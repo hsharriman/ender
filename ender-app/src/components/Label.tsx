@@ -1,6 +1,7 @@
+import { Vector } from "../core/vectorOps";
+
 export interface LabelProps {
-  x: number;
-  y: number;
+  pt: Vector;
   val: string;
 }
 
@@ -16,11 +17,11 @@ export interface LabelProps {
 // };
 
 export class Label {
-  private coords: [number, number];
+  private pt: [number, number];
   private val: string;
 
   constructor(props: LabelProps) {
-    this.coords = [props.x, props.y];
+    this.pt = props.pt;
     this.val = props.val;
   }
 
@@ -29,7 +30,6 @@ export class Label {
   }
 
   render() {
-    console.log(this.val, this.coords, this.val);
     return <div style={{fontSize: "12px", color: "black", fontFamily: "sans-serif"}}>{this.val}</div>;
   }
 }

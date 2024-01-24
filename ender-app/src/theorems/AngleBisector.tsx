@@ -1,5 +1,7 @@
 import React from "react";
 import { equalAngle, parallel } from "../core/checks";
+import Card from "../components/Card";
+import { Euclidean } from "../components/geometry/Euclidean";
 import { Angle, Point, Segment, Triangle } from "../core/geometry";
 interface obj {
   points: number[][]; // arr of 2d points
@@ -9,11 +11,6 @@ interface obj {
 
 let objMap = new Map<string, obj>(); // map of id to objects
 // something like "aACE"->{type: angle, id: xyz, data: angle data like p1,p2,p3,min}
-interface ProofStep {
-  // code changes necessary, styling stuff
-  // minimap contents
-  // text/annotation to accompany
-}
 
 export class AngleBisector extends React.Component {
   private construction = () => {
@@ -30,6 +27,8 @@ export class AngleBisector extends React.Component {
       new Triangle({p1: D, p2: A, p3: C}),
       new Triangle({p1: A, p2: C, p3: E})
     ];
+    // TODO return a map of all objects in the construction?
+    return [tBAD, tDAC, tACE];
     // tBAD, tDAC colored red and tACE invisible to start
   }
 
@@ -49,15 +48,38 @@ export class AngleBisector extends React.Component {
     // 6, ratios
     ];
   }
+
+  componentDidMount() {
+    this.frame1();
+    this.frame2();
+  }
+
+  frame1 = () => {
+    const [tBAD, tDAC, ] = this.construction();
+    const svgIdSuffix = "1"; 
+    const diagram = new Euclidean(svgIdSuffix);
+    diagram.triangle(tBAD.p1.labeled(), tBAD.p2.labeled(), tBAD.p3.labeled());
+    diagram.triangle(tDAC.p1.labeled(), tDAC.p2.labeled(), tDAC.p3.labeled());
+  }
+
+  frame2 = () => {
+    const [tBAD, tDAC, tACE] = this.construction();
+    const svgIdSuffix = "2"; 
+    const diagram = new Euclidean(svgIdSuffix);
+    diagram.triangle(tBAD.p1.labeled(), tBAD.p2.labeled(), tBAD.p3.labeled());
+    diagram.triangle(tDAC.p1.labeled(), tDAC.p2.labeled(), tDAC.p3.labeled());
+    diagram.triangle(tACE.p1.labeled(), tACE.p2.labeled(), tACE.p3.labeled())
+  }
   render() {
     return(
       <div>
-        <div id="frame-1"></div>
-        <div id="frame-2"></div>
-        <div id="frame-3"></div>
-        <div id="frame-4"></div>
-        <div id="frame-5"></div>
-        <div id="frame-6"></div>
+        <Card idx={1} text={"Initial construction"} svg={<></>}/>
+        <Card idx={2} text={"Add point E s.t. it makes a parallel line"} svg={<></>}/>
+        {/* <Card idx={2} text={"Initial construction"} svg={<></>}/>
+        <Card idx={3} text={"Initial construction"} svg={<></>}/>
+        <Card idx={4} text={"Initial construction"} svg={<></>}/>
+        <Card idx={5} text={"Initial construction"} svg={<></>}/>
+        <Card idx={6} text={"Initial construction"} svg={<></>}/> */}
       </div>
     )
   }

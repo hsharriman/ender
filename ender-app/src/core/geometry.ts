@@ -5,12 +5,31 @@ export type GeometryProps = {
 }
 
 export class GeometryObject {
-  public readonly names: string[] | undefined;
+  public names: string[] | undefined;
   constructor(props: GeometryProps) {
-    this.names = props.names;
+    this.names = [];
+    console.log(this.names);
   }
 
-  // pts getter/setters?
+  possibleNames = (): string[] => [];
+
+  // https://stackoverflow.com/questions/9960908/permutations-in-javascript
+  permutator = (inputArr: string[]): string[] => {
+    let result: string[] = [];
+    const permute = (arr: string[], m: string = "") => {
+      if (arr.length === 0) {
+        result.push(m);
+      } else {
+        for (let i = 0; i < arr.length; i++) {
+          let curr = arr.slice(); // copy arr
+          let next = curr.splice(i, 1);
+          permute(curr.slice(), m + next)
+       }
+     }
+   }
+   permute(inputArr);
+   return result;
+  }
 }
 
 export type PointProps = {
@@ -29,7 +48,7 @@ export class Point extends GeometryObject {
     this.label = props.label;
   }
 
-  // equals = (p: Point) => this.vec.equals(p.vec);
+  labeled = () => {return {pt: this.pt, label: this.label};}
 
   // returns euclidean distance between 2 points
   dist = (p: Point) => {
@@ -37,6 +56,7 @@ export class Point extends GeometryObject {
     console.log("vector", vops.mag(this.sub(p)));
     return vops.mag(this.sub(p));
   } 
+  possibleNames = () => [this.label];
   magnitude = () => vops.mag(this.pt);
   unit = () => vops.unit(this.pt);
   equals = (v: Point) => vops.equals(this.pt, v.pt);
@@ -47,7 +67,6 @@ export class Point extends GeometryObject {
 export type SegmentProps = {
   p1: Point;
   p2: Point;
-  // id?
 } & GeometryProps;
 export class Segment extends GeometryObject {
   // 2 points
@@ -64,6 +83,8 @@ export class Segment extends GeometryObject {
     this.parallel = 0;
     this.equalMark = 0;
   }
+
+  possibleNames= () => this.permutator([this.p1.label, this.p2.label])
 
   length = () => {
     return this.p1.dist(this.p2);
@@ -117,6 +138,11 @@ export class Angle extends GeometryObject {
     this.label = `${props.p1.label}${props.p2.label}${props.p3.label}`
   }
 
+  possibleNames = () => [
+    `${this.p1.label}${this.p2.label}${this.p3.label}`,
+    `${this.p3.label}${this.p2.label}${this.p1.label}`
+  ]
+
   setEqualMark = (marked: number) => {this.equalMark = marked; }
   getEqualMark = () => this.equalMark;
   isEqualMark = () => this.equalMark === 0;
@@ -129,12 +155,14 @@ export type TriangleProps = {
   // add things like type of triangle, isos, right, etc.
 } & GeometryProps;
 export class Triangle extends GeometryObject {
-  public readonly pts: [Point,Point,Point];
+  public readonly p1: Point;
+  public readonly p2: Point;
+  public readonly p3: Point;
   public readonly segs: [Segment, Segment, Segment];
   public readonly angs: [Angle, Angle, Angle];
   constructor(props: TriangleProps) {
     super(props);
-    this.pts = [props.p1, props.p2, props.p3];
+    [this.p1,this.p2, this.p3] = [props.p1, props.p2, props.p3];
     // TODO replace all of these constructors with
     // findOrCreate methods
     this.segs = [
@@ -171,6 +199,9 @@ export class Triangle extends GeometryObject {
         size: AngleSize.Min
       }),
     ];
+  }
+  possibleNames= () => {
+    return this.permutator([this.p1.label, this.p2.label, this.p3.label]);
   }
   // 3 points, type of triangle
   // type of triangle may just be a constraint
