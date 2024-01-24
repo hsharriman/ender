@@ -5,7 +5,7 @@ const unit = (v: Vector) => v.map(c => c / mag(v));
 const equals = (v1: Vector, v2: Vector) => v1[0] === v2[0] && v1[1] === v2[1];
 const add = (v1: Vector, v2: Vector): Vector => [v1[0] + v2[0], v1[1] + v2[1]];
 const sub = (v1: Vector, v2: Vector): Vector => [v1[0] + v2[0], v1[1] + v2[1]];
-const smul = (v: Vector, s: number) => v.map(c => c * s);
+const smul = (v: Vector, s: number): Vector => [v[0] * s, v[1] * s];
 const mmul = () => {};
 const div = () => {};
 const dotProd = () => {};

@@ -8,7 +8,6 @@ export class GeometryObject {
   public names: string[] | undefined;
   constructor(props: GeometryProps) {
     this.names = [];
-    console.log(this.names);
   }
 
   possibleNames = (): string[] => [];
