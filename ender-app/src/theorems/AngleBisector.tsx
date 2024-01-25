@@ -1,8 +1,8 @@
 import React from "react";
 import { equalAngle, parallel } from "../core/checks";
 import Card from "../components/Card";
-import { Euclidean } from "../components/geometry/Euclidean";
 import { Angle, Point, Segment, Triangle } from "../core/geometry";
+import { EuclideanBuilder } from "../components/geometry/EuclideanBuilder";
 interface obj {
   points: number[][]; // arr of 2d points
   type: string;
@@ -56,29 +56,29 @@ export class AngleBisector extends React.Component {
 
   frame1 = () => {
     const [tBAD, tDAC, ] = this.construction();
-    const svgIdSuffix = "1"; 
-    const diagram = new Euclidean(svgIdSuffix);
-    diagram.triangle(tBAD.p1.labeled(), tBAD.p2.labeled(), tBAD.p3.labeled());
-    diagram.triangle(tDAC.p1.labeled(), tDAC.p2.labeled(), tDAC.p3.labeled());
+    const diagram = new EuclideanBuilder();
+    diagram.triangle(tBAD.getLabeledPts());
+    diagram.triangle(tDAC.getLabeledPts());
+    return diagram.contents();
   }
 
   frame2 = () => {
-    const [tBAD, tDAC, tACE] = this.construction();
-    const svgIdSuffix = "2"; 
-    const diagram = new Euclidean(svgIdSuffix);
-    diagram.triangle(tBAD.p1.labeled(), tBAD.p2.labeled(), tBAD.p3.labeled());
-    diagram.triangle(tDAC.p1.labeled(), tDAC.p2.labeled(), tDAC.p3.labeled());
-    diagram.triangle(tACE.p1.labeled(), tACE.p2.labeled(), tACE.p3.labeled());
-    diagram.parallelMark(tBAD.s23.p2.labeled(), tBAD.s23.p1.labeled(), 1); // TODO EWW
-    diagram.parallelMark(tACE.s23.p1.labeled(), tACE.s23.p2.labeled(), 1);
+    const [tBAD, , tACE] = this.construction();
+    const diagram = new EuclideanBuilder(this.frame1());
+    console.log("frame1", this.frame1());
+    diagram.triangle(tACE.getLabeledPts());
+    diagram.parallelMark(tBAD.s23.getLabeledPts(), 1); // TODO EWW
+    diagram.parallelMark(tACE.s23.getLabeledPts(), 1);
+    console.log("frame2", diagram.contents());
+    return diagram.contents();
   }
 
   render() {
     return(
       <div>
-        <Card idx={1} text={"Initial construction"} svg={<></>}/>
-        <Card idx={2} text={"Add point E s.t. it makes a parallel line"} svg={<></>}/>
-        {/* <Card idx={2} text={"Initial construction"} svg={<></>}/>
+        <Card idx={1} text={"Initial construction"} content={this.frame1}/>
+        <Card idx={2} text={"Add point E s.t. it makes a parallel line"} content={this.frame2} />
+        {/*
         <Card idx={3} text={"Initial construction"} svg={<></>}/>
         <Card idx={4} text={"Initial construction"} svg={<></>}/>
         <Card idx={5} text={"Initial construction"} svg={<></>}/>

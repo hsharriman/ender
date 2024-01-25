@@ -1,3 +1,4 @@
+import { LabeledPoint } from "../components/geometry/EuclideanBuilder";
 import { Vector, vops } from "./vectorOps";
 
 export type GeometryProps = {
@@ -71,11 +72,16 @@ export class Segment extends GeometryObject {
   // 2 points
   public readonly p1: Point;
   public readonly p2: Point;
+  readonly p: Map<string, Point>;
   public label: string;
   private parallel: number;
   private equalMark: number;
   constructor(props: SegmentProps) {
     super(props);
+    this.p = new Map([
+      [props.p1.label, props.p1],
+      [props.p2.label, props.p2]
+    ]);
     this.p1 = props.p1;
     this.p2 = props.p2;
     this.label = `${props.p1.label}${props.p2.label}`;
@@ -85,6 +91,10 @@ export class Segment extends GeometryObject {
 
   possibleNames = () => this.permutator([this.p1.label, this.p2.label])
 
+  getLabeledPts = (): [LabeledPoint, LabeledPoint] => 
+    [this.p1.labeled(), this.p2.labeled()];
+
+  // TODO everything below this is useless atm
   length = () => {
     return this.p1.dist(this.p2);
   }
@@ -205,6 +215,9 @@ export class Triangle extends GeometryObject {
     return this.permutator([this.p1.label, this.p2.label, this.p3.label]);
   }
   // 3 points, type of triangle
+  getLabeledPts = (): [LabeledPoint, LabeledPoint, LabeledPoint] => {
+    return [this.p1.labeled(), this.p2.labeled(), this.p3.labeled()];
+  }
   // type of triangle may just be a constraint
 }
 
