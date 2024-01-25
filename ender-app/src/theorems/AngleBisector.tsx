@@ -68,8 +68,11 @@ export class AngleBisector extends React.Component {
     const diagram = new Euclidean(svgIdSuffix);
     diagram.triangle(tBAD.p1.labeled(), tBAD.p2.labeled(), tBAD.p3.labeled());
     diagram.triangle(tDAC.p1.labeled(), tDAC.p2.labeled(), tDAC.p3.labeled());
-    diagram.triangle(tACE.p1.labeled(), tACE.p2.labeled(), tACE.p3.labeled())
+    diagram.triangle(tACE.p1.labeled(), tACE.p2.labeled(), tACE.p3.labeled());
+    diagram.parallelMark(tBAD.s23.p2.labeled(), tBAD.s23.p1.labeled(), 1); // TODO EWW
+    diagram.parallelMark(tACE.s23.p1.labeled(), tACE.s23.p2.labeled(), 1);
   }
+
   render() {
     return(
       <div>

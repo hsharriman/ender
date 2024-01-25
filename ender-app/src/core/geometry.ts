@@ -83,7 +83,7 @@ export class Segment extends GeometryObject {
     this.equalMark = 0;
   }
 
-  possibleNames= () => this.permutator([this.p1.label, this.p2.label])
+  possibleNames = () => this.permutator([this.p1.label, this.p2.label])
 
   length = () => {
     return this.p1.dist(this.p2);
@@ -154,17 +154,19 @@ export type TriangleProps = {
   // add things like type of triangle, isos, right, etc.
 } & GeometryProps;
 export class Triangle extends GeometryObject {
-  public readonly p1: Point;
-  public readonly p2: Point;
-  public readonly p3: Point;
-  public readonly segs: [Segment, Segment, Segment];
+  readonly p1: Point;
+  readonly p2: Point;
+  readonly p3: Point;
   public readonly angs: [Angle, Angle, Angle];
+  readonly s12: Segment;
+  readonly s23: Segment;
+  readonly s13: Segment;
   constructor(props: TriangleProps) {
     super(props);
     [this.p1,this.p2, this.p3] = [props.p1, props.p2, props.p3];
     // TODO replace all of these constructors with
     // findOrCreate methods
-    this.segs = [
+    [this.s12, this.s23, this.s13] = [
       new Segment({
         p1: props.p1,
         p2: props.p2,

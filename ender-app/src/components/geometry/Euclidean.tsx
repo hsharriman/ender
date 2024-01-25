@@ -6,6 +6,7 @@ const SVG_XSHIFT = 40;
 const SVG_YSHIFT = 0;
 const SVG_URL = "http://www.w3.org/2000/svg"; 
 
+// TODO redundant with other files
 export type LabeledPoint = {pt: Vector, label: string};
 
 enum ObjectType {
@@ -15,7 +16,7 @@ enum ObjectType {
   // Circle,
   // AngleArc,
   // RightAngle,
-  // ParallelTick,
+  ParallelTick = "parallel",
   // EqualLengthTick,
 }
 const coordsToSvg = (coords: Vector, offset: Vector = [0, 0]): Vector => {
@@ -26,6 +27,14 @@ const coordsToSvg = (coords: Vector, offset: Vector = [0, 0]): Vector => {
     [SVG_XSHIFT + offset[0], SVG_YSHIFT + offset[1]]
   );
   return [vec[0], SVG_DIM-vec[1]];
+}
+
+const polylinePathFromPts = (pts: Vector[]) => {
+  let pointsStr = "";
+  pts.map(v => {
+    pointsStr = pointsStr + `${v[0]},${v[1]} `
+  });
+  return pointsStr;
 }
 
 export class Euclidean {
@@ -42,6 +51,7 @@ export class Euclidean {
   }
 
   getId = (objectType: ObjectType, label: string) => {
+    // TODO might need to add some iterator for number of ticks as well
     const alphabetizedLabel = Array.from(label).sort().toString();
     return `${objectType}.${alphabetizedLabel}`;
   }
@@ -55,7 +65,7 @@ export class Euclidean {
       const parent = document.getElementById(this.svgId);
       if (parent) {
         const [cx, cy] = coordsToSvg(p.pt);
-        var circle = document.createElementNS(SVG_URL, "circle");
+        let circle = document.createElementNS(SVG_URL, "circle");
         circle.setAttributeNS(null, 'cx', `${cx}`);
         circle.setAttributeNS(null, 'cy', `${cy}`);
         circle.setAttributeNS(null, 'r', '2');
@@ -79,7 +89,7 @@ export class Euclidean {
       if (parent) {
         const [x1, y1] = coordsToSvg(p1.pt);
         const [x2, y2] = coordsToSvg(p2.pt);
-        var line = document.createElementNS(SVG_URL, "line");
+        let line = document.createElementNS(SVG_URL, "line");
         line.setAttributeNS(null, 'x1', `${x1}`);
         line.setAttributeNS(null, 'y1', `${y1}`);
         line.setAttributeNS(null, 'x2', `${x2}`);
@@ -96,7 +106,7 @@ export class Euclidean {
     const parent = document.getElementById(this.svgId);
     if (parent) {
       const [cx, cy] = coordsToSvg(pos, offset);
-      var text = document.createElementNS(SVG_URL, 'text');
+      let text = document.createElementNS(SVG_URL, "text");
       text.setAttributeNS(null, "x", `${cx}`);
       text.setAttributeNS(null, "y", `${cy}`);
       text.style.font = "12px sans-serif";
@@ -106,9 +116,38 @@ export class Euclidean {
     }
   }
 
-  parallelMark = (p1: Vector, p2: Vector) => {
-    // find midpoint on segment
-    // build chevron path, needs to be rotated to match the segment
+  parallelMark = (p1: LabeledPoint, p2: LabeledPoint, numTicks: number) => {
+    const parent = document.getElementById(this.svgId);
+      if (parent) {
+      // find midpoint on segment
+      const midpoint = vops.div(vops.add(p1.pt, p2.pt), 2);
+
+      // TODO make direction face "positive direction"?
+      // TODO, customize scaling of dir
+      // 2 endpoints of the chevron, rotated to match segment
+      const dir = vops.smul(vops.unit(vops.sub(p2.pt, p1.pt)), 0.5);
+      const startDir = vops.add(vops.rot(dir, 135), midpoint);
+      const endDir = vops.add(vops.rot(dir, 225), midpoint);
+
+      // if odd number of ticks, start at midpoint 
+      let points = [startDir, midpoint, endDir];
+      // TODO account for number of ticks
+      if (numTicks % 2 !== 0) {
+        points = points.map(v => coordsToSvg(v));
+      } else {
+        // TODO offset
+        points = points.map(v => coordsToSvg(v));
+      }
+
+      // build svg polyline of chevron
+      let path = document.createElementNS(SVG_URL, "polyline");
+      path.setAttributeNS(null, "points", polylinePathFromPts(points));
+      path.setAttributeNS(null, "fill", "none");
+      path.style.strokeWidth = "1px";
+      path.style.stroke = "black";
+      path.id = this.getId(ObjectType.ParallelTick, `${p1.label}${p2.label}.${numTicks}`); // TODO numTicks is temp, should change
+      parent.appendChild(path);
+    }
   }
 
   triangle = (p1: LabeledPoint, p2: LabeledPoint, p3: LabeledPoint) => {
