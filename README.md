@@ -1,9 +1,16 @@
 # Ender
+## Implemented:
+* Labeled points
+* Segments
+* Triangles
+* Parallel Markers
+* Equal Length Markers
+* Multiple tick marks
+* Angle Markers
 
 ## TODO
-* Parallel Markers
-* Angle Markers
-* Equal Length Markers
+* Coloring specific segments
+* Render mini-constructions alongside steps
 * Updating styling of an object on initial render
 * Dynamically updating the styling of objects based on interaction
 * Interaction between text of proof and visualization
@@ -12,6 +19,5 @@
 ## TODO for future proofs
 * Circles
 * Labeled segments
-* Multiple tick marks
 * Right angle tick marks
 * Separating `<Card />` components from the proof files

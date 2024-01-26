@@ -1,5 +1,5 @@
-import { LabeledPoint } from "../components/geometry/EuclideanBuilder";
-import { Vector, vops } from "./vectorOps";
+import { Vector, LabeledPoint, LabeledAngle } from "./types";
+import { vops } from "./vectorOps";
 
 export type GeometryProps = {
   names?: string[];
@@ -48,7 +48,7 @@ export class Point extends GeometryObject {
     this.label = props.label;
   }
 
-  labeled = () => {return {pt: this.pt, label: this.label};}
+  labeled = (): LabeledPoint => {return {pt: this.pt, label: this.label};}
 
   // returns euclidean distance between 2 points
   dist = (p: Point) => {
@@ -152,6 +152,16 @@ export class Angle extends GeometryObject {
     `${this.p3.label}${this.p2.label}${this.p1.label}`
   ]
 
+  getLabeledAngle = (): LabeledAngle => {
+    return {
+      center: this.p2.pt,
+      start: this.p1.pt,
+      end: this.p3.pt,
+      label: this.label
+    }
+  }
+
+  // TODO code not being used atm
   setEqualMark = (marked: number) => {this.equalMark = marked; }
   getEqualMark = () => this.equalMark;
   isEqualMark = () => this.equalMark === 0;
@@ -167,10 +177,12 @@ export class Triangle extends GeometryObject {
   readonly p1: Point;
   readonly p2: Point;
   readonly p3: Point;
-  public readonly angs: [Angle, Angle, Angle];
   readonly s12: Segment;
   readonly s23: Segment;
   readonly s13: Segment;
+  readonly a1: Angle;
+  readonly a2: Angle;
+  readonly a3: Angle;
   constructor(props: TriangleProps) {
     super(props);
     [this.p1,this.p2, this.p3] = [props.p1, props.p2, props.p3];
@@ -190,7 +202,7 @@ export class Triangle extends GeometryObject {
         p2: props.p1,
       })
     ];
-    this.angs = [
+    [this.a2, this.a3, this.a1] = [
       new Angle({
         p1: props.p1, 
         p2: props.p2, 
@@ -198,15 +210,15 @@ export class Triangle extends GeometryObject {
         size: AngleSize.Min
       }),
       new Angle({
-        p1: props.p2, 
+        p1: props.p1, 
         p2: props.p3, 
-        p3: props.p1, 
+        p3: props.p2, 
         size: AngleSize.Min
       }),
       new Angle({
-        p1: props.p3, 
+        p1: props.p2, 
         p2: props.p1, 
-        p3: props.p2, 
+        p3: props.p3, 
         size: AngleSize.Min
       }),
     ];

@@ -29,7 +29,7 @@ export class AngleBisector extends React.Component {
     ];
     // TODO return a map of all objects in the construction?
     return [tBAD, tDAC, tACE];
-    // tBAD, tDAC colored red and tACE invisible to start
+    // tBAD, tDAC colored red
   }
 
   // array of steps
@@ -49,11 +49,6 @@ export class AngleBisector extends React.Component {
     ];
   }
 
-  componentDidMount() {
-    this.frame1();
-    this.frame2();
-  }
-
   frame1 = () => {
     const [tBAD, tDAC, ] = this.construction();
     const diagram = new EuclideanBuilder();
@@ -65,11 +60,23 @@ export class AngleBisector extends React.Component {
   frame2 = () => {
     const [tBAD, , tACE] = this.construction();
     const diagram = new EuclideanBuilder(this.frame1());
-    console.log("frame1", this.frame1());
     diagram.triangle(tACE.getLabeledPts());
-    diagram.parallelMark(tBAD.s23.getLabeledPts(), 1); // TODO EWW
+    diagram.parallelMark(tBAD.s23.getLabeledPts(), 1); // TODO still not great
     diagram.parallelMark(tACE.s23.getLabeledPts(), 1);
-    console.log("frame2", diagram.contents());
+    return diagram.contents();
+  }
+
+  frame3 = () => {
+    const [tBAD, tDAC, tACE] = this.construction();
+    const diagram = new EuclideanBuilder(this.frame2());
+    const oppAngle = new OppositeAngleTheorem()
+      .construction(
+        [tBAD.s23, tACE.s23],
+        tACE.s12,
+        tDAC.a2,
+        tACE.a2
+      ); // TODO also eww
+    diagram.batchAdd(oppAngle);
     return diagram.contents();
   }
 
@@ -78,27 +85,29 @@ export class AngleBisector extends React.Component {
       <div>
         <Card idx={1} text={"Initial construction"} content={this.frame1}/>
         <Card idx={2} text={"Add point E s.t. it makes a parallel line"} content={this.frame2} />
-        {/*
-        <Card idx={3} text={"Initial construction"} svg={<></>}/>
-        <Card idx={4} text={"Initial construction"} svg={<></>}/>
-        <Card idx={5} text={"Initial construction"} svg={<></>}/>
-        <Card idx={6} text={"Initial construction"} svg={<></>}/> */}
+        <Card idx={3} text={"Add point E s.t. it makes a parallel line"} content={this.frame3} />
       </div>
     )
   }
 }
 
 class OppositeAngleTheorem {
+  // TODO list of coords and labels for the proof of this theorem
+  // method that takes generic objects and draws the stuff necessary for a minimap
   construction (parallels: [Segment, Segment], s3: Segment, a1: Angle, a2: Angle) {
     // 2 lines will get parallel markers
     const [s1, s2] = parallels;
-    parallel(s1, s2);
-    // 2 opposite angles will be marked
-    equalAngle(a1, a2);
-  }
+    const diagram = new EuclideanBuilder();
+    diagram.segment(s1.p1, s1.p2);
+    diagram.segment(s2.p1, s2.p2);
+    diagram.segment(s3.p1, s3.p2);
+  
+    diagram.parallelMark(s1.getLabeledPts(), 1);
+    diagram.parallelMark(s2.getLabeledPts(), 1);
 
-  renderConstruction() {
-    // display relevant objects to the construction
+    diagram.equalAngle(a1.getLabeledAngle(), 1);
+    diagram.equalAngle(a2.getLabeledAngle(), 1);
+    return diagram.contents();
   }
 }
 
