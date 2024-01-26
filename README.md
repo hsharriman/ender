@@ -11,7 +11,6 @@
 ## TODO
 * Coloring specific segments
 * Render mini-constructions alongside steps
-* Updating styling of an object on initial render
 * Dynamically updating the styling of objects based on interaction
 * Interaction between text of proof and visualization
 * Improve the proof class structure

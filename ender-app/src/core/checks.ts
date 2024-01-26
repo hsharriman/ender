@@ -4,11 +4,11 @@ import { Angle, Segment } from "./geometry";
 export const equalAngle = (a1: Angle, a2: Angle) => {
   // check for marks on a1 and a2
   let numMarks = numberOfTicks(a1.getEqualMark(), a2.getEqualMark());
-  
+
   a1.setEqualMark(numMarks);
   a2.setEqualMark(numMarks);
   // if present, use that number of ticks
-}
+};
 
 export const parallel = (s1: Segment, s2: Segment) => {
   // check for marks on s1 and s2
@@ -16,14 +16,14 @@ export const parallel = (s1: Segment, s2: Segment) => {
 
   s1.setParallel(numMarks);
   s2.setParallel(numMarks);
-}
+};
 
 export const equalLength = (s1: Segment, s2: Segment) => {
   let numMarks = numberOfTicks(s1.getEqualMark(), s2.getEqualMark());
 
   s1.setEqualMark(numMarks);
   s2.setEqualMark(numMarks);
-}
+};
 
 /* ---------- HELPERS ---------- */
 
@@ -43,4 +43,4 @@ const numberOfTicks = (a: number, b: number) => {
     numTicks = 1;
   }
   return numTicks;
-}
+};

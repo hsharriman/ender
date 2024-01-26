@@ -27,9 +27,15 @@ export class Label {
 
   getVal = () => {
     return this.val;
-  }
+  };
 
   render() {
-    return <div style={{fontSize: "12px", color: "black", fontFamily: "sans-serif"}}>{this.val}</div>;
+    return (
+      <div
+        style={{ fontSize: "12px", color: "black", fontFamily: "sans-serif" }}
+      >
+        {this.val}
+      </div>
+    );
   }
 }

@@ -18,20 +18,26 @@ export class Euclidean extends React.Component<EuclideanProps, EuclideanState> {
     this.svgId = `svg-object-${props.svgIdSuffix}`;
     this.svgContent = props.content();
     this.state = {
-      content: this.svgContent
+      content: this.svgContent,
     };
   }
 
   getContent = () => {
     return this.state.content;
-  }
+  };
 
   render() {
-    return (<>
-        <svg id={this.svgId} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        {this.state.content}
+    return (
+      <>
+        <svg
+          id={this.svgId}
+          width="100%"
+          height="100%"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {this.state.content}
         </svg>
-    </>
+      </>
     );
   }
 }

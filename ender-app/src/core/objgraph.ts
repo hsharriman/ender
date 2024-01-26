@@ -1,4 +1,3 @@
-
 export enum ObjectType {
   Point,
   Segment,
@@ -30,17 +29,17 @@ export class ObjectNode {
 
   getId = () => {
     return this.id;
-  }
+  };
 
   getChildren = () => {
     return this.children;
-  }
+  };
 
   addChild = (child: ObjectNode) => {
     this.children?.push(child);
-  }
+  };
 
   getParent = () => {
     return this.parent;
-  }
+  };
 }
