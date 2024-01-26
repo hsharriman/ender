@@ -21,7 +21,7 @@ export class SVGBuilder {
   }
 
   addContent = (item: JSX.Element) => {
-    if (this.content.find((elem) => elem.key === item.key) === undefined) {
+    if (!this.content.find((elem) => elem.key === item.key)) {
       this.content = this.content.concat(item);
     }
   };

@@ -1,11 +1,23 @@
 export type Vector = [number, number];
-export type LabeledPoint = { pt: Vector; label: string };
-export type LabeledAngle = {
+export type LPoint = { pt: Vector; label: string };
+export type LSegment = { p1: Vector; p2: Vector; label: string };
+export type LAngle = {
   center: Vector;
   start: Vector;
   end: Vector;
   label: string;
 };
+
+export enum Obj {
+  Point = "point",
+  Segment = "segment",
+  Text = "text",
+  // Circle,
+  Angle = "angle",
+  ParallelTick = "parallel",
+  EqualLengthTick = "equallength",
+  Triangle = "triangle",
+}
 
 export enum SVGFlag {
   False = 0,
@@ -14,6 +26,7 @@ export enum SVGFlag {
 
 export type BaseSVGProps = {
   key: string;
+  names?: string[];
   style?: React.CSSProperties;
 };
 
@@ -53,3 +66,8 @@ export type QuadBezierSVGProps = {
   anchor: Vector;
   end: Vector;
 } & BaseSVGProps;
+
+export type GHash<T> = {
+  labels: string[];
+  map: { [label: string]: T };
+};

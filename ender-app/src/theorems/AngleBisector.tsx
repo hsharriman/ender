@@ -1,21 +1,20 @@
 import React from "react";
 import Card from "../components/Card";
 import { Angle, Point, Segment, Triangle } from "../core/geometry";
-import {
-  EuclideanBuilder,
-  ObjectType,
-} from "../components/geometry/EuclideanBuilder";
-interface obj {
-  points: number[][]; // arr of 2d points
-  type: string;
-  direction?: number; // for angles
-}
+import { EuclideanBuilder } from "../components/geometry/EuclideanBuilder";
+import { Obj } from "../core/types";
+import { Content } from "../core/objgraph";
 
-let objMap = new Map<string, obj>(); // map of id to objects
-// something like "aACE"->{type: angle, id: xyz, data: angle data like p1,p2,p3,min}
-
+// TODO some top level state that tracks all the color customizations
+// currently in the doc and passes them down
 export class AngleBisector extends React.Component {
+  private ctx: Content;
+  constructor(props: any) {
+    super(props);
+    this.ctx = this.construction();
+  }
   private construction = () => {
+    let ctx = new Content();
     // TODO define params for construction that other proofs can use
     // initialize points
     const labels = ["A", "B", "C", "D", "E"];
@@ -26,100 +25,86 @@ export class AngleBisector extends React.Component {
       [4, 0],
       [9, 6],
     ];
-    const [A, B, C, D, E] = coords.map(
-      (c, i) => new Point({ pt: c, label: labels[i] })
+    const [A, B, C, D, E] = coords.map((c, i) =>
+      ctx.push(new Point({ pt: c, label: labels[i] }))
     );
 
     // define triangles?
     // eventually it would be nice to just name the triangles without needing the pts defined first?
-    const [tBAD, tDAC, tACE] = [
-      new Triangle({ p1: B, p2: A, p3: D }),
-      new Triangle({ p1: D, p2: A, p3: C }),
-      new Triangle({ p1: A, p2: C, p3: E }),
+    const triangles = [
+      new Triangle({ pts: [B, A, D] }, ctx),
+      new Triangle({ pts: [D, A, C] }, ctx),
+      new Triangle({ pts: [A, C, E] }, ctx),
     ];
-    // TODO return a map of all objects in the construction?
-    return [tBAD, tDAC, tACE];
+    triangles.map((t) => ctx.push(t));
     // tBAD, tDAC colored red
-  };
-
-  // array of steps
-  // proof = (): ProofStep[] => {
-  proof = () => {
-    return [
-      // 1, add triangle
-      // tACE.show()
-      // 2, opp angle theorem
-      // equalangle(a ace, a cad), mini: oppositeAngleTheorem(AD, CE, AC, aACE, aCAD)
-      // 3, by hypothesis
-      // equalangle(aCAD, aBAD)
-      // 4, parallelism implies = corresponding angles
-      // book1Prop29()
-      // 5, isosceles triangle
-      // 6, ratios
-    ];
+    return ctx;
   };
 
   frame1 = () => {
-    const [tBAD, tDAC] = this.construction();
+    // const [tBAD, tDAC] = this.construction();
+    this.ctx = this.construction();
+    const tBAD = this.ctx.get("BAD", Obj.Triangle);
+    const tDAC = this.ctx.get("DAC", Obj.Triangle);
+
     const diagram = new EuclideanBuilder();
-    diagram.triangle(tBAD.getLabeledPts());
-    diagram.triangle(tDAC.getLabeledPts());
+    diagram.triangle(tBAD.p, tBAD.s);
+    diagram.triangle(tDAC.p, tDAC.s);
     return diagram.contents();
   };
 
   frame2 = () => {
-    const [tBAD, , tACE] = this.construction();
+    const tACE = this.ctx.get("ACE", Obj.Triangle);
     const diagram = new EuclideanBuilder(this.frame1());
-    diagram.triangle(tACE.getLabeledPts());
-    diagram.parallelMark(tBAD.s23.getLabeledPts(), 1); // TODO still not great
-    diagram.parallelMark(tACE.s23.getLabeledPts(), 1);
+    diagram.triangle(tACE.p, tACE.s); // TODO labeled triangle?
+
+    const AD = this.ctx.get("AD", Obj.Segment);
+    const CE = this.ctx.get("CE", Obj.Segment);
+    diagram.parallelMark(AD.labeled(), 1);
+    diagram.parallelMark(CE.labeled(), 1);
     return diagram.contents();
   };
 
   frame3 = () => {
-    const [tBAD, tDAC, tACE] = this.construction();
     const diagram = new EuclideanBuilder(this.frame2());
-    const oppAngle = new Book1Prop29().construction(
-      [tBAD.s23, tACE.s23],
-      tACE.s12,
-      tDAC.a2,
-      tACE.a2
-    ); // TODO also eww
+    const AD = this.ctx.get("AD", Obj.Segment);
+    const CE = this.ctx.get("CE", Obj.Segment);
+    const AC = this.ctx.get("AC", Obj.Segment);
+    const A = this.ctx.get("DAC", Obj.Angle);
+    const C = this.ctx.get("ACE", Obj.Angle);
+    const oppAngle = new Book1Prop29().construction([AD, CE], AC, A, C); // TODO also eww
     diagram.batchAdd(oppAngle);
     return diagram.contents();
   };
 
   frame4 = () => {
-    const [tBAD, ,] = this.construction();
     const diagram = new EuclideanBuilder(this.frame3());
-    diagram.equalAngle(tBAD.a2.getLabeledAngle(), 1);
+    const A = this.ctx.get("BAD", Obj.Angle);
+    diagram.equalAngle(A.labeled(), 1);
     return diagram.contents();
   };
 
   frame5 = () => {
-    const [tBAD, , tACE] = this.construction();
     const diagram = new EuclideanBuilder(this.frame4());
+    const AD = this.ctx.get("AD", Obj.Segment);
+    const CE = this.ctx.get("CE", Obj.Segment);
+    const AC = this.ctx.get("AC", Obj.Segment);
+    const A = this.ctx.get("BAD", Obj.Angle);
+    const E = this.ctx.get("AEC", Obj.Angle);
     // instance where we need segment BE which i did not define initially.
-    const correspAngle = new Book1Prop29().construction(
-      [tBAD.s23, tACE.s23],
-      tACE.s12,
-      tBAD.a2,
-      tACE.a3
-    ); // TODO also eww
+    const correspAngle = new Book1Prop29().construction([AD, CE], AC, A, E); // TODO also eww
     diagram.batchAdd(correspAngle);
-    console.log(correspAngle);
     return diagram.contents();
   };
 
   frame6 = () => {
-    const [, , tACE] = this.construction();
     const diagram = new EuclideanBuilder(this.frame5());
-    const isos = new AASTheorem().construction(
-      tACE,
-      [tACE.a2, tACE.a3],
-      tACE.s12,
-      tACE.s13
-    );
+    const tACE = this.ctx.get("ACE", Obj.Triangle);
+    const C = this.ctx.get("ACE", Obj.Angle);
+    const E = this.ctx.get("AEC", Obj.Angle);
+    const AC = this.ctx.get("AC", Obj.Segment);
+    const AE = this.ctx.get("AE", Obj.Segment);
+    const isos = new AASTheorem().construction(tACE, [C, E], AC, AE);
     diagram.batchAdd(isos);
     return diagram.contents();
   };
@@ -131,9 +116,7 @@ export class AngleBisector extends React.Component {
     const diagram = new EuclideanBuilder(this.frame6());
     const colors = ["orange", "lightblue", "lightgreen", "red"];
     ["BA", "BD", "DC", "AC"].map((label, i) => {
-      let elem = diagram.getExistingElement(
-        diagram.getId(ObjectType.Segment, label)
-      );
+      let elem = diagram.getExistingElement(diagram.getId(Obj.Segment, label));
       elem.props.style = {
         stroke: colors[i],
       };
@@ -171,6 +154,7 @@ export class AngleBisector extends React.Component {
           text={"By AAS Theorem ACE is isosceles"}
           content={this.frame7}
         /> */}
+        {/* <Card idx={8} text={"minimap"} content={this.frame6} /> */}
       </div>
     );
   }
@@ -188,15 +172,15 @@ class Book1Prop29 {
     // 2 lines are parallel
     const [s1, s2] = parallels;
     const diagram = new EuclideanBuilder();
-    diagram.segment(s1.p1, s1.p2);
-    diagram.segment(s2.p1, s2.p2);
-    diagram.segment(s3.p1, s3.p2);
+    diagram.segment(s1.labeled());
+    diagram.segment(s2.labeled());
+    diagram.segment(s3.labeled());
 
-    diagram.parallelMark(s1.getLabeledPts(), 1);
-    diagram.parallelMark(s2.getLabeledPts(), 1);
+    diagram.parallelMark(s1.labeled(), 1);
+    diagram.parallelMark(s2.labeled(), 1);
 
-    diagram.equalAngle(a1.getLabeledAngle(), 1);
-    diagram.equalAngle(a2.getLabeledAngle(), 1);
+    diagram.equalAngle(a1.labeled(), 1);
+    diagram.equalAngle(a2.labeled(), 1);
     return diagram.contents();
   }
 
@@ -215,11 +199,11 @@ class AASTheorem {
     // TODO can make this not take so many parameters if t holds more information
     const [a1, a2] = angles;
     const diagram = new EuclideanBuilder();
-    diagram.triangle(t.getLabeledPts());
-    diagram.equalAngle(a1.getLabeledAngle(), 1);
-    diagram.equalAngle(a2.getLabeledAngle(), 1);
-    diagram.equalLength(s1.getLabeledPts(), 1);
-    diagram.equalLength(s2.getLabeledPts(), 1);
+    diagram.triangle(t.p, t.s);
+    diagram.equalAngle(a1.labeled(), 1);
+    diagram.equalAngle(a2.labeled(), 1);
+    diagram.equalLength(s1.labeled(), 1);
+    diagram.equalLength(s2.labeled(), 1);
     return diagram.contents();
   };
 }

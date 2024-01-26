@@ -1,17 +1,13 @@
-import { Vector, LabeledPoint, LabeledAngle } from "./types";
-import { vops } from "./vectorOps";
+import { Content } from "./objgraph";
+import { Vector, Obj, LAngle, LSegment, LPoint } from "./types";
 
-export type GeometryProps = {
-  names?: string[];
-};
-
-export class GeometryObject {
-  public names: string[] | undefined;
-  constructor(props: GeometryProps) {
-    this.names = [];
+export class BaseGeometryObject {
+  public readonly tag: Obj;
+  public names: string[] = [];
+  public label: string = "";
+  constructor(tag: Obj) {
+    this.tag = tag;
   }
-
-  possibleNames = (): string[] => [];
 
   // https://stackoverflow.com/questions/9960908/permutations-in-javascript
   permutator = (inputArr: string[]): string[] => {
@@ -30,90 +26,61 @@ export class GeometryObject {
     permute(inputArr);
     return result;
   };
+
+  matches = (name: string) => this.names.find((n) => n === name) !== undefined;
 }
 
 export type PointProps = {
   pt: [number, number];
   label: string;
-  // id?
-} & GeometryProps;
+};
 
-export class Point extends GeometryObject {
+export class Point extends BaseGeometryObject {
   // 1 point and label
   public readonly pt: Vector;
-  public readonly label: string;
   constructor(props: PointProps) {
-    super(props);
+    super(Obj.Point);
     this.pt = props.pt;
     this.label = props.label;
+    this.names = [this.label];
   }
 
-  labeled = (): LabeledPoint => {
+  labeled = (): LPoint => {
     return { pt: this.pt, label: this.label };
   };
-
-  // returns euclidean distance between 2 points
-  dist = (p: Point) => {
-    console.log(
-      "euclidean: ",
-      Math.sqrt(
-        Math.pow(this.pt[0] - p.pt[0], 2) + Math.pow(this.pt[1] - p.pt[1], 2)
-      )
-    );
-    console.log("vector", vops.mag(this.sub(p)));
-    return vops.mag(this.sub(p));
-  };
-  possibleNames = () => [this.label];
-  magnitude = () => vops.mag(this.pt);
-  unit = () => vops.unit(this.pt);
-  equals = (v: Point) => vops.equals(this.pt, v.pt);
-  add = (v: Point) => vops.add(this.pt, v.pt);
-  sub = (v: Point) => vops.sub(this.pt, v.pt);
 }
 
 export type SegmentProps = {
   p1: Point;
   p2: Point;
-} & GeometryProps;
-export class Segment extends GeometryObject {
+};
+export class Segment extends BaseGeometryObject {
   // 2 points
-  public readonly p1: Point;
-  public readonly p2: Point;
-  readonly p: Map<string, Point>;
-  public label: string;
+  public readonly p1: LPoint;
+  public readonly p2: LPoint;
   private parallel: number;
   private equalMark: number;
   constructor(props: SegmentProps) {
-    super(props);
-    this.p = new Map([
-      [props.p1.label, props.p1],
-      [props.p2.label, props.p2],
-    ]);
-    this.p1 = props.p1;
-    this.p2 = props.p2;
-    this.label = `${props.p1.label}${props.p2.label}`;
+    super(Obj.Segment);
+    this.p1 = props.p1.labeled();
+    this.p2 = props.p2.labeled();
+    this.label = `${this.p1.label}${this.p2.label}`;
     this.parallel = 0;
     this.equalMark = 0;
+    this.names = this.permutator([this.p1.label, this.p2.label]);
   }
 
-  possibleNames = () => this.permutator([this.p1.label, this.p2.label]);
+  labeled = (): LSegment => {
+    return {
+      p1: this.p1.pt,
+      p2: this.p2.pt,
+      label: this.label,
+    };
+  };
 
-  getLabeledPts = (): [LabeledPoint, LabeledPoint] => [
-    this.p1.labeled(),
-    this.p2.labeled(),
-  ];
+  getLabeledPts = (): [LPoint, LPoint] => [this.p1, this.p2];
 
   // TODO everything below this is useless atm
-  length = () => {
-    return this.p1.dist(this.p2);
-  };
-
-  unitVec = () => {
-    return vops.unit(this.p2.sub(this.p1));
-  };
-
-  midPoint = () => {};
-
   isParallel = (s: Segment) => {};
   isPerpendicular = (s: Segment) => {};
 
@@ -128,48 +95,36 @@ export class Segment extends GeometryObject {
   isEqualMark = () => this.equalMark === 0;
 }
 
-// whether to take the larger or smaller of 2 angles
-export enum AngleSize {
-  Min,
-  Max,
-}
-
 export type AngleProps = {
-  p1: Point;
-  p2: Point;
-  p3: Point;
-  size: AngleSize;
-} & GeometryProps;
-
-export class Angle extends GeometryObject {
+  start: Point;
+  center: Point;
+  end: Point;
+};
+export class Angle extends BaseGeometryObject {
   // need 3 points and concavity/direction
-  public readonly p1: Point;
-  public readonly p2: Point;
-  public readonly p3: Point;
-  public readonly size: AngleSize; // TODO rename
-  public label: string;
+  public readonly start: Point;
+  public readonly center: Point;
+  public readonly end: Point;
   private equalMark: number;
   // public rightMarked: boolean;
   constructor(props: AngleProps) {
-    super(props);
-    this.p1 = props.p1;
-    this.p2 = props.p2;
-    this.p3 = props.p3;
-    this.size = props.size;
+    super(Obj.Angle);
+    this.start = props.start;
+    this.center = props.center;
+    this.end = props.end;
     this.equalMark = 0;
-    this.label = `${props.p1.label}${props.p2.label}${props.p3.label}`;
+    this.label = `${props.start.label}${props.center.label}${props.end.label}`;
+    this.names = [
+      `${this.start.label}${this.center.label}${this.end.label}`,
+      `${this.end.label}${this.center.label}${this.start.label}`,
+    ];
   }
 
-  possibleNames = () => [
-    `${this.p1.label}${this.p2.label}${this.p3.label}`,
-    `${this.p3.label}${this.p2.label}${this.p1.label}`,
-  ];
-
-  getLabeledAngle = (): LabeledAngle => {
+  labeled = (): LAngle => {
     return {
-      center: this.p2.pt,
-      start: this.p1.pt,
-      end: this.p3.pt,
+      start: this.start.pt,
+      center: this.center.pt,
+      end: this.end.pt,
       label: this.label,
     };
   };
@@ -183,87 +138,85 @@ export class Angle extends GeometryObject {
 }
 
 export type TriangleProps = {
-  p1: Point;
-  p2: Point;
-  p3: Point;
+  pts: [Point, Point, Point];
   // add things like type of triangle, isos, right, etc.
-} & GeometryProps;
-export class Triangle extends GeometryObject {
-  readonly p1: Point;
-  readonly p2: Point;
-  readonly p3: Point;
-  readonly s12: Segment;
-  readonly s23: Segment;
-  readonly s13: Segment;
-  readonly a1: Angle;
-  readonly a2: Angle;
-  readonly a3: Angle;
-  constructor(props: TriangleProps) {
-    super(props);
-    [this.p1, this.p2, this.p3] = [props.p1, props.p2, props.p3];
-    // TODO replace all of these constructors with
-    // findOrCreate methods
-    [this.s12, this.s23, this.s13] = [
-      new Segment({
-        p1: props.p1,
-        p2: props.p2,
-      }),
-      new Segment({
-        p1: props.p2,
-        p2: props.p3,
-      }),
-      new Segment({
-        p1: props.p3,
-        p2: props.p1,
-      }),
+};
+export class Triangle extends BaseGeometryObject {
+  readonly s: [LSegment, LSegment, LSegment];
+  readonly a: [LAngle, LAngle, LAngle];
+  readonly p: [LPoint, LPoint, LPoint];
+
+  constructor(props: TriangleProps, ctx: Content) {
+    super(Obj.Triangle);
+    this.p = props.pts;
+
+    this.s = this.buildSegments(props.pts, ctx);
+    this.p = [
+      props.pts[0].labeled(),
+      props.pts[1].labeled(),
+      props.pts[2].labeled(),
     ];
-    [this.a2, this.a3, this.a1] = [
-      new Angle({
-        p1: props.p1,
-        p2: props.p2,
-        p3: props.p3,
-        size: AngleSize.Min,
-      }),
-      new Angle({
-        p1: props.p1,
-        p2: props.p3,
-        p3: props.p2,
-        size: AngleSize.Min,
-      }),
-      new Angle({
-        p1: props.p2,
-        p2: props.p1,
-        p3: props.p3,
-        size: AngleSize.Min,
-      }),
-    ];
+    this.a = this.buildAngles(props.pts, ctx);
+    this.names = this.permutator(props.pts.map((pt) => pt.label));
   }
-  possibleNames = () => {
-    return this.permutator([this.p1.label, this.p2.label, this.p3.label]);
+
+  private buildSegments = (
+    pts: Point[],
+    ctx: Content
+  ): [LSegment, LSegment, LSegment] => {
+    const sa = ctx.push(new Segment({ p1: pts[0], p2: pts[1] }));
+    const sb = ctx.push(new Segment({ p1: pts[0], p2: pts[2] }));
+    const sc = ctx.push(new Segment({ p1: pts[1], p2: pts[2] }));
+    return [sa.labeled(), sb.labeled(), sc.labeled()];
   };
-  // 3 points, type of triangle
-  getLabeledPts = (): [LabeledPoint, LabeledPoint, LabeledPoint] => {
-    return [this.p1.labeled(), this.p2.labeled(), this.p3.labeled()];
+
+  private buildAngles = (
+    pts: Point[],
+    ctx: Content
+  ): [LAngle, LAngle, LAngle] => {
+    const aa = ctx.push(
+      new Angle({
+        start: pts[0],
+        center: pts[1],
+        end: pts[2],
+      })
+    );
+    const ab = ctx.push(
+      new Angle({
+        start: pts[1],
+        center: pts[0],
+        end: pts[2],
+      })
+    );
+    const ac = ctx.push(
+      new Angle({
+        start: pts[0],
+        center: pts[2],
+        end: pts[1],
+      })
+    );
+    return [aa.labeled(), ab.labeled(), ac.labeled()];
   };
+
   // type of triangle may just be a constraint
   isosceles = (s1: Segment, s2: Segment) => {
     // TODO
   };
 }
 
-class Quadrilateral extends GeometryObject {
+class Quadrilateral extends BaseGeometryObject {
   // 4 points and type of quadrilateral
   // type of quad can be a constraint not a prop
 }
 
-class Circle extends GeometryObject {
+class Circle extends BaseGeometryObject {
   // radius of circle, internally track center
 }
 
-class Oval extends GeometryObject {} //? maybe
+class Oval extends BaseGeometryObject {} //? maybe
 
-class Pentagon extends GeometryObject {}
+class Pentagon extends BaseGeometryObject {}
 
-class RegularNGon extends GeometryObject {}
+class RegularNGon extends BaseGeometryObject {}
 
-class Polygon extends GeometryObject {}
+class Polygon extends BaseGeometryObject {}

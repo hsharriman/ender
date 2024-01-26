@@ -1,38 +1,34 @@
 import { SVGBuilder } from "../../core/SVGBuilder";
-import { Vector, LabeledPoint, LabeledAngle, SVGFlag } from "../../core/types";
+import {
+  Vector,
+  LAngle,
+  LPoint,
+  SVGFlag,
+  Obj,
+  LSegment,
+} from "../../core/types";
 import { vops } from "../../core/vectorOps";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.4;
 const ARC_PADDING = 0.2;
 
-export enum ObjectType {
-  Point = "point",
-  Segment = "segment",
-  Text = "text",
-  // Circle,
-  EqualAngle = "equalangle",
-  // RightAngle,
-  ParallelTick = "parallel",
-  EqualLengthTick = "equallength",
-}
-
 export class EuclideanBuilder extends SVGBuilder {
-  getId = (objectType: ObjectType, label: string, tickNumber?: number) => {
-    // TODO account for possible names instead of just alphabetizing because this case
-    // doesn't work for angles
-    const alphabetizedLabel = Array.from(label)
-      .sort()
-      .toString()
-      .replaceAll(",", "");
-    let id = `${objectType}.${alphabetizedLabel}`;
+  getId = (objectType: Obj, label: string, tickNumber?: number) => {
+    if (objectType === Obj.Angle) {
+      const endPts = [label[0], label[2]].sort().toString().replaceAll(",", "");
+      label = `${label[1]}-${endPts}`;
+    } else {
+      label = Array.from(label).sort().toString().replaceAll(",", "");
+    }
+    let id = `${objectType}.${label}`;
     return tickNumber ? `${id}.${tickNumber}` : id;
   };
 
-  point = (p: LabeledPoint, labeled?: boolean, style?: React.CSSProperties) => {
+  point = (p: LPoint, labeled?: boolean, style?: React.CSSProperties) => {
     // TODO check possible names as well as chosen label
     // check current SVG objects by ID
-    const id = this.getId(ObjectType.Point, p.label);
+    const id = this.getId(Obj.Point, p.label);
     if (!this.getExistingElement(id)) {
       // element not found, add it
       this.addCircle({
@@ -50,19 +46,15 @@ export class EuclideanBuilder extends SVGBuilder {
     }
   };
 
-  segment = (
-    p1: LabeledPoint,
-    p2: LabeledPoint,
-    style?: React.CSSProperties
-  ) => {
+  segment = (s: LSegment, style?: React.CSSProperties) => {
     // TODO check possible names as well as chosen label
     // check current SVG objects by ID
-    const id = this.getId(ObjectType.Segment, `${p1.label}${p2.label}`);
+    const id = this.getId(Obj.Segment, s.label);
     if (!this.getExistingElement(id)) {
       // element not found, add it
       this.addLine({
-        start: this.coordsToSvg(p1.pt),
-        end: this.coordsToSvg(p2.pt),
+        start: this.coordsToSvg(s.p1),
+        end: this.coordsToSvg(s.p2),
         key: id,
         style: {
           stroke: "black",
@@ -81,7 +73,7 @@ export class EuclideanBuilder extends SVGBuilder {
   ) => {
     this.addText({
       point: this.coordsToSvg(pos, offset),
-      key: this.getId(ObjectType.Text, label),
+      key: this.getId(Obj.Text, label),
       text: label,
       style: {
         font: "12px sans-serif",
@@ -91,17 +83,17 @@ export class EuclideanBuilder extends SVGBuilder {
   };
 
   parallelMark = (
-    [p1, p2]: [LabeledPoint, LabeledPoint],
+    s: LSegment,
     numTicks: number,
     style?: React.CSSProperties
   ) => {
     // find midpoint on segment
-    const midpoint = vops.div(vops.add(p1.pt, p2.pt), 2);
+    const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
 
     // TODO make direction face "positive direction"?
     // TODO, customize scaling of seg
     // 2 endpoints of the chevron, rotated to match segment
-    const unit = vops.unit(vops.sub(p2.pt, p1.pt));
+    const unit = vops.unit(vops.sub(s.p2, s.p1));
     const seg = vops.smul(unit, 0.5);
     const startDir = vops.add(vops.rot(seg, 135), midpoint);
     const endDir = vops.add(vops.rot(seg, 225), midpoint);
@@ -117,7 +109,7 @@ export class EuclideanBuilder extends SVGBuilder {
       this.addPolyline({
         points: polyPts,
         fill: "none",
-        key: this.getId(ObjectType.ParallelTick, `${p1.label}${p2.label}`, i),
+        key: this.getId(Obj.ParallelTick, s.label, i),
         style: {
           stroke: "black",
           strokeWidth: "1px",
@@ -128,13 +120,13 @@ export class EuclideanBuilder extends SVGBuilder {
   };
 
   equalLength = (
-    [p1, p2]: [LabeledPoint, LabeledPoint],
+    s: LSegment,
     numTicks: number,
     style?: React.CSSProperties
   ) => {
     // find midpoint on segment
-    const midpoint = vops.div(vops.add(p1.pt, p2.pt), 2);
-    const unit = vops.unit(vops.sub(p2.pt, p1.pt));
+    const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
+    const unit = vops.unit(vops.sub(s.p2, s.p1));
 
     // segments to make up the tick mark
     const seg = vops.rot(vops.smul(unit, 0.25), 90);
@@ -147,11 +139,7 @@ export class EuclideanBuilder extends SVGBuilder {
       this.addLine({
         start: this.coordsToSvg(vops.add(start, shift)),
         end: this.coordsToSvg(vops.add(end, shift)),
-        key: this.getId(
-          ObjectType.EqualLengthTick,
-          `${p1.label}${p2.label}`,
-          i
-        ),
+        key: this.getId(Obj.EqualLengthTick, s.label, i),
         style: {
           stroke: "black",
           strokeWidth: "1px",
@@ -161,11 +149,7 @@ export class EuclideanBuilder extends SVGBuilder {
     });
   };
 
-  equalAngle = (
-    a: LabeledAngle,
-    numTicks: number,
-    style?: React.CSSProperties
-  ) => {
+  equalAngle = (a: LAngle, numTicks: number, style?: React.CSSProperties) => {
     const sweep = this.arcSweepsCCW(a.center, a.start, a.end);
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
@@ -180,7 +164,7 @@ export class EuclideanBuilder extends SVGBuilder {
         start: this.coordsToSvg(vops.add(a.center, vops.smul(sUnit, scalar))),
         majorArc: 0,
         sweep: sweep,
-        key: this.getId(ObjectType.EqualAngle, a.label, i),
+        key: this.getId(Obj.Angle, a.label, i),
         style: {
           stroke: "black",
           strokeWidth: "1px",
@@ -191,13 +175,9 @@ export class EuclideanBuilder extends SVGBuilder {
     }
   };
 
-  triangle = (pts: [LabeledPoint, LabeledPoint, LabeledPoint]) => {
+  triangle = (pts: LPoint[], segs: LSegment[]) => {
     pts.map((p) => this.point(p, true));
-    [
-      [pts[0], pts[1]],
-      [pts[1], pts[2]],
-      [pts[0], pts[2]],
-    ].forEach((pair) => this.segment(pair[0], pair[1]));
+    segs.map((s) => this.segment(s));
   };
 
   // returns list of vectors for tick marks along direction represented by unit, centered at the origin
