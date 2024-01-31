@@ -1,12 +1,5 @@
-import { SVGBuilder } from "../../core/SVGBuilder";
-import {
-  Vector,
-  LAngle,
-  LPoint,
-  SVGFlag,
-  Obj,
-  LSegment,
-} from "../../core/types";
+import { SVGBuilder } from "../../core/svg/SVGBuilder";
+import { Vector, LAngle, LPoint, Obj, LSegment } from "../../core/types";
 import { vops } from "../../core/vectorOps";
 
 const TICK_PADDING = 0.35;
@@ -108,12 +101,12 @@ export class EuclideanBuilder extends SVGBuilder {
       // build svg polyline of chevron
       this.addPolyline({
         points: polyPts,
-        fill: "none",
         key: this.getId(Obj.ParallelTick, s.label, i),
         style: {
           stroke: "black",
           strokeWidth: "1px",
           ...style,
+          fill: "none",
         },
       });
     });
@@ -202,7 +195,7 @@ export class EuclideanBuilder extends SVGBuilder {
     center: Vector,
     start: Vector,
     end: Vector
-  ): SVGFlag => {
+  ): number => {
     const st = vops.unit(vops.sub(start, center));
     const en = vops.unit(vops.sub(end, center));
     const cross = vops.cross(st, en);

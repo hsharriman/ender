@@ -2,8 +2,8 @@ import { AngleBisector } from "./theorems/AngleBisector";
 
 function App() {
   return (
-    <div className="bg-black w-screen h-screen p-5">
-      <div className="font-mono text-lg text-slate-200">Ender</div>
+    <div className="bg-neutral-900 w-screen h-full p-5">
+      <div className="font-mono text-lg text-violet-300">🅔🅝🅓🅔🅡</div>
       <AngleBisector />
     </div>
   );

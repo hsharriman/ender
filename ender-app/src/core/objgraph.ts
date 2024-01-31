@@ -1,5 +1,5 @@
-import { Angle, Point, Segment, Triangle } from "./geometry";
-import { GHash, Obj } from "./types";
+import { Point, Segment, Angle, Triangle } from "./geometry";
+import { Obj } from "./types";
 
 type SupportedObjects = Obj.Point | Obj.Segment | Obj.Angle | Obj.Triangle;
 export class Content {
@@ -68,13 +68,4 @@ export class Content {
     this.angles.filter((a) => a.matches(label))[0];
   triangleByLabel = (label: string) =>
     this.triangles.filter((t) => t.matches(label))[0];
-}
-export function makeGHash<T>(objs: any[]): GHash<T> {
-  let map: { [v: string]: T } = {};
-  let labels: string[] = [];
-  objs.map((o) => {
-    labels.push(o.label);
-    map[o.label] = o;
-  });
-  return { map, labels };
 }

@@ -1,17 +1,18 @@
 import React from "react";
+import { BaseSVG } from "../../core/svg/BaseSVG";
 
 export interface EuclideanProps {
   svgIdSuffix: number;
-  content: () => JSX.Element[];
+  content: () => BaseSVG[];
 }
 
 interface EuclideanState {
-  content: JSX.Element[];
+  content: BaseSVG[];
 }
 
 export class Euclidean extends React.Component<EuclideanProps, EuclideanState> {
   private svgId: string;
-  private svgContent: JSX.Element[];
+  private svgContent: BaseSVG[];
 
   constructor(props: EuclideanProps) {
     super(props);
@@ -35,7 +36,8 @@ export class Euclidean extends React.Component<EuclideanProps, EuclideanState> {
           height="100%"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {this.state.content}
+          {this.state.content.length > 0 &&
+            this.state.content.map((item) => item.renderSVG())}
         </svg>
       </>
     );
