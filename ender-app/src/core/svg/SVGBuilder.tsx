@@ -20,7 +20,7 @@ const SVG_DIM = 200;
 const MINI_SVG_DIM = 40;
 const MINI_SVG_SCALE = 8;
 const SVG_XSHIFT = 40;
-const SVG_YSHIFT = -40;
+const SVG_YSHIFT = 0;
 
 export class SVGBuilder {
   content: BaseSVG[];

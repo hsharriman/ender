@@ -4,7 +4,6 @@ import { Angle, Point, Segment, Triangle } from "../core/geometry";
 import { EuclideanBuilder } from "../components/geometry/EuclideanBuilder";
 import { Obj } from "../core/types";
 import { Content } from "../core/objgraph";
-import { BaseSVG } from "../core/svg/BaseSVG";
 
 // TODO some top level state that tracks all the color customizations
 // currently in the doc and passes them down
@@ -96,6 +95,7 @@ export class AngleBisector extends React.Component {
     if (useFrame) {
       diagram = new EuclideanBuilder(this.frame4());
     }
+    // diagram.addLine({start: , end: ,key, style})
     const AD = this.ctx.get("AD", Obj.Segment);
     const CE = this.ctx.get("CE", Obj.Segment);
     const AE = this.ctx.get("AE", Obj.Segment);
