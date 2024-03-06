@@ -18,3 +18,9 @@ export enum Obj {
   EqualLengthTick = "equallength",
   Triangle = "triangle",
 }
+
+export enum LinkedSymbolType {
+  Segment = "segment",
+  Triangle = "triangle",
+  Angle = "angle",
+}

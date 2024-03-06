@@ -10,11 +10,7 @@ export class ProofItem {
     this.text = text;
   }
   renderText = () => {
-    return (
-      <div className="width-100 height-12 border-black border-r-2 border-2">
-        {this.text}
-      </div>
-    );
+    return <div className="width-100 height-12">{this.text}</div>;
   };
   renderConstruction = () => {
     return (

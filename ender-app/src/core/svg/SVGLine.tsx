@@ -19,6 +19,7 @@ export class SVGLine extends BaseSVG {
         x2={this.end[0]}
         y1={this.start[1]}
         y2={this.end[1]}
+        id={this.key}
         key={this.key}
         style={this.style}
       />

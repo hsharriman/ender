@@ -33,7 +33,11 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     if (this.props.items.length > 0) {
       return this.props.items.map((item, idx) => {
         return (
-          <button id={`prooftext-${idx}`} onClick={this.onClick}>
+          <button
+            id={`prooftext-${idx}`}
+            onClick={this.onClick}
+            className="py-4 border-black border-r-2 border-2"
+          >
             {item.renderText()}
           </button>
         );

@@ -17,6 +17,7 @@ export class SVGText extends BaseSVG {
       <text
         x={this.point[0]}
         y={this.point[1]}
+        id={this.key}
         key={this.key}
         style={this.style}
       >

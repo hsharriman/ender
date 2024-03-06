@@ -1,11 +1,12 @@
 import React from "react";
 import { Content } from "../core/objgraph";
-import { Point, Triangle } from "../core/geometry";
+import { Point, Segment, Triangle } from "../core/geometry";
 import { AppPage } from "../components/AppPage";
 import { Obj, Vector } from "../core/types";
 import { EuclideanBuilder } from "../components/geometry/EuclideanBuilder";
 import { ProofItem } from "../components/ProofItem";
 import { LinkedText } from "../components/LinkedText";
+import { congruent, parallel, comma } from "../core/geometryText";
 
 export class ParallelProp extends React.Component {
   private ctx: Content;
@@ -46,7 +47,7 @@ export class ParallelProp extends React.Component {
     const BDM = this.ctx.get("BDM", Obj.Triangle);
     diagram.triangle(ACM.p, ACM.s);
     diagram.triangle(BDM.p, BDM.s);
-    return new ProofItem("", diagram.contents());
+    return new ProofItem("Initial construction", diagram.contents());
   };
 
   step1 = () => {
@@ -64,13 +65,13 @@ export class ParallelProp extends React.Component {
 
     const text = (
       <span>
-        <LinkedText val={"AM"} activeColor="lightblue" />
-        =
-        <LinkedText val={"BM"} activeColor="lightgreen" />
-        ,
-        <LinkedText val={"CM"} activeColor="magenta" />
-        =
-        <LinkedText val={"DM"} activeColor="red" />
+        <LinkedText val={"AM"} activeColor="lightblue" type={Obj.Segment} />
+        {congruent}
+        <LinkedText val={"BM"} activeColor="lightgreen" type={Obj.Segment} />
+        {comma}
+        <LinkedText val={"CM"} activeColor="magenta" type={Obj.Segment} />
+        {congruent}
+        <LinkedText val={"DM"} activeColor="red" type={Obj.Segment} />
       </span>
     );
     return new ProofItem(text, diagram.contents());
@@ -86,9 +87,9 @@ export class ParallelProp extends React.Component {
     diagram.equalAngle(BMD.labeled(), 1);
     const text = (
       <span>
-        <LinkedText val={"aAMC"} activeColor="lightblue" />
-        =
-        <LinkedText val={"aBMD"} activeColor="pink" />
+        <LinkedText val={"AMC"} activeColor="lightblue" type={Obj.Angle} />
+        {congruent}
+        <LinkedText val={"BMD"} activeColor="pink" type={Obj.Angle} />
       </span>
     );
     return new ProofItem(text, diagram.contents());
@@ -101,9 +102,9 @@ export class ParallelProp extends React.Component {
     // TODO colors should be different
     const text = (
       <span>
-        <LinkedText val={"tAMC"} activeColor="lightblue" />
-        =
-        <LinkedText val={"tBMD"} activeColor="pink" />
+        <LinkedText val={"AMC"} activeColor="lightblue" type={Obj.Triangle} />
+        {congruent}
+        <LinkedText val={"BMD"} activeColor="pink" type={Obj.Triangle} />
       </span>
     );
     return new ProofItem(text, diagram.contents());
@@ -120,9 +121,9 @@ export class ParallelProp extends React.Component {
     diagram.equalAngle(DBM.labeled(), 1);
     const text = (
       <span>
-        <LinkedText val={"tAMC"} activeColor="lightblue" />
-        =
-        <LinkedText val={"tBMD"} activeColor="pink" />
+        <LinkedText val={"AMC"} activeColor="lightblue" type={Obj.Triangle} />
+        {congruent}
+        <LinkedText val={"tBMD"} activeColor="pink" type={Obj.Triangle} />
       </span>
     );
     return new ProofItem(text, diagram.contents());
@@ -135,13 +136,25 @@ export class ParallelProp extends React.Component {
 
     const AC = this.ctx.get("AC", Obj.Segment);
     const BD = this.ctx.get("BD", Obj.Segment);
-    diagram.parallelMark(AC.labeled(), 1);
-    diagram.parallelMark(BD.labeled(), 1);
+    const ACmark = diagram.parallelMark(AC.labeled(), 1);
+    const BDmark = diagram.parallelMark(BD.labeled(), 1);
+    const cb1 = segmentCallback(this.ctx, diagram, "AC", "lightblue", ACmark);
+    const cb2 = segmentCallback(this.ctx, diagram, "BD", "pink", BDmark);
     const text = (
       <span>
-        <LinkedText val={"AC"} activeColor="lightblue" />
-        ||
-        <LinkedText val={"BD"} activeColor="pink" />
+        <LinkedText
+          val={"AC"}
+          activeColor="lightblue"
+          clickCallback={cb1}
+          type={Obj.Segment}
+        />
+        {parallel}
+        <LinkedText
+          val={"BD"}
+          activeColor="pink"
+          clickCallback={cb2}
+          type={Obj.Segment}
+        />
       </span>
     );
     return new ProofItem(text, diagram.contents());
@@ -179,3 +192,54 @@ export class ParallelProp extends React.Component {
     return ``;
   };
 }
+
+const segmentCallback =
+  (
+    ctx: Content,
+    diagram: EuclideanBuilder,
+    label: string,
+    activeColor: string,
+    tickIds: string[] = []
+  ) =>
+  (isActive: boolean) => {
+    const seg = ctx.get(label, Obj.Segment);
+    const setStyle = (ele: HTMLElement | null) => {
+      if (ele) {
+        ele.style.stroke = isActive ? activeColor : "black";
+        ele.style.strokeWidth = isActive ? "3px" : "1px";
+      }
+    };
+    const ele = diagram.getElement(Obj.Segment, seg.label);
+    setStyle(ele);
+    if (tickIds.length > 0)
+      tickIds.map((id) => {
+        setStyle(document.getElementById(id));
+      });
+  };
+
+const angleCallback =
+  (
+    ctx: Content,
+    diagram: EuclideanBuilder,
+    label: string,
+    activeColor: string
+  ) =>
+  (isActive: boolean) => {
+    const angle = ctx.get(label, Obj.Angle);
+    const segs = [
+      ctx.get(label.slice(0, 1), Obj.Segment),
+      ctx.get(label.slice(1, 2), Obj.Segment),
+    ];
+    const ele = diagram.getElement(Obj.Angle, label);
+    const setStyle = (ele: HTMLElement | null) => {
+      if (ele) {
+        ele.style.stroke = isActive ? activeColor : "black";
+        ele.style.strokeWidth = isActive ? "3px" : "1px";
+      }
+    };
+    setStyle(ele);
+    segs.map((seg) => {
+      const ele = diagram.getElement(Obj.Segment, seg.label);
+      setStyle(ele);
+    });
+  };

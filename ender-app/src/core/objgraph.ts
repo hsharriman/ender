@@ -1,7 +1,11 @@
 import { Point, Segment, Angle, Triangle } from "./geometry";
 import { Obj } from "./types";
 
-type SupportedObjects = Obj.Point | Obj.Segment | Obj.Angle | Obj.Triangle;
+export type SupportedObjects =
+  | Obj.Point
+  | Obj.Segment
+  | Obj.Angle
+  | Obj.Triangle;
 export class Content {
   private points: Point[] = [];
   private segments: Segment[] = [];

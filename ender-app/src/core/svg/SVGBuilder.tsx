@@ -48,14 +48,6 @@ export class SVGBuilder {
     return matches[0];
   };
 
-  setStyle = (id: string, overrides: CSSProperties) => {
-    const matches = this.content.filter((item) => item.key === id);
-    if (matches.length > 1) {
-      console.log("more than 1 match for id, ", id, matches);
-    }
-    matches[0].setStyle(overrides);
-  };
-
   coordsToSvg = (coords: Vector, offset: Vector = [0, 0]): Vector => {
     // scale coordinates, shift and invert y axis
     // TODO scale the transformation based on canvas size

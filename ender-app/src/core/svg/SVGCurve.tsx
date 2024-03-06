@@ -26,6 +26,6 @@ export class SVGCurve extends BaseSVG {
         this.props.sweep,
         this.props.end
       );
-    return <path d={pathStr} key={this.key} style={this.style} />;
+    return <path d={pathStr} id={this.key} style={this.style} key={this.key} />;
   };
 }

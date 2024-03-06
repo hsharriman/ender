@@ -1,10 +1,12 @@
 import React from "react";
+import { Obj } from "../core/types";
 
 export interface LinkedTextProps {
   val: string;
   activeColor: string;
+  type: Obj; // TODO correct type
   isActive?: boolean;
-  // TODO callback?
+  clickCallback?: (isActive: boolean) => void;
 }
 
 export interface LinkedTextState {
@@ -15,52 +17,80 @@ export class LinkedText extends React.Component<
   LinkedTextState
 > {
   private defaultColor = "black"; // TODO
+  private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: LinkedTextProps) {
     super(props);
     this.state = {
       isClicked: Boolean(this.props.isActive),
     };
+    this.wrapperRef = React.createRef<HTMLDivElement>();
   }
+
+  componentDidMount() {
+    document.addEventListener("mousedown", this.handleClickOutside);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("mousedown", this.handleClickOutside);
+  }
+
+  handleClickOutside = (event: MouseEvent) => {
+    if (
+      this.wrapperRef &&
+      !this.wrapperRef.current?.contains(event.target as Node)
+    ) {
+      this.onClick(false);
+    }
+  };
 
   getColor = () => {
     return this.props.isActive || this.state.isClicked
       ? this.props.activeColor
       : this.defaultColor;
   };
+
   getStyle = () => {
     return {
       color: this.getColor(),
       border: this.state.isClicked ? `1px solid ${this.props.activeColor}` : "",
+      fontWeight: this.state.isClicked ? "bold" : "normal",
     };
   };
-  handleClick = () => {
+
+  onClick = (isClicked: boolean) => {
     this.setState({
-      isClicked: !this.state.isClicked,
+      isClicked,
     });
+    this.props.clickCallback && this.props.clickCallback(isClicked);
   };
-  seg = (v: string) => (
-    <span style={{ borderTop: `1px solid ${this.getColor()}` }}>{`${v}`}</span>
-  );
-  triangle = (v: string) => <span>{`&#U+25B5;${v}`}</span>;
-  angle = (v: string) => <span>{`&#U+29A3;${v}`}</span>;
+
+  renderText = () => {
+    switch (this.props.type) {
+      case Obj.Segment:
+        return (
+          <span
+            style={{ borderTop: `2px solid ${this.getColor()}` }}
+          >{`${this.props.val}`}</span>
+        );
+      case Obj.Triangle:
+        return `\u25B5${this.props.val}`;
+      case Obj.Angle:
+        return `\u29A3${this.props.val}`;
+      default:
+        return this.props.val;
+    }
+  };
 
   render() {
     return (
       <span
         className="font-sans"
         style={this.getStyle()}
-        onClick={this.handleClick}
+        onClick={() => this.onClick(!this.state.isClicked)}
+        ref={this.wrapperRef}
       >
-        {this.props.val}
+        {this.renderText()}
       </span>
     );
   }
 }
-
-const congruent = (v1: string, v2: string) => {
-  return <span>{`${v1} &#U+2245; ${v2}`}</span>;
-};
-
-const parallel = (v1: string, v2: string) => {
-  return <span>{`${v1} &#U+2225; ${v2}`}</span>;
-};

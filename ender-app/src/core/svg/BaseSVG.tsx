@@ -5,6 +5,7 @@ export class BaseSVG {
   readonly key: string;
   readonly names: string[];
   readonly tag: SVGObj;
+  readonly activeColor?: string;
   style: CSSProperties;
   constructor(props: BaseSVGProps, tag: SVGObj) {
     this.key = props.key;
@@ -12,13 +13,6 @@ export class BaseSVG {
     this.tag = tag;
     this.style = props.style ?? {};
   }
-
-  setStyle = (overrides: CSSProperties) => {
-    this.style = {
-      ...this.style,
-      ...overrides,
-    };
-  };
 
   isMatch = (name: string) =>
     this.names.find((n) => name === n) ? true : false;

@@ -18,6 +18,11 @@ export class EuclideanBuilder extends SVGBuilder {
     return tickNumber ? `${id}.${tickNumber}` : id;
   };
 
+  getElement = (objectType: Obj, label: string, tickNumber?: number) => {
+    const id = this.getId(objectType, label, tickNumber);
+    return document.getElementById(id);
+  };
+
   point = (p: LPoint, labeled?: boolean, style?: React.CSSProperties) => {
     // TODO check possible names as well as chosen label
     // check current SVG objects by ID
@@ -95,13 +100,13 @@ export class EuclideanBuilder extends SVGBuilder {
     const points = [startDir, midpoint, endDir];
 
     const tickVectors = this.tickPlacement(unit, numTicks);
-    tickVectors.map((shift, i) => {
+    return tickVectors.map((shift, i) => {
       const polyPts = points.map((v) => this.coordsToSvg(vops.add(v, shift)));
-
+      const id = this.getId(Obj.ParallelTick, s.label, i);
       // build svg polyline of chevron
       this.addPolyline({
         points: polyPts,
-        key: this.getId(Obj.ParallelTick, s.label, i),
+        key: id,
         style: {
           stroke: "black",
           strokeWidth: "1px",
@@ -109,6 +114,7 @@ export class EuclideanBuilder extends SVGBuilder {
           fill: "none",
         },
       });
+      return id;
     });
   };
 
@@ -128,17 +134,19 @@ export class EuclideanBuilder extends SVGBuilder {
 
     // add evenly spaced ticks based on numTicks
     const tickVectors = this.tickPlacement(unit, numTicks);
-    tickVectors.map((shift, i) => {
+    return tickVectors.map((shift, i) => {
+      const id = this.getId(Obj.EqualLengthTick, s.label, i);
       this.addLine({
         start: this.coordsToSvg(vops.add(start, shift)),
         end: this.coordsToSvg(vops.add(end, shift)),
-        key: this.getId(Obj.EqualLengthTick, s.label, i),
+        key: id,
         style: {
           stroke: "black",
           strokeWidth: "1px",
           ...style,
         },
       });
+      return id;
     });
   };
 
@@ -148,16 +156,18 @@ export class EuclideanBuilder extends SVGBuilder {
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
     // increase radius according to numticks
+    let ids = [];
     for (let i = 0; i < numTicks; i++) {
       const scalar = ARC_RADIUS + ARC_PADDING * i;
       const radius = ARC_RADIUS + this.scaleToSvg(ARC_PADDING * (i + 1));
+      const id = this.getId(Obj.Angle, a.label, i);
       this.addCircularArc({
         r: radius,
         end: this.coordsToSvg(vops.add(a.center, vops.smul(eUnit, scalar))),
         start: this.coordsToSvg(vops.add(a.center, vops.smul(sUnit, scalar))),
         majorArc: 0,
         sweep: sweep,
-        key: this.getId(Obj.Angle, a.label, i),
+        key: id,
         style: {
           stroke: "black",
           strokeWidth: "1px",
@@ -165,7 +175,9 @@ export class EuclideanBuilder extends SVGBuilder {
           ...style,
         },
       });
+      ids.push(id);
     }
+    return ids;
   };
 
   triangle = (pts: LPoint[], segs: LSegment[]) => {

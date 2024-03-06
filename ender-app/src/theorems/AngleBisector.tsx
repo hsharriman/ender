@@ -130,9 +130,10 @@ export class AngleBisector extends React.Component {
     const colors = ["orange", "lightblue", "lightgreen", "red"];
     ["BA", "BD", "DC", "AC"].map((label, i) => {
       const seg = this.ctx.segByLabel(label);
-      diagram.setStyle(diagram.getId(Obj.Segment, seg.label), {
-        stroke: colors[i],
-      });
+      // TODO
+      // diagram.setStyle(diagram.getId(Obj.Segment, seg.label), {
+      //   stroke: colors[i],
+      // });
     });
     return diagram.contents();
   };
