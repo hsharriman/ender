@@ -1,5 +1,5 @@
 import { BaseSVG } from "../core/svg/BaseSVG";
-import { Euclidean } from "./geometry/Euclidean";
+import { Euclidean } from "./Euclidean";
 
 export interface CardProps {
   idx: number;

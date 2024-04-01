@@ -1,4 +1,7 @@
-import { Point, Segment, Angle, Triangle } from "./geometry";
+import { Angle } from "./geometry/Angle";
+import { Point } from "./geometry/Point";
+import { Segment } from "./geometry/Segment";
+import { Triangle } from "./geometry/Triangle";
 import { BaseSVG } from "./svg/BaseSVG";
 import { Obj } from "./types";
 
@@ -56,24 +59,24 @@ export class Content {
     });
   }
 
-  get(name: string, type: Obj.Point): Point;
-  get(name: string, type: Obj.Segment): Segment;
-  get(name: string, type: Obj.Angle): Angle;
-  get(name: string, type: Obj.Triangle): Triangle;
-  get(name: string, type: SupportedObjects) {
-    switch (type) {
-      case Obj.Point:
-        return this.ptByLabel(name);
-      case Obj.Segment:
-        return this.segByLabel(name);
-      case Obj.Angle:
-        return this.angByLabel(name);
-      case Obj.Triangle:
-        return this.triangleByLabel(name);
-      default:
-        return;
-    }
-  }
+  // get(name: string, type: Obj.Point): Point;
+  // get(name: string, type: Obj.Segment): Segment;
+  // get(name: string, type: Obj.Angle): Angle;
+  // get(name: string, type: Obj.Triangle): Triangle;
+  // get(name: string, type: SupportedObjects) {
+  //   switch (type) {
+  //     case Obj.Point:
+  //       return this.ptByLabel(name);
+  //     case Obj.Segment:
+  //       return this.segByLabel(name);
+  //     case Obj.Angle:
+  //       return this.angByLabel(name);
+  //     case Obj.Triangle:
+  //       return this.triangleByLabel(name);
+  //     default:
+  //       return;
+  //   }
+  // }
 
   push(e: Point): Point;
   push(e: Segment): Segment;
@@ -82,17 +85,17 @@ export class Content {
   push(e: Point | Segment | Angle | Triangle) {
     switch (e.tag) {
       case Obj.Point:
-        if (!this.ptByLabel(e.label)) this.points.push(e as Point);
+        if (!this.getPoint(e.label)) this.points.push(e as Point);
         return e;
       case Obj.Segment:
-        if (!this.segByLabel(e.label)) this.segments.push(e as Segment);
+        if (!this.getSegment(e.label)) this.segments.push(e as Segment);
         return e;
       case Obj.Angle:
-        if (!this.angByLabel(e.label)) this.angles.push(e as Angle);
+        if (!this.getAngle(e.label)) this.angles.push(e as Angle);
         return e;
       case Obj.Triangle:
         // add segments
-        if (!this.triangleByLabel(e.label)) this.triangles.push(e as Triangle);
+        if (!this.getTriangle(e.label)) this.triangles.push(e as Triangle);
         return e;
       // add angles
       default:
@@ -100,11 +103,10 @@ export class Content {
     }
   }
 
-  ptByLabel = (label: string) => this.points.filter((p) => p.matches(label))[0];
-  segByLabel = (label: string) =>
+  getPoint = (label: string) => this.points.filter((p) => p.matches(label))[0];
+  getSegment = (label: string) =>
     this.segments.filter((s) => s.matches(label))[0];
-  angByLabel = (label: string) =>
-    this.angles.filter((a) => a.matches(label))[0];
-  triangleByLabel = (label: string) =>
+  getAngle = (label: string) => this.angles.filter((a) => a.matches(label))[0];
+  getTriangle = (label: string) =>
     this.triangles.filter((t) => t.matches(label))[0];
 }

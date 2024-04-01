@@ -1,10 +1,12 @@
 import React from "react";
 import { Content } from "../core/objgraph";
-import { Point, Segment, Triangle } from "../core/geometry";
 import { AppPage } from "../components/AppPage";
-import { Obj, Vector } from "../core/types";
+import { Vector } from "../core/types";
 import { ProofItem } from "../components/ProofItem";
 import { congruent, parallel, comma } from "../core/geometryText";
+import { Point } from "../core/geometry/Point";
+import { Triangle } from "../core/geometry/Triangle";
+import { BaseSVG } from "../core/svg/BaseSVG";
 
 export class ParallelProp extends React.Component {
   private ctx: Content;
@@ -41,8 +43,8 @@ export class ParallelProp extends React.Component {
 
   defaultConstruction = () => {
     this.ctx.addFrame("0", []);
-    const ACM = this.ctx.get("ACM", Obj.Triangle);
-    const BDM = this.ctx.get("BDM", Obj.Triangle);
+    const ACM = this.ctx.getTriangle("ACM");
+    const BDM = this.ctx.getTriangle("BDM");
     this.ctx.batchAdd("0", ACM.svg(0));
     this.ctx.batchAdd("0", BDM.svg(0));
     return new ProofItem("Initial construction", this.ctx.getFrame("0"));
@@ -50,11 +52,10 @@ export class ParallelProp extends React.Component {
 
   step1 = () => {
     // TODO needs the "reason"
-    const AM = this.ctx.get("AM", Obj.Segment);
-    const BM = this.ctx.get("BM", Obj.Segment);
-    const CM = this.ctx.get("CM", Obj.Segment);
-    const DM = this.ctx.get("DM", Obj.Segment);
-
+    const AM = this.ctx.getSegment("AM");
+    const BM = this.ctx.getSegment("BM");
+    const CM = this.ctx.getSegment("CM");
+    const DM = this.ctx.getSegment("DM");
     this.ctx.addFrame("1", this.ctx.getFrame("0"));
     this.ctx.batchAdd(
       "1",
@@ -83,8 +84,8 @@ export class ParallelProp extends React.Component {
 
   step2 = () => {
     this.ctx.addFrame("2", this.ctx.getFrame("1"));
-    const AMC = this.ctx.get("AMC", Obj.Angle);
-    const BMD = this.ctx.get("DMB", Obj.Angle);
+    const AMC = this.ctx.getAngle("AMC");
+    const BMD = this.ctx.getAngle("DMB");
     this.ctx.batchAdd(
       "2",
       [AMC.equalAngleMark(1, 2), BMD.equalAngleMark(1, 2)].flat()
@@ -102,8 +103,8 @@ export class ParallelProp extends React.Component {
 
   step3 = () => {
     this.ctx.addFrame("3", this.ctx.getFrame("2"));
-    const AMC = this.ctx.get("AMC", Obj.Triangle);
-    const BMD = this.ctx.get("BMD", Obj.Triangle);
+    const AMC = this.ctx.getTriangle("AMC");
+    const BMD = this.ctx.getTriangle("BMD");
 
     // TODO triangle highlighting
     const text = (
@@ -119,8 +120,8 @@ export class ParallelProp extends React.Component {
   step4 = () => {
     this.ctx.addFrame("4", this.ctx.getFrame("3"));
 
-    const CAM = this.ctx.get("CAM", Obj.Angle);
-    const DBM = this.ctx.get("DBM", Obj.Angle);
+    const CAM = this.ctx.getAngle("CAM");
+    const DBM = this.ctx.getAngle("DBM");
     this.ctx.batchAdd(
       "4",
       [CAM.equalAngleMark(2, 4), DBM.equalAngleMark(2, 4)].flat()
@@ -138,8 +139,8 @@ export class ParallelProp extends React.Component {
   step5 = () => {
     this.ctx.addFrame("5", this.ctx.getFrame("4"));
 
-    const AC = this.ctx.get("AC", Obj.Segment);
-    const BD = this.ctx.get("BD", Obj.Segment);
+    const AC = this.ctx.getSegment("AC");
+    const BD = this.ctx.getSegment("BD");
     this.ctx.batchAdd("5", [AC.parallel(1, 5), BD.parallel(1, 5)].flat());
     const text = (
       <span>

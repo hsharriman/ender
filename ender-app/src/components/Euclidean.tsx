@@ -1,5 +1,5 @@
 import React from "react";
-import { BaseSVG } from "../../core/svg/BaseSVG";
+import { BaseSVG } from "../core/svg/BaseSVG";
 
 export interface EuclideanProps {
   svgIdSuffix: number;

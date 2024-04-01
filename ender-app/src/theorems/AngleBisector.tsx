@@ -1,9 +1,12 @@
 import React from "react";
 import Card from "../components/Card";
-import { Angle, Point, Segment, Triangle } from "../core/geometry";
-import { EuclideanBuilder } from "../components/geometry/EuclideanBuilder";
+import { EuclideanBuilder } from "../core/geometry/EuclideanBuilder";
 import { Obj } from "../core/types";
 import { Content } from "../core/objgraph";
+import { Angle } from "../core/geometry/Angle";
+import { Point } from "../core/geometry/Point";
+import { Segment } from "../core/geometry/Segment";
+import { Triangle } from "../core/geometry/Triangle";
 
 // TODO some top level state that tracks all the color customizations
 // currently in the doc and passes them down
@@ -45,19 +48,19 @@ export class AngleBisector extends React.Component {
   };
 
   frame1 = () => {
-    const tBAD = this.ctx.get("BAD", Obj.Triangle);
-    const tDAC = this.ctx.get("DAC", Obj.Triangle);
+    const tBAD = this.ctx.getTriangle("BAD");
+    const tDAC = this.ctx.getTriangle("DAC");
     this.ctx.addFrame("1", [tBAD.svg(0), tDAC.svg(0)].flat());
     return this.ctx.getFrame("1");
   };
 
   frame2 = () => {
-    const tACE = this.ctx.get("ACE", Obj.Triangle);
+    const tACE = this.ctx.getTriangle("ACE");
     this.ctx.addFrame("2", this.frame1());
     this.ctx.batchAdd("2", tACE.svg(0));
 
-    const AD = this.ctx.get("AD", Obj.Segment);
-    const CE = this.ctx.get("CE", Obj.Segment);
+    const AD = this.ctx.getSegment("AD");
+    const CE = this.ctx.getSegment("CE");
     this.ctx.batchAdd("2", [AD.parallel(1, 2), CE.parallel(1, 2)].flat());
     return this.ctx.getFrame("2");
   };
@@ -67,11 +70,11 @@ export class AngleBisector extends React.Component {
     if (useFrame) {
       diagram = new EuclideanBuilder(this.frame2());
     }
-    const AD = this.ctx.get("AD", Obj.Segment);
-    const CE = this.ctx.get("CE", Obj.Segment);
-    const AC = this.ctx.get("AC", Obj.Segment);
-    const A = this.ctx.get("DAC", Obj.Angle);
-    const C = this.ctx.get("ACE", Obj.Angle);
+    const AD = this.ctx.getSegment("AD");
+    const CE = this.ctx.getSegment("CE");
+    const AC = this.ctx.getSegment("AC");
+    const A = this.ctx.getAngle("DAC");
+    const C = this.ctx.getAngle("ACE");
     const oppAngle = new Book1Prop29().construction([AD, CE], AC, A, C); // TODO also eww
     diagram.batchAdd(oppAngle);
     return diagram.contents();
@@ -79,7 +82,7 @@ export class AngleBisector extends React.Component {
 
   frame4 = () => {
     const diagram = new EuclideanBuilder(this.frame3(true));
-    const A = this.ctx.get("BAD", Obj.Angle);
+    const A = this.ctx.getAngle("BAD");
     diagram.equalAngle(A.labeled(), 1);
     return diagram.contents();
   };
@@ -90,11 +93,11 @@ export class AngleBisector extends React.Component {
       diagram = new EuclideanBuilder(this.frame4());
     }
     // diagram.addLine({start: , end: ,key, style})
-    const AD = this.ctx.get("AD", Obj.Segment);
-    const CE = this.ctx.get("CE", Obj.Segment);
-    const AE = this.ctx.get("AE", Obj.Segment);
-    const A = this.ctx.get("BAD", Obj.Angle);
-    const E = this.ctx.get("AEC", Obj.Angle);
+    const AD = this.ctx.getSegment("AD");
+    const CE = this.ctx.getSegment("CE");
+    const AE = this.ctx.getSegment("AE");
+    const A = this.ctx.getAngle("BAD");
+    const E = this.ctx.getAngle("AEC");
     // instance where we need segment BE which i did not define initially.
     const correspAngle = new Book1Prop29().construction([AD, CE], AE, A, E); // TODO also eww
     diagram.batchAdd(correspAngle);
@@ -106,11 +109,11 @@ export class AngleBisector extends React.Component {
     if (useFrame) {
       diagram = new EuclideanBuilder(this.frame5(true));
     }
-    const tACE = this.ctx.get("ACE", Obj.Triangle);
-    const C = this.ctx.get("ACE", Obj.Angle);
-    const E = this.ctx.get("AEC", Obj.Angle);
-    const AC = this.ctx.get("AC", Obj.Segment);
-    const AE = this.ctx.get("AE", Obj.Segment);
+    const tACE = this.ctx.getTriangle("ACE");
+    const C = this.ctx.getAngle("ACE");
+    const E = this.ctx.getAngle("AEC");
+    const AC = this.ctx.getSegment("AC");
+    const AE = this.ctx.getSegment("AE");
     const isos = new AASTheorem().construction(tACE, [C, E], AC, AE);
     diagram.batchAdd(isos);
     return diagram.contents();
@@ -123,7 +126,7 @@ export class AngleBisector extends React.Component {
     const diagram = new EuclideanBuilder(this.frame6(true));
     const colors = ["orange", "lightblue", "lightgreen", "red"];
     ["BA", "BD", "DC", "AC"].map((label, i) => {
-      const seg = this.ctx.segByLabel(label);
+      const seg = this.ctx.getSegment(label);
       // TODO
       // diagram.setStyle(diagram.getId(Obj.Segment, seg.label), {
       //   stroke: colors[i],

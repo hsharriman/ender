@@ -1,11 +1,12 @@
-import { SVGBuilder } from "../../core/svg/SVGBuilder";
-import { Vector, LAngle, LPoint, Obj, LSegment } from "../../core/types";
-import { vops } from "../../core/vectorOps";
+import { SVGBuilder } from "../svg/SVGBuilder";
+import { Vector, LAngle, LPoint, Obj, LSegment } from "../types";
+import { vops } from "../vectorOps";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.4;
 const ARC_PADDING = 0.2;
 
+// TODO delete file
 export class EuclideanBuilder extends SVGBuilder {
   getId = (objectType: Obj, label: string, tickNumber?: number) => {
     if (objectType === Obj.Angle) {

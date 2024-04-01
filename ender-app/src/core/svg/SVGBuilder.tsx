@@ -22,6 +22,7 @@ const MINI_SVG_SCALE = 8;
 const SVG_XSHIFT = 40;
 const SVG_YSHIFT = 0;
 
+// TODO delete file
 export class SVGBuilder {
   content: BaseSVG[];
   constructor(content?: BaseSVG[]) {

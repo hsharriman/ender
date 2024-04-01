@@ -1,7 +1,7 @@
 import React from "react";
 import { BaseSVG } from "../core/svg/BaseSVG";
 import { ProofRows } from "./ProofRows";
-import { Euclidean } from "./geometry/Euclidean";
+import { Euclidean } from "./Euclidean";
 import { ProofItem } from "./ProofItem";
 
 export interface AppPageProps {
@@ -23,7 +23,6 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
   }
 
   handleClick = (active: number) => {
-    console.log("handle click", active);
     if (active + 1 !== this.state.activeIdx) {
       this.setState({
         activeIdx: active,
@@ -33,7 +32,6 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
 
   // TODO click away handler that displays the initial construction
   render() {
-    console.log(this.state.activeIdx);
     return (
       <div className="w-screen h-screen bg-slate-50 font-sans text-black grid grid-rows-1 grid-cols-4">
         <div

@@ -1,8 +1,6 @@
-import { Angle, Segment } from "./geometry";
-
 /* ---------- HELPERS ---------- */
 
-const numberOfTicks = (a: number, b: number) => {
+export const numberOfTicks = (a: number, b: number) => {
   let numTicks = 0;
   if (a > 0 && b > 0) {
     if (a !== b) {
