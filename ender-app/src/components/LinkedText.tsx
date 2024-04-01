@@ -3,7 +3,7 @@ import { Obj } from "../core/types";
 
 export interface LinkedTextProps {
   val: string;
-  activeColor: string;
+  activeColor?: string;
   type: Obj; // TODO correct type
   isActive?: boolean;
   clickCallback?: (isActive: boolean) => void;
@@ -17,12 +17,14 @@ export class LinkedText extends React.Component<
   LinkedTextState
 > {
   private defaultColor = "black"; // TODO
+  private activeColor = "#9A76FF"; // TODO
   private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: LinkedTextProps) {
     super(props);
     this.state = {
       isClicked: Boolean(this.props.isActive),
     };
+    this.activeColor = this.props.activeColor || this.activeColor;
     this.wrapperRef = React.createRef<HTMLDivElement>();
   }
 
@@ -45,7 +47,7 @@ export class LinkedText extends React.Component<
 
   getColor = () => {
     return this.props.isActive || this.state.isClicked
-      ? this.props.activeColor
+      ? this.activeColor
       : this.defaultColor;
   };
 

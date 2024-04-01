@@ -17,6 +17,7 @@ export enum Obj {
   ParallelTick = "parallel",
   EqualLengthTick = "equallength",
   Triangle = "triangle",
+  EqualAngleTick = "equalangle",
 }
 
 export enum LinkedSymbolType {
@@ -24,3 +25,8 @@ export enum LinkedSymbolType {
   Triangle = "triangle",
   Angle = "angle",
 }
+
+export type TickType =
+  | Obj.ParallelTick
+  | Obj.EqualLengthTick
+  | Obj.EqualAngleTick;

@@ -3,9 +3,7 @@ import { Content } from "../core/objgraph";
 import { Point, Segment, Triangle } from "../core/geometry";
 import { AppPage } from "../components/AppPage";
 import { Obj, Vector } from "../core/types";
-import { EuclideanBuilder } from "../components/geometry/EuclideanBuilder";
 import { ProofItem } from "../components/ProofItem";
-import { LinkedText } from "../components/LinkedText";
 import { congruent, parallel, comma } from "../core/geometryText";
 
 export class ParallelProp extends React.Component {
@@ -42,122 +40,115 @@ export class ParallelProp extends React.Component {
   };
 
   defaultConstruction = () => {
-    const diagram = new EuclideanBuilder();
+    this.ctx.addFrame("0", []);
     const ACM = this.ctx.get("ACM", Obj.Triangle);
     const BDM = this.ctx.get("BDM", Obj.Triangle);
-    diagram.triangle(ACM.p, ACM.s);
-    diagram.triangle(BDM.p, BDM.s);
-    return new ProofItem("Initial construction", diagram.contents());
+    this.ctx.batchAdd("0", ACM.svg(0));
+    this.ctx.batchAdd("0", BDM.svg(0));
+    return new ProofItem("Initial construction", this.ctx.getFrame("0"));
   };
 
   step1 = () => {
-    const diagram = new EuclideanBuilder();
-    const prevFrame = this.defaultConstruction();
+    // TODO needs the "reason"
     const AM = this.ctx.get("AM", Obj.Segment);
     const BM = this.ctx.get("BM", Obj.Segment);
     const CM = this.ctx.get("CM", Obj.Segment);
     const DM = this.ctx.get("DM", Obj.Segment);
-    diagram.batchAdd(prevFrame.svg);
-    diagram.equalLength(AM.labeled(), 1);
-    diagram.equalLength(BM.labeled(), 2);
-    diagram.equalLength(CM.labeled(), 2);
-    diagram.equalLength(DM.labeled(), 2);
+
+    this.ctx.addFrame("1", this.ctx.getFrame("0"));
+    this.ctx.batchAdd(
+      "1",
+      [
+        // for now, stores in AM object and returns SVG (not stored)
+        AM.equalLengthMark(1, 1),
+        BM.equalLengthMark(1, 1),
+        CM.equalLengthMark(2, 1),
+        DM.equalLengthMark(2, 1),
+      ].flat()
+    );
 
     const text = (
       <span>
-        <LinkedText val={"AM"} activeColor="lightblue" type={Obj.Segment} />
+        {AM.linkedText("AM")}
         {congruent}
-        <LinkedText val={"BM"} activeColor="lightgreen" type={Obj.Segment} />
+        {BM.linkedText("BM")}
         {comma}
-        <LinkedText val={"CM"} activeColor="magenta" type={Obj.Segment} />
+        {CM.linkedText("CM")}
         {congruent}
-        <LinkedText val={"DM"} activeColor="red" type={Obj.Segment} />
+        {DM.linkedText("DM")}
       </span>
     );
-    return new ProofItem(text, diagram.contents());
+    return new ProofItem(text, this.ctx.getFrame("1"));
   };
 
   step2 = () => {
-    const diagram = new EuclideanBuilder();
-    const prevFrame = this.step1();
-    diagram.batchAdd(prevFrame.svg);
+    this.ctx.addFrame("2", this.ctx.getFrame("1"));
     const AMC = this.ctx.get("AMC", Obj.Angle);
     const BMD = this.ctx.get("DMB", Obj.Angle);
-    diagram.equalAngle(AMC.labeled(), 1);
-    diagram.equalAngle(BMD.labeled(), 1);
+    this.ctx.batchAdd(
+      "2",
+      [AMC.equalAngleMark(1, 2), BMD.equalAngleMark(1, 2)].flat()
+    );
+
     const text = (
       <span>
-        <LinkedText val={"AMC"} activeColor="lightblue" type={Obj.Angle} />
+        {AMC.linkedText("AMC")}
         {congruent}
-        <LinkedText val={"BMD"} activeColor="pink" type={Obj.Angle} />
+        {BMD.linkedText("BMD")}
       </span>
     );
-    return new ProofItem(text, diagram.contents());
+    return new ProofItem(text, this.ctx.getFrame("2"));
   };
 
   step3 = () => {
-    const diagram = new EuclideanBuilder();
-    const prevFrame = this.step2();
-    diagram.batchAdd(prevFrame.svg);
-    // TODO colors should be different
+    this.ctx.addFrame("3", this.ctx.getFrame("2"));
+    const AMC = this.ctx.get("AMC", Obj.Triangle);
+    const BMD = this.ctx.get("BMD", Obj.Triangle);
+
+    // TODO triangle highlighting
     const text = (
       <span>
-        <LinkedText val={"AMC"} activeColor="lightblue" type={Obj.Triangle} />
+        {AMC.linkedText("AMC")}
         {congruent}
-        <LinkedText val={"BMD"} activeColor="pink" type={Obj.Triangle} />
+        {BMD.linkedText("BMD")}
       </span>
     );
-    return new ProofItem(text, diagram.contents());
+    return new ProofItem(text, this.ctx.getFrame("3"));
   };
 
   step4 = () => {
-    const diagram = new EuclideanBuilder();
-    const prevFrame = this.step3();
-    diagram.batchAdd(prevFrame.svg);
+    this.ctx.addFrame("4", this.ctx.getFrame("3"));
 
     const CAM = this.ctx.get("CAM", Obj.Angle);
     const DBM = this.ctx.get("DBM", Obj.Angle);
-    diagram.equalAngle(CAM.labeled(), 1);
-    diagram.equalAngle(DBM.labeled(), 1);
+    this.ctx.batchAdd(
+      "4",
+      [CAM.equalAngleMark(2, 4), DBM.equalAngleMark(2, 4)].flat()
+    );
     const text = (
       <span>
-        <LinkedText val={"AMC"} activeColor="lightblue" type={Obj.Triangle} />
+        {CAM.linkedText("CAM")}
         {congruent}
-        <LinkedText val={"tBMD"} activeColor="pink" type={Obj.Triangle} />
+        {DBM.linkedText("DBM")}
       </span>
     );
-    return new ProofItem(text, diagram.contents());
+    return new ProofItem(text, this.ctx.getFrame("4"));
   };
 
   step5 = () => {
-    const diagram = new EuclideanBuilder();
-    const prevFrame = this.step4();
-    diagram.batchAdd(prevFrame.svg);
+    this.ctx.addFrame("5", this.ctx.getFrame("4"));
 
     const AC = this.ctx.get("AC", Obj.Segment);
     const BD = this.ctx.get("BD", Obj.Segment);
-    const ACmark = diagram.parallelMark(AC.labeled(), 1);
-    const BDmark = diagram.parallelMark(BD.labeled(), 1);
-    const cb1 = segmentCallback(this.ctx, diagram, "AC", "lightblue", ACmark);
-    const cb2 = segmentCallback(this.ctx, diagram, "BD", "pink", BDmark);
+    this.ctx.batchAdd("5", [AC.parallel(1, 5), BD.parallel(1, 5)].flat());
     const text = (
       <span>
-        <LinkedText
-          val={"AC"}
-          activeColor="lightblue"
-          clickCallback={cb1}
-          type={Obj.Segment}
-        />
+        {AC.linkedText("AC")}
         {parallel}
-        <LinkedText
-          val={"BD"}
-          activeColor="pink"
-          clickCallback={cb2}
-          type={Obj.Segment}
-        />
+        {BD.linkedText("BD")}
       </span>
     );
-    return new ProofItem(text, diagram.contents());
+    return new ProofItem(text, this.ctx.getFrame("5"));
   };
 
   steps = () => {
@@ -192,54 +183,3 @@ export class ParallelProp extends React.Component {
     return ``;
   };
 }
-
-const segmentCallback =
-  (
-    ctx: Content,
-    diagram: EuclideanBuilder,
-    label: string,
-    activeColor: string,
-    tickIds: string[] = []
-  ) =>
-  (isActive: boolean) => {
-    const seg = ctx.get(label, Obj.Segment);
-    const setStyle = (ele: HTMLElement | null) => {
-      if (ele) {
-        ele.style.stroke = isActive ? activeColor : "black";
-        ele.style.strokeWidth = isActive ? "3px" : "1px";
-      }
-    };
-    const ele = diagram.getElement(Obj.Segment, seg.label);
-    setStyle(ele);
-    if (tickIds.length > 0)
-      tickIds.map((id) => {
-        setStyle(document.getElementById(id));
-      });
-  };
-
-const angleCallback =
-  (
-    ctx: Content,
-    diagram: EuclideanBuilder,
-    label: string,
-    activeColor: string
-  ) =>
-  (isActive: boolean) => {
-    const angle = ctx.get(label, Obj.Angle);
-    const segs = [
-      ctx.get(label.slice(0, 1), Obj.Segment),
-      ctx.get(label.slice(1, 2), Obj.Segment),
-    ];
-    const ele = diagram.getElement(Obj.Angle, label);
-    const setStyle = (ele: HTMLElement | null) => {
-      if (ele) {
-        ele.style.stroke = isActive ? activeColor : "black";
-        ele.style.strokeWidth = isActive ? "3px" : "1px";
-      }
-    };
-    setStyle(ele);
-    segs.map((seg) => {
-      const ele = diagram.getElement(Obj.Segment, seg.label);
-      setStyle(ele);
-    });
-  };

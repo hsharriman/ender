@@ -15,8 +15,8 @@
 
 - [ ] Update page layout
 - [x] Step-by-step interaction instead of grid
-- [ ] Dynamically updating the styling of objects based on interaction
-- [ ] Interaction between text of proof and visualization
+- [x] Dynamically updating the styling of objects based on interaction
+- [x] Interaction between text of proof and visualization
 - [ ] Render mini-constructions alongside steps (fix SVG scaling to fit)
 - [ ] Draggability? or button to "resample layout" (discrete options)
 - [ ] Improve the proof class structure / cleanup

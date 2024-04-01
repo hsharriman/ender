@@ -36,7 +36,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           <button
             id={`prooftext-${idx}`}
             onClick={this.onClick}
-            className="py-4 border-black border-r-2 border-2"
+            className="py-4 border-b-2 border-gray-300"
           >
             {item.renderText()}
           </button>

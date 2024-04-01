@@ -45,27 +45,21 @@ export class AngleBisector extends React.Component {
   };
 
   frame1 = () => {
-    // const [tBAD, tDAC] = this.construction();
-    this.ctx = this.construction();
     const tBAD = this.ctx.get("BAD", Obj.Triangle);
     const tDAC = this.ctx.get("DAC", Obj.Triangle);
-
-    const diagram = new EuclideanBuilder();
-    diagram.triangle(tBAD.p, tBAD.s);
-    diagram.triangle(tDAC.p, tDAC.s);
-    return diagram.contents();
+    this.ctx.addFrame("1", [tBAD.svg(0), tDAC.svg(0)].flat());
+    return this.ctx.getFrame("1");
   };
 
   frame2 = () => {
     const tACE = this.ctx.get("ACE", Obj.Triangle);
-    const diagram = new EuclideanBuilder(this.frame1());
-    diagram.triangle(tACE.p, tACE.s); // TODO labeled triangle?
+    this.ctx.addFrame("2", this.frame1());
+    this.ctx.batchAdd("2", tACE.svg(0));
 
     const AD = this.ctx.get("AD", Obj.Segment);
     const CE = this.ctx.get("CE", Obj.Segment);
-    diagram.parallelMark(AD.labeled(), 1);
-    diagram.parallelMark(CE.labeled(), 1);
-    return diagram.contents();
+    this.ctx.batchAdd("2", [AD.parallel(1, 2), CE.parallel(1, 2)].flat());
+    return this.ctx.getFrame("2");
   };
 
   frame3 = (useFrame: boolean) => {
@@ -227,12 +221,12 @@ class AASTheorem {
   ) => {
     // TODO can make this not take so many parameters if t holds more information
     const [a1, a2] = angles;
-    const diagram = new EuclideanBuilder();
-    diagram.triangle(t.p, t.s);
-    diagram.equalAngle(a1.labeled(), 1);
-    diagram.equalAngle(a2.labeled(), 1);
-    diagram.equalLength(s1.labeled(), 1);
-    diagram.equalLength(s2.labeled(), 1);
-    return diagram.contents();
+    return [
+      t.svg(0),
+      a1.equalAngleMark(1, 1),
+      a2.equalAngleMark(1, 1),
+      s1.equalLengthMark(1, 1),
+      s2.equalLengthMark(1, 1),
+    ].flat();
   };
 }

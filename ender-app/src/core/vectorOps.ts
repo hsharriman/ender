@@ -1,6 +1,9 @@
 import { Vector } from "./types";
 
 export const vops = {
+  // Return true if v1 === v2
+  eq: (v1: Vector, v2: Vector) => v1[0] === v2[0] && v1[1] === v2[1],
+
   // Return the magnitude of vector v
   mag: (v: Vector) => Math.sqrt(Math.pow(v[0], 2) + Math.pow(v[1], 2)),
 

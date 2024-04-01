@@ -1,4 +1,5 @@
 import { Point, Segment, Angle, Triangle } from "./geometry";
+import { BaseSVG } from "./svg/BaseSVG";
 import { Obj } from "./types";
 
 export type SupportedObjects =
@@ -7,10 +8,44 @@ export type SupportedObjects =
   | Obj.Angle
   | Obj.Triangle;
 export class Content {
+  // abstract object tracking
   private points: Point[] = [];
   private segments: Segment[] = [];
   private angles: Angle[] = [];
   private triangles: Triangle[] = [];
+
+  // DOM items, array of SVG elements for each frame
+  private frames: Map<string, BaseSVG[]> = new Map();
+
+  addFrame = (name: string, frame: BaseSVG[]) => this.frames.set(name, frame);
+  getFrame = (name: string) => this.frames.get(name) || [];
+
+  addContent = (frameKey: string, item: BaseSVG) => {
+    let frame = this.getFrame(frameKey);
+    if (!frame) {
+      console.error("frame not found", frameKey);
+      return;
+    }
+    if (!frame.find((elem) => elem.key === item.key)) {
+      this.addFrame(frameKey, frame.concat(item));
+    }
+  };
+
+  batchAdd = (frameKey: string, items: BaseSVG[]) => {
+    items.map((item) => this.addContent(frameKey, item));
+  };
+
+  //# from EuclideanBuilder
+  getId = (objectType: Obj, label: string, tickNumber?: number) => {
+    if (objectType === Obj.Angle) {
+      const endPts = [label[0], label[2]].sort().toString().replaceAll(",", "");
+      label = `${label[1]}-${endPts}`;
+    } else {
+      label = Array.from(label).sort().toString().replaceAll(",", "");
+    }
+    let id = `${objectType}.${label}`;
+    return tickNumber ? `${id}.${tickNumber}` : id;
+  };
 
   print() {
     console.log({
