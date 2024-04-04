@@ -1,18 +1,17 @@
 import { Vector } from "../types";
 import { BaseSVG } from "./BaseSVG";
-import { CircleSVGProps, SVGObj } from "./svgTypes";
+import { CircleSVGProps } from "./svgTypes";
 
 export class SVGCircle extends BaseSVG {
   private center: Vector;
   private r: number;
   constructor(props: CircleSVGProps) {
-    super(props, SVGObj.Circle);
-    const { center, r } = props;
-    this.center = center;
-    this.r = r;
+    super(props);
+    this.center = props.center;
+    this.r = props.r;
   }
 
-  override renderSVG = () => {
+  render() {
     return (
       <circle
         cx={this.center[0]}
@@ -20,8 +19,8 @@ export class SVGCircle extends BaseSVG {
         r={this.r}
         id={this.key}
         key={this.key}
-        style={this.style}
+        style={this.updateStyle()}
       />
     );
-  };
+  }
 }

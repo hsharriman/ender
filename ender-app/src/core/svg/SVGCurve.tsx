@@ -5,7 +5,7 @@ import { CircularArcSVGProps, SVGObj } from "./svgTypes";
 export class SVGCurve extends BaseSVG {
   readonly props: CircularArcSVGProps;
   constructor(props: CircularArcSVGProps) {
-    super(props, SVGObj.Curve);
+    super(props);
     this.props = props;
   }
 
@@ -17,7 +17,7 @@ export class SVGCurve extends BaseSVG {
     return `A ${r} ${r} 0 ${major} ${sweep} ${end[0]} ${end[1]}`;
   };
 
-  override renderSVG = () => {
+  render() {
     const pathStr =
       this.moveTo(this.props.start) +
       this.arcTo(
@@ -26,6 +26,13 @@ export class SVGCurve extends BaseSVG {
         this.props.sweep,
         this.props.end
       );
-    return <path d={pathStr} id={this.key} style={this.style} key={this.key} />;
-  };
+    return (
+      <path
+        d={pathStr}
+        id={this.key}
+        style={this.updateStyle()}
+        key={this.key}
+      />
+    );
+  }
 }

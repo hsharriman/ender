@@ -8,17 +8,20 @@ import { BaseGeometryObject } from "./BaseGeometryObject";
 export type PointProps = {
   pt: [number, number];
   label: string;
+  showLabel?: boolean;
 };
 
 export class Point extends BaseGeometryObject {
   // 1 point and label
   public readonly pt: Vector;
   public readonly id: string;
+  private showLabel: boolean;
   constructor(props: PointProps) {
-    super(Obj.Point);
+    super(Obj.Point, {});
     this.pt = props.pt;
     this.label = props.label;
     this.names = [this.label];
+    this.showLabel = props.showLabel ?? true;
     this.id = this.getId(Obj.Point, this.label);
   }
 
@@ -30,31 +33,39 @@ export class Point extends BaseGeometryObject {
     return this.label === p.label && vops.eq(this.pt, p.pt);
   };
 
-  svg = (labeled: boolean = true, style?: React.CSSProperties) => {
-    let svgItems: BaseSVG[] = [
-      new SVGCircle({
-        center: this.coordsToSvg(this.pt),
-        r: 2,
-        key: this.id,
-        style: {
-          fill: "black",
-          ...style,
-        },
-      }),
+  svg = (style?: React.CSSProperties): JSX.Element[] => {
+    let svgItems: JSX.Element[] = [
+      <SVGCircle
+        {...{
+          center: this.coordsToSvg(this.pt),
+          r: 2,
+          key: this.id,
+          style: {
+            fill: "black",
+            ...style,
+          },
+          activeFrame: "",
+        }}
+      />,
     ];
-    if (labeled) svgItems.push(this.addLabel());
+    if (this.showLabel) svgItems.push(this.addLabel());
     return svgItems;
   };
 
   addLabel = (offset: Vector = [3, 3], style?: React.CSSProperties) => {
-    return new SVGText({
-      point: this.coordsToSvg(this.pt, offset),
-      key: this.getId(Obj.Text, this.label),
-      text: this.label,
-      style: {
-        font: "12px sans-serif",
-        ...style,
-      },
-    });
+    return (
+      <SVGText
+        {...{
+          point: this.coordsToSvg(this.pt, offset),
+          key: this.getId(Obj.Text, this.label),
+          text: this.label,
+          style: {
+            font: "12px sans-serif",
+            ...style,
+          },
+          activeFrame: "",
+        }}
+      />
+    );
   };
 }

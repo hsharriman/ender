@@ -1,13 +1,14 @@
 import React from "react";
 import { ProofItem } from "./ProofItem";
+import { ProofTextItem } from "../core/types";
 
 export interface ProofRowsProps {
-  active: number;
-  items: ProofItem[];
-  onClick: (n: number) => void; // callback that returns new selected idx when clicked
+  active: string;
+  items: ProofTextItem[];
+  onClick: (n: string) => void; // callback that returns new selected idx when clicked
 }
 export interface ProofRowsState {
-  active: number;
+  active: string;
 }
 export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   private idPrefix = "prooftext-";
@@ -19,7 +20,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   }
 
   onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const idx = parseInt(event.currentTarget.id.replace(this.idPrefix, ""));
+    const idx = event.currentTarget.id.replace(this.idPrefix, "");
     if (idx !== this.state.active) {
       this.setState({
         active: idx,
@@ -31,14 +32,14 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   render() {
     // TODO change style based on the state
     if (this.props.items.length > 0) {
-      return this.props.items.map((item, idx) => {
+      return this.props.items.map((item) => {
         return (
           <button
-            id={`prooftext-${idx}`}
+            id={`${this.idPrefix}${item.k}`}
             onClick={this.onClick}
             className="py-4 border-b-2 border-gray-300"
           >
-            {item.renderText()}
+            {item.v}
           </button>
         );
       });

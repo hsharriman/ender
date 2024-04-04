@@ -1,4 +1,4 @@
-import { Vector } from "../types";
+import { SVGModes, Vector } from "../types";
 
 export enum SVGObj {
   Circle,
@@ -10,6 +10,8 @@ export enum SVGObj {
 
 export type BaseSVGProps = {
   key: string;
+  modes?: Map<string, SVGModes>;
+  activeFrame: string;
   names?: string[];
   style?: React.CSSProperties;
 };

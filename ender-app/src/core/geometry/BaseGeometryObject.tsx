@@ -1,20 +1,35 @@
-import { Obj, Vector } from "../types";
+import React from "react";
+import { Obj, SVGModes, Vector } from "../types";
 import { vops } from "../vectorOps";
 
 const SVG_XSHIFT = 40;
-const SVG_YSHIFT = 0;
-const SVG_SCALE = 20;
-const SVG_DIM = 200;
+const SVG_YSHIFT = -110;
+const SVG_SCALE = 60;
+const SVG_DIM = 120;
 const MINI_SVG_DIM = 40;
 const MINI_SVG_SCALE = 8;
+
+export interface BaseGeometryProps {
+  modes?: Map<string, SVGModes>; // all modes for all states
+  activeIdx?: number; // follows the state of the app
+}
 
 export class BaseGeometryObject {
   public readonly tag: Obj;
   public names: string[] = [];
   public label: string = "";
-  constructor(tag: Obj) {
+  protected modes: Map<string, SVGModes>;
+  public activeIdx: number;
+  constructor(tag: Obj, props: BaseGeometryProps) {
     this.tag = tag;
+    this.modes = props.modes ? props.modes : new Map();
+    this.activeIdx = props.activeIdx ? props.activeIdx : -1;
   }
+
+  mode = (frameKey: string, mode: SVGModes) => {
+    this.modes.set(frameKey, mode);
+    return this;
+  };
 
   // https://stackoverflow.com/questions/9960908/permutations-in-javascript
   permutator = (inputArr: string[]): string[] => {

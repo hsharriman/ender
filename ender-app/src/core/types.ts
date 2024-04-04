@@ -30,3 +30,18 @@ export type TickType =
   | Obj.ParallelTick
   | Obj.EqualLengthTick
   | Obj.EqualAngleTick;
+
+export enum SVGModes {
+  Hidden = "hidden",
+  Focused = "focused",
+  Active = "active",
+  Unfocused = "unfocused",
+  Default = "default",
+  Purple = "purple",
+  Blue = "blue",
+}
+
+export interface ProofTextItem {
+  k: string;
+  v: JSX.Element;
+}

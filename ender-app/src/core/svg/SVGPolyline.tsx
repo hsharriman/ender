@@ -5,7 +5,7 @@ import { PolylineSVGProps, SVGObj } from "./svgTypes";
 export class SVGPolyline extends BaseSVG {
   readonly points: Vector[];
   constructor(props: PolylineSVGProps) {
-    super(props, SVGObj.Polyline);
+    super(props);
     this.points = props.points;
   }
 
@@ -17,14 +17,14 @@ export class SVGPolyline extends BaseSVG {
     return pointsStr;
   };
 
-  override renderSVG = () => {
+  render() {
     return (
       <polyline
         points={this.polylinePathFromPts(this.points)}
         id={this.key}
         key={this.key}
-        style={this.style}
+        style={this.updateStyle()}
       />
     );
-  };
+  }
 }

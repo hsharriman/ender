@@ -1,32 +1,29 @@
-import { Obj, LAngle } from "../types";
+import { Obj, LAngle, SVGModes, TickType } from "../types";
 import { LinkedText } from "../../components/LinkedText";
-import { BaseGeometryObject } from "./BaseGeometryObject";
+import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
 import { Tick } from "./Tick";
+import { BaseSVG } from "../svg/BaseSVG";
 
 export type AngleProps = {
   start: Point;
   center: Point;
   end: Point;
-};
+} & BaseGeometryProps;
 export class Angle extends BaseGeometryObject {
   // need 3 points and concavity/direction
   public readonly start: Point;
   public readonly center: Point;
   public readonly end: Point;
-  public readonly s1: Segment;
-  public readonly s2: Segment;
   private id: string;
   private ticks: Tick | undefined;
   // public rightMarked: boolean;
   constructor(props: AngleProps) {
-    super(Obj.Angle);
+    super(Obj.Angle, props);
     this.start = props.start;
     this.center = props.center;
     this.end = props.end;
-    this.s1 = new Segment({ p1: props.start, p2: props.center });
-    this.s2 = new Segment({ p1: props.center, p2: props.end });
     this.label = `${props.start.label}${props.center.label}${props.end.label}`;
     this.names = [
       `${this.start.label}${this.center.label}${this.end.label}`,
@@ -35,14 +32,28 @@ export class Angle extends BaseGeometryObject {
     this.id = this.getId(Obj.Angle, this.label);
   }
 
-  equalAngleMark = (numTicks: number, frameIdx: number) => {
+  tick = (tick: TickType, numTicks: number = 1) => {
+    switch (tick) {
+      case Obj.EqualAngleTick:
+        return this.equalAngleMark(numTicks);
+      case Obj.ParallelTick:
+        console.error(`cannot set ${tick} on angle type`);
+        return this;
+      case Obj.EqualLengthTick:
+        console.error(`cannot set ${tick} on angle type`);
+        return this;
+      default:
+        return this;
+    }
+  };
+
+  equalAngleMark = (numTicks: number) => {
     this.ticks = new Tick({
       type: Obj.EqualAngleTick,
       num: numTicks,
-      start: frameIdx,
       parent: this.labeled(),
     });
-    return this.ticks.svg(frameIdx);
+    return this;
   };
 
   labeled = (): LAngle => {
@@ -54,9 +65,14 @@ export class Angle extends BaseGeometryObject {
     };
   };
 
+  svg = (frameIdx: string, style?: React.CSSProperties) => {
+    return this.ticks ? this.ticks.svg(frameIdx, style) : [<></>];
+  };
+
   onClickText = (activeColor: string) => (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
+        // TODO change based on mode
         ele.style.stroke = isActive ? activeColor : "black";
         ele.style.strokeWidth = isActive ? "3px" : "1px";
       }
@@ -67,10 +83,6 @@ export class Angle extends BaseGeometryObject {
         setStyle(document.getElementById(id));
       });
     }
-    [this.s1, this.s2].map((seg) => {
-      const ele = document.getElementById(seg.id);
-      setStyle(ele);
-    });
   };
 
   linkedText = (label: string) => {
@@ -82,5 +94,13 @@ export class Angle extends BaseGeometryObject {
         type={Obj.Angle}
       />
     );
+  };
+
+  override mode = (frameKey: string, mode: SVGModes) => {
+    if (this.ticks) {
+      this.ticks.mode(frameKey, mode);
+    }
+    this.modes.set(frameKey, mode);
+    return this;
   };
 }

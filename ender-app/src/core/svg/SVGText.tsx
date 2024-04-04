@@ -6,13 +6,13 @@ export class SVGText extends BaseSVG {
   private text: string;
   private point: Vector;
   constructor(props: TextSVGProps) {
-    super(props, SVGObj.Text);
+    super(props);
     const { text, point } = props;
     this.text = text;
     this.point = point;
   }
 
-  override renderSVG = () => {
+  render() {
     return (
       <text
         x={this.point[0]}
@@ -24,5 +24,5 @@ export class SVGText extends BaseSVG {
         {this.text}
       </text>
     );
-  };
+  }
 }

@@ -1,22 +1,22 @@
 import { Content } from "../objgraph";
-import { Obj } from "../types";
+import { Obj, SVGModes } from "../types";
 import { LinkedText } from "../../components/LinkedText";
 import { Angle } from "./Angle";
-import { BaseGeometryObject } from "./BaseGeometryObject";
+import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
 
 export type TriangleProps = {
   pts: [Point, Point, Point];
   // add things like type of triangle, isos, right, etc.
-};
+} & BaseGeometryProps;
 export class Triangle extends BaseGeometryObject {
   readonly s: [Segment, Segment, Segment];
   readonly a: [Angle, Angle, Angle];
   readonly p: [Point, Point, Point];
 
   constructor(props: TriangleProps, ctx: Content) {
-    super(Obj.Triangle);
+    super(Obj.Triangle, props);
     this.p = props.pts;
 
     this.s = this.buildSegments(props.pts, ctx);
@@ -60,8 +60,10 @@ export class Triangle extends BaseGeometryObject {
     return [aa, ab, ac];
   };
 
-  svg = (frameIdx: number, style?: React.CSSProperties) => {
-    return this.s.flatMap((seg) => seg.svg(frameIdx, style));
+  svg = (frameIdx: string, style?: React.CSSProperties) => {
+    return this.s
+      .flatMap((seg) => seg.svg(frameIdx, style))
+      .concat(this.a.flatMap((ang) => ang.svg(frameIdx, style)));
   };
 
   onClickText = (activeColor: string) => (isActive: boolean) => {
@@ -82,5 +84,19 @@ export class Triangle extends BaseGeometryObject {
         type={Obj.Angle}
       />
     );
+  };
+
+  override mode = (frameKey: string, mode: SVGModes) => {
+    this.modes.set(frameKey, mode);
+    // cascading update the segments and angles
+    this.s.map((seg) => seg.mode(frameKey, mode));
+    this.a.map((ang) => ang.mode(frameKey, mode));
+    // TODO cascading update the segments and angles too
+    // TODO special handling for the tick marks which may be
+    // hidden in some modes.
+    // maybe we don't set the mode on the tick marks for ones
+    // that haven't been rendered yet, so "not found" means that
+    // it should be hidden.
+    return this;
   };
 }

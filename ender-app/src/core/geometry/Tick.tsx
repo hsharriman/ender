@@ -6,7 +6,7 @@ import { SVGPolyline } from "../svg/SVGPolyline";
 import { SVGObj } from "../svg/svgTypes";
 import { TickType, LSegment, LAngle, Obj, Vector } from "../types";
 import { vops } from "../vectorOps";
-import { BaseGeometryObject } from "./BaseGeometryObject";
+import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.4;
@@ -15,23 +15,22 @@ const ARC_PADDING = 0.2;
 export type TickProps = {
   type: TickType;
   num: number;
-  start: number;
   parent: LSegment | LAngle;
-};
+} & BaseGeometryProps;
 export class Tick extends BaseGeometryObject {
   // 1 segment and type of tick
   public readonly type: TickType;
   public readonly num: number;
-  public readonly start: number;
   parent: LSegment | LAngle;
   ids: string[];
+  id: string;
   constructor(props: TickProps) {
-    super(props.type);
+    super(props.type, props);
     this.type = props.type;
     this.num = props.num;
-    this.start = props.start;
     this.parent = props.parent;
     this.ids = [];
+    this.id = this.getId(this.type, this.label);
   }
 
   getLabels = () => {
@@ -39,35 +38,28 @@ export class Tick extends BaseGeometryObject {
     for (let i = 0; i < this.num; i++) {
       labels.push(this.getId(this.type, this.parent.label, i));
     }
-    console.log("labels", this.type, labels);
     // TODO this only works for equalMark and parallel bc angles have different format
     return labels;
   };
 
-  svg = (frameIdx: number, style?: React.CSSProperties): BaseSVG[] => {
+  svg = (activeFrame: string, style?: React.CSSProperties): JSX.Element[] => {
     // frame-specific render-logic
-    if (frameIdx >= this.start) {
-      if (this.type === Obj.ParallelTick) {
-        // makes all parallel ticks at once for 1 segment
-        return this.parallelMark(this.parent as LSegment, style);
-      } else if (this.type === Obj.EqualLengthTick) {
-        return this.equalLength(this.parent as LSegment, style);
-      } else if (this.type === Obj.EqualAngleTick) {
-        return this.equalAngle(this.parent as LAngle, style);
-      }
+    if (this.type === Obj.ParallelTick) {
+      // makes all parallel ticks at once for 1 segment
+      return this.parallelMark(this.parent as LSegment, activeFrame, style);
+    } else if (this.type === Obj.EqualLengthTick) {
+      return this.equalLength(this.parent as LSegment, activeFrame, style);
+    } else if (this.type === Obj.EqualAngleTick) {
+      return this.equalAngle(this.parent as LAngle, activeFrame, style);
     }
-    return [
-      new BaseSVG(
-        {
-          key: this.ids[0],
-          style: { display: "none" },
-        },
-        SVGObj.Line
-      ),
-    ];
+    return [];
   };
 
-  parallelMark = (s: LSegment, style?: React.CSSProperties) => {
+  parallelMark = (
+    s: LSegment,
+    activeFrame: string,
+    style?: React.CSSProperties
+  ) => {
     // find midpoint on segment
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
 
@@ -83,25 +75,32 @@ export class Tick extends BaseGeometryObject {
     const points = [startDir, midpoint, endDir];
 
     const tickVectors = this.tickPlacement(unit, this.num);
+    console.log(this.id, this.parent.label, activeFrame, this.modes.keys());
+
     return tickVectors.map((shift, i) => {
       const polyPts = points.map((v) => this.coordsToSvg(vops.add(v, shift)));
       const id = this.getId(Obj.ParallelTick, s.label, i);
       this.ids.push(id);
       // build svg polyline of chevron
-      return new SVGPolyline({
-        points: polyPts,
-        key: id,
-        style: {
-          ...style,
-          stroke: "black",
-          strokeWidth: "2px",
-          fill: "none",
-        },
-      });
+      return (
+        <SVGPolyline
+          {...{
+            points: polyPts,
+            key: id,
+            modes: this.modes,
+            style: style,
+            activeFrame: activeFrame,
+          }}
+        />
+      );
     });
   };
 
-  equalLength = (s: LSegment, style?: React.CSSProperties) => {
+  equalLength = (
+    s: LSegment,
+    activeFrame: string,
+    style?: React.CSSProperties
+  ) => {
     // find midpoint on segment
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
     const unit = vops.unit(vops.sub(s.p2, s.p1));
@@ -116,20 +115,26 @@ export class Tick extends BaseGeometryObject {
     return tickVectors.map((shift, i) => {
       const id = this.getId(Obj.EqualLengthTick, s.label, i);
       this.ids.push(id);
-      return new SVGLine({
-        start: this.coordsToSvg(vops.add(start, shift)),
-        end: this.coordsToSvg(vops.add(end, shift)),
-        key: id,
-        style: {
-          ...style,
-          stroke: "black",
-          strokeWidth: "2px",
-        },
-      });
+      return (
+        <SVGLine
+          {...{
+            start: this.coordsToSvg(vops.add(start, shift)),
+            end: this.coordsToSvg(vops.add(end, shift)),
+            key: id,
+            style: style,
+            modes: this.modes,
+            activeFrame: activeFrame,
+          }}
+        />
+      );
     });
   };
 
-  equalAngle = (a: LAngle, style?: React.CSSProperties) => {
+  equalAngle = (
+    a: LAngle,
+    activeFrame: string,
+    style?: React.CSSProperties
+  ) => {
     const sweep = this.arcSweepsCCW(a.center, a.start, a.end);
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
@@ -142,20 +147,21 @@ export class Tick extends BaseGeometryObject {
       const id = this.getId(Obj.Angle, a.label, i);
       this.ids.push(id);
       ticks.push(
-        new SVGCurve({
-          r: radius,
-          end: this.coordsToSvg(vops.add(a.center, vops.smul(eUnit, scalar))),
-          start: this.coordsToSvg(vops.add(a.center, vops.smul(sUnit, scalar))),
-          majorArc: 0,
-          sweep: sweep,
-          key: id,
-          style: {
-            ...style,
-            stroke: "black",
-            strokeWidth: "2px",
-            fill: "none",
-          },
-        })
+        <SVGCurve
+          {...{
+            r: radius,
+            end: this.coordsToSvg(vops.add(a.center, vops.smul(eUnit, scalar))),
+            start: this.coordsToSvg(
+              vops.add(a.center, vops.smul(sUnit, scalar))
+            ),
+            majorArc: 0,
+            sweep: sweep,
+            key: id,
+            modes: this.modes,
+            activeFrame: activeFrame,
+            style: style,
+          }}
+        />
       );
     }
     return ticks;

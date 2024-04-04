@@ -12,30 +12,34 @@ export type SupportedObjects =
   | Obj.Triangle;
 export class Content {
   // abstract object tracking
-  private points: Point[] = [];
-  private segments: Segment[] = [];
-  private angles: Angle[] = [];
+  public points: Point[] = [];
+  public segments: Segment[] = [];
+  public angles: Angle[] = [];
   private triangles: Triangle[] = [];
+  private modes: Set<string> = new Set();
+  private content: BaseSVG[] = [];
 
-  // DOM items, array of SVG elements for each frame
-  private frames: Map<string, BaseSVG[]> = new Map();
-
-  addFrame = (name: string, frame: BaseSVG[]) => this.frames.set(name, frame);
-  getFrame = (name: string) => this.frames.get(name) || [];
-
-  addContent = (frameKey: string, item: BaseSVG) => {
-    let frame = this.getFrame(frameKey);
-    if (!frame) {
-      console.error("frame not found", frameKey);
-      return;
-    }
-    if (!frame.find((elem) => elem.key === item.key)) {
-      this.addFrame(frameKey, frame.concat(item));
+  addContent = (item: BaseSVG) => {
+    if (!this.content.find((elem) => elem.key === item.key)) {
+      this.content = this.content.concat(item);
     }
   };
 
-  batchAdd = (frameKey: string, items: BaseSVG[]) => {
-    items.map((item) => this.addContent(frameKey, item));
+  batchAdd = (items: BaseSVG[]) => {
+    items.map((item) => this.addContent(item));
+  };
+
+  getExistingElement = (id: string) => {
+    const matches = this.content.filter((item) => item.key === id);
+    if (matches.length > 1) {
+      console.log("more than 1 match for id, ", id, matches);
+    }
+    return matches[0];
+  };
+
+  addFrame = (name: string) => {
+    this.modes.add(name);
+    return name;
   };
 
   //# from EuclideanBuilder
@@ -59,24 +63,33 @@ export class Content {
     });
   }
 
-  // get(name: string, type: Obj.Point): Point;
-  // get(name: string, type: Obj.Segment): Segment;
-  // get(name: string, type: Obj.Angle): Angle;
-  // get(name: string, type: Obj.Triangle): Triangle;
-  // get(name: string, type: SupportedObjects) {
-  //   switch (type) {
-  //     case Obj.Point:
-  //       return this.ptByLabel(name);
-  //     case Obj.Segment:
-  //       return this.segByLabel(name);
-  //     case Obj.Angle:
-  //       return this.angByLabel(name);
-  //     case Obj.Triangle:
-  //       return this.triangleByLabel(name);
-  //     default:
-  //       return;
-  //   }
-  // }
+  update(e: Segment): void;
+  update(e: Angle): void;
+  update(e: Triangle): void;
+  update(e: Segment | Angle | Triangle) {
+    switch (e.tag) {
+      case Obj.Segment:
+        let s = this.getSegment(e.label);
+        if (s) {
+          this.segments[this.segments.indexOf(s)] = e as Segment;
+        }
+        return;
+      case Obj.Angle:
+        let a = this.getAngle(e.label);
+        if (a) {
+          this.angles[this.angles.indexOf(a)] = e as Angle;
+        }
+        return;
+      case Obj.Triangle:
+        let t = this.getTriangle(e.label);
+        if (t) {
+          this.triangles[this.triangles.indexOf(t)] = e as Triangle;
+        }
+        return;
+      default:
+        return;
+    }
+  }
 
   push(e: Point): Point;
   push(e: Segment): Segment;

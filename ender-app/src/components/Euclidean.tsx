@@ -3,29 +3,33 @@ import { BaseSVG } from "../core/svg/BaseSVG";
 
 export interface EuclideanProps {
   svgIdSuffix: number;
-  content: () => BaseSVG[];
+  content: JSX.Element[];
+  activeFrame: string;
 }
 
 interface EuclideanState {
-  content: BaseSVG[];
+  activeFrame: string;
 }
 
 export class Euclidean extends React.Component<EuclideanProps, EuclideanState> {
   private svgId: string;
-  private svgContent: BaseSVG[];
+  private svgContent: JSX.Element[];
 
+  // TODO
+  // euclidean needs to render a list of all BaseSVG objects that will
+  // ever appear in the construction. It needs state to track
+  // when each object should be rendered as well
+  // it needs to remember what state each object should be at each frame
+  // each object should have its own render function that updates
+  // based on the following states: focused, unfocus, hidden, active, default
   constructor(props: EuclideanProps) {
     super(props);
     this.svgId = `svg-object-${props.svgIdSuffix}`;
-    this.svgContent = props.content();
+    this.svgContent = props.content;
     this.state = {
-      content: this.svgContent,
+      activeFrame: this.props.activeFrame,
     };
   }
-
-  getContent = () => {
-    return this.state.content;
-  };
 
   render() {
     return (
@@ -36,8 +40,7 @@ export class Euclidean extends React.Component<EuclideanProps, EuclideanState> {
           height="100%"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {this.state.content.length > 0 &&
-            this.state.content.map((item) => item.renderSVG())}
+          {this.props.content}
         </svg>
       </>
     );
