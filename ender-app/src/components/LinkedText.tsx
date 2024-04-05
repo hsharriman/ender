@@ -46,17 +46,14 @@ export class LinkedText extends React.Component<
   };
 
   getColor = () => {
-    return this.props.isActive || this.state.isClicked
-      ? this.activeColor
-      : this.defaultColor;
+    // return this.props.isActive || this.state.isClicked
+    //   ? this.activeColor
+    //   : this.defaultColor;
+    return this.state.isClicked ? "stroke-violet-500" : "";
   };
 
   getStyle = () => {
-    return {
-      color: this.getColor(),
-      border: this.state.isClicked ? `1px solid ${this.props.activeColor}` : "",
-      fontWeight: this.state.isClicked ? "bold" : "normal",
-    };
+    return this.state.isClicked ? "text-violet-500 font-bold" : "";
   };
 
   onClick = (isClicked: boolean) => {
@@ -86,8 +83,8 @@ export class LinkedText extends React.Component<
   render() {
     return (
       <span
-        className="font-sans"
-        style={this.getStyle()}
+        className={`font-sans ${this.getStyle()}`}
+        // style={this.getStyle()}
         onClick={() => this.onClick(!this.state.isClicked)}
         ref={this.wrapperRef}
       >

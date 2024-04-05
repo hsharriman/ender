@@ -163,6 +163,7 @@ const contents = () => {
         {DM.linkedText("DM")}
       </span>
     ),
+    alwaysActive: true,
   });
   linkedTexts.push({
     k: prove,
@@ -171,6 +172,7 @@ const contents = () => {
         {AC.linkedText("AC")} {parallel} {BD.linkedText("BD")}
       </span>
     ),
+    alwaysActive: true,
   });
 
   // TEXT STEP 1
@@ -187,7 +189,7 @@ const contents = () => {
         {DM.linkedText("DM")}
       </span>
     ),
-    reason: "Given",
+    reason: "Given", // TODO figure this out automatically based on KEY instead of array index
   });
   // TEXT STEP 2
   linkedTexts.push({
@@ -212,6 +214,7 @@ const contents = () => {
       </span>
     ),
     reason: "SAS Triangle Congruence",
+    dependsOn: new Set([step1, step2]),
   });
   // TEXT STEP 4
   linkedTexts.push({
@@ -224,6 +227,7 @@ const contents = () => {
       </span>
     ),
     reason: "Corresponding Angles Postulate",
+    dependsOn: new Set([step3]),
   });
   // TEXT STEP 5
   linkedTexts.push({
@@ -234,6 +238,7 @@ const contents = () => {
       </span>
     ),
     reason: "Alternate Interior Angles Theorem",
+    dependsOn: new Set([step4]),
   });
   return { ctx, linkedTexts };
 };

@@ -6,7 +6,6 @@ import { LinkedText } from "../../components/LinkedText";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import React from "react";
-import { LineSVGProps } from "../svg/svgTypes";
 import { ModeCSS } from "../svg/SVGStyles";
 
 export type SegmentProps = {
@@ -72,11 +71,10 @@ export class Segment extends BaseGeometryObject {
     return this;
   };
 
-  onClickText = (activeColor: string) => (isActive: boolean) => {
+  onClickText = () => (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
         const cls = ModeCSS.ACTIVE.split(" ");
-        // ele.style.stroke = isActive ? activeColor : "black";
         isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
       }
     };
@@ -111,11 +109,10 @@ export class Segment extends BaseGeometryObject {
   };
 
   linkedText = (label: string) => {
-    const DEFAULT_COLOR = "#9A76FF";
     return (
       <LinkedText
         val={label}
-        clickCallback={this.onClickText(DEFAULT_COLOR)}
+        clickCallback={this.onClickText()}
         type={Obj.Segment}
       />
     );

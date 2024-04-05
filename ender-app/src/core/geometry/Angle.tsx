@@ -68,15 +68,13 @@ export class Angle extends BaseGeometryObject {
     return this.ticks ? this.ticks.svg(frameIdx, miniScale, style) : [<></>];
   };
 
-  onClickText = (activeColor: string) => (isActive: boolean) => {
+  onClickText = () => (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
         const cls = ModeCSS.ACTIVE.split(" ");
-        // ele.style.stroke = isActive ? activeColor : "black";
         isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
       }
     };
-    console.log("running onClickText for angle", this.id);
     // update style for each tick mark
     if (this.ticks) {
       console.log(this.ticks.getLabels());
@@ -87,11 +85,10 @@ export class Angle extends BaseGeometryObject {
   };
 
   linkedText = (label: string) => {
-    const DEFAULT_COLOR = "#9A76FF";
     return (
       <LinkedText
         val={label}
-        clickCallback={this.onClickText(DEFAULT_COLOR)}
+        clickCallback={this.onClickText()}
         type={Obj.Angle}
       />
     );

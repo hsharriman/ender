@@ -45,6 +45,8 @@ export interface ProofTextItem {
   k: string;
   v: JSX.Element;
   reason?: string;
+  dependsOn?: Set<string>;
+  alwaysActive?: boolean;
 }
 
 export interface Reason {

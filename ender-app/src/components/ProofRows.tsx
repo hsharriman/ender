@@ -8,6 +8,7 @@ export interface ProofRowsProps {
 }
 export interface ProofRowsState {
   active: string;
+  idx: number;
 }
 export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   private idPrefix = "prooftext-";
@@ -15,16 +16,53 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     super(props);
     this.state = {
       active: this.props.active,
+      idx: 0,
     };
   }
 
-  onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const idx = event.currentTarget.id.replace(this.idPrefix, "");
-    if (idx !== this.state.active) {
+  componentDidMount() {
+    document.addEventListener("keydown", this.onKeyboardPress);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.onKeyboardPress);
+  }
+
+  onKeyboardPress = (event: KeyboardEvent) => {
+    let newIdx = this.state.idx;
+    if (
+      event.key === "ArrowDown" &&
+      this.state.idx < this.props.items.length - 1
+    ) {
+      newIdx = this.state.idx + 1;
+    } else if (event.key === "ArrowUp" && this.state.idx > 0) {
+      newIdx = this.state.idx - 1;
+    }
+    if (newIdx !== this.state.idx) {
+      const newActive = this.props.items[newIdx].k;
       this.setState({
-        active: idx,
+        idx: newIdx,
+        active: newActive,
       });
-      this.props.onClick(idx);
+      this.props.onClick(newActive);
+    }
+  };
+
+  onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const active = event.currentTarget.id.replace(this.idPrefix, "");
+    if (active !== this.state.active) {
+      const newIdx = this.props.items.findIndex((item) => item.k === active);
+      if (newIdx !== -1) {
+        console.error(
+          "couldn't find match in ProofRows items array for key: ",
+          active
+        );
+      }
+      this.setState({
+        active: active,
+        idx: newIdx,
+      });
+      this.props.onClick(active);
     }
   };
 
@@ -59,6 +97,11 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   };
 
   renderRow = (item: ProofTextItem, i: number) => {
+    const activeItem = this.props.items[this.state.idx];
+    const isActive =
+      activeItem.k === item.k || activeItem.dependsOn?.has(item.k);
+    const textColor = isActive ? "text-slate-800" : "text-slate-400";
+    const strokeColor = isActive ? "border-slate-800" : "border-gray-300";
     return (
       <>
         <div className="flex flex-row justify-start h-16">
@@ -66,14 +109,18 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           <button
             id={`${this.idPrefix}${item.k}`}
             onClick={this.onClick}
-            className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-lg w-10/12 h-16 ml-2"
+            className="border-gray-300 border-b-2 w-10/12 h-16 ml-2 text-lg"
           >
-            <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-              <div className="text-slate-400 font-bold">{i + 1}</div>
-              {item.v}
-            </div>
-            <div className="flex flex-row justify-start align-baseline">
-              {item.reason}
+            <div
+              className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
+            >
+              <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
+                <div className="text-slate-400 font-bold">{i + 1}</div>
+                {item.v}
+              </div>
+              <div className="flex flex-row justify-start align-baseline">
+                {item.reason}
+              </div>
             </div>
           </button>
         </div>

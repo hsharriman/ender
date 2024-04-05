@@ -23,8 +23,8 @@
 - [x] Step-by-step interaction instead of grid
 - [x] Dynamically updating the styling of objects based on interaction
 - [x] Interaction between text of proof and visualization
-- [ ] Fix proof row highlighting based on dependencies
-- [ ] Add better keyboard controls and scroll
+- [x] Fix proof row highlighting based on dependencies
+- [x] Add better keyboard controls and scroll
 - [x] Fix label sizes and placement
 - [ ] Improve the proof class structure / cleanup (always ongoing)
 - [x] Make angle markers look less scuffed

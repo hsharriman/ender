@@ -66,24 +66,23 @@ export class Triangle extends BaseGeometryObject {
       .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
   };
 
-  onClickText = (activeColor: string) => (isActive: boolean) => {
+  onClickText = () => (isActive: boolean) => {
     if (isActive) {
       // for each segment use onClickText
       this.s.map((seg) => {
-        seg.onClickText(activeColor)(isActive);
+        seg.onClickText()(isActive);
       });
       this.a.map((ang) => {
-        ang.onClickText(activeColor)(isActive);
+        ang.onClickText()(isActive);
       });
     }
   };
 
   linkedText = (label: string) => {
-    const DEFAULT_COLOR = "#9A76FF";
     return (
       <LinkedText
         val={label}
-        clickCallback={this.onClickText(DEFAULT_COLOR)}
+        clickCallback={this.onClickText()}
         type={Obj.Triangle}
       />
     );
