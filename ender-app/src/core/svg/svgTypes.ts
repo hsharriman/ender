@@ -9,7 +9,7 @@ export enum SVGObj {
 }
 
 export type BaseSVGProps = {
-  key: string;
+  geoId: string;
   modes?: Map<string, SVGModes>;
   activeFrame: string;
   names?: string[];
@@ -24,13 +24,11 @@ export type CircleSVGProps = {
 export type LineSVGProps = {
   start: Vector;
   end: Vector;
-  key: string;
   style?: React.CSSProperties;
 } & BaseSVGProps;
 
 export type TextSVGProps = {
   point: Vector;
-  key: string;
   text: string;
 } & BaseSVGProps;
 

@@ -2,9 +2,7 @@ import { Obj, LAngle, SVGModes, TickType } from "../types";
 import { LinkedText } from "../../components/LinkedText";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
-import { Segment } from "./Segment";
 import { Tick } from "./Tick";
-import { BaseSVG } from "../svg/BaseSVG";
 
 export type AngleProps = {
   start: Point;
@@ -72,13 +70,14 @@ export class Angle extends BaseGeometryObject {
   onClickText = (activeColor: string) => (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        // TODO change based on mode
+        console.log(ele);
         ele.style.stroke = isActive ? activeColor : "black";
-        ele.style.strokeWidth = isActive ? "3px" : "1px";
       }
     };
+    console.log("running onClickText for angle", this.id);
     // update style for each tick mark
     if (this.ticks) {
+      console.log(this.ticks.getLabels());
       this.ticks.getLabels().map((id) => {
         setStyle(document.getElementById(id));
       });

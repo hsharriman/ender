@@ -17,8 +17,8 @@ export class SVGCircle extends BaseSVG {
         cx={this.center[0]}
         cy={this.center[1]}
         r={this.r}
-        id={this.key}
-        key={this.key}
+        id={this.geoId}
+        key={this.geoId}
         style={this.updateStyle()}
       />
     );

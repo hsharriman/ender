@@ -36,9 +36,12 @@ export class Tick extends BaseGeometryObject {
   getLabels = () => {
     const labels = [];
     for (let i = 0; i < this.num; i++) {
-      labels.push(this.getId(this.type, this.parent.label, i));
+      if (this.type === Obj.EqualAngleTick) {
+        labels.push(this.getId(Obj.Angle, this.parent.label, i));
+      } else {
+        labels.push(this.getId(this.type, this.parent.label, i));
+      }
     }
-    // TODO this only works for equalMark and parallel bc angles have different format
     return labels;
   };
 
@@ -75,7 +78,6 @@ export class Tick extends BaseGeometryObject {
     const points = [startDir, midpoint, endDir];
 
     const tickVectors = this.tickPlacement(unit, this.num);
-    console.log(this.id, this.parent.label, activeFrame, this.modes.keys());
 
     return tickVectors.map((shift, i) => {
       const polyPts = points.map((v) => this.coordsToSvg(vops.add(v, shift)));
@@ -86,7 +88,7 @@ export class Tick extends BaseGeometryObject {
         <SVGPolyline
           {...{
             points: polyPts,
-            key: id,
+            geoId: id,
             modes: this.modes,
             style: style,
             activeFrame: activeFrame,
@@ -120,7 +122,7 @@ export class Tick extends BaseGeometryObject {
           {...{
             start: this.coordsToSvg(vops.add(start, shift)),
             end: this.coordsToSvg(vops.add(end, shift)),
-            key: id,
+            geoId: id,
             style: style,
             modes: this.modes,
             activeFrame: activeFrame,
@@ -156,7 +158,7 @@ export class Tick extends BaseGeometryObject {
             ),
             majorArc: 0,
             sweep: sweep,
-            key: id,
+            geoId: id,
             modes: this.modes,
             activeFrame: activeFrame,
             style: style,

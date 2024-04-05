@@ -21,6 +21,8 @@
     "ignore/Card.tsx",
     "ignore/EuclideanBuilder.tsx",
     "ignore/AngleBisector.tsx",
-    "ignore/ParallelProp.tsx"
+    "ignore/ParallelProp.tsx",
+    "ignore/Euclidean.tsx",
+    "ignore/Label.tsx"
   ]
 }

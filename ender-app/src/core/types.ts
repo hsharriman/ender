@@ -44,4 +44,5 @@ export enum SVGModes {
 export interface ProofTextItem {
   k: string;
   v: JSX.Element;
+  reason?: string;
 }

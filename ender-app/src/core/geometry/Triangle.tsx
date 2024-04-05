@@ -72,6 +72,9 @@ export class Triangle extends BaseGeometryObject {
       this.s.map((seg) => {
         seg.onClickText(activeColor)(isActive);
       });
+      this.a.map((ang) => {
+        ang.onClickText(activeColor)(isActive);
+      });
     }
   };
 
@@ -81,7 +84,7 @@ export class Triangle extends BaseGeometryObject {
       <LinkedText
         val={label}
         clickCallback={this.onClickText(DEFAULT_COLOR)}
-        type={Obj.Angle}
+        type={Obj.Triangle}
       />
     );
   };

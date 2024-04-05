@@ -1,4 +1,4 @@
-import { Vector } from "../core/types";
+import { Vector } from "../src/core/types";
 
 export interface LabelProps {
   pt: Vector;

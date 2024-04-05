@@ -6,6 +6,7 @@ import { LinkedText } from "../../components/LinkedText";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import React from "react";
+import { LineSVGProps } from "../svg/svgTypes";
 
 export type SegmentProps = {
   p1: Point;
@@ -71,16 +72,12 @@ export class Segment extends BaseGeometryObject {
   };
 
   onClickText = (activeColor: string) => (isActive: boolean) => {
-    console.log("clicked segment", this.id, isActive);
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        // TODO reset to correcct style
         ele.style.stroke = isActive ? activeColor : "black";
-        ele.style.strokeWidth = isActive ? "3px" : "1px";
       }
     };
     const ele = document.getElementById(this.id);
-    console.log(ele);
     setStyle(ele);
     if (this.ticks)
       this.ticks.getLabels().map((id) => {
@@ -100,7 +97,7 @@ export class Segment extends BaseGeometryObject {
         {...{
           start: this.coordsToSvg(this.p1.pt),
           end: this.coordsToSvg(this.p2.pt),
-          key: this.id,
+          geoId: this.id,
           style: style,
           modes: this.modes,
           activeFrame: frameIdx,

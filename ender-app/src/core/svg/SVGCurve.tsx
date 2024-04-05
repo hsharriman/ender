@@ -29,9 +29,9 @@ export class SVGCurve extends BaseSVG {
     return (
       <path
         d={pathStr}
-        id={this.key}
+        id={this.geoId}
         style={this.updateStyle()}
-        key={this.key}
+        key={this.geoId}
       />
     );
   }

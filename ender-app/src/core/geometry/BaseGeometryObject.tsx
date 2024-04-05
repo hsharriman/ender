@@ -2,8 +2,8 @@ import React from "react";
 import { Obj, SVGModes, Vector } from "../types";
 import { vops } from "../vectorOps";
 
-const SVG_XSHIFT = 40;
-const SVG_YSHIFT = -110;
+const SVG_XSHIFT = 60;
+const SVG_YSHIFT = -200;
 const SVG_SCALE = 60;
 const SVG_DIM = 120;
 const MINI_SVG_DIM = 40;

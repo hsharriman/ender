@@ -30,7 +30,7 @@ export class SVGBuilder {
   }
 
   addContent = (item: BaseSVG) => {
-    if (!this.content.find((elem) => elem.key === item.key)) {
+    if (!this.content.find((elem) => elem.geoId === item.geoId)) {
       this.content = this.content.concat(item);
     }
   };
@@ -42,7 +42,7 @@ export class SVGBuilder {
   contents = () => this.content;
 
   getExistingElement = (id: string) => {
-    const matches = this.content.filter((item) => item.key === id);
+    const matches = this.content.filter((item) => item.geoId === id);
     if (matches.length > 1) {
       console.log("more than 1 match for id, ", id, matches);
     }

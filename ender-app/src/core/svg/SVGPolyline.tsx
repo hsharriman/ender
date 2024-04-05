@@ -21,8 +21,8 @@ export class SVGPolyline extends BaseSVG {
     return (
       <polyline
         points={this.polylinePathFromPts(this.points)}
-        id={this.key}
-        key={this.key}
+        id={this.geoId}
+        key={this.geoId}
         style={this.updateStyle()}
       />
     );

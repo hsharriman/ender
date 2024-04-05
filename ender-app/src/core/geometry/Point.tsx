@@ -39,7 +39,7 @@ export class Point extends BaseGeometryObject {
         {...{
           center: this.coordsToSvg(this.pt),
           r: 2,
-          key: this.id,
+          geoId: this.id,
           style: {
             fill: "black",
             ...style,
@@ -57,7 +57,7 @@ export class Point extends BaseGeometryObject {
       <SVGText
         {...{
           point: this.coordsToSvg(this.pt, offset),
-          key: this.getId(Obj.Text, this.label),
+          geoId: this.getId(Obj.Text, this.label),
           text: this.label,
           style: {
             font: "12px sans-serif",

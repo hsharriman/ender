@@ -139,7 +139,6 @@ const contents = () => {
     k: given,
     v: (
       <span>
-        {"Given: "}
         {"AB and CD intersect at point M"}
         {comma}
         {AM.linkedText("AM")}
@@ -156,7 +155,6 @@ const contents = () => {
     k: prove,
     v: (
       <span>
-        {"Prove: "}
         {AC.linkedText("AC")} {parallel} {BD.linkedText("BD")}
       </span>
     ),
@@ -176,6 +174,7 @@ const contents = () => {
         {DM.linkedText("DM")}
       </span>
     ),
+    reason: "Given",
   });
   // TEXT STEP 2
   linkedTexts.push({
@@ -187,6 +186,7 @@ const contents = () => {
         {DMB.linkedText("DMB")}
       </span>
     ),
+    reason: "Vertical Angles Theorem",
   });
   // TEXT STEP 3
   linkedTexts.push({
@@ -198,6 +198,7 @@ const contents = () => {
         {BDM.linkedText("BDM")}
       </span>
     ),
+    reason: "SAS Triangle Congruence",
   });
   // TEXT STEP 4
   linkedTexts.push({
@@ -209,6 +210,7 @@ const contents = () => {
         {DBM.linkedText("DBM")}
       </span>
     ),
+    reason: "Corresponding Angles Postulate",
   });
   // TEXT STEP 5
   linkedTexts.push({
@@ -218,6 +220,7 @@ const contents = () => {
         {AC.linkedText("AC")} {parallel} {BD.linkedText("BD")}
       </span>
     ),
+    reason: "Alternate Interior Angles Theorem",
   });
   return { ctx, linkedTexts };
 };
@@ -328,7 +331,6 @@ export const ParallelV2 = () => {
   // linked text
   // need COMPLETE CONSTRUCTION WHERE EACH COMPONENT KNOWS WHAT TO RENDER AT EACH STEP
   // need LINKED TEXT FOR EACH STEP
-  console.log(linkedTexts.length, linkedTexts);
   return (
     <AppPage
       problemText={""}
