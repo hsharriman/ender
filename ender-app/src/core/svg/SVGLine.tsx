@@ -1,9 +1,7 @@
 import React from "react";
-import { SVGModes, Vector } from "../types";
+import { Vector } from "../types";
 import { BaseSVG } from "./BaseSVG";
-import { LineSVGProps, SVGObj } from "./svgTypes";
-import { Path } from "paper";
-import { Point } from "paper/dist/paper-core";
+import { LineSVGProps } from "./svgTypes";
 
 export class SVGLine extends BaseSVG {
   private start: Vector;

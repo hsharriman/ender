@@ -46,3 +46,8 @@ export interface ProofTextItem {
   v: JSX.Element;
   reason?: string;
 }
+
+export interface Reason {
+  title: string;
+  body: string;
+}

@@ -9,6 +9,7 @@ export type PointProps = {
   pt: [number, number];
   label: string;
   showLabel?: boolean;
+  offset: Vector;
 };
 
 export class Point extends BaseGeometryObject {
@@ -16,12 +17,14 @@ export class Point extends BaseGeometryObject {
   public readonly pt: Vector;
   public readonly id: string;
   private showLabel: boolean;
+  private offset: Vector = [3, 3]; // TODO better label placement
   constructor(props: PointProps) {
     super(Obj.Point, {});
     this.pt = props.pt;
     this.label = props.label;
     this.names = [this.label];
     this.showLabel = props.showLabel ?? true;
+    this.offset = props.offset;
     this.id = this.getId(Obj.Point, this.label);
   }
 
@@ -33,11 +36,15 @@ export class Point extends BaseGeometryObject {
     return this.label === p.label && vops.eq(this.pt, p.pt);
   };
 
-  svg = (style?: React.CSSProperties): JSX.Element[] => {
+  setOffset = (offset: Vector) => {
+    this.offset = offset;
+  };
+
+  svg = (miniScale = false, style?: React.CSSProperties): JSX.Element[] => {
     let svgItems: JSX.Element[] = [
       <SVGCircle
         {...{
-          center: this.coordsToSvg(this.pt),
+          center: this.coordsToSvg(this.pt, miniScale),
           r: 2,
           geoId: this.id,
           style: {
@@ -48,19 +55,19 @@ export class Point extends BaseGeometryObject {
         }}
       />,
     ];
-    if (this.showLabel) svgItems.push(this.addLabel());
+    if (this.showLabel) svgItems.push(this.addLabel(miniScale));
     return svgItems;
   };
 
-  addLabel = (offset: Vector = [3, 3], style?: React.CSSProperties) => {
+  addLabel = (miniScale: boolean, style?: React.CSSProperties) => {
     return (
       <SVGText
         {...{
-          point: this.coordsToSvg(this.pt, offset),
+          point: this.coordsToSvg(this.pt, miniScale, this.offset),
           geoId: this.getId(Obj.Text, this.label),
           text: this.label,
           style: {
-            font: "12px sans-serif",
+            font: "24px sans-serif",
             ...style,
           },
           activeFrame: "",

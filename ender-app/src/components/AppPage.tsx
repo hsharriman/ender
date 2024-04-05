@@ -1,10 +1,14 @@
 import React from "react";
 import { ProofRows } from "./ProofRows";
-import { ProofTextItem } from "../core/types";
+import { ProofTextItem, Reason } from "../core/types";
+import { Diagram } from "./Diagram";
+import { ReasonText } from "./ReasonText";
 
 export interface AppPageProps {
   problemText: string;
   proofText: ProofTextItem[];
+  miniSvgElements: (activeFrame: string) => JSX.Element[];
+  reasonText: (activeFrame: string) => Reason;
   svgElements: (activeFrame: string) => JSX.Element[];
   onResample: () => void;
   onClickCanvas: () => void;
@@ -32,7 +36,7 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
   // TODO click away handler that displays the initial construction
   render() {
     return (
-      <div className="w-screen h-screen bg-slate-50 font-sans text-black grid grid-rows-1 grid-cols-2 p-4">
+      <div className="w-screen h-screen bg-slate-50 font-sans text-slate-800 grid grid-rows-1 grid-cols-2 p-4">
         <div id="proof-steps" className="col-start-1">
           <div className="pt-16">
             <ProofRows
@@ -42,34 +46,29 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
             />
           </div>
         </div>
-        {/* <div id="problem-text">{this.props.problemText}</div> */}
         <div id="canvas-container" className="col-start-2 row-span-5 p-4">
-          <svg
-            id={`construction-svg`}
+          <Diagram
             width="100%"
             height="480px"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {this.props.svgElements(this.state.activeFrame)}
-          </svg>
-          <div className="flex flex-row h-48">
-            <svg
-              id="mini-svg"
-              width="60%"
-              height="100%"
-              xmlns="http://www.w3.org/2000/svg"
-            ></svg>
-            <div className="flex flex-col justify-start">
-              <div className="font-bold text-lg text-slate-500">
-                Reason Applied:
-              </div>
-              <div className="font-bold text-lg">
-                Corresponding Angles Postulate
-              </div>
-              <div className="text-lg">
-                Corresponding angles are the angles in congruent or similar
-                triangles that have the same measurement.
-              </div>
+            svgIdSuffix="construction"
+            activeFrame={this.state.activeFrame}
+            svgElements={this.props.svgElements}
+          />
+          <div className="grid grid-rows-1 grid-cols-8 h-48">
+            <div className="col-span-3">
+              <Diagram
+                width="100%"
+                height="100%"
+                svgIdSuffix="mini"
+                activeFrame={this.state.activeFrame}
+                svgElements={this.props.miniSvgElements}
+              />
+            </div>
+            <div className="col-span-5">
+              <ReasonText
+                activeFrame={this.state.activeFrame}
+                textFn={this.props.reasonText}
+              />
             </div>
           </div>
         </div>

@@ -45,15 +45,34 @@ export class Tick extends BaseGeometryObject {
     return labels;
   };
 
-  svg = (activeFrame: string, style?: React.CSSProperties): JSX.Element[] => {
+  svg = (
+    activeFrame: string,
+    miniScale = false,
+    style?: React.CSSProperties
+  ): JSX.Element[] => {
     // frame-specific render-logic
     if (this.type === Obj.ParallelTick) {
       // makes all parallel ticks at once for 1 segment
-      return this.parallelMark(this.parent as LSegment, activeFrame, style);
+      return this.parallelMark(
+        this.parent as LSegment,
+        activeFrame,
+        miniScale,
+        style
+      );
     } else if (this.type === Obj.EqualLengthTick) {
-      return this.equalLength(this.parent as LSegment, activeFrame, style);
+      return this.equalLength(
+        this.parent as LSegment,
+        activeFrame,
+        miniScale,
+        style
+      );
     } else if (this.type === Obj.EqualAngleTick) {
-      return this.equalAngle(this.parent as LAngle, activeFrame, style);
+      return this.equalAngle(
+        this.parent as LAngle,
+        activeFrame,
+        miniScale,
+        style
+      );
     }
     return [];
   };
@@ -61,6 +80,7 @@ export class Tick extends BaseGeometryObject {
   parallelMark = (
     s: LSegment,
     activeFrame: string,
+    miniScale = false,
     style?: React.CSSProperties
   ) => {
     // find midpoint on segment
@@ -70,17 +90,19 @@ export class Tick extends BaseGeometryObject {
     // TODO, customize scaling of seg
     // 2 endpoints of the chevron, rotated to match segment
     const unit = vops.unit(vops.sub(s.p2, s.p1));
-    const seg = vops.smul(unit, 0.5);
+    const seg = vops.smul(unit, miniScale ? 0.35 : 0.25);
     const startDir = vops.add(vops.rot(seg, 135), midpoint);
     const endDir = vops.add(vops.rot(seg, 225), midpoint);
 
     // if odd number of ticks, start at midpoint
     const points = [startDir, midpoint, endDir];
 
-    const tickVectors = this.tickPlacement(unit, this.num);
+    const tickVectors = this.tickPlacement(unit, this.num, miniScale);
 
     return tickVectors.map((shift, i) => {
-      const polyPts = points.map((v) => this.coordsToSvg(vops.add(v, shift)));
+      const polyPts = points.map((v) =>
+        this.coordsToSvg(vops.add(v, shift), miniScale)
+      );
       const id = this.getId(Obj.ParallelTick, s.label, i);
       this.ids.push(id);
       // build svg polyline of chevron
@@ -101,6 +123,7 @@ export class Tick extends BaseGeometryObject {
   equalLength = (
     s: LSegment,
     activeFrame: string,
+    miniScale = false,
     style?: React.CSSProperties
   ) => {
     // find midpoint on segment
@@ -108,20 +131,20 @@ export class Tick extends BaseGeometryObject {
     const unit = vops.unit(vops.sub(s.p2, s.p1));
 
     // segments to make up the tick mark
-    const seg = vops.rot(vops.smul(unit, 0.25), 90);
+    const seg = vops.rot(vops.smul(unit, miniScale ? 0.2 : 0.15), 90);
     const start = vops.add(seg, midpoint);
     const end = vops.add(vops.smul(seg, -1), midpoint);
 
     // add evenly spaced ticks based on numTicks
-    const tickVectors = this.tickPlacement(unit, this.num);
+    const tickVectors = this.tickPlacement(unit, this.num, miniScale);
     return tickVectors.map((shift, i) => {
       const id = this.getId(Obj.EqualLengthTick, s.label, i);
       this.ids.push(id);
       return (
         <SVGLine
           {...{
-            start: this.coordsToSvg(vops.add(start, shift)),
-            end: this.coordsToSvg(vops.add(end, shift)),
+            start: this.coordsToSvg(vops.add(start, shift), miniScale),
+            end: this.coordsToSvg(vops.add(end, shift), miniScale),
             geoId: id,
             style: style,
             modes: this.modes,
@@ -135,26 +158,34 @@ export class Tick extends BaseGeometryObject {
   equalAngle = (
     a: LAngle,
     activeFrame: string,
+    miniScale = false,
     style?: React.CSSProperties
   ) => {
     const sweep = this.arcSweepsCCW(a.center, a.start, a.end);
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
+    const arcR = miniScale || this.num == 1 ? ARC_RADIUS : 0.2;
+    const arcPad = miniScale || this.num == 1 ? ARC_PADDING : 0.15;
+
     let ticks = [];
     // increase radius according to numticks
     for (let i = 0; i < this.num; i++) {
-      const scalar = ARC_RADIUS + ARC_PADDING * i;
-      const radius = ARC_RADIUS + this.scaleToSvg(ARC_PADDING * (i + 1));
+      const scalar = arcR + arcPad * i;
+      const radius = arcR + this.scaleToSvg(arcPad * (i + 1), miniScale);
       const id = this.getId(Obj.Angle, a.label, i);
       this.ids.push(id);
       ticks.push(
         <SVGCurve
           {...{
             r: radius,
-            end: this.coordsToSvg(vops.add(a.center, vops.smul(eUnit, scalar))),
+            end: this.coordsToSvg(
+              vops.add(a.center, vops.smul(eUnit, scalar)),
+              miniScale
+            ),
             start: this.coordsToSvg(
-              vops.add(a.center, vops.smul(sUnit, scalar))
+              vops.add(a.center, vops.smul(sUnit, scalar)),
+              miniScale
             ),
             majorArc: 0,
             sweep: sweep,
@@ -170,14 +201,18 @@ export class Tick extends BaseGeometryObject {
   };
 
   // returns list of vectors for tick marks along direction represented by unit, centered at the origin
-  protected tickPlacement = (unit: Vector, numTicks: number): Vector[] => {
+  protected tickPlacement = (
+    unit: Vector,
+    numTicks: number,
+    miniScale: boolean
+  ): Vector[] => {
     let dir = 1;
     const even = numTicks % 2 === 0;
-    let shifts = even ? [TICK_PADDING / 2] : [0];
+    const padding = miniScale ? TICK_PADDING : 0.15;
+    let shifts = even ? [padding / 2] : [0];
     for (let i = 1; i < numTicks; i++) {
       if (even && i === 1) dir = -1;
-      const shift =
-        i % 2 === 0 ? TICK_PADDING * i * (-1 * dir) : TICK_PADDING * i * dir;
+      const shift = i % 2 === 0 ? padding * i * (-1 * dir) : padding * i * dir;
       shifts.push(shifts[i - 1] + shift);
     }
     return shifts.map((shift) => {

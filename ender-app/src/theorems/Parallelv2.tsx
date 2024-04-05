@@ -4,7 +4,7 @@ import { Segment } from "../core/geometry/Segment";
 import { Triangle } from "../core/geometry/Triangle";
 import { comma, congruent, parallel } from "../core/geometryText";
 import { Content } from "../core/objgraph";
-import { Obj, ProofTextItem, SVGModes, Vector } from "../core/types";
+import { Obj, ProofTextItem, Reason, SVGModes, Vector } from "../core/types";
 
 const baseContent = (labeledPoints: boolean) => {
   const coords: Vector[][] = [
@@ -18,10 +18,24 @@ const baseContent = (labeledPoints: boolean) => {
   ];
   let ctx = new Content();
   const labels = ["A", "B", "C", "D", "M"];
+  const offsets: Vector[] = [
+    [5, 5],
+    [10, -10],
+    [-20, -20],
+    [3, 3],
+    [0, 10],
+  ];
   const pts = coords[0];
   const [A, B, C, D, M] = pts.map((c, i) =>
     // TODO option to make point labels invisible
-    ctx.push(new Point({ pt: c, label: labels[i], showLabel: labeledPoints }))
+    ctx.push(
+      new Point({
+        pt: c,
+        label: labels[i],
+        showLabel: labeledPoints,
+        offset: offsets[i],
+      })
+    )
   );
 
   [
@@ -31,7 +45,6 @@ const baseContent = (labeledPoints: boolean) => {
   return ctx;
 };
 
-// TODO LINKEDTEXT
 const contents = () => {
   let ctx = baseContent(true);
 
@@ -313,6 +326,27 @@ const miniContent = () => {
   return ctx;
 };
 
+const reasons = (activeFrame: string) => {
+  let reasonMap = new Map<string, Reason>();
+  reasonMap.set("step2", {
+    title: "Vertical Angles Theorem",
+    body: "When two lines intersect each other, the angles that are opposite from each other are congruent.",
+  });
+  reasonMap.set("step3", {
+    title: "SAS Triangle Congruence",
+    body: "Side-Angle-Side (SAS) Congruence. If two triangles have two sides and the included angle of one triangle congruent to two sides and the included angle of another triangle, then the triangles are congruent.",
+  });
+  reasonMap.set("step4", {
+    title: "Corresponding Angles Postulate",
+    body: "Corresponding angles are the angles in congruent or similar triangles that have the same measurement.",
+  });
+  reasonMap.set("step5", {
+    title: "Alternate Interior Angles Theorem",
+    body: "When a transversal intersects a pair of lines such that the alternate interior angles are congruent, then the lines are parallel to each other.",
+  });
+  return reasonMap.get(activeFrame) ?? { title: "", body: "" };
+};
+
 export const ParallelV2 = () => {
   // render list of all components ONCE  completed list of states
   const { ctx, linkedTexts } = contents();
@@ -324,7 +358,14 @@ export const ParallelV2 = () => {
     return pts.concat(segs).concat(angs);
   };
 
-  const miniCtx = miniContent(); // TODO
+  const miniCtx = miniContent();
+  const miniSvgElements = (activeFrame: string) => {
+    let pts = miniCtx.points.flatMap((p) => p.svg(true));
+    let segs = miniCtx.segments.flatMap((s) => s.svg(activeFrame, true));
+    let angs = miniCtx.angles.flatMap((a) => a.svg(activeFrame, true));
+    return pts.concat(segs).concat(angs);
+  };
+
   // each component needs to accept state (activeIdx) as prop so it knows
   // what state to pick
   // each component needs to set up its own onHover/onClick handler to highlight
@@ -336,6 +377,8 @@ export const ParallelV2 = () => {
       problemText={""}
       proofText={linkedTexts}
       svgElements={svgElements}
+      reasonText={reasons}
+      miniSvgElements={miniSvgElements}
       onResample={function (): void {
         throw new Error("Function not implemented.");
       }}

@@ -63,14 +63,13 @@ export class Angle extends BaseGeometryObject {
     };
   };
 
-  svg = (frameIdx: string, style?: React.CSSProperties) => {
-    return this.ticks ? this.ticks.svg(frameIdx, style) : [<></>];
+  svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
+    return this.ticks ? this.ticks.svg(frameIdx, miniScale, style) : [<></>];
   };
 
   onClickText = (activeColor: string) => (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        console.log(ele);
         ele.style.stroke = isActive ? activeColor : "black";
       }
     };

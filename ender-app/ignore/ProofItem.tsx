@@ -1,5 +1,5 @@
 import React from "react";
-import { BaseSVG } from "../core/svg/BaseSVG";
+import { BaseSVG } from "../src/core/svg/BaseSVG";
 
 // tracks text and construction of each row in a 2-column proof
 export class ProofItem {

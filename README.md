@@ -13,10 +13,10 @@
 
 ## TODO
 
-- [ ] Update page layout
+- [x] Update page layout
 - [x] Given + Prove rows
 - [x] Add reasons
-- [ ] render minis
+- [x] render minis
 - [ ] add "relies on"
 - [x] add focus to aspects of diagram
 - [ ] highlighting of text when clicking on the diagram
@@ -25,8 +25,13 @@
 - [x] Interaction between text of proof and visualization
 - [ ] Fix proof row highlighting based on dependencies
 - [ ] Add better keyboard controls and scroll
-- [ ] Fix label sizes and placement
-- [ ] Improve the proof class structure / cleanup
+- [x] Fix label sizes and placement
+- [ ] Improve the proof class structure / cleanup (always ongoing)
+- [x] Make angle markers look less scuffed
+- [ ] Make parallel markers face the same direction
+- [ ] CSS animations for transitions
+- [ ] Handle multiple tick marks on the same object
+- [ ] Change fonts
 
 ## TODO for future proofs
 

@@ -1,5 +1,4 @@
 import React from "react";
-import { ProofItem } from "./ProofItem";
 import { ProofTextItem } from "../core/types";
 
 export interface ProofRowsProps {
@@ -48,7 +47,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         <button
           id={`${this.idPrefix}${item.k}`}
           onClick={this.onClick}
-          className="py-4 border-b-2 border-gray-300 text-xl w-11/12 h-16 ml-2"
+          className="py-4 border-b-2 border-gray-300 text-lg w-10/12 h-16 ml-2"
         >
           <div className="flex flex-row justify-start gap-8 align-baseline ml-2">
             <div className="font-semibold">{`${premise}:`} </div>
@@ -67,10 +66,10 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           <button
             id={`${this.idPrefix}${item.k}`}
             onClick={this.onClick}
-            className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-xl w-11/12 h-16 ml-2"
+            className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-lg w-10/12 h-16 ml-2"
           >
             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-              <div className="text-slate-600">{`(${i})`}</div>
+              <div className="text-slate-400 font-bold">{i + 1}</div>
               {item.v}
             </div>
             <div className="flex flex-row justify-start align-baseline">
@@ -94,9 +93,9 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           {this.renderPremise("Given", given)}
           {this.renderPremise("Prove", prove)}
           <div className="h-24"></div>
-          <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-xl w-11/12 font-bold ml-6">
+          <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-lg w-10/12 font-bold ml-6">
             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-              <div className="opacity-0">(0)</div>
+              <div className="opacity-0">0</div>
               <div>Statement</div>
             </div>
             <div>Reason</div>

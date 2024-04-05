@@ -86,17 +86,17 @@ export class Segment extends BaseGeometryObject {
   };
 
   //Does not check whether the object already exists in DOM, just returns the SVG
-  svg = (frameIdx: string, style?: React.CSSProperties) => {
+  svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
     let svgItems: JSX.Element[] = [];
     if (this.ticks) {
-      svgItems.push(...this.ticks.svg(frameIdx, style));
+      svgItems.push(...this.ticks.svg(frameIdx, miniScale, style));
     }
     // add line
     svgItems.push(
       <SVGLine
         {...{
-          start: this.coordsToSvg(this.p1.pt),
-          end: this.coordsToSvg(this.p2.pt),
+          start: this.coordsToSvg(this.p1.pt, miniScale),
+          end: this.coordsToSvg(this.p2.pt, miniScale),
           geoId: this.id,
           style: style,
           modes: this.modes,

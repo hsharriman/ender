@@ -60,10 +60,10 @@ export class Triangle extends BaseGeometryObject {
     return [aa, ab, ac];
   };
 
-  svg = (frameIdx: string, style?: React.CSSProperties) => {
+  svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
     return this.s
-      .flatMap((seg) => seg.svg(frameIdx, style))
-      .concat(this.a.flatMap((ang) => ang.svg(frameIdx, style)));
+      .flatMap((seg) => seg.svg(frameIdx, miniScale, style))
+      .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
   };
 
   onClickText = (activeColor: string) => (isActive: boolean) => {

@@ -4,10 +4,14 @@ import { vops } from "../vectorOps";
 
 const SVG_XSHIFT = 60;
 const SVG_YSHIFT = -200;
+const TICK_SCALE = 20;
 const SVG_SCALE = 60;
 const SVG_DIM = 120;
+
 const MINI_SVG_DIM = 40;
-const MINI_SVG_SCALE = 8;
+const MINI_SVG_SCALE = 25;
+const MINI_SVG_XSHIFT = 20;
+const MINI_SVG_YSHIFT = -70;
 
 export interface BaseGeometryProps {
   modes?: Map<string, SVGModes>; // all modes for all states
@@ -52,17 +56,27 @@ export class BaseGeometryObject {
   matches = (name: string) => this.names.find((n) => n === name) !== undefined;
 
   // From EuclideanBuilder SVG Related
-  coordsToSvg = (coords: Vector, offset: Vector = [0, 0]): Vector => {
+  coordsToSvg = (
+    coords: Vector,
+    miniScale: boolean,
+    offset: Vector = [0, 0]
+  ): Vector => {
     // scale coordinates, shift and invert y axis
     // TODO scale the transformation based on canvas size
-    let vec = vops.add(vops.smul(coords, SVG_SCALE), [
-      SVG_XSHIFT + offset[0],
-      SVG_YSHIFT + offset[1],
+    const scale = miniScale ? MINI_SVG_SCALE : SVG_SCALE;
+    const xshift = miniScale ? MINI_SVG_XSHIFT : SVG_XSHIFT;
+    const yshift = miniScale ? MINI_SVG_YSHIFT : SVG_YSHIFT;
+    const dim = miniScale ? MINI_SVG_DIM : SVG_DIM;
+
+    let vec = vops.add(vops.smul(coords, scale), [
+      xshift + offset[0],
+      yshift + offset[1],
     ]);
-    return [vec[0], SVG_DIM - vec[1]];
+    return [vec[0], dim - vec[1]];
   };
 
-  scaleToSvg = (n: number) => n * SVG_SCALE;
+  scaleToSvg = (n: number, miniScale: boolean) =>
+    n * (miniScale ? MINI_SVG_SCALE : SVG_SCALE);
 
   getId = (objectType: Obj, label: string, tickNumber?: number) => {
     if (objectType === Obj.Angle) {
