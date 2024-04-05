@@ -7,6 +7,7 @@ import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import React from "react";
 import { LineSVGProps } from "../svg/svgTypes";
+import { ModeCSS } from "../svg/SVGStyles";
 
 export type SegmentProps = {
   p1: Point;
@@ -74,7 +75,9 @@ export class Segment extends BaseGeometryObject {
   onClickText = (activeColor: string) => (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        ele.style.stroke = isActive ? activeColor : "black";
+        const cls = ModeCSS.ACTIVE.split(" ");
+        // ele.style.stroke = isActive ? activeColor : "black";
+        isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
       }
     };
     const ele = document.getElementById(this.id);

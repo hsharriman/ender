@@ -10,6 +10,8 @@ import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.4;
+const SINGLE_MINI_ARC_RADIUS = 0.5;
+const SINGLE_MINI_ARC_PADDING = 0.5;
 const ARC_PADDING = 0.2;
 
 export type TickProps = {
@@ -165,8 +167,12 @@ export class Tick extends BaseGeometryObject {
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
-    const arcR = miniScale || this.num == 1 ? ARC_RADIUS : 0.2;
-    const arcPad = miniScale || this.num == 1 ? ARC_PADDING : 0.15;
+    let arcR = miniScale || this.num == 1 ? ARC_RADIUS : 0.2;
+    let arcPad = miniScale || this.num == 1 ? ARC_PADDING : 0.15;
+    if (this.num == 1 && miniScale) {
+      arcR = SINGLE_MINI_ARC_RADIUS;
+      arcPad = SINGLE_MINI_ARC_PADDING;
+    }
 
     let ticks = [];
     // increase radius according to numticks

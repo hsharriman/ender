@@ -3,6 +3,7 @@ import { LinkedText } from "../../components/LinkedText";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import { Tick } from "./Tick";
+import { ModeCSS } from "../svg/SVGStyles";
 
 export type AngleProps = {
   start: Point;
@@ -70,7 +71,9 @@ export class Angle extends BaseGeometryObject {
   onClickText = (activeColor: string) => (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        ele.style.stroke = isActive ? activeColor : "black";
+        const cls = ModeCSS.ACTIVE.split(" ");
+        // ele.style.stroke = isActive ? activeColor : "black";
+        isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
       }
     };
     console.log("running onClickText for angle", this.id);

@@ -19,7 +19,8 @@ export class SVGCircle extends BaseSVG {
         r={this.r}
         id={this.geoId}
         key={this.geoId}
-        style={this.updateStyle()}
+        // style={this.updateStyle()}
+        className={this.updateStyle()}
       />
     );
   }

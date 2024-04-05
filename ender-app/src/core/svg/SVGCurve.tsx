@@ -30,7 +30,8 @@ export class SVGCurve extends BaseSVG {
       <path
         d={pathStr}
         id={this.geoId}
-        style={this.updateStyle()}
+        // style={this.updateStyle()}
+        className={this.updateStyle()}
         key={this.geoId}
       />
     );

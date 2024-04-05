@@ -23,7 +23,8 @@ export class SVGPolyline extends BaseSVG {
         points={this.polylinePathFromPts(this.points)}
         id={this.geoId}
         key={this.geoId}
-        style={this.updateStyle()}
+        // style={this.updateStyle()}
+        className={this.updateStyle()}
       />
     );
   }
