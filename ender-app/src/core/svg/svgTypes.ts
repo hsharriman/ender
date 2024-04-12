@@ -49,3 +49,7 @@ export type QuadBezierSVGProps = {
   anchor: Vector;
   end: Vector;
 } & BaseSVGProps;
+
+export type PathSVGProps = {
+  d: string;
+} & BaseSVGProps;

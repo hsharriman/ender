@@ -25,6 +25,7 @@
     "ignore/Euclidean.tsx",
     "ignore/Label.tsx",
     "ignore/ProofItem.tsx",
-    "ignore/checks.ts"
+    "ignore/checks.ts",
+    "ignore/SVGCurve.tsx"
   ]
 }

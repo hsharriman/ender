@@ -1,6 +1,6 @@
-import { Vector } from "../types";
-import { BaseSVG } from "./BaseSVG";
-import { CircularArcSVGProps, SVGObj } from "./svgTypes";
+import { Vector } from "../src/core/types";
+import { BaseSVG } from "../src/core/svg/BaseSVG";
+import { CircularArcSVGProps, SVGObj } from "../src/core/svg/svgTypes";
 
 export class SVGCurve extends BaseSVG {
   readonly props: CircularArcSVGProps;

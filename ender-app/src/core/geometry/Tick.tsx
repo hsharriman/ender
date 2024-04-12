@@ -1,12 +1,14 @@
 import React from "react";
 import { BaseSVG } from "../svg/BaseSVG";
-import { SVGCurve } from "../svg/SVGCurve";
+import { SVGCurve } from "../../../ignore/SVGCurve";
 import { SVGLine } from "../svg/SVGLine";
 import { SVGPolyline } from "../svg/SVGPolyline";
 import { SVGObj } from "../svg/svgTypes";
 import { TickType, LSegment, LAngle, Obj, Vector } from "../types";
 import { vops } from "../vectorOps";
+import { pops } from "../svg/pathBuilderUtils";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
+import { PathSVG } from "../svg/PathSVG";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.4;
@@ -24,34 +26,24 @@ export class Tick extends BaseGeometryObject {
   public readonly type: TickType;
   public readonly num: number;
   parent: LSegment | LAngle;
-  ids: string[];
   id: string;
   constructor(props: TickProps) {
     super(props.type, props);
     this.type = props.type;
     this.num = props.num;
     this.parent = props.parent;
-    this.ids = [];
     this.id = this.getId(this.type, this.label);
   }
 
   getLabels = () => {
-    const labels = [];
-    for (let i = 0; i < this.num; i++) {
-      if (this.type === Obj.EqualAngleTick) {
-        labels.push(this.getId(Obj.Angle, this.parent.label, i));
-      } else {
-        labels.push(this.getId(this.type, this.parent.label, i));
-      }
-    }
-    return labels;
+    return this.id;
   };
 
   svg = (
     activeFrame: string,
     miniScale = false,
     style?: React.CSSProperties
-  ): JSX.Element[] => {
+  ): JSX.Element => {
     // frame-specific render-logic
     if (this.type === Obj.ParallelTick) {
       // makes all parallel ticks at once for 1 segment
@@ -76,7 +68,7 @@ export class Tick extends BaseGeometryObject {
         style
       );
     }
-    return [];
+    return <></>;
   };
 
   parallelMark = (
@@ -104,26 +96,30 @@ export class Tick extends BaseGeometryObject {
     const points = [startDir, midpoint, endDir];
 
     const tickVectors = this.tickPlacement(unit, this.num, miniScale);
-
-    return tickVectors.map((shift, i) => {
+    let dStr = "";
+    tickVectors.map((shift, i) => {
       const polyPts = points.map((v) =>
         this.coordsToSvg(vops.add(v, shift), miniScale)
       );
-      const id = this.getId(Obj.ParallelTick, s.label, i);
-      this.ids.push(id);
+      dStr =
+        dStr +
+        pops.moveTo(polyPts[0]) +
+        pops.lineTo(polyPts[1]) +
+        pops.lineTo(polyPts[2]);
       // build svg polyline of chevron
-      return (
-        <SVGPolyline
-          {...{
-            points: polyPts,
-            geoId: id,
-            modes: this.modes,
-            style: style,
-            activeFrame: activeFrame,
-          }}
-        />
-      );
     });
+    this.id = this.getId(Obj.ParallelTick, s.label);
+    return (
+      <PathSVG
+        {...{
+          d: dStr,
+          geoId: this.id,
+          modes: this.modes,
+          style: style,
+          activeFrame: activeFrame,
+        }}
+      />
+    );
   };
 
   equalLength = (
@@ -142,23 +138,25 @@ export class Tick extends BaseGeometryObject {
     const end = vops.add(vops.smul(seg, -1), midpoint);
 
     // add evenly spaced ticks based on numTicks
+    let dStr = "";
     const tickVectors = this.tickPlacement(unit, this.num, miniScale);
-    return tickVectors.map((shift, i) => {
-      const id = this.getId(Obj.EqualLengthTick, s.label, i);
-      this.ids.push(id);
-      return (
-        <SVGLine
-          {...{
-            start: this.coordsToSvg(vops.add(start, shift), miniScale),
-            end: this.coordsToSvg(vops.add(end, shift), miniScale),
-            geoId: id,
-            style: style,
-            modes: this.modes,
-            activeFrame: activeFrame,
-          }}
-        />
-      );
+    tickVectors.map((shift) => {
+      const st = this.coordsToSvg(vops.add(start, shift), miniScale);
+      const en = this.coordsToSvg(vops.add(end, shift), miniScale);
+      dStr = dStr + pops.moveTo(st) + pops.lineTo(en);
     });
+    this.id = this.getId(Obj.ParallelTick, s.label);
+    return (
+      <PathSVG
+        {...{
+          d: dStr,
+          geoId: this.id,
+          style: style,
+          modes: this.modes,
+          activeFrame: activeFrame,
+        }}
+      />
+    );
   };
 
   equalAngle = (
@@ -178,36 +176,33 @@ export class Tick extends BaseGeometryObject {
       arcPad = SINGLE_MINI_ARC_PADDING;
     }
 
-    let ticks = [];
+    let dStr = "";
     // increase radius according to numticks
     for (let i = 0; i < this.num; i++) {
       const scalar = arcR + arcPad * i;
       const radius = arcR + this.scaleToSvg(arcPad * (i + 1), miniScale);
-      const id = this.getId(Obj.Angle, a.label, i);
-      this.ids.push(id);
-      ticks.push(
-        <SVGCurve
-          {...{
-            r: radius,
-            end: this.coordsToSvg(
-              vops.add(a.center, vops.smul(eUnit, scalar)),
-              miniScale
-            ),
-            start: this.coordsToSvg(
-              vops.add(a.center, vops.smul(sUnit, scalar)),
-              miniScale
-            ),
-            majorArc: 0,
-            sweep: sweep,
-            geoId: id,
-            modes: this.modes,
-            activeFrame: activeFrame,
-            style: style,
-          }}
-        />
+      const end = this.coordsToSvg(
+        vops.add(a.center, vops.smul(eUnit, scalar)),
+        miniScale
       );
+      const start = this.coordsToSvg(
+        vops.add(a.center, vops.smul(sUnit, scalar)),
+        miniScale
+      );
+      dStr = dStr + pops.moveTo(start) + pops.arcTo(radius, 0, sweep, end);
     }
-    return ticks;
+    this.id = this.getId(Obj.EqualAngleTick, a.label);
+    return (
+      <PathSVG
+        {...{
+          d: dStr,
+          geoId: this.id,
+          style: style,
+          modes: this.modes,
+          activeFrame: activeFrame,
+        }}
+      />
+    );
   };
 
   // returns list of vectors for tick marks along direction represented by unit, centered at the origin

@@ -80,17 +80,16 @@ export class Segment extends BaseGeometryObject {
     };
     const ele = document.getElementById(this.id);
     setStyle(ele);
-    if (this.ticks)
-      this.ticks.getLabels().map((id) => {
-        setStyle(document.getElementById(id));
-      });
+    if (this.ticks) {
+      setStyle(document.getElementById(this.ticks.getLabels()));
+    }
   };
 
   //Does not check whether the object already exists in DOM, just returns the SVG
   svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
     let svgItems: JSX.Element[] = [];
     if (this.ticks) {
-      svgItems.push(...this.ticks.svg(frameIdx, miniScale, style));
+      svgItems.push(this.ticks.svg(frameIdx, miniScale, style));
     }
     // add line
     svgItems.push(

@@ -28,7 +28,7 @@
 - [x] Fix label sizes and placement
 - [ ] Improve the proof class structure / cleanup (always ongoing)
 - [x] Make angle markers look less scuffed
-- [ ] Make parallel markers face the same direction
+- [x] Make parallel markers face the same direction
 - [ ] CSS animations for transitions
 - [ ] Handle multiple tick marks on the same object
 - [ ] Change fonts

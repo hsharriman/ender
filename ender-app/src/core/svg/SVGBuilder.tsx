@@ -1,6 +1,6 @@
 import { CSSProperties } from "react";
 import { SVGCircle } from "./SVGCircle";
-import { SVGCurve } from "./SVGCurve";
+import { SVGCurve } from "../../../ignore/SVGCurve";
 import { SVGLine } from "./SVGLine";
 import { SVGPolyline } from "./SVGPolyline";
 import { SVGText } from "./SVGText";
