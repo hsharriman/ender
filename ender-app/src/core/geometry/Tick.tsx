@@ -88,11 +88,15 @@ export class Tick extends BaseGeometryObject {
     // find midpoint on segment
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
 
-    // TODO make direction face "positive direction"?
-    // TODO, customize scaling of seg
+    let unit = vops.unit(vops.sub(s.p2, s.p1));
+    // flip the direction of chevron if unit vec is pointing downwards
+    // (in quadrant 3 or 4, where y coord is negative)
+    // TODO special case where unit vec is horizontal and pointing left
+    if (unit[1] < 0) {
+      unit = vops.smul(unit, -1);
+    }
     // 2 endpoints of the chevron, rotated to match segment
-    const unit = vops.unit(vops.sub(s.p2, s.p1));
-    const seg = vops.smul(unit, miniScale ? 0.35 : 0.25);
+    const seg = vops.smul(unit, miniScale ? 0.35 : 0.25); // TODO, customize scaling of seg
     const startDir = vops.add(vops.rot(seg, 135), midpoint);
     const endDir = vops.add(vops.rot(seg, 225), midpoint);
 
