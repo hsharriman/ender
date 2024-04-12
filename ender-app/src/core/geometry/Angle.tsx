@@ -77,7 +77,6 @@ export class Angle extends BaseGeometryObject {
     };
     // update style for each tick mark
     if (this.ticks) {
-      console.log(this.ticks.getLabels());
       this.ticks.getLabels().map((id) => {
         setStyle(document.getElementById(id));
       });

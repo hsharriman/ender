@@ -17,7 +17,7 @@
 - [x] Given + Prove rows
 - [x] Add reasons
 - [x] render minis
-- [ ] add "relies on"
+- [x] add "relies on"
 - [x] add focus to aspects of diagram
 - [ ] highlighting of text when clicking on the diagram
 - [x] Step-by-step interaction instead of grid
@@ -32,6 +32,8 @@
 - [ ] CSS animations for transitions
 - [ ] Handle multiple tick marks on the same object
 - [ ] Change fonts
+- [ ] Make relies on resample if screen resizes
+- [ ] long-form layout + resampling
 
 ## TODO for future proofs
 

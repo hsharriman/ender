@@ -1,10 +1,12 @@
 import React from "react";
 import { ProofTextItem } from "../core/types";
+import { ReliesOn, ReliesOnProps } from "./ReliesOn";
 
 export interface ProofRowsProps {
   active: string;
   items: ProofTextItem[];
   onClick: (n: string) => void; // callback that returns new selected idx when clicked
+  reliesOn?: Map<string, Set<string>>;
 }
 export interface ProofRowsState {
   active: string;
@@ -134,13 +136,12 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       // first 2 rows are "given" and "prove"
       const given = this.props.items[0];
       const prove = this.props.items[1];
-      console.log(this.state.active);
       return (
         <>
           {this.renderPremise("Given", given)}
           {this.renderPremise("Prove", prove)}
           <div className="h-24"></div>
-          <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-lg w-10/12 font-bold ml-6">
+          <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-lg font-bold ml-6 w-10/12">
             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
               <div className="opacity-0">0</div>
               <div>Statement</div>

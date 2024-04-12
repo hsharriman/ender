@@ -18,6 +18,7 @@ export class Content {
   private triangles: Triangle[] = [];
   private modes: Set<string> = new Set();
   private content: BaseSVG[] = [];
+  private deps: Map<string, Set<string>> = new Map();
 
   addContent = (item: BaseSVG) => {
     if (!this.content.find((elem) => elem.geoId === item.geoId)) {
@@ -35,6 +36,16 @@ export class Content {
       console.log("more than 1 match for id, ", id, matches);
     }
     return matches[0];
+  };
+
+  reliesOn = (id: string, deps: string[]) => {
+    // adds dependencies from one step to another
+    // key is mode, value is array of modes that it depends on
+    this.deps.set(id, new Set(deps));
+  };
+
+  getReliesOn = () => {
+    return this.deps;
   };
 
   addFrame = (name: string) => {

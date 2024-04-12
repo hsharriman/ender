@@ -238,8 +238,17 @@ const contents = () => {
       </span>
     ),
     reason: "Alternate Interior Angles Theorem",
-    dependsOn: new Set([step4]),
+    dependsOn: new Set([step4]), // TODO repetitive, same as ctx.deps
   });
+
+  // RELIES ON:
+  // STEP 3
+  ctx.reliesOn(step3, [step1, step2]);
+  // STEP 4
+  ctx.reliesOn(step4, [step3]);
+  // STEP 5
+  ctx.reliesOn(step5, [step4]);
+
   return { ctx, linkedTexts };
 };
 
@@ -263,27 +272,27 @@ const miniContent = () => {
 
   // STEP 3 - SAS TRIANGLE CONGRUENCE
   const step3 = ctx.addFrame("step3");
-  AC = AC.mode(step3, SVGModes.Blue);
-  BD = BD.mode(step3, SVGModes.Purple);
-  CMA = CMA.mode(step2, SVGModes.Purple);
-  DMB = DMB.mode(step2, SVGModes.Blue);
+  AC = AC.mode(step3, SVGModes.Purple);
+  BD = BD.mode(step3, SVGModes.Blue);
+  CMA = CMA.mode(step3, SVGModes.Purple);
+  DMB = DMB.mode(step3, SVGModes.Blue);
 
   let AM = ctx
     .getSegment("AM")
     .tick(Obj.EqualLengthTick)
-    .mode(step3, SVGModes.Blue);
+    .mode(step3, SVGModes.Purple);
   let BM = ctx
     .getSegment("BM")
     .tick(Obj.EqualLengthTick)
-    .mode(step3, SVGModes.Purple);
+    .mode(step3, SVGModes.Blue);
   let CM = ctx
     .getSegment("CM")
     .tick(Obj.EqualLengthTick, 2)
-    .mode(step3, SVGModes.Blue);
+    .mode(step3, SVGModes.Purple);
   let DM = ctx
     .getSegment("DM")
     .tick(Obj.EqualLengthTick, 2)
-    .mode(step3, SVGModes.Purple);
+    .mode(step3, SVGModes.Blue);
 
   // STEP 4 - CORRESPONDING ANGLES
   const step4 = ctx.addFrame("step4");
@@ -384,6 +393,7 @@ export const ParallelV2 = () => {
       svgElements={svgElements}
       reasonText={reasons}
       miniSvgElements={miniSvgElements}
+      reliesOn={ctx.getReliesOn()}
       onResample={function (): void {
         throw new Error("Function not implemented.");
       }}
