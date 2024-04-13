@@ -325,6 +325,8 @@ const miniContent = () => {
   DM = DM.mode(step5, SVGModes.Hidden);
   AM = AM.mode(step5, SVGModes.Default); // TODO hide tick
   BM = BM.mode(step5, SVGModes.Default); // TODO hide tick
+  AM = AM.hideTick(step5);
+  BM = BM.hideTick(step5);
   MAC = MAC.tick(Obj.EqualAngleTick).mode(step5, SVGModes.Default);
   MBD = MBD.tick(Obj.EqualAngleTick).mode(step5, SVGModes.Default);
   AC = AC.tick(Obj.ParallelTick).mode(step5, SVGModes.Purple);
@@ -365,7 +367,6 @@ export const ParallelV2 = () => {
   // render list of all components ONCE  completed list of states
   const { ctx, linkedTexts } = contents();
   const svgElements = (activeFrame: string) => {
-    console.log("calling render on canvas elems", activeFrame);
     let pts = ctx.points.flatMap((p) => p.svg());
     let segs = ctx.segments.flatMap((s) => s.svg(activeFrame));
     let angs = ctx.angles.flatMap((a) => a.svg(activeFrame));

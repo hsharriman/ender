@@ -54,7 +54,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     const active = event.currentTarget.id.replace(this.idPrefix, "");
     if (active !== this.state.active) {
       const newIdx = this.props.items.findIndex((item) => item.k === active);
-      if (newIdx !== -1) {
+      if (newIdx === -1) {
         console.error(
           "couldn't find match in ProofRows items array for key: ",
           active

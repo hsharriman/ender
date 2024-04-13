@@ -16,7 +16,6 @@ export class LinkedText extends React.Component<
   LinkedTextProps,
   LinkedTextState
 > {
-  private defaultColor = "black"; // TODO
   private activeColor = "#9A76FF"; // TODO
   private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: LinkedTextProps) {

@@ -145,7 +145,7 @@ export class Tick extends BaseGeometryObject {
       const en = this.coordsToSvg(vops.add(end, shift), miniScale);
       dStr = dStr + pops.moveTo(st) + pops.lineTo(en);
     });
-    this.id = this.getId(Obj.ParallelTick, s.label);
+    this.id = this.getId(Obj.EqualLengthTick, s.label);
     return (
       <PathSVG
         {...{
@@ -191,7 +191,7 @@ export class Tick extends BaseGeometryObject {
       );
       dStr = dStr + pops.moveTo(start) + pops.arcTo(radius, 0, sweep, end);
     }
-    this.id = this.getId(Obj.EqualAngleTick, a.label);
+    this.id = this.getId(Obj.Angle, a.label);
     return (
       <PathSVG
         {...{
