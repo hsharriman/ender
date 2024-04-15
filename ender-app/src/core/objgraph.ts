@@ -1,9 +1,11 @@
+import { getId } from "../utils";
 import { Angle } from "./geometry/Angle";
 import { Point } from "./geometry/Point";
 import { Segment } from "./geometry/Segment";
+import { Tick } from "./geometry/Tick";
 import { Triangle } from "./geometry/Triangle";
 import { BaseSVG } from "./svg/BaseSVG";
-import { Obj } from "./types";
+import { LAngle, LSegment, Obj, TickType } from "./types";
 
 export type SupportedObjects =
   | Obj.Point
@@ -15,10 +17,12 @@ export class Content {
   public points: Point[] = [];
   public segments: Segment[] = [];
   public angles: Angle[] = [];
+  public ticks: Tick[] = [];
   private triangles: Triangle[] = [];
   private modes: Set<string> = new Set();
   private content: BaseSVG[] = [];
   private deps: Map<string, Set<string>> = new Map();
+  getId = getId;
 
   addContent = (item: BaseSVG) => {
     if (!this.content.find((elem) => elem.geoId === item.geoId)) {
@@ -51,18 +55,6 @@ export class Content {
   addFrame = (name: string) => {
     this.modes.add(name);
     return name;
-  };
-
-  //# from EuclideanBuilder
-  getId = (objectType: Obj, label: string, tickNumber?: number) => {
-    if (objectType === Obj.Angle) {
-      const endPts = [label[0], label[2]].sort().toString().replaceAll(",", "");
-      label = `${label[1]}-${endPts}`;
-    } else {
-      label = Array.from(label).sort().toString().replaceAll(",", "");
-    }
-    let id = `${objectType}.${label}`;
-    return tickNumber ? `${id}.${tickNumber}` : id;
   };
 
   print() {
@@ -106,7 +98,7 @@ export class Content {
   push(e: Segment): Segment;
   push(e: Angle): Angle;
   push(e: Triangle): Triangle;
-  push(e: Point | Segment | Angle | Triangle) {
+  push(e: Point | Segment | Angle | Triangle | Tick) {
     switch (e.tag) {
       case Obj.Point:
         if (!this.getPoint(e.label)) this.points.push(e as Point);
@@ -127,10 +119,24 @@ export class Content {
     }
   }
 
+  pushTick = (parent: Segment | Angle, type: TickType, num: number = 1) => {
+    const existing = this.getTick(parent, type, num);
+    if (existing) return existing;
+    let tick = new Tick({ parent: parent.labeled(), type, num });
+    this.ticks.push(tick);
+    return tick;
+  };
+
   getPoint = (label: string) => this.points.filter((p) => p.matches(label))[0];
   getSegment = (label: string) =>
     this.segments.filter((s) => s.matches(label))[0];
   getAngle = (label: string) => this.angles.filter((a) => a.matches(label))[0];
   getTriangle = (label: string) =>
     this.triangles.filter((t) => t.matches(label))[0];
+
+  getTick = (parent: Segment | Angle, type: TickType, numTicks: number = 1) => {
+    return this.ticks.filter(
+      (t) => t.id === this.getId(type, parent.labeled().label, numTicks)
+    )[0];
+  };
 }

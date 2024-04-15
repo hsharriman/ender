@@ -1,19 +1,19 @@
 import { CSSProperties } from "react";
-import { SVGCircle } from "./SVGCircle";
-import { SVGCurve } from "../../../ignore/SVGCurve";
-import { SVGLine } from "./SVGLine";
-import { SVGPolyline } from "./SVGPolyline";
-import { SVGText } from "./SVGText";
-import { Vector } from "../types";
-import { vops } from "../vectorOps";
-import { BaseSVG } from "./BaseSVG";
+import { SVGCircle } from "../src/core/svg/SVGCircle";
+// import { SVGCurve } from "./SVGCurve";
+import { SVGLine } from "../src/core/svg/SVGLine";
+import { SVGPolyline } from "../src/core/svg/SVGPolyline";
+import { SVGText } from "../src/core/svg/SVGText";
+import { Vector } from "../src/core/types";
+import { vops } from "../src/core/vectorOps";
+import { BaseSVG } from "../src/core/svg/BaseSVG";
 import {
   CircleSVGProps,
   LineSVGProps,
   TextSVGProps,
   PolylineSVGProps,
   CircularArcSVGProps,
-} from "./svgTypes";
+} from "../src/core/svg/svgTypes";
 
 const SVG_SCALE = 20;
 const SVG_DIM = 200;
@@ -77,7 +77,7 @@ export class SVGBuilder {
     this.addContent(new SVGPolyline(props));
   };
 
-  addCircularArc = (props: CircularArcSVGProps) => {
-    this.addContent(new SVGCurve(props));
-  };
+  // addCircularArc = (props: CircularArcSVGProps) => {
+  //   this.addContent(new SVGCurve(props));
+  // };
 }

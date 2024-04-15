@@ -13,13 +13,14 @@ export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
   readonly names: string[];
   // readonly tag: SVGObj;
   readonly activeColor?: string;
-  readonly modes: Map<string, SVGModes> | undefined;
+  // readonly modes: Map<string, SVGModes> | undefined;
+  readonly mode: SVGModes;
   style: CSSProperties;
   constructor(props: BaseSVGProps) {
     super(props);
     this.geoId = props.geoId;
     this.names = props.names ?? [];
-    this.modes = props.modes;
+    this.mode = props.mode;
     // this.tag = props.tag;
     this.style = props.style ?? {};
     this.state = {
@@ -27,8 +28,8 @@ export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
     };
   }
 
-  updateStyle = () => {
-    switch (this.modes?.get(this.props.activeFrame)) {
+  updateStyle = (mode: SVGModes) => {
+    switch (mode) {
       case SVGModes.Active:
         return ModeCSS.ACTIVE;
       case SVGModes.Default:

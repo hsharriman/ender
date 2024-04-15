@@ -1,7 +1,7 @@
 import { BaseSVG } from "../svg/BaseSVG";
 import { SVGCircle } from "../svg/SVGCircle";
 import { SVGText } from "../svg/SVGText";
-import { Vector, Obj, LPoint } from "../types";
+import { Vector, Obj, LPoint, SVGModes } from "../types";
 import { vops } from "../vectorOps";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 
@@ -51,6 +51,7 @@ export class Point extends BaseGeometryObject {
             fill: "black",
             ...style,
           },
+          mode: SVGModes.Hidden, // TODO unnecessary rn
           activeFrame: "",
         }}
       />,
@@ -70,6 +71,7 @@ export class Point extends BaseGeometryObject {
             font: "24px sans-serif",
             ...style,
           },
+          mode: SVGModes.Default, // TODO unnecessary rn
           activeFrame: "",
         }}
       />

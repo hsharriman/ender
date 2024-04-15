@@ -1,14 +1,10 @@
 import React from "react";
-import { BaseSVG } from "../svg/BaseSVG";
-import { SVGCurve } from "../../../ignore/SVGCurve";
-import { SVGLine } from "../svg/SVGLine";
-import { SVGPolyline } from "../svg/SVGPolyline";
-import { SVGObj } from "../svg/svgTypes";
-import { TickType, LSegment, LAngle, Obj, Vector } from "../types";
+import { TickType, LSegment, LAngle, Obj, Vector, SVGModes } from "../types";
 import { vops } from "../vectorOps";
 import { pops } from "../svg/pathBuilderUtils";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { PathSVG } from "../svg/PathSVG";
+import { ModeCSS } from "../svg/SVGStyles";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.4;
@@ -17,56 +13,118 @@ const SINGLE_MINI_ARC_PADDING = 0.5;
 const ARC_PADDING = 0.2;
 
 export type TickProps = {
+  parent: LSegment | LAngle;
   type: TickType;
   num: number;
-  parent: LSegment | LAngle;
 } & BaseGeometryProps;
+
+interface TickMeta {
+  id: string;
+  type: TickType;
+  num: number;
+  mode: SVGModes;
+}
 export class Tick extends BaseGeometryObject {
   // 1 segment and type of tick
-  public readonly type: TickType;
-  public readonly num: number;
   parent: LSegment | LAngle;
+  type: TickType;
+  num: number;
   id: string;
+  prevFrame: string | undefined;
+  // tickMap: Map<string, TickMeta> = new Map();
   constructor(props: TickProps) {
-    super(props.type, props);
+    super(Obj.Tick, props);
+    this.parent = props.parent;
     this.type = props.type;
     this.num = props.num;
-    this.parent = props.parent;
-    this.id = this.getId(this.type, this.label);
+    this.id = this.getId(this.type, this.parent.label, this.num);
+    // this.names = [this.id];
   }
 
-  getLabels = () => {
-    return this.id;
+  override onClickText = (isActive: boolean) => {
+    const setStyle = (ele: HTMLElement | null) => {
+      if (ele) {
+        const cls = ModeCSS.ACTIVE.split(" ");
+        isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
+      }
+    };
+    const ele = document.getElementById(this.id);
+    setStyle(ele);
   };
+
+  // // for copying the previous frame's tick type
+  // copyFrame = (frame: string, mode: SVGModes) => {
+  //   if (this.prevFrame) {
+  //     let meta = this.tickMap.get(this.prevFrame)!;
+  //     meta.mode = meta.mode === SVGModes.Hidden ? meta.mode : mode;
+  //     console.log("mode", frame, meta);
+  //     this.tickMap.set(frame, meta);
+  //     this.prevFrame = frame;
+  //   }
+  // };
+
+  // for setting a new tick type
+  // addTickMeta = (frame: string, meta: TickMeta) => {
+  //   if (meta.id === "") {
+  //     meta.id = this.getId(meta.type, this.parent.label, meta.num);
+  //   }
+  //   this.tickMap.set(frame, meta);
+  //   this.prevFrame = frame;
+  // };
+
+  // every tick needs:
+  // parent
+  // PER MODE:
+  //   1. id, type, num ticks, mode
+  // the tick CANNOT BE ALTERED ONCE MADE. IF YOU NEED MULTIPLE TICK TYPES PER SEG THERE MUST BE MULTIPLE TICK INSTANCES.
+  // anything else?
+  // MODES have to work a little differently, because one tick could have multiple possible SVG elements,
+  // cannot just pass all modes to any svg object, have to filter down to just the ones that are relevant
+  // to the particular type of tick. FILTERING also cannot be done based on just tick type, need
+  // to account for number of ticks as well.
+
+  // getLabels = (frameKey: string) => {
+  //   return this.tickMap.get(frameKey)?.id;
+  // };
 
   svg = (
     activeFrame: string,
     miniScale = false,
     style?: React.CSSProperties
   ): JSX.Element => {
-    // frame-specific render-logic
-    if (this.type === Obj.ParallelTick) {
-      // makes all parallel ticks at once for 1 segment
-      return this.parallelMark(
-        this.parent as LSegment,
-        activeFrame,
-        miniScale,
-        style
-      );
-    } else if (this.type === Obj.EqualLengthTick) {
-      return this.equalLength(
-        this.parent as LSegment,
-        activeFrame,
-        miniScale,
-        style
-      );
-    } else if (this.type === Obj.EqualAngleTick) {
-      return this.equalAngle(
-        this.parent as LAngle,
-        activeFrame,
-        miniScale,
-        style
-      );
+    // const meta = this.tickMap.get(activeFrame);
+    // if (miniScale && meta) {
+    //   console.log(activeFrame, meta);
+    // }
+    const mode = this.modes.get(activeFrame);
+    if (mode) {
+      // frame-specific render-logic
+      if (this.type === Obj.ParallelTick) {
+        // makes all parallel ticks at once for 1 segment
+        return this.parallelMark(
+          this.parent as LSegment,
+          activeFrame,
+          mode,
+          miniScale,
+          style
+        );
+      } else if (this.type === Obj.EqualLengthTick) {
+        return this.equalLength(
+          this.parent as LSegment,
+          activeFrame,
+          mode,
+          miniScale,
+          style
+        );
+      } else if (this.type === Obj.EqualAngleTick) {
+        return this.equalAngle(
+          this.parent as LAngle,
+          activeFrame,
+          mode,
+          miniScale,
+          style
+        );
+      }
     }
     return <></>;
   };
@@ -74,6 +132,7 @@ export class Tick extends BaseGeometryObject {
   parallelMark = (
     s: LSegment,
     activeFrame: string,
+    mode: SVGModes,
     miniScale = false,
     style?: React.CSSProperties
   ) => {
@@ -108,13 +167,12 @@ export class Tick extends BaseGeometryObject {
         pops.lineTo(polyPts[2]);
       // build svg polyline of chevron
     });
-    this.id = this.getId(Obj.ParallelTick, s.label);
     return (
       <PathSVG
         {...{
           d: dStr,
           geoId: this.id,
-          modes: this.modes,
+          mode: mode, // TODO tick path modes? might need separate
           style: style,
           activeFrame: activeFrame,
         }}
@@ -125,6 +183,7 @@ export class Tick extends BaseGeometryObject {
   equalLength = (
     s: LSegment,
     activeFrame: string,
+    mode: SVGModes,
     miniScale = false,
     style?: React.CSSProperties
   ) => {
@@ -145,14 +204,13 @@ export class Tick extends BaseGeometryObject {
       const en = this.coordsToSvg(vops.add(end, shift), miniScale);
       dStr = dStr + pops.moveTo(st) + pops.lineTo(en);
     });
-    this.id = this.getId(Obj.EqualLengthTick, s.label);
     return (
       <PathSVG
         {...{
           d: dStr,
           geoId: this.id,
           style: style,
-          modes: this.modes,
+          mode: mode,
           activeFrame: activeFrame,
         }}
       />
@@ -162,6 +220,7 @@ export class Tick extends BaseGeometryObject {
   equalAngle = (
     a: LAngle,
     activeFrame: string,
+    mode: SVGModes,
     miniScale = false,
     style?: React.CSSProperties
   ) => {
@@ -191,14 +250,13 @@ export class Tick extends BaseGeometryObject {
       );
       dStr = dStr + pops.moveTo(start) + pops.arcTo(radius, 0, sweep, end);
     }
-    this.id = this.getId(Obj.Angle, a.label);
     return (
       <PathSVG
         {...{
           d: dStr,
           geoId: this.id,
           style: style,
-          modes: this.modes,
+          mode: mode,
           activeFrame: activeFrame,
         }}
       />

@@ -10,7 +10,8 @@ export enum SVGObj {
 
 export type BaseSVGProps = {
   geoId: string;
-  modes?: Map<string, SVGModes>;
+  // modes?: Map<string, SVGModes>;
+  mode: SVGModes;
   activeFrame: string;
   names?: string[];
   style?: React.CSSProperties;

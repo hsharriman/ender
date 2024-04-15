@@ -1,6 +1,7 @@
 import React from "react";
 import { Obj, SVGModes, Vector } from "../types";
 import { vops } from "../vectorOps";
+import { getId } from "../../utils";
 
 const SVG_XSHIFT = 60;
 const SVG_YSHIFT = -200;
@@ -24,6 +25,7 @@ export class BaseGeometryObject {
   public label: string = "";
   protected modes: Map<string, SVGModes>;
   public activeIdx: number;
+  getId = getId;
   constructor(tag: Obj, props: BaseGeometryProps) {
     this.tag = tag;
     this.modes = props.modes ? props.modes : new Map();
@@ -33,6 +35,10 @@ export class BaseGeometryObject {
   mode = (frameKey: string, mode: SVGModes) => {
     this.modes.set(frameKey, mode);
     return this;
+  };
+
+  onClickText = (isActive: boolean) => {
+    // TODO implementation
   };
 
   // https://stackoverflow.com/questions/9960908/permutations-in-javascript
@@ -77,17 +83,6 @@ export class BaseGeometryObject {
 
   scaleToSvg = (n: number, miniScale: boolean) =>
     n * (miniScale ? MINI_SVG_SCALE : SVG_SCALE);
-
-  getId = (objectType: Obj, label: string, tickNumber?: number) => {
-    if (objectType === Obj.Angle) {
-      const endPts = [label[0], label[2]].sort().toString().replaceAll(",", "");
-      label = `${label[1]}-${endPts}`;
-    } else {
-      label = Array.from(label).sort().toString().replaceAll(",", "");
-    }
-    let id = `${objectType}.${label}`;
-    return tickNumber ? `${id}.${tickNumber}` : id;
-  };
 
   // method to check whether ticks should be included in the render or not
 }

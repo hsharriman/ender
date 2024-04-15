@@ -66,27 +66,27 @@ export class Triangle extends BaseGeometryObject {
       .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
   };
 
-  onClickText = () => (isActive: boolean) => {
+  onClickText = (isActive: boolean) => {
     if (isActive) {
       // for each segment use onClickText
       this.s.map((seg) => {
-        seg.onClickText()(isActive);
+        seg.onClickText(isActive);
       });
       this.a.map((ang) => {
-        ang.onClickText()(isActive);
+        ang.onClickText(isActive);
       });
     }
   };
 
-  linkedText = (label: string) => {
-    return (
-      <LinkedText
-        val={label}
-        clickCallback={this.onClickText()}
-        type={Obj.Triangle}
-      />
-    );
-  };
+  // linkedText = (activeFrame: string, label: string) => {
+  //   return (
+  //     <LinkedText
+  //       val={label}
+  //       clickCallback={this.onClickText(activeFrame)}
+  //       type={Obj.Triangle}
+  //     />
+  //   );
+  // };
 
   override mode = (frameKey: string, mode: SVGModes) => {
     this.modes.set(frameKey, mode);

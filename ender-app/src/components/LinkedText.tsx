@@ -1,12 +1,14 @@
 import React from "react";
 import { Obj } from "../core/types";
+import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
 
 export interface LinkedTextProps {
   val: string;
   activeColor?: string;
-  type: Obj; // TODO correct type
+  obj: BaseGeometryObject; // TODO correct type
   isActive?: boolean;
-  clickCallback?: (isActive: boolean) => void;
+  linkedObjs?: BaseGeometryObject[];
+  // clickCallback?: (isActive: boolean) => void;
 }
 
 export interface LinkedTextState {
@@ -59,11 +61,17 @@ export class LinkedText extends React.Component<
     this.setState({
       isClicked,
     });
-    this.props.clickCallback && this.props.clickCallback(isClicked);
+    this.props.obj.onClickText(isClicked);
+    if (this.props.linkedObjs) {
+      this.props.linkedObjs.forEach((obj) => {
+        obj.onClickText(isClicked);
+      });
+    }
+    // this.props.clickCallback && this.props.clickCallback(isClicked);
   };
 
   renderText = () => {
-    switch (this.props.type) {
+    switch (this.props.obj.tag) {
       case Obj.Segment:
         return (
           <span

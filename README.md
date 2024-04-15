@@ -34,6 +34,14 @@
 - [ ] Change fonts
 - [ ] Make relies on resample if screen resizes
 - [ ] long-form layout + resampling
+- [ ] make linked text active on hover
+
+## TODO for infra/study
+
+- [ ] multiple choice question component
+- [ ] anonymized ID for each participant
+- [ ] question logic/randomizing
+- [ ] uploading selected answers
 
 ## TODO for future proofs
 

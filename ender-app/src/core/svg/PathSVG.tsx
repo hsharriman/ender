@@ -15,7 +15,7 @@ export class PathSVG extends BaseSVG {
         d={this.d}
         id={this.geoId}
         key={this.geoId}
-        className={this.updateStyle()}
+        className={this.updateStyle(this.props.mode)}
       />
     );
   }

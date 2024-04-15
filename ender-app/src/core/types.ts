@@ -18,6 +18,8 @@ export enum Obj {
   EqualLengthTick = "equallength",
   Triangle = "triangle",
   EqualAngleTick = "equalangle",
+  Tick = "tick",
+  HiddenTick = "hiddentick",
 }
 
 export enum LinkedSymbolType {
@@ -29,7 +31,8 @@ export enum LinkedSymbolType {
 export type TickType =
   | Obj.ParallelTick
   | Obj.EqualLengthTick
-  | Obj.EqualAngleTick;
+  | Obj.EqualAngleTick
+  | Obj.HiddenTick;
 
 export enum SVGModes {
   Hidden = "hidden",

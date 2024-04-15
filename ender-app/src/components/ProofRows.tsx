@@ -105,28 +105,26 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     const textColor = isActive ? "text-slate-800" : "text-slate-400";
     const strokeColor = isActive ? "border-slate-800" : "border-gray-300";
     return (
-      <>
-        <div className="flex flex-row justify-start h-16">
-          {this.highlightBar(item.k)}
-          <button
-            id={`${this.idPrefix}${item.k}`}
-            onClick={this.onClick}
-            className="border-gray-300 border-b-2 w-10/12 h-16 ml-2 text-lg"
+      <div className="flex flex-row justify-start h-16" key={item.k}>
+        {this.highlightBar(item.k)}
+        <button
+          id={`${this.idPrefix}${item.k}`}
+          onClick={this.onClick}
+          className="border-gray-300 border-b-2 w-10/12 h-16 ml-2 text-lg"
+        >
+          <div
+            className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
           >
-            <div
-              className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
-            >
-              <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-                <div className="text-slate-400 font-bold">{i + 1}</div>
-                {item.v}
-              </div>
-              <div className="flex flex-row justify-start align-baseline">
-                {item.reason}
-              </div>
+            <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
+              <div className="text-slate-400 font-bold">{i + 1}</div>
+              {item.v}
             </div>
-          </button>
-        </div>
-      </>
+            <div className="flex flex-row justify-start align-baseline">
+              {item.reason}
+            </div>
+          </div>
+        </button>
+      </div>
     );
   };
 

@@ -24,7 +24,7 @@ export class SVGPolyline extends BaseSVG {
         id={this.geoId}
         key={this.geoId}
         // style={this.updateStyle()}
-        className={this.updateStyle()}
+        className={this.updateStyle(this.props.mode)}
       />
     );
   }

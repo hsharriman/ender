@@ -50,7 +50,7 @@ export class SVGLine extends BaseSVG {
         y2={this.end[1]}
         key={this.geoId}
         id={this.geoId}
-        className={this.updateStyle()}
+        className={this.updateStyle(this.props.mode)}
         // style={this.updateStyle()}
         // ref={this.wrapperRef}
         onMouseOver={() => this.onClick(true)} // TODO

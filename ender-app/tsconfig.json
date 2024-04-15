@@ -26,6 +26,7 @@
     "ignore/Label.tsx",
     "ignore/ProofItem.tsx",
     "ignore/checks.ts",
-    "ignore/SVGCurve.tsx"
+    "ignore/SVGCurve.tsx",
+    "ignore/SVGBuilder.tsx"
   ]
 }
