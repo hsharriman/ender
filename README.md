@@ -30,7 +30,7 @@
 - [x] Make angle markers look less scuffed
 - [x] Make parallel markers face the same direction
 - [ ] CSS animations for transitions
-- [ ] Handle multiple tick marks on the same object
+- [x] Handle multiple tick marks on the same object
 - [ ] Change fonts
 - [ ] Make relies on resample if screen resizes
 - [ ] long-form layout + resampling

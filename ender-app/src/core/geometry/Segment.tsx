@@ -1,8 +1,5 @@
-import { Tick } from "./Tick";
-import { BaseSVG } from "../svg/BaseSVG";
 import { SVGLine } from "../svg/SVGLine";
 import { Obj, LSegment, LPoint, SVGModes, TickType } from "../types";
-import { LinkedText } from "../../components/LinkedText";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import React from "react";
@@ -80,6 +77,7 @@ export class Segment extends BaseGeometryObject {
   // };
 
   override onClickText = (isActive: boolean) => {
+    console.log("updating segment", this.id);
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
         const cls = ModeCSS.ACTIVE.split(" ");

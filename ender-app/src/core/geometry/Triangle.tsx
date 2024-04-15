@@ -67,15 +67,13 @@ export class Triangle extends BaseGeometryObject {
   };
 
   onClickText = (isActive: boolean) => {
-    if (isActive) {
-      // for each segment use onClickText
-      this.s.map((seg) => {
-        seg.onClickText(isActive);
-      });
-      this.a.map((ang) => {
-        ang.onClickText(isActive);
-      });
-    }
+    // for each segment use onClickText
+    this.s.map((seg) => {
+      seg.onClickText(isActive);
+    });
+    this.a.map((ang) => {
+      ang.onClickText(isActive);
+    });
   };
 
   // linkedText = (activeFrame: string, label: string) => {

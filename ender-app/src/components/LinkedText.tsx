@@ -30,11 +30,11 @@ export class LinkedText extends React.Component<
   }
 
   componentDidMount() {
-    document.addEventListener("mousedown", this.handleClickOutside);
+    document.addEventListener("mouseover", this.handleClickOutside);
   }
 
   componentWillUnmount() {
-    document.removeEventListener("mousedown", this.handleClickOutside);
+    document.removeEventListener("mouseover", this.handleClickOutside);
   }
 
   handleClickOutside = (event: MouseEvent) => {
@@ -58,14 +58,16 @@ export class LinkedText extends React.Component<
   };
 
   onClick = (isClicked: boolean) => {
-    this.setState({
-      isClicked,
-    });
-    this.props.obj.onClickText(isClicked);
-    if (this.props.linkedObjs) {
-      this.props.linkedObjs.forEach((obj) => {
-        obj.onClickText(isClicked);
+    if (isClicked !== this.state.isClicked) {
+      this.setState({
+        isClicked,
       });
+      this.props.obj.onClickText(isClicked);
+      if (this.props.linkedObjs) {
+        this.props.linkedObjs.forEach((obj) => {
+          obj.onClickText(isClicked);
+        });
+      }
     }
     // this.props.clickCallback && this.props.clickCallback(isClicked);
   };
@@ -92,7 +94,8 @@ export class LinkedText extends React.Component<
       <span
         className={`font-sans ${this.getStyle()}`}
         // style={this.getStyle()}
-        onClick={() => this.onClick(!this.state.isClicked)}
+        onMouseEnter={() => this.onClick(true)}
+        onMouseLeave={() => this.onClick(false)}
         ref={this.wrapperRef}
       >
         {this.renderText()}
