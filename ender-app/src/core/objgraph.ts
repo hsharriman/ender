@@ -139,4 +139,14 @@ export class Content {
       (t) => t.id === this.getId(type, parent.labeled().label, numTicks)
     )[0];
   };
+
+  allSvgElements =
+    (mini = false) =>
+    (activeFrame: string) => {
+      let pts = this.points.flatMap((p) => p.svg());
+      let segs = this.segments.flatMap((s) => s.svg(activeFrame, mini));
+      let angs = this.angles.flatMap((a) => a.svg(activeFrame, mini));
+      let ticks = this.ticks.flatMap((t) => t.svg(activeFrame, mini));
+      return pts.concat(segs).concat(angs).concat(ticks);
+    };
 }

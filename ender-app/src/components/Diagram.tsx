@@ -15,13 +15,6 @@ interface DiagramState {
 export class Diagram extends React.Component<DiagramProps, DiagramState> {
   private svgId: string;
 
-  // TODO
-  // euclidean needs to render a list of all BaseSVG objects that will
-  // ever appear in the construction. It needs state to track
-  // when each object should be rendered as well
-  // it needs to remember what state each object should be at each frame
-  // each object should have its own render function that updates
-  // based on the following states: focused, unfocus, hidden, active, default
   constructor(props: DiagramProps) {
     super(props);
     this.svgId = `svg-object-${props.svgIdSuffix}`;

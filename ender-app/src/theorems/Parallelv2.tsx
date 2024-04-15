@@ -60,24 +60,21 @@ const contents = () => {
   // PROVE
   // old content should be rendered as unfocused
   const prove = ctx.addFrame("prove");
-  ACM = ACM.mode(prove, SVGModes.Unfocused);
-  BDM = BDM.mode(prove, SVGModes.Unfocused);
+  ACM.mode(prove, SVGModes.Unfocused);
+  BDM.mode(prove, SVGModes.Unfocused);
   const proves = (frame: string, mode: SVGModes): [Segment, Segment] => {
     const AC = ctx.getSegment("AC").mode(frame, mode);
     const BD = ctx.getSegment("BD").mode(frame, mode);
-    const ACp = ctx.pushTick(AC, Obj.ParallelTick).mode(frame, mode);
-    const BDp = ctx.pushTick(BD, Obj.ParallelTick).mode(frame, mode);
+    ctx.pushTick(AC, Obj.ParallelTick).mode(frame, mode);
+    ctx.pushTick(BD, Obj.ParallelTick).mode(frame, mode);
     return [AC, BD];
   };
   let [AC, BD] = proves(prove, SVGModes.Focused);
 
-  // should know that AC/BD were first set to unfocused but should render focused, and also recognize that
-  // AC and BD have tick marks that should match the same mode.
-
   // STEP 1
   const step1 = ctx.addFrame("step1");
-  ACM = ACM.mode(step1, SVGModes.Unfocused);
-  BDM = BDM.mode(step1, SVGModes.Unfocused);
+  ACM.mode(step1, SVGModes.Unfocused);
+  BDM.mode(step1, SVGModes.Unfocused);
 
   const givens = (
     frame: string,
@@ -99,9 +96,9 @@ const contents = () => {
 
   // STEP 2
   const step2 = ctx.addFrame("step2");
-  ACM = ACM.mode(step2, SVGModes.Unfocused);
-  BDM = BDM.mode(step2, SVGModes.Unfocused);
-  [AM, BM, CM, DM] = givens(step2, SVGModes.Unfocused);
+  ACM.mode(step2, SVGModes.Unfocused);
+  BDM.mode(step2, SVGModes.Unfocused);
+  givens(step2, SVGModes.Unfocused);
   const equalAngles = (frame: string, mode: SVGModes): [Angle, Angle] => {
     let CMA = ctx.getAngle("CMA").mode(frame, mode); // TODO mode does nothing
     let DMB = ctx.getAngle("DMB").mode(frame, mode);
@@ -113,16 +110,15 @@ const contents = () => {
 
   // STEP 3
   const step3 = ctx.addFrame("step3");
-  ACM = ACM.mode(step3, SVGModes.Focused);
-  BDM = BDM.mode(step3, SVGModes.Focused);
+  ACM.mode(step3, SVGModes.Focused);
+  BDM.mode(step3, SVGModes.Focused);
   givens(step3, SVGModes.Focused);
   equalAngles(step3, SVGModes.Focused);
-  // this step needs to fetch the tick marks from the previous step
 
   // STEP 4
   const step4 = ctx.addFrame("step4");
-  ACM = ACM.mode(step4, SVGModes.Unfocused);
-  BDM = BDM.mode(step4, SVGModes.Unfocused);
+  ACM.mode(step4, SVGModes.Unfocused);
+  BDM.mode(step4, SVGModes.Unfocused);
   givens(step4, SVGModes.Unfocused);
   equalAngles(step4, SVGModes.Unfocused);
   const correspondingAngles = (
@@ -139,24 +135,16 @@ const contents = () => {
 
   // STEP 5
   const step5 = ctx.addFrame("step5");
-  ACM = ACM.mode(step5, SVGModes.Unfocused);
-  BDM = BDM.mode(step5, SVGModes.Unfocused);
+  ACM.mode(step5, SVGModes.Unfocused);
+  BDM.mode(step5, SVGModes.Unfocused);
   proves(step5, SVGModes.Focused);
   givens(step5, SVGModes.Unfocused);
   equalAngles(step5, SVGModes.Unfocused);
   correspondingAngles(step5, SVGModes.Unfocused);
-  AC = AC.mode(step5, SVGModes.Focused);
-  BD = BD.mode(step5, SVGModes.Focused);
+  AC.mode(step5, SVGModes.Focused);
+  BD.mode(step5, SVGModes.Focused);
   ctx.pushTick(AC, Obj.ParallelTick).mode(step5, SVGModes.Focused);
   ctx.pushTick(BD, Obj.ParallelTick).mode(step5, SVGModes.Focused);
-
-  // // update graph  finalized states
-  // //update triangles
-  // [ACM, BDM].map((obj) => ctx.update(obj));
-  // //update segments
-  // [AC, BD, AM, BM, CM, DM].map((obj) => ctx.update(obj));
-  // // update angles
-  // [CMA, DMB, CAM, DBM].map((obj) => ctx.update(obj));
 
   const linkedTexts: ProofTextItem[] = [];
   const linked = (
@@ -168,7 +156,11 @@ const contents = () => {
     k: given,
     v: (
       <span>
-        {"AB and CD intersect at point M"}
+        {linked("AB", AM, [BM])}
+        {" and "}
+        {linked("CD", CM, [DM])}
+        {" intersect at point "}
+        {linked("M", ctx.getPoint("M"))}
         {comma}
         {linked("AM", AM, [ctx.getTick(AM, Obj.EqualLengthTick)])}
         {congruent}
@@ -285,12 +277,14 @@ const miniContent = () => {
 
   // STEP 2 - VERTICAL ANGLES
   const step2 = ctx.addFrame("step2");
-  let ACM = ctx.getTriangle("ACM").mode(step2, SVGModes.Default);
-  let BDM = ctx.getTriangle("BDM").mode(step2, SVGModes.Default);
+  ctx.getTriangle("ACM").mode(step2, SVGModes.Default);
+  ctx.getTriangle("BDM").mode(step2, SVGModes.Default);
   let AC = ctx.getSegment("AC").mode(step2, SVGModes.Hidden);
   let BD = ctx.getSegment("BD").mode(step2, SVGModes.Hidden);
-  let CMA = ctx.getAngle("CMA").mode(step2, SVGModes.Purple);
-  let DMB = ctx.getAngle("DMB").mode(step2, SVGModes.Blue);
+  let CMA = ctx.getAngle("CMA");
+  // .mode(step2, SVGModes.Purple);
+  let DMB = ctx.getAngle("DMB");
+  // .mode(step2, SVGModes.Blue);
   ctx.pushTick(CMA, Obj.EqualAngleTick).mode(step2, SVGModes.Purple);
   ctx.pushTick(DMB, Obj.EqualAngleTick).mode(step2, SVGModes.Blue);
 
@@ -301,7 +295,7 @@ const miniContent = () => {
     let AM = ctx.getSegment("AM").mode(frame, t1Mode);
     let CM = ctx.getSegment("CM").mode(frame, t1Mode);
     let AC = ctx.getSegment("AC").mode(frame, t1Mode);
-    let CMA = ctx.getAngle("CMA").mode(frame, t1Mode);
+    // let CMA = ctx.getAngle("CMA").mode(frame, t1Mode);
     // t1 ticks
     ctx.pushTick(CMA, Obj.EqualAngleTick).mode(frame, t1Mode);
     ctx.pushTick(AM, Obj.EqualLengthTick).mode(frame, t1Mode);
@@ -311,7 +305,7 @@ const miniContent = () => {
     let BM = ctx.getSegment("BM").mode(frame, t2Mode);
     let DM = ctx.getSegment("DM").mode(frame, t2Mode);
     let BD = ctx.getSegment("BD").mode(frame, t2Mode);
-    let DMB = ctx.getAngle("DMB").mode(frame, t2Mode);
+    // let DMB = ctx.getAngle("DMB").mode(frame, t2Mode);
     // t2 ticks
     ctx.pushTick(DMB, Obj.EqualAngleTick).mode(frame, t2Mode);
     ctx.pushTick(BM, Obj.EqualLengthTick).mode(frame, t2Mode);
@@ -321,39 +315,39 @@ const miniContent = () => {
 
   // STEP 4 - CORRESPONDING ANGLES
   const step4 = ctx.addFrame("step4");
-  // ACM = ACM.mode(step4, SVGModes.Default);
-  // BDM = BDM.mode(step4, SVGModes.Default);
   SAS(step4, SVGModes.Default, SVGModes.Default);
-  let MAC = ctx.getAngle("MAC").mode(step4, SVGModes.Purple);
-  let MBD = ctx.getAngle("MBD").mode(step4, SVGModes.Blue);
-  let MDB = ctx.getAngle("BDM").mode(step4, SVGModes.Default);
-  let MCA = ctx.getAngle("ACM").mode(step4, SVGModes.Default);
-  AC = AC.mode(step4, SVGModes.Default);
-  BD = BD.mode(step4, SVGModes.Default);
+  AC.mode(step4, SVGModes.Default);
+  BD.mode(step4, SVGModes.Default);
   // step 4 ticks
-  ctx.pushTick(MAC, Obj.EqualAngleTick, 2).mode(step4, SVGModes.Purple);
-  ctx.pushTick(MBD, Obj.EqualAngleTick, 2).mode(step4, SVGModes.Blue);
-  ctx.pushTick(MDB, Obj.EqualAngleTick, 3).mode(step4, SVGModes.Default);
-  ctx.pushTick(MCA, Obj.EqualAngleTick, 3).mode(step4, SVGModes.Default);
+  ctx
+    .pushTick(ctx.getAngle("MAC"), Obj.EqualAngleTick, 2)
+    .mode(step4, SVGModes.Purple);
+  ctx
+    .pushTick(ctx.getAngle("MBD"), Obj.EqualAngleTick, 2)
+    .mode(step4, SVGModes.Blue);
+  ctx
+    .pushTick(ctx.getAngle("BDM"), Obj.EqualAngleTick, 3)
+    .mode(step4, SVGModes.Default);
+  ctx
+    .pushTick(ctx.getAngle("ACM"), Obj.EqualAngleTick, 3)
+    .mode(step4, SVGModes.Default);
   ctx.pushTick(AC, Obj.EqualLengthTick, 3).mode(step4, SVGModes.Default);
   ctx.pushTick(BD, Obj.EqualLengthTick, 3).mode(step4, SVGModes.Default);
 
   // STEP 5 - ALTERNATE ANGLES
-  // TODO need to be able to handle multiple types of tick marks
-  // on the same object :(
   const step5 = ctx.addFrame("step5");
-  // let CM = ctx.getSegment("CM").mode(step5, SVGModes.Hidden);
-  // let DM = ctx.getSegment("DM").mode(step5, SVGModes.Hidden);
-  let AM = ctx.getSegment("AM").mode(step5, SVGModes.Default);
-  let BM = ctx.getSegment("BM").mode(step5, SVGModes.Default);
+  ctx.getSegment("AM").mode(step5, SVGModes.Default);
+  ctx.getSegment("BM").mode(step5, SVGModes.Default);
 
-  MAC.mode(step5, SVGModes.Default);
-  MBD.mode(step5, SVGModes.Default);
   AC.mode(step5, SVGModes.Purple);
   BD.mode(step5, SVGModes.Blue);
   // step 5 ticks
-  ctx.pushTick(MAC, Obj.EqualAngleTick, 1).mode(step5, SVGModes.Default);
-  ctx.pushTick(MBD, Obj.EqualAngleTick, 1).mode(step5, SVGModes.Default);
+  ctx
+    .pushTick(ctx.getAngle("MAC"), Obj.EqualAngleTick)
+    .mode(step5, SVGModes.Default);
+  ctx
+    .pushTick(ctx.getAngle("MBD"), Obj.EqualAngleTick)
+    .mode(step5, SVGModes.Default);
   ctx.pushTick(AC, Obj.ParallelTick, 1).mode(step5, SVGModes.Purple);
   ctx.pushTick(BD, Obj.ParallelTick, 1).mode(step5, SVGModes.Blue);
 
@@ -384,40 +378,15 @@ const reasons = (activeFrame: string) => {
 export const ParallelV2 = () => {
   // render list of all components ONCE  completed list of states
   const { ctx, linkedTexts } = contents();
-  const svgElements = (activeFrame: string) => {
-    let pts = ctx.points.flatMap((p) => p.svg());
-    let segs = ctx.segments.flatMap((s) => s.svg(activeFrame));
-    let angs = ctx.angles.flatMap((a) => a.svg(activeFrame));
-    let ticks = ctx.ticks.flatMap((t) => t.svg(activeFrame));
-    return pts.concat(segs).concat(angs).concat(ticks);
-  };
-
   const miniCtx = miniContent();
-  const miniSvgElements = (activeFrame: string) => {
-    let pts = miniCtx.points.flatMap((p) => p.svg(true));
-    let segs = miniCtx.segments.flatMap((s) => s.svg(activeFrame, true));
-    let angs = miniCtx.angles.flatMap((a) => a.svg(activeFrame, true));
-    let ticks = miniCtx.ticks.flatMap((t) => t.svg(activeFrame, true));
-    return pts.concat(segs).concat(angs).concat(ticks);
-  };
 
-  // each component needs to accept state (activeIdx) as prop so it knows
-  // what state to pick
-  // each component needs to set up its own onHover/onClick handler to highlight
-  // linked text
-  // need COMPLETE CONSTRUCTION WHERE EACH COMPONENT KNOWS WHAT TO RENDER AT EACH STEP
-  // need LINKED TEXT FOR EACH STEP
   return (
     <AppPage
-      problemText={""}
       proofText={linkedTexts}
-      svgElements={svgElements}
+      svgElements={ctx.allSvgElements()}
       reasonText={reasons}
-      miniSvgElements={miniSvgElements}
+      miniSvgElements={miniCtx.allSvgElements(true)}
       reliesOn={ctx.getReliesOn()}
-      onResample={function (): void {
-        throw new Error("Function not implemented.");
-      }}
       onClickCanvas={function (): void {
         throw new Error("Function not implemented.");
       }}

@@ -1,5 +1,6 @@
 import { BaseSVG } from "../svg/BaseSVG";
 import { SVGCircle } from "../svg/SVGCircle";
+import { ModeCSS } from "../svg/SVGStyles";
 import { SVGText } from "../svg/SVGText";
 import { Vector, Obj, LPoint, SVGModes } from "../types";
 import { vops } from "../vectorOps";
@@ -40,6 +41,19 @@ export class Point extends BaseGeometryObject {
     this.offset = offset;
   };
 
+  onClickText = (isActive: boolean) => {
+    const setStyle = (ele: HTMLElement | null) => {
+      if (ele) {
+        const cls = ModeCSS.ACTIVETEXT.split(" ");
+        isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
+      }
+    };
+    const textId = this.getId(Obj.Text, this.label);
+    const ele = document.getElementById(textId);
+    console.log("updating point", textId, ele, isActive);
+    setStyle(ele);
+  };
+
   svg = (miniScale = false, style?: React.CSSProperties): JSX.Element[] => {
     let svgItems: JSX.Element[] = [
       <SVGCircle
@@ -68,7 +82,8 @@ export class Point extends BaseGeometryObject {
           geoId: this.getId(Obj.Text, this.label),
           text: this.label,
           style: {
-            font: "24px sans-serif",
+            font: "24px serif",
+            fontStyle: "italic",
             ...style,
           },
           mode: SVGModes.Default, // TODO unnecessary rn

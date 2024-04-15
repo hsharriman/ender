@@ -6,13 +6,11 @@ import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
 
 export interface AppPageProps {
-  problemText: string;
   proofText: ProofTextItem[];
   reliesOn?: Map<string, Set<string>>;
   miniSvgElements: (activeFrame: string) => JSX.Element[];
   reasonText: (activeFrame: string) => Reason;
   svgElements: (activeFrame: string) => JSX.Element[];
-  onResample: () => void;
   onClickCanvas: () => void;
 }
 

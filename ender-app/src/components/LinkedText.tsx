@@ -47,9 +47,6 @@ export class LinkedText extends React.Component<
   };
 
   getColor = () => {
-    // return this.props.isActive || this.state.isClicked
-    //   ? this.activeColor
-    //   : this.defaultColor;
     return this.state.isClicked ? "stroke-violet-500" : "";
   };
 
@@ -69,7 +66,6 @@ export class LinkedText extends React.Component<
         });
       }
     }
-    // this.props.clickCallback && this.props.clickCallback(isClicked);
   };
 
   renderText = () => {
@@ -92,7 +88,7 @@ export class LinkedText extends React.Component<
   render() {
     return (
       <span
-        className={`font-sans ${this.getStyle()}`}
+        className={`font-serif ${this.getStyle()}`}
         // style={this.getStyle()}
         onMouseEnter={() => this.onClick(true)}
         onMouseLeave={() => this.onClick(false)}

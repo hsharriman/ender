@@ -7,7 +7,7 @@ import { PathSVG } from "../svg/PathSVG";
 import { ModeCSS } from "../svg/SVGStyles";
 
 const TICK_PADDING = 0.35;
-const ARC_RADIUS = 0.4;
+const ARC_RADIUS = 0.3;
 const SINGLE_MINI_ARC_RADIUS = 0.5;
 const SINGLE_MINI_ARC_PADDING = 0.5;
 const ARC_PADDING = 0.2;
@@ -18,12 +18,6 @@ export type TickProps = {
   num: number;
 } & BaseGeometryProps;
 
-interface TickMeta {
-  id: string;
-  type: TickType;
-  num: number;
-  mode: SVGModes;
-}
 export class Tick extends BaseGeometryObject {
   // 1 segment and type of tick
   parent: LSegment | LAngle;
@@ -31,14 +25,12 @@ export class Tick extends BaseGeometryObject {
   num: number;
   id: string;
   prevFrame: string | undefined;
-  // tickMap: Map<string, TickMeta> = new Map();
   constructor(props: TickProps) {
     super(Obj.Tick, props);
     this.parent = props.parent;
     this.type = props.type;
     this.num = props.num;
     this.id = this.getId(this.type, this.parent.label, this.num);
-    // this.names = [this.id];
   }
 
   override onClickText = (isActive: boolean) => {
@@ -52,50 +44,11 @@ export class Tick extends BaseGeometryObject {
     setStyle(ele);
   };
 
-  // // for copying the previous frame's tick type
-  // copyFrame = (frame: string, mode: SVGModes) => {
-  //   if (this.prevFrame) {
-  //     let meta = this.tickMap.get(this.prevFrame)!;
-  //     meta.mode = meta.mode === SVGModes.Hidden ? meta.mode : mode;
-  //     console.log("mode", frame, meta);
-  //     this.tickMap.set(frame, meta);
-  //     this.prevFrame = frame;
-  //   }
-  // };
-
-  // for setting a new tick type
-  // addTickMeta = (frame: string, meta: TickMeta) => {
-  //   if (meta.id === "") {
-  //     meta.id = this.getId(meta.type, this.parent.label, meta.num);
-  //   }
-  //   this.tickMap.set(frame, meta);
-  //   this.prevFrame = frame;
-  // };
-
-  // every tick needs:
-  // parent
-  // PER MODE:
-  //   1. id, type, num ticks, mode
-  // the tick CANNOT BE ALTERED ONCE MADE. IF YOU NEED MULTIPLE TICK TYPES PER SEG THERE MUST BE MULTIPLE TICK INSTANCES.
-  // anything else?
-  // MODES have to work a little differently, because one tick could have multiple possible SVG elements,
-  // cannot just pass all modes to any svg object, have to filter down to just the ones that are relevant
-  // to the particular type of tick. FILTERING also cannot be done based on just tick type, need
-  // to account for number of ticks as well.
-
-  // getLabels = (frameKey: string) => {
-  //   return this.tickMap.get(frameKey)?.id;
-  // };
-
   svg = (
     activeFrame: string,
     miniScale = false,
     style?: React.CSSProperties
   ): JSX.Element => {
-    // const meta = this.tickMap.get(activeFrame);
-    // if (miniScale && meta) {
-    //   console.log(activeFrame, meta);
-    // }
     const mode = this.modes.get(activeFrame);
     if (mode) {
       // frame-specific render-logic

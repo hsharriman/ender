@@ -76,27 +76,12 @@ export class Triangle extends BaseGeometryObject {
     });
   };
 
-  // linkedText = (activeFrame: string, label: string) => {
-  //   return (
-  //     <LinkedText
-  //       val={label}
-  //       clickCallback={this.onClickText(activeFrame)}
-  //       type={Obj.Triangle}
-  //     />
-  //   );
-  // };
-
   override mode = (frameKey: string, mode: SVGModes) => {
     this.modes.set(frameKey, mode);
     // cascading update the segments and angles
     this.s.map((seg) => seg.mode(frameKey, mode));
     this.a.map((ang) => ang.mode(frameKey, mode));
     // TODO cascading update the segments and angles too
-    // TODO special handling for the tick marks which may be
-    // hidden in some modes.
-    // maybe we don't set the mode on the tick marks for ones
-    // that haven't been rendered yet, so "not found" means that
-    // it should be hidden.
     return this;
   };
 }

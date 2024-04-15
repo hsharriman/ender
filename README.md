@@ -31,10 +31,11 @@
 - [x] Make parallel markers face the same direction
 - [ ] CSS animations for transitions
 - [x] Handle multiple tick marks on the same object
-- [ ] Change fonts
+- [ ] Change fonts (again?)
 - [ ] Make relies on resample if screen resizes
 - [ ] long-form layout + resampling
-- [ ] make linked text active on hover
+- [x] make linked text active on hover
+- [ ] reword the reasons to follow if/then pattern
 
 ## TODO for infra/study
 

@@ -10,16 +10,13 @@ export interface BaseSVGState {
 
 export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
   readonly geoId: string;
-  readonly names: string[];
-  // readonly tag: SVGObj;
+  readonly names: string[] = [];
   readonly activeColor?: string;
-  // readonly modes: Map<string, SVGModes> | undefined;
   readonly mode: SVGModes;
   style: CSSProperties;
   constructor(props: BaseSVGProps) {
     super(props);
     this.geoId = props.geoId;
-    this.names = props.names ?? [];
     this.mode = props.mode;
     // this.tag = props.tag;
     this.style = props.style ?? {};

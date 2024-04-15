@@ -1,4 +1,3 @@
-import { Vector } from "../types";
 import { BaseSVG } from "./BaseSVG";
 import { PathSVGProps } from "./svgTypes";
 
