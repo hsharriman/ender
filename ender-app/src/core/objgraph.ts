@@ -119,10 +119,23 @@ export class Content {
     }
   }
 
-  pushTick = (parent: Segment | Angle, type: TickType, num: number = 1) => {
-    const existing = this.getTick(parent, type, num);
+  pushTick = (
+    parent: Segment | Angle,
+    type: TickType,
+    options?: {
+      parentFrame?: string;
+      num?: number;
+    }
+  ) => {
+    let numTicks = options?.num || 1;
+    const existing = this.getTick(parent, type, options);
     if (existing) return existing;
-    let tick = new Tick({ parent: parent.labeled(), type, num });
+    let tick = new Tick({
+      parent: parent.labeled(),
+      type,
+      num: numTicks,
+      parentFrame: options?.parentFrame,
+    });
     this.ticks.push(tick);
     return tick;
   };
@@ -134,10 +147,18 @@ export class Content {
   getTriangle = (label: string) =>
     this.triangles.filter((t) => t.matches(label))[0];
 
-  getTick = (parent: Segment | Angle, type: TickType, numTicks: number = 1) => {
-    return this.ticks.filter(
-      (t) => t.id === this.getId(type, parent.labeled().label, numTicks)
-    )[0];
+  getTick = (
+    parent: Segment | Angle,
+    type: TickType,
+    options?: { num?: number; parentFrame?: string }
+  ) => {
+    let numTicks = options?.num || 1;
+    let id = this.getId(type, parent.labeled().label, numTicks);
+    const hasParent = options?.parentFrame && options.parentFrame !== undefined;
+    if (hasParent) {
+      id = `${options?.parentFrame}-${id}`;
+    }
+    return this.ticks.filter((t) => t.id === id)[0];
   };
 
   allSvgElements =

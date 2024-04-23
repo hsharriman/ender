@@ -11,6 +11,7 @@ export type PointProps = {
   label: string;
   showLabel?: boolean;
   offset: Vector;
+  parentFrame?: string;
 };
 
 export class Point extends BaseGeometryObject {
@@ -27,6 +28,7 @@ export class Point extends BaseGeometryObject {
     this.showLabel = props.showLabel ?? true;
     this.offset = props.offset;
     this.id = this.getId(Obj.Point, this.label);
+    this.id = props.parentFrame ? `${props.parentFrame}-${this.id}` : this.id;
   }
 
   labeled = (): LPoint => {
@@ -50,17 +52,21 @@ export class Point extends BaseGeometryObject {
     };
     const textId = this.getId(Obj.Text, this.label);
     const ele = document.getElementById(textId);
-    console.log("updating point", textId, ele, isActive);
     setStyle(ele);
   };
 
-  svg = (miniScale = false, style?: React.CSSProperties): JSX.Element[] => {
+  svg = (
+    parentFrame?: string,
+    miniScale = false,
+    style?: React.CSSProperties
+  ): JSX.Element[] => {
     let svgItems: JSX.Element[] = [
       <SVGCircle
         {...{
           center: this.coordsToSvg(this.pt, miniScale),
           r: 2,
-          geoId: this.id,
+          geoId:
+            parentFrame !== undefined ? `${parentFrame}-${this.id}` : this.id,
           style: {
             fill: "black",
             ...style,
@@ -82,7 +88,7 @@ export class Point extends BaseGeometryObject {
           geoId: this.getId(Obj.Text, this.label),
           text: this.label,
           style: {
-            font: "24px serif",
+            font: "18px serif",
             fontStyle: "italic",
             ...style,
           },

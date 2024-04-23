@@ -1,4 +1,5 @@
-import { ParallelV2 } from "./theorems/Parallelv2";
+import { ParallelLongForm } from "./theorems/LongParallel";
+import { InPlaceParallel } from "./theorems/InPlaceParallel";
 
 function App() {
   return (
@@ -6,7 +7,8 @@ function App() {
       {/* <div className="font-mono text-lg text-violet-300">🅔🅝🅓🅔🅡</div> */}
       {/* <AngleBisector /> */}
       {/* <ParallelProp /> */}
-      {ParallelV2()}
+      {/* {InPlaceParallel()} */}
+      <ParallelLongForm />
     </div>
   );
 }

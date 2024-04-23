@@ -19,28 +19,34 @@ export class Triangle extends BaseGeometryObject {
     super(Obj.Triangle, props);
     this.p = props.pts;
 
-    this.s = this.buildSegments(props.pts, ctx);
+    this.s = this.buildSegments(props.pts, ctx, props.parentFrame);
     this.p = props.pts;
-    this.a = this.buildAngles(props.pts, ctx);
+    this.a = this.buildAngles(props.pts, ctx, props.parentFrame);
     this.names = this.permutator(props.pts.map((pt) => pt.label));
   }
 
   private buildSegments = (
     pts: Point[],
-    ctx: Content
+    ctx: Content,
+    parentFrame?: string
   ): [Segment, Segment, Segment] => {
-    const sa = ctx.push(new Segment({ p1: pts[0], p2: pts[1] }));
-    const sb = ctx.push(new Segment({ p1: pts[0], p2: pts[2] }));
-    const sc = ctx.push(new Segment({ p1: pts[1], p2: pts[2] }));
+    const sa = ctx.push(new Segment({ p1: pts[0], p2: pts[1], parentFrame }));
+    const sb = ctx.push(new Segment({ p1: pts[0], p2: pts[2], parentFrame }));
+    const sc = ctx.push(new Segment({ p1: pts[1], p2: pts[2], parentFrame }));
     return [sa, sb, sc];
   };
 
-  private buildAngles = (pts: Point[], ctx: Content): [Angle, Angle, Angle] => {
+  private buildAngles = (
+    pts: Point[],
+    ctx: Content,
+    parentFrame?: string
+  ): [Angle, Angle, Angle] => {
     const aa = ctx.push(
       new Angle({
         start: pts[0],
         center: pts[1],
         end: pts[2],
+        parentFrame,
       })
     );
     const ab = ctx.push(
@@ -48,6 +54,7 @@ export class Triangle extends BaseGeometryObject {
         start: pts[1],
         center: pts[0],
         end: pts[2],
+        parentFrame,
       })
     );
     const ac = ctx.push(
@@ -55,6 +62,7 @@ export class Triangle extends BaseGeometryObject {
         start: pts[0],
         center: pts[2],
         end: pts[1],
+        parentFrame,
       })
     );
     return [aa, ab, ac];

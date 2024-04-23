@@ -8,7 +8,7 @@ import { ModeCSS } from "../svg/SVGStyles";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.3;
-const SINGLE_MINI_ARC_RADIUS = 0.5;
+const SINGLE_MINI_ARC_RADIUS = 0.4;
 const SINGLE_MINI_ARC_PADDING = 0.5;
 const ARC_PADDING = 0.2;
 
@@ -31,6 +31,10 @@ export class Tick extends BaseGeometryObject {
     this.type = props.type;
     this.num = props.num;
     this.id = this.getId(this.type, this.parent.label, this.num);
+    this.id =
+      props.parentFrame !== undefined
+        ? `${props.parentFrame}-${this.id}`
+        : this.id;
   }
 
   override onClickText = (isActive: boolean) => {
@@ -71,6 +75,14 @@ export class Tick extends BaseGeometryObject {
         );
       } else if (this.type === Obj.EqualAngleTick) {
         return this.equalAngle(
+          this.parent as LAngle,
+          activeFrame,
+          mode,
+          miniScale,
+          style
+        );
+      } else if (this.type === Obj.RightTick) {
+        return this.rightAngle(
           this.parent as LAngle,
           activeFrame,
           mode,
@@ -182,6 +194,7 @@ export class Tick extends BaseGeometryObject {
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
     let arcR = miniScale || this.num == 1 ? ARC_RADIUS : 0.2;
+    arcR = miniScale ? 0.18 : arcR;
     let arcPad = miniScale || this.num == 1 ? ARC_PADDING : 0.15;
     if (this.num == 1 && miniScale) {
       arcR = SINGLE_MINI_ARC_RADIUS;
@@ -191,8 +204,12 @@ export class Tick extends BaseGeometryObject {
     let dStr = "";
     // increase radius according to numticks
     for (let i = 0; i < this.num; i++) {
+      let radius;
+      if (i == 0 && this.num > 1) {
+        radius = arcR * (i + 1) + this.scaleToSvg(arcPad * (i + 1), miniScale);
+      }
+      radius = arcR * (i + 1) + this.scaleToSvg(arcPad * (i + 1), miniScale);
       const scalar = arcR + arcPad * i;
-      const radius = arcR + this.scaleToSvg(arcPad * (i + 1), miniScale);
       const end = this.coordsToSvg(
         vops.add(a.center, vops.smul(eUnit, scalar)),
         miniScale
@@ -212,6 +229,34 @@ export class Tick extends BaseGeometryObject {
           mode: mode,
           activeFrame: activeFrame,
         }}
+      />
+    );
+  };
+
+  rightAngle = (
+    a: LAngle,
+    activeFrame: string,
+    mode: SVGModes,
+    miniScale = false,
+    style?: React.CSSProperties
+  ) => {
+    const sweep = this.arcSweepsCCW(a.center, a.start, a.end);
+    const sUnit = vops.unit(vops.sub(a.start, a.center));
+    const eUnit = vops.unit(vops.sub(a.end, a.center));
+
+    const scale = miniScale ? 0.2 : 0.15; // TODO
+    const start = this.coordsToSvg(
+      vops.add(a.center, vops.smul(sUnit, scale)),
+      miniScale
+    );
+    const end = this.coordsToSvg(
+      vops.add(a.center, vops.smul(eUnit, scale)),
+      miniScale
+    );
+    const dStr = pops.moveTo(start) + pops.lineTo(end) + pops.lineTo(end); // TODO
+    return (
+      <PathSVG
+        {...{ d: dStr, geoId: this.id, style: style, mode: mode, activeFrame }}
       />
     );
   };
@@ -237,7 +282,6 @@ export class Tick extends BaseGeometryObject {
   };
 
   // true if arc should sweep CCW
-  // TODO redo so that it automatically looks the smaller angle?
   private arcSweepsCCW = (
     center: Vector,
     start: Vector,

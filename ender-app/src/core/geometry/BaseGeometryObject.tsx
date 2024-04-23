@@ -17,6 +17,7 @@ const MINI_SVG_YSHIFT = -70;
 export interface BaseGeometryProps {
   modes?: Map<string, SVGModes>; // all modes for all states
   activeIdx?: number; // follows the state of the app
+  parentFrame?: string; // for long-form objects
 }
 
 export class BaseGeometryObject {
@@ -69,10 +70,14 @@ export class BaseGeometryObject {
   ): Vector => {
     // scale coordinates, shift and invert y axis
     // TODO scale the transformation based on canvas size
-    const scale = miniScale ? MINI_SVG_SCALE : SVG_SCALE;
-    const xshift = miniScale ? MINI_SVG_XSHIFT : SVG_XSHIFT;
-    const yshift = miniScale ? MINI_SVG_YSHIFT : SVG_YSHIFT;
-    const dim = miniScale ? MINI_SVG_DIM : SVG_DIM;
+    // const scale = miniScale ? MINI_SVG_SCALE : SVG_SCALE;
+    // const xshift = miniScale ? MINI_SVG_XSHIFT : SVG_XSHIFT;
+    // const yshift = miniScale ? MINI_SVG_YSHIFT : SVG_YSHIFT;
+    // const dim = miniScale ? MINI_SVG_DIM : SVG_DIM;
+    const scale = 50;
+    const xshift = 50;
+    const yshift = 25;
+    const dim = 250;
 
     let vec = vops.add(vops.smul(coords, scale), [
       xshift + offset[0],

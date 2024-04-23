@@ -77,6 +77,7 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
                 <ReasonText
                   activeFrame={this.state.activeFrame}
                   textFn={this.props.reasonText}
+                  displayHeader={true}
                 />
               </div>
             </div>

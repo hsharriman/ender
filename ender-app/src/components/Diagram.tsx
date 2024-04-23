@@ -25,16 +25,16 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   render() {
     return (
-      <>
+      <div style={{ width: this.props.width, height: this.props.height }}>
         <svg
           id={this.svgId}
-          width={this.props.width}
-          height={this.props.height}
+          viewBox="0 0 500 350"
           xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMidYMid meet"
         >
           {this.props.svgElements(this.props.activeFrame)}
         </svg>
-      </>
+      </div>
     );
   }
 }

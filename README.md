@@ -33,9 +33,13 @@
 - [x] Handle multiple tick marks on the same object
 - [ ] Change fonts (again?)
 - [ ] Make relies on resample if screen resizes
-- [ ] long-form layout + resampling
+- [x] long-form layout + resampling
 - [x] make linked text active on hover
 - [ ] reword the reasons to follow if/then pattern
+- [ ] fix stroke width of mini figs and tick mark placement for angles
+- [ ] relies on for long-form
+- [x] hovering not working on correct figs in long form
+- [ ] bigger stroke for minifigures
 
 ## TODO for infra/study
 

@@ -20,6 +20,10 @@ export class Segment extends BaseGeometryObject {
     this.p2 = props.p2;
     this.label = `${this.p1.label}${this.p2.label}`;
     this.id = this.getId(Obj.Segment, this.label);
+    this.id =
+      props.parentFrame !== undefined
+        ? `${props.parentFrame}-${this.id}`
+        : this.id;
     this.names = this.permutator([this.p1.label, this.p2.label]);
   }
   // deprecated?
@@ -32,7 +36,6 @@ export class Segment extends BaseGeometryObject {
   };
 
   override onClickText = (isActive: boolean) => {
-    console.log("updating segment", this.id);
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
         const cls = ModeCSS.ACTIVE.split(" ");
