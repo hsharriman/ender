@@ -1,5 +1,7 @@
-import { ParallelLongForm } from "./theorems/LongParallel";
-import { InPlaceParallel } from "./theorems/InPlaceParallel";
+import { ParallelLongForm } from "./theorems/complete/proof1/LongParallel";
+import { InPlaceParallel } from "./theorems/complete/proof1/InPlaceParallel";
+import { InPlaceProof2 } from "./theorems/complete/proof2/InPlaceProof2";
+import { Proof2Long } from "./theorems/complete/proof2/LongProof2";
 
 function App() {
   return (
@@ -8,7 +10,9 @@ function App() {
       {/* <AngleBisector /> */}
       {/* <ParallelProp /> */}
       {/* {InPlaceParallel()} */}
-      <ParallelLongForm />
+      {/* <ParallelLongForm /> */}
+      <InPlaceProof2 />
+      {/* <Proof2Long /> */}
     </div>
   );
 }

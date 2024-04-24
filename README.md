@@ -19,27 +19,28 @@
 - [x] render minis
 - [x] add "relies on"
 - [x] add focus to aspects of diagram
-- [ ] highlighting of text when clicking on the diagram
 - [x] Step-by-step interaction instead of grid
 - [x] Dynamically updating the styling of objects based on interaction
 - [x] Interaction between text of proof and visualization
 - [x] Fix proof row highlighting based on dependencies
 - [x] Add better keyboard controls and scroll
 - [x] Fix label sizes and placement
-- [ ] Improve the proof class structure / cleanup (always ongoing)
 - [x] Make angle markers look less scuffed
 - [x] Make parallel markers face the same direction
-- [ ] CSS animations for transitions
 - [x] Handle multiple tick marks on the same object
-- [ ] Change fonts (again?)
-- [ ] Make relies on resample if screen resizes
 - [x] long-form layout + resampling
 - [x] make linked text active on hover
+- [x] hovering not working on correct figs in long form
+- [x] Right angle tick marks
+- [ ] Change fonts (again?)
+- [ ] Make relies on resample if screen resizes
 - [ ] reword the reasons to follow if/then pattern
 - [ ] fix stroke width of mini figs and tick mark placement for angles
-- [ ] relies on for long-form
-- [x] hovering not working on correct figs in long form
-- [ ] bigger stroke for minifigures
+- [x] relies on for long-form
+- [ ] highlighting of text when clicking on the diagram
+- [ ] highlighting angles on hover? when no tick is visible
+- [ ] CSS animations for transitions
+- [ ] Improve the proof class structure / cleanup (always ongoing)
 
 ## TODO for infra/study
 
@@ -52,4 +53,3 @@
 
 - Circles
 - Labeled segments
-- Right angle tick marks

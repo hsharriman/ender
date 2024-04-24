@@ -1,11 +1,13 @@
-import React from "react";
+import React, { createRef, useEffect, useRef } from "react";
 import { ProofTextItem, Reason } from "../core/types";
 import { ReasonText } from "./ReasonText";
 import { StaticDiagram } from "./StaticDiagram";
+import { LongFormReliesOn } from "./LongFormReliesOn";
+import { LongProofRow } from "./LongProofRow";
 
 export interface LongPageProps {
   proofText: ProofTextItem[];
-  reliesOn?: Map<string, Set<string>>;
+  reliesOn?: Map<string, string[]>;
   frames: string[];
   givenSvg: JSX.Element[];
   miniSvgElements: (activeFrame: string) => JSX.Element[];
@@ -50,28 +52,11 @@ export class LongPage extends React.Component<LongPageProps> {
   };
 
   renderRow = (item: ProofTextItem, idx: number) => {
-    const textColor = "text-slate-800";
-    const strokeColor = "border-slate-800";
-    return (
-      <div className="flex flex-row justify-start h-16" key={item.k}>
-        <button
-          id={`proofrow-${item.k}`}
-          className="border-gray-200 border-b-2 w-11/12 h-16 ml-2 text-lg"
-        >
-          <div
-            className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-8`}
-          >
-            <div className="flex flex-row justify-start gap-8 ml-2 align-baseline col-span-4">
-              <div className="text-slate-400 font-bold">{idx + 1}</div>
-              {item.v}
-            </div>
-            <div className="flex flex-row justify-start align-baseline col-span-4">
-              {item.reason}
-            </div>
-          </div>
-        </button>
-      </div>
-    );
+    const reliesOn = this.props.reliesOn;
+    if (reliesOn) {
+      return <LongProofRow idx={idx} item={item} reliesOn={reliesOn} />;
+    }
+    return <></>;
   };
 
   renderStep = (frame: string, idx: number) => {
@@ -114,15 +99,23 @@ export class LongPage extends React.Component<LongPageProps> {
   // TODO click away handler that displays the initial construction
   render() {
     // TODO render method is not taking an order of frames from props and it should
+    let reliesArray: JSX.Element[] = [];
+    if (this.props.reliesOn) {
+      // const reliesOnMap = this.props.reliesOn;
+      // const keys = Array.from(reliesOnMap.keys());
+      // keys.map((key) => {
+      //   const item: string[] = reliesOnMap.get(key)!;
+      //   reliesArray.push(
+      //     <LongFormReliesOn
+      //       reliesOn={item}
+      //       parentFrameId={key}
+      //       rowHeight={28}
+      //     />
+      //   );
+      // });
+    }
     return (
       <>
-        {/* {this.props.reliesOn && (
-          <ReliesOn
-            reliesOn={this.props.reliesOn}
-            activeFrame={this.state.activeFrame}
-            rowHeight={64}
-          />
-        )} */}
         <div className="w-screen h-screen font-sans text-slate-800 flex flex-col justify-left p-4">
           <div className="flex justify-start ml-4 pb-2 border-b-2 border-gray-300 font-bold my-4 text-2xl">
             Given Information
@@ -139,6 +132,7 @@ export class LongPage extends React.Component<LongPageProps> {
           {this.props.frames.map((item, idx) => {
             return this.renderStep(item, idx);
           })}
+          {/* {reliesArray} */}
         </div>
       </>
     );

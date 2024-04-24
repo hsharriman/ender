@@ -1,5 +1,5 @@
-import { AppPage } from "../components/AppPage";
-import { ProofTextItem } from "../core/types";
+import { AppPage } from "../../../components/AppPage";
+import { ProofTextItem } from "../../../core/types";
 import {
   miniContent,
   reasons,

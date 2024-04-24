@@ -1,10 +1,10 @@
-import { LinkedText } from "../components/LinkedText";
-import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
-import { Point } from "../core/geometry/Point";
-import { Triangle } from "../core/geometry/Triangle";
-import { comma, congruent, parallel } from "../core/geometryText";
-import { Content } from "../core/objgraph";
-import { Obj, Reason, SVGModes, Vector } from "../core/types";
+import { LinkedText } from "../../../components/LinkedText";
+import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
+import { Point } from "../../../core/geometry/Point";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { comma, congruent, parallel, strs } from "../../../core/geometryText";
+import { Content } from "../../../core/objgraph";
+import { Obj, Reason, SVGModes, Vector } from "../../../core/types";
 
 export const linked = (
   val: string,
@@ -517,11 +517,24 @@ export const miniContent = () => {
   return ctx;
 };
 
+export const reliesOnText = () => {
+  let relies = new Map<string, string[]>();
+  const s1 = `(1) AM ${strs.congruent} BM`;
+  const s2 = `(1) CM ${strs.congruent} DM`;
+  const s3 = `(2) ${strs.angle}CMA ${strs.congruent} ${strs.angle}DMB`;
+  const s4 = `(3) ${strs.triangle}ACM ${strs.congruent} ${strs.triangle}BDM`;
+  const s5 = `(4) ${strs.angle}CAM ${strs.congruent} ${strs.angle}DBM`;
+  relies.set("s3", [s1, s2, s3]);
+  relies.set("s4", [s4]);
+  relies.set("s5", [s5]);
+  return relies;
+};
+
 export const reasons = (activeFrame: string) => {
   let reasonMap = new Map<string, Reason>();
   reasonMap.set("s2", {
     title: "Vertical Angles Theorem",
-    body: "When two lines intersect each other, the angles that are opposite from each other are congruent.",
+    body: "If two lines intersect each other, then the angles that are opposite from each other are congruent.",
   });
   reasonMap.set("s3", {
     title: "SAS Triangle Congruence",
@@ -529,11 +542,11 @@ export const reasons = (activeFrame: string) => {
   });
   reasonMap.set("s4", {
     title: "Corresponding Angles Postulate",
-    body: "Corresponding angles are the angles in congruent or similar triangles that have the same measurement.",
+    body: "If two triangles are congruent, then corresponding angles are the pairs of angles that have the same measurement.",
   });
   reasonMap.set("s5", {
     title: "Alternate Interior Angles Theorem",
-    body: "When a transversal intersects a pair of lines such that the alternate interior angles are congruent, then the lines are parallel to each other.",
+    body: "If a transversal (a line that crosses two or more lines) intersects a pair of lines such that the alternate interior angles are congruent, then the lines are parallel to each other.",
   });
   return reasonMap.get(activeFrame) ?? { title: "", body: "" };
 };

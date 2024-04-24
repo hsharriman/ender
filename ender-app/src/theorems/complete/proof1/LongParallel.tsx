@@ -1,5 +1,5 @@
-import { LongPage } from "../components/LongPage";
-import { ProofTextItem } from "../core/types";
+import { LongPage } from "../../../components/LongPage";
+import { ProofTextItem } from "../../../core/types";
 import {
   Givens,
   Proves,
@@ -11,6 +11,7 @@ import {
   baseContent,
   miniContent,
   reasons,
+  reliesOnText,
 } from "./proof1";
 
 export const ParallelLongForm = () => {
@@ -115,6 +116,7 @@ export const ParallelLongForm = () => {
       givenSvg={givenDiag.allSvgElements(true)("given")}
       frames={["s1", "s2", "s3", "s4", "s5"]}
       miniSvgElements={miniCtx.allSvgElements(true)}
+      reliesOn={reliesOnText()}
     />
   );
 };

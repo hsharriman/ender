@@ -7,3 +7,11 @@ export const parallel = (
 );
 
 export const comma = <span>{",\t"}</span>;
+
+export const strs = {
+  angle: "\u29A3",
+  congruent: "\u2245",
+  parallel: "\u2225",
+  comma: ",\t",
+  triangle: "\u25B5",
+};

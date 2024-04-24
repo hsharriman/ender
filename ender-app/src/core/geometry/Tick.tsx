@@ -10,6 +10,7 @@ const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.3;
 const SINGLE_MINI_ARC_RADIUS = 0.4;
 const SINGLE_MINI_ARC_PADDING = 0.5;
+const RIGHT_ANGLE_SCALE = 0.45;
 const ARC_PADDING = 0.2;
 
 export type TickProps = {
@@ -193,10 +194,10 @@ export class Tick extends BaseGeometryObject {
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
-    let arcR = miniScale || this.num == 1 ? ARC_RADIUS : 0.2;
+    let arcR = miniScale || this.num === 1 ? ARC_RADIUS : 0.2;
     arcR = miniScale ? 0.18 : arcR;
-    let arcPad = miniScale || this.num == 1 ? ARC_PADDING : 0.15;
-    if (this.num == 1 && miniScale) {
+    let arcPad = miniScale || this.num === 1 ? ARC_PADDING : 0.15;
+    if (this.num === 1 && miniScale) {
       arcR = SINGLE_MINI_ARC_RADIUS;
       arcPad = SINGLE_MINI_ARC_PADDING;
     }
@@ -205,7 +206,7 @@ export class Tick extends BaseGeometryObject {
     // increase radius according to numticks
     for (let i = 0; i < this.num; i++) {
       let radius;
-      if (i == 0 && this.num > 1) {
+      if (i === 0 && this.num > 1) {
         radius = arcR * (i + 1) + this.scaleToSvg(arcPad * (i + 1), miniScale);
       }
       radius = arcR * (i + 1) + this.scaleToSvg(arcPad * (i + 1), miniScale);
@@ -244,16 +245,23 @@ export class Tick extends BaseGeometryObject {
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
-    const scale = miniScale ? 0.2 : 0.15; // TODO
+    const scale = miniScale ? 0.3 : 0.2; // TODO
     const start = this.coordsToSvg(
       vops.add(a.center, vops.smul(sUnit, scale)),
+      miniScale
+    );
+    const mid = this.coordsToSvg(
+      vops.add(
+        vops.add(vops.smul(sUnit, scale), vops.smul(eUnit, scale)),
+        a.center
+      ),
       miniScale
     );
     const end = this.coordsToSvg(
       vops.add(a.center, vops.smul(eUnit, scale)),
       miniScale
     );
-    const dStr = pops.moveTo(start) + pops.lineTo(end) + pops.lineTo(end); // TODO
+    const dStr = pops.moveTo(start) + pops.lineTo(mid) + pops.lineTo(end); // TODO
     return (
       <PathSVG
         {...{ d: dStr, geoId: this.id, style: style, mode: mode, activeFrame }}
@@ -269,7 +277,7 @@ export class Tick extends BaseGeometryObject {
   ): Vector[] => {
     let dir = 1;
     const even = numTicks % 2 === 0;
-    const padding = miniScale ? TICK_PADDING : 0.15;
+    const padding = miniScale ? 0.25 : 0.15;
     let shifts = even ? [padding / 2] : [0];
     for (let i = 1; i < numTicks; i++) {
       if (even && i === 1) dir = -1;
