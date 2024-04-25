@@ -5,12 +5,8 @@ import { Triangle } from "../../../core/geometry/Triangle";
 import { congruent, strs } from "../../../core/geometryText";
 import { Content } from "../../../core/objgraph";
 import { Obj, Reason, SVGModes, Vector } from "../../../core/types";
-
-export const linked = (
-  val: string,
-  obj: BaseGeometryObject,
-  objs?: BaseGeometryObject[]
-) => <LinkedText val={val} obj={obj} linkedObjs={objs} />;
+import { Reasons } from "../../reasons";
+import { BaseStep, linked } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
@@ -47,20 +43,6 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   ctx.push(new Triangle({ pts: [C, B, D], parentFrame }, ctx));
   return ctx;
 };
-
-export abstract class BaseStep {
-  abstract text(ctx: Content, frame?: string): JSX.Element;
-  static additions(
-    ctx: Content,
-    frame: string,
-    mode: SVGModes,
-    inPlace: boolean = true
-  ): Content {
-    return ctx;
-  }
-  abstract unfocused(ctx: Content, frame: string, inPlace: boolean): Content;
-  abstract diagram(ctx: Content, frame: string, inPlace: boolean): Content;
-}
 
 export class Givens implements BaseStep {
   unfocused(ctx: Content): Content {
@@ -128,7 +110,7 @@ export class Proves implements BaseStep {
   ) => {
     const AD = ctx.getSegment("AD").mode(frame, mode);
     const DC = ctx.getSegment("CD").mode(frame, mode);
-    const options = inPlace ? {} : { parentFrame: frame };
+    const options = inPlace ? {} : { frame };
     ctx.pushTick(AD, Obj.EqualLengthTick, options).mode(frame, mode);
     ctx.pushTick(DC, Obj.EqualLengthTick, options).mode(frame, mode);
     return ctx;
@@ -143,8 +125,8 @@ export class Proves implements BaseStep {
         {" is the midpoint of "}
         {linked("AC", AD, [
           BD,
-          ctx.getTick(AD, Obj.EqualLengthTick, { parentFrame: frame }),
-          ctx.getTick(BD, Obj.EqualLengthTick, { parentFrame: frame }),
+          ctx.getTick(AD, Obj.EqualLengthTick, { frame }),
+          ctx.getTick(BD, Obj.EqualLengthTick, { frame }),
         ])}
       </span>
     );
@@ -183,7 +165,7 @@ export class Step1 implements BaseStep {
     const ABD = ctx.getAngle("ABD");
     const DBC = ctx.getAngle("CBD");
     const ADB = ctx.getAngle("ADB");
-    const options = inPlace ? {} : { parentFrame: frame };
+    const options = inPlace ? {} : { frame };
     ctx.pushTick(ABD, Obj.EqualAngleTick, options).mode(frame, mode);
     ctx.pushTick(DBC, Obj.EqualAngleTick, options).mode(frame, mode);
     ctx.pushTick(ADB, Obj.RightTick, options).mode(frame, mode);
@@ -197,15 +179,13 @@ export class Step1 implements BaseStep {
 
     return (
       <span>
-        {linked("ADB", ADB, [
-          ctx.getTick(ADB, Obj.RightTick, { parentFrame: frame }),
-        ])}
+        {linked("ADB", ADB, [ctx.getTick(ADB, Obj.RightTick, { frame })])}
         {"= 90°, "}
         {linked("BD", BD)}
         {" bisects "}
         {linked("ABC", ABD, [
-          ctx.getTick(ABD, Obj.EqualAngleTick, { parentFrame: frame }),
-          ctx.getTick(DBC, Obj.EqualAngleTick, { parentFrame: frame }),
+          ctx.getTick(ABD, Obj.EqualAngleTick, { frame }),
+          ctx.getTick(DBC, Obj.EqualAngleTick, { frame }),
         ])}
       </span>
     );
@@ -230,7 +210,7 @@ export class Step2 implements BaseStep {
   ) => {
     const ADB = ctx.getAngle("ADB");
     const BDC = ctx.getAngle("BDC");
-    const options = inPlace ? {} : { parentFrame: frame };
+    const options = inPlace ? {} : { frame };
     ctx.pushTick(ADB, Obj.RightTick, options).mode(frame, mode);
     ctx.pushTick(BDC, Obj.RightTick, options).mode(frame, mode);
     return ctx;
@@ -240,13 +220,9 @@ export class Step2 implements BaseStep {
     const BDC = ctx.getAngle("BDC");
     return (
       <span>
-        {linked("ADB", ADB, [
-          ctx.getTick(ADB, Obj.RightTick, { parentFrame: frame }),
-        ])}
+        {linked("ADB", ADB, [ctx.getTick(ADB, Obj.RightTick, { frame })])}
         {congruent}
-        {linked("BDC", BDC, [
-          ctx.getTick(BDC, Obj.RightTick, { parentFrame: frame }),
-        ])}
+        {linked("BDC", BDC, [ctx.getTick(BDC, Obj.RightTick, { frame })])}
       </span>
     );
   };
@@ -269,7 +245,7 @@ export class Step3 implements BaseStep {
     mode: SVGModes,
     inPlace = true
   ) => {
-    const options = inPlace ? {} : { parentFrame: frame };
+    const options = inPlace ? {} : { frame };
     const BD = ctx.getSegment("BD").mode(frame, mode);
     ctx.pushTick(BD, Obj.EqualLengthTick, options).mode(frame, mode);
     return ctx;
@@ -277,7 +253,7 @@ export class Step3 implements BaseStep {
   text = (ctx: Content, frame?: string) => {
     const BD = ctx.getSegment("BD");
     const BDLinked = linked("BD", BD, [
-      ctx.getTick(BD, Obj.EqualLengthTick, { parentFrame: frame }),
+      ctx.getTick(BD, Obj.EqualLengthTick, { frame }),
     ]);
     return (
       <span>
@@ -323,15 +299,15 @@ export class Step4 implements BaseStep {
     return (
       <span>
         {linked("ABD", ABD, [
-          ctx.getTick(BD, Obj.EqualLengthTick, { parentFrame: frame }),
-          ctx.getTick(aABD, Obj.EqualAngleTick, { parentFrame: frame }),
-          ctx.getTick(aDBA, Obj.RightTick, { parentFrame: frame }),
+          ctx.getTick(BD, Obj.EqualLengthTick, { frame }),
+          ctx.getTick(aABD, Obj.EqualAngleTick, { frame }),
+          ctx.getTick(aDBA, Obj.RightTick, { frame }),
         ])}
         {congruent}
         {linked("DBC", CBD, [
-          ctx.getTick(BD, Obj.EqualLengthTick, { parentFrame: frame }),
-          ctx.getTick(aCBD, Obj.EqualAngleTick, { parentFrame: frame }),
-          ctx.getTick(aDBC, Obj.RightTick, { parentFrame: frame }),
+          ctx.getTick(BD, Obj.EqualLengthTick, { frame }),
+          ctx.getTick(aCBD, Obj.EqualAngleTick, { frame }),
+          ctx.getTick(aDBC, Obj.RightTick, { frame }),
         ])}
       </span>
     );
@@ -357,7 +333,7 @@ export class Step5 implements BaseStep {
   ) => {
     const AD = ctx.getSegment("AD").mode(frame, mode);
     const DC = ctx.getSegment("DC").mode(frame, mode);
-    const options = inPlace ? { num: 2 } : { num: 2, parentFrame: frame };
+    const options = inPlace ? { num: 2 } : { num: 2, frame };
     ctx.pushTick(AD, Obj.EqualLengthTick, options).mode(frame, mode);
     ctx.pushTick(DC, Obj.EqualLengthTick, options).mode(frame, mode);
     return ctx;
@@ -368,11 +344,11 @@ export class Step5 implements BaseStep {
     return (
       <span>
         {linked("AD", AD, [
-          ctx.getTick(AD, Obj.EqualLengthTick, { parentFrame: frame, num: 2 }),
+          ctx.getTick(AD, Obj.EqualLengthTick, { frame, num: 2 }),
         ])}
         {congruent}
         {linked("DC", DC, [
-          ctx.getTick(DC, Obj.EqualLengthTick, { parentFrame: frame, num: 2 }),
+          ctx.getTick(DC, Obj.EqualLengthTick, { frame, num: 2 }),
         ])}
       </span>
     );
@@ -401,14 +377,15 @@ export class Step6 implements BaseStep {
     const D = ctx.getPoint("D");
     const AD = ctx.getSegment("AD");
     const DC = ctx.getSegment("DC");
+    // TODO D is not highlighting in long-form
     return (
       <span>
         {linked("D", D)}
         {" is the midpoint of "}
         {linked("AC", AD, [
           DC,
-          ctx.getTick(AD, Obj.EqualLengthTick, { parentFrame: frame, num: 2 }),
-          ctx.getTick(DC, Obj.EqualLengthTick, { parentFrame: frame, num: 2 }),
+          ctx.getTick(AD, Obj.EqualLengthTick, { frame, num: 2 }),
+          ctx.getTick(DC, Obj.EqualLengthTick, { frame, num: 2 }),
         ])}
       </span>
     );
@@ -511,25 +488,10 @@ export const reliesOnText = () => {
 
 export const reasons = (activeFrame: string) => {
   let reasonMap = new Map<string, Reason>();
-  reasonMap.set("s2", {
-    title: "Def. Perpendicular Lines",
-    body: "If two lines meet at 90°, then they are perpendicular.",
-  });
-  reasonMap.set("s3", {
-    title: "Reflexive Property",
-    body: "Any geometric figure is congruent with itself.",
-  });
-  reasonMap.set("s4", {
-    title: "ASA Triangle Congruence",
-    body: "Angle-Side-Angle (ASA) Triangle Congruence. If two triangles have 2 congruent angles and 1 included congruent side, then the triangles are congruent.",
-  });
-  reasonMap.set("s5", {
-    title: "Corresponding Segments Postulate",
-    body: "If two triangles are congruent, then the corresponding segments of each triangle are also congruent.",
-  });
-  reasonMap.set("s6", {
-    title: "Def. Midpoint",
-    body: "The point that is halfway between two endpoints of a segment.",
-  });
+  reasonMap.set("s2", Reasons.PerpendicularLines);
+  reasonMap.set("s3", Reasons.Reflexive);
+  reasonMap.set("s4", Reasons.ASA);
+  reasonMap.set("s5", Reasons.CorrespondingSegments);
+  reasonMap.set("s6", Reasons.Midpoint);
   return reasonMap.get(activeFrame) ?? { title: "", body: "" };
 };

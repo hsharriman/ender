@@ -11,8 +11,7 @@ import {
   Step3,
   Step4,
   Step5,
-  Step6,
-} from "./proof1";
+} from "./pc1";
 
 const contents = () => {
   let ctx = baseContent(true);
@@ -23,25 +22,24 @@ const contents = () => {
   defaults.diagram(ctx, given);
 
   // PROVE
-  // old content should be rendered as unfocused
   const prove = ctx.addFrame("prove");
   let proves = new Proves();
   proves.diagram(ctx, prove);
 
   // STEP 1
   const step1 = ctx.addFrame("s1");
-  let givens = new Step1();
-  givens.diagram(ctx, step1);
+  let given1 = new Step1();
+  given1.diagram(ctx, step1);
 
   // STEP 2
   const step2 = ctx.addFrame("s2");
-  let intersect = new Step2();
-  intersect.diagram(ctx, step2);
+  let given2 = new Step2();
+  given2.diagram(ctx, step2);
 
   // STEP 3
   const step3 = ctx.addFrame("s3");
-  let vertAngs = new Step3();
-  vertAngs.diagram(ctx, step3);
+  let given3 = new Step3();
+  given3.diagram(ctx, step3);
 
   // STEP 4
   const step4 = ctx.addFrame("s4");
@@ -52,11 +50,6 @@ const contents = () => {
   const step5 = ctx.addFrame("s5");
   let corresp = new Step5();
   corresp.diagram(ctx, step5);
-
-  // STEP 6
-  const step6 = ctx.addFrame("s6");
-  let alternate = new Step6();
-  alternate.diagram(ctx, step6);
 
   const linkedTexts: ProofTextItem[] = [];
   linkedTexts.push({
@@ -73,56 +66,46 @@ const contents = () => {
   // TEXT STEP 1
   linkedTexts.push({
     k: step1,
-    v: givens.text(ctx),
+    v: given1.text(ctx),
     reason: "Given", // TODO figure this out automatically based on KEY instead of array index
-  });
-  linkedTexts.push({
-    k: step2,
-    v: intersect.text(ctx),
-    reason: "Given",
   });
   // TEXT STEP 2
   linkedTexts.push({
-    k: step3,
-    v: vertAngs.text(ctx),
-    reason: "Vertical Angles Theorem",
-    dependsOn: new Set([step2]),
+    k: step2,
+    v: given2.text(ctx),
+    reason: "Given",
   });
   // TEXT STEP 3
+  linkedTexts.push({
+    k: step3,
+    v: given3.text(ctx),
+    reason: "Given",
+  });
+  // TEXT STEP 4
   linkedTexts.push({
     k: step4,
     v: SAS.text(ctx),
     reason: "SAS Triangle Congruence",
-    dependsOn: new Set([step1, step3]),
+    dependsOn: new Set([step1, step2, step3]),
   });
-  // TEXT STEP 4
+  // TEXT STEP 5
   linkedTexts.push({
     k: step5,
     v: corresp.text(ctx),
     reason: "Corresponding Angles Postulate",
-    dependsOn: new Set([step4]),
-  });
-  // TEXT STEP 5
-  linkedTexts.push({
-    k: step6,
-    v: alternate.text(ctx),
-    reason: "Alternate Interior Angles Theorem",
-    dependsOn: new Set([step5]), // TODO repetitive, same as ctx.deps
+    dependsOn: new Set([step4]), // TODO repetitive, same as ctx.deps
   });
 
   // RELIES ON:
-  ctx.reliesOn(step3, [step2]);
-  // STEP 3
-  ctx.reliesOn(step4, [step1, step3]);
   // STEP 4
-  ctx.reliesOn(step5, [step4]);
+  ctx.reliesOn(step4, [step1, step2, step3]);
   // STEP 5
-  ctx.reliesOn(step6, [step5]);
+  ctx.reliesOn(step5, [step4]);
 
   return { ctx, linkedTexts };
 };
 
-export const InPlaceParallel = () => {
+export const InPlaceP1 = () => {
   // render list of all components ONCE  completed list of states
   const { ctx, linkedTexts } = contents();
   const miniCtx = miniContent();

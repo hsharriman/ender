@@ -41,6 +41,10 @@
 - [ ] highlighting angles on hover? when no tick is visible
 - [ ] CSS animations for transitions
 - [ ] Improve the proof class structure / cleanup (always ongoing)
+- [ ] Make it so that hovering text doesn't cause the text to move
+- [ ] Static format
+- [ ] automate multiple format creation
+- [ ] fix layout of long-form
 
 ## TODO for infra/study
 

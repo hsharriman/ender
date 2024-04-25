@@ -123,18 +123,25 @@ export class Content {
     parent: Segment | Angle,
     type: TickType,
     options?: {
-      parentFrame?: string;
+      frame?: string;
       num?: number;
     }
   ) => {
     let numTicks = options?.num || 1;
     const existing = this.getTick(parent, type, options);
+    // debugging
+    // let id = this.getId(type, parent.labeled().label, numTicks);
+    // const hasParent = options?.frame && options.frame !== undefined;
+    // if (hasParent) {
+    //   id = `${options?.frame}-${id}`;
+    // }
+    // const existing = this.ticks.filter((t) => t.id === id)[0];
     if (existing) return existing;
     let tick = new Tick({
       parent: parent.labeled(),
       type,
       num: numTicks,
-      parentFrame: options?.parentFrame,
+      parentFrame: options?.frame,
     });
     this.ticks.push(tick);
     return tick;
@@ -150,15 +157,20 @@ export class Content {
   getTick = (
     parent: Segment | Angle,
     type: TickType,
-    options?: { num?: number; parentFrame?: string }
+    options?: { num?: number; frame?: string }
   ) => {
     let numTicks = options?.num || 1;
     let id = this.getId(type, parent.labeled().label, numTicks);
-    const hasParent = options?.parentFrame && options.parentFrame !== undefined;
+    const hasParent = options?.frame && options.frame !== undefined;
     if (hasParent) {
-      id = `${options?.parentFrame}-${id}`;
+      id = `${options?.frame}-${id}`;
     }
-    return this.ticks.filter((t) => t.id === id)[0];
+    const match = this.ticks.filter((t) => t.id === id);
+    // if (match.length === 0) { // debugging
+    //   const tickStr = this.ticks.map((t) => t.id).join(", ");
+    //   console.error("no match for tick", id, "from ticks", tickStr, options);
+    // }
+    return match[0];
   };
 
   allSvgElements =

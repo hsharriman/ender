@@ -17,7 +17,6 @@ interface Dims {
 export interface ReliesOnState {}
 export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
   private DEFAULT_CLR = "#D8B1FF";
-  buildGraph = () => {};
 
   getRowCoords = (frameKey: string): Dims | undefined => {
     // TODO make work for any row type
@@ -56,40 +55,43 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     return [];
   };
 
-  renderDepEdge = (d: Dims, highest: boolean = true) => {
+  renderDepEdge = (d: Dims, highest: boolean = true, lastBottom: number) => {
     const divHeight = Math.round(d.b - d.t);
-    const rightCoord = this.props.rowHeight;
     return (
-      <div
-        className="absolute w-8"
-        style={{
-          top: `${d.t}px`,
-          left: `${d.l}px`,
-          height: `${divHeight}px`,
-        }}
-      >
-        <svg width="100%" height="100%">
-          <circle r="5px" cx="5px" cy="50%" fill={this.DEFAULT_CLR} />
-          <polyline
-            points={`0,${this.props.rowHeight / 2} 30, ${
-              this.props.rowHeight / 2
-            } 30, ${this.props.rowHeight}`}
-            stroke={this.DEFAULT_CLR}
-            fill="none"
-            strokeWidth="3px"
-          />
-          {!highest && (
-            <line
-              x1="30px"
-              y1="0"
-              x2="30px"
-              y2={`${this.props.rowHeight / 2}px`}
-              strokeWidth="3px"
+      <>
+        <div
+          className="absolute w-8"
+          style={{
+            top: `${d.t}px`,
+            left: `${d.l}px`,
+            height: `${divHeight}px`,
+          }}
+        >
+          <svg width="100%" height="100%">
+            <circle r="5px" cx="5px" cy="50%" fill={this.DEFAULT_CLR} />
+            <polyline
+              points={`0,${this.props.rowHeight / 2} 30, ${
+                this.props.rowHeight / 2
+              } 30, ${this.props.rowHeight}`}
               stroke={this.DEFAULT_CLR}
+              fill="none"
+              strokeWidth="3px"
             />
-          )}
-        </svg>
-      </div>
+            {!highest && (
+              <line
+                x1="30px"
+                y1="0"
+                x2="30px"
+                y2={`${this.props.rowHeight / 2}px`}
+                strokeWidth="3px"
+                stroke={this.DEFAULT_CLR}
+              />
+            )}
+          </svg>
+        </div>
+        {d.b - lastBottom > this.props.rowHeight &&
+          this.renderConnector(lastBottom, d)}
+      </>
     );
   };
 
@@ -132,25 +134,57 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     );
   };
 
+  renderConnector = (lastBottom: number, d: Dims) => {
+    const divHeight = Math.round(d.t - lastBottom);
+    return (
+      <div
+        className="absolute w-8"
+        style={{
+          top: `${lastBottom}px`,
+          left: `${d.l}px`,
+          height: `${divHeight}px`,
+        }}
+      >
+        <svg width="100%" height="100%">
+          <line
+            x1={`30px`}
+            x2={`30px`}
+            y1={0}
+            y2={`${divHeight}px`}
+            stroke={this.DEFAULT_CLR}
+            fill="none"
+            strokeWidth="3px"
+          />
+        </svg>
+      </div>
+    );
+  };
+
   render() {
     const dependsOn = this.props.reliesOn.get(this.props.activeFrame);
     let innerContent = <></>;
+    // TODO height of text div should always match the top/bottom of the relies on arrow
     if (dependsOn) {
       const dims = this.vertDists();
-      const height = dims[dims.length - 1].b - dims[1].t;
+      const height = dims[dims.length - 1].b - dims[0].t;
+
+      let lastBottom = dims[0].b;
+      const svgs = dims.map((d, i) => {
+        if (i === dims.length - 1) {
+          return this.renderArrow(d);
+        }
+        const svg = this.renderDepEdge(d, i === 0, lastBottom);
+        lastBottom = d.b;
+        return svg;
+      });
       innerContent = (
         <>
-          {dims.map((d, i) => {
-            if (i === dims.length - 1) {
-              return this.renderArrow(d);
-            }
-            return this.renderDepEdge(d, i === 0);
-          })}
+          {svgs}
           <div
             className="text-purple-400 font-sans w-6 text-base absolute text-nowrap flex align-middle"
             style={{
               height: `${height}px`,
-              top: `${dims[0].t + (dims[0].b - dims[0].t) / 2}px`,
+              top: `${dims[0].t}px`,
               left: `${dims[0].l + 32}px`,
             }}
           >
