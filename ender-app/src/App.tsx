@@ -1,17 +1,16 @@
-import { ParallelLongForm } from "./theorems/complete/proof1/LongParallel";
-import { InPlaceParallel } from "./theorems/complete/proof1/InPlaceParallel";
-import { InPlaceProof2 } from "./theorems/complete/proof2/InPlaceProof2";
-import { Proof2Long } from "./theorems/complete/proof2/LongProof2";
-import { InPlaceP1 } from "./theorems/checking/p1/InPlaceP1";
+import { Check1 } from "./theorems/checking/p1/Check1";
+import { Complete1 } from "./theorems/complete/proof1/Complete1";
+import { Complete2 } from "./theorems/complete/proof2/Complete2";
 
 function App() {
   return (
     <div className="w-screen h-screen">
-      {/* {InPlaceParallel()} */}
-      <ParallelLongForm />
-      {/* <InPlaceProof2 /> */}
-      {/* <Proof2Long /> */}
-      {/* <InPlaceP1 /> */}
+      {/* {new Check1().inPlace()} */}
+      {new Check1().longForm()}
+      {/* {new Complete1().inPlace()} */}
+      {/* {new Complete1().longForm()} */}
+      {/* {new Complete2().inPlace()} */}
+      {/* {new Complete2().longForm()} */}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { Reason } from "../core/types";
+import { Reasons } from "../theorems/reasons";
 
 export interface ReasonTextProps {
   activeFrame: string;
@@ -19,7 +20,9 @@ export class ReasonText extends React.Component<ReasonTextProps> {
           <div
             className="font-bold text-base text-slate-500"
             style={
-              title.length > 0 && this.props.displayHeader
+              title.length > 0 &&
+              title !== Reasons.Given.title &&
+              this.props.displayHeader
                 ? { opacity: 1 }
                 : { opacity: 0 }
             }
@@ -29,7 +32,7 @@ export class ReasonText extends React.Component<ReasonTextProps> {
           <div
             className="font-bold text-base"
             style={
-              this.props.displayHeader
+              this.props.displayHeader && title !== Reasons.Given.title
                 ? { display: "block" }
                 : { display: "none" }
             }

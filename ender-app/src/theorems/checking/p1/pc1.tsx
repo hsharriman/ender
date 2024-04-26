@@ -8,9 +8,9 @@ import { CongruentTriangles } from "../../templates/CongruentTriangles";
 import { EqualAngles } from "../../templates/EqualAngles";
 import { EqualSegments } from "../../templates/EqualSegments";
 import { SAS } from "../../templates/SAS";
-import { BaseStep } from "../../utils";
+import { BaseStep, StepCls } from "../../utils";
 
-export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
     [
       [1, 0],
@@ -48,10 +48,7 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   return ctx;
 };
 
-export class Givens implements BaseStep {
-  unfocused(ctx: Content): Content {
-    return ctx;
-  }
+class Givens implements BaseStep {
   text = (ctx: Content, frame?: string) => {
     const ADeqBC = EqualSegments.text(ctx, ["AD", "BC"], { frame });
     const ABeqDC = EqualSegments.text(ctx, ["AB", "DC"], { frame, num: 2 });
@@ -84,30 +81,21 @@ export class Givens implements BaseStep {
     );
   };
 
-  static additions = (ctx: Content, frame: string, mode: SVGModes) => {
+  additions = (ctx: Content, frame: string, mode: SVGModes) => {
     ctx.getTriangle("ABD").mode(frame, mode);
     ctx.getTriangle("CDB").mode(frame, mode);
-    return ctx;
   };
   diagram = (ctx: Content, frame: string) => {
-    return Givens.additions(ctx, frame, SVGModes.Default);
+    this.additions(ctx, frame, SVGModes.Default);
   };
 }
 
-export class Proves implements BaseStep {
+class Proves implements BaseStep {
   unfocused = (ctx: Content, frame: string) => {
-    Givens.additions(ctx, frame, SVGModes.Unfocused);
-    return ctx;
+    new Givens().additions(ctx, frame, SVGModes.Unfocused);
   };
   additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    return EqualAngles.additions(
-      ctx,
-      ["BAD", "DCB"],
-      frame,
-      mode,
-      mode,
-      inPlace
-    );
+    EqualAngles.additions(ctx, ["BAD", "DCB"], frame, mode, mode, inPlace);
   };
   text = (ctx: Content, frame?: string) => {
     return EqualAngles.text(ctx, ["BAD", "DCB"], { frame });
@@ -115,7 +103,6 @@ export class Proves implements BaseStep {
   diagram = (ctx: Content, frame: string, inPlace = true) => {
     this.unfocused(ctx, frame);
     this.additions(ctx, frame, SVGModes.Focused, inPlace);
-    return ctx;
   };
 
   ticklessText = (ctx: Content) => {
@@ -123,113 +110,64 @@ export class Proves implements BaseStep {
   };
 }
 
-export class Step1 implements BaseStep {
-  unfocused(ctx: Content, frame: string): Content {
-    Givens.additions(ctx, frame, SVGModes.Unfocused);
-    return ctx;
-  }
-  static additions = (
-    ctx: Content,
-    frame: string,
-    mode: SVGModes,
-    inPlace = true
-  ) => {
-    return EqualSegments.additions(
-      ctx,
-      ["AD", "BC"],
-      frame,
-      mode,
-      mode,
-      inPlace
-    );
+class S1 implements StepCls {
+  unfocused = (ctx: Content, frame: string) => {
+    new Givens().additions(ctx, frame, SVGModes.Unfocused);
+  };
+  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
+    EqualSegments.additions(ctx, ["AD", "BC"], frame, mode, mode, inPlace);
   };
   text = (ctx: Content, frame?: string) => {
     return EqualSegments.text(ctx, ["AD", "BC"], { frame });
   };
   diagram = (ctx: Content, frame: string, inPlace = true) => {
     this.unfocused(ctx, frame);
-    return Step1.additions(ctx, frame, SVGModes.Focused, inPlace);
+    this.additions(ctx, frame, SVGModes.Focused, inPlace);
   };
 }
 
-export class Step2 implements BaseStep {
-  unfocused(ctx: Content, frame: string, inPlace = true): Content {
-    Givens.additions(ctx, frame, SVGModes.Unfocused);
-    Step1.additions(ctx, frame, SVGModes.Unfocused, inPlace);
-    return ctx;
-  }
-  static additions = (
-    ctx: Content,
-    frame: string,
-    mode: SVGModes,
-    inPlace = true
-  ) => {
-    return EqualSegments.additions(
-      ctx,
-      ["AB", "DC"],
-      frame,
-      mode,
-      mode,
-      inPlace,
-      2
-    );
+class S2 implements StepCls {
+  unfocused = (ctx: Content, frame: string, inPlace = true) => {
+    new Givens().additions(ctx, frame, SVGModes.Unfocused);
+    new S1().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+  };
+  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
+    EqualSegments.additions(ctx, ["AB", "DC"], frame, mode, mode, inPlace, 2);
   };
   text = (ctx: Content, frame?: string) => {
     return EqualSegments.text(ctx, ["AB", "DC"], { frame, num: 2 });
   };
-  diagram(ctx: Content, frame: string, inPlace = true): Content {
+  diagram = (ctx: Content, frame: string, inPlace = true) => {
     this.unfocused(ctx, frame);
-    return Step2.additions(ctx, frame, SVGModes.Default, inPlace);
-  }
+    this.additions(ctx, frame, SVGModes.Default, inPlace);
+  };
 }
 
-export class Step3 implements BaseStep {
-  unfocused(ctx: Content, frame: string, inPlace = true): Content {
-    Givens.additions(ctx, frame, SVGModes.Unfocused);
-    Step1.additions(ctx, frame, SVGModes.Unfocused, inPlace);
-    Step2.additions(ctx, frame, SVGModes.Unfocused, inPlace);
-    return ctx;
-  }
-  static additions = (
-    ctx: Content,
-    frame: string,
-    mode: SVGModes,
-    inPlace = true
-  ) => {
-    return EqualAngles.additions(
-      ctx,
-      ["ABD", "CDB"],
-      frame,
-      mode,
-      mode,
-      inPlace
-    );
+class S3 implements StepCls {
+  unfocused = (ctx: Content, frame: string, inPlace = true) => {
+    new Givens().additions(ctx, frame, SVGModes.Unfocused);
+    new S1().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+    new S2().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+  };
+  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
+    EqualAngles.additions(ctx, ["ABD", "CDB"], frame, mode, mode, inPlace);
   };
   text = (ctx: Content, frame?: string) => {
     return EqualAngles.text(ctx, ["ABD", "CDB"], { frame });
   };
 
-  diagram(ctx: Content, frame: string, inPlace = true): Content {
+  diagram = (ctx: Content, frame: string, inPlace = true) => {
     this.unfocused(ctx, frame, inPlace);
-    return Step3.additions(ctx, frame, SVGModes.Focused, inPlace);
-  }
+    this.additions(ctx, frame, SVGModes.Focused, inPlace);
+  };
 }
 
-export class Step4 implements BaseStep {
-  unfocused(ctx: Content): Content {
-    return ctx;
-  }
-  static additions = (
-    ctx: Content,
-    frame: string,
-    mode: SVGModes,
-    inPlace = true
-  ) => {
-    Givens.additions(ctx, frame, mode);
-    Step1.additions(ctx, frame, mode, inPlace);
-    Step2.additions(ctx, frame, mode, inPlace);
-    Step3.additions(ctx, frame, mode, inPlace);
-    return ctx;
+class S4 implements StepCls {
+  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
+    new Givens().additions(ctx, frame, mode);
+    new S1().additions(ctx, frame, mode, inPlace);
+    new S2().additions(ctx, frame, mode, inPlace);
+    new S3().additions(ctx, frame, mode, inPlace);
   };
   text = (ctx: Content, frame?: string) => {
     return SAS.text(
@@ -244,37 +182,27 @@ export class Step4 implements BaseStep {
     );
   };
   diagram = (ctx: Content, frame: string, inPlace = true) => {
-    Step4.additions(ctx, frame, SVGModes.Focused, inPlace);
-    return ctx;
+    this.additions(ctx, frame, SVGModes.Focused, inPlace);
   };
 }
 
-export class Step5 implements BaseStep {
-  unfocused(ctx: Content, frame: string, inPlace = true): Content {
-    Step4.additions(ctx, frame, SVGModes.Unfocused, inPlace);
-    return ctx;
-  }
+class S5 implements StepCls {
+  unfocused = (ctx: Content, frame: string, inPlace = true) => {
+    new S4().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+  };
   additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    return EqualAngles.additions(
-      ctx,
-      ["BAD", "DCB"],
-      frame,
-      mode,
-      mode,
-      inPlace,
-      2
-    );
+    EqualAngles.additions(ctx, ["BAD", "DCB"], frame, mode, mode, inPlace, 2);
   };
   text = (ctx: Content, frame?: string) => {
     return EqualAngles.text(ctx, ["BAD", "DCB"], { frame, num: 2 });
   };
   diagram = (ctx: Content, frame: string, inPlace = true) => {
     this.unfocused(ctx, frame, inPlace);
-    return this.additions(ctx, frame, SVGModes.Focused, inPlace);
+    this.additions(ctx, frame, SVGModes.Focused, inPlace);
   };
 }
 
-export const miniContent = () => {
+const miniContent = () => {
   let ctx = baseContent(false);
 
   // STEP 3 - SAS TRIANGLE CONGRUENCE
@@ -319,7 +247,7 @@ export const miniContent = () => {
   return ctx;
 };
 
-export const reliesOnText = () => {
+const reliesOnText = () => {
   let relies = new Map<string, string[]>();
   const r1 = `(1) AM ${strs.congruent} BM`;
   const r2 = `(1) CM ${strs.congruent} DM`;
@@ -330,9 +258,23 @@ export const reliesOnText = () => {
   return relies;
 };
 
-export const reasons = (activeFrame: string) => {
+const reasons = (activeFrame: string) => {
   let reasonMap = new Map<string, Reason>();
   reasonMap.set("s4", Reasons.SAS);
   reasonMap.set("s5", Reasons.CorrespondingAngles);
   return reasonMap.get(activeFrame) ?? { title: "", body: "" };
+};
+
+export const PC1 = {
+  miniContent: miniContent(),
+  reliesOnText: reliesOnText(),
+  reasons,
+  baseContent,
+  Givens,
+  Proves,
+  S1,
+  S2,
+  S3,
+  S4,
+  S5,
 };

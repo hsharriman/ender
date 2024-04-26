@@ -32,11 +32,11 @@
 - [x] make linked text active on hover
 - [x] hovering not working on correct figs in long form
 - [x] Right angle tick marks
+- [x] relies on for long-form
 - [ ] Change fonts (again?)
 - [ ] Make relies on resample if screen resizes
 - [ ] reword the reasons to follow if/then pattern
 - [ ] fix stroke width of mini figs and tick mark placement for angles
-- [x] relies on for long-form
 - [ ] highlighting of text when clicking on the diagram
 - [ ] highlighting angles on hover? when no tick is visible
 - [ ] CSS animations for transitions
@@ -45,6 +45,8 @@
 - [ ] Static format
 - [ ] automate multiple format creation
 - [ ] fix layout of long-form
+- [ ] go through todos in files
+- [ ] make symbols bigger in linkedtext
 
 ## TODO for infra/study
 

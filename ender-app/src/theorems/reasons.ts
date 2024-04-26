@@ -1,4 +1,5 @@
 export const Reasons = {
+  Given: { title: "Given", body: "" },
   SAS: {
     title: "SAS Triangle Congruence",
     body: "Side-Angle-Side (SAS) Congruence. If two triangles have two sides and the included angle of one triangle congruent to two sides and the included angle of another triangle, then the triangles are congruent.",
