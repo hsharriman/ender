@@ -30,7 +30,7 @@ export const InPlaceFormatter = (props: InPlaceFormatterProps) => {
   });
   linkedTexts.push({
     k: PROVE_ID,
-    v: props.proveCls.text(ctx),
+    v: props.proveCls.text({ ctx }),
     alwaysActive: true,
   });
 
@@ -48,7 +48,7 @@ export const InPlaceFormatter = (props: InPlaceFormatterProps) => {
     linkedTexts.push({
       ...textMeta,
       k: s,
-      v: step.cls.text(ctx),
+      v: step.cls.text({ ctx }),
       reason: step.reason.title,
     });
   });

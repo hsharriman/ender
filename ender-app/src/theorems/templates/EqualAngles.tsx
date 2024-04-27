@@ -1,37 +1,40 @@
 import { congruent } from "../../core/geometryText";
 import { Content } from "../../core/objgraph";
 import { SVGModes, Obj } from "../../core/types";
-import { linked } from "../utils";
+import { StepFocusProps, StepTextProps, linked } from "../utils";
 
 export class EqualAngles {
   static additions = (
-    ctx: Content,
+    props: StepFocusProps,
     [a1, a2]: [string, string],
-    frame: string,
-    a1Mode: SVGModes,
-    a2Mode: SVGModes,
-    inPlace = true,
-    numTicks = 1
+    numTicks = 1,
+    a2Mode?: SVGModes
   ) => {
-    const a1a = ctx.getAngle(a1);
-    const a2a = ctx.getAngle(a2);
-    const options = inPlace ? { num: numTicks } : { frame, num: numTicks };
-    ctx.pushTick(a1a, Obj.EqualAngleTick, options).mode(frame, a1Mode);
-    ctx.pushTick(a2a, Obj.EqualAngleTick, options).mode(frame, a2Mode);
-    return ctx;
+    const a1a = props.ctx.getAngle(a1);
+    const a2a = props.ctx.getAngle(a2);
+    const options = props.inPlace
+      ? { num: numTicks }
+      : { frame: props.frame, num: numTicks };
+    props.ctx
+      .pushTick(a1a, Obj.EqualAngleTick, options)
+      .mode(props.frame, props.mode);
+    props.ctx
+      .pushTick(a2a, Obj.EqualAngleTick, options)
+      .mode(props.frame, a2Mode || props.mode);
   };
   static text = (
-    ctx: Content,
+    props: StepTextProps,
     [a1, a2]: [string, string],
-    options?: { frame?: string; num?: number }
+    num?: number
   ) => {
-    const a1a = ctx.getAngle(a1);
-    const a2a = ctx.getAngle(a2);
+    const a1a = props.ctx.getAngle(a1);
+    const a2a = props.ctx.getAngle(a2);
+    const options = { frame: props.frame, num };
     return (
       <span>
-        {linked(a1, a1a, [ctx.getTick(a1a, Obj.EqualAngleTick, options)])}
+        {linked(a1, a1a, [props.ctx.getTick(a1a, Obj.EqualAngleTick, options)])}
         {congruent}
-        {linked(a2, a2a, [ctx.getTick(a2a, Obj.EqualAngleTick, options)])}
+        {linked(a2, a2a, [props.ctx.getTick(a2a, Obj.EqualAngleTick, options)])}
       </span>
     );
   };

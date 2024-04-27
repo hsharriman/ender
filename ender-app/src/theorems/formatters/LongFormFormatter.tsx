@@ -40,7 +40,7 @@ export const LongFormFormatter = (props: LongFormFormatterProps) => {
 
     linkedTexts.push({
       k: frame,
-      v: step.cls.text(diagram, frame),
+      v: step.cls.text({ ctx: diagram, frame }),
       reason: step.reason.title,
     });
 

@@ -35,7 +35,7 @@
 - [x] relies on for long-form
 - [ ] Change fonts (again?)
 - [ ] Make relies on resample if screen resizes
-- [ ] reword the reasons to follow if/then pattern
+- [x] reword the reasons to follow if/then pattern
 - [ ] fix stroke width of mini figs and tick mark placement for angles
 - [ ] highlighting of text when clicking on the diagram
 - [ ] highlighting angles on hover? when no tick is visible
@@ -43,10 +43,13 @@
 - [ ] Improve the proof class structure / cleanup (always ongoing)
 - [ ] Make it so that hovering text doesn't cause the text to move
 - [ ] Static format
-- [ ] automate multiple format creation
+- [x] automate multiple format creation
 - [ ] fix layout of long-form
 - [ ] go through todos in files
-- [ ] make symbols bigger in linkedtext
+- [x] make symbols bigger in linkedtext
+- [ ] be able to render points
+- [ ] minifigures highlight on hover as well (for key terms)
+- [ ] hovering on point in long-form highlights wrong diagram label
 
 ## TODO for infra/study
 

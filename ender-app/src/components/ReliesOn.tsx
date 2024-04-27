@@ -55,7 +55,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     return [];
   };
 
-  renderDepEdge = (d: Dims, highest: boolean = true, lastBottom: number) => {
+  renderDepEdge = (d: Dims, highest: boolean, lastBottom: number) => {
     const divHeight = Math.round(d.b - d.t);
     return (
       <>
@@ -95,42 +95,46 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     );
   };
 
-  renderArrow = (d: Dims) => {
+  renderArrow = (d: Dims, lastBottom: number) => {
     // TODO make less absolutely calculated by pixel values + assumed row height
     return (
-      <div
-        className="absolute w-8"
-        style={{
-          top: `${d.t}px`,
-          left: `${d.l}px`,
-          height: `${this.props.rowHeight}px`,
-        }}
-      >
-        <svg width="100%" height="100%">
-          <polyline
-            points={`16,18 1,32 16,46`}
-            stroke={this.DEFAULT_CLR}
-            fill="none"
-            strokeWidth="3px"
-          />
-          <line
-            x1="0%"
-            y1="50%"
-            x2="30px"
-            y2="50%"
-            stroke={this.DEFAULT_CLR}
-            strokeWidth="3px"
-          />
-          <polyline
-            points={`0,${this.props.rowHeight / 2} 30, ${
-              this.props.rowHeight / 2
-            } 30,0`}
-            stroke={this.DEFAULT_CLR}
-            fill="none"
-            strokeWidth="3px"
-          />
-        </svg>
-      </div>
+      <>
+        <div
+          className="absolute w-8"
+          style={{
+            top: `${d.t}px`,
+            left: `${d.l}px`,
+            height: `${this.props.rowHeight}px`,
+          }}
+        >
+          <svg width="100%" height="100%">
+            <polyline
+              points={`16,18 1,32 16,46`}
+              stroke={this.DEFAULT_CLR}
+              fill="none"
+              strokeWidth="3px"
+            />
+            <line
+              x1="0%"
+              y1="50%"
+              x2="30px"
+              y2="50%"
+              stroke={this.DEFAULT_CLR}
+              strokeWidth="3px"
+            />
+            <polyline
+              points={`0,${this.props.rowHeight / 2} 30, ${
+                this.props.rowHeight / 2
+              } 30,0`}
+              stroke={this.DEFAULT_CLR}
+              fill="none"
+              strokeWidth="3px"
+            />
+          </svg>
+        </div>
+        {d.b - lastBottom > this.props.rowHeight &&
+          this.renderConnector(lastBottom, d)}
+      </>
     );
   };
 
@@ -171,14 +175,14 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
       let lastBottom = dims[0].b;
       const svgs = dims.map((d, i) => {
         if (i === dims.length - 1) {
-          return this.renderArrow(d);
+          return this.renderArrow(d, lastBottom);
         }
         const svg = this.renderDepEdge(d, i === 0, lastBottom);
         lastBottom = d.b;
         return svg;
       });
       innerContent = (
-        <>
+        <div>
           {svgs}
           <div
             className="text-purple-400 font-sans w-6 text-base absolute text-nowrap flex align-middle"
@@ -195,7 +199,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
               relies on
             </span>
           </div>
-        </>
+        </div>
       );
     }
     return (

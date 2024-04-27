@@ -1,10 +1,23 @@
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
-import { congruent, strs } from "../../../core/geometryText";
+import { comma, strs } from "../../../core/geometryText";
 import { Content } from "../../../core/objgraph";
-import { Obj, Reason, SVGModes, Vector } from "../../../core/types";
-import { Reasons } from "../../reasons";
-import { BaseStep, StepCls, linked } from "../../utils";
+import { Obj, SVGModes, Vector } from "../../../core/types";
+import { ASA, ASAProps } from "../../templates/ASA";
+import { EqualAngles } from "../../templates/EqualAngles";
+import { EqualRightAngles } from "../../templates/EqualRightAngles";
+import { EqualSegments } from "../../templates/EqualSegments";
+import { Midpoint } from "../../templates/Midpoint";
+import { Reflexive } from "../../templates/Reflexive";
+import { RightAngle } from "../../templates/RightAngle";
+import {
+  BaseStep,
+  StepCls,
+  StepFocusProps,
+  StepTextProps,
+  StepUnfocusProps,
+  linked,
+} from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
@@ -42,17 +55,15 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   return ctx;
 };
 
-export class Givens implements BaseStep {
-  text = (ctx: Content, frame?: string) => {
-    const BD = ctx.getSegment("BD");
-    const ABD = ctx.getAngle("ABD");
-    const DBC = ctx.getAngle("CBD");
-    const ADB = ctx.getAngle("ADB");
+export class Givens extends BaseStep {
+  override text = (props: StepTextProps) => {
+    const BD = props.ctx.getSegment("BD");
+    const ABD = props.ctx.getAngle("ABD");
 
     return (
       <span>
-        {linked("ADB", ADB)}
-        {" is a right angle, "}
+        {RightAngle.text(props, "ADB")}
+        {comma}
         {linked("BD", BD)}
         {" bisects "}
         {linked("ABC", ABD)}
@@ -60,16 +71,15 @@ export class Givens implements BaseStep {
     );
   };
 
-  ticklessText = (ctx: Content) => {
+  override ticklessText = (ctx: Content) => {
     const BD = ctx.getSegment("BD");
     const ABD = ctx.getAngle("ABD");
     const DBC = ctx.getAngle("CBD");
-    const ADB = ctx.getAngle("ADB");
 
     return (
       <span>
-        {linked("ADB", ADB)}
-        {" is a right angle, "}
+        {RightAngle.ticklessText(ctx, "ADB")}
+        {comma}
         {linked("BD", BD)}
         {" bisects "}
         {linked("ABC", ABD, [DBC])}
@@ -77,260 +87,136 @@ export class Givens implements BaseStep {
     );
   };
 
-  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    ctx.getTriangle("ABD").mode(frame, mode);
-    ctx.getTriangle("CBD").mode(frame, mode);
+  override additions = (props: StepFocusProps) => {
+    props.ctx.getTriangle("ABD").mode(props.frame, props.mode);
+    props.ctx.getTriangle("CBD").mode(props.frame, props.mode);
   };
-  diagram = (ctx: Content, frame: string) => {
-    this.additions(ctx, frame, SVGModes.Default);
+
+  override diagram = (ctx: Content, frame: string) => {
+    this.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
   };
 }
 
-export class Proves implements BaseStep {
-  unfocused = (ctx: Content, frame: string, inPlace = true) => {
-    new Givens().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+export class Proves extends BaseStep {
+  override unfocused = (props: StepUnfocusProps) => {
+    new Givens().additions({ ...props, mode: SVGModes.Unfocused });
   };
-  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    const AD = ctx.getSegment("AD").mode(frame, mode);
-    const DC = ctx.getSegment("CD").mode(frame, mode);
-    const options = inPlace ? {} : { frame };
-    ctx.pushTick(AD, Obj.EqualLengthTick, options).mode(frame, mode);
-    ctx.pushTick(DC, Obj.EqualLengthTick, options).mode(frame, mode);
+  override additions = (props: StepFocusProps) => {
+    Midpoint.additions(props, "D", ["AD", "CD"]);
   };
-  text = (ctx: Content, frame?: string) => {
-    const AD = ctx.getSegment("AD");
-    const BD = ctx.getSegment("CD");
-    const D = ctx.getPoint("D");
-    return (
-      <span>
-        {linked("D", D)}
-        {" is the midpoint of "}
-        {linked("AC", AD, [
-          BD,
-          ctx.getTick(AD, Obj.EqualLengthTick, { frame }),
-          ctx.getTick(BD, Obj.EqualLengthTick, { frame }),
-        ])}
-      </span>
-    );
+  override text = (props: StepTextProps) => {
+    return Midpoint.text(props, "AC", ["AD", "CD"], "D");
   };
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.unfocused(ctx, frame, inPlace);
-    this.additions(ctx, frame, SVGModes.Focused, inPlace);
-  };
-
-  ticklessText = (ctx: Content) => {
-    const AD = ctx.getSegment("AD");
-    const BD = ctx.getSegment("CD");
-    const D = ctx.getPoint("D");
-    return (
-      <span>
-        {linked("D", D)}
-        {" is the midpoint of "}
-        {linked("AC", AD, [BD])}
-      </span>
-    );
+  override ticklessText = (ctx: Content) => {
+    return Midpoint.ticklessText(ctx, "AC", ["AD", "CD"], "D");
   };
 }
 
-export class S1 implements StepCls {
-  unfocused = (ctx: Content, frame: string, inPlace = true) => {
-    new Givens().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+export class S1 extends StepCls {
+  override unfocused = (props: StepUnfocusProps) => {
+    new Givens().additions({ ...props, mode: SVGModes.Unfocused });
   };
-  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    const ABD = ctx.getAngle("ABD");
-    const DBC = ctx.getAngle("CBD");
-    const ADB = ctx.getAngle("ADB");
-    const options = inPlace ? {} : { frame };
-    ctx.pushTick(ABD, Obj.EqualAngleTick, options).mode(frame, mode);
-    ctx.pushTick(DBC, Obj.EqualAngleTick, options).mode(frame, mode);
-    ctx.pushTick(ADB, Obj.RightTick, options).mode(frame, mode);
+  override additions = (props: StepFocusProps) => {
+    EqualAngles.additions(props, ["ABD", "CBD"]);
+    RightAngle.additions(props, "ADB");
   };
-  text = (ctx: Content, frame?: string) => {
-    const BD = ctx.getSegment("BD");
-    const ABD = ctx.getAngle("ABD");
-    const DBC = ctx.getAngle("CBD");
-    const ADB = ctx.getAngle("ADB");
+  override text = (props: StepTextProps) => {
+    const BD = props.ctx.getSegment("BD");
+    const ABD = props.ctx.getAngle("ABD");
+    const DBC = props.ctx.getAngle("CBD");
 
     return (
       <span>
-        {linked("ADB", ADB, [ctx.getTick(ADB, Obj.RightTick, { frame })])}
-        {"= 90°, "}
+        {RightAngle.text(props, "ADB")}
+        {comma}
         {linked("BD", BD)}
         {" bisects "}
         {linked("ABC", ABD, [
-          ctx.getTick(ABD, Obj.EqualAngleTick, { frame }),
-          ctx.getTick(DBC, Obj.EqualAngleTick, { frame }),
+          props.ctx.getTick(ABD, Obj.EqualAngleTick, { frame: props.frame }),
+          props.ctx.getTick(DBC, Obj.EqualAngleTick, { frame: props.frame }),
         ])}
       </span>
     );
-  };
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.unfocused(ctx, frame, inPlace);
-    this.additions(ctx, frame, SVGModes.Focused, inPlace);
   };
 }
 
-export class S2 implements StepCls {
-  unfocused = (ctx: Content, frame: string, inPlace = true) => {
-    new Givens().additions(ctx, frame, SVGModes.Unfocused, inPlace);
-    new S1().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+export class S2 extends StepCls {
+  override unfocused = (props: StepUnfocusProps) => {
+    const stepProps = { ...props, mode: SVGModes.Unfocused };
+    new Givens().additions(stepProps);
+    new S1().additions(stepProps);
   };
-  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    const ADB = ctx.getAngle("ADB");
-    const BDC = ctx.getAngle("BDC");
-    const options = inPlace ? {} : { frame };
-    ctx.pushTick(ADB, Obj.RightTick, options).mode(frame, mode);
-    ctx.pushTick(BDC, Obj.RightTick, options).mode(frame, mode);
+  override additions = (props: StepFocusProps) => {
+    EqualRightAngles.additions(props, ["ADB", "BDC"]);
   };
-  text = (ctx: Content, frame?: string) => {
-    const ADB = ctx.getAngle("ADB");
-    const BDC = ctx.getAngle("BDC");
-    return (
-      <span>
-        {linked("ADB", ADB, [ctx.getTick(ADB, Obj.RightTick, { frame })])}
-        {congruent}
-        {linked("BDC", BDC, [ctx.getTick(BDC, Obj.RightTick, { frame })])}
-      </span>
-    );
-  };
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.unfocused(ctx, frame);
-    this.additions(ctx, frame, SVGModes.Focused, inPlace);
+  text = (props: StepTextProps) => {
+    return EqualRightAngles.text(props, ["ADB", "BDC"]);
   };
 }
 
-export class S3 implements StepCls {
-  unfocused = (ctx: Content, frame: string, inPlace = true) => {
-    new Givens().additions(ctx, frame, SVGModes.Unfocused, inPlace);
-    new S1().additions(ctx, frame, SVGModes.Unfocused, inPlace);
-    new S2().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+export class S3 extends StepCls {
+  override unfocused = (props: StepUnfocusProps) => {
+    const stepProps = { ...props, mode: SVGModes.Unfocused };
+    new Givens().additions(stepProps);
+    new S1().additions(stepProps);
+    new S2().additions(stepProps);
   };
-  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    const options = inPlace ? {} : { frame };
-    const BD = ctx.getSegment("BD").mode(frame, mode);
-    ctx.pushTick(BD, Obj.EqualLengthTick, options).mode(frame, mode);
+  override additions = (props: StepFocusProps) => {
+    Reflexive.additions(props, "BD");
   };
-  text = (ctx: Content, frame?: string) => {
-    const BD = ctx.getSegment("BD");
-    const BDLinked = linked("BD", BD, [
-      ctx.getTick(BD, Obj.EqualLengthTick, { frame }),
-    ]);
-    return (
-      <span>
-        {BDLinked}
-        {congruent}
-        {BDLinked}
-      </span>
-    );
-  };
-
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.unfocused(ctx, frame, inPlace);
-    this.additions(ctx, frame, SVGModes.Focused, inPlace);
+  override text = (props: StepTextProps) => {
+    return Reflexive.text(props, "BD");
   };
 }
 
-export class S4 implements StepCls {
-  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    new S1().additions(ctx, frame, mode, inPlace);
-    new S2().additions(ctx, frame, mode, inPlace);
-    new S3().additions(ctx, frame, mode, inPlace);
-    ctx.getTriangle("ABD").mode(frame, mode);
-    ctx.getTriangle("CBD").mode(frame, mode);
+export class S4 extends StepCls {
+  private meta: ASAProps = {
+    a1s: { angles: ["ADB", "BDC"], tick: Obj.RightTick },
+    a2s: { angles: ["ABD", "CBD"], tick: Obj.EqualAngleTick },
+    segs: ["BD", "BD"],
+    triangles: ["ABD", "CBD"],
   };
-  text = (ctx: Content, frame?: string) => {
-    const ABD = ctx.getTriangle("ABD");
-    const CBD = ctx.getTriangle("CBD");
-    const BD = ctx.getSegment("BD");
-    const aCBD = ctx.getAngle("CBD");
-    const aABD = ctx.getAngle("ABD");
-    const aDBA = ctx.getAngle("ADB");
-    const aDBC = ctx.getAngle("BDC");
-    return (
-      <span>
-        {linked("ABD", ABD, [
-          ctx.getTick(BD, Obj.EqualLengthTick, { frame }),
-          ctx.getTick(aABD, Obj.EqualAngleTick, { frame }),
-          ctx.getTick(aDBA, Obj.RightTick, { frame }),
-        ])}
-        {congruent}
-        {linked("DBC", CBD, [
-          ctx.getTick(BD, Obj.EqualLengthTick, { frame }),
-          ctx.getTick(aCBD, Obj.EqualAngleTick, { frame }),
-          ctx.getTick(aDBC, Obj.RightTick, { frame }),
-        ])}
-      </span>
-    );
+  override additions = (props: StepFocusProps) => {
+    ASA.additions(props, this.meta);
   };
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.additions(ctx, frame, SVGModes.Focused, inPlace);
+  override text = (props: StepTextProps) => {
+    return ASA.text(props, this.meta);
   };
 }
 
-export class S5 implements StepCls {
-  unfocused = (ctx: Content, frame: string, inPlace = true) => {
-    new S4().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+export class S5 extends StepCls {
+  override unfocused = (props: StepUnfocusProps) => {
+    new S4().additions({ ...props, mode: SVGModes.Unfocused });
   };
-  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    const AD = ctx.getSegment("AD").mode(frame, mode);
-    const DC = ctx.getSegment("DC").mode(frame, mode);
-    const options = inPlace ? { num: 2 } : { num: 2, frame };
-    ctx.pushTick(AD, Obj.EqualLengthTick, options).mode(frame, mode);
-    ctx.pushTick(DC, Obj.EqualLengthTick, options).mode(frame, mode);
+  override additions = (props: StepFocusProps) => {
+    EqualSegments.additions(props, ["AD", "DC"], 2);
   };
-  text = (ctx: Content, frame?: string) => {
-    const AD = ctx.getSegment("AD");
-    const DC = ctx.getSegment("DC");
-    return (
-      <span>
-        {linked("AD", AD, [
-          ctx.getTick(AD, Obj.EqualLengthTick, { frame, num: 2 }),
-        ])}
-        {congruent}
-        {linked("DC", DC, [
-          ctx.getTick(DC, Obj.EqualLengthTick, { frame, num: 2 }),
-        ])}
-      </span>
-    );
-  };
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.unfocused(ctx, frame);
-    this.additions(ctx, frame, SVGModes.Focused, inPlace);
+  override text = (props: StepTextProps) => {
+    return EqualSegments.text(props, ["AD", "DC"], 2);
   };
 }
 
-export class S6 implements StepCls {
-  unfocused = (ctx: Content, frame: string, inPlace = true) => {
-    new S4().additions(ctx, frame, SVGModes.Unfocused, inPlace);
+export class S6 extends StepCls {
+  override unfocused = (props: StepUnfocusProps) => {
+    new S4().additions({ ...props, mode: SVGModes.Unfocused });
   };
-  additions = (ctx: Content, frame: string, mode: SVGModes, inPlace = true) => {
-    new S5().additions(ctx, frame, mode, inPlace);
+  override additions = (props: StepFocusProps) => {
+    new S5().additions(props);
   };
-  text = (ctx: Content, frame?: string) => {
-    const D = ctx.getPoint("D");
-    const AD = ctx.getSegment("AD");
-    const DC = ctx.getSegment("DC");
-    // TODO D is not highlighting in long-form
-    return (
-      <span>
-        {linked("D", D)}
-        {" is the midpoint of "}
-        {linked("AC", AD, [
-          DC,
-          ctx.getTick(AD, Obj.EqualLengthTick, { frame, num: 2 }),
-          ctx.getTick(DC, Obj.EqualLengthTick, { frame, num: 2 }),
-        ])}
-      </span>
-    );
-  };
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.unfocused(ctx, frame, inPlace);
-    this.additions(ctx, frame, SVGModes.Focused, inPlace);
+  text = (props: StepTextProps) => {
+    return Midpoint.text(props, "AC", ["AD", "DC"], "D", 2);
   };
 }
 
 export const miniContent = () => {
   let ctx = baseContent(false);
+
+  const defaultStepProps: StepFocusProps = {
+    ctx,
+    frame: "",
+    mode: SVGModes.Purple,
+    inPlace: true,
+  };
 
   // STEP 2 - PERPENDICULAR LINES
   const step2 = ctx.addFrame("s2");
@@ -398,14 +284,6 @@ export const miniContent = () => {
   return ctx;
 };
 
-export const reliesOn = () => {
-  let relies = new Map<string, Set<string>>();
-  relies.set("s4", new Set(["s1", "s2", "s3"]));
-  relies.set("s5", new Set(["s4"]));
-  relies.set("s6", new Set(["s5"]));
-  return relies;
-};
-
 export const reliesOnText = () => {
   let relies = new Map<string, string[]>();
   const s1 = `(1) ${strs.angle}ABD ${strs.congruent} ${strs.angle}CBD`;
@@ -419,19 +297,8 @@ export const reliesOnText = () => {
   return relies;
 };
 
-export const reasons = (activeFrame: string) => {
-  let reasonMap = new Map<string, Reason>();
-  reasonMap.set("s2", Reasons.PerpendicularLines);
-  reasonMap.set("s3", Reasons.Reflexive);
-  reasonMap.set("s4", Reasons.ASA);
-  reasonMap.set("s5", Reasons.CorrespondingSegments);
-  reasonMap.set("s6", Reasons.Midpoint);
-  return reasonMap.get(activeFrame) ?? { title: "", body: "" };
-};
-
 export const P2 = {
   baseContent,
-  reasons,
   reliesOnText: reliesOnText(),
   miniContent: miniContent(),
   Givens,

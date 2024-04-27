@@ -1,5 +1,5 @@
-import { Content } from "../../core/objgraph";
 import { SVGModes } from "../../core/types";
+import { StepFocusProps } from "../utils";
 import { EqualAngles } from "./EqualAngles";
 import { EqualSegments } from "./EqualSegments";
 
@@ -14,19 +14,15 @@ interface CongruentTrianglesProps {
 
 export class CongruentTriangles {
   static additions = (
-    ctx: Content,
-    frame: string,
+    props: StepFocusProps,
     labels: CongruentTrianglesProps,
-    t1Mode: SVGModes,
-    t2Mode: SVGModes,
-    inPlace = true
+    t2Mode?: SVGModes
   ) => {
-    EqualSegments.additions(ctx, labels.s1s, frame, t1Mode, t2Mode, inPlace, 1);
-    EqualSegments.additions(ctx, labels.s2s, frame, t1Mode, t2Mode, inPlace, 2);
-    EqualSegments.additions(ctx, labels.s3s, frame, t1Mode, t2Mode, inPlace, 3);
-    EqualAngles.additions(ctx, labels.a1s, frame, t1Mode, t2Mode, inPlace, 1);
-    EqualAngles.additions(ctx, labels.a2s, frame, t1Mode, t2Mode, inPlace, 2);
-    EqualAngles.additions(ctx, labels.a3s, frame, t1Mode, t2Mode, inPlace, 3);
-    return ctx;
+    EqualSegments.additions(props, labels.s1s, 1, t2Mode);
+    EqualSegments.additions(props, labels.s2s, 2, t2Mode);
+    EqualSegments.additions(props, labels.s3s, 3, t2Mode);
+    EqualAngles.additions(props, labels.a1s, 1, t2Mode);
+    EqualAngles.additions(props, labels.a2s, 2, t2Mode);
+    EqualAngles.additions(props, labels.a3s, 3, t2Mode);
   };
 }

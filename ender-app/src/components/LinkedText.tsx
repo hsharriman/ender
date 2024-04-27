@@ -77,9 +77,19 @@ export class LinkedText extends React.Component<
           >{`${this.props.val}`}</span>
         );
       case Obj.Triangle:
-        return `\u25B5${this.props.val}`;
+        return (
+          <span>
+            <span className="text-l leading-4">{`\u25B5`}</span>
+            {this.props.val}
+          </span>
+        );
       case Obj.Angle:
-        return `\u29A3${this.props.val}`;
+        return (
+          <span>
+            <span className="text-2xl leading-4">{`\u29A3`}</span>
+            {this.props.val}
+          </span>
+        );
       default:
         return this.props.val;
     }
@@ -88,7 +98,7 @@ export class LinkedText extends React.Component<
   render() {
     return (
       <span
-        className={`font-serif ${this.getStyle()}`}
+        className={`font-serif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150`}
         // style={this.getStyle()}
         onMouseEnter={() => this.onClick(true)}
         onMouseLeave={() => this.onClick(false)}

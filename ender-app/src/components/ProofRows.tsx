@@ -72,7 +72,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     return (
       <div
         id="active-bar"
-        className="w-4 h-16"
+        className="w-4 h-16 transition-all ease-in-out duration-300"
         style={
           this.state.active === k ? { borderLeft: "10px double #9A76FF" } : {}
         }

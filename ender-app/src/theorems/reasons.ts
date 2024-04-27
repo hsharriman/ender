@@ -36,4 +36,8 @@ export const Reasons = {
     title: "Def. Midpoint",
     body: "The point that is halfway between two endpoints of a segment.",
   },
+  CongAdjAngles: {
+    title: "Congruent Adjacent Angles",
+    body: "If two lines are perpendicular then the formed adjacent angles are congruent",
+  },
 };

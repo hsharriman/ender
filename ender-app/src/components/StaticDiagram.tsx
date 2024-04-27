@@ -21,6 +21,8 @@ export class StaticDiagram extends React.Component<DiagramProps, {}> {
         <svg
           id={this.svgId}
           viewBox="0 0 500 300"
+          width={this.props.width}
+          height={this.props.height}
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid meet"
         >
