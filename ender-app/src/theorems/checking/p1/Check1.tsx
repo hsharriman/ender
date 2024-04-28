@@ -1,5 +1,6 @@
 import { InPlaceFormatter } from "../../formatters/InPlaceFormatter";
 import { LongFormFormatter } from "../../formatters/LongFormFormatter";
+import { StaticFormatter } from "../../formatters/StaticFormatter";
 import { Reasons } from "../../reasons";
 import { PC1 } from "./pc1";
 
@@ -36,6 +37,14 @@ export class Check1 {
       proveCls: new PC1.Proves(),
       miniContent: PC1.miniContent,
       reliesOn: PC1.reliesOnText,
+    });
+  };
+  staticForm = () => {
+    return StaticFormatter({
+      baseContent: PC1.baseContent,
+      steps: this.steps,
+      givenCls: new PC1.Givens(),
+      proveCls: new PC1.Proves(),
     });
   };
 }
