@@ -1,3 +1,4 @@
+import React from "react";
 import { Check1 } from "./theorems/checking/p1/Check1";
 import { Check2 } from "./theorems/checking/p2/Check2";
 import { Complete1 } from "./theorems/complete/proof1/Complete1";
