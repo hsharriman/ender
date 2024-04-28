@@ -1,4 +1,3 @@
-import React, { MouseEventHandler } from "react";
 import { Check1 } from "./theorems/checking/p1/Check1";
 import { Check2 } from "./theorems/checking/p2/Check2";
 import { Complete1 } from "./theorems/complete/proof1/Complete1";
@@ -99,12 +98,27 @@ export class App extends React.Component<AppProps, AppState> {
       );
     }
     return (
-      <div className="flex flex-row w-[1100px] h-full justify-center">
-        <button className="" onClick={this.onClickTest(1)}>
-          Test 1
-        </button>
-        <button onClick={this.onClickTest(2)}>Test 2</button>
-        <button onClick={this.onClickTest(3)}>Test 3</button>
+      <div className="flex w-screen h-screen justify-center items-center">
+        <div className="flex flex-row w-[1100px] h-32 justify-center">
+          <button
+            className="py-4 px-8 m-4 text-3xl bg-violet-300 rounded-md text-white"
+            onClick={this.onClickTest(1)}
+          >
+            Test 1
+          </button>
+          <button
+            className="py-4 px-8 m-4 text-3xl bg-violet-500 rounded-md text-white"
+            onClick={this.onClickTest(2)}
+          >
+            Test 2
+          </button>
+          <button
+            className="py-4 px-8 m-4 text-3xl bg-violet-700 rounded-md text-white"
+            onClick={this.onClickTest(3)}
+          >
+            Test 3
+          </button>
+        </div>
       </div>
     );
   }
