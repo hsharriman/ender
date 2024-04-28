@@ -1,20 +1,22 @@
 import { InPlaceFormatter } from "../../formatters/InPlaceFormatter";
 import { LongFormFormatter } from "../../formatters/LongFormFormatter";
+import { StaticFormatter } from "../../formatters/StaticFormatter";
 import { Reasons } from "../../reasons";
 import { P3 } from "./proof3";
 
 export class Complete3 {
   private steps = [
     { cls: new P3.S1(), reason: Reasons.Given },
-    { cls: new P3.S2(), reason: Reasons.PerpendicularLines },
-    { cls: new P3.S3(), reason: Reasons.Reflexive },
-    { cls: new P3.S4(), reason: Reasons.ASA, dependsOn: [1, 2, 3] },
+    { cls: new P3.S2(), reason: Reasons.Given },
+    { cls: new P3.S3(), reason: Reasons.Rectangle, dependsOn: [1] },
+    { cls: new P3.S4(), reason: Reasons.Parallelogram, dependsOn: [3] },
     {
       cls: new P3.S5(),
-      reason: Reasons.CorrespondingSegments,
-      dependsOn: [4],
+      reason: Reasons.SAS,
+      dependsOn: [2, 3, 4],
     },
-    { cls: new P3.S6(), reason: Reasons.Midpoint, dependsOn: [5] },
+    { cls: new P3.S6(), reason: Reasons.CorrespondingSegments, dependsOn: [5] },
+    { cls: new P3.S7(), reason: Reasons.Isosceles, dependsOn: [6] },
   ];
   longForm = () => {
     return LongFormFormatter({
@@ -34,6 +36,15 @@ export class Complete3 {
       givenCls: new P3.Givens(),
       proveCls: new P3.Proves(),
       miniContent: P3.miniContent,
+    });
+  };
+
+  staticForm = () => {
+    return StaticFormatter({
+      baseContent: P3.baseContent,
+      steps: this.steps,
+      givenCls: new P3.Givens(),
+      proveCls: new P3.Proves(),
     });
   };
 }

@@ -6,17 +6,17 @@ import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
 
-export type RectangleProps = {
+export type QuadrilateralProps = {
   pts: [Point, Point, Point, Point];
   // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
-export class Rectangle extends BaseGeometryObject {
+export class Quadrilateral extends BaseGeometryObject {
   readonly s: [Segment, Segment, Segment, Segment];
   readonly a: [Angle, Angle, Angle, Angle];
   readonly p: [Point, Point, Point, Point];
 
-  constructor(props: RectangleProps, ctx: Content) {
-    super(Obj.Rectangle, props);
+  constructor(props: QuadrilateralProps, ctx: Content) {
+    super(Obj.Quadrilateral, props);
     this.p = props.pts;
 
     this.s = this.buildSegments(props.pts, ctx, props.parentFrame);
@@ -33,7 +33,7 @@ export class Rectangle extends BaseGeometryObject {
     const sa = ctx.push(new Segment({ p1: pts[0], p2: pts[1], parentFrame }));
     const sb = ctx.push(new Segment({ p1: pts[1], p2: pts[2], parentFrame }));
     const sc = ctx.push(new Segment({ p1: pts[2], p2: pts[3], parentFrame }));
-    const sd = ctx.push(new Segment({ p1: pts[3], p2: pts[1], parentFrame }));
+    const sd = ctx.push(new Segment({ p1: pts[3], p2: pts[0], parentFrame }));
     return [sa, sb, sc, sd];
   };
 

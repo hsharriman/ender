@@ -38,7 +38,7 @@ export const Reasons = {
   },
   CongAdjAngles: {
     title: "Congruent Adjacent Angles",
-    body: "If two lines are perpendicular then the formed adjacent angles are congruent",
+    body: "If two lines are perpendicular, then the formed adjacent angles are congruent.",
   },
   Rectangle: {
     title: "Def. Rectangle",

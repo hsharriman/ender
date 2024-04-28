@@ -49,9 +49,10 @@ export class Midpoint {
     segs: [string, string],
     pt: string
   ) => {
+    console.log(ctx.getSegment(segs[0]), ctx.getSegment(segs[1]));
     return (
       <span>
-        {linked(pt, ctx.getPoint("D"))}
+        {linked(pt, ctx.getPoint(pt))}
         {" is the midpoint of "}
         {linked(label, ctx.getSegment(segs[0]), [ctx.getSegment(segs[1])])}
       </span>

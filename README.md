@@ -53,6 +53,7 @@
 - [ ] minifigures highlight on hover as well (for key terms)
 - [ ] Change fonts (again?)
 - [ ] highlighting of text when clicking on the diagram
+- [ ] check for segments that overlap or are sub-sections of larger segment + keep track (then fix complete proof 3)
 
 ## Less Urgent Bugs
 

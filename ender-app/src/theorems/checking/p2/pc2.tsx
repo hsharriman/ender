@@ -1,3 +1,4 @@
+import { JSX } from "react/jsx-runtime";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, strs } from "../../../core/geometryText";
@@ -82,6 +83,15 @@ export class Givens extends BaseStep {
   override diagram = (ctx: Content, frame: string) => {
     this.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
   };
+  override staticText = () => {
+    return (
+      <span>
+        {RightAngle.staticText("JMK")}
+        {comma}
+        {EqualSegments.staticText(["JK", "LK"])}
+      </span>
+    );
+  };
 }
 
 export class Proves extends BaseStep {
@@ -94,6 +104,7 @@ export class Proves extends BaseStep {
   override ticklessText = (ctx: Content) => {
     return EqualTriangles.ticklessText(ctx, ["JMK", "LMK"]);
   };
+  override staticText = () => EqualTriangles.staticText(["JMK", "LMK"]);
 }
 
 export class S1 extends StepCls {
@@ -106,6 +117,7 @@ export class S1 extends StepCls {
   override text = (props: StepTextProps) => {
     return RightAngle.text(props, "JMK");
   };
+  override staticText = () => RightAngle.staticText("JMK");
 }
 
 export class S2 extends StepCls {
@@ -120,6 +132,7 @@ export class S2 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualSegments.text(props, ["JK", "LK"]);
   };
+  override staticText = () => EqualSegments.staticText(["JK", "LK"]);
 }
 
 export class S3 extends StepCls {
@@ -134,6 +147,7 @@ export class S3 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualRightAngles.text(props, ["JMK", "LMK"]);
   };
+  override staticText = () => EqualRightAngles.staticText(["JMK", "LMK"]);
 }
 
 export class S4 extends StepCls {
@@ -148,6 +162,7 @@ export class S4 extends StepCls {
   override text = (props: StepTextProps) => {
     return Reflexive.text(props, "MK", 2);
   };
+  override staticText = () => Reflexive.staticText("MK");
 }
 
 export class S5 extends StepCls {
@@ -164,6 +179,7 @@ export class S5 extends StepCls {
   override text = (props: StepTextProps) => {
     return SAS.text(props, this.labels);
   };
+  override staticText = () => EqualTriangles.staticText(["JMK", "LMK"]);
 }
 
 export const miniContent = () => {

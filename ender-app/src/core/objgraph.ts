@@ -1,7 +1,7 @@
 import { getId } from "../utils";
 import { Angle } from "./geometry/Angle";
 import { Point } from "./geometry/Point";
-import { Rectangle } from "./geometry/Rectangle";
+import { Quadrilateral } from "./geometry/Quadrilateral";
 import { Segment } from "./geometry/Segment";
 import { Tick } from "./geometry/Tick";
 import { Triangle } from "./geometry/Triangle";
@@ -20,7 +20,7 @@ export class Content {
   public angles: Angle[] = [];
   public ticks: Tick[] = [];
   private triangles: Triangle[] = []; // not rendered, just tracking
-  private rectangles: Rectangle[] = []; // not rendered, just tracking
+  private rectangles: Quadrilateral[] = []; // not rendered, just tracking
   private modes: Set<string> = new Set();
   private content: BaseSVG[] = [];
   private deps: Map<string, Set<string>> = new Map();
@@ -100,8 +100,8 @@ export class Content {
   push(e: Segment): Segment;
   push(e: Angle): Angle;
   push(e: Triangle): Triangle;
-  push(e: Rectangle): Rectangle;
-  push(e: Point | Segment | Angle | Triangle | Tick | Rectangle) {
+  push(e: Quadrilateral): Quadrilateral;
+  push(e: Point | Segment | Angle | Triangle | Tick | Quadrilateral) {
     switch (e.tag) {
       case Obj.Point:
         if (!this.getPoint(e.label)) this.points.push(e as Point);
@@ -117,8 +117,9 @@ export class Content {
         if (!this.getTriangle(e.label)) this.triangles.push(e as Triangle);
         return e;
       // add angles
-      case Obj.Rectangle:
-        if (!this.getRectangle(e.label)) this.rectangles.push(e as Rectangle);
+      case Obj.Quadrilateral:
+        if (!this.getQuadrilateral(e.label))
+          this.rectangles.push(e as Quadrilateral);
         return e;
       default:
         return;
@@ -159,7 +160,7 @@ export class Content {
   getAngle = (label: string) => this.angles.filter((a) => a.matches(label))[0];
   getTriangle = (label: string) =>
     this.triangles.filter((t) => t.matches(label))[0];
-  getRectangle = (label: string) =>
+  getQuadrilateral = (label: string) =>
     this.rectangles.filter((r) => r.matches(label))[0];
 
   getTick = (

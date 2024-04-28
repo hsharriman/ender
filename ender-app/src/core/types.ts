@@ -21,7 +21,7 @@ export enum Obj {
   Tick = "tick",
   HiddenTick = "hiddentick",
   RightTick = "righttick",
-  Rectangle = "rectangle",
+  Quadrilateral = "rectangle",
 }
 
 export enum LinkedSymbolType {

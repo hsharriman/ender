@@ -1,3 +1,4 @@
+import { JSX } from "react/jsx-runtime";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, strs } from "../../../core/geometryText";
@@ -14,6 +15,7 @@ import {
   StepTextProps,
   StepUnfocusProps,
 } from "../../utils";
+import { EqualTriangles } from "../../templates/EqualTriangles";
 
 const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
@@ -93,6 +95,17 @@ class Givens extends BaseStep {
   override diagram = (ctx: Content, frame: string) => {
     this.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
   };
+  override staticText = () => {
+    return (
+      <span>
+        {EqualSegments.staticText(["AD", "BC"])}
+        {comma}
+        {EqualSegments.staticText(["AB", "DC"])}
+        {comma}
+        {EqualAngles.staticText(["ABD", "CDB"])}
+      </span>
+    );
+  };
 }
 
 class Proves extends BaseStep {
@@ -108,6 +121,7 @@ class Proves extends BaseStep {
   override ticklessText = (ctx: Content) => {
     return EqualAngles.ticklessText(ctx, ["BAD", "DCB"]);
   };
+  override staticText = () => EqualAngles.staticText(["BAD", "DCB"]);
 }
 
 class S1 extends StepCls {
@@ -120,6 +134,7 @@ class S1 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualSegments.text(props, ["AD", "BC"]);
   };
+  override staticText = () => EqualSegments.staticText(["AD", "BC"]);
 }
 
 class S2 extends StepCls {
@@ -134,6 +149,7 @@ class S2 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualSegments.text(props, ["AB", "DC"], 2);
   };
+  override staticText = () => EqualSegments.staticText(["AB", "DC"]);
 }
 
 class S3 extends StepCls {
@@ -149,6 +165,7 @@ class S3 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualAngles.text(props, ["ABD", "CDB"]);
   };
+  override staticText = () => EqualAngles.staticText(["ABD", "CDB"]);
 }
 
 class S4 extends StepCls {
@@ -166,6 +183,7 @@ class S4 extends StepCls {
       triangles: ["ABD", "CDB"],
     });
   };
+  override staticText = () => EqualTriangles.staticText(["ABD", "CDB"]);
 }
 
 class S5 extends StepCls {
@@ -178,6 +196,7 @@ class S5 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualAngles.text(props, ["BAD", "DCB"], 2);
   };
+  override staticText = () => EqualAngles.staticText(["BAD", "DCB"]);
 }
 
 const miniContent = () => {

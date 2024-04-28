@@ -1,6 +1,7 @@
+import { JSX } from "react/jsx-runtime";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
-import { comma, strs } from "../../../core/geometryText";
+import { angleStr, comma, segmentStr, strs } from "../../../core/geometryText";
 import { Content } from "../../../core/objgraph";
 import { Obj, SVGModes, Vector } from "../../../core/types";
 import { ASA, ASAProps } from "../../templates/ASA";
@@ -18,6 +19,8 @@ import {
   StepUnfocusProps,
   linked,
 } from "../../utils";
+import { EqualTriangles } from "../../templates/EqualTriangles";
+import { CongruentTriangles } from "../../templates/CongruentTriangles";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
@@ -95,6 +98,17 @@ export class Givens extends BaseStep {
   override diagram = (ctx: Content, frame: string) => {
     this.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
   };
+  override staticText = () => {
+    return (
+      <span>
+        {RightAngle.staticText("ADB")}
+        {comma}
+        {segmentStr("BD")}
+        {" bisects "}
+        {angleStr("ABC")}
+      </span>
+    );
+  };
 }
 
 export class Proves extends BaseStep {
@@ -110,6 +124,7 @@ export class Proves extends BaseStep {
   override ticklessText = (ctx: Content) => {
     return Midpoint.ticklessText(ctx, "AC", ["AD", "CD"], "D");
   };
+  override staticText = () => Midpoint.staticText("D", "AC");
 }
 
 export class S1 extends StepCls {
@@ -138,6 +153,7 @@ export class S1 extends StepCls {
       </span>
     );
   };
+  override staticText = () => new Givens().staticText();
 }
 
 export class S2 extends StepCls {
@@ -147,14 +163,45 @@ export class S2 extends StepCls {
     new S1().additions(stepProps);
   };
   override additions = (props: StepFocusProps) => {
-    EqualRightAngles.additions(props, ["ADB", "BDC"]);
+    RightAngle.additions(props, "ADB");
   };
-  text = (props: StepTextProps) => {
-    return EqualRightAngles.text(props, ["ADB", "BDC"]);
+  override text = (props: StepTextProps) => {
+    const ADB = props.ctx.getAngle("ADB");
+    return (
+      <span>
+        {linked("ADB", ADB, [
+          props.ctx.getTick(ADB, Obj.RightTick, { frame: props.frame }),
+        ])}
+        {" is perpendicular"}
+      </span>
+    );
+  };
+  override staticText = () => {
+    return (
+      <span>
+        {angleStr("ADB")}
+        {" is perpendicular"}
+      </span>
+    );
   };
 }
 
 export class S3 extends StepCls {
+  override unfocused = (props: StepUnfocusProps) => {
+    const stepProps = { ...props, mode: SVGModes.Unfocused };
+    new Givens().additions(stepProps);
+    new S1().additions(stepProps);
+  };
+  override additions = (props: StepFocusProps) => {
+    EqualRightAngles.additions(props, ["ADB", "BDC"]);
+  };
+  override text = (props: StepTextProps) => {
+    return EqualRightAngles.text(props, ["ADB", "BDC"]);
+  };
+  override staticText = () => EqualRightAngles.staticText(["ADB", "BDC"]);
+}
+
+export class S4 extends StepCls {
   override unfocused = (props: StepUnfocusProps) => {
     const stepProps = { ...props, mode: SVGModes.Unfocused };
     new Givens().additions(stepProps);
@@ -167,9 +214,10 @@ export class S3 extends StepCls {
   override text = (props: StepTextProps) => {
     return Reflexive.text(props, "BD");
   };
+  override staticText = () => Reflexive.staticText("BD");
 }
 
-export class S4 extends StepCls {
+export class S5 extends StepCls {
   private meta: ASAProps = {
     a1s: { angles: ["ADB", "BDC"], tick: Obj.RightTick },
     a2s: { angles: ["ABD", "CBD"], tick: Obj.EqualAngleTick },
@@ -182,11 +230,12 @@ export class S4 extends StepCls {
   override text = (props: StepTextProps) => {
     return ASA.text(props, this.meta);
   };
+  override staticText = () => EqualTriangles.staticText(["ABD", "CBD"]);
 }
 
-export class S5 extends StepCls {
+export class S6 extends StepCls {
   override unfocused = (props: StepUnfocusProps) => {
-    new S4().additions({ ...props, mode: SVGModes.Unfocused });
+    new S5().additions({ ...props, mode: SVGModes.Unfocused });
   };
   override additions = (props: StepFocusProps) => {
     EqualSegments.additions(props, ["AD", "DC"], 2);
@@ -194,18 +243,20 @@ export class S5 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualSegments.text(props, ["AD", "DC"], 2);
   };
+  override staticText = () => EqualSegments.staticText(["AD", "DC"]);
 }
 
-export class S6 extends StepCls {
+export class S7 extends StepCls {
   override unfocused = (props: StepUnfocusProps) => {
-    new S4().additions({ ...props, mode: SVGModes.Unfocused });
+    new S5().additions({ ...props, mode: SVGModes.Unfocused });
   };
   override additions = (props: StepFocusProps) => {
-    new S5().additions(props);
+    new S6().additions(props);
   };
-  text = (props: StepTextProps) => {
+  override text = (props: StepTextProps) => {
     return Midpoint.text(props, "AC", ["AD", "DC"], "D", 2);
   };
+  override staticText = () => Midpoint.staticText("D", "AC");
 }
 
 export const miniContent = () => {
@@ -223,63 +274,115 @@ export const miniContent = () => {
   const BD = ctx.getSegment("BD").mode(step2, SVGModes.Focused);
   const AD = ctx.getSegment("AD").mode(step2, SVGModes.Focused);
   const CD = ctx.getSegment("CD").mode(step2, SVGModes.Focused);
-  const ADB = ctx.getAngle("ADB");
-  ctx.pushTick(ADB, Obj.RightTick).mode(step2, SVGModes.Purple);
+  RightAngle.additions({ ...defaultStepProps, frame: step2 }, "ADB");
+
+  const step3 = ctx.addFrame("s3");
+  BD.mode(step3, SVGModes.Focused);
+  AD.mode(step3, SVGModes.Focused);
+  CD.mode(step3, SVGModes.Focused);
+  EqualRightAngles.additions(
+    { ...defaultStepProps, frame: step3 },
+    ["ADB", "BDC"],
+    SVGModes.Blue
+  );
 
   // STEP 3 - REFLEXIVE PROPERTY
-  const step3 = ctx.addFrame("s3");
-  ctx.getSegment("BD").mode(step3, SVGModes.Purple);
-  ctx.pushTick(BD, Obj.EqualLengthTick).mode(step3, SVGModes.Purple);
+  const step4 = ctx.addFrame("s4");
+  Reflexive.additions({ ...defaultStepProps, frame: step4 }, "BD");
 
   // STEP 4 - ASA CONGRUENCE
-  const step4 = ctx.addFrame("s4");
-  const ABD = ctx.getTriangle("ABD").mode(step4, SVGModes.Purple);
-  BD.mode(step4, SVGModes.Purple);
-  // ADB.mode(step4, SVGModes.Purple);
-  const aABD = ctx.getAngle("ABD").mode(step4, SVGModes.Purple);
-  ctx.pushTick(ADB, Obj.RightTick).mode(step4, SVGModes.Purple);
-  ctx.pushTick(aABD, Obj.EqualAngleTick).mode(step4, SVGModes.Purple);
+  const step5 = ctx.addFrame("s5");
+  ASA.additions(
+    { ...defaultStepProps, frame: step5 },
+    {
+      a1s: { angles: ["ADB", "BDC"], tick: Obj.RightTick },
+      a2s: { angles: ["ABD", "CBD"], tick: Obj.EqualAngleTick },
+      segs: ["BD", "BD"],
+      triangles: ["ABD", "CBD"],
+    },
+    SVGModes.Blue
+  );
+  const ABD = ctx.getTriangle("ABD");
+  // BD.mode(step4, SVGModes.Purple);
+  // // ADB.mode(step4, SVGModes.Purple);
+  const aABD = ctx.getAngle("ABD");
+  // ctx.pushTick(ADB, Obj.RightTick).mode(step4, SVGModes.Purple);
+  // ctx.pushTick(aABD, Obj.EqualAngleTick).mode(step4, SVGModes.Purple);
 
-  const CBD = ctx.getTriangle("CBD").mode(step4, SVGModes.Blue);
+  const CBD = ctx.getTriangle("CBD");
   const DBC = ctx.getAngle("CBD");
-  ctx.pushTick(DBC, Obj.EqualAngleTick).mode(step4, SVGModes.Blue);
+  // ctx.pushTick(DBC, Obj.EqualAngleTick).mode(step4, SVGModes.Blue);
   const aBDC = ctx.getAngle("BDC");
-  ctx.pushTick(aBDC, Obj.RightTick).mode(step4, SVGModes.Blue);
-  ctx.pushTick(BD, Obj.EqualLengthTick).mode(step4, SVGModes.Blue);
+  // ctx.pushTick(aBDC, Obj.RightTick).mode(step4, SVGModes.Blue);
+  // ctx.pushTick(BD, Obj.EqualLengthTick).mode(step4, SVGModes.Blue);
 
   // STEP 5 - CORRESPONDING SEGMENTS
-  const step5 = ctx.addFrame("s5");
-  ABD.mode(step5, SVGModes.Focused);
-  CBD.mode(step5, SVGModes.Focused);
-  BD.mode(step5, SVGModes.Focused);
-  ctx.pushTick(BD, Obj.EqualLengthTick).mode(step5, SVGModes.Focused);
-  ctx.pushTick(ADB, Obj.RightTick).mode(step5, SVGModes.Focused);
-  ctx.pushTick(DBC, Obj.EqualAngleTick).mode(step5, SVGModes.Focused);
-  ctx.pushTick(aABD, Obj.EqualAngleTick).mode(step5, SVGModes.Focused);
-  ctx.pushTick(aBDC, Obj.RightTick).mode(step5, SVGModes.Focused);
-  AD.mode(step5, SVGModes.Purple);
-  CD.mode(step5, SVGModes.Blue);
-  ctx
-    .pushTick(AD, Obj.EqualLengthTick, { num: 2 })
-    .mode(step5, SVGModes.Purple);
-  ctx.pushTick(CD, Obj.EqualLengthTick, { num: 2 }).mode(step5, SVGModes.Blue);
-  const AB = ctx.getSegment("AB").mode(step5, SVGModes.Focused);
-  const CB = ctx.getSegment("CB").mode(step5, SVGModes.Focused);
-  ctx
-    .pushTick(AB, Obj.EqualLengthTick, { num: 3 })
-    .mode(step5, SVGModes.Focused);
-  ctx
-    .pushTick(CB, Obj.EqualLengthTick, { num: 3 })
-    .mode(step5, SVGModes.Focused);
+  const step6 = ctx.addFrame("s6");
+  // ABD.mode(step6, SVGModes.Focused);
+  // CBD.mode(step6, SVGModes.Focused);
+  EqualAngles.additions(
+    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
+    ["ABD", "CBD"]
+  );
+  // BD.mode(step6, SVGModes.Focused);
+  // ctx.pushTick(BD, Obj.EqualLengthTick).mode(step6, SVGModes.Focused);
+  Reflexive.additions(
+    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
+    "BD"
+  );
+  // ctx
+  //   .pushTick(ctx.getAngle("ADB"), Obj.RightTick)
+  //   .mode(step6, SVGModes.Focused);
+  EqualRightAngles.additions(
+    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
+    ["ADB", "BDC"]
+  );
+  // ctx.pushTick(DBC, Obj.EqualAngleTick).mode(step6, SVGModes.Focused);
+  // ctx.pushTick(aABD, Obj.EqualAngleTick).mode(step6, SVGModes.Focused);
+  EqualAngles.additions(
+    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
+    ["ABD", "CBD"]
+  );
+  EqualAngles.additions(
+    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
+    ["BAD", "BCD"],
+    2
+  );
+  EqualSegments.additions(
+    { ...defaultStepProps, frame: step6 },
+    ["AD", "DC"],
+    2,
+    SVGModes.Blue
+  );
+  EqualSegments.additions(
+    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
+    ["AB", "CB"],
+    3
+  );
+  // ctx.pushTick(aBDC, Obj.RightTick).mode(step6, SVGModes.Focused);
+  // AD.mode(step6, SVGModes.Purple);
+  // CD.mode(step6, SVGModes.Blue);
+  // ctx
+  //   .pushTick(AD, Obj.EqualLengthTick, { num: 2 })
+  //   .mode(step6, SVGModes.Purple);
+  // ctx.pushTick(CD, Obj.EqualLengthTick, { num: 2 }).mode(step6, SVGModes.Blue);
+  // const AB = ctx.getSegment("AB").mode(step6, SVGModes.Focused);
+  // const CB = ctx.getSegment("CB").mode(step6, SVGModes.Focused);
+  // ctx
+  //   .pushTick(AB, Obj.EqualLengthTick, { num: 3 })
+  //   .mode(step5, SVGModes.Focused);
+  // ctx
+  //   .pushTick(CB, Obj.EqualLengthTick, { num: 3 })
+  //   .mode(step5, SVGModes.Focused);
 
   // STEP 6 - MIDPOINT
-  const step6 = ctx.addFrame("s6");
-  AD.mode(step6, SVGModes.Purple);
-  CD.mode(step6, SVGModes.Blue);
+  const step7 = ctx.addFrame("s7");
+  AD.mode(step7, SVGModes.Purple);
+  CD.mode(step7, SVGModes.Blue);
   ctx
     .pushTick(AD, Obj.EqualLengthTick, { num: 2 })
-    .mode(step6, SVGModes.Purple);
-  ctx.pushTick(CD, Obj.EqualLengthTick, { num: 2 }).mode(step6, SVGModes.Blue);
+    .mode(step7, SVGModes.Purple);
+  ctx.pushTick(CD, Obj.EqualLengthTick, { num: 2 }).mode(step7, SVGModes.Blue);
 
   return ctx;
 };
@@ -294,6 +397,7 @@ export const reliesOnText = () => {
   relies.set("s4", [s1, s2, s3]);
   relies.set("s5", [s4]);
   relies.set("s6", [s5]);
+  relies.set("s7", [s5]);
   return relies;
 };
 
@@ -309,4 +413,5 @@ export const P2 = {
   S4,
   S5,
   S6,
+  S7,
 };
