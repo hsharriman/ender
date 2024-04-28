@@ -1,5 +1,6 @@
 {
   "name": "ender",
+  "homepage": "https://hsharriman.github.io/ender",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
