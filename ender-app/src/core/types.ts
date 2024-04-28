@@ -21,6 +21,7 @@ export enum Obj {
   Tick = "tick",
   HiddenTick = "hiddentick",
   RightTick = "righttick",
+  Rectangle = "rectangle",
 }
 
 export enum LinkedSymbolType {
@@ -52,6 +53,11 @@ export interface ProofTextItem {
   reason?: string;
   dependsOn?: Set<string>;
   alwaysActive?: boolean;
+}
+
+export interface StaticProofTextItem {
+  stmt: JSX.Element;
+  reason?: string;
 }
 
 export interface Reason {

@@ -1,4 +1,4 @@
-import { congruent } from "../../core/geometryText";
+import { angleStr, congruent } from "../../core/geometryText";
 import { Content } from "../../core/objgraph";
 import { SVGModes, Obj } from "../../core/types";
 import { StepFocusProps, StepTextProps, linked } from "../utils";
@@ -27,6 +27,14 @@ export class RightAngle {
     return (
       <span>
         {linked(a, ctx.getAngle(a))}
+        {this.rightText}
+      </span>
+    );
+  };
+  static staticText = (a: string) => {
+    return (
+      <span>
+        {angleStr(a)}
         {this.rightText}
       </span>
     );

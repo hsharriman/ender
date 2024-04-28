@@ -1,4 +1,4 @@
-import { congruent } from "../../core/geometryText";
+import { angleStr, congruent } from "../../core/geometryText";
 import { Content } from "../../core/objgraph";
 import { SVGModes, Obj } from "../../core/types";
 import { StepFocusProps, StepTextProps, linked } from "../utils";
@@ -44,6 +44,15 @@ export class EqualAngles {
         {linked(a1, ctx.getAngle(a1))}
         {congruent}
         {linked(a2, ctx.getAngle(a2))}
+      </span>
+    );
+  };
+  static staticText = (a: [string, string]) => {
+    return (
+      <span>
+        {angleStr(a[0])}
+        {congruent}
+        {angleStr(a[1])}
       </span>
     );
   };

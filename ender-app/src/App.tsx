@@ -8,9 +8,10 @@ function App() {
     <div className="w-screen h-screen flex justify-center">
       {/* {new Check1().inPlace()} */}
       {/* {new Check1().longForm()} */}
-      {/* {new Complete1().inPlace()} */}
+      {new Complete1().inPlace()}
       {/* {new Complete1().longForm()} */}
-      {new Complete2().inPlace()}
+      {/* {new Complete1().staticForm()} */}
+      {/* {new Complete2().inPlace()} */}
       {/* {new Complete2().longForm()} */}
       {/* {new Check2().inPlace()} */}
       {/* {new Check2().longForm()} */}

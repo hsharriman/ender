@@ -33,29 +33,38 @@
 - [x] hovering not working on correct figs in long form
 - [x] Right angle tick marks
 - [x] relies on for long-form
-- [ ] Change fonts (again?)
-- [ ] Make relies on resample if screen resizes
 - [x] reword the reasons to follow if/then pattern
-- [ ] fix stroke width of mini figs and tick mark placement for angles
-- [ ] highlighting of text when clicking on the diagram
-- [ ] highlighting angles on hover? when no tick is visible
-- [ ] CSS animations for transitions
-- [ ] Improve the proof class structure / cleanup (always ongoing)
-- [ ] Make it so that hovering text doesn't cause the text to move
-- [ ] Static format
+- [x] CSS animations for transitions
+- [x] Static format
 - [x] automate multiple format creation
-- [ ] fix layout of long-form
-- [ ] go through todos in files
+- [x] fix layout of long-form
 - [x] make symbols bigger in linkedtext
+- [ ] Improve the proof class structure / cleanup (always ongoing)
 - [ ] be able to render points
+- [ ] add prev/next buttons to navigate through
+- [ ] define order for pilot
+- [ ] highlighting angles on hover? when no tick is visible
+
+## Stretch TODOs
+
+- [ ] question logic/randomizing
+- [ ] multiple choice question component
+- [ ] redo relies on for long-form
 - [ ] minifigures highlight on hover as well (for key terms)
+- [ ] Change fonts (again?)
+- [ ] highlighting of text when clicking on the diagram
+
+## Less Urgent Bugs
+
+- [ ] fix tick mark placement for angles in minifigures
+- [ ] Make relies on resample if screen resizes
+- [ ] go through todos in files
 - [ ] hovering on point in long-form highlights wrong diagram label
+- [ ] Make it so that hovering text doesn't cause the text to move
 
 ## TODO for infra/study
 
-- [ ] multiple choice question component
 - [ ] anonymized ID for each participant
-- [ ] question logic/randomizing
 - [ ] uploading selected answers
 
 ## TODO for future proofs

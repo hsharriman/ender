@@ -207,14 +207,14 @@ export const miniContent = () => {
 };
 
 export const reliesOnText = () => {
+  // TODO check this
   let relies = new Map<string, string[]>();
-  const s1 = `(1) ${strs.angle}ABD ${strs.congruent} ${strs.angle}CBD`;
-  const s2 = `(2) ${strs.angle}ADB ${strs.congruent} ${strs.angle}BDC`;
-  const s3 = `(3) BD ${strs.congruent} BD`;
-  const s4 = `(4) ${strs.triangle}ABD ${strs.congruent} ${strs.triangle}CBD`;
-  const s5 = `(5) AD ${strs.congruent} DC`;
-  relies.set("s4", [s1, s2, s3]);
-  relies.set("s5", [s4]);
+  const s1 = `(1) ${strs.angle}JMK${strs.right}`;
+  const s2 = `(2) JK ${strs.congruent} LK`;
+  const s3 = `(3) ${strs.angle}JMK ${strs.congruent} ${strs.angle}LMK`;
+  const s4 = `(4) MK ${strs.congruent} MK`;
+  relies.set("s3", [s1]);
+  relies.set("s5", [s2, s3, s4]);
   return relies;
 };
 

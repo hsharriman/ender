@@ -40,4 +40,16 @@ export const Reasons = {
     title: "Congruent Adjacent Angles",
     body: "If two lines are perpendicular then the formed adjacent angles are congruent",
   },
+  Rectangle: {
+    title: "Def. Rectangle",
+    body: "A rectangle is a type of parallelogram that has four right angles.",
+  },
+  Isosceles: {
+    title: "Def. Isosceles Triangle",
+    body: "An isosceles triangle is a triangle with two congruent sides.",
+  },
+  Parallelogram: {
+    title: "Def. Parallelogram",
+    body: "A parallelogram is a quadrilateral with opposite sides that are parallel. The opposite sides of a parallelogram are equal in length.",
+  },
 };

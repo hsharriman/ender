@@ -1,5 +1,6 @@
 import { InPlaceFormatter } from "../../formatters/InPlaceFormatter";
 import { LongFormFormatter } from "../../formatters/LongFormFormatter";
+import { StaticFormatter } from "../../formatters/StaticFormatter";
 import { Reasons } from "../../reasons";
 import { P1 } from "./proof1";
 
@@ -41,6 +42,14 @@ export class Complete1 {
       proveCls: new P1.Proves(),
       miniContent: P1.miniContent,
       reliesOn: P1.reliesOnText,
+    });
+  };
+  staticForm = () => {
+    return StaticFormatter({
+      baseContent: P1.baseContent,
+      steps: this.steps,
+      givenCls: new P1.Givens(),
+      proveCls: new P1.Proves(),
     });
   };
 }

@@ -1,4 +1,4 @@
-import { parallel } from "../../core/geometryText";
+import { parallel, segmentStr } from "../../core/geometryText";
 import { Content } from "../../core/objgraph";
 import { Obj, SVGModes } from "../../core/types";
 import { StepFocusProps, StepTextProps, linked } from "../utils";
@@ -48,6 +48,15 @@ export class ParallelLines {
         {linked(s1, ctx.getSegment(s1))}
         {parallel}
         {linked(s2, ctx.getSegment(s2))}
+      </span>
+    );
+  };
+  static staticText = (s: [string, string]) => {
+    return (
+      <span>
+        {segmentStr(s[0])}
+        {parallel}
+        {segmentStr(s[1])}
       </span>
     );
   };

@@ -1,4 +1,4 @@
-import { congruent } from "../../core/geometryText";
+import { congruent, segmentStr } from "../../core/geometryText";
 import { Content } from "../../core/objgraph";
 import { SVGModes, Obj } from "../../core/types";
 import { StepFocusProps, StepTextProps, linked } from "../utils";
@@ -50,6 +50,15 @@ export class EqualSegments {
         {linked(s1, ctx.getSegment(s1))}
         {congruent}
         {linked(s2, ctx.getSegment(s2))}
+      </span>
+    );
+  };
+  static staticText = (s: [string, string]) => {
+    return (
+      <span>
+        {segmentStr(s[0])}
+        {congruent}
+        {segmentStr(s[1])}
       </span>
     );
   };

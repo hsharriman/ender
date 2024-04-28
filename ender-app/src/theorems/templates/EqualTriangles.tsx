@@ -1,4 +1,4 @@
-import { congruent } from "../../core/geometryText";
+import { congruent, triangleStr } from "../../core/geometryText";
 import { Content } from "../../core/objgraph";
 import { StepTextProps, linked } from "../utils";
 
@@ -16,5 +16,14 @@ export class EqualTriangles {
   };
   static ticklessText = (ctx: Content, [t1, t2]: [string, string]) => {
     return EqualTriangles.text({ ctx }, [t1, t2]);
+  };
+  static staticText = (t: [string, string]) => {
+    return (
+      <span>
+        {triangleStr(t[0])}
+        {congruent}
+        {triangleStr(t[1])}
+      </span>
+    );
   };
 }

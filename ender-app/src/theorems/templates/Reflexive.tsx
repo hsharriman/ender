@@ -1,6 +1,7 @@
 import { congruent } from "../../core/geometryText";
 import { Obj } from "../../core/types";
 import { StepFocusProps, StepTextProps, linked } from "../utils";
+import { EqualSegments } from "./EqualSegments";
 
 export class Reflexive {
   static additions = (props: StepFocusProps, s: string, num = 1) => {
@@ -22,5 +23,8 @@ export class Reflexive {
         {MKLinked}
       </span>
     );
+  };
+  static staticText = (s: string) => {
+    return EqualSegments.staticText([s, s]);
   };
 }

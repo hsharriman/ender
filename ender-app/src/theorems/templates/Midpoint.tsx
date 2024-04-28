@@ -1,3 +1,4 @@
+import { segmentStr } from "../../core/geometryText";
 import { Content } from "../../core/objgraph";
 import { Obj, SVGModes } from "../../core/types";
 import { StepFocusProps, StepTextProps, linked } from "../utils";
@@ -53,6 +54,15 @@ export class Midpoint {
         {linked(pt, ctx.getPoint("D"))}
         {" is the midpoint of "}
         {linked(label, ctx.getSegment(segs[0]), [ctx.getSegment(segs[1])])}
+      </span>
+    );
+  };
+  static staticText = (p: string, s: string) => {
+    return (
+      <span>
+        {p}
+        {" is the midpoint of "}
+        {segmentStr(s)}
       </span>
     );
   };

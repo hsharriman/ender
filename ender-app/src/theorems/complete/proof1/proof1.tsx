@@ -1,7 +1,8 @@
+import { JSX } from "react/jsx-runtime";
 import { Point } from "../../../core/geometry/Point";
 import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
-import { comma, strs } from "../../../core/geometryText";
+import { comma, segmentStr, strs } from "../../../core/geometryText";
 import { Content } from "../../../core/objgraph";
 import { Obj, SVGModes, Vector } from "../../../core/types";
 import { CongruentTriangles } from "../../templates/CongruentTriangles";
@@ -17,6 +18,7 @@ import {
   StepUnfocusProps,
   linked,
 } from "../../utils";
+import { EqualTriangles } from "../../templates/EqualTriangles";
 
 const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
@@ -103,6 +105,20 @@ class Givens extends BaseStep {
       </span>
     );
   };
+  override staticText = () => {
+    return (
+      <span>
+        {segmentStr("AB")}
+        {" and "}
+        {segmentStr("CD")}
+        {" intersect at point M"}
+        {comma}
+        {EqualSegments.staticText(["AM", "BM"])}
+        {comma}
+        {EqualSegments.staticText(["CM", "DM"])}
+      </span>
+    );
+  };
 
   override additions = (props: StepFocusProps) => {
     props.ctx.getTriangle("ACM").mode(props.frame, props.mode);
@@ -114,18 +130,19 @@ class Givens extends BaseStep {
 }
 
 class Proves extends BaseStep {
+  private ACBD: [string, string] = ["AC", "BD"];
   override unfocused = (props: StepUnfocusProps) => {
     new Givens().additions({ ...props, mode: SVGModes.Unfocused });
   };
   override additions = (props: StepFocusProps) => {
-    ParallelLines.additions(props, ["AC", "BD"]);
+    ParallelLines.additions(props, this.ACBD);
   };
   override text = (props: StepTextProps) => {
-    return ParallelLines.text(props, ["AC", "BD"]);
+    return ParallelLines.text(props, this.ACBD);
   };
-
+  override staticText = () => ParallelLines.staticText(this.ACBD);
   override ticklessText = (ctx: Content) => {
-    return ParallelLines.ticklessText(ctx, ["AC", "BD"]);
+    return ParallelLines.ticklessText(ctx, this.ACBD);
   };
 }
 
@@ -143,6 +160,15 @@ class S1 extends StepCls {
         {EqualSegments.text(props, ["AM", "BM"])}
         {comma}
         {EqualSegments.text(props, ["CM", "DM"], 2)}
+      </span>
+    );
+  };
+  override staticText = () => {
+    return (
+      <span>
+        {EqualSegments.staticText(["AM", "BM"])}
+        {comma}
+        {EqualSegments.staticText(["CM", "DM"])}
       </span>
     );
   };
@@ -174,6 +200,16 @@ class S2 extends StepCls {
     props.ctx.getSegment("CM").mode(props.frame, props.mode);
     props.ctx.getSegment("DM").mode(props.frame, props.mode);
   };
+  override staticText = () => {
+    return (
+      <span>
+        {segmentStr("AB")}
+        {" and "}
+        {segmentStr("CD")}
+        {" intersect at point M"}
+      </span>
+    );
+  };
 }
 
 class S3 extends StepCls {
@@ -187,6 +223,7 @@ class S3 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualAngles.text(props, ["CMA", "DMB"]);
   };
+  override staticText = () => EqualAngles.staticText(["CMA", "DMB"]);
 }
 
 class S4 extends StepCls {
@@ -206,6 +243,7 @@ class S4 extends StepCls {
       triangles: ["ACM", "BDM"],
     });
   };
+  override staticText = () => EqualTriangles.staticText(["ACM", "BDM"]);
 }
 
 class S5 extends StepCls {
@@ -218,6 +256,7 @@ class S5 extends StepCls {
   override text = (props: StepTextProps) => {
     return EqualAngles.text(props, ["CAM", "DBM"], 2);
   };
+  override staticText = () => EqualAngles.staticText(["CAM", "DBM"]);
 }
 
 class S6 extends StepCls {
@@ -231,6 +270,7 @@ class S6 extends StepCls {
   override text = (props: StepTextProps) => {
     return ParallelLines.text(props, ["AC", "BD"]);
   };
+  override staticText = () => ParallelLines.staticText(["AC", "BD"]);
 }
 
 const miniContent = () => {
@@ -268,28 +308,6 @@ const miniContent = () => {
     },
     SVGModes.Blue
   );
-  // const SAS = (frame: string, t1Mode: SVGModes, t2Mode: SVGModes) => {
-  //   // T1
-  //   let AM = ctx.getSegment("AM").mode(frame, t1Mode);
-  //   let CM = ctx.getSegment("CM").mode(frame, t1Mode);
-  //   let AC = ctx.getSegment("AC").mode(frame, t1Mode);
-  //   // let CMA = ctx.getAngle("CMA").mode(frame, t1Mode);
-  //   // t1 ticks
-  //   ctx.pushTick(CMA, Obj.EqualAngleTick).mode(frame, t1Mode);
-  //   ctx.pushTick(AM, Obj.EqualLengthTick).mode(frame, t1Mode);
-  //   ctx.pushTick(CM, Obj.EqualLengthTick, { num: 2 }).mode(frame, t1Mode);
-
-  //   // T2
-  //   let BM = ctx.getSegment("BM").mode(frame, t2Mode);
-  //   let DM = ctx.getSegment("DM").mode(frame, t2Mode);
-  //   let BD = ctx.getSegment("BD").mode(frame, t2Mode);
-  //   // let DMB = ctx.getAngle("DMB").mode(frame, t2Mode);
-  //   // t2 ticks
-  //   ctx.pushTick(DMB, Obj.EqualAngleTick).mode(frame, t2Mode);
-  //   ctx.pushTick(BM, Obj.EqualLengthTick).mode(frame, t2Mode);
-  //   ctx.pushTick(DM, Obj.EqualLengthTick, { num: 2 }).mode(frame, t2Mode);
-  // };
-  // SAS(step4, SVGModes.Purple, SVGModes.Blue);
 
   // STEP 4 - CORRESPONDING ANGLES
   const step5 = ctx.addFrame("s5");
@@ -305,28 +323,6 @@ const miniContent = () => {
     },
     SVGModes.Blue
   );
-  // SAS(step5, SVGModes.Focused, SVGModes.Focused);
-  // AC.mode(step5, SVGModes.Focused);
-  // BD.mode(step5, SVGModes.Focused);
-  // // step 4 ticks
-  // ctx
-  //   .pushTick(ctx.getAngle("MAC"), Obj.EqualAngleTick, { num: 2 })
-  //   .mode(step5, SVGModes.Purple);
-  // ctx
-  //   .pushTick(ctx.getAngle("MBD"), Obj.EqualAngleTick, { num: 2 })
-  //   .mode(step5, SVGModes.Blue);
-  // ctx
-  //   .pushTick(ctx.getAngle("BDM"), Obj.EqualAngleTick, { num: 3 })
-  //   .mode(step5, SVGModes.Focused);
-  // ctx
-  //   .pushTick(ctx.getAngle("ACM"), Obj.EqualAngleTick, { num: 3 })
-  //   .mode(step5, SVGModes.Focused);
-  // ctx
-  //   .pushTick(AC, Obj.EqualLengthTick, { num: 3 })
-  //   .mode(step5, SVGModes.Focused);
-  // ctx
-  //   .pushTick(BD, Obj.EqualLengthTick, { num: 3 })
-  //   .mode(step5, SVGModes.Focused);
 
   // STEP 5 - ALTERNATE ANGLES
   const step6 = ctx.addFrame("s6");

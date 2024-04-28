@@ -49,6 +49,7 @@ export class StepCls {
   ticklessText?(ctx: Content): JSX.Element {
     return <></>;
   }
+  staticText = () => <></>;
   additions = (props: StepFocusProps) => {};
 }
 

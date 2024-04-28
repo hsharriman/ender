@@ -1,6 +1,7 @@
 import { getId } from "../utils";
 import { Angle } from "./geometry/Angle";
 import { Point } from "./geometry/Point";
+import { Rectangle } from "./geometry/Rectangle";
 import { Segment } from "./geometry/Segment";
 import { Tick } from "./geometry/Tick";
 import { Triangle } from "./geometry/Triangle";
@@ -18,7 +19,8 @@ export class Content {
   public segments: Segment[] = [];
   public angles: Angle[] = [];
   public ticks: Tick[] = [];
-  private triangles: Triangle[] = [];
+  private triangles: Triangle[] = []; // not rendered, just tracking
+  private rectangles: Rectangle[] = []; // not rendered, just tracking
   private modes: Set<string> = new Set();
   private content: BaseSVG[] = [];
   private deps: Map<string, Set<string>> = new Map();
@@ -66,39 +68,40 @@ export class Content {
     });
   }
 
-  update(e: Segment): void;
-  update(e: Angle): void;
-  update(e: Triangle): void;
-  update(e: Segment | Angle | Triangle) {
-    switch (e.tag) {
-      case Obj.Segment:
-        let s = this.getSegment(e.label);
-        if (s) {
-          this.segments[this.segments.indexOf(s)] = e as Segment;
-        }
-        return;
-      case Obj.Angle:
-        let a = this.getAngle(e.label);
-        if (a) {
-          this.angles[this.angles.indexOf(a)] = e as Angle;
-        }
-        return;
-      case Obj.Triangle:
-        let t = this.getTriangle(e.label);
-        if (t) {
-          this.triangles[this.triangles.indexOf(t)] = e as Triangle;
-        }
-        return;
-      default:
-        return;
-    }
-  }
+  // update(e: Segment): void;
+  // update(e: Angle): void;
+  // update(e: Triangle): void;
+  // update(e: Segment | Angle | Triangle) {
+  //   switch (e.tag) {
+  //     case Obj.Segment:
+  //       let s = this.getSegment(e.label);
+  //       if (s) {
+  //         this.segments[this.segments.indexOf(s)] = e as Segment;
+  //       }
+  //       return;
+  //     case Obj.Angle:
+  //       let a = this.getAngle(e.label);
+  //       if (a) {
+  //         this.angles[this.angles.indexOf(a)] = e as Angle;
+  //       }
+  //       return;
+  //     case Obj.Triangle:
+  //       let t = this.getTriangle(e.label);
+  //       if (t) {
+  //         this.triangles[this.triangles.indexOf(t)] = e as Triangle;
+  //       }
+  //       return;
+  //     default:
+  //       return;
+  //   }
+  // }
 
   push(e: Point): Point;
   push(e: Segment): Segment;
   push(e: Angle): Angle;
   push(e: Triangle): Triangle;
-  push(e: Point | Segment | Angle | Triangle | Tick) {
+  push(e: Rectangle): Rectangle;
+  push(e: Point | Segment | Angle | Triangle | Tick | Rectangle) {
     switch (e.tag) {
       case Obj.Point:
         if (!this.getPoint(e.label)) this.points.push(e as Point);
@@ -114,6 +117,9 @@ export class Content {
         if (!this.getTriangle(e.label)) this.triangles.push(e as Triangle);
         return e;
       // add angles
+      case Obj.Rectangle:
+        if (!this.getRectangle(e.label)) this.rectangles.push(e as Rectangle);
+        return e;
       default:
         return;
     }
@@ -153,6 +159,8 @@ export class Content {
   getAngle = (label: string) => this.angles.filter((a) => a.matches(label))[0];
   getTriangle = (label: string) =>
     this.triangles.filter((t) => t.matches(label))[0];
+  getRectangle = (label: string) =>
+    this.rectangles.filter((r) => r.matches(label))[0];
 
   getTick = (
     parent: Segment | Angle,

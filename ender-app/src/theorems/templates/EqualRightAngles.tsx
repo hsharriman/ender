@@ -2,6 +2,7 @@ import { congruent } from "../../core/geometryText";
 import { Content } from "../../core/objgraph";
 import { SVGModes, Obj } from "../../core/types";
 import { StepFocusProps, StepTextProps, linked } from "../utils";
+import { EqualAngles } from "./EqualAngles";
 import { RightAngle } from "./RightAngle";
 
 export class EqualRightAngles {
@@ -27,5 +28,8 @@ export class EqualRightAngles {
         ])}
       </span>
     );
+  };
+  static staticText = (a: [string, string]) => {
+    return EqualAngles.staticText(a);
   };
 }
