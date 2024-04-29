@@ -26,6 +26,7 @@ export interface StepTextProps {
   ctx: Content;
   frame?: string;
 }
+
 export const linked = (
   val: string,
   obj: BaseGeometryObject,

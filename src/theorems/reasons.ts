@@ -52,4 +52,8 @@ export const Reasons = {
     title: "Def. Parallelogram",
     body: "A parallelogram is a quadrilateral with opposite sides that are parallel. The opposite sides of a parallelogram are equal in length.",
   },
+  HL: {
+    title: "HL Triangle Congruence",
+    body: "Hypotenuse-Leg (HL) Triangle Congruence. If the hypotenuse and a leg of one right triangle are congruent to the hypotenuse and a leg of another right triangle, then the triangles are congruent.",
+  },
 };

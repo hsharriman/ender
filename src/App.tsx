@@ -4,6 +4,7 @@ import { Check2 } from "./theorems/checking/p2/Check2";
 import { Complete1 } from "./theorems/complete/proof1/Complete1";
 import { Complete2 } from "./theorems/complete/proof2/Complete2";
 import { Complete3 } from "./theorems/complete/proof3/Complete3";
+import { Check3 } from "./theorems/checking/p3/Check3";
 
 const order1 = [
   new Complete1().inPlace(),
@@ -11,6 +12,7 @@ const order1 = [
   new Complete3().longForm(),
   new Check1().staticForm(),
   new Check2().inPlace(),
+  new Check3().longForm(),
 ];
 
 const order2 = [
@@ -19,6 +21,7 @@ const order2 = [
   new Complete3().inPlace(),
   new Check1().inPlace(),
   new Check2().longForm(),
+  new Check3().staticForm(),
 ];
 
 const order3 = [
@@ -27,8 +30,9 @@ const order3 = [
   new Complete3().staticForm(),
   new Check1().longForm(),
   new Check2().staticForm(),
+  new Check3().inPlace(),
 ];
-const NUM_PAGES = 5;
+const NUM_PAGES = 6;
 
 export interface AppProps {}
 export interface AppState {
