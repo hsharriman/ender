@@ -87,7 +87,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         <button
           id={`${this.idPrefix}${item.k}`}
           onClick={this.onClick}
-          className="py-4 border-b-2 border-gray-300 text-lg w-10/12 h-16 ml-2"
+          className="py-4 border-b-2 border-gray-300 text-lg w-full h-16 ml-2"
         >
           <div className="flex flex-row justify-start gap-8 align-baseline ml-2">
             <div className="font-semibold">{`${premise}:`} </div>
@@ -110,7 +110,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         <button
           id={`${this.idPrefix}${item.k}`}
           onClick={this.onClick}
-          className="border-gray-300 border-b-2 w-10/12 h-16 ml-2 text-lg"
+          className="border-gray-300 border-b-2 w-full h-16 ml-2 text-lg"
         >
           <div
             className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
@@ -139,7 +139,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           {this.renderPremise("Given", given)}
           {this.renderPremise("Prove", prove)}
           <div className="h-24"></div>
-          <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-lg font-bold ml-6 w-10/12">
+          <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-lg font-bold ml-6">
             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
               <div className="opacity-0">0</div>
               <div>Statement</div>

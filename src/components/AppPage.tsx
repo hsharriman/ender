@@ -44,7 +44,7 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
             rowHeight={64}
           />
         )}
-        <div className="w-screen h-screen font-sans text-slate-800 grid grid-rows-1 grid-cols-2 p-4">
+        <div className="absolute top-0 left-0 w-screen max-w-[1400px] min-w-[1300px] xl:justify-start overflow-scroll h-screen font-notoSans text-slate-800 grid grid-rows-1 grid-cols-2 p-4 gap-4">
           <div id="proof-steps" className="col-start-1">
             <div className="pt-16">
               <ProofRows
@@ -55,7 +55,7 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
             </div>
             {/* <div>{this.props.reliesOn && new component}</div> */}
           </div>
-          <div id="canvas-container" className="col-start-2 row-span-5 p-4">
+          <div id="canvas-container" className="col-start-2 row-span-5 ml-4">
             <Diagram
               width="100%"
               height="480px"

@@ -17,6 +17,8 @@ interface Dims {
 export interface ReliesOnState {}
 export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
   private DEFAULT_CLR = "#D8B1FF";
+  private SVGWIDTH = 30;
+  private left = 10;
 
   getRowCoords = (frameKey: string): Dims | undefined => {
     // TODO make work for any row type
@@ -63,7 +65,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
           className="absolute w-8"
           style={{
             top: `${d.t}px`,
-            left: `${d.l}px`,
+            left: `${d.l - this.left}px`,
             height: `${divHeight}px`,
           }}
         >
@@ -103,7 +105,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
           className="absolute w-8"
           style={{
             top: `${d.t}px`,
-            left: `${d.l}px`,
+            left: `${d.l - this.left}px`,
             height: `${this.props.rowHeight}px`,
           }}
         >
@@ -145,7 +147,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
         className="absolute w-8"
         style={{
           top: `${lastBottom}px`,
-          left: `${d.l}px`,
+          left: `${d.l - this.left}px`,
           height: `${divHeight}px`,
         }}
       >
@@ -185,11 +187,11 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
         <div>
           {svgs}
           <div
-            className="text-purple-400 font-sans w-6 text-base absolute text-nowrap flex align-middle"
+            className="text-purple-400 font-notoSans w-6 text-base absolute text-nowrap flex align-middle"
             style={{
               height: `${height}px`,
               top: `${dims[0].t}px`,
-              left: `${dims[0].l + 32}px`,
+              left: `${dims[0].l - this.left + 32}px`,
             }}
           >
             <span

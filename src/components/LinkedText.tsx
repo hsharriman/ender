@@ -98,7 +98,7 @@ export class LinkedText extends React.Component<
   render() {
     return (
       <span
-        className={`font-serif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150`}
+        className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150`}
         // style={this.getStyle()}
         onMouseEnter={() => this.onClick(true)}
         onMouseLeave={() => this.onClick(false)}

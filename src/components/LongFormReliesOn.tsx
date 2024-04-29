@@ -177,7 +177,7 @@ export class LongFormReliesOn extends React.Component<
               return this.renderDepEdge(d, dependsOn[i], i === 0);
             })}
             <div
-              className="text-purple-400 font-sans w-6 text-base absolute text-nowrap flex align-middle"
+              className="text-purple-400 font-notoSans w-6 text-base absolute text-nowrap flex align-middle"
               style={{
                 height: `${height}px`,
                 top: `${dims[0].t - this.props.rowHeight + 4}px`,

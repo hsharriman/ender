@@ -48,8 +48,8 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
 
   render() {
     return (
-      <div className="flex flex-row flex-nowrap w-[1100px] mt-12">
-        <div className="w-[800px] h-full flex flex-col">
+      <div className="absolute top-0 left-0 flex flex-row flex-nowrap w-[1100px] mt-12">
+        <div className="w-[800px] h-full flex flex-col ml-12">
           <div className="flex flex-row">
             <div className="flex flex-col mx-4 w-[300px]">
               <div className="pb-2">

@@ -73,7 +73,6 @@ export class Givens extends BaseStep {
     const GH = props.ctx.getSegment("GH");
     const EJ = props.ctx.getSegment("EJ");
     const HJ = props.ctx.getSegment("HJ");
-    // console.log(EFGH);
 
     return (
       <span>
@@ -407,13 +406,13 @@ export const miniContent = () => {
 export const reliesOnText = () => {
   let relies = new Map<string, string[]>();
   const s1 = `(1) EFGH is a rectangle`;
-  const s2 = `(2) EH ${strs.congruent} JH`;
-  const s3 = `(3) BD ${strs.congruent} BD`;
-  const s4 = `(4) ${strs.angle}FEJ ${strs.congruent} ${strs.angle}JHG`;
+  const s2 = `(2) EJ ${strs.congruent} JH`;
+  const s3 = `(3) ${strs.angle}FEJ ${strs.congruent} ${strs.angle}JHG`;
+  const s4 = `(4) FE ${strs.congruent} GH`;
   const s5 = `(5) ${strs.triangle}FEJ ${strs.congruent} ${strs.triangle}JHG`;
   const s6 = `(6) FJ ${strs.congruent} GJ`;
   relies.set("s3", [s1]);
-  relies.set("s4", [s3]);
+  relies.set("s4", [s1]);
   relies.set("s5", [s2, s3, s4]);
   relies.set("s6", [s5]);
   relies.set("s7", [s6]);

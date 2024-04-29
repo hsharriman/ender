@@ -39,10 +39,10 @@
 - [x] automate multiple format creation
 - [x] fix layout of long-form
 - [x] make symbols bigger in linkedtext
+- [x] add prev/next buttons to navigate through
+- [x] define order for pilot
 - [ ] Improve the proof class structure / cleanup (always ongoing)
 - [ ] be able to render points
-- [ ] add prev/next buttons to navigate through
-- [ ] define order for pilot
 - [ ] highlighting angles on hover? when no tick is visible
 
 ## Stretch TODOs
@@ -54,6 +54,7 @@
 - [ ] Change fonts (again?)
 - [ ] highlighting of text when clicking on the diagram
 - [ ] check for segments that overlap or are sub-sections of larger segment + keep track (then fix complete proof 3)
+- [ ] hover tooltips for symbols like ||
 
 ## Less Urgent Bugs
 

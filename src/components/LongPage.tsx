@@ -106,11 +106,11 @@ export class LongPage extends React.Component<LongPageProps> {
   render() {
     // TODO render method is not taking an order of frames from props and it should
     return (
-      <>
+      <div className="absolute top-0 left-0 w-full h-screen">
         <div
-          className={`${this.contentWidth} h-screen font-sans text-slate-800 flex flex-col justify-left p-4`}
+          className={`${this.contentWidth} h-screen font-notoSans text-slate-800 flex flex-col justify-start p-4`}
         >
-          <div className="flex justify-start pb-2 pl-4 ml-4 border-b-2 border-gray-300 font-bold my-4 text-2xl">
+          <div className="flex justify-start pb-2 pl-4 ml-4 pt-8 border-b-2 border-gray-300 font-bold my-4 text-2xl">
             Given Information
           </div>
           {this.renderGiven()}
@@ -126,7 +126,7 @@ export class LongPage extends React.Component<LongPageProps> {
             return this.renderStep(item, idx);
           })}
         </div>
-      </>
+      </div>
     );
   }
 }

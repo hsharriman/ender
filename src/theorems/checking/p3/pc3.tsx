@@ -37,7 +37,6 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   ];
   const [L, M, K, N] = pts.map((c, i) => {
     // TODO option to make point labels invisible
-    console.log(c);
     return ctx.push(
       new Point({
         pt: c,

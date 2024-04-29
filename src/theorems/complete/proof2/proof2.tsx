@@ -21,6 +21,7 @@ import {
 } from "../../utils";
 import { EqualTriangles } from "../../templates/EqualTriangles";
 import { CongruentTriangles } from "../../templates/CongruentTriangles";
+import { Perpendicular } from "../../templates/Perpendicular";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
@@ -162,28 +163,11 @@ export class S2 extends StepCls {
     new Givens().additions(stepProps);
     new S1().additions(stepProps);
   };
-  override additions = (props: StepFocusProps) => {
-    RightAngle.additions(props, "ADB");
-  };
-  override text = (props: StepTextProps) => {
-    const ADB = props.ctx.getAngle("ADB");
-    return (
-      <span>
-        {linked("ADB", ADB, [
-          props.ctx.getTick(ADB, Obj.RightTick, { frame: props.frame }),
-        ])}
-        {" is perpendicular"}
-      </span>
-    );
-  };
-  override staticText = () => {
-    return (
-      <span>
-        {angleStr("ADB")}
-        {" is perpendicular"}
-      </span>
-    );
-  };
+  override additions = (props: StepFocusProps) =>
+    Perpendicular.additions(props, "BD", ["AD", "DC"]);
+  override text = (props: StepTextProps) =>
+    Perpendicular.text(props, "AC", ["AD", "DC"], "BD");
+  override staticText = () => Perpendicular.staticText("BD", "AC");
 }
 
 export class S3 extends StepCls {

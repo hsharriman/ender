@@ -70,18 +70,18 @@ export class App extends React.Component<AppProps, AppState> {
     return (
       <>
         <button
-          className="absolute top-0 left-0 p-4 underline underline-offset-2"
+          className="absolute top-0 left-0 p-4 underline underline-offset-2 z-30"
           id="prev-arrow"
           style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
           onClick={this.onClick(-1)}
         >
           {"Previous"}
         </button>
-        <div className="absolute top-0 p-4 left-24">{`${
+        <div className="absolute top-0 p-4 left-24 z-30">{`${
           this.state.activePage + 1
         } / ${NUM_PAGES}`}</div>
         <button
-          className="absolute top-0 right-0 p-4 underline underline-offset-2"
+          className="absolute top-0 right-0 p-4 underline underline-offset-2 z-30"
           id="next-arrow"
           style={{
             display: this.state.activePage < NUM_PAGES - 1 ? "block" : "none",
@@ -90,7 +90,7 @@ export class App extends React.Component<AppProps, AppState> {
         >
           {"Next"}
         </button>
-        <div className="w-screen h-screen flex justify-center">
+        <div className="w-screen h-screen flex justify-center xl:justify-start">
           {testOrder[this.state.activePage]}
         </div>
       </>
