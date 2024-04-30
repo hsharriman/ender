@@ -11,7 +11,7 @@ export class Check3 {
     { cls: new PC3.S3(), reason: Reasons.Given },
     { cls: new PC3.S4(), reason: Reasons.Rectangle, dependsOn: [1] },
     { cls: new PC3.S5(), reason: Reasons.Reflexive },
-    { cls: new PC3.S6(), reason: Reasons.SAS, dependsOn: [2, 4, 5] },
+    { cls: new PC3.S6(), reason: Reasons.HL, dependsOn: [2, 4, 5] },
   ];
   inPlace = () => {
     return InPlaceFormatter({

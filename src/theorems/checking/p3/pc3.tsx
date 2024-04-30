@@ -293,7 +293,7 @@ export const miniContent = () => {
   SAS.additions(
     { ...defaultStepProps, frame: step6 },
     {
-      seg1s: ["LM", "NM"],
+      seg1s: ["LM", "NK"],
       seg2s: ["MK", "MK"],
       angles: ["KLM", "MNK"],
       triangles: ["KLM", "MNK"],
