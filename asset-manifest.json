@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/ender/static/css/main.4e130fe4.css",
-    "main.js": "/ender/static/js/main.24570ea8.js",
+    "main.js": "/ender/static/js/main.47f00351.js",
     "index.html": "/ender/index.html",
     "main.4e130fe4.css.map": "/ender/static/css/main.4e130fe4.css.map",
-    "main.24570ea8.js.map": "/ender/static/js/main.24570ea8.js.map"
+    "main.47f00351.js.map": "/ender/static/js/main.47f00351.js.map"
   },
   "entrypoints": [
     "static/css/main.4e130fe4.css",
-    "static/js/main.24570ea8.js"
+    "static/js/main.47f00351.js"
   ]
 }
