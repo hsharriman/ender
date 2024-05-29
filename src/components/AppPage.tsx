@@ -44,7 +44,7 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
             rowHeight={64}
           />
         )}
-        <div className="absolute top-0 left-0 w-screen max-w-[1400px] min-w-[1300px] xl:justify-start overflow-scroll h-screen font-notoSans text-slate-800 grid grid-rows-1 grid-cols-2 p-4 gap-4">
+        <div className="top-0 left-0 w-screen max-w-[1400px] min-w-[1300px] xl:justify-start h-screen font-notoSans text-slate-800 grid grid-rows-1 grid-cols-2 pt-4 pl-4 gap-4">
           <div id="proof-steps" className="col-start-1">
             <div className="pt-16">
               <ProofRows

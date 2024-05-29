@@ -68,32 +68,34 @@ export class App extends React.Component<AppProps, AppState> {
 
   renderProofPages = (testOrder: JSX.Element[]) => {
     return (
-      <>
-        <button
-          className="absolute top-0 left-0 p-4 underline underline-offset-2 z-30"
-          id="prev-arrow"
-          style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
-          onClick={this.onClick(-1)}
-        >
-          {"Previous"}
-        </button>
-        <div className="absolute top-0 p-4 left-24 z-30">{`${
-          this.state.activePage + 1
-        } / ${NUM_PAGES}`}</div>
-        <button
-          className="absolute top-0 right-0 p-4 underline underline-offset-2 z-30"
-          id="next-arrow"
-          style={{
-            display: this.state.activePage < NUM_PAGES - 1 ? "block" : "none",
-          }}
-          onClick={this.onClick(1)}
-        >
-          {"Next"}
-        </button>
-        <div className="w-screen h-screen flex justify-center xl:justify-start">
+      <div>
+        <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30"id="header">
+          <button
+            className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+            id="prev-arrow"
+            style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+            onClick={this.onClick(-1)}
+          >
+            {"Previous"}
+          </button>
+          <div className="absolute top-0 p-3 left-24 z-30">{`${
+            this.state.activePage + 1
+          } / ${NUM_PAGES}`}</div>
+          <button
+            className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+            id="next-arrow"
+            style={{
+              display: this.state.activePage < NUM_PAGES - 1 ? "block" : "none",
+            }}
+            onClick={this.onClick(1)}
+          >
+            {"Next"}
+          </button>
+        </div>
+        <div className="w-full h-screen flex justify-center xl:justify-start">
           {testOrder[this.state.activePage]}
         </div>
-      </>
+      </div>
     );
   };
   render() {
