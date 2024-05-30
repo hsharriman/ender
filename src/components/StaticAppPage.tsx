@@ -1,6 +1,7 @@
 import React from "react";
 import { Reason, StaticProofTextItem } from "../core/types";
 import { StaticDiagram } from "./StaticDiagram";
+import { RadioQuestion } from "./RadioQuestion";
 
 export interface StaticAppPageProps {
   reasons: Reason[];
@@ -48,7 +49,7 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
 
   render() {
     return (
-      <div className="top-0 left-0 flex flex-row flex-nowrap w-[1100px] mt-12">
+      <div className="top-0 left-0 flex flex-row flex-nowrap w-5/6 mt-12">
         <div className="w-[800px] h-full flex flex-col ml-12">
           <div className="flex flex-row">
             <div className="flex flex-col mx-4 w-[300px]">
@@ -77,11 +78,19 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
           </div>
           {this.props.texts.map((item, i) => this.renderRow(item, i))}
         </div>
-        <div className="w-[300px] flex flex-col justify-start">
-          <div className="font-bold text-base text-slate-500 pb-2">
-            Reasons Applied:
+        <div>
+          <div className="w-4/6 flex flex-col justify-start">
+            <div className="font-bold text-base text-slate-500 pb-2">
+              Reasons Applied:
+            </div>
+            {this.props.reasons.map((reason) => this.renderReason(reason))}
           </div>
-          {this.props.reasons.map((reason) => this.renderReason(reason))}
+          <div className="mt-10">
+            <RadioQuestion 
+                questionNum="Question 1" 
+                question="Do you agree that segment AC = BD?" 
+                answers={["Yes", "No", "Can't Tell"]}/>
+          </div>
         </div>
       </div>
     );

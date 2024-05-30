@@ -4,6 +4,7 @@ import { ProofTextItem, Reason } from "../core/types";
 import { Diagram } from "./Diagram";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
+import { RadioQuestion } from "./RadioQuestion";
 
 export interface AppPageProps {
   proofText: ProofTextItem[];
@@ -58,12 +59,12 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
           <div id="canvas-container" className="col-start-2 row-span-5 ml-4">
             <Diagram
               width="100%"
-              height="480px"
+              height="320px"
               svgIdSuffix="construction"
               activeFrame={this.state.activeFrame}
               svgElements={this.props.svgElements}
             />
-            <div className="grid grid-rows-1 grid-cols-8 h-48">
+            <div className="grid grid-rows-1 grid-cols-8 h-44 mt-6">
               <div className="col-span-3">
                 <Diagram
                   width="100%"
@@ -81,6 +82,12 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
                 />
               </div>
             </div>
+            <div className="col-span-5 pl-6">
+                <RadioQuestion 
+                  questionNum="Question 1" 
+                  question="Do you agree that segment AC = BD?" 
+                  answers={["Yes", "No", "Can't Tell"]}/>
+              </div>
           </div>
         </div>
       </>
