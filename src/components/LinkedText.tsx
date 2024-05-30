@@ -1,6 +1,8 @@
 import React from "react";
 import { Obj } from "../core/types";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
+import { triangleStr } from "../core/geometryText";
+import { angleStr } from "../core/geometryText";
 
 export interface LinkedTextProps {
   val: string;
@@ -78,17 +80,11 @@ export class LinkedText extends React.Component<
         );
       case Obj.Triangle:
         return (
-          <span>
-            <span className="text-l leading-4">{`\u25B5`}</span>
-            {this.props.val}
-          </span>
+          triangleStr(this.props.val)
         );
       case Obj.Angle:
         return (
-          <span>
-            <span className="text-2xl leading-4">{`\u29A3`}</span>
-            {this.props.val}
-          </span>
+          angleStr(this.props.val)
         );
       default:
         return this.props.val;

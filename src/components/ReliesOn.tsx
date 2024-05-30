@@ -26,9 +26,9 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     if (rowEle) {
       const rowRect = rowEle.getBoundingClientRect();
       return {
-        l: rowRect.right, // right side of row
-        t: rowRect.top, // top of row,
-        b: rowRect.bottom,
+        l: rowRect.right + window.scrollX, // right side of row
+        t: rowRect.top + window.scrollY, // top of row,
+        b: rowRect.bottom + window.scrollY,
         key: frameKey,
       };
     }
@@ -206,7 +206,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     }
     return (
       <div id="relies-on">
-        <div className="absolute top-0 left-0 w-screen h-screen -z-10">
+        <div className="absolute top-0 left-0 w-full h-screen -z-10">
           {innerContent}
         </div>
       </div>

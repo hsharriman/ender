@@ -24,14 +24,14 @@ export const segmentStr = (s: string, clr?: string) => (
 // for static text
 export const triangleStr = (t: string) => (
   <span className="font-notoSerif">
-    <span className="text-l leading-4 font-semibold">{`\u25B5`}</span>
+    <span className="text-l leading-4 font-semibold">{`\u25B3`}</span>
     {t}
   </span>
 );
 // for static text
 export const angleStr = (a: string) => (
   <span className="font-notoSerif">
-    <span className="text-2xl leading-4">{`\u29A3`}</span>
+    <span className="text-2xl leading-4">{`\u2220`}</span>
     {a}
   </span>
 );
