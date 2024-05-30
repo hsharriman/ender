@@ -92,7 +92,7 @@ export class App extends React.Component<AppProps, AppState> {
             {"Next"}
           </button>
         </div>
-        <div className="w-full h-screen flex justify-center xl:justify-start">
+        <div className="w-full h-full flex justify-center xl:justify-start">
           {testOrder[this.state.activePage]}
         </div>
       </div>
