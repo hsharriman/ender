@@ -34,6 +34,72 @@
 - Circles
 - Labeled segments
 
+## Contributing
+1. Open a branch with the naming convention `<user-alias>/<description>` (i.e., `hharriman/render-points`)
+2. Push your changes to your branch
+3. Open a PR to `main`. The first word of your PR title should be one of:
+  a. `feat:` A new feature is being added with this PR
+  b. `fix:` A fix is implemented in this PR
+  c. `chore:` Some utility/devops/upkeep is done
+4. In the PR description provide a list of the changes that were made
+
+
+### Finding an issue to work on
+
+Check out our list of [good first issues][].
+
+- Before working on one of them, let us know that you are interested so we can
+  give you more guidance! (Currently the issue descriptions are fairly brief.)
+
+- Create a separate [branch][] in your forked repo to work on the issue:
+
+  ```sh
+  git switch --create my-branch
+  git push --set-upstream fork my-branch
+  ```
+
+### Merging new changes from upstream
+
+If you need to merge new changes from upstream (i.e. the original Penrose repo):
+
+```sh
+git fetch origin main:main
+git merge main
+```
+
+After running the above, manage any [merge conflicts][], [commit][] to your
+branch, and then [push][] to your fork:
+
+```sh
+git push
+```
+
+### Adding tests
+
+For some PRs, it can be helpful to add tests that help verify the correctness of new features, and which ensure features don't break in future versions. Tests can be created as example diagrams in `packages/examples/src` and added to the [registry](#registry).
+
+### Opening a pull request (PR)
+
+When your work is ready for review:
+
+- [Open a pull request][] (PR) by clicking on the **Contribute** button on the
+  homepage of your forked repo
+  (`https://github.com/<your-github-account-name>/penrose`).
+- Put `fix:` or `feat:` at the beginning of the PR title depending on if it's a
+  fix or a feature. We follow [conventional commit guidelines][] in our repo.
+- Document your changes in the PR's description (including _specific paths for
+  reproducing specific examples_, and link(s) to any issue(s) you address).
+- Some things will be checked automatically by our [CI][]:
+  - Make sure the system passes the regression tests.
+  - Run [Prettier][] via `yarn format`.
+- If you have permission, request review from the relevant person. Otherwise, no
+  worries: we'll take a look at your PR and assign it to a maintainer.
+- When your PR is approved, a maintainer will merge it.
+
+If you hit any snags in the process, run into bugs, or just have questions,
+please file an issue!
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
