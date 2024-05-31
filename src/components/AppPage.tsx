@@ -5,6 +5,8 @@ import { Diagram } from "./Diagram";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
 import { RadioQuestion } from "./RadioQuestion";
+import { MultiSelectQuestion } from "./MultiSelectQuestion";
+import { TextQuestion } from "./TextQuestion";
 
 export interface AppPageProps {
   proofText: ProofTextItem[];
@@ -83,11 +85,28 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
               </div>
             </div>
             <div className="col-span-5 pl-6">
-                <RadioQuestion 
-                  questionNum="Question 1" 
-                  question="Do you agree that segment AC = BD?" 
-                  answers={["Yes", "No", "Can't Tell"]}/>
-              </div>
+              {/* <RadioQuestion
+                questionNum="Question 1"
+                question="Do you agree that segment AC = BD?"
+                answers={["Yes", "No", "Can't Tell"]}
+              /> */}
+              {/* <MultiSelectQuestion
+                questionNum="Question 1"
+                question="Besides the given information, which statements can be directly applied without any explanation? Select all that apply."
+                answers={[
+                  "Statement 3",
+                  "Statement 4",
+                  "Statement 5",
+                  "Statement 6",
+                  "Statement 7",
+                ]}
+              /> */}
+              <TextQuestion
+                questionNum="Question 1"
+                question="Explain it as you would to a classmate who has not seen this proof yet.
+                For instance: 'Given _______, we first determine _______ in order to conclude that  _______.'"
+              />
+            </div>
           </div>
         </div>
       </>

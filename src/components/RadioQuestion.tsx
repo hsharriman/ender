@@ -1,22 +1,38 @@
 import React from "react";
 import { SubmitQuestion } from "./SubmitQuestion";
 
-
 interface QuestionProps {
-    questionNum: string;
-    question: string;
-    answers: string[];
+  questionNum: string;
+  question: string;
+  answers: string[];
 }
 
-export class RadioQuestion extends React.Component<QuestionProps> {
+interface QuestionState {
+  selectedOption: string[];
+}
+
+export class RadioQuestion extends React.Component<
+  QuestionProps,
+  QuestionState
+> {
   constructor(props: QuestionProps) {
     super(props);
+    this.state = {
+      selectedOption: [],
+    };
+    this.handleRadioChange = this.handleRadioChange.bind(this);
   }
 
+  handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    this.setState({
+      selectedOption: [value],
+    });
+  };
+
   render() {
-    const questionNum = this.props.questionNum
-    const question = this.props.question
-    const answers = this.props.answers
+    const { questionNum, question, answers } = this.props;
+    const selectedOption = this.state.selectedOption;
 
     return (
       <div className="">
@@ -25,21 +41,28 @@ export class RadioQuestion extends React.Component<QuestionProps> {
             {questionNum}:
           </div>
         </div>
-        <div className="font-bold text-base pb-1">
-          {question}
-        </div>
+        <div className="font-bold text-base pb-1">{question}</div>
         <div className="text-base">
-        {
-          answers.map(answer => {
-            return <div className="py-0.5">
-              <input type="radio" value={answer} name={question} />
-              <label> {answer} </label>
-            </div>
-          })
-        }
+          {answers.map((answer, index) => {
+            return (
+              <div className="py-0.5" key={index}>
+                <input
+                  type="radio"
+                  value={answer}
+                  name={answer}
+                  checked={selectedOption.indexOf(answer) > -1}
+                  onChange={this.handleRadioChange}
+                />
+                <label> {answer} </label>
+              </div>
+            );
+          })}
         </div>
-        <SubmitQuestion />
+        <SubmitQuestion
+          answerType="Single Select"
+          inputAnswer={this.state.selectedOption}
+        />
       </div>
-    )
+    );
   }
 }
