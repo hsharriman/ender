@@ -7,6 +7,9 @@ import { ReliesOn } from "./ReliesOn";
 import { RadioQuestion } from "./RadioQuestion";
 import { MultiSelectQuestion } from "./MultiSelectQuestion";
 import { TextQuestion } from "./TextQuestion";
+import { completeProof1 } from "../questions/completeQuestions";
+import { QuestionType } from "../questions/completeQuestions";
+import { Question } from "../questions/completeQuestions";
 
 export interface AppPageProps {
   proofText: ProofTextItem[];
@@ -15,16 +18,19 @@ export interface AppPageProps {
   reasonText: (activeFrame: string) => Reason;
   svgElements: (activeFrame: string) => JSX.Element[];
   onClickCanvas: () => void;
+  questions: Question[];
 }
 
 interface AppPageState {
   activeFrame: string;
+  currentQuestionIndex: number;
 }
 export class AppPage extends React.Component<AppPageProps, AppPageState> {
   constructor(props: AppPageProps) {
     super(props);
     this.state = {
       activeFrame: "given",
+      currentQuestionIndex: 0,
     };
   }
 
@@ -36,8 +42,25 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
     }
   };
 
+  handleSubmit = (answer: any) => {
+    console.log(
+      `Answer for question ${this.state.currentQuestionIndex + 1}:`,
+      answer
+    );
+    if (this.state.currentQuestionIndex < this.props.questions.length - 1) {
+      this.setState((prevState) => ({
+        currentQuestionIndex: prevState.currentQuestionIndex + 1,
+      }));
+    } else {
+      alert("Survey completed!");
+    }
+  };
+
   // TODO click away handler that displays the initial construction
   render() {
+    const currentQuestion =
+      this.props.questions[this.state.currentQuestionIndex];
+    const answers = currentQuestion.answers || [];
     return (
       <>
         {this.props.reliesOn && (
@@ -85,12 +108,35 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
               </div>
             </div>
             <div className="col-span-5 pl-6">
+              {currentQuestion.type === QuestionType.Single && (
+                <RadioQuestion
+                  questionNum={(this.state.currentQuestionIndex + 1).toString()}
+                  question={currentQuestion.prompt}
+                  answers={answers}
+                  onSubmit={this.handleSubmit}
+                />
+              )}
+              {currentQuestion.type === QuestionType.Mutli && (
+                <MultiSelectQuestion
+                  questionNum={(this.state.currentQuestionIndex + 1).toString()}
+                  question={currentQuestion.prompt}
+                  answers={answers}
+                  onSubmit={this.handleSubmit}
+                />
+              )}
+              {currentQuestion.type === QuestionType.Text && (
+                <TextQuestion
+                  questionNum={(this.state.currentQuestionIndex + 1).toString()}
+                  question={currentQuestion.prompt}
+                  onSubmit={this.handleSubmit}
+                />
+              )}
               {/* <RadioQuestion
                 questionNum="Question 1"
                 question="Do you agree that segment AC = BD?"
                 answers={["Yes", "No", "Can't Tell"]}
-              /> */}
-              {/* <MultiSelectQuestion
+              />
+              <MultiSelectQuestion
                 questionNum="Question 1"
                 question="Besides the given information, which statements can be directly applied without any explanation? Select all that apply."
                 answers={[
@@ -100,12 +146,12 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
                   "Statement 6",
                   "Statement 7",
                 ]}
-              /> */}
+              />
               <TextQuestion
                 questionNum="Question 1"
                 question="Explain it as you would to a classmate who has not seen this proof yet.
                 For instance: 'Given _______, we first determine _______ in order to conclude that  _______.'"
-              />
+              /> */}
             </div>
           </div>
         </div>

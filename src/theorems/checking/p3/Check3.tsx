@@ -3,6 +3,7 @@ import { LongFormFormatter } from "../../formatters/LongFormFormatter";
 import { StaticFormatter } from "../../formatters/StaticFormatter";
 import { Reasons } from "../../reasons";
 import { PC3 } from "./pc3";
+import { checkingProof3 } from "../../../questions/checkingQuestions";
 
 export class Check3 {
   private steps = [
@@ -13,6 +14,9 @@ export class Check3 {
     { cls: new PC3.S5(), reason: Reasons.Reflexive },
     { cls: new PC3.S6(), reason: Reasons.HL, dependsOn: [2, 4, 5] },
   ];
+
+  private questions = checkingProof3;
+
   inPlace = () => {
     return InPlaceFormatter({
       baseContent: PC3.baseContent,
@@ -20,6 +24,7 @@ export class Check3 {
       givenCls: new PC3.Givens(),
       proveCls: new PC3.Proves(),
       miniContent: PC3.miniContent,
+      questions: this.questions,
     });
   };
   longForm = () => {
@@ -38,6 +43,7 @@ export class Check3 {
       steps: this.steps,
       givenCls: new PC3.Givens(),
       proveCls: new PC3.Proves(),
+      questions: this.questions,
     });
   };
 }

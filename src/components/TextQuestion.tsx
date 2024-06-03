@@ -4,10 +4,11 @@ import { SubmitQuestion } from "./SubmitQuestion";
 interface QuestionProps {
   questionNum: string;
   question: string;
+  onSubmit: (text: string) => void;
 }
 
 interface QuestionState {
-  inputText: string[];
+  inputText: string;
 }
 
 export class TextQuestion extends React.Component<
@@ -17,15 +18,27 @@ export class TextQuestion extends React.Component<
   constructor(props: QuestionProps) {
     super(props);
     this.state = {
-      inputText: [],
+      inputText: "",
     };
     this.handleInputChange = this.handleInputChange.bind(this);
   }
 
   handleInputChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = event.target.value;
-    this.setState({ inputText: [value] });
+    this.setState({ inputText: value });
   }
+
+  handleSubmit = () => {
+    const { inputText } = this.state;
+    if (inputText.length === 0) {
+      alert("Please type something.");
+      return;
+    }
+    this.props.onSubmit(this.state.inputText);
+    this.setState({
+      inputText: "",
+    });
+  };
 
   render() {
     const { questionNum, question } = this.props;
@@ -35,7 +48,7 @@ export class TextQuestion extends React.Component<
       <div className="">
         <div className="flex flex-col justify-start pb-1">
           <div className="font-bold text-base text-slate-500">
-            {questionNum}:
+            Question {questionNum}:
           </div>
         </div>
         <div className="font-bold text-base pb-1">{question}</div>
@@ -47,10 +60,7 @@ export class TextQuestion extends React.Component<
             onChange={this.handleInputChange}
           />
         </div>
-        <SubmitQuestion
-          answerType="Text Input"
-          inputAnswer={this.state.inputText}
-        />
+        <SubmitQuestion onClick={this.handleSubmit} />
       </div>
     );
   }

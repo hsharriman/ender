@@ -2,6 +2,7 @@ import { AppPage } from "../../components/AppPage";
 import { Content } from "../../core/objgraph";
 import { ProofTextItem, Reason } from "../../core/types";
 import { BaseStep, GIVEN_ID, PROVE_ID, Step, getReasonFn } from "../utils";
+import { Question } from "../../questions/completeQuestions";
 
 export interface InPlaceFormatterProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
@@ -9,6 +10,7 @@ export interface InPlaceFormatterProps {
   givenCls: BaseStep;
   proveCls: BaseStep;
   miniContent: Content;
+  questions: Question[];
 }
 
 export const InPlaceFormatter = (props: InPlaceFormatterProps) => {
@@ -63,6 +65,7 @@ export const InPlaceFormatter = (props: InPlaceFormatterProps) => {
       onClickCanvas={function (): void {
         throw new Error("Function not implemented.");
       }}
+      questions={props.questions}
     />
   );
 };

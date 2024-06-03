@@ -2,6 +2,11 @@ import React from "react";
 import { Reason, StaticProofTextItem } from "../core/types";
 import { StaticDiagram } from "./StaticDiagram";
 import { RadioQuestion } from "./RadioQuestion";
+import { TextQuestion } from "./TextQuestion";
+import { MultiSelectQuestion } from "./MultiSelectQuestion";
+import { completeProof1 } from "../questions/completeQuestions";
+import { QuestionType } from "../questions/completeQuestions";
+import { Question } from "../questions/completeQuestions";
 
 export interface StaticAppPageProps {
   reasons: Reason[];
@@ -9,8 +14,24 @@ export interface StaticAppPageProps {
   diagram: JSX.Element[];
   givenText: JSX.Element;
   proveText: JSX.Element;
+  questions: Question[];
 }
-export class StaticAppPage extends React.Component<StaticAppPageProps> {
+
+interface StaticAppPageState {
+  currentQuestionIndex: number;
+}
+
+export class StaticAppPage extends React.Component<
+  StaticAppPageProps,
+  StaticAppPageState
+> {
+  constructor(props: StaticAppPageProps) {
+    super(props);
+    this.state = {
+      currentQuestionIndex: 0,
+    };
+  }
+
   renderRow = (item: StaticProofTextItem, i: number) => {
     const textColor = "text-slate-800";
     const strokeColor = "border-slate-800";
@@ -47,7 +68,25 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
     );
   };
 
+  handleSubmit = (answer: any) => {
+    console.log(
+      `Answer for question ${this.state.currentQuestionIndex + 1}:`,
+      answer
+    );
+    if (this.state.currentQuestionIndex < this.props.questions.length - 1) {
+      this.setState((prevState) => ({
+        currentQuestionIndex: prevState.currentQuestionIndex + 1,
+      }));
+    } else {
+      console.log("Survey completed!");
+    }
+  };
+
   render() {
+    const currentQuestion =
+      this.props.questions[this.state.currentQuestionIndex];
+    const answers = currentQuestion.answers || [];
+
     return (
       <div className="top-0 left-0 flex flex-row flex-nowrap w-5/6 mt-12">
         <div className="w-[800px] h-full flex flex-col ml-12">
@@ -86,10 +125,29 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
             {this.props.reasons.map((reason) => this.renderReason(reason))}
           </div>
           <div className="mt-10">
-            <RadioQuestion 
-                questionNum="Question 1" 
-                question="Do you agree that segment AC = BD?" 
-                answers={["Yes", "No", "Can't Tell"]}/>
+            {currentQuestion.type === QuestionType.Single && (
+              <RadioQuestion
+                questionNum={(this.state.currentQuestionIndex + 1).toString()}
+                question={currentQuestion.prompt}
+                answers={answers}
+                onSubmit={this.handleSubmit}
+              />
+            )}
+            {currentQuestion.type === QuestionType.Mutli && (
+              <MultiSelectQuestion
+                questionNum={(this.state.currentQuestionIndex + 1).toString()}
+                question={currentQuestion.prompt}
+                answers={answers}
+                onSubmit={this.handleSubmit}
+              />
+            )}
+            {currentQuestion.type === QuestionType.Text && (
+              <TextQuestion
+                questionNum={(this.state.currentQuestionIndex + 1).toString()}
+                question={currentQuestion.prompt}
+                onSubmit={this.handleSubmit}
+              />
+            )}
           </div>
         </div>
       </div>

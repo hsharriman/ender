@@ -6,29 +6,31 @@ import { Complete2 } from "./theorems/complete/proof2/Complete2";
 import { Complete3 } from "./theorems/complete/proof3/Complete3";
 import { Check3 } from "./theorems/checking/p3/Check3";
 
+// TODO: refractor and so that the last submit button will move along to the next proof
+
 const order1 = [
   new Complete1().inPlace(),
   new Complete2().staticForm(),
-  new Complete3().longForm(),
+  new Complete3().inPlace(),
   new Check1().staticForm(),
   new Check2().inPlace(),
-  new Check3().longForm(),
+  new Check3().staticForm(),
 ];
 
 const order2 = [
   new Complete1().staticForm(),
-  new Complete2().longForm(),
+  new Complete2().inPlace(),
   new Complete3().inPlace(),
   new Check1().inPlace(),
-  new Check2().longForm(),
+  new Check2().staticForm(),
   new Check3().staticForm(),
 ];
 
 const order3 = [
-  new Complete1().longForm(),
+  new Complete1().staticForm(),
   new Complete2().inPlace(),
   new Complete3().staticForm(),
-  new Check1().longForm(),
+  new Check1().inPlace(),
   new Check2().staticForm(),
   new Check3().inPlace(),
 ];
@@ -69,7 +71,7 @@ export class App extends React.Component<AppProps, AppState> {
   renderProofPages = (testOrder: JSX.Element[]) => {
     return (
       <div>
-        <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30"id="header">
+        <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
           <button
             className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
             id="prev-arrow"

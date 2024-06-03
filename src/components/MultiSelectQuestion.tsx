@@ -6,6 +6,7 @@ interface QuestionProps {
   questionNum: string;
   question: string;
   answers: string[];
+  onSubmit: (answers: string[]) => void;
 }
 
 interface QuestionState {
@@ -42,6 +43,18 @@ export class MultiSelectQuestion extends React.Component<
     this.setState({ selectedOptions: newSelectedOptions });
   }
 
+  handleSubmit = () => {
+    const { selectedOptions } = this.state;
+    if (selectedOptions.length === 0) {
+      alert("Please select at least one answer.");
+      return;
+    }
+    this.props.onSubmit(this.state.selectedOptions);
+    this.setState({
+      selectedOptions: [],
+    });
+  };
+
   render() {
     const { questionNum, question, answers } = this.props;
     const selectedOptions = this.state.selectedOptions;
@@ -50,14 +63,14 @@ export class MultiSelectQuestion extends React.Component<
       <div className="">
         <div className="flex flex-col justify-start pb-1">
           <div className="font-bold text-base text-slate-500">
-            {questionNum}:
+            Question {questionNum}:
           </div>
         </div>
         <div className="font-bold text-base pb-1">{question}</div>
         <div className="text-base">
-          {answers.map((answer) => {
+          {answers.map((answer, index) => {
             return (
-              <div className="py-0.5">
+              <div className="py-0.5" key={index}>
                 <input
                   type="checkbox"
                   value={answer}
@@ -70,10 +83,7 @@ export class MultiSelectQuestion extends React.Component<
             );
           })}
         </div>
-        <SubmitQuestion
-          answerType="Multi Select"
-          inputAnswer={this.state.selectedOptions}
-        />
+        <SubmitQuestion onClick={this.handleSubmit} />
       </div>
     );
   }

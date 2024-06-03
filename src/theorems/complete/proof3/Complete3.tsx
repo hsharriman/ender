@@ -3,6 +3,7 @@ import { LongFormFormatter } from "../../formatters/LongFormFormatter";
 import { StaticFormatter } from "../../formatters/StaticFormatter";
 import { Reasons } from "../../reasons";
 import { P3 } from "./proof3";
+import { completeProof3 } from "../../../questions/completeQuestions";
 
 export class Complete3 {
   private steps = [
@@ -18,6 +19,9 @@ export class Complete3 {
     { cls: new P3.S6(), reason: Reasons.CorrespondingSegments, dependsOn: [5] },
     { cls: new P3.S7(), reason: Reasons.Isosceles, dependsOn: [6] },
   ];
+
+  private questions = completeProof3;
+
   longForm = () => {
     return LongFormFormatter({
       baseContent: P3.baseContent,
@@ -36,6 +40,7 @@ export class Complete3 {
       givenCls: new P3.Givens(),
       proveCls: new P3.Proves(),
       miniContent: P3.miniContent,
+      questions: this.questions,
     });
   };
 
@@ -45,6 +50,7 @@ export class Complete3 {
       steps: this.steps,
       givenCls: new P3.Givens(),
       proveCls: new P3.Proves(),
+      questions: this.questions,
     });
   };
 }
