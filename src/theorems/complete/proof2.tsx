@@ -1,27 +1,27 @@
-import { JSX } from "react/jsx-runtime";
-import { Point } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
-import { angleStr, comma, segmentStr, strs } from "../../../core/geometryText";
-import { Content } from "../../../core/objgraph";
-import { Obj, SVGModes, Vector } from "../../../core/types";
-import { ASA, ASAProps } from "../../templates/ASA";
-import { EqualAngles } from "../../templates/EqualAngles";
-import { EqualRightAngles } from "../../templates/EqualRightAngles";
-import { EqualSegments } from "../../templates/EqualSegments";
-import { Midpoint } from "../../templates/Midpoint";
-import { Reflexive } from "../../templates/Reflexive";
-import { RightAngle } from "../../templates/RightAngle";
+import { Point } from "../../core/geometry/Point";
+import { Triangle } from "../../core/geometry/Triangle";
+import { angleStr, comma, segmentStr, strs } from "../../core/geometryText";
+import { Content } from "../../core/objgraph";
+import { Obj, SVGModes, Vector } from "../../core/types";
+import { ASA, ASAProps } from "../templates/ASA";
+import { EqualAngles } from "../templates/EqualAngles";
+import { EqualRightAngles } from "../templates/EqualRightAngles";
+import { EqualSegments } from "../templates/EqualSegments";
+import { Midpoint } from "../templates/Midpoint";
+import { Reflexive } from "../templates/Reflexive";
+import { RightAngle } from "../templates/RightAngle";
 import {
-  BaseStep,
-  StepCls,
+  LayoutProps,
   StepFocusProps,
+  StepMeta,
   StepTextProps,
   StepUnfocusProps,
   linked,
-} from "../../utils";
-import { EqualTriangles } from "../../templates/EqualTriangles";
-import { CongruentTriangles } from "../../templates/CongruentTriangles";
-import { Perpendicular } from "../../templates/Perpendicular";
+  makeStepMeta,
+} from "../utils";
+import { EqualTriangles } from "../templates/EqualTriangles";
+import { Perpendicular } from "../templates/Perpendicular";
+import { Reasons } from "../reasons";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
@@ -59,8 +59,8 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   return ctx;
 };
 
-export class Givens extends BaseStep {
-  override text = (props: StepTextProps) => {
+const givens: StepMeta = makeStepMeta({
+  text: (props: StepTextProps) => {
     const BD = props.ctx.getSegment("BD");
     const ABD = props.ctx.getAngle("ABD");
 
@@ -73,9 +73,9 @@ export class Givens extends BaseStep {
         {linked("ABC", ABD)}
       </span>
     );
-  };
+  },
 
-  override ticklessText = (ctx: Content) => {
+  ticklessText: (ctx: Content) => {
     const BD = ctx.getSegment("BD");
     const ABD = ctx.getAngle("ABD");
     const DBC = ctx.getAngle("CBD");
@@ -89,17 +89,17 @@ export class Givens extends BaseStep {
         {linked("ABC", ABD, [DBC])}
       </span>
     );
-  };
+  },
 
-  override additions = (props: StepFocusProps) => {
+  additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("ABD").mode(props.frame, props.mode);
     props.ctx.getTriangle("CBD").mode(props.frame, props.mode);
-  };
+  },
 
-  override diagram = (ctx: Content, frame: string) => {
-    this.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
-  };
-  override staticText = () => {
+  diagram: (ctx: Content, frame: string) => {
+    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+  },
+  staticText: () => {
     return (
       <span>
         {RightAngle.staticText("ADB")}
@@ -109,34 +109,34 @@ export class Givens extends BaseStep {
         {angleStr("ABC")}
       </span>
     );
-  };
-}
+  },
+});
 
-export class Proves extends BaseStep {
-  override unfocused = (props: StepUnfocusProps) => {
-    new Givens().additions({ ...props, mode: SVGModes.Unfocused });
-  };
-  override additions = (props: StepFocusProps) => {
+const proves: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    givens.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "D", ["AD", "CD"]);
-  };
-  override text = (props: StepTextProps) => {
+  },
+  text: (props: StepTextProps) => {
     return Midpoint.text(props, "AC", ["AD", "CD"], "D");
-  };
-  override ticklessText = (ctx: Content) => {
+  },
+  ticklessText: (ctx: Content) => {
     return Midpoint.ticklessText(ctx, "AC", ["AD", "CD"], "D");
-  };
-  override staticText = () => Midpoint.staticText("D", "AC");
-}
+  },
+  staticText: () => Midpoint.staticText("D", "AC"),
+});
 
-export class S1 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
-    new Givens().additions({ ...props, mode: SVGModes.Unfocused });
-  };
-  override additions = (props: StepFocusProps) => {
+const step1: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    givens.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["ABD", "CBD"]);
     RightAngle.additions(props, "ADB");
-  };
-  override text = (props: StepTextProps) => {
+  },
+  text: (props: StepTextProps) => {
     const BD = props.ctx.getSegment("BD");
     const ABD = props.ctx.getAngle("ABD");
     const DBC = props.ctx.getAngle("CBD");
@@ -153,95 +153,80 @@ export class S1 extends StepCls {
         ])}
       </span>
     );
-  };
-  override staticText = () => new Givens().staticText();
-}
+  },
+  staticText: () => givens.staticText(),
+});
 
-export class S2 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
+const step2: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
     const stepProps = { ...props, mode: SVGModes.Unfocused };
-    new Givens().additions(stepProps);
-    new S1().additions(stepProps);
-  };
-  override additions = (props: StepFocusProps) =>
-    Perpendicular.additions(props, "BD", ["AD", "DC"]);
-  override text = (props: StepTextProps) =>
-    Perpendicular.text(props, "AC", ["AD", "DC"], "BD");
-  override staticText = () => Perpendicular.staticText("BD", "AC");
-}
+    givens.additions(stepProps);
+    step1.additions(stepProps);
+  },
+  additions: (props: StepFocusProps) =>
+    Perpendicular.additions(props, "BD", ["AD", "DC"]),
+  text: (props: StepTextProps) =>
+    Perpendicular.text(props, "AC", ["AD", "DC"], "BD"),
+  staticText: () => Perpendicular.staticText("BD", "AC"),
+});
 
-export class S3 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
+const step3: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
     const stepProps = { ...props, mode: SVGModes.Unfocused };
-    new Givens().additions(stepProps);
-    new S1().additions(stepProps);
-  };
-  override additions = (props: StepFocusProps) => {
-    EqualRightAngles.additions(props, ["ADB", "BDC"]);
-  };
-  override text = (props: StepTextProps) => {
-    return EqualRightAngles.text(props, ["ADB", "BDC"]);
-  };
-  override staticText = () => EqualRightAngles.staticText(["ADB", "BDC"]);
-}
+    givens.additions(stepProps);
+    step1.additions(stepProps);
+  },
+  additions: (props: StepFocusProps) =>
+    EqualRightAngles.additions(props, ["ADB", "BDC"]),
+  text: (props: StepTextProps) => EqualRightAngles.text(props, ["ADB", "BDC"]),
+  staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
+});
 
-export class S4 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
+const step4: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
     const stepProps = { ...props, mode: SVGModes.Unfocused };
-    new Givens().additions(stepProps);
-    new S1().additions(stepProps);
-    new S2().additions(stepProps);
-  };
-  override additions = (props: StepFocusProps) => {
-    Reflexive.additions(props, "BD");
-  };
-  override text = (props: StepTextProps) => {
-    return Reflexive.text(props, "BD");
-  };
-  override staticText = () => Reflexive.staticText("BD");
-}
+    givens.additions(stepProps);
+    step1.additions(stepProps);
+    step2.additions(stepProps);
+  },
+  additions: (props: StepFocusProps) => Reflexive.additions(props, "BD"),
+  text: (props: StepTextProps) => Reflexive.text(props, "BD"),
+  staticText: () => Reflexive.staticText("BD"),
+});
 
-export class S5 extends StepCls {
-  private meta: ASAProps = {
-    a1s: { angles: ["ADB", "BDC"], tick: Obj.RightTick },
-    a2s: { angles: ["ABD", "CBD"], tick: Obj.EqualAngleTick },
-    segs: ["BD", "BD"],
-    triangles: ["ABD", "CBD"],
-  };
-  override additions = (props: StepFocusProps) => {
-    ASA.additions(props, this.meta);
-  };
-  override text = (props: StepTextProps) => {
-    return ASA.text(props, this.meta);
-  };
-  override staticText = () => EqualTriangles.staticText(["ABD", "CBD"]);
-}
+const step5ASAProps: ASAProps = {
+  a1s: { angles: ["ADB", "BDC"], tick: Obj.RightTick },
+  a2s: { angles: ["ABD", "CBD"], tick: Obj.EqualAngleTick },
+  segs: ["BD", "BD"],
+  triangles: ["ABD", "CBD"],
+};
+const step5: StepMeta = makeStepMeta({
+  additions: (props: StepFocusProps) => {
+    ASA.additions(props, step5ASAProps);
+  },
+  text: (props: StepTextProps) => ASA.text(props, step5ASAProps),
+  staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
+});
 
-export class S6 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
-    new S5().additions({ ...props, mode: SVGModes.Unfocused });
-  };
-  override additions = (props: StepFocusProps) => {
-    EqualSegments.additions(props, ["AD", "DC"], 2);
-  };
-  override text = (props: StepTextProps) => {
-    return EqualSegments.text(props, ["AD", "DC"], 2);
-  };
-  override staticText = () => EqualSegments.staticText(["AD", "DC"]);
-}
+const step6: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    step5.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) =>
+    EqualSegments.additions(props, ["AD", "DC"], 2),
+  text: (props: StepTextProps) => EqualSegments.text(props, ["AD", "DC"], 2),
+  staticText: () => EqualSegments.staticText(["AD", "DC"]),
+});
 
-export class S7 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
-    new S5().additions({ ...props, mode: SVGModes.Unfocused });
-  };
-  override additions = (props: StepFocusProps) => {
-    new S6().additions(props);
-  };
-  override text = (props: StepTextProps) => {
-    return Midpoint.text(props, "AC", ["AD", "DC"], "D", 2);
-  };
-  override staticText = () => Midpoint.staticText("D", "AC");
-}
+const step7: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    step5.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => step6.additions(props),
+  text: (props: StepTextProps) =>
+    Midpoint.text(props, "AC", ["AD", "DC"], "D", 2),
+  staticText: () => Midpoint.staticText("D", "AC"),
+});
 
 export const miniContent = () => {
   let ctx = baseContent(false);
@@ -371,31 +356,37 @@ export const miniContent = () => {
   return ctx;
 };
 
-export const reliesOnText = () => {
-  let relies = new Map<string, string[]>();
-  const s1 = `(1) ${strs.angle}ABD ${strs.congruent} ${strs.angle}CBD`;
-  const s2 = `(2) ${strs.angle}ADB ${strs.congruent} ${strs.angle}BDC`;
-  const s3 = `(3) BD ${strs.congruent} BD`;
-  const s4 = `(4) ${strs.triangle}ABD ${strs.congruent} ${strs.triangle}CBD`;
-  const s5 = `(5) AD ${strs.congruent} DC`;
-  relies.set("s4", [s1, s2, s3]);
-  relies.set("s5", [s4]);
-  relies.set("s6", [s5]);
-  relies.set("s7", [s5]);
-  return relies;
-};
+// TODO remove
+// export const reliesOnText = () => {
+//   let relies = new Map<string, string[]>();
+//   const s1 = `(1) ${strs.angle}ABD ${strs.congruent} ${strs.angle}CBD`;
+//   const s2 = `(2) ${strs.angle}ADB ${strs.congruent} ${strs.angle}BDC`;
+//   const s3 = `(3) BD ${strs.congruent} BD`;
+//   const s4 = `(4) ${strs.triangle}ABD ${strs.congruent} ${strs.triangle}CBD`;
+//   const s5 = `(5) AD ${strs.congruent} DC`;
+//   relies.set("s4", [s1, s2, s3]);
+//   relies.set("s5", [s4]);
+//   relies.set("s6", [s5]);
+//   relies.set("s7", [s5]);
+//   return relies;
+// };
 
-export const P2 = {
+export const P2: LayoutProps = {
   baseContent,
-  reliesOnText: reliesOnText(),
   miniContent: miniContent(),
-  Givens,
-  Proves,
-  S1,
-  S2,
-  S3,
-  S4,
-  S5,
-  S6,
-  S7,
+  givens,
+  proves,
+  steps: [
+    { meta: step1, reason: Reasons.Given },
+    { meta: step2, reason: Reasons.PerpendicularLines, dependsOn: [1] },
+    { meta: step3, reason: Reasons.CongAdjAngles, dependsOn: [2] },
+    { meta: step4, reason: Reasons.Reflexive },
+    {
+      meta: step5,
+      reason: Reasons.ASA,
+      dependsOn: [1, 3, 4],
+    },
+    { meta: step6, reason: Reasons.CorrespondingSegments, dependsOn: [5] },
+    { meta: step7, reason: Reasons.Midpoint, dependsOn: [6] },
+  ],
 };

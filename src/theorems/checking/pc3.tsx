@@ -1,24 +1,26 @@
-import { Angle } from "../../../core/geometry/Angle";
-import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
-import { Point } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
-import { angleStr, comma, strs, triangleStr } from "../../../core/geometryText";
-import { Content } from "../../../core/objgraph";
-import { Obj, SVGModes, Vector } from "../../../core/types";
-import { EqualRightAngles } from "../../templates/EqualRightAngles";
-import { EqualSegments } from "../../templates/EqualSegments";
-import { EqualTriangles } from "../../templates/EqualTriangles";
-import { Reflexive } from "../../templates/Reflexive";
-import { RightAngle } from "../../templates/RightAngle";
-import { SAS, SASProps } from "../../templates/SAS";
+import { Angle } from "../../core/geometry/Angle";
+import { BaseGeometryObject } from "../../core/geometry/BaseGeometryObject";
+import { Point } from "../../core/geometry/Point";
+import { Triangle } from "../../core/geometry/Triangle";
+import { angleStr, comma, strs, triangleStr } from "../../core/geometryText";
+import { Content } from "../../core/objgraph";
+import { Obj, SVGModes, Vector } from "../../core/types";
+import { Reasons } from "../reasons";
+import { EqualRightAngles } from "../templates/EqualRightAngles";
+import { EqualSegments } from "../templates/EqualSegments";
+import { EqualTriangles } from "../templates/EqualTriangles";
+import { Reflexive } from "../templates/Reflexive";
+import { RightAngle } from "../templates/RightAngle";
+import { SAS, SASProps } from "../templates/SAS";
 import {
-  BaseStep,
-  StepCls,
+  LayoutProps,
   StepFocusProps,
+  StepMeta,
   StepTextProps,
   StepUnfocusProps,
   linked,
-} from "../../utils";
+  makeStepMeta,
+} from "../utils";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const pts: Vector[] = [
@@ -56,8 +58,8 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   return ctx;
 };
 
-export class Givens extends BaseStep {
-  override text = (props: StepTextProps) => {
+const givens: StepMeta = makeStepMeta({
+  text: (props: StepTextProps) => {
     const LK = props.ctx.getSegment("LK");
     const LM = props.ctx.getSegment("LM");
     const MN = props.ctx.getSegment("MN");
@@ -78,9 +80,9 @@ export class Givens extends BaseStep {
         {RightAngle.text(props, "KLM")}
       </span>
     );
-  };
+  },
 
-  override ticklessText = (ctx: Content) => {
+  ticklessText: (ctx: Content) => {
     const LK = ctx.getSegment("LK");
     const LM = ctx.getSegment("LM");
     const MN = ctx.getSegment("MN");
@@ -101,17 +103,16 @@ export class Givens extends BaseStep {
         {RightAngle.ticklessText(ctx, "KLM")}
       </span>
     );
-  };
+  },
 
-  override additions = (props: StepFocusProps) => {
+  additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("LMK").mode(props.frame, props.mode);
     props.ctx.getTriangle("KMN").mode(props.frame, props.mode);
-  };
-
-  override diagram = (ctx: Content, frame: string) => {
-    this.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
-  };
-  override staticText = () => {
+  },
+  diagram: (ctx: Content, frame: string) => {
+    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+  },
+  staticText: () => {
     return (
       <span>
         {"EFGH is a quadrilateral"}
@@ -121,30 +122,29 @@ export class Givens extends BaseStep {
         {RightAngle.staticText("KLM")}
       </span>
     );
-  };
-}
+  },
+});
 
-export class Proves extends BaseStep {
-  override additions = (props: StepFocusProps) => {
-    new Givens().additions(props);
-  };
-  override text = (props: StepTextProps) =>
-    EqualTriangles.text(props, ["LMK", "KMN"]);
-  override ticklessText = (ctx: Content) =>
-    EqualTriangles.ticklessText(ctx, ["LMK", "KMN"]);
-  override staticText = () => EqualTriangles.staticText(["LMK", "KMN"]);
-}
+const proves: StepMeta = makeStepMeta({
+  additions: (props: StepFocusProps) => {
+    givens.additions(props);
+  },
+  text: (props: StepTextProps) => EqualTriangles.text(props, ["LMK", "KMN"]),
+  ticklessText: (ctx: Content) =>
+    EqualTriangles.ticklessText(ctx, ["LMK", "KMN"]),
+  staticText: () => EqualTriangles.staticText(["LMK", "KMN"]),
+});
 
-export class S1 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
-    new Givens().additions({ ...props, mode: SVGModes.Unfocused });
-  };
-  override additions = (props: StepFocusProps) => {
+const step1: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    givens.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
     ["LK", "LM", "MN", "NK"].map((s) =>
       props.ctx.getSegment(s).mode(props.frame, props.mode)
     );
-  };
-  override text = (props: StepTextProps) => {
+  },
+  text: (props: StepTextProps) => {
     return (
       <span>
         {linked("KLMN", new BaseGeometryObject(Obj.Quadrilateral, {}), [
@@ -156,8 +156,8 @@ export class S1 extends StepCls {
         {" is a quadrilateral"}
       </span>
     );
-  };
-  override ticklessText = (ctx: Content) => {
+  },
+  ticklessText: (ctx: Content) => {
     return (
       <span>
         {linked("KLMN", new BaseGeometryObject(Obj.Quadrilateral, {}), [
@@ -169,47 +169,43 @@ export class S1 extends StepCls {
         {" is a quadrilateral"}
       </span>
     );
-  };
-  override staticText = () => <span>{"KLMN is a quadrilateral"}</span>;
-}
+  },
+  staticText: () => <span>{"KLMN is a quadrilateral"}</span>,
+});
 
-export class S2 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
-    const s1 = new S1();
-    s1.unfocused(props);
-    s1.additions({ ...props, mode: SVGModes.Unfocused });
-  };
-  override additions = (props: StepFocusProps) => {
+const step2: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    step1.unfocused(props);
+    step1.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["LM", "NK"]);
-  };
-  override text = (props: StepTextProps) =>
-    EqualSegments.text(props, ["LM", "NK"]);
-  override staticText = () => EqualSegments.staticText(["LM", "NK"]);
-}
+  },
+  text: (props: StepTextProps) => EqualSegments.text(props, ["LM", "NK"]),
+  staticText: () => EqualSegments.staticText(["LM", "NK"]),
+});
 
-export class S3 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
-    const s2 = new S2();
-    s2.additions({ ...props, mode: SVGModes.Unfocused });
-    s2.unfocused(props);
-  };
-  override additions = (props: StepFocusProps) => {
+const step3: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    step2.additions({ ...props, mode: SVGModes.Unfocused });
+    step2.unfocused(props);
+  },
+  additions: (props: StepFocusProps) => {
     RightAngle.additions(props, "KLM");
-  };
-  override text = (props: StepTextProps) => RightAngle.text(props, "KLM");
-  override staticText = () => RightAngle.staticText("KLM");
-}
+  },
+  text: (props: StepTextProps) => RightAngle.text(props, "KLM"),
+  staticText: () => RightAngle.staticText("KLM"),
+});
 
-export class S4 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
-    const s3 = new S3();
-    s3.unfocused(props);
-    s3.additions({ ...props, mode: SVGModes.Unfocused });
-  };
-  override additions = (props: StepFocusProps) => {
+const step4: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    step3.unfocused(props);
+    step3.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["KLM", "MNK"]);
-  };
-  override text = (props: StepTextProps) => {
+  },
+  text: (props: StepTextProps) => {
     const MNK = props.ctx.getAngle("MNK");
     return (
       <span>
@@ -220,8 +216,8 @@ export class S4 extends StepCls {
         ])}
       </span>
     );
-  };
-  override staticText = () => {
+  },
+  staticText: () => {
     return (
       <span>
         {angleStr("KLM")}
@@ -229,39 +225,37 @@ export class S4 extends StepCls {
         {angleStr("MNK")}
       </span>
     );
-  };
-}
+  },
+});
 
-export class S5 extends StepCls {
-  override unfocused = (props: StepUnfocusProps) => {
-    const s4 = new S4();
-    s4.unfocused(props);
-    s4.additions({ ...props, mode: SVGModes.Unfocused });
-  };
-  override additions = (props: StepFocusProps) => {
+const step5: StepMeta = makeStepMeta({
+  unfocused: (props: StepUnfocusProps) => {
+    step4.unfocused(props);
+    step4.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
     Reflexive.additions(props, "MK", 2);
-  };
-  override text = (props: StepTextProps) => Reflexive.text(props, "MK", 2);
-  override staticText = () => Reflexive.staticText("MK");
-}
+  },
+  text: (props: StepTextProps) => Reflexive.text(props, "MK", 2),
+  staticText: () => Reflexive.staticText("MK"),
+});
 
-export class S6 extends StepCls {
-  private sasProps: SASProps = {
-    seg1s: ["LM", "KN"],
-    seg2s: ["MK", "MK"],
-    angles: ["KLM", "MNK"],
-    triangles: ["KLM", "MNK"],
-    tickOverride: Obj.RightTick,
-  };
-  override additions = (props: StepFocusProps) => {
-    SAS.additions(props, this.sasProps);
-  };
-  override text = (props: StepTextProps) => {
-    return SAS.text(props, this.sasProps);
-  };
-  override staticText = () =>
-    EqualTriangles.staticText(this.sasProps.triangles);
-}
+const s6SASProps: SASProps = {
+  seg1s: ["LM", "KN"],
+  seg2s: ["MK", "MK"],
+  angles: ["KLM", "MNK"],
+  triangles: ["KLM", "MNK"],
+  tickOverride: Obj.RightTick,
+};
+const step6: StepMeta = makeStepMeta({
+  additions: (props: StepFocusProps) => {
+    SAS.additions(props, s6SASProps);
+  },
+  text: (props: StepTextProps) => {
+    return SAS.text(props, s6SASProps);
+  },
+  staticText: () => EqualTriangles.staticText(s6SASProps.triangles),
+});
 
 export const miniContent = () => {
   let ctx = baseContent(false);
@@ -304,27 +298,30 @@ export const miniContent = () => {
   return ctx;
 };
 
-export const reliesOnText = () => {
-  let relies = new Map<string, string[]>();
-  const s1 = `(1) KLMN is a quadrilateral`;
-  const s2 = `(2) LM ${strs.congruent} MK`;
-  const s4 = `(4) MK ${strs.congruent} MK`;
-  const s5 = `(5) ${strs.angle}KLM ${strs.right} = ${strs.angle}MNK`;
-  relies.set("s4", [s1]);
-  relies.set("s6", [s2, s4, s5]);
-  return relies;
-};
+// TODO part of long-form, deprecate
+// export const reliesOnText = () => {
+//   let relies = new Map<string, string[]>();
+//   const s1 = `(1) KLMN is a quadrilateral`;
+//   const s2 = `(2) LM ${strs.congruent} MK`;
+//   const s4 = `(4) MK ${strs.congruent} MK`;
+//   const s5 = `(5) ${strs.angle}KLM ${strs.right} = ${strs.angle}MNK`;
+//   relies.set("s4", [s1]);
+//   relies.set("s6", [s2, s4, s5]);
+//   return relies;
+// };
 
-export const PC3 = {
+export const PC3: LayoutProps = {
   baseContent,
-  reliesOnText: reliesOnText(),
+  // reliesOnText: reliesOnText(), // TODO remove
   miniContent: miniContent(),
-  Givens,
-  Proves,
-  S1,
-  S2,
-  S3,
-  S4,
-  S5,
-  S6,
+  steps: [
+    { meta: step1, reason: Reasons.Given },
+    { meta: step2, reason: Reasons.Given },
+    { meta: step3, reason: Reasons.Given },
+    { meta: step4, reason: Reasons.Rectangle, dependsOn: [1] },
+    { meta: step5, reason: Reasons.Reflexive },
+    { meta: step6, reason: Reasons.HL, dependsOn: [2, 4, 5] },
+  ],
+  givens,
+  proves,
 };

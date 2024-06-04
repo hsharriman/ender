@@ -6,7 +6,7 @@ import { Reason, SVGModes } from "../core/types";
 export const GIVEN_ID = "given";
 export const PROVE_ID = "prove";
 export interface Step {
-  cls: StepCls;
+  meta: StepMeta;
   reason: Reason;
   dependsOn?: number[];
 }
@@ -27,6 +27,24 @@ export interface StepTextProps {
   frame?: string;
 }
 
+export interface InPlaceLayoutProps {
+  baseContent: (showPoints: boolean, frame?: string) => Content;
+  steps: Step[];
+  givens: StepMeta;
+  proves: StepMeta;
+  miniContent: Content;
+}
+
+export interface StaticLayoutProps {
+  baseContent: (showPoints: boolean, frame?: string) => Content;
+  steps: Step[];
+  givens: StepMeta;
+  proves: StepMeta;
+}
+
+export type LayoutProps = InPlaceLayoutProps & StaticLayoutProps;
+
+// TODO move linked and reasonFn to different place, or move all this type info to a diff place
 export const linked = (
   val: string,
   obj: BaseGeometryObject,
@@ -38,22 +56,38 @@ export const getReasonFn =
     return reasonMap.get(activeFrame) || { title: "", body: "" };
   };
 
-export class StepCls {
-  unfocused = (props: StepUnfocusProps) => {};
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.unfocused({ ctx, frame, inPlace });
-    this.additions({ ctx, frame, mode: SVGModes.Focused, inPlace });
-  };
-  text(props: StepTextProps): JSX.Element {
-    return <></>;
-  }
-  ticklessText?(ctx: Content): JSX.Element {
-    return <></>;
-  }
-  staticText = () => <></>;
-  additions = (props: StepFocusProps) => {};
+export interface StepMeta {
+  unfocused: (props: StepUnfocusProps) => void;
+  diagram: (ctx: Content, frame: string, inPlace?: boolean) => void;
+  text: (props: StepTextProps) => JSX.Element;
+  ticklessText: (ctx: Content) => JSX.Element;
+  staticText: () => JSX.Element;
+  additions: (props: StepFocusProps) => void;
 }
 
-export class BaseStep extends StepCls {
-  ticklessText = (ctx: Content): JSX.Element => <></>;
-}
+export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
+  const defaultStaticText = () => <></>;
+  const defaultAdditions = (props: StepFocusProps) => {};
+  const defaultText = (props: StepTextProps) => <></>;
+  const defaultTicklessText = (ctx: Content) => <></>;
+  const defaultUnfocused = (props: StepUnfocusProps) => {};
+  const diagram = (ctx: Content, frame: string, inPlace = true) => {
+    const unfocusedProps = { ctx, frame, inPlace };
+    const additionProps = { ctx, frame, mode: SVGModes.Focused, inPlace };
+    meta.unfocused
+      ? meta.unfocused(unfocusedProps)
+      : defaultUnfocused(unfocusedProps);
+    meta.additions
+      ? meta.additions(additionProps)
+      : defaultAdditions(additionProps);
+  };
+
+  return {
+    unfocused: meta.unfocused || defaultUnfocused,
+    diagram,
+    text: meta.text || defaultText,
+    ticklessText: meta.ticklessText || defaultTicklessText,
+    staticText: meta.staticText || defaultStaticText,
+    additions: meta.additions || defaultAdditions,
+  };
+};

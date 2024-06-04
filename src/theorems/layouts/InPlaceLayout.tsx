@@ -1,36 +1,27 @@
-import { AppPage } from "../../components/AppPage";
-import { Content } from "../../core/objgraph";
+import { AppPage } from "../../components/InteractiveAppPage";
 import { ProofTextItem, Reason } from "../../core/types";
-import { BaseStep, GIVEN_ID, PROVE_ID, Step, getReasonFn } from "../utils";
+import { GIVEN_ID, InPlaceLayoutProps, PROVE_ID, getReasonFn } from "../utils";
 
-export interface InPlaceFormatterProps {
-  baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: Step[];
-  givenCls: BaseStep;
-  proveCls: BaseStep;
-  miniContent: Content;
-}
-
-export const InPlaceFormatter = (props: InPlaceFormatterProps) => {
+export const InPlaceLayout = (props: InPlaceLayoutProps) => {
   let ctx = props.baseContent(true);
 
   // GIVEN
   ctx.addFrame(GIVEN_ID);
-  props.givenCls.diagram(ctx, GIVEN_ID, false);
+  props.givens.diagram(ctx, GIVEN_ID, false);
 
   // PROVE
   ctx.addFrame(PROVE_ID);
-  props.proveCls.diagram(ctx, PROVE_ID, true);
+  props.proves.diagram(ctx, PROVE_ID, true);
 
   const linkedTexts: ProofTextItem[] = [];
   linkedTexts.push({
     k: GIVEN_ID,
-    v: props.givenCls.ticklessText(ctx),
+    v: props.givens.ticklessText(ctx),
     alwaysActive: true,
   });
   linkedTexts.push({
     k: PROVE_ID,
-    v: props.proveCls.text({ ctx }),
+    v: props.proves.text({ ctx }),
     alwaysActive: true,
   });
 
@@ -38,7 +29,7 @@ export const InPlaceFormatter = (props: InPlaceFormatterProps) => {
   props.steps.map((step, i) => {
     let textMeta = {};
     const s = ctx.addFrame(`s${i + 1}`);
-    step.cls.diagram(ctx, s, true);
+    step.meta.diagram(ctx, s, true);
     if (step.dependsOn) {
       const depIds = step.dependsOn.map((i) => `s${i}`);
       ctx.reliesOn(s, depIds);
@@ -48,7 +39,7 @@ export const InPlaceFormatter = (props: InPlaceFormatterProps) => {
     linkedTexts.push({
       ...textMeta,
       k: s,
-      v: step.cls.text({ ctx }),
+      v: step.meta.text({ ctx }),
       reason: step.reason.title,
     });
   });

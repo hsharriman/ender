@@ -1,18 +1,18 @@
 import { Content } from "../../core/objgraph";
 import { ProofTextItem, Reason } from "../../core/types";
-import { BaseStep, GIVEN_ID, PROVE_ID, Step, getReasonFn } from "../utils";
+import { GIVEN_ID, PROVE_ID, Step, StepMeta, getReasonFn } from "../utils";
 import { LongPage } from "../../components/LongPage";
 
 export interface LongFormFormatterProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
   steps: Step[];
-  givenCls: BaseStep;
-  proveCls: BaseStep;
+  givenCls: StepMeta;
+  proveCls: StepMeta;
   miniContent: Content;
   reliesOn: Map<string, string[]>;
 }
 
-export const LongFormFormatter = (props: LongFormFormatterProps) => {
+export const LongFormLayout = (props: LongFormFormatterProps) => {
   const linkedTexts: ProofTextItem[] = [];
   // build given and prove info
   const givenCtx = props.baseContent(true, GIVEN_ID);
@@ -36,11 +36,11 @@ export const LongFormFormatter = (props: LongFormFormatterProps) => {
   props.steps.map((step, i) => {
     const frame = `s${i + 1}`;
     const diagram = props.baseContent(true, frame);
-    step.cls.diagram(diagram, frame, false);
+    step.meta.diagram(diagram, frame, false);
 
     linkedTexts.push({
       k: frame,
-      v: step.cls.text({ ctx: diagram, frame }),
+      v: step.meta.text({ ctx: diagram, frame }),
       reason: step.reason.title,
     });
 
