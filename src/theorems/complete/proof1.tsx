@@ -138,7 +138,6 @@ const proves: StepMeta = makeStepMeta({
   },
   text: (props: StepTextProps) => ParallelLines.text(props, ["AC", "BD"]),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
-  ticklessText: (ctx: Content) => ParallelLines.ticklessText(ctx, ["AC", "BD"]),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -319,22 +318,6 @@ const miniContent = () => {
 
   return ctx;
 };
-
-// TODO remove
-// const reliesOnText = () => {
-//   let relies = new Map<string, string[]>();
-//   const r1 = `(1) AM ${strs.congruent} BM`;
-//   const r2 = `(1) CM ${strs.congruent} DM`;
-//   const r3 = `(2) AB and CD intersect at M`;
-//   const r4 = `(2) ${strs.angle}CMA ${strs.congruent} ${strs.angle}DMB`;
-//   const r5 = `(3) ${strs.triangle}ACM ${strs.congruent} ${strs.triangle}BDM`;
-//   const r6 = `(4) ${strs.angle}CAM ${strs.congruent} ${strs.angle}DBM`;
-//   relies.set("s3", [r3]);
-//   relies.set("s4", [r1, r2, r4]);
-//   relies.set("s5", [r5]);
-//   relies.set("s6", [r6]);
-//   return relies;
-// };
 
 export const P1: LayoutProps = {
   questions: completeProof1,

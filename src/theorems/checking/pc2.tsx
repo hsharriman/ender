@@ -101,9 +101,6 @@ const proves: StepMeta = makeStepMeta({
   text: (props: StepTextProps) => {
     return EqualTriangles.text(props, ["JMK", "LMK"]);
   },
-  ticklessText: (ctx: Content) => {
-    return EqualTriangles.ticklessText(ctx, ["JMK", "LMK"]);
-  },
   staticText: () => EqualTriangles.staticText(["JMK", "LMK"]),
 });
 
@@ -220,19 +217,6 @@ export const miniContent = () => {
   return ctx;
 };
 
-// TODO remove
-// export const reliesOnText = () => {
-//   // TODO check this
-//   let relies = new Map<string, string[]>();
-//   const s1 = `(1) ${strs.angle}JMK${strs.right}`;
-//   const s2 = `(2) JK ${strs.congruent} LK`;
-//   const s3 = `(3) ${strs.angle}JMK ${strs.congruent} ${strs.angle}LMK`;
-//   const s4 = `(4) MK ${strs.congruent} MK`;
-//   relies.set("s3", [s1]);
-//   relies.set("s5", [s2, s3, s4]);
-//   return relies;
-// };
-
 export const PC2: LayoutProps = {
   questions: checkingProof2,
   baseContent,
@@ -243,7 +227,6 @@ export const PC2: LayoutProps = {
     { meta: step4, reason: Reasons.Reflexive },
     { meta: step5, reason: Reasons.SAS, dependsOn: [2, 3, 4] },
   ],
-  // reliesOnText: reliesOnText(),
   miniContent: miniContent(),
   givens,
   proves,

@@ -121,9 +121,6 @@ const proves: StepMeta = makeStepMeta({
   text: (props: StepTextProps) => {
     return Midpoint.text(props, "AC", ["AD", "CD"], "D");
   },
-  ticklessText: (ctx: Content) => {
-    return Midpoint.ticklessText(ctx, "AC", ["AD", "CD"], "D");
-  },
   staticText: () => Midpoint.staticText("D", "AC"),
 });
 
@@ -354,21 +351,6 @@ export const miniContent = () => {
 
   return ctx;
 };
-
-// TODO remove
-// export const reliesOnText = () => {
-//   let relies = new Map<string, string[]>();
-//   const s1 = `(1) ${strs.angle}ABD ${strs.congruent} ${strs.angle}CBD`;
-//   const s2 = `(2) ${strs.angle}ADB ${strs.congruent} ${strs.angle}BDC`;
-//   const s3 = `(3) BD ${strs.congruent} BD`;
-//   const s4 = `(4) ${strs.triangle}ABD ${strs.congruent} ${strs.triangle}CBD`;
-//   const s5 = `(5) AD ${strs.congruent} DC`;
-//   relies.set("s4", [s1, s2, s3]);
-//   relies.set("s5", [s4]);
-//   relies.set("s6", [s5]);
-//   relies.set("s7", [s5]);
-//   return relies;
-// };
 
 export const P2: LayoutProps = {
   questions: completeProof2,

@@ -158,14 +158,6 @@ const proves: StepMeta = makeStepMeta({
       </span>
     );
   },
-  ticklessText: (ctx: Content) => {
-    return (
-      <span>
-        {linked("FGJ", ctx.getTriangle("FGJ"))}
-        {" is isosceles"}
-      </span>
-    );
-  },
   staticText: () => {
     return (
       <span>
@@ -201,7 +193,6 @@ const step1: StepMeta = makeStepMeta({
       </span>
     );
   },
-  ticklessText: (ctx: Content) => givens.ticklessText(ctx),
   staticText: () => givens.staticText(),
 });
 
@@ -392,23 +383,6 @@ export const miniContent = () => {
   );
   return ctx;
 };
-
-// TODO remove
-// export const reliesOnText = () => {
-//   let relies = new Map<string, string[]>();
-//   const s1 = `(1) EFGH is a rectangle`;
-//   const s2 = `(2) EJ ${strs.congruent} JH`;
-//   const s3 = `(3) ${strs.angle}FEJ ${strs.congruent} ${strs.angle}JHG`;
-//   const s4 = `(4) FE ${strs.congruent} GH`;
-//   const s5 = `(5) ${strs.triangle}FEJ ${strs.congruent} ${strs.triangle}JHG`;
-//   const s6 = `(6) FJ ${strs.congruent} GJ`;
-//   relies.set("s3", [s1]);
-//   relies.set("s4", [s1]);
-//   relies.set("s5", [s2, s3, s4]);
-//   relies.set("s6", [s5]);
-//   relies.set("s7", [s6]);
-//   return relies;
-// };
 
 export const P3: LayoutProps = {
   questions: completeProof3,
