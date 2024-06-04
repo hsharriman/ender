@@ -3,12 +3,14 @@ import { Content } from "../../core/objgraph";
 import { Reason, StaticProofTextItem } from "../../core/types";
 import { Reasons } from "../reasons";
 import { Step, BaseStep, GIVEN_ID } from "../utils";
+import { Question } from "../../questions/completeQuestions";
 
 export interface StaticFormatterProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
   steps: Step[];
   givenCls: BaseStep;
   proveCls: BaseStep;
+  questions: Question[];
 }
 
 export const StaticFormatter = (props: StaticFormatterProps) => {
@@ -35,6 +37,7 @@ export const StaticFormatter = (props: StaticFormatterProps) => {
       diagram={ctx.allSvgElements()(GIVEN_ID)}
       givenText={props.givenCls.staticText()}
       proveText={props.proveCls.staticText()}
+      questions={props.questions}
     />
   );
 };

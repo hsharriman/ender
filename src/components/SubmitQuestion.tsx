@@ -1,8 +1,9 @@
 import React from "react";
 
 interface SubmitQuestionProps {
-  answerType: string;
-  inputAnswer: string[];
+  // answerType: string;
+  // inputAnswer: string[];
+  onClick: () => void;
 }
 
 export class SubmitQuestion extends React.Component<SubmitQuestionProps> {
@@ -10,17 +11,25 @@ export class SubmitQuestion extends React.Component<SubmitQuestionProps> {
     super(props);
   }
 
-  handleClick = () => {
-    const type = this.props.answerType;
-    const answer = this.props.inputAnswer;
-    console.log(`${type}: ${answer}`);
+  componentDidMount() {
+    document.addEventListener("keydown", this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.handleKeyDown);
+  }
+
+  handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Enter") {
+      this.props.onClick();
+    }
   };
 
   render() {
     return (
       <div className="font-bold text-base mt-4 mb-4 text-slate-50">
         <button
-          onClick={this.handleClick}
+          onClick={this.props.onClick}
           className="bg-[#9459d4] hover:bg-[#7644ad] focus:bg-[#623691] py-1.5 px-2 rounded-md"
         >
           Submit

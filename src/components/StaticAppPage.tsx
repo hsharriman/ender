@@ -1,7 +1,8 @@
 import React from "react";
 import { Reason, StaticProofTextItem } from "../core/types";
 import { StaticDiagram } from "./StaticDiagram";
-import { RadioQuestion } from "./RadioQuestion";
+import { Question } from "../questions/completeQuestions";
+import { TestQuestions } from "./TestQuestions";
 
 export interface StaticAppPageProps {
   reasons: Reason[];
@@ -9,8 +10,14 @@ export interface StaticAppPageProps {
   diagram: JSX.Element[];
   givenText: JSX.Element;
   proveText: JSX.Element;
+  questions: Question[];
 }
+
 export class StaticAppPage extends React.Component<StaticAppPageProps> {
+  constructor(props: StaticAppPageProps) {
+    super(props);
+  }
+
   renderRow = (item: StaticProofTextItem, i: number) => {
     const textColor = "text-slate-800";
     const strokeColor = "border-slate-800";
@@ -86,10 +93,7 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
             {this.props.reasons.map((reason) => this.renderReason(reason))}
           </div>
           <div className="mt-10">
-            <RadioQuestion 
-                questionNum="Question 1" 
-                question="Do you agree that segment AC = BD?" 
-                answers={["Yes", "No", "Can't Tell"]}/>
+            <TestQuestions questions={this.props.questions} />
           </div>
         </div>
       </div>

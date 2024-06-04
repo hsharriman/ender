@@ -5,10 +5,11 @@ interface QuestionProps {
   questionNum: string;
   question: string;
   answers: string[];
+  onSubmit: (answer: string) => void;
 }
 
 interface QuestionState {
-  selectedOption: string[];
+  selectedOption: string;
 }
 
 export class RadioQuestion extends React.Component<
@@ -18,15 +19,26 @@ export class RadioQuestion extends React.Component<
   constructor(props: QuestionProps) {
     super(props);
     this.state = {
-      selectedOption: [],
+      selectedOption: "",
     };
-    this.handleRadioChange = this.handleRadioChange.bind(this);
   }
 
   handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     this.setState({
-      selectedOption: [value],
+      selectedOption: value,
+    });
+  };
+
+  handleSubmit = () => {
+    const { selectedOption } = this.state;
+    if (selectedOption.length === 0) {
+      alert("Please select an answer.");
+      return;
+    }
+    this.props.onSubmit(this.state.selectedOption);
+    this.setState({
+      selectedOption: "",
     });
   };
 
@@ -38,7 +50,7 @@ export class RadioQuestion extends React.Component<
       <div className="">
         <div className="flex flex-col justify-start pb-1">
           <div className="font-bold text-base text-slate-500">
-            {questionNum}:
+            Question {questionNum}:
           </div>
         </div>
         <div className="font-bold text-base pb-1">{question}</div>
@@ -58,10 +70,7 @@ export class RadioQuestion extends React.Component<
             );
           })}
         </div>
-        <SubmitQuestion
-          answerType="Single Select"
-          inputAnswer={this.state.selectedOption}
-        />
+        <SubmitQuestion onClick={this.handleSubmit} />
       </div>
     );
   }
