@@ -215,13 +215,12 @@ export const completeProof3: Question[] = [
     type: QuestionType.Single,
   },
   {
-    prompt:
-      "Which statements are necessary to prove that FJG is isosceles? Select all that apply.",
+    prompt: `Which statements are necessary to prove that ${strs.triangle}FJG is isosceles? Select all that apply.`,
     answers: ["Statement 1", "Statement 2", "Statement 3", "Statement 4"],
     type: QuestionType.Mutli,
   },
   {
-    prompt: `If EFGH is a rectangle and EJ = JH, then ${strs.triangle}FJG is isoscelesC. Does this proof demonstrate that this statement is always correct?`,
+    prompt: `If EFGH is a rectangle and EJ = JH, then ${strs.triangle}FJG is isosceles. Does this proof demonstrate that this statement is always correct?`,
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },

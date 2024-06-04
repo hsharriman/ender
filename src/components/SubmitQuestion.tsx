@@ -11,12 +11,6 @@ export class SubmitQuestion extends React.Component<SubmitQuestionProps> {
     super(props);
   }
 
-  // handleClick = () => {
-  //   const type = this.props.answerType;
-  //   const answer = this.props.inputAnswer;
-  //   console.log(`${type}: ${answer}`);
-  // };
-
   componentDidMount() {
     document.addEventListener("keydown", this.handleKeyDown);
   }
