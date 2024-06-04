@@ -156,19 +156,6 @@ const step1: StepMeta = makeStepMeta({
       </span>
     );
   },
-  ticklessText: (ctx: Content) => {
-    return (
-      <span>
-        {linked("KLMN", new BaseGeometryObject(Obj.Quadrilateral, {}), [
-          ctx.getSegment("LK"),
-          ctx.getSegment("LM"),
-          ctx.getSegment("MN"),
-          ctx.getSegment("NK"),
-        ])}
-        {" is a quadrilateral"}
-      </span>
-    );
-  },
   staticText: () => <span>{"KLMN is a quadrilateral"}</span>,
 });
 
@@ -297,22 +284,9 @@ export const miniContent = () => {
   return ctx;
 };
 
-// TODO part of long-form, deprecate
-// export const reliesOnText = () => {
-//   let relies = new Map<string, string[]>();
-//   const s1 = `(1) KLMN is a quadrilateral`;
-//   const s2 = `(2) LM ${strs.congruent} MK`;
-//   const s4 = `(4) MK ${strs.congruent} MK`;
-//   const s5 = `(5) ${strs.angle}KLM ${strs.right} = ${strs.angle}MNK`;
-//   relies.set("s4", [s1]);
-//   relies.set("s6", [s2, s4, s5]);
-//   return relies;
-// };
-
 export const PC3: LayoutProps = {
   questions: checkingProof3,
   baseContent,
-  // reliesOnText: reliesOnText(), // TODO remove
   miniContent: miniContent(),
   steps: [
     { meta: step1, reason: Reasons.Given },
