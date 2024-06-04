@@ -37,11 +37,11 @@ export const angleStr = (a: string) => (
 );
 
 export const strs = {
-  angle: "\u29A3",
+  angle: "\u2220",
   congruent: "\u2245",
   parallel: "\u2225",
   comma: ",\t",
-  triangle: "\u0394",
+  triangle: "\u25B3",
   right: " = 90°",
   perpendicular: "\u22A5",
 };

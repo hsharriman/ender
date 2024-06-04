@@ -17,6 +17,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
+import { checkingProof3 } from "../../questions/checkingQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 
@@ -309,6 +310,7 @@ export const miniContent = () => {
 // };
 
 export const PC3: LayoutProps = {
+  questions: checkingProof3,
   baseContent,
   // reliesOnText: reliesOnText(), // TODO remove
   miniContent: miniContent(),

@@ -1,6 +1,6 @@
 import React from "react";
-import { StaticLayout } from "./components/layouts/StaticLayout";
 import { InPlaceLayout } from "./components/layouts/InPlaceLayout";
+import { StaticLayout } from "./components/layouts/StaticLayout";
 import { PC1 } from "./theorems/checking/pc1";
 import { PC2 } from "./theorems/checking/pc2";
 import { PC3 } from "./theorems/checking/pc3";

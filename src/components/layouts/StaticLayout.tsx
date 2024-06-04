@@ -1,19 +1,21 @@
-import { StaticAppPage } from "../StaticAppPage";
-import { Reason } from "../../core/types/types";
-import { Reasons } from "../../theorems/reasons";
-import { GIVEN_ID } from "../../theorems/utils";
 import { Content } from "../../core/diagramContent";
 import {
+  StaticProofTextItem,
   Step,
   StepMeta,
-  StaticProofTextItem,
 } from "../../core/types/stepTypes";
+import { Reason } from "../../core/types/types";
+import { Question } from "../../questions/completeQuestions";
+import { Reasons } from "../../theorems/reasons";
+import { GIVEN_ID } from "../../theorems/utils";
+import { StaticAppPage } from "../StaticAppPage";
 
 export interface StaticLayoutProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
   steps: Step[];
   givens: StepMeta;
   proves: StepMeta;
+  questions: Question[];
 }
 
 export const StaticLayout = (props: StaticLayoutProps) => {
@@ -40,6 +42,7 @@ export const StaticLayout = (props: StaticLayoutProps) => {
       diagram={ctx.allSvgElements()(GIVEN_ID)}
       givenText={props.givens.staticText()}
       proveText={props.givens.staticText()}
+      questions={props.questions}
     />
   );
 };

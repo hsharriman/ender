@@ -15,6 +15,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
+import { checkingProof2 } from "../../questions/checkingQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -233,6 +234,7 @@ export const miniContent = () => {
 // };
 
 export const PC2: LayoutProps = {
+  questions: checkingProof2,
   baseContent,
   steps: [
     { meta: step1, reason: Reasons.Given },

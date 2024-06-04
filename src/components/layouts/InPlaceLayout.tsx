@@ -1,8 +1,9 @@
-import { AppPage } from "../InteractiveAppPage";
-import { Reason } from "../../core/types/types";
-import { GIVEN_ID, PROVE_ID, getReasonFn } from "../../theorems/utils";
 import { Content } from "../../core/diagramContent";
-import { Step, StepMeta, ProofTextItem } from "../../core/types/stepTypes";
+import { ProofTextItem, Step, StepMeta } from "../../core/types/stepTypes";
+import { Reason } from "../../core/types/types";
+import { Question } from "../../questions/completeQuestions";
+import { GIVEN_ID, PROVE_ID, getReasonFn } from "../../theorems/utils";
+import { AppPage } from "../InteractiveAppPage";
 
 export interface InPlaceLayoutProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
@@ -10,6 +11,7 @@ export interface InPlaceLayoutProps {
   givens: StepMeta;
   proves: StepMeta;
   miniContent: Content;
+  questions: Question[];
 }
 
 export const InPlaceLayout = (props: InPlaceLayoutProps) => {
@@ -64,6 +66,7 @@ export const InPlaceLayout = (props: InPlaceLayoutProps) => {
       onClickCanvas={function (): void {
         throw new Error("Function not implemented.");
       }}
+      questions={props.questions}
     />
   );
 };
