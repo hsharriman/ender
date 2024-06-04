@@ -20,13 +20,12 @@ export class TextQuestion extends React.Component<
     this.state = {
       inputText: "",
     };
-    this.handleInputChange = this.handleInputChange.bind(this);
   }
 
-  handleInputChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+  handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = event.target.value;
     this.setState({ inputText: value });
-  }
+  };
 
   handleSubmit = () => {
     const { inputText } = this.state;

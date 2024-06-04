@@ -28,7 +28,6 @@ export class RadioQuestion extends React.Component<
     this.setState({
       selectedOption: value,
     });
-    this.handleRadioChange = this.handleRadioChange.bind(this);
   };
 
   handleSubmit = () => {

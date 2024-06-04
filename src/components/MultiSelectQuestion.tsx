@@ -22,10 +22,9 @@ export class MultiSelectQuestion extends React.Component<
     this.state = {
       selectedOptions: [],
     };
-    this.handleOptionChange = this.handleOptionChange.bind(this);
   }
 
-  handleOptionChange(event: React.ChangeEvent<HTMLInputElement>) {
+  handleOptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { selectedOptions } = this.state;
     const value = event.target.value;
 
@@ -41,7 +40,7 @@ export class MultiSelectQuestion extends React.Component<
     }
 
     this.setState({ selectedOptions: newSelectedOptions });
-  }
+  };
 
   handleSubmit = () => {
     const { selectedOptions } = this.state;
