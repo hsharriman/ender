@@ -1,4 +1,4 @@
-import { Obj, LAngle, SVGModes, TickType } from "../types";
+import { Obj, LAngle, SVGModes, TickType } from "../types/types";
 import { LinkedText } from "../../components/LinkedText";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";

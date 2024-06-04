@@ -1,6 +1,7 @@
-import { congruent, triangleStr } from "../../core/geometryText";
-import { Content } from "../../core/objgraph";
-import { StepTextProps, linked } from "../utils";
+import { linked } from "../../theorems/utils";
+import { Content } from "../diagramContent";
+import { congruent, triangleStr } from "../geometryText";
+import { StepTextProps } from "../types/stepTypes";
 
 export class EqualTriangles {
   static text = (props: StepTextProps, [t1, t2]: [string, string]) => {

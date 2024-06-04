@@ -1,6 +1,5 @@
 import React from "react";
-import { ProofTextItem } from "../core/types";
-import { ReliesOn, ReliesOnProps } from "./ReliesOn";
+import { ProofTextItem } from "../core/types/stepTypes";
 
 export interface ProofRowsProps {
   active: string;

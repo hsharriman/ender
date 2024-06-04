@@ -1,4 +1,4 @@
-import { Obj } from "./core/types";
+import { Obj } from "./types/types";
 
 export const getId = (objectType: Obj, label: string, tickNumber?: number) => {
   if (objectType === Obj.Angle || objectType === Obj.EqualAngleTick) {

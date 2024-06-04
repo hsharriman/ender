@@ -1,5 +1,5 @@
-import { SVGModes } from "../../core/types";
-import { StepFocusProps } from "../utils";
+import { StepFocusProps } from "../types/stepTypes";
+import { SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualSegments } from "./EqualSegments";
 

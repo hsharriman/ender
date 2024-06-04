@@ -1,28 +1,26 @@
+import { Content } from "../../core/diagramContent";
 import { Angle } from "../../core/geometry/Angle";
 import { BaseGeometryObject } from "../../core/geometry/BaseGeometryObject";
 import { Point } from "../../core/geometry/Point";
 import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
-import { angleStr, comma, strs, triangleStr } from "../../core/geometryText";
-import { Content } from "../../core/objgraph";
-import { Obj, SVGModes, Vector } from "../../core/types";
-import { EqualAngles } from "../templates/EqualAngles";
-import { EqualRightAngles } from "../templates/EqualRightAngles";
-import { EqualSegments } from "../templates/EqualSegments";
-import { EqualTriangles } from "../templates/EqualTriangles";
-import { Midpoint } from "../templates/Midpoint";
-import { RightAngle } from "../templates/RightAngle";
-import { SAS, SASProps } from "../templates/SAS";
+import { angleStr, comma, triangleStr } from "../../core/geometryText";
+import { EqualAngles } from "../../core/templates/EqualAngles";
+import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
+import { EqualSegments } from "../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../core/templates/EqualTriangles";
+import { Midpoint } from "../../core/templates/Midpoint";
+import { RightAngle } from "../../core/templates/RightAngle";
+import { SAS, SASProps } from "../../core/templates/SAS";
 import {
-  LayoutProps,
   StepFocusProps,
   StepMeta,
   StepTextProps,
   StepUnfocusProps,
-  linked,
-  makeStepMeta,
-} from "../utils";
+} from "../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
+import { linked, makeStepMeta } from "../utils";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [

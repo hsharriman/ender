@@ -1,6 +1,5 @@
-import { Content } from "../../core/objgraph";
-import { Obj, SVGModes } from "../../core/types";
-import { StepFocusProps, StepTextProps } from "../utils";
+import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 
 export interface VerticalAnglesProps {

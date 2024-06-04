@@ -1,12 +1,11 @@
 import React from "react";
 import { ProofRows } from "./ProofRows";
-import { ProofTextItem, Reason } from "../core/types";
+import { Reason } from "../core/types/types";
 import { Diagram } from "./Diagram";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
-import { RadioQuestion } from "./RadioQuestion";
-import { MultiSelectQuestion } from "./MultiSelectQuestion";
 import { TextQuestion } from "./TextQuestion";
+import { ProofTextItem } from "../core/types/stepTypes";
 
 export interface AppPageProps {
   proofText: ProofTextItem[];

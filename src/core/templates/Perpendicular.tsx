@@ -1,34 +1,36 @@
-import { segmentStr } from "../../core/geometryText";
-import { Content } from "../../core/objgraph";
-import { Obj, SVGModes } from "../../core/types";
-import { StepFocusProps, StepTextProps, linked } from "../utils";
-import { EqualSegments } from "./EqualSegments";
+import { linked } from "../../theorems/utils";
+import { Content } from "../diagramContent";
+import { perpendicular, segmentStr } from "../geometryText";
+import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { Obj, SVGModes } from "../types/types";
 
-export class Midpoint {
+export class Perpendicular {
   static additions = (
     props: StepFocusProps,
-    pt: string,
+    perp: string,
     segs: [string, string],
     num?: number,
     s2Mode?: SVGModes,
     ptMode?: SVGModes
   ) => {
-    props.ctx.getPoint(pt).mode(props.frame, ptMode || props.mode);
-    EqualSegments.additions(props, segs, num, s2Mode || props.mode);
+    props.ctx.getSegment(perp).mode(props.frame, ptMode || props.mode);
+    props.ctx.getSegment(segs[0]).mode(props.frame, ptMode || props.mode);
+    props.ctx.getSegment(segs[1]).mode(props.frame, ptMode || props.mode);
   };
   static text = (
     props: StepTextProps,
     label: string,
     segs: [string, string],
-    pt: string,
+    perp: string,
     num?: number
   ) => {
+    const perp1 = props.ctx.getSegment(perp);
     const s1 = props.ctx.getSegment(segs[0]);
     const s2 = props.ctx.getSegment(segs[1]);
     return (
       <span>
-        {linked(pt, props.ctx.getPoint(pt))}
-        {" is the midpoint of "}
+        {linked(perp, perp1)}
+        {perpendicular}
         {linked(label, s1, [
           s2,
           props.ctx.getTick(s1, Obj.EqualLengthTick, {
@@ -47,22 +49,22 @@ export class Midpoint {
     ctx: Content,
     label: string,
     segs: [string, string],
-    pt: string
+    perp: string
   ) => {
     return (
       <span>
-        {linked(pt, ctx.getPoint(pt))}
-        {" is the midpoint of "}
+        {linked(perp, ctx.getSegment(perp))}
+        {perpendicular}
         {linked(label, ctx.getSegment(segs[0]), [ctx.getSegment(segs[1])])}
       </span>
     );
   };
-  static staticText = (p: string, s: string) => {
+  static staticText = (s1: string, s2: string) => {
     return (
       <span>
-        {p}
-        {" is the midpoint of "}
-        {segmentStr(s)}
+        {segmentStr(s1)}
+        {perpendicular}
+        {segmentStr(s2)}
       </span>
     );
   };

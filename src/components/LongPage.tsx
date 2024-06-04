@@ -1,9 +1,9 @@
-import React, { createRef, useEffect, useRef } from "react";
-import { ProofTextItem, Reason } from "../core/types";
+import React from "react";
+import { ProofTextItem } from "../core/types/stepTypes";
+import { Reason } from "../core/types/types";
+import { LongProofRow } from "./LongProofRow";
 import { ReasonText } from "./ReasonText";
 import { StaticDiagram } from "./StaticDiagram";
-import { LongFormReliesOn } from "./LongFormReliesOn";
-import { LongProofRow } from "./LongProofRow";
 
 export interface LongPageProps {
   proofText: ProofTextItem[];

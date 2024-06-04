@@ -1,4 +1,3 @@
-import { getId } from "../utils";
 import { Angle } from "./geometry/Angle";
 import { Point } from "./geometry/Point";
 import { Quadrilateral } from "./geometry/Quadrilateral";
@@ -6,7 +5,8 @@ import { Segment } from "./geometry/Segment";
 import { Tick } from "./geometry/Tick";
 import { Triangle } from "./geometry/Triangle";
 import { BaseSVG } from "./svg/BaseSVG";
-import { LAngle, LSegment, Obj, TickType } from "./types";
+import { Obj, TickType } from "./types/types";
+import { getId } from "./utils";
 
 export type SupportedObjects =
   | Obj.Point

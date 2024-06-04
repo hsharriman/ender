@@ -1,7 +1,20 @@
-import { StaticAppPage } from "../../components/StaticAppPage";
-import { Reason, StaticProofTextItem } from "../../core/types";
-import { Reasons } from "../reasons";
-import { GIVEN_ID, StaticLayoutProps } from "../utils";
+import { StaticAppPage } from "../StaticAppPage";
+import { Reason } from "../../core/types/types";
+import { Reasons } from "../../theorems/reasons";
+import { GIVEN_ID } from "../../theorems/utils";
+import { Content } from "../../core/diagramContent";
+import {
+  Step,
+  StepMeta,
+  StaticProofTextItem,
+} from "../../core/types/stepTypes";
+
+export interface StaticLayoutProps {
+  baseContent: (showPoints: boolean, frame?: string) => Content;
+  steps: Step[];
+  givens: StepMeta;
+  proves: StepMeta;
+}
 
 export const StaticLayout = (props: StaticLayoutProps) => {
   // build diagram from given construction

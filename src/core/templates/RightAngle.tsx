@@ -1,7 +1,8 @@
-import { angleStr, congruent } from "../../core/geometryText";
-import { Content } from "../../core/objgraph";
-import { SVGModes, Obj } from "../../core/types";
-import { StepFocusProps, StepTextProps, linked } from "../utils";
+import { linked } from "../../theorems/utils";
+import { Content } from "../diagramContent";
+import { angleStr } from "../geometryText";
+import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { Obj } from "../types/types";
 
 export class RightAngle {
   private static rightText = " = 90°";

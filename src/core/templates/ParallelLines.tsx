@@ -1,7 +1,8 @@
-import { parallel, segmentStr } from "../../core/geometryText";
-import { Content } from "../../core/objgraph";
-import { Obj, SVGModes } from "../../core/types";
-import { StepFocusProps, StepTextProps, linked } from "../utils";
+import { linked } from "../../theorems/utils";
+import { Content } from "../diagramContent";
+import { parallel, segmentStr } from "../geometryText";
+import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { Obj, SVGModes } from "../types/types";
 
 export class ParallelLines {
   static additions = (

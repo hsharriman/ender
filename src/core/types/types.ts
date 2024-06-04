@@ -1,3 +1,7 @@
+import { InPlaceLayoutProps } from "../../components/layouts/InPlaceLayout";
+import { StaticLayoutProps } from "../../components/layouts/StaticLayout";
+
+// -------- GEOMETRY TYPES --------
 export type Vector = [number, number];
 export type LPoint = { pt: Vector; label: string };
 export type LSegment = { p1: Vector; p2: Vector; label: string };
@@ -24,12 +28,6 @@ export enum Obj {
   Quadrilateral = "rectangle",
 }
 
-export enum LinkedSymbolType {
-  Segment = "segment",
-  Triangle = "triangle",
-  Angle = "angle",
-}
-
 export type TickType =
   | Obj.ParallelTick
   | Obj.EqualLengthTick
@@ -47,18 +45,8 @@ export enum SVGModes {
   Blue = "blue",
 }
 
-export interface ProofTextItem {
-  k: string;
-  v: JSX.Element;
-  reason?: string;
-  dependsOn?: Set<string>;
-  alwaysActive?: boolean;
-}
-
-export interface StaticProofTextItem {
-  stmt: JSX.Element;
-  reason?: string;
-}
+// -------- TYPES RELATED TO PROOF SETUP --------
+export type LayoutProps = InPlaceLayoutProps & StaticLayoutProps;
 
 export interface Reason {
   title: string;

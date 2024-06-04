@@ -1,7 +1,6 @@
 import React from "react";
-import { LayoutProps } from "./theorems/utils";
-import { StaticLayout } from "./theorems/layouts/StaticLayout";
-import { InPlaceLayout } from "./theorems/layouts/InPlaceLayout";
+import { StaticLayout } from "./components/layouts/StaticLayout";
+import { InPlaceLayout } from "./components/layouts/InPlaceLayout";
 import { PC1 } from "./theorems/checking/pc1";
 import { PC2 } from "./theorems/checking/pc2";
 import { PC3 } from "./theorems/checking/pc3";
@@ -24,6 +23,7 @@ export class App extends React.Component<AppProps, AppState> {
       activePage: 0,
       activeTest: 0,
     };
+    // TODO randomize order of questions and type
     const presetOrder1 = [
       InPlaceLayout(P1),
       StaticLayout(P2),
@@ -56,14 +56,6 @@ export class App extends React.Component<AppProps, AppState> {
     if (test > 0) {
       this.renderProofPages(this.orders.get(test) || []);
     }
-  };
-
-  renderInPlace = (layoutProps: LayoutProps) => {
-    return InPlaceLayout(layoutProps);
-  };
-
-  renderStaticForm = (layoutProps: LayoutProps) => {
-    return StaticLayout(layoutProps);
   };
 
   renderProofPages = (testOrder: JSX.Element[]) => {
@@ -119,12 +111,6 @@ export class App extends React.Component<AppProps, AppState> {
           >
             Test 2
           </button>
-          {/* <button
-            className="py-4 px-8 m-4 text-3xl bg-violet-700 rounded-md text-white"
-            onClick={this.onClickTest(3)}
-          >
-            Test 3
-          </button> */}
         </div>
       </div>
     );

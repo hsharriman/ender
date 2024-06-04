@@ -1,5 +1,5 @@
 import React from "react";
-import { Vector } from "../types";
+import { Vector } from "../types/types";
 import { BaseSVG } from "./BaseSVG";
 import { LineSVGProps } from "./svgTypes";
 

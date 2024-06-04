@@ -1,25 +1,23 @@
+import { Content } from "../../core/diagramContent";
 import { Point } from "../../core/geometry/Point";
 import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
-import { comma, segmentStr, strs } from "../../core/geometryText";
-import { Content } from "../../core/objgraph";
-import { Obj, SVGModes, Vector } from "../../core/types";
-import { CongruentTriangles } from "../templates/CongruentTriangles";
-import { EqualAngles } from "../templates/EqualAngles";
-import { EqualSegments } from "../templates/EqualSegments";
-import { ParallelLines } from "../templates/ParallelLines";
-import { SAS, SASProps } from "../templates/SAS";
+import { comma, segmentStr } from "../../core/geometryText";
+import { CongruentTriangles } from "../../core/templates/CongruentTriangles";
+import { EqualAngles } from "../../core/templates/EqualAngles";
+import { EqualSegments } from "../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../core/templates/EqualTriangles";
+import { ParallelLines } from "../../core/templates/ParallelLines";
+import { SAS, SASProps } from "../../core/templates/SAS";
 import {
-  LayoutProps,
   StepFocusProps,
   StepMeta,
   StepTextProps,
   StepUnfocusProps,
-  linked,
-  makeStepMeta,
-} from "../utils";
-import { EqualTriangles } from "../templates/EqualTriangles";
+} from "../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
+import { linked, makeStepMeta } from "../utils";
 
 const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [

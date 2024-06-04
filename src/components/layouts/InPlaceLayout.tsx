@@ -1,6 +1,16 @@
-import { AppPage } from "../../components/InteractiveAppPage";
-import { ProofTextItem, Reason } from "../../core/types";
-import { GIVEN_ID, InPlaceLayoutProps, PROVE_ID, getReasonFn } from "../utils";
+import { AppPage } from "../InteractiveAppPage";
+import { Reason } from "../../core/types/types";
+import { GIVEN_ID, PROVE_ID, getReasonFn } from "../../theorems/utils";
+import { Content } from "../../core/diagramContent";
+import { Step, StepMeta, ProofTextItem } from "../../core/types/stepTypes";
+
+export interface InPlaceLayoutProps {
+  baseContent: (showPoints: boolean, frame?: string) => Content;
+  steps: Step[];
+  givens: StepMeta;
+  proves: StepMeta;
+  miniContent: Content;
+}
 
 export const InPlaceLayout = (props: InPlaceLayoutProps) => {
   let ctx = props.baseContent(true);

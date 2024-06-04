@@ -1,6 +1,7 @@
-import { congruent } from "../../core/geometryText";
-import { Obj } from "../../core/types";
-import { StepFocusProps, StepTextProps, linked } from "../utils";
+import { linked } from "../../theorems/utils";
+import { congruent } from "../geometryText";
+import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { Obj } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
 
 export class Reflexive {

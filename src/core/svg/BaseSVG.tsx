@@ -1,7 +1,7 @@
 import { CSSProperties } from "react";
 import { SVGObj, BaseSVGProps } from "./svgTypes";
 import React from "react";
-import { SVGModes } from "../types";
+import { SVGModes } from "../types/types";
 import { ModeCSS } from "./SVGStyles";
 
 export interface BaseSVGState {

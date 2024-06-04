@@ -1,7 +1,8 @@
-import { Content } from "../../core/objgraph";
-import { ProofTextItem, Reason } from "../../core/types";
-import { GIVEN_ID, PROVE_ID, Step, StepMeta, getReasonFn } from "../utils";
-import { LongPage } from "../../components/LongPage";
+import { Content } from "../../core/diagramContent";
+import { Step, StepMeta, ProofTextItem } from "../../core/types/stepTypes";
+import { Reason } from "../../core/types/types";
+import { GIVEN_ID, PROVE_ID, getReasonFn } from "../../theorems/utils";
+import { LongPage } from "../LongPage";
 
 export interface LongFormFormatterProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;

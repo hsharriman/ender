@@ -1,7 +1,7 @@
-import { Angle } from "../../core/geometry/Angle";
-import { congruent } from "../../core/geometryText";
-import { Obj, SVGModes, TickType } from "../../core/types";
-import { StepFocusProps, StepTextProps, linked } from "../utils";
+import { linked } from "../../theorems/utils";
+import { congruent } from "../geometryText";
+import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { Obj, SVGModes, TickType } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";

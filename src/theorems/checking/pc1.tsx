@@ -1,22 +1,21 @@
+import { Content } from "../../core/diagramContent";
 import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
-import { Content } from "../../core/objgraph";
-import { SVGModes, Vector } from "../../core/types";
-import { CongruentTriangles } from "../templates/CongruentTriangles";
-import { EqualAngles } from "../templates/EqualAngles";
-import { EqualSegments } from "../templates/EqualSegments";
-import { SAS } from "../templates/SAS";
+import { CongruentTriangles } from "../../core/templates/CongruentTriangles";
+import { EqualAngles } from "../../core/templates/EqualAngles";
+import { EqualSegments } from "../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../core/templates/EqualTriangles";
+import { SAS } from "../../core/templates/SAS";
 import {
-  LayoutProps,
   StepFocusProps,
   StepMeta,
   StepTextProps,
   StepUnfocusProps,
-  makeStepMeta,
-} from "../utils";
-import { EqualTriangles } from "../templates/EqualTriangles";
+} from "../../core/types/stepTypes";
+import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
+import { makeStepMeta } from "../utils";
 
 const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [

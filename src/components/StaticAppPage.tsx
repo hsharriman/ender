@@ -1,7 +1,8 @@
 import React from "react";
-import { Reason, StaticProofTextItem } from "../core/types";
-import { StaticDiagram } from "./StaticDiagram";
+import { StaticProofTextItem } from "../core/types/stepTypes";
+import { Reason } from "../core/types/types";
 import { RadioQuestion } from "./RadioQuestion";
+import { StaticDiagram } from "./StaticDiagram";
 
 export interface StaticAppPageProps {
   reasons: Reason[];
@@ -86,10 +87,11 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
             {this.props.reasons.map((reason) => this.renderReason(reason))}
           </div>
           <div className="mt-10">
-            <RadioQuestion 
-                questionNum="Question 1" 
-                question="Do you agree that segment AC = BD?" 
-                answers={["Yes", "No", "Can't Tell"]}/>
+            <RadioQuestion
+              questionNum="Question 1"
+              question="Do you agree that segment AC = BD?"
+              answers={["Yes", "No", "Can't Tell"]}
+            />
           </div>
         </div>
       </div>

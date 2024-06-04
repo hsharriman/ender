@@ -1,27 +1,25 @@
+import { Content } from "../../core/diagramContent";
 import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
-import { angleStr, comma, segmentStr, strs } from "../../core/geometryText";
-import { Content } from "../../core/objgraph";
-import { Obj, SVGModes, Vector } from "../../core/types";
-import { ASA, ASAProps } from "../templates/ASA";
-import { EqualAngles } from "../templates/EqualAngles";
-import { EqualRightAngles } from "../templates/EqualRightAngles";
-import { EqualSegments } from "../templates/EqualSegments";
-import { Midpoint } from "../templates/Midpoint";
-import { Reflexive } from "../templates/Reflexive";
-import { RightAngle } from "../templates/RightAngle";
+import { angleStr, comma, segmentStr } from "../../core/geometryText";
+import { ASA, ASAProps } from "../../core/templates/ASA";
+import { EqualAngles } from "../../core/templates/EqualAngles";
+import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
+import { EqualSegments } from "../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../core/templates/EqualTriangles";
+import { Midpoint } from "../../core/templates/Midpoint";
+import { Perpendicular } from "../../core/templates/Perpendicular";
+import { Reflexive } from "../../core/templates/Reflexive";
+import { RightAngle } from "../../core/templates/RightAngle";
 import {
-  LayoutProps,
   StepFocusProps,
   StepMeta,
   StepTextProps,
   StepUnfocusProps,
-  linked,
-  makeStepMeta,
-} from "../utils";
-import { EqualTriangles } from "../templates/EqualTriangles";
-import { Perpendicular } from "../templates/Perpendicular";
+} from "../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
+import { linked, makeStepMeta } from "../utils";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
