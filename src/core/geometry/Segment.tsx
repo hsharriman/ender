@@ -1,5 +1,5 @@
 import { SVGLine } from "../svg/SVGLine";
-import { Obj, LSegment, LPoint, SVGModes, TickType } from "../types";
+import { Obj, LSegment, LPoint, SVGModes, TickType } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import React from "react";

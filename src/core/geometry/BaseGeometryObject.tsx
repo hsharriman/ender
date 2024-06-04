@@ -1,7 +1,6 @@
-import React from "react";
-import { Obj, SVGModes, Vector } from "../types";
+import { Obj, SVGModes, Vector } from "../types/types";
+import { getId } from "../utils";
 import { vops } from "../vectorOps";
-import { getId } from "../../utils";
 
 const SVG_XSHIFT = 60;
 const SVG_YSHIFT = -200;

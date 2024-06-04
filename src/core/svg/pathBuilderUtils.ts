@@ -1,4 +1,4 @@
-import { Vector } from "../types";
+import { Vector } from "../types/types";
 
 const moveTo = (v: Vector) => {
   return `M ${v[0]} ${v[1]}`;

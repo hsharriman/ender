@@ -1,5 +1,5 @@
 import React, { createRef } from "react";
-import { ProofTextItem } from "../core/types";
+import { ProofTextItem } from "../core/types/stepTypes";
 import { LongFormReliesOn } from "./LongFormReliesOn";
 
 export interface LongProofRowProps {

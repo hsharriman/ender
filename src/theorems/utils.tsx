@@ -1,32 +1,18 @@
 import { LinkedText } from "../components/LinkedText";
+import { Content } from "../core/diagramContent";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
-import { Content } from "../core/objgraph";
-import { Reason, SVGModes } from "../core/types";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepTextProps,
+  StepUnfocusProps,
+} from "../core/types/stepTypes";
+import { Reason, SVGModes } from "../core/types/types";
 
 export const GIVEN_ID = "given";
 export const PROVE_ID = "prove";
-export interface Step {
-  cls: StepCls;
-  reason: Reason;
-  dependsOn?: number[];
-}
 
-export interface StepUnfocusProps {
-  ctx: Content;
-  frame: string;
-  inPlace: boolean;
-}
-export interface StepFocusProps {
-  ctx: Content;
-  frame: string;
-  mode: SVGModes;
-  inPlace: boolean;
-}
-export interface StepTextProps {
-  ctx: Content;
-  frame?: string;
-}
-
+// TODO move linked and reasonFn to different place, or move all this type info to a diff place
 export const linked = (
   val: string,
   obj: BaseGeometryObject,
@@ -38,22 +24,29 @@ export const getReasonFn =
     return reasonMap.get(activeFrame) || { title: "", body: "" };
   };
 
-export class StepCls {
-  unfocused = (props: StepUnfocusProps) => {};
-  diagram = (ctx: Content, frame: string, inPlace = true) => {
-    this.unfocused({ ctx, frame, inPlace });
-    this.additions({ ctx, frame, mode: SVGModes.Focused, inPlace });
+export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
+  const defaultStaticText = () => <></>;
+  const defaultAdditions = (props: StepFocusProps) => {};
+  const defaultText = (props: StepTextProps) => <></>;
+  const defaultTicklessText = (ctx: Content) => <></>;
+  const defaultUnfocused = (props: StepUnfocusProps) => {};
+  const diagram = (ctx: Content, frame: string, inPlace = true) => {
+    const unfocusedProps = { ctx, frame, inPlace };
+    const additionProps = { ctx, frame, mode: SVGModes.Focused, inPlace };
+    meta.unfocused
+      ? meta.unfocused(unfocusedProps)
+      : defaultUnfocused(unfocusedProps);
+    meta.additions
+      ? meta.additions(additionProps)
+      : defaultAdditions(additionProps);
   };
-  text(props: StepTextProps): JSX.Element {
-    return <></>;
-  }
-  ticklessText?(ctx: Content): JSX.Element {
-    return <></>;
-  }
-  staticText = () => <></>;
-  additions = (props: StepFocusProps) => {};
-}
 
-export class BaseStep extends StepCls {
-  ticklessText = (ctx: Content): JSX.Element => <></>;
-}
+  return {
+    unfocused: meta.unfocused || defaultUnfocused,
+    diagram,
+    text: meta.text || defaultText,
+    ticklessText: meta.ticklessText || defaultTicklessText,
+    staticText: meta.staticText || defaultStaticText,
+    additions: meta.additions || defaultAdditions,
+  };
+};

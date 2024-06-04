@@ -1,5 +1,12 @@
 import React from "react";
-import { TickType, LSegment, LAngle, Obj, Vector, SVGModes } from "../types";
+import {
+  TickType,
+  LSegment,
+  LAngle,
+  Obj,
+  Vector,
+  SVGModes,
+} from "../types/types";
 import { vops } from "../vectorOps";
 import { pops } from "../svg/pathBuilderUtils";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";

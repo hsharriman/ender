@@ -1,5 +1,5 @@
-import { Content } from "../objgraph";
-import { Obj, SVGModes } from "../types";
+import { Content } from "../diagramContent";
+import { Obj, SVGModes } from "../types/types";
 import { LinkedText } from "../../components/LinkedText";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";

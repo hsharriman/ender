@@ -1,4 +1,4 @@
-import { Vector } from "../types";
+import { Vector } from "../types/types";
 import { BaseSVG } from "./BaseSVG";
 import { PolylineSVGProps, SVGObj } from "./svgTypes";
 
