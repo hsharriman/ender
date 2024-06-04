@@ -17,6 +17,20 @@ export class SubmitQuestion extends React.Component<SubmitQuestionProps> {
   //   console.log(`${type}: ${answer}`);
   // };
 
+  componentDidMount() {
+    document.addEventListener("keydown", this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.handleKeyDown);
+  }
+
+  handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Enter") {
+      this.props.onClick();
+    }
+  };
+
   render() {
     return (
       <div className="font-bold text-base mt-4 mb-4 text-slate-50">

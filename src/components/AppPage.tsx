@@ -42,6 +42,12 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
     }
   };
 
+  handleQuestionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    this.setState({
+      currentQuestionIndex: Number(event.target.value),
+    });
+  };
+
   handleSubmit = (answer: any) => {
     console.log(
       `Answer for question ${this.state.currentQuestionIndex + 1}:`,
@@ -108,29 +114,50 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
               </div>
             </div>
             <div className="col-span-5 pl-6">
-              {currentQuestion.type === QuestionType.Single && (
-                <RadioQuestion
-                  questionNum={(this.state.currentQuestionIndex + 1).toString()}
-                  question={currentQuestion.prompt}
-                  answers={answers}
-                  onSubmit={this.handleSubmit}
-                />
-              )}
-              {currentQuestion.type === QuestionType.Mutli && (
-                <MultiSelectQuestion
-                  questionNum={(this.state.currentQuestionIndex + 1).toString()}
-                  question={currentQuestion.prompt}
-                  answers={answers}
-                  onSubmit={this.handleSubmit}
-                />
-              )}
-              {currentQuestion.type === QuestionType.Text && (
-                <TextQuestion
-                  questionNum={(this.state.currentQuestionIndex + 1).toString()}
-                  question={currentQuestion.prompt}
-                  onSubmit={this.handleSubmit}
-                />
-              )}
+              <div className="flex items-center mb-4">
+                <select
+                  onChange={this.handleQuestionChange}
+                  value={this.state.currentQuestionIndex}
+                  className="border p-2 rounded"
+                >
+                  {this.props.questions.map((q, index) => (
+                    <option key={index} value={index}>
+                      Question {index + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                {currentQuestion.type === QuestionType.Single && (
+                  <RadioQuestion
+                    questionNum={(
+                      this.state.currentQuestionIndex + 1
+                    ).toString()}
+                    question={currentQuestion.prompt}
+                    answers={answers}
+                    onSubmit={this.handleSubmit}
+                  />
+                )}
+                {currentQuestion.type === QuestionType.Mutli && (
+                  <MultiSelectQuestion
+                    questionNum={(
+                      this.state.currentQuestionIndex + 1
+                    ).toString()}
+                    question={currentQuestion.prompt}
+                    answers={answers}
+                    onSubmit={this.handleSubmit}
+                  />
+                )}
+                {currentQuestion.type === QuestionType.Text && (
+                  <TextQuestion
+                    questionNum={(
+                      this.state.currentQuestionIndex + 1
+                    ).toString()}
+                    question={currentQuestion.prompt}
+                    onSubmit={this.handleSubmit}
+                  />
+                )}
+              </div>
               {/* <RadioQuestion
                 questionNum="Question 1"
                 question="Do you agree that segment AC = BD?"
