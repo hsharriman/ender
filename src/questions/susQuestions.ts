@@ -83,7 +83,7 @@ export const staticFollowUpQuestions: Question[] = [
   },
 ];
 
-export const dynamicFollowUpQuestions: Question[] = [
+export const interactiveFollowUpQuestions: Question[] = [
   {
     prompt:
       "What do you like about this presentation style of the proof, layout, interactions etc.?",

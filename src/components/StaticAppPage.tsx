@@ -82,8 +82,8 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
           </div>
           {this.props.texts.map((item, i) => this.renderRow(item, i))}
         </div>
-        <div>
-          <div className="w-4/6 flex flex-col justify-start">
+        <div className="min-w-[300px] max-w-[400px]">
+          <div className="flex flex-col justify-start">
             <div className="font-bold text-base text-slate-500 pb-2">
               Reasons Applied:
             </div>

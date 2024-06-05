@@ -2,9 +2,11 @@ import React from "react";
 import { Question } from "../questions/completeQuestions";
 import { susQuestions } from "../questions/susQuestions";
 import { staticFollowUpQuestions } from "../questions/susQuestions";
-import { dynamicFollowUpQuestions } from "../questions/susQuestions";
+import { interactiveFollowUpQuestions } from "../questions/susQuestions";
 import SusQuestion from "./SusQuestion";
 import { SubmitQuestion } from "./SubmitQuestion";
+import staticScreenshot from "../assets/StaticPageScreenshot.png";
+import interactiveScreenshot from "../assets/InteractivePageScreenshot.png";
 
 interface susPageProps {
   type: string;
@@ -22,7 +24,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
     const textQuestions =
       this.props.type === "Static"
         ? staticFollowUpQuestions
-        : dynamicFollowUpQuestions;
+        : interactiveFollowUpQuestions;
     this.state = {
       textQuestions: textQuestions,
       answers: {
@@ -71,24 +73,43 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
   render() {
     return (
       <>
-        <div className="grid grid-rows-[auto,1fr] gap-2 pl-10">
-          <div className="flex flex-col w-full items-center">
+        <div className="grid grid-rows-[auto,1fr] gap-2 justify-center flex w-full min-w-[1300px]">
+          <div className="flex flex-col items-center">
             {this.props.type === "Static" ? (
               <h2 className="text-2xl font-bold mb-4">Static Proof</h2>
             ) : (
-              <h2 className="text-2xl font-bold mb-4">Dynamic Proof</h2>
+              <h2 className="text-2xl font-bold mb-4">Interactive Proof</h2>
             )}
-            <h2 className="text-xl font-bold mb-2">Survey Instructions</h2>
-            <p className="text-base">
-              Please answer the questions honestly based on your experience.
-            </p>
-            <p className="text-base">
-              For each statement, select the response that best matches your
-              opinion.
-            </p>
+            <div className="grid grid-cols-2">
+              <div className="self-center">
+                <h2 className="text-xl font-bold mb-2">Survey Instructions</h2>
+                <p className="text-base">
+                  Please answer the questions honestly based on your experience.
+                </p>
+                <p className="text-base">
+                  For each statement, select the response that best matches your
+                  opinion.
+                </p>
+              </div>
+              <div className="ml-[30px]">
+                {this.props.type === "Static" ? (
+                  <img
+                    src={staticScreenshot}
+                    alt="Static Proof"
+                    className="w-[300px] h-[200px] mr-4"
+                  />
+                ) : (
+                  <img
+                    src={interactiveScreenshot}
+                    alt="Interactive Proof"
+                    className="w-[320px] h-[200px] mr-4"
+                  />
+                )}
+              </div>
+            </div>
           </div>
-          <div className="ml-20 grid grid-cols-2 gap-4 mt-10">
-            <div className="left-column">
+          <div className="grid grid-cols-2 gap-4 mt-10">
+            <div className="left-column mr-10">
               {susQuestions.map((question, index) => (
                 <SusQuestion
                   key={index}
@@ -100,7 +121,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                 />
               ))}
             </div>
-            <div className="right-column ml-60">
+            <div className="right-column ml-10">
               {this.state.textQuestions.map((question, index) => (
                 <>
                   <div className="flex flex-col justify-start pb-1">

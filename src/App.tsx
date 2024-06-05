@@ -86,13 +86,13 @@ export class App extends React.Component<AppProps, AppState> {
             {"Next"}
           </button>
         </div>
-        <div className="w-full h-full flex justify-center xl:justify-start">
+        <div className="w-full h-full flex justify-start">
           {this.state.activePage <= NUM_PAGES - 1 ? (
             testOrder[this.state.activePage]
           ) : (
             <SusPage
               key={this.state.activePage}
-              type={this.state.activePage === 6 ? "Static" : "Dynamic"}
+              type={this.state.activePage === 6 ? "Static" : "Interactive"}
             />
           )}
         </div>
