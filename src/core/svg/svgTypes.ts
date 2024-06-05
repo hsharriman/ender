@@ -1,4 +1,4 @@
-import { SVGModes, Vector } from "../types";
+import { SVGModes, Vector } from "../types/types";
 
 export enum SVGObj {
   Circle,

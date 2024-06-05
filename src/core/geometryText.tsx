@@ -35,7 +35,7 @@ export const angleStr = (a: string) => (
     {a}
   </span>
 );
-// for long-form reasons
+
 export const strs = {
   angle: "\u2220",
   congruent: "\u2245",

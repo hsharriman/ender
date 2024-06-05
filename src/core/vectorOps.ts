@@ -1,4 +1,4 @@
-import { Vector } from "./types";
+import { Vector } from "./types/types";
 
 export const vops = {
   // Return true if v1 === v2

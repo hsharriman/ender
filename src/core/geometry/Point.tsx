@@ -2,7 +2,7 @@ import { BaseSVG } from "../svg/BaseSVG";
 import { SVGCircle } from "../svg/SVGCircle";
 import { ModeCSS } from "../svg/SVGStyles";
 import { SVGText } from "../svg/SVGText";
-import { Vector, Obj, LPoint, SVGModes } from "../types";
+import { Vector, Obj, LPoint, SVGModes } from "../types/types";
 import { vops } from "../vectorOps";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 

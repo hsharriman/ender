@@ -1,7 +1,8 @@
 import React from "react";
-import { Reason, StaticProofTextItem } from "../core/types";
-import { StaticDiagram } from "./StaticDiagram";
+import { StaticProofTextItem } from "../core/types/stepTypes";
+import { Reason } from "../core/types/types";
 import { Question } from "../questions/completeQuestions";
+import { StaticDiagram } from "./StaticDiagram";
 import { TestQuestions } from "./TestQuestions";
 
 export interface StaticAppPageProps {
@@ -14,10 +15,6 @@ export interface StaticAppPageProps {
 }
 
 export class StaticAppPage extends React.Component<StaticAppPageProps> {
-  constructor(props: StaticAppPageProps) {
-    super(props);
-  }
-
   renderRow = (item: StaticProofTextItem, i: number) => {
     const textColor = "text-slate-800";
     const strokeColor = "border-slate-800";
