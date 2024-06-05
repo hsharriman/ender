@@ -13,11 +13,8 @@ export interface StepUnfocusProps {
   frame: string;
   inPlace: boolean;
 }
-export interface StepFocusProps {
-  ctx: Content;
-  frame: string;
+export interface StepFocusProps extends StepUnfocusProps {
   mode: SVGModes;
-  inPlace: boolean;
 }
 export interface StepTextProps {
   ctx: Content;

@@ -4,7 +4,7 @@ import { BaseGeometryObject } from "../../core/geometry/BaseGeometryObject";
 import { Point } from "../../core/geometry/Point";
 import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
-import { angleStr, comma, triangleStr } from "../../core/geometryText";
+import { comma, triangleStr } from "../../core/geometryText";
 import { EqualAngles } from "../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../core/templates/EqualSegments";
@@ -220,19 +220,8 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["FEJ", "JHG"]);
   },
-  text: (props: StepTextProps) => {
-    // const JHG = props.ctx.getAngle("JHG");
-    return EqualRightAngles.text(props, ["FEJ", "JHG"]);
-  },
-  staticText: () => {
-    return (
-      <span>
-        {angleStr("FEJ")}
-        {" = "}
-        {angleStr("JHG")}
-      </span>
-    );
-  },
+  text: (props: StepTextProps) => EqualRightAngles.text(props, ["FEJ", "JHG"]),
+  staticText: () => EqualRightAngles.staticText(["FEJ", "JHG"]),
 });
 
 const step4: StepMeta = makeStepMeta({

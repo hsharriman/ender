@@ -28,17 +28,23 @@ export class EqualAngles {
     [a1, a2]: [string, string],
     num?: number
   ) => {
-    const a1a = props.ctx.getAngle(a1);
-    const a2a = props.ctx.getAngle(a2);
     const options = { frame: props.frame, num };
     return (
       <span>
         {BaseAngle.text(props, a1, [
-          props.ctx.getTick(a1a, Obj.EqualAngleTick, options),
+          props.ctx.getTick(
+            props.ctx.getAngle(a1),
+            Obj.EqualAngleTick,
+            options
+          ),
         ])}
         {congruent}
         {BaseAngle.text(props, a2, [
-          props.ctx.getTick(a2a, Obj.EqualAngleTick, options),
+          props.ctx.getTick(
+            props.ctx.getAngle(a2),
+            Obj.EqualAngleTick,
+            options
+          ),
         ])}
       </span>
     );

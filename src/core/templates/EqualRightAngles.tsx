@@ -14,16 +14,18 @@ export class EqualRightAngles {
     RightAngle.additions({ ...props, mode: a2Mode || props.mode }, a2);
   };
   static text = (props: StepTextProps, [a1, a2]: [string, string]) => {
-    const a1a = props.ctx.getAngle(a1);
-    const a2a = props.ctx.getAngle(a2);
     return (
       <span>
         {BaseAngle.text(props, a1, [
-          props.ctx.getTick(a1a, Obj.RightTick, { frame: props.frame }),
+          props.ctx.getTick(props.ctx.getAngle(a1), Obj.RightTick, {
+            frame: props.frame,
+          }),
         ])}
         {this.equalNinety}
         {BaseAngle.text(props, a2, [
-          props.ctx.getTick(a2a, Obj.RightTick, { frame: props.frame }),
+          props.ctx.getTick(props.ctx.getAngle(a2), Obj.RightTick, {
+            frame: props.frame,
+          }),
         ])}
       </span>
     );
