@@ -61,11 +61,12 @@ export const susQuestions: Question[] = [
 
 export const staticFollowUpQuestions: Question[] = [
   {
-    prompt: "What do you like about this type of proof, layout etc.?",
+    prompt:
+      "What do you like about this presentation style of the proof, layout etc.?",
     type: QuestionType.Text,
   },
   {
-    prompt: "What do you disklike about this type of proof?",
+    prompt: "What do you disklike about this presentation style of the proof?",
     type: QuestionType.Text,
   },
   {
@@ -85,11 +86,11 @@ export const staticFollowUpQuestions: Question[] = [
 export const dynamicFollowUpQuestions: Question[] = [
   {
     prompt:
-      "What do you like about this type of proof, layout, interactions etc.?",
+      "What do you like about this presentation style of the proof, layout, interactions etc.?",
     type: QuestionType.Text,
   },
   {
-    prompt: "What do you disklike about this type of proof?",
+    prompt: "What do you disklike about this presentation style of the proof?",
     type: QuestionType.Text,
   },
   {

@@ -27,7 +27,7 @@ class SusQuestion extends React.Component<susQuestionProps> {
       <div className="mb-6">
         <div className="flex flex-col justify-start pb-1">
           <div className="font-bold text-base text-slate-500">
-            Question {questionNum}:
+            Question {Number(questionNum) + 1}:
           </div>
         </div>
         <div className="font-bold text-base pb-1">{question}</div>

@@ -94,7 +94,6 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
             </div>
           </div>
         </div>
-        <SusPage />
       </>
     );
   }
