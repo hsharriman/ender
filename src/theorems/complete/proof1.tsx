@@ -141,6 +141,7 @@ const proves: StepMeta = makeStepMeta({
 });
 
 const step1: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -169,6 +170,7 @@ const step1: StepMeta = makeStepMeta({
 });
 
 const step2: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -207,6 +209,8 @@ const step2: StepMeta = makeStepMeta({
 });
 
 const step3: StepMeta = makeStepMeta({
+  reason: Reasons.VerticalAngles,
+  dependsOn: [2],
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
     step1.additions({ ...props, mode: SVGModes.Unfocused });
@@ -224,12 +228,16 @@ const step4SASProps: SASProps = {
   triangles: ["ACM", "BDM"],
 };
 const step4: StepMeta = makeStepMeta({
+  reason: Reasons.SAS,
+  dependsOn: [1, 3],
   additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
   text: (props: StepTextProps) => SAS.text(props, step4SASProps),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
 });
 
 const step5: StepMeta = makeStepMeta({
+  reason: Reasons.CorrespondingAngles,
+  dependsOn: [4],
   unfocused: (props: StepUnfocusProps) => {
     step4.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -240,6 +248,8 @@ const step5: StepMeta = makeStepMeta({
 });
 
 const step6: StepMeta = makeStepMeta({
+  reason: Reasons.AlternateInteriorAngles,
+  dependsOn: [5],
   unfocused: (props: StepUnfocusProps) => {
     step4.additions({ ...props, mode: SVGModes.Unfocused });
     step5.additions({ ...props, mode: SVGModes.Unfocused });
@@ -325,24 +335,5 @@ export const P1: LayoutProps = {
   baseContent,
   givens,
   proves,
-  steps: [
-    { meta: step1, reason: Reasons.Given },
-    { meta: step2, reason: Reasons.Given },
-    {
-      meta: step3,
-      reason: Reasons.VerticalAngles,
-      dependsOn: [2],
-    },
-    { meta: step4, reason: Reasons.SAS, dependsOn: [1, 3] },
-    {
-      meta: step5,
-      reason: Reasons.CorrespondingAngles,
-      dependsOn: [4],
-    },
-    {
-      meta: step6,
-      reason: Reasons.AlternateInteriorAngles,
-      dependsOn: [5],
-    },
-  ],
+  steps: [step1, step2, step3, step4, step5, step6],
 };

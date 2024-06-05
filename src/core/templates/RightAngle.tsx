@@ -1,8 +1,8 @@
-import { linked } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { angleStr } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj } from "../types/types";
+import { BaseAngle } from "./BaseAngle";
 
 export class RightAngle {
   private static rightText = " = 90°";
@@ -17,7 +17,7 @@ export class RightAngle {
     const ang = props.ctx.getAngle(a);
     return (
       <span>
-        {linked(a, ang, [
+        {BaseAngle.text(props, a, [
           props.ctx.getTick(ang, Obj.RightTick, { frame: props.frame }),
         ])}
         {this.rightText}
@@ -27,7 +27,7 @@ export class RightAngle {
   static ticklessText = (ctx: Content, a: string) => {
     return (
       <span>
-        {linked(a, ctx.getAngle(a))}
+        {BaseAngle.ticklessText(ctx, a)}
         {this.rightText}
       </span>
     );

@@ -8,6 +8,7 @@ import {
   StepUnfocusProps,
 } from "../core/types/stepTypes";
 import { Reason, SVGModes } from "../core/types/types";
+import { Reasons } from "./reasons";
 
 export const GIVEN_ID = "given";
 export const PROVE_ID = "prove";
@@ -42,6 +43,8 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   };
 
   return {
+    reason: meta.reason || Reasons.Empty,
+    dependsOn: meta.dependsOn,
     unfocused: meta.unfocused || defaultUnfocused,
     diagram,
     text: meta.text || defaultText,
