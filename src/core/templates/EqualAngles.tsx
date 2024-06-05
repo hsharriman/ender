@@ -1,8 +1,8 @@
-import { linked } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { angleStr, congruent } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
+import { BaseAngle } from "./BaseAngle";
 
 export class EqualAngles {
   static additions = (
@@ -33,18 +33,22 @@ export class EqualAngles {
     const options = { frame: props.frame, num };
     return (
       <span>
-        {linked(a1, a1a, [props.ctx.getTick(a1a, Obj.EqualAngleTick, options)])}
+        {BaseAngle.text(props, a1, [
+          props.ctx.getTick(a1a, Obj.EqualAngleTick, options),
+        ])}
         {congruent}
-        {linked(a2, a2a, [props.ctx.getTick(a2a, Obj.EqualAngleTick, options)])}
+        {BaseAngle.text(props, a2, [
+          props.ctx.getTick(a2a, Obj.EqualAngleTick, options),
+        ])}
       </span>
     );
   };
   static ticklessText = (ctx: Content, [a1, a2]: [string, string]) => {
     return (
       <span>
-        {linked(a1, ctx.getAngle(a1))}
+        {BaseAngle.ticklessText(ctx, a1)}
         {congruent}
-        {linked(a2, ctx.getAngle(a2))}
+        {BaseAngle.ticklessText(ctx, a2)}
       </span>
     );
   };

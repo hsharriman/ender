@@ -1,4 +1,5 @@
 export const Reasons = {
+  Empty: { title: "", body: "" },
   Given: { title: "Given", body: "" },
   SAS: {
     title: "SAS Triangle Congruence",

@@ -1,5 +1,9 @@
 import { Content } from "../../core/diagramContent";
-import { ProofTextItem, Step, StepMeta } from "../../core/types/stepTypes";
+import {
+  ProofTextItem,
+  SetupStepMeta,
+  StepMeta,
+} from "../../core/types/stepTypes";
 import { Reason } from "../../core/types/types";
 import { Question } from "../../questions/completeQuestions";
 import { GIVEN_ID, PROVE_ID, getReasonFn } from "../../theorems/utils";
@@ -7,9 +11,9 @@ import { AppPage } from "../InteractiveAppPage";
 
 export interface InPlaceLayoutProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: Step[];
-  givens: StepMeta;
-  proves: StepMeta;
+  steps: StepMeta[];
+  givens: SetupStepMeta;
+  proves: SetupStepMeta;
   miniContent: Content;
   questions: Question[];
 }
@@ -41,7 +45,7 @@ export const InPlaceLayout = (props: InPlaceLayoutProps) => {
   props.steps.map((step, i) => {
     let textMeta = {};
     const s = ctx.addFrame(`s${i + 1}`);
-    step.meta.diagram(ctx, s, true);
+    step.diagram(ctx, s, true);
     if (step.dependsOn) {
       const depIds = step.dependsOn.map((i) => `s${i}`);
       ctx.reliesOn(s, depIds);
@@ -51,7 +55,7 @@ export const InPlaceLayout = (props: InPlaceLayoutProps) => {
     linkedTexts.push({
       ...textMeta,
       k: s,
-      v: step.meta.text({ ctx }),
+      v: step.text({ ctx }),
       reason: step.reason.title,
     });
   });
