@@ -6,6 +6,8 @@ import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
 import { Question } from "../questions/completeQuestions";
 import { TestQuestions } from "./TestQuestions";
+import { SusPage } from "./SusPage";
+import { susQuestions } from "../questions/susQuestions";
 
 export interface AppPageProps {
   proofText: ProofTextItem[];
@@ -91,6 +93,7 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
             </div>
           </div>
         </div>
+        <SusPage />
       </>
     );
   }
