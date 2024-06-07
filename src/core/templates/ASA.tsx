@@ -1,10 +1,13 @@
 import { linked } from "../../theorems/utils";
+import { tooltip } from "../../theorems/utils";
 import { congruent } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes, TickType } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
+import { definitions } from "../../theorems/definitions";
+import { strs } from "../geometryText";
 
 export interface ASAAngleMeta {
   angles: [string, string];
@@ -46,7 +49,11 @@ export class ASA {
             num: meta.a2s.numTicks,
           }),
         ])}
-        {congruent}
+        {tooltip(
+          strs.congruent,
+          definitions.CongruentTriangles.keyword,
+          definitions.CongruentTriangles.keyword
+        )}
         {linked(t2, props.ctx.getTriangle(t2), [
           props.ctx.getTick(
             props.ctx.getSegment(t2s),

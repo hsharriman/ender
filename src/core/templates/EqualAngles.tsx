@@ -1,8 +1,11 @@
 import { Content } from "../diagramContent";
+import { tooltip } from "../../theorems/utils";
 import { angleStr, congruent } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
+import { strs } from "../geometryText";
+import { definitions } from "../../theorems/definitions";
 
 export class EqualAngles {
   static additions = (
@@ -38,7 +41,11 @@ export class EqualAngles {
             options
           ),
         ])}
-        {congruent}
+        {tooltip(
+          strs.congruent,
+          definitions.CongruentAngles.keyword,
+          definitions.CongruentAngles.definition
+        )}
         {BaseAngle.text(props, a2, [
           props.ctx.getTick(
             props.ctx.getAngle(a2),
@@ -53,7 +60,11 @@ export class EqualAngles {
     return (
       <span>
         {BaseAngle.ticklessText(ctx, a1)}
-        {congruent}
+        {tooltip(
+          strs.congruent,
+          definitions.CongruentAngles.keyword,
+          definitions.CongruentAngles.definition
+        )}
         {BaseAngle.ticklessText(ctx, a2)}
       </span>
     );

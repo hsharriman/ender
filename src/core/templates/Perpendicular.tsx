@@ -1,8 +1,11 @@
 import { linked } from "../../theorems/utils";
+import { tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { perpendicular, segmentStr } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
+import { strs } from "../geometryText";
+import { definitions } from "../../theorems/definitions";
 
 export class Perpendicular {
   static additions = (
@@ -30,7 +33,11 @@ export class Perpendicular {
     return (
       <span>
         {linked(perp, perp1)}
-        {perpendicular}
+        {tooltip(
+          strs.perpendicular,
+          definitions.Perpendicular.keyword,
+          definitions.Perpendicular.definition
+        )}
         {linked(label, s1, [
           s2,
           props.ctx.getTick(s1, Obj.EqualLengthTick, {
@@ -54,7 +61,11 @@ export class Perpendicular {
     return (
       <span>
         {linked(perp, ctx.getSegment(perp))}
-        {perpendicular}
+        {tooltip(
+          strs.perpendicular,
+          definitions.Perpendicular.keyword,
+          definitions.Perpendicular.definition
+        )}
         {linked(label, ctx.getSegment(segs[0]), [ctx.getSegment(segs[1])])}
       </span>
     );

@@ -2,6 +2,9 @@ import { linked } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { congruent, triangleStr } from "../geometryText";
 import { StepTextProps } from "../types/stepTypes";
+import { tooltip } from "../../theorems/utils";
+import { definitions } from "../../theorems/definitions";
+import { strs } from "../geometryText";
 
 export class EqualTriangles {
   static text = (props: StepTextProps, [t1, t2]: [string, string]) => {
@@ -10,7 +13,11 @@ export class EqualTriangles {
     return (
       <span>
         {linked(t1, t1s)}
-        {congruent}
+        {tooltip(
+          strs.congruent,
+          definitions.CongruentTriangles.keyword,
+          definitions.CongruentTriangles.keyword
+        )}
         {linked(t2, t2s)}
       </span>
     );

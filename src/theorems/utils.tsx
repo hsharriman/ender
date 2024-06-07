@@ -1,3 +1,4 @@
+import { DefinitionTooltip } from "../components/DefinitionTooltip";
 import { LinkedText } from "../components/LinkedText";
 import { Content } from "../core/diagramContent";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
@@ -19,6 +20,10 @@ export const linked = (
   obj: BaseGeometryObject,
   objs?: BaseGeometryObject[]
 ) => <LinkedText val={val} obj={obj} linkedObjs={objs} />;
+
+export const tooltip = (obj: string, keyword: string, definition: string) => (
+  <DefinitionTooltip obj={obj} keyword={keyword} definition={definition} />
+);
 
 export const getReasonFn =
   (reasonMap: Map<string, Reason>) => (activeFrame: string) => {
