@@ -7,8 +7,6 @@ import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
 import { TestQuestions } from "./TestQuestions";
-import { SusPage } from "./SusPage";
-import { susQuestions } from "../questions/susQuestions";
 
 export interface AppPageProps {
   proofText: ProofTextItem[];
