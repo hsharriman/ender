@@ -7,6 +7,7 @@ import { PC3 } from "./theorems/checking/pc3";
 import { P1 } from "./theorems/complete/proof1";
 import { P2 } from "./theorems/complete/proof2";
 import { P3 } from "./theorems/complete/proof3";
+import { SusPage } from "./components/SusPage";
 
 const NUM_PAGES = 6;
 
@@ -72,20 +73,28 @@ export class App extends React.Component<AppProps, AppState> {
           </button>
           <div className="absolute top-0 p-3 left-24 z-30">{`${
             this.state.activePage + 1
-          } / ${NUM_PAGES}`}</div>
+          } / ${NUM_PAGES + 2}`}</div>
           <button
             className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
             id="next-arrow"
             style={{
-              display: this.state.activePage < NUM_PAGES - 1 ? "block" : "none",
+              display:
+                this.state.activePage < NUM_PAGES + 2 - 1 ? "block" : "none",
             }}
             onClick={this.onClick(1)}
           >
             {"Next"}
           </button>
         </div>
-        <div className="w-full h-full flex justify-center xl:justify-start">
-          {testOrder[this.state.activePage]}
+        <div className="w-full h-full flex justify-start">
+          {this.state.activePage <= NUM_PAGES - 1 ? (
+            testOrder[this.state.activePage]
+          ) : (
+            <SusPage
+              key={this.state.activePage}
+              type={this.state.activePage === 6 ? "Static" : "Interactive"}
+            />
+          )}
         </div>
       </div>
     );
