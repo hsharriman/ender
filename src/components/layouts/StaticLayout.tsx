@@ -41,7 +41,7 @@ export const StaticLayout = (props: StaticLayoutProps) => {
       texts={texts}
       diagram={ctx.allSvgElements()(GIVEN_ID)}
       givenText={props.givens.staticText()}
-      proveText={props.givens.staticText()}
+      proveText={props.proves.staticText()}
       questions={props.questions}
     />
   );
