@@ -23,7 +23,7 @@ export class Reflexive {
     return (
       <span>
         {MKLinked}
-        {tooltip(strs.congruent, definitions.CongruentAngles)}
+        {tooltip(strs.congruent, definitions.CongruentLines)}
         {MKLinked}
       </span>
     );
