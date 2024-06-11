@@ -1,10 +1,10 @@
 import React from "react";
-import { definitions } from "../theorems/definitions";
+import { strs } from "../core/geometryText";
+import { Definition } from "../theorems/definitions";
 
 interface TooltipProps {
   obj: string;
-  keyword: string;
-  definition: string;
+  definition: Definition;
   isActive?: boolean;
 }
 
@@ -59,8 +59,8 @@ export class DefinitionTooltip extends React.Component<
   };
 
   render() {
-    const keyword = this.props.keyword;
-    const definition = this.props.definition;
+    const keyword = this.props.definition.keyword;
+    const definition = this.props.definition.definition;
     return (
       <span
         className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150 group relative`}
@@ -72,10 +72,10 @@ export class DefinitionTooltip extends React.Component<
           <h2 className="text-[15px]">{keyword}</h2>
           <p className="font-normal text-sm">{definition}</p>
         </span>
-        {this.props.obj === "\u2225" || "\u22A5" ? (
-          <span> {`${this.props.obj}`} </span>
+        {this.props.obj === strs.parallel || strs.perpendicular ? (
+          <span> {this.props.obj} </span>
         ) : (
-          <span>{`${this.props.obj}`}</span>
+          <span>{this.props.obj}</span>
         )}
       </span>
     );

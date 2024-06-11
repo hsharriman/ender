@@ -41,11 +41,7 @@ export class EqualAngles {
             options
           ),
         ])}
-        {tooltip(
-          strs.congruent,
-          definitions.CongruentAngles.keyword,
-          definitions.CongruentAngles.definition
-        )}
+        {tooltip(strs.congruent, definitions.CongruentAngles)}
         {BaseAngle.text(props, a2, [
           props.ctx.getTick(
             props.ctx.getAngle(a2),
@@ -60,11 +56,7 @@ export class EqualAngles {
     return (
       <span>
         {BaseAngle.ticklessText(ctx, a1)}
-        {tooltip(
-          strs.congruent,
-          definitions.CongruentAngles.keyword,
-          definitions.CongruentAngles.definition
-        )}
+        {tooltip(strs.congruent, definitions.CongruentAngles)}
         {BaseAngle.ticklessText(ctx, a2)}
       </span>
     );

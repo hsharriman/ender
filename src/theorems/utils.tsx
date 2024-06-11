@@ -9,6 +9,7 @@ import {
   StepUnfocusProps,
 } from "../core/types/stepTypes";
 import { Reason, SVGModes } from "../core/types/types";
+import { Definition } from "./definitions";
 import { Reasons } from "./reasons";
 
 export const GIVEN_ID = "given";
@@ -21,8 +22,8 @@ export const linked = (
   objs?: BaseGeometryObject[]
 ) => <LinkedText val={val} obj={obj} linkedObjs={objs} />;
 
-export const tooltip = (obj: string, keyword: string, definition: string) => (
-  <DefinitionTooltip obj={obj} keyword={keyword} definition={definition} />
+export const tooltip = (obj: string, definition: Definition) => (
+  <DefinitionTooltip obj={obj} definition={definition} />
 );
 
 export const getReasonFn =

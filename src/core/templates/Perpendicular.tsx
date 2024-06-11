@@ -33,11 +33,7 @@ export class Perpendicular {
     return (
       <span>
         {linked(perp, perp1)}
-        {tooltip(
-          strs.perpendicular,
-          definitions.Perpendicular.keyword,
-          definitions.Perpendicular.definition
-        )}
+        {tooltip(strs.perpendicular, definitions.Perpendicular)}
         {linked(label, s1, [
           s2,
           props.ctx.getTick(s1, Obj.EqualLengthTick, {
@@ -61,11 +57,7 @@ export class Perpendicular {
     return (
       <span>
         {linked(perp, ctx.getSegment(perp))}
-        {tooltip(
-          strs.perpendicular,
-          definitions.Perpendicular.keyword,
-          definitions.Perpendicular.definition
-        )}
+        {tooltip(strs.perpendicular, definitions.Perpendicular)}
         {linked(label, ctx.getSegment(segs[0]), [ctx.getSegment(segs[1])])}
       </span>
     );

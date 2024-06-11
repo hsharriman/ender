@@ -40,11 +40,7 @@ export class ParallelLines {
     return (
       <span>
         {linked(s1, s1s, [props.ctx.getTick(s1s, Obj.ParallelTick, options)])}
-        {tooltip(
-          strs.parallel,
-          definitions.Parallel.keyword,
-          definitions.Parallel.definition
-        )}
+        {tooltip(strs.parallel, definitions.Parallel)}
         {linked(s2, s2s, [props.ctx.getTick(s2s, Obj.ParallelTick, options)])}
       </span>
     );
@@ -54,11 +50,7 @@ export class ParallelLines {
     return (
       <span>
         {linked(s1, ctx.getSegment(s1))}
-        {tooltip(
-          strs.parallel,
-          definitions.Parallel.keyword,
-          definitions.Parallel.definition
-        )}
+        {tooltip(strs.parallel, definitions.Parallel)}
         {linked(s2, ctx.getSegment(s2))}
       </span>
     );

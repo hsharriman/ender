@@ -41,11 +41,7 @@ export class SAS {
             options
           ),
         ])}
-        {tooltip(
-          strs.congruent,
-          definitions.CongruentTriangles.keyword,
-          definitions.CongruentTriangles.definition
-        )}
+        {tooltip(strs.congruent, definitions.CongruentTriangles)}
         {linked(t2, props.ctx.getTriangle(t2), [
           props.ctx.getTick(
             props.ctx.getSegment(t2s1),

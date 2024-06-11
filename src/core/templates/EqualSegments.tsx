@@ -41,11 +41,7 @@ export class EqualSegments {
         {linked(s1, s1s, [
           props.ctx.getTick(s1s, Obj.EqualLengthTick, options),
         ])}
-        {tooltip(
-          strs.congruent,
-          definitions.CongruentLines.keyword,
-          definitions.CongruentLines.definition
-        )}
+        {tooltip(strs.congruent, definitions.CongruentLines)}
         {linked(s2, s2s, [
           props.ctx.getTick(s2s, Obj.EqualLengthTick, options),
         ])}
@@ -56,11 +52,7 @@ export class EqualSegments {
     return (
       <span>
         {linked(s1, ctx.getSegment(s1))}
-        {tooltip(
-          strs.congruent,
-          definitions.CongruentLines.keyword,
-          definitions.CongruentLines.definition
-        )}
+        {tooltip(strs.congruent, definitions.CongruentLines)}
         {linked(s2, ctx.getSegment(s2))}
       </span>
     );

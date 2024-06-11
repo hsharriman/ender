@@ -49,11 +49,7 @@ export class ASA {
             num: meta.a2s.numTicks,
           }),
         ])}
-        {tooltip(
-          strs.congruent,
-          definitions.CongruentTriangles.keyword,
-          definitions.CongruentTriangles.keyword
-        )}
+        {tooltip(strs.congruent, definitions.CongruentTriangles)}
         {linked(t2, props.ctx.getTriangle(t2), [
           props.ctx.getTick(
             props.ctx.getSegment(t2s),

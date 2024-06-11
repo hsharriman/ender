@@ -13,11 +13,7 @@ export class EqualTriangles {
     return (
       <span>
         {linked(t1, t1s)}
-        {tooltip(
-          strs.congruent,
-          definitions.CongruentTriangles.keyword,
-          definitions.CongruentTriangles.keyword
-        )}
+        {tooltip(strs.congruent, definitions.CongruentTriangles)}
         {linked(t2, t2s)}
       </span>
     );
