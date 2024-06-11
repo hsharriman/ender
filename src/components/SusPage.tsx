@@ -59,7 +59,6 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
     const allAnswered = Object.values(answers).every((answer) => answer !== "");
 
     if (!allAnswered) {
-      alert("Please answer all questions.");
       return;
     }
     console.log("Survey results:", answers);

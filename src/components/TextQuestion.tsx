@@ -30,7 +30,7 @@ export class TextQuestion extends React.Component<
   handleSubmit = () => {
     const { inputText } = this.state;
     if (inputText.length === 0) {
-      alert("Please type something.");
+      //alert("Please type something.");
       return;
     }
     this.props.onSubmit(this.state.inputText);

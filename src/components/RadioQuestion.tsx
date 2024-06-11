@@ -33,7 +33,7 @@ export class RadioQuestion extends React.Component<
   handleSubmit = () => {
     const { selectedOption } = this.state;
     if (selectedOption.length === 0) {
-      alert("Please select an answer.");
+      //alert("Please select an answer.");
       return;
     }
     this.props.onSubmit(this.state.selectedOption);

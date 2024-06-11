@@ -45,7 +45,7 @@ export class MultiSelectQuestion extends React.Component<
   handleSubmit = () => {
     const { selectedOptions } = this.state;
     if (selectedOptions.length === 0) {
-      alert("Please select at least one answer.");
+      //alert("Please select at least one answer.");
       return;
     }
     this.props.onSubmit(this.state.selectedOptions);

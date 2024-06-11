@@ -11,6 +11,11 @@ export const checkingProof1: Question[] = [
     prompt: "Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
   },
+  {
+    prompt:
+      "You've completed all the questions for this page, please move to the next page!",
+    type: QuestionType.Next,
+  },
 ];
 
 export const checkingProof2: Question[] = [
@@ -24,6 +29,11 @@ export const checkingProof2: Question[] = [
     prompt: "Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
   },
+  {
+    prompt:
+      "You've completed all the questions for this page, please move to the next page!",
+    type: QuestionType.Next,
+  },
 ];
 
 export const checkingProof3: Question[] = [
@@ -36,5 +46,10 @@ export const checkingProof3: Question[] = [
   {
     prompt: "Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
+  },
+  {
+    prompt:
+      "You've completed all the questions for this page, please move to the next page!",
+    type: QuestionType.Next,
   },
 ];
