@@ -1,8 +1,11 @@
 import { linked } from "../../theorems/utils";
+import { tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { parallel, segmentStr } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
+import { strs } from "../geometryText";
+import { definitions } from "../../theorems/definitions";
 
 export class ParallelLines {
   static additions = (
@@ -37,7 +40,7 @@ export class ParallelLines {
     return (
       <span>
         {linked(s1, s1s, [props.ctx.getTick(s1s, Obj.ParallelTick, options)])}
-        {parallel}
+        {tooltip(strs.parallel, definitions.Parallel)}
         {linked(s2, s2s, [props.ctx.getTick(s2s, Obj.ParallelTick, options)])}
       </span>
     );
@@ -47,7 +50,7 @@ export class ParallelLines {
     return (
       <span>
         {linked(s1, ctx.getSegment(s1))}
-        {parallel}
+        {tooltip(strs.parallel, definitions.Parallel)}
         {linked(s2, ctx.getSegment(s2))}
       </span>
     );
