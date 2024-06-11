@@ -4,7 +4,7 @@ import { SubmitQuestion } from "./SubmitQuestion";
 
 interface QuestionProps {
   questionNum: string;
-  question: string;
+  question: string | JSX.Element;
   answers: string[];
   onSubmit: (answers: string[]) => void;
 }

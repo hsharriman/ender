@@ -3,7 +3,7 @@ import { SubmitQuestion } from "./SubmitQuestion";
 
 interface QuestionProps {
   questionNum: string;
-  question: string;
+  question: string | JSX.Element;
   onSubmit: (text: string) => void;
 }
 
@@ -53,7 +53,7 @@ export class TextQuestion extends React.Component<
         <div className="font-bold text-base pb-1">{question}</div>
         <div className="text-base">
           <textarea
-            name={question}
+            name={questionNum}
             className="border-2 border-black w-full p-1.5 rounded-sm"
             value={inputText}
             onChange={this.handleInputChange}

@@ -3,7 +3,7 @@ import { SubmitQuestion } from "./SubmitQuestion";
 
 interface QuestionProps {
   questionNum: string;
-  question: string;
+  question: string | JSX.Element;
   answers: string[];
   onSubmit: (answer: string) => void;
 }
@@ -53,7 +53,9 @@ export class RadioQuestion extends React.Component<
             Question {questionNum}:
           </div>
         </div>
-        <div className="font-bold text-base pb-1">{question}</div>
+        <div className="font-bold text-base pb-1">
+          <span>{question}</span>
+        </div>
         <div className="text-base">
           {answers.map((answer, index) => {
             return (
