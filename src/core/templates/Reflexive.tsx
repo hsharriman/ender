@@ -1,8 +1,11 @@
 import { linked } from "../../theorems/utils";
+import { tooltip } from "../../theorems/utils";
 import { congruent } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
+import { strs } from "../geometryText";
+import { definitions } from "../../theorems/definitions";
 
 export class Reflexive {
   static additions = (props: StepFocusProps, s: string, num = 1) => {
@@ -20,7 +23,7 @@ export class Reflexive {
     return (
       <span>
         {MKLinked}
-        {congruent}
+        {tooltip(strs.congruent, definitions.CongruentLines)}
         {MKLinked}
       </span>
     );

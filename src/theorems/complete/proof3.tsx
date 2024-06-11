@@ -4,7 +4,7 @@ import { BaseGeometryObject } from "../../core/geometry/BaseGeometryObject";
 import { Point } from "../../core/geometry/Point";
 import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
-import { angleStr, comma, triangleStr } from "../../core/geometryText";
+import { comma, triangleStr } from "../../core/geometryText";
 import { EqualAngles } from "../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../core/templates/EqualSegments";
@@ -169,6 +169,7 @@ const proves: StepMeta = makeStepMeta({
 });
 
 const step1: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -197,6 +198,7 @@ const step1: StepMeta = makeStepMeta({
 });
 
 const step2: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     step1.unfocused(props);
     step1.additions({ ...props, mode: SVGModes.Unfocused });
@@ -209,6 +211,8 @@ const step2: StepMeta = makeStepMeta({
 });
 
 const step3: StepMeta = makeStepMeta({
+  reason: Reasons.Rectangle,
+  dependsOn: [1],
   unfocused: (props: StepUnfocusProps) => {
     step2.additions({ ...props, mode: SVGModes.Unfocused });
     step2.unfocused(props);
@@ -216,30 +220,13 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["FEJ", "JHG"]);
   },
-  text: (props: StepTextProps) => {
-    const JHG = props.ctx.getAngle("JHG");
-    return (
-      <span>
-        {RightAngle.text(props, "FEJ")}
-        {" = "}
-        {linked("JHG", JHG, [
-          props.ctx.getTick(JHG, Obj.RightTick, { frame: props.frame }),
-        ])}
-      </span>
-    );
-  },
-  staticText: () => {
-    return (
-      <span>
-        {angleStr("FEJ")}
-        {" = "}
-        {angleStr("JHG")}
-      </span>
-    );
-  },
+  text: (props: StepTextProps) => EqualRightAngles.text(props, ["FEJ", "JHG"]),
+  staticText: () => EqualRightAngles.staticText(["FEJ", "JHG"]),
 });
 
 const step4: StepMeta = makeStepMeta({
+  reason: Reasons.Parallelogram,
+  dependsOn: [3],
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);
     step3.additions({ ...props, mode: SVGModes.Unfocused });
@@ -259,6 +246,8 @@ const step5SASProps: SASProps = {
   tickOverride: Obj.RightTick,
 };
 const step5: StepMeta = makeStepMeta({
+  reason: Reasons.SAS,
+  dependsOn: [2, 3, 4],
   unfocused: (props: StepUnfocusProps) => {
     props.ctx.getSegment("FG").mode(props.frame, SVGModes.Unfocused);
   },
@@ -270,6 +259,8 @@ const step5: StepMeta = makeStepMeta({
 });
 
 const step6: StepMeta = makeStepMeta({
+  reason: Reasons.CorrespondingSegments,
+  dependsOn: [5],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });
     step5.unfocused(props);
@@ -282,6 +273,8 @@ const step6: StepMeta = makeStepMeta({
 });
 
 const step7: StepMeta = makeStepMeta({
+  reason: Reasons.Isosceles,
+  dependsOn: [6],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });
     step6.unfocused(props);
@@ -390,17 +383,5 @@ export const P3: LayoutProps = {
   miniContent: miniContent(),
   givens,
   proves,
-  steps: [
-    { meta: step1, reason: Reasons.Given },
-    { meta: step2, reason: Reasons.Given },
-    { meta: step3, reason: Reasons.Rectangle, dependsOn: [1] },
-    { meta: step4, reason: Reasons.Parallelogram, dependsOn: [3] },
-    {
-      meta: step5,
-      reason: Reasons.SAS,
-      dependsOn: [2, 3, 4],
-    },
-    { meta: step6, reason: Reasons.CorrespondingSegments, dependsOn: [5] },
-    { meta: step7, reason: Reasons.Isosceles, dependsOn: [6] },
-  ],
+  steps: [step1, step2, step3, step4, step5, step6, step7],
 };

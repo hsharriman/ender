@@ -1,7 +1,7 @@
 import { Content } from "../../core/diagramContent";
 import {
+  SetupStepMeta,
   StaticProofTextItem,
-  Step,
   StepMeta,
 } from "../../core/types/stepTypes";
 import { Reason } from "../../core/types/types";
@@ -12,9 +12,9 @@ import { StaticAppPage } from "../StaticAppPage";
 
 export interface StaticLayoutProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: Step[];
-  givens: StepMeta;
-  proves: StepMeta;
+  steps: StepMeta[];
+  givens: SetupStepMeta;
+  proves: SetupStepMeta;
   questions: Question[];
 }
 
@@ -28,7 +28,7 @@ export const StaticLayout = (props: StaticLayoutProps) => {
   const texts: StaticProofTextItem[] = [];
   props.steps.map((step) => {
     texts.push({
-      stmt: step.meta.staticText(),
+      stmt: step.staticText(),
       reason: step.reason.title,
     });
     if (step.reason.body !== "" && step.reason.title !== Reasons.Given.title) {
@@ -41,7 +41,7 @@ export const StaticLayout = (props: StaticLayoutProps) => {
       texts={texts}
       diagram={ctx.allSvgElements()(GIVEN_ID)}
       givenText={props.givens.staticText()}
-      proveText={props.givens.staticText()}
+      proveText={props.proves.staticText()}
       questions={props.questions}
     />
   );

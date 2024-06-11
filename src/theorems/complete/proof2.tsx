@@ -1,8 +1,10 @@
 import { Content } from "../../core/diagramContent";
+import { Angle } from "../../core/geometry/Angle";
 import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
 import { angleStr, comma, segmentStr } from "../../core/geometryText";
 import { ASA, ASAProps } from "../../core/templates/ASA";
+import { BaseAngle } from "../../core/templates/BaseAngle";
 import { EqualAngles } from "../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../core/templates/EqualSegments";
@@ -55,13 +57,15 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
 
   ctx.push(new Triangle({ pts: [A, B, D], parentFrame }, ctx));
   ctx.push(new Triangle({ pts: [C, B, D], parentFrame }, ctx));
+
+  // for given step:
+  ctx.push(new Angle({ start: A, center: B, end: C }));
   return ctx;
 };
 
 const givens: StepMeta = makeStepMeta({
   text: (props: StepTextProps) => {
     const BD = props.ctx.getSegment("BD");
-    const ABD = props.ctx.getAngle("ABD");
 
     return (
       <span>
@@ -69,15 +73,13 @@ const givens: StepMeta = makeStepMeta({
         {comma}
         {linked("BD", BD)}
         {" bisects "}
-        {linked("ABC", ABD)}
+        {BaseAngle.text(props, "ABC")}
       </span>
     );
   },
 
   ticklessText: (ctx: Content) => {
     const BD = ctx.getSegment("BD");
-    const ABD = ctx.getAngle("ABD");
-    const DBC = ctx.getAngle("CBD");
 
     return (
       <span>
@@ -85,7 +87,7 @@ const givens: StepMeta = makeStepMeta({
         {comma}
         {linked("BD", BD)}
         {" bisects "}
-        {linked("ABC", ABD, [DBC])}
+        {BaseAngle.ticklessText(ctx, "ABC")}
       </span>
     );
   },
@@ -125,6 +127,7 @@ const proves: StepMeta = makeStepMeta({
 });
 
 const step1: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -143,7 +146,7 @@ const step1: StepMeta = makeStepMeta({
         {comma}
         {linked("BD", BD)}
         {" bisects "}
-        {linked("ABC", ABD, [
+        {BaseAngle.text(props, "ABC", [
           props.ctx.getTick(ABD, Obj.EqualAngleTick, { frame: props.frame }),
           props.ctx.getTick(DBC, Obj.EqualAngleTick, { frame: props.frame }),
         ])}
@@ -154,6 +157,8 @@ const step1: StepMeta = makeStepMeta({
 });
 
 const step2: StepMeta = makeStepMeta({
+  reason: Reasons.PerpendicularLines,
+  dependsOn: [1],
   unfocused: (props: StepUnfocusProps) => {
     const stepProps = { ...props, mode: SVGModes.Unfocused };
     givens.additions(stepProps);
@@ -167,6 +172,8 @@ const step2: StepMeta = makeStepMeta({
 });
 
 const step3: StepMeta = makeStepMeta({
+  reason: Reasons.CongAdjAngles,
+  dependsOn: [2],
   unfocused: (props: StepUnfocusProps) => {
     const stepProps = { ...props, mode: SVGModes.Unfocused };
     givens.additions(stepProps);
@@ -179,6 +186,7 @@ const step3: StepMeta = makeStepMeta({
 });
 
 const step4: StepMeta = makeStepMeta({
+  reason: Reasons.Reflexive,
   unfocused: (props: StepUnfocusProps) => {
     const stepProps = { ...props, mode: SVGModes.Unfocused };
     givens.additions(stepProps);
@@ -197,6 +205,8 @@ const step5ASAProps: ASAProps = {
   triangles: ["ABD", "CBD"],
 };
 const step5: StepMeta = makeStepMeta({
+  reason: Reasons.ASA,
+  dependsOn: [1, 3, 4],
   additions: (props: StepFocusProps) => {
     ASA.additions(props, step5ASAProps);
   },
@@ -205,6 +215,8 @@ const step5: StepMeta = makeStepMeta({
 });
 
 const step6: StepMeta = makeStepMeta({
+  reason: Reasons.CorrespondingSegments,
+  dependsOn: [5],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -215,6 +227,8 @@ const step6: StepMeta = makeStepMeta({
 });
 
 const step7: StepMeta = makeStepMeta({
+  reason: Reasons.Midpoint,
+  dependsOn: [6],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -358,17 +372,5 @@ export const P2: LayoutProps = {
   miniContent: miniContent(),
   givens,
   proves,
-  steps: [
-    { meta: step1, reason: Reasons.Given },
-    { meta: step2, reason: Reasons.PerpendicularLines, dependsOn: [1] },
-    { meta: step3, reason: Reasons.CongAdjAngles, dependsOn: [2] },
-    { meta: step4, reason: Reasons.Reflexive },
-    {
-      meta: step5,
-      reason: Reasons.ASA,
-      dependsOn: [1, 3, 4],
-    },
-    { meta: step6, reason: Reasons.CorrespondingSegments, dependsOn: [5] },
-    { meta: step7, reason: Reasons.Midpoint, dependsOn: [6] },
-  ],
+  steps: [step1, step2, step3, step4, step5, step6, step7],
 };
