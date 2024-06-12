@@ -8,7 +8,6 @@ import { Reason } from "../../core/types/types";
 import { Question } from "../../questions/completeQuestions";
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID } from "../../theorems/utils";
-import { StaticAppPage } from "../StaticAppPage";
 
 export interface StaticLayoutProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
@@ -18,7 +17,7 @@ export interface StaticLayoutProps {
   questions: Question[];
 }
 
-export const StaticLayout = (props: StaticLayoutProps) => {
+export const StaticLayout = (props: StaticLayoutProps, active: number) => {
   // build diagram from given construction
   const ctx = props.baseContent(true);
   ctx.addFrame(GIVEN_ID);
@@ -36,13 +35,15 @@ export const StaticLayout = (props: StaticLayoutProps) => {
     }
   });
   return (
-    <StaticAppPage
-      reasons={reasons}
-      texts={texts}
-      diagram={ctx.allSvgElements()(GIVEN_ID)}
-      givenText={props.givens.staticText()}
-      proveText={props.givens.staticText()}
-      questions={props.questions}
-    />
+    <></>
+    // <StaticAppPage
+    //   reasons={reasons}
+    //   texts={texts}
+    //   diagram={ctx.allSvgElements()(GIVEN_ID)}
+    //   givenText={props.givens.staticText()}
+    //   proveText={props.givens.staticText()}
+    //   questions={props.questions}
+    //   pageNum={active}
+    // />
   );
 };

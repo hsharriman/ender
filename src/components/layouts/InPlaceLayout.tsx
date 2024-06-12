@@ -2,8 +2,7 @@ import { Content } from "../../core/diagramContent";
 import { ProofTextItem, Step, StepMeta } from "../../core/types/stepTypes";
 import { Reason } from "../../core/types/types";
 import { Question } from "../../questions/completeQuestions";
-import { GIVEN_ID, PROVE_ID, getReasonFn } from "../../theorems/utils";
-import { AppPage } from "../InteractiveAppPage";
+import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
 
 export interface InPlaceLayoutProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
@@ -14,7 +13,7 @@ export interface InPlaceLayoutProps {
   questions: Question[];
 }
 
-export const InPlaceLayout = (props: InPlaceLayoutProps) => {
+export const InPlaceLayout = (props: InPlaceLayoutProps, active: number) => {
   let ctx = props.baseContent(true);
 
   // GIVEN
@@ -57,16 +56,15 @@ export const InPlaceLayout = (props: InPlaceLayoutProps) => {
   });
 
   return (
-    <AppPage
-      proofText={linkedTexts}
-      svgElements={ctx.allSvgElements()}
-      reasonText={getReasonFn(reasonMap)}
-      miniSvgElements={props.miniContent.allSvgElements(true)}
-      reliesOn={ctx.getReliesOn()}
-      onClickCanvas={function (): void {
-        throw new Error("Function not implemented.");
-      }}
-      questions={props.questions}
-    />
+    <></>
+    // <AppPage
+    //   proofText={linkedTexts}
+    //   svgElements={ctx.allSvgElements(1)}
+    //   reasonText={getReasonFn(reasonMap)}
+    //   miniSvgElements={props.miniContent.allSvgElements(1,true)}
+    //   reliesOn={ctx.getReliesOn()}
+    //   questions={props.questions}
+    //   pageNum={active}
+    // />
   );
 };

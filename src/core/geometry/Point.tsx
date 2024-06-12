@@ -1,8 +1,6 @@
-import { BaseSVG } from "../svg/BaseSVG";
-import { SVGCircle } from "../svg/SVGCircle";
 import { ModeCSS } from "../svg/SVGStyles";
 import { SVGText } from "../svg/SVGText";
-import { Vector, Obj, LPoint, SVGModes } from "../types/types";
+import { LPoint, Obj, SVGModes, Vector } from "../types/types";
 import { vops } from "../vectorOps";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 
@@ -56,31 +54,37 @@ export class Point extends BaseGeometryObject {
   };
 
   svg = (
+    pageNum: number,
     parentFrame?: string,
     miniScale = false,
     style?: React.CSSProperties
   ): JSX.Element[] => {
-    let svgItems: JSX.Element[] = [
-      <SVGCircle
-        {...{
-          center: this.coordsToSvg(this.pt, miniScale),
-          r: 2,
-          geoId:
-            parentFrame !== undefined ? `${parentFrame}-${this.id}` : this.id,
-          style: {
-            fill: "black",
-            ...style,
-          },
-          mode: SVGModes.Hidden, // TODO unnecessary rn
-          activeFrame: "",
-        }}
-      />,
-    ];
-    if (this.showLabel) svgItems.push(this.addLabel(miniScale));
+    let svgItems: JSX.Element[] = [];
+    // TODO fix point rendering
+    //   <SVGCircle
+    //     {...{
+    //       center: this.coordsToSvg(this.pt, miniScale),
+    //       r: 2,
+    //       geoId:
+    //         parentFrame !== undefined ? `${parentFrame}-${this.id}` : this.id,
+    //       style: {
+    //         fill: "black",
+    //         ...style,
+    //       },
+    //       mode: SVGModes.Hidden, // TODO unnecessary rn
+    //       activeFrame: "",
+    //     }}
+    //   />,
+    // ];
+    if (this.showLabel) svgItems.push(this.addLabel(miniScale, pageNum));
     return svgItems;
   };
 
-  addLabel = (miniScale: boolean, style?: React.CSSProperties) => {
+  addLabel = (
+    miniScale: boolean,
+    pageNum: number,
+    style?: React.CSSProperties
+  ) => {
     return (
       <SVGText
         {...{
@@ -92,9 +96,10 @@ export class Point extends BaseGeometryObject {
             fontStyle: "italic",
             ...style,
           },
-          mode: SVGModes.Default, // TODO unnecessary rn
+          mode: SVGModes.Default,
           activeFrame: "",
         }}
+        key={`${this.getId(Obj.Text, this.label)}-${pageNum}`}
       />
     );
   };

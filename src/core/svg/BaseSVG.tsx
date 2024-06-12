@@ -1,8 +1,7 @@
-import { CSSProperties } from "react";
-import { SVGObj, BaseSVGProps } from "./svgTypes";
-import React from "react";
+import React, { CSSProperties } from "react";
 import { SVGModes } from "../types/types";
 import { ModeCSS } from "./SVGStyles";
+import { BaseSVGProps } from "./svgTypes";
 
 export interface BaseSVGState {
   isActive: boolean;
@@ -18,7 +17,6 @@ export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
     super(props);
     this.geoId = props.geoId;
     this.mode = props.mode;
-    // this.tag = props.tag;
     this.style = props.style ?? {};
     this.state = {
       isActive: false,

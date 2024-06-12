@@ -1,12 +1,14 @@
 import React from "react";
-import { Question } from "../questions/completeQuestions";
-import { susQuestions } from "../questions/susQuestions";
-import { staticFollowUpQuestions } from "../questions/susQuestions";
-import { interactiveFollowUpQuestions } from "../questions/susQuestions";
-import SusQuestion from "./SusQuestion";
-import { SubmitQuestion } from "./SubmitQuestion";
-import staticScreenshot from "../assets/StaticPageScreenshot.png";
 import interactiveScreenshot from "../assets/InteractivePageScreenshot.png";
+import staticScreenshot from "../assets/StaticPageScreenshot.png";
+import { Question } from "../questions/completeQuestions";
+import {
+  interactiveFollowUpQuestions,
+  staticFollowUpQuestions,
+  susQuestions,
+} from "../questions/susQuestions";
+import { SubmitQuestion } from "./SubmitQuestion";
+import SusQuestion from "./SusQuestion";
 
 interface susPageProps {
   type: string;
@@ -73,7 +75,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
   render() {
     return (
       <>
-        <div className="grid grid-rows-[auto,1fr] gap-2 justify-center flex w-full min-w-[1300px]">
+        <div className="grid grid-rows-[auto,1fr] gap-2 justify-center w-full min-w-[1300px]">
           <div className="flex flex-col items-center">
             {this.props.type === "Static" ? (
               <h2 className="text-2xl font-bold mb-4">Static Proof</h2>

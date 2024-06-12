@@ -1,54 +1,71 @@
 import React from "react";
-import { InPlaceLayout } from "./components/layouts/InPlaceLayout";
-import { StaticLayout } from "./components/layouts/StaticLayout";
+import { InteractiveAppPage } from "./components/InteractiveAppPage";
+import { StaticAppPage } from "./components/StaticAppPage";
+import { SusPage } from "./components/SusPage";
+import { LayoutProps } from "./core/types/types";
 import { PC1 } from "./theorems/checking/pc1";
 import { PC2 } from "./theorems/checking/pc2";
 import { PC3 } from "./theorems/checking/pc3";
 import { P1 } from "./theorems/complete/proof1";
 import { P2 } from "./theorems/complete/proof2";
 import { P3 } from "./theorems/complete/proof3";
-import { SusPage } from "./components/SusPage";
-import { LayoutProps } from "./core/types/types";
 
-const NUM_PAGES = 6;
+interface AppMeta {
+  layout: LayoutOptions;
+  proofMeta: LayoutProps;
+}
+type LayoutOptions = "static" | "interactive";
 
-const randomizeOrder = (arr: number[]) => {
-  for (let i = arr.length - 1; i >= 0; i--) {
+const fisherYates = (arrLen: number) => {
+  // create a range of numbers from 0 to arrLen in an array
+  const arr = Array.from({ length: arrLen }, (_, i) => i);
+  // shuffle the array with Fisher-Yates algorithm
+  for (let i = arrLen - 1; i >= 0; i--) {
     const randomIndex = Math.floor(Math.random() * (i + 1));
     arr.push(arr[randomIndex]);
     arr.splice(randomIndex, 1);
   }
+  // return the shuffled array
   return arr;
 };
 
 const randomizeProofs = (arr: LayoutProps[]) => {
-  const order = randomizeOrder([0, 1, 2]);
+  const order = fisherYates(3);
   const newArr = order.map((i) => arr[i]);
-
+  // only 2 proofs are needed per experiment
   return newArr.slice(1);
 };
 
-const randomizeLayout = (proof: LayoutProps[]) => {
-  const randomNum = Math.floor(Math.random());
+const staticLayout = (proofMeta: LayoutProps): AppMeta => {
+  return {
+    layout: "static",
+    proofMeta,
+  };
+};
+const interactiveLayout = (proofMeta: LayoutProps): AppMeta => {
+  return {
+    layout: "interactive",
+    proofMeta,
+  };
+};
 
-  const newLayout = proof.map((i) => {
-    if (randomNum === 0) {
-      return StaticLayout(i);
-    } else {
-      return InPlaceLayout(i);
-    }
-  });
-
-  return newLayout;
+const randomizeLayout = (proofMetas: LayoutProps[]): AppMeta[] => {
+  // randomly pick 0 or 1
+  // if 1, then the first proof is static, else interactive
+  const staticFirst = Math.round(Math.random()) === 1;
+  return staticFirst
+    ? [staticLayout(proofMetas[0]), interactiveLayout(proofMetas[1])]
+    : [interactiveLayout(proofMetas[0]), staticLayout(proofMetas[1])];
 };
 
 interface AppProps {}
-export interface AppState {
+interface AppState {
   activePage: number;
   activeTest: number;
 }
 export class App extends React.Component<AppProps, AppState> {
-  private orders = new Map<number, JSX.Element[]>();
+  private orders = new Map<number, AppMeta[]>();
+  private meta: AppMeta[] = [];
   constructor(props: AppProps) {
     super(props);
     this.state = {
@@ -57,33 +74,31 @@ export class App extends React.Component<AppProps, AppState> {
     };
 
     // TODO randomize order of questions and type
-    const randomCompleteProofs = randomizeProofs([P1, P2, P3]);
-    const randomizedCompleteProofs = randomizeLayout(randomCompleteProofs);
-    const randomCheckingProofs = randomizeProofs([PC1, PC2, PC3]);
-    const randomizedCheckingProofs = randomizeLayout(randomCheckingProofs);
-    let randomProofOrder = randomizedCompleteProofs.concat(
-      randomizedCheckingProofs
+    const randomCompleteProofs = randomizeLayout(randomizeProofs([P1, P2, P3])); // 2 random complete proofs
+    const randomCheckingProofs = randomizeLayout(
+      randomizeProofs([PC1, PC2, PC3])
     );
-
-    const presetOrder1 = [
-      InPlaceLayout(P1),
-      StaticLayout(P2),
-      InPlaceLayout(P3),
-      StaticLayout(PC1),
-      InPlaceLayout(PC2),
-      StaticLayout(PC3),
-    ];
+    let randomProofOrder = randomCompleteProofs.concat(randomCheckingProofs);
+    // shuffle activities
+    const shuffleProofOrder = fisherYates(randomProofOrder.length);
+    randomProofOrder = shuffleProofOrder.map((i) => randomProofOrder[i]);
+    // const presetOrder1 = [
+    //   InPlaceLayout(P1, ActivityType.Complete),
+    //   InPlaceLayout(P2, ActivityType.Complete),
+    //   InPlaceLayout(P3, ActivityType.Complete),
+    //   StaticLayout(PC1, ActivityType.Checking),
+    //   InPlaceLayout(PC2, ActivityType.Checking),
+    //   StaticLayout(PC3, ActivityType.Checking),
+    // ];
     const presetOrder2 = [
-      StaticLayout(P1),
-      InPlaceLayout(P2),
-      StaticLayout(P3),
-      InPlaceLayout(PC1),
-      StaticLayout(PC2),
-      InPlaceLayout(PC3),
+      staticLayout(P1),
+      interactiveLayout(P2),
+      staticLayout(P3),
+      interactiveLayout(PC1),
+      staticLayout(PC2),
+      interactiveLayout(PC3),
     ];
-    this.orders.set(1, presetOrder1);
-    this.orders.set(2, presetOrder2);
-    this.orders.set(3, randomProofOrder);
+    this.meta = randomProofOrder;
   }
   onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
     if (this.state.activePage + direction < 0) {
@@ -93,14 +108,15 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  onClickTest = (test: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
-    this.setState({ activeTest: test });
-    if (test > 0) {
-      this.renderProofPages(this.orders.get(test) || []);
-    }
-  };
+  // onClickTest = (test: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   this.setState({ activeTest: test });
+  //   if (test > 0) {
+  //     this.renderProofPages(this.orders.get(test) || []);
+  //   }
+  // };
 
-  renderProofPages = (testOrder: JSX.Element[]) => {
+  render() {
+    const currMeta = this.meta[this.state.activePage];
     return (
       <div>
         <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
@@ -114,13 +130,15 @@ export class App extends React.Component<AppProps, AppState> {
           </button>
           <div className="absolute top-0 p-3 left-24 z-30">{`${
             this.state.activePage + 1
-          } / ${NUM_PAGES + 2}`}</div>
+          } / ${this.meta.length + 2}`}</div>
           <button
             className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
             id="next-arrow"
             style={{
               display:
-                this.state.activePage < NUM_PAGES + 2 - 1 ? "block" : "none",
+                this.state.activePage < this.meta.length + 2 - 1
+                  ? "block"
+                  : "none",
             }}
             onClick={this.onClick(1)}
           >
@@ -128,27 +146,39 @@ export class App extends React.Component<AppProps, AppState> {
           </button>
         </div>
         <div className="w-full h-full flex justify-start">
-          {this.state.activePage <= NUM_PAGES - 1 ? (
-            testOrder[this.state.activePage]
+          {this.state.activePage <= this.meta.length - 1 ? (
+            currMeta.layout === "static" ? (
+              <StaticAppPage
+                {...{ ...currMeta.proofMeta, pageNum: this.state.activePage }}
+              />
+            ) : (
+              <InteractiveAppPage
+                {...{ ...currMeta.proofMeta, pageNum: this.state.activePage }}
+              />
+            )
           ) : (
             <SusPage
               key={this.state.activePage}
-              type={this.state.activePage === 6 ? "Static" : "Interactive"}
+              type={
+                this.state.activePage === this.meta.length
+                  ? "Static"
+                  : "Interactive"
+              }
             />
           )}
         </div>
       </div>
     );
-  };
-  render() {
-    if (this.state.activeTest > 0) {
-      return this.renderProofPages(
-        this.orders.get(this.state.activeTest) || []
-      );
-    }
+    // activeTest == length of tests, if > 0 then need some meta info to determine which type of page layout to call
+    // so basically need an array of length testOrder, either saying "interactive" or "static"
+    // if (this.state.activeTest > 0) {
+    //   return this.renderProofPages(
+    //     this.orders.get(this.state.activeTest) || []
+    //   );
+    // }
     return (
       <div className="flex w-screen h-screen justify-center items-center">
-        <div className="flex flex-row w-[1100px] h-32 justify-center">
+        {/* <div className="flex flex-row w-[1100px] h-32 justify-center">
           <button
             className="py-4 px-8 m-4 text-3xl bg-violet-300 rounded-md text-white"
             onClick={this.onClickTest(1)}
@@ -167,7 +197,7 @@ export class App extends React.Component<AppProps, AppState> {
           >
             Test 3
           </button>
-        </div>
+        </div> */}
       </div>
     );
   }
