@@ -12,6 +12,7 @@ export type BaseSVGProps = {
   geoId: string;
   mode: SVGModes;
   activeFrame: string;
+  hoverable?: boolean;
   style?: React.CSSProperties;
 };
 

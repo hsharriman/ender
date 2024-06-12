@@ -1,8 +1,7 @@
 import React from "react";
-import { Obj } from "../core/types/types";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
-import { triangleStr } from "../core/geometryText";
-import { angleStr } from "../core/geometryText";
+import { angleStr, triangleStr } from "../core/geometryText";
+import { Obj } from "../core/types/types";
 
 export interface LinkedTextProps {
   val: string;
@@ -92,8 +91,8 @@ export class LinkedText extends React.Component<
       <span
         className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150`}
         // style={this.getStyle()}
-        onMouseEnter={() => this.onClick(true)}
-        onMouseLeave={() => this.onClick(false)}
+        onPointerEnter={() => this.onClick(true)}
+        onPointerLeave={() => this.onClick(false)}
         ref={this.wrapperRef}
       >
         {this.renderText()}

@@ -145,35 +145,6 @@ const step1: StepMeta = makeStepMeta({
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  additions: (props: StepFocusProps) => {
-    EqualSegments.additions(props, ["AM", "BM"]);
-    EqualSegments.additions(props, ["CM", "DM"], 2);
-  },
-  text: (props: StepTextProps) => {
-    return (
-      <span>
-        {EqualSegments.text(props, ["AM", "BM"])}
-        {comma}
-        {EqualSegments.text(props, ["CM", "DM"], 2)}
-      </span>
-    );
-  },
-  staticText: () => {
-    return (
-      <span>
-        {EqualSegments.staticText(["AM", "BM"])}
-        {comma}
-        {EqualSegments.staticText(["CM", "DM"])}
-      </span>
-    );
-  },
-});
-
-const step2: StepMeta = makeStepMeta({
-  reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
   text: (props: StepTextProps) => {
     const AM = props.ctx.getSegment("AM");
     const BM = props.ctx.getSegment("BM");
@@ -208,12 +179,41 @@ const step2: StepMeta = makeStepMeta({
   },
 });
 
-const step3: StepMeta = makeStepMeta({
-  reason: Reasons.VerticalAngles,
-  dependsOn: [2],
+const step2: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
+    EqualSegments.additions(props, ["AM", "BM"]);
+    EqualSegments.additions(props, ["CM", "DM"], 2);
+  },
+  text: (props: StepTextProps) => {
+    return (
+      <span>
+        {EqualSegments.text(props, ["AM", "BM"])}
+        {comma}
+        {EqualSegments.text(props, ["CM", "DM"], 2)}
+      </span>
+    );
+  },
+  staticText: () => {
+    return (
+      <span>
+        {EqualSegments.staticText(["AM", "BM"])}
+        {comma}
+        {EqualSegments.staticText(["CM", "DM"])}
+      </span>
+    );
+  },
+});
+
+const step3: StepMeta = makeStepMeta({
+  reason: Reasons.VerticalAngles,
+  dependsOn: [1],
+  unfocused: (props: StepUnfocusProps) => {
+    step2.unfocused(props);
+    step2.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CMA", "DMB"]),

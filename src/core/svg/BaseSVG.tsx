@@ -1,11 +1,12 @@
-import { CSSProperties } from "react";
-import { SVGObj, BaseSVGProps } from "./svgTypes";
-import React from "react";
+import React, { CSSProperties } from "react";
 import { SVGModes } from "../types/types";
 import { ModeCSS } from "./SVGStyles";
+import { BaseSVGProps } from "./svgTypes";
 
 export interface BaseSVGState {
   isActive: boolean;
+  css: string;
+  isPinned?: boolean;
 }
 
 export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
@@ -22,6 +23,8 @@ export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
     this.style = props.style ?? {};
     this.state = {
       isActive: false,
+      css: this.updateStyle(this.props.mode),
+      isPinned: false,
     };
   }
 
