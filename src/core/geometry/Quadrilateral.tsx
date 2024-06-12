@@ -1,6 +1,5 @@
 import { Content } from "../diagramContent";
 import { Obj, SVGModes } from "../types/types";
-import { LinkedText } from "../../components/LinkedText";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
@@ -77,9 +76,14 @@ export class Quadrilateral extends BaseGeometryObject {
     return [aa, ab, ac, ad];
   };
 
-  svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
+  svg = (
+    frameIdx: string,
+    pageNum: number,
+    miniScale = false,
+    style?: React.CSSProperties
+  ) => {
     return this.s
-      .flatMap((seg) => seg.svg(frameIdx, miniScale, style))
+      .flatMap((seg) => seg.svg(frameIdx, pageNum, miniScale, style))
       .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
   };
 
