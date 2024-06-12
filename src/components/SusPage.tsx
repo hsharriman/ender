@@ -1,7 +1,6 @@
 import React from "react";
 import interactiveScreenshot from "../assets/InteractivePageScreenshot.png";
 import staticScreenshot from "../assets/StaticPageScreenshot.png";
-import { Question } from "../questions/completeQuestions";
 import {
   interactiveFollowUpQuestions,
   staticFollowUpQuestions,
@@ -15,26 +14,23 @@ interface susPageProps {
 }
 
 interface susPageState {
-  textQuestions: Question[];
   answers: { [key: string]: string };
 }
 
 export class SusPage extends React.Component<susPageProps, susPageState> {
+  private textQuestions =
+    this.props.type === "Static"
+      ? staticFollowUpQuestions
+      : interactiveFollowUpQuestions;
   constructor(props: susPageProps) {
     super(props);
-    console.log(this.props.type);
-    const textQuestions =
-      this.props.type === "Static"
-        ? staticFollowUpQuestions
-        : interactiveFollowUpQuestions;
     this.state = {
-      textQuestions: textQuestions,
       answers: {
         ...susQuestions.reduce((acc, _, index) => {
           acc[index.toString()] = "";
           return acc;
         }, {} as { [key: string]: string }),
-        ...textQuestions.reduce((acc, _, index) => {
+        ...this.textQuestions.reduce((acc, _, index) => {
           acc[`text${index}`] = "";
           return acc;
         }, {} as { [key: string]: string }),
@@ -68,8 +64,6 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
       return;
     }
     console.log("Survey results:", answers);
-
-    alert("Survey submitted successfully!");
   };
 
   render() {
@@ -124,7 +118,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
               ))}
             </div>
             <div className="right-column ml-10">
-              {this.state.textQuestions.map((question, index) => (
+              {this.textQuestions.map((question, index) => (
                 <>
                   <div className="flex flex-col justify-start pb-1">
                     <div className="font-bold text-base text-slate-500">

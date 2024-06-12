@@ -105,6 +105,7 @@ const proves: StepMeta = makeStepMeta({
 });
 
 const step1: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -118,6 +119,7 @@ const step1: StepMeta = makeStepMeta({
 });
 
 const step2: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     const focusProps = { ...props, mode: SVGModes.Unfocused };
     givens.additions(focusProps);
@@ -133,6 +135,8 @@ const step2: StepMeta = makeStepMeta({
 });
 
 const step3: StepMeta = makeStepMeta({
+  reason: Reasons.CongAdjAngles,
+  dependsOn: [1],
   unfocused: (props: StepUnfocusProps) => {
     step2.unfocused(props);
     step2.additions({ ...props, mode: SVGModes.Unfocused });
@@ -147,6 +151,7 @@ const step3: StepMeta = makeStepMeta({
 });
 
 const step4: StepMeta = makeStepMeta({
+  reason: Reasons.Reflexive,
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);
     step3.additions({ ...props, mode: SVGModes.Unfocused });
@@ -168,6 +173,8 @@ const step5Labels: SASProps = {
   tickOverride: Obj.RightTick,
 };
 const step5: StepMeta = makeStepMeta({
+  reason: Reasons.SAS,
+  dependsOn: [2, 3, 4],
   additions: (props: StepFocusProps) => {
     SAS.additions(props, step5Labels);
   },
@@ -220,13 +227,7 @@ export const miniContent = () => {
 export const PC2: LayoutProps = {
   questions: checkingProof2,
   baseContent,
-  steps: [
-    { meta: step1, reason: Reasons.Given },
-    { meta: step2, reason: Reasons.Given },
-    { meta: step3, reason: Reasons.CongAdjAngles, dependsOn: [1] },
-    { meta: step4, reason: Reasons.Reflexive },
-    { meta: step5, reason: Reasons.SAS, dependsOn: [2, 3, 4] },
-  ],
+  steps: [step1, step2, step3, step4, step5],
   miniContent: miniContent(),
   givens,
   proves,

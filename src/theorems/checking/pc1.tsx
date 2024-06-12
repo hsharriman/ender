@@ -123,6 +123,7 @@ const proves: StepMeta = makeStepMeta({
 });
 
 const step1: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -136,6 +137,7 @@ const step1: StepMeta = makeStepMeta({
 });
 
 const step2: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     const addProps = { ...props, mode: SVGModes.Unfocused };
     givens.additions(addProps);
@@ -151,6 +153,7 @@ const step2: StepMeta = makeStepMeta({
 });
 
 const step3: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     const addProps = { ...props, mode: SVGModes.Unfocused };
     givens.additions(addProps);
@@ -167,6 +170,8 @@ const step3: StepMeta = makeStepMeta({
 });
 
 const step4: StepMeta = makeStepMeta({
+  reason: Reasons.SAS,
+  dependsOn: [1, 2, 3],
   additions: (props: StepFocusProps) => {
     givens.additions(props);
     step1.additions(props);
@@ -185,6 +190,8 @@ const step4: StepMeta = makeStepMeta({
 });
 
 const step5: StepMeta = makeStepMeta({
+  reason: Reasons.CorrespondingAngles,
+  dependsOn: [4],
   unfocused: (props: StepUnfocusProps) => {
     step4.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -249,19 +256,5 @@ export const PC1: LayoutProps = {
   baseContent,
   givens,
   proves,
-  steps: [
-    { meta: step1, reason: Reasons.Given },
-    { meta: step2, reason: Reasons.Given },
-    { meta: step3, reason: Reasons.Given },
-    {
-      meta: step4,
-      reason: Reasons.SAS,
-      dependsOn: [1, 2, 3],
-    },
-    {
-      meta: step5,
-      reason: Reasons.CorrespondingAngles,
-      dependsOn: [4],
-    },
-  ],
+  steps: [step1, step2, step3, step4, step5],
 };

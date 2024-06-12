@@ -13,11 +13,8 @@ export interface StepUnfocusProps {
   frame: string;
   inPlace: boolean;
 }
-export interface StepFocusProps {
-  ctx: Content;
-  frame: string;
+export interface StepFocusProps extends StepUnfocusProps {
   mode: SVGModes;
-  inPlace: boolean;
 }
 export interface StepTextProps {
   ctx: Content;
@@ -36,11 +33,15 @@ export interface StaticProofTextItem {
   reason?: string;
 }
 
-export interface StepMeta {
+export interface SetupStepMeta {
   unfocused: (props: StepUnfocusProps) => void;
   diagram: (ctx: Content, frame: string, inPlace?: boolean) => void;
   text: (props: StepTextProps) => JSX.Element;
   ticklessText: (ctx: Content) => JSX.Element;
   staticText: () => JSX.Element;
   additions: (props: StepFocusProps) => void;
+}
+export interface StepMeta extends SetupStepMeta {
+  reason: Reason;
+  dependsOn?: number[];
 }

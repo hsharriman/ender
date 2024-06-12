@@ -1,3 +1,4 @@
+import { DefinitionTooltip } from "../components/DefinitionTooltip";
 import { LinkedText } from "../components/LinkedText";
 import { Content } from "../core/diagramContent";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
@@ -8,6 +9,8 @@ import {
   StepUnfocusProps,
 } from "../core/types/stepTypes";
 import { Reason, SVGModes } from "../core/types/types";
+import { Definition } from "./definitions";
+import { Reasons } from "./reasons";
 
 export const GIVEN_ID = "given";
 export const PROVE_ID = "prove";
@@ -18,6 +21,10 @@ export const linked = (
   obj: BaseGeometryObject,
   objs?: BaseGeometryObject[]
 ) => <LinkedText val={val} obj={obj} linkedObjs={objs} />;
+
+export const tooltip = (obj: string, definition: Definition) => (
+  <DefinitionTooltip obj={obj} definition={definition} />
+);
 
 export const getReasonFn =
   (reasonMap: Map<string, Reason>) => (activeFrame: string) => {
@@ -42,6 +49,8 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   };
 
   return {
+    reason: meta.reason || Reasons.Empty,
+    dependsOn: meta.dependsOn,
     unfocused: meta.unfocused || defaultUnfocused,
     diagram,
     text: meta.text || defaultText,
