@@ -1,11 +1,6 @@
 import React from "react";
+import { QuestionProps } from "./RadioQuestion";
 import { SubmitQuestion } from "./SubmitQuestion";
-
-interface QuestionProps {
-  questionNum: string;
-  question: string | JSX.Element;
-  onSubmit: (text: string) => void;
-}
 
 interface QuestionState {
   inputText: string;
@@ -30,7 +25,7 @@ export class TextQuestion extends React.Component<
   handleSubmit = () => {
     const { inputText } = this.state;
     if (inputText.length === 0) {
-      //alert("Please type something.");
+      // TODO: add alert for empty input
       return;
     }
     this.props.onSubmit(this.state.inputText);

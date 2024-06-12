@@ -13,6 +13,12 @@ export enum QuestionType {
   Next = "Next proof",
 }
 
+export const endQuestion = {
+  prompt:
+    "You've completed all the questions for this page, please move to the next page!",
+  type: QuestionType.Next,
+};
+
 export const completeProof1: Question[] = [
   {
     prompt: (
@@ -117,11 +123,7 @@ export const completeProof1: Question[] = [
     prompt: "Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
   },
-  {
-    prompt:
-      "You've completed all the questions for this page, please move to the next page!",
-    type: QuestionType.Next,
-  },
+  endQuestion,
 ];
 
 export const completeProof2: Question[] = [
@@ -227,11 +229,7 @@ export const completeProof2: Question[] = [
     prompt: "Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
   },
-  {
-    prompt:
-      "You've completed all the questions for this page, please move to the next page!",
-    type: QuestionType.Next,
-  },
+  endQuestion,
 ];
 
 export const completeProof3: Question[] = [
@@ -322,9 +320,5 @@ export const completeProof3: Question[] = [
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
-  {
-    prompt:
-      "You've completed all the questions for this page, please move to the next page!",
-    type: QuestionType.Next,
-  },
+  endQuestion,
 ];
