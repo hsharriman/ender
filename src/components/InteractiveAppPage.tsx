@@ -1,6 +1,6 @@
 import React from "react";
 import { Content } from "../core/diagramContent";
-import { ProofTextItem, Step, StepMeta } from "../core/types/stepTypes";
+import { ProofTextItem, StepMeta } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
 import { Question } from "../questions/completeQuestions";
 import { GIVEN_ID, PROVE_ID, getReasonFn } from "../theorems/utils";
@@ -12,7 +12,7 @@ import { TestQuestions } from "./TestQuestions";
 
 export interface InteractiveAppPageProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: Step[];
+  steps: StepMeta[];
   givens: StepMeta;
   proves: StepMeta;
   miniContent: Content;
@@ -67,7 +67,7 @@ export class InteractiveAppPage extends React.Component<
     this.props.steps.map((step, i) => {
       let textMeta = {};
       const s = this.ctx.addFrame(`s${i + 1}`);
-      step.meta.diagram(this.ctx, s, true);
+      step.diagram(this.ctx, s, true);
       if (step.dependsOn) {
         const depIds = step.dependsOn.map((i) => `s${i}`);
         this.ctx.reliesOn(s, depIds);
@@ -77,7 +77,7 @@ export class InteractiveAppPage extends React.Component<
       this.linkedTexts.push({
         ...textMeta,
         k: s,
-        v: step.meta.text({ ctx: this.ctx }),
+        v: step.text({ ctx: this.ctx }),
         reason: step.reason.title,
       });
     });

@@ -1,6 +1,6 @@
 import { Question } from "../../questions/completeQuestions";
 import { Content } from "../diagramContent";
-import { SetupStepMeta, Step, StepMeta } from "./stepTypes";
+import { StepMeta } from "./stepTypes";
 
 // -------- GEOMETRY TYPES --------
 export type Vector = [number, number];
@@ -49,19 +49,14 @@ export enum SVGModes {
 // -------- TYPES RELATED TO PROOF SETUP --------
 interface StaticLayoutProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: Step[];
+  steps: StepMeta[];
   givens: StepMeta;
   proves: StepMeta;
   questions: Question[];
 }
 
-interface InPlaceLayoutProps {
-  baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: StepMeta[];
-  givens: SetupStepMeta;
-  proves: SetupStepMeta;
+interface InPlaceLayoutProps extends StaticLayoutProps {
   miniContent: Content;
-  questions: Question[];
 }
 
 export type LayoutProps = InPlaceLayoutProps & StaticLayoutProps;

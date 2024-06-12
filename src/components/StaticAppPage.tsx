@@ -1,6 +1,6 @@
 import React from "react";
 import { Content } from "../core/diagramContent";
-import { StaticProofTextItem, Step, StepMeta } from "../core/types/stepTypes";
+import { StaticProofTextItem, StepMeta } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
 import { Question } from "../questions/completeQuestions";
 import { Reasons } from "../theorems/reasons";
@@ -12,7 +12,7 @@ export interface StaticAppPageProps {
   questions: Question[];
   pageNum: number;
   baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: Step[];
+  steps: StepMeta[];
   givens: StepMeta;
   proves: StepMeta;
 }
@@ -45,7 +45,7 @@ export class StaticAppPage extends React.Component<
     this.props.givens.diagram(ctx, GIVEN_ID, false);
     this.props.steps.map((step) => {
       this.texts.push({
-        stmt: step.meta.staticText(),
+        stmt: step.staticText(),
         reason: step.reason.title,
       });
       if (
