@@ -53,7 +53,7 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
 
   render() {
     return (
-      <div className="top-0 left-0 flex flex-row flex-nowrap w-5/6 mt-12">
+      <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1300px] mt-12">
         <div className="w-[800px] h-full flex flex-col ml-12">
           <div className="flex flex-row">
             <div className="flex flex-col mx-4 w-[300px]">
@@ -89,9 +89,9 @@ export class StaticAppPage extends React.Component<StaticAppPageProps> {
             </div>
             {this.props.reasons.map((reason) => this.renderReason(reason))}
           </div>
-          <div className="mt-10">
-            <TestQuestions questions={this.props.questions} />
-          </div>
+        </div>
+        <div className="max-w-[400px] h-fit ml-10 p-8 rounded-lg border-dotted border-4 border-violet-300">
+          <TestQuestions questions={this.props.questions} />
         </div>
       </div>
     );

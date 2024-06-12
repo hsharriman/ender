@@ -59,14 +59,14 @@ export class MultiSelectQuestion extends React.Component<
     const selectedOptions = this.state.selectedOptions;
 
     return (
-      <div className="">
+      <div className="text-lg">
         <div className="flex flex-col justify-start pb-1">
-          <div className="font-bold text-lg text-slate-500">
+          <div className="font-bold text-slate-500">
             Question {questionNum}:
           </div>
         </div>
-        <div className="font-bold text-lg pb-1">{question}</div>
-        <div className="text-lg">
+        <div className="font-bold pb-1">{question}</div>
+        <div>
           {answers.map((answer, index) => {
             return (
               <div className="py-0.5" key={index}>

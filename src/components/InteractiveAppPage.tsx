@@ -87,9 +87,7 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
             </div>
           </div>
           <div className="max-w-[400px] h-fit col-start-3 p-8 rounded-lg border-dotted border-4 border-violet-300">
-            <div>
-              <TestQuestions questions={this.props.questions} />
-            </div>
+            <TestQuestions questions={this.props.questions} />
           </div>
         </div>
       </>
