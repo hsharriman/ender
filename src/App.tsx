@@ -7,9 +7,11 @@ import { PC3 } from "./theorems/checking/pc3";
 import { P1 } from "./theorems/complete/proof1";
 import { P2 } from "./theorems/complete/proof2";
 import { P3 } from "./theorems/complete/proof3";
+import { IP1 } from "./theorems/incomplete/ip1";
+import { IP2 } from "./theorems/incomplete/ip2";
 import { SusPage } from "./components/SusPage";
 
-const NUM_PAGES = 6;
+const NUM_PAGES = 8;
 
 interface AppProps {}
 export interface AppState {
@@ -26,6 +28,8 @@ export class App extends React.Component<AppProps, AppState> {
     };
     // TODO randomize order of questions and type
     const presetOrder1 = [
+      InPlaceLayout(IP1),
+      StaticLayout(IP2),
       InPlaceLayout(P1),
       StaticLayout(P2),
       InPlaceLayout(P3),
@@ -92,7 +96,7 @@ export class App extends React.Component<AppProps, AppState> {
           ) : (
             <SusPage
               key={this.state.activePage}
-              type={this.state.activePage === 6 ? "Static" : "Interactive"}
+              type={this.state.activePage === 8 ? "Static" : "Interactive"}
             />
           )}
         </div>
