@@ -1,8 +1,7 @@
 import React from "react";
 import { Content } from "../core/diagramContent";
-import { ProofTextItem, StepMeta } from "../core/types/stepTypes";
-import { Reason } from "../core/types/types";
-import { Question } from "../questions/completeQuestions";
+import { ProofTextItem } from "../core/types/stepTypes";
+import { InteractiveLayoutProps, Reason } from "../core/types/types";
 import { GIVEN_ID, PROVE_ID, getReasonFn } from "../theorems/utils";
 import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
@@ -10,13 +9,7 @@ import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
 import { TestQuestions } from "./TestQuestions";
 
-export interface InteractiveAppPageProps {
-  baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: StepMeta[];
-  givens: StepMeta;
-  proves: StepMeta;
-  miniContent: Content;
-  questions: Question[];
+export interface InteractiveAppPageProps extends InteractiveLayoutProps {
   pageNum: number;
 }
 

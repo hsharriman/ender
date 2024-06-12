@@ -1,20 +1,13 @@
 import React from "react";
-import { Content } from "../core/diagramContent";
-import { StaticProofTextItem, StepMeta } from "../core/types/stepTypes";
-import { Reason } from "../core/types/types";
-import { Question } from "../questions/completeQuestions";
+import { StaticProofTextItem } from "../core/types/stepTypes";
+import { Reason, StaticLayoutProps } from "../core/types/types";
 import { Reasons } from "../theorems/reasons";
 import { GIVEN_ID } from "../theorems/utils";
 import { StaticDiagram } from "./StaticDiagram";
 import { TestQuestions } from "./TestQuestions";
 
-export interface StaticAppPageProps {
-  questions: Question[];
+export interface StaticAppPageProps extends StaticLayoutProps {
   pageNum: number;
-  baseContent: (showPoints: boolean, frame?: string) => Content;
-  steps: StepMeta[];
-  givens: StepMeta;
-  proves: StepMeta;
 }
 
 interface StaticAppPageState {

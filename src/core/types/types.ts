@@ -47,7 +47,7 @@ export enum SVGModes {
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------
-interface StaticLayoutProps {
+export interface StaticLayoutProps {
   baseContent: (showPoints: boolean, frame?: string) => Content;
   steps: StepMeta[];
   givens: StepMeta;
@@ -55,11 +55,11 @@ interface StaticLayoutProps {
   questions: Question[];
 }
 
-interface InPlaceLayoutProps extends StaticLayoutProps {
+export interface InteractiveLayoutProps extends StaticLayoutProps {
   miniContent: Content;
 }
 
-export type LayoutProps = InPlaceLayoutProps & StaticLayoutProps;
+export type LayoutProps = InteractiveLayoutProps & StaticLayoutProps;
 
 export interface Reason {
   title: string;
