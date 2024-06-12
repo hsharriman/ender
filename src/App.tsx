@@ -16,6 +16,7 @@ interface AppMeta {
 }
 type LayoutOptions = "static" | "interactive";
 
+/* Helper methods related to randomizing the proof order */
 const fisherYates = (arrLen: number) => {
   // create a range of numbers from 0 to arrLen in an array
   const arr = Array.from({ length: arrLen }, (_, i) => i);
@@ -64,7 +65,6 @@ interface AppState {
   activeTest: number;
 }
 export class App extends React.Component<AppProps, AppState> {
-  private orders = new Map<number, AppMeta[]>();
   private meta: AppMeta[] = [];
   constructor(props: AppProps) {
     super(props);
@@ -73,7 +73,6 @@ export class App extends React.Component<AppProps, AppState> {
       activeTest: 0,
     };
 
-    // TODO randomize order of questions and type
     const randomCompleteProofs = randomizeLayout(randomizeProofs([P1, P2, P3])); // 2 random complete proofs
     const randomCheckingProofs = randomizeLayout(
       randomizeProofs([PC1, PC2, PC3])
@@ -81,25 +80,9 @@ export class App extends React.Component<AppProps, AppState> {
     let randomProofOrder = randomCompleteProofs.concat(randomCheckingProofs);
     // shuffle activities
     const shuffleProofOrder = fisherYates(randomProofOrder.length);
-    randomProofOrder = shuffleProofOrder.map((i) => randomProofOrder[i]);
-    // const presetOrder1 = [
-    //   InPlaceLayout(P1, ActivityType.Complete),
-    //   InPlaceLayout(P2, ActivityType.Complete),
-    //   InPlaceLayout(P3, ActivityType.Complete),
-    //   StaticLayout(PC1, ActivityType.Checking),
-    //   InPlaceLayout(PC2, ActivityType.Checking),
-    //   StaticLayout(PC3, ActivityType.Checking),
-    // ];
-    const presetOrder2 = [
-      staticLayout(P1),
-      interactiveLayout(P2),
-      staticLayout(P3),
-      interactiveLayout(PC1),
-      staticLayout(PC2),
-      interactiveLayout(PC3),
-    ];
-    this.meta = randomProofOrder;
+    this.meta = shuffleProofOrder.map((i) => randomProofOrder[i]);
   }
+
   onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
     if (this.state.activePage + direction < 0) {
       this.setState({ activeTest: 0 });
@@ -107,13 +90,6 @@ export class App extends React.Component<AppProps, AppState> {
       this.setState({ activePage: this.state.activePage + direction });
     }
   };
-
-  // onClickTest = (test: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
-  //   this.setState({ activeTest: test });
-  //   if (test > 0) {
-  //     this.renderProofPages(this.orders.get(test) || []);
-  //   }
-  // };
 
   render() {
     const currMeta = this.meta[this.state.activePage];
@@ -167,37 +143,6 @@ export class App extends React.Component<AppProps, AppState> {
             />
           )}
         </div>
-      </div>
-    );
-    // activeTest == length of tests, if > 0 then need some meta info to determine which type of page layout to call
-    // so basically need an array of length testOrder, either saying "interactive" or "static"
-    // if (this.state.activeTest > 0) {
-    //   return this.renderProofPages(
-    //     this.orders.get(this.state.activeTest) || []
-    //   );
-    // }
-    return (
-      <div className="flex w-screen h-screen justify-center items-center">
-        {/* <div className="flex flex-row w-[1100px] h-32 justify-center">
-          <button
-            className="py-4 px-8 m-4 text-3xl bg-violet-300 rounded-md text-white"
-            onClick={this.onClickTest(1)}
-          >
-            Test 1
-          </button>
-          <button
-            className="py-4 px-8 m-4 text-3xl bg-violet-500 rounded-md text-white"
-            onClick={this.onClickTest(2)}
-          >
-            Test 2
-          </button>
-          <button
-            className="py-4 px-8 m-4 text-3xl bg-violet-700 rounded-md text-white"
-            onClick={this.onClickTest(3)}
-          >
-            Test 3
-          </button>
-        </div> */}
       </div>
     );
   }

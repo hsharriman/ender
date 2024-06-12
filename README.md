@@ -1,46 +1,13 @@
 # Ender
 
-## TODO
-- [ ] Improve the proof class structure / cleanup (always ongoing)
-- [ ] be able to render points
-- [ ] highlighting angles on hover? when no tick is visible
-
-## Stretch TODOs
-
-- [ ] question logic/randomizing
-- [ ] multiple choice question component
-- [ ] redo relies on for long-form
-- [ ] minifigures highlight on hover as well (for key terms)
-- [ ] Change fonts (again?)
-- [ ] highlighting of text when clicking on the diagram
-- [ ] check for segments that overlap or are sub-sections of larger segment + keep track (then fix complete proof 3)
-- [ ] hover tooltips for symbols like ||
-
-## Less Urgent Bugs
-
-- [ ] fix tick mark placement for angles in minifigures
-- [ ] Make relies on resample if screen resizes
-- [ ] go through todos in files
-- [ ] hovering on point in long-form highlights wrong diagram label
-- [ ] Make it so that hovering text doesn't cause the text to move
-
-## TODO for infra/study
-
-- [ ] anonymized ID for each participant
-- [ ] uploading selected answers
-
-## TODO for future proofs
-
-- Circles
-- Labeled segments
-
 ## Contributing
+
 1. Open a branch with the naming convention `<user-alias>/<description>` (i.e., `hharriman/render-points`)
 2. Push your changes to your branch
 3. Open a PR to `main`. The first word of your PR title should be one of:
-  a. `feat:` A new feature is being added with this PR
-  b. `fix:` A fix is implemented in this PR
-  c. `chore:` Some utility/devops/upkeep is done
+   a. `feat:` A new feature is being added with this PR
+   b. `fix:` A fix is implemented in this PR
+   c. `chore:` Some utility/devops/upkeep is done
 4. In the PR description provide a list of the changes that were made
 
 # Getting Started with Create React App
