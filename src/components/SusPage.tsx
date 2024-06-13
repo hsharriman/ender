@@ -83,16 +83,20 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
             </span>
           </div>
         ) : (
-          <div className="grid grid-rows-[auto,1fr] gap-2 justify-center flex w-full min-w-[1300px]">
-            <div className="flex flex-col items-center">
+          <div className="grid grid-rows-[auto,1fr] gap-2 justify-center w-full min-w-[1300px]">
+            <div>
               {this.props.type === "Static" ? (
-                <h2 className="text-2xl font-bold mb-4">Static Proof</h2>
+                <h2 className="text-2xl font-bold mb-8 text-center">
+                  Static Proof
+                </h2>
               ) : (
-                <h2 className="text-2xl font-bold mb-4">Interactive Proof</h2>
+                <h2 className="text-2xl font-bold mb-8 text-center">
+                  Interactive Proof
+                </h2>
               )}
               <div className="grid grid-cols-2">
-                <div className="">
-                  <h2 className="text-xl font-bold mb-2">
+                <div className="col-start-1 justify-start">
+                  {/* <h2 className="text-xl font-bold mb-2">
                     Survey Instructions
                   </h2>
                   <p className="text-base">
@@ -102,39 +106,39 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                   <p className="text-base">
                     For each statement, select the response that best matches
                     your opinion.
-                  </p>
+                  </p> */}
+                  <div className="left-column mr-10">
+                    {susQuestions.map((question, index) => (
+                      <SusQuestion
+                        key={index}
+                        questionNum={index.toString()}
+                        question={question.prompt}
+                        answers={question.answers || []}
+                        selectedOption={this.state.answers[index.toString()]}
+                        onAnswerChange={this.handleAnswerChange}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="ml-[30px]">
+                <div className="col-start-2 ml-[50px]">
                   {this.props.type === "Static" ? (
                     <img
                       src={staticScreenshot}
                       alt="Static Proof"
-                      className="w-[300px] h-[200px] mr-4"
+                      className="w-[700px] h-[400px] mr-4"
                     />
                   ) : (
                     <img
                       src={interactiveScreenshot}
                       alt="Interactive Proof"
-                      className="w-[320px] h-[200px] mr-4"
+                      className="w-[700px] h-[400px] mr-4"
                     />
                   )}
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-10">
-              <div className="left-column mr-10">
-                {susQuestions.map((question, index) => (
-                  <SusQuestion
-                    key={index}
-                    questionNum={index.toString()}
-                    question={question.prompt}
-                    answers={question.answers || []}
-                    selectedOption={this.state.answers[index.toString()]}
-                    onAnswerChange={this.handleAnswerChange}
-                  />
-                ))}
-              </div>
-              <div className="right-column ml-10">
+              {/* <div className="right-column ml-10">
                 {this.textQuestions.map((question, index) => (
                   <>
                     <div className="flex flex-col justify-start pb-1">
@@ -158,7 +162,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                     </div>
                   </>
                 ))}
-              </div>
+              </div> */}
               <SubmitQuestion onClick={this.handleSubmit} />
             </div>
           </div>
