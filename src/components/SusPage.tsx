@@ -91,7 +91,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                 <h2 className="text-2xl font-bold mb-4">Interactive Proof</h2>
               )}
               <div className="grid grid-cols-2">
-                <div className="self-center">
+                <div className="">
                   <h2 className="text-xl font-bold mb-2">
                     Survey Instructions
                   </h2>
