@@ -1,6 +1,6 @@
 import { Vector } from "../types/types";
 import { BaseSVG } from "./BaseSVG";
-import { TextSVGProps, SVGObj } from "./svgTypes";
+import { TextSVGProps } from "./svgTypes";
 
 export class SVGText extends BaseSVG {
   private text: string;
