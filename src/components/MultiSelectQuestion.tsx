@@ -1,13 +1,6 @@
 import React from "react";
-
+import { QuestionProps } from "./RadioQuestion";
 import { SubmitQuestion } from "./SubmitQuestion";
-
-interface QuestionProps {
-  questionNum: string;
-  question: string;
-  answers: string[];
-  onSubmit: (answers: string[]) => void;
-}
 
 interface QuestionState {
   selectedOptions: string[];
@@ -45,10 +38,10 @@ export class MultiSelectQuestion extends React.Component<
   handleSubmit = () => {
     const { selectedOptions } = this.state;
     if (selectedOptions.length === 0) {
-      alert("Please select at least one answer.");
+      // TODO: add alert for empty input
       return;
     }
-    this.props.onSubmit(this.state.selectedOptions);
+    this.props.onSubmit(this.state.selectedOptions.join(", "));
     this.setState({
       selectedOptions: [],
     });

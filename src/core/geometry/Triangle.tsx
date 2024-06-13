@@ -1,6 +1,5 @@
 import { Content } from "../diagramContent";
 import { Obj, SVGModes } from "../types/types";
-import { LinkedText } from "../../components/LinkedText";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
@@ -68,9 +67,14 @@ export class Triangle extends BaseGeometryObject {
     return [aa, ab, ac];
   };
 
-  svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
+  svg = (
+    frameIdx: string,
+    pageNum: number,
+    miniScale = false,
+    style?: React.CSSProperties
+  ) => {
     return this.s
-      .flatMap((seg) => seg.svg(frameIdx, miniScale, style))
+      .flatMap((seg) => seg.svg(frameIdx, pageNum, miniScale, style))
       .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
   };
 
@@ -89,7 +93,6 @@ export class Triangle extends BaseGeometryObject {
     // cascading update the segments and angles
     this.s.map((seg) => seg.mode(frameKey, mode));
     this.a.map((ang) => ang.mode(frameKey, mode));
-    // TODO cascading update the segments and angles too
     return this;
   };
 }
