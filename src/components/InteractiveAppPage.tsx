@@ -48,8 +48,8 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
             rowHeight={64}
           />
         )}
-        <div className="top-0 left-0 w-screen max-w-[1800px] min-w-[1300px] xl:justify-start h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-2 pt-4 pl-4 gap-4">
-          <div id="proof-steps" className="col-start-1">
+        <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-2 pl-6 gap-4">
+          <div id="proof-steps" className="col-start-1 w-[700px]">
             <div className="pt-16">
               <ProofRows
                 items={this.props.proofText}
@@ -86,7 +86,7 @@ export class AppPage extends React.Component<AppPageProps, AppPageState> {
               </div>
             </div>
           </div>
-          <div className="max-w-[400px] h-fit col-start-3 p-8 rounded-lg border-dotted border-4 border-violet-300">
+          <div className="w-[400px] h-fit col-start-3 mt-12 p-8 rounded-lg border-dotted border-4 border-violet-300">
             <TestQuestions questions={this.props.questions} />
           </div>
         </div>
