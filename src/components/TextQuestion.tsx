@@ -1,11 +1,6 @@
 import React from "react";
+import { QuestionProps } from "./RadioQuestion";
 import { SubmitQuestion } from "./SubmitQuestion";
-
-interface QuestionProps {
-  questionNum: string;
-  question: string;
-  onSubmit: (text: string) => void;
-}
 
 interface QuestionState {
   inputText: string;
@@ -30,7 +25,7 @@ export class TextQuestion extends React.Component<
   handleSubmit = () => {
     const { inputText } = this.state;
     if (inputText.length === 0) {
-      alert("Please type something.");
+      // TODO: add alert for empty input
       return;
     }
     this.props.onSubmit(this.state.inputText);
@@ -53,7 +48,7 @@ export class TextQuestion extends React.Component<
         <div className="font-bold text-base pb-1">{question}</div>
         <div className="text-base">
           <textarea
-            name={question}
+            name={questionNum}
             className="border-2 border-black w-full p-1.5 rounded-sm"
             value={inputText}
             onChange={this.handleInputChange}
