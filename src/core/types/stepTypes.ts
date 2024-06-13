@@ -2,12 +2,6 @@ import { Content } from "../diagramContent";
 import { Reason, SVGModes } from "./types";
 
 // -------- TYPES RELATED TO RENDERING STEPS OF A PROOF --------
-export interface Step {
-  meta: StepMeta;
-  reason: Reason;
-  dependsOn?: number[];
-}
-
 export interface StepUnfocusProps {
   ctx: Content;
   frame: string;

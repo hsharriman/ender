@@ -1,9 +1,9 @@
+import React from "react";
 import { SVGLine } from "../svg/SVGLine";
-import { Obj, LSegment, LPoint, SVGModes, TickType } from "../types/types";
+import { ModeCSS } from "../svg/SVGStyles";
+import { LSegment, Obj, SVGModes } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
-import React from "react";
-import { ModeCSS } from "../svg/SVGStyles";
 
 export type SegmentProps = {
   p1: Point;
@@ -46,7 +46,12 @@ export class Segment extends BaseGeometryObject {
     setStyle(ele);
   };
 
-  svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
+  svg = (
+    frameIdx: string,
+    pageNum: number,
+    miniScale = false,
+    style?: React.CSSProperties
+  ) => {
     let svgItems: JSX.Element[] = [];
     // add line
     svgItems.push(
@@ -59,6 +64,7 @@ export class Segment extends BaseGeometryObject {
           mode: this.modes.get(frameIdx) ?? SVGModes.Hidden,
           activeFrame: frameIdx,
         }}
+        key={`${this.id}-${pageNum}`}
       />
     );
     return svgItems;

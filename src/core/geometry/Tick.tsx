@@ -1,17 +1,17 @@
 import React from "react";
-import {
-  TickType,
-  LSegment,
-  LAngle,
-  Obj,
-  Vector,
-  SVGModes,
-} from "../types/types";
-import { vops } from "../vectorOps";
-import { pops } from "../svg/pathBuilderUtils";
-import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { PathSVG } from "../svg/PathSVG";
 import { ModeCSS } from "../svg/SVGStyles";
+import { pops } from "../svg/pathBuilderUtils";
+import {
+  LAngle,
+  LSegment,
+  Obj,
+  SVGModes,
+  TickType,
+  Vector,
+} from "../types/types";
+import { vops } from "../vectorOps";
+import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.3;
@@ -58,6 +58,7 @@ export class Tick extends BaseGeometryObject {
 
   svg = (
     activeFrame: string,
+    pageNum: number,
     miniScale = false,
     style?: React.CSSProperties
   ): JSX.Element => {
@@ -70,6 +71,7 @@ export class Tick extends BaseGeometryObject {
           this.parent as LSegment,
           activeFrame,
           mode,
+          pageNum,
           miniScale,
           style
         );
@@ -78,6 +80,7 @@ export class Tick extends BaseGeometryObject {
           this.parent as LSegment,
           activeFrame,
           mode,
+          pageNum,
           miniScale,
           style
         );
@@ -86,6 +89,7 @@ export class Tick extends BaseGeometryObject {
           this.parent as LAngle,
           activeFrame,
           mode,
+          pageNum,
           miniScale,
           style
         );
@@ -94,6 +98,7 @@ export class Tick extends BaseGeometryObject {
           this.parent as LAngle,
           activeFrame,
           mode,
+          pageNum,
           miniScale,
           style
         );
@@ -106,6 +111,7 @@ export class Tick extends BaseGeometryObject {
     s: LSegment,
     activeFrame: string,
     mode: SVGModes,
+    pageNum: number,
     miniScale = false,
     style?: React.CSSProperties
   ) => {
@@ -149,6 +155,7 @@ export class Tick extends BaseGeometryObject {
           style: style,
           activeFrame: activeFrame,
         }}
+        key={`${this.id}-${pageNum}`}
       />
     );
   };
@@ -157,6 +164,7 @@ export class Tick extends BaseGeometryObject {
     s: LSegment,
     activeFrame: string,
     mode: SVGModes,
+    pageNum: number,
     miniScale = false,
     style?: React.CSSProperties
   ) => {
@@ -186,6 +194,7 @@ export class Tick extends BaseGeometryObject {
           mode: mode,
           activeFrame: activeFrame,
         }}
+        key={`${this.id}-${pageNum}`}
       />
     );
   };
@@ -194,6 +203,7 @@ export class Tick extends BaseGeometryObject {
     a: LAngle,
     activeFrame: string,
     mode: SVGModes,
+    pageNum: number,
     miniScale = false,
     style?: React.CSSProperties
   ) => {
@@ -237,6 +247,7 @@ export class Tick extends BaseGeometryObject {
           mode: mode,
           activeFrame: activeFrame,
         }}
+        key={`${this.id}-${pageNum}`}
       />
     );
   };
@@ -245,6 +256,7 @@ export class Tick extends BaseGeometryObject {
     a: LAngle,
     activeFrame: string,
     mode: SVGModes,
+    pageNum: number,
     miniScale = false,
     style?: React.CSSProperties
   ) => {
@@ -272,6 +284,7 @@ export class Tick extends BaseGeometryObject {
     return (
       <PathSVG
         {...{ d: dStr, geoId: this.id, style: style, mode: mode, activeFrame }}
+        key={`${this.id}-${pageNum}`}
       />
     );
   };
