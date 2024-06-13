@@ -58,7 +58,7 @@ export class StaticAppPage extends React.Component<
       <div className="flex flex-row justify-start h-12" key={`static-row-${i}`}>
         <div
           id={`proof-row-control-${i}`}
-          className="border-gray-300 w-10/12 h-12 ml-2 text-normal"
+          className="border-gray-300 w-10/12 h-12 ml-2 text-lg"
         >
           <div
             className={`${textColor} ${strokeColor} grid grid-rows-1 grid-cols-2 pt-2`}
@@ -79,12 +79,9 @@ export class StaticAppPage extends React.Component<
   renderReason = (item: Reason) => {
     return (
       <>
-        <div
-          className="flex flex-col justify-start pb-2"
-          key={`static-reason-${item.title}`}
-        >
-          <div className="font-semibold text-sm">{item.title}</div>
-          <div className="text-sm">{item.body}</div>
+        <div className="flex flex-col justify-start pb-2">
+          <div className="font-semibold text-lg">{item.title}</div>
+          <div className="text-lg">{item.body}</div>
         </div>
       </>
     );
@@ -93,10 +90,10 @@ export class StaticAppPage extends React.Component<
   render() {
     const ctx = this.buildCtxAndText();
     return (
-      <div className="top-0 left-0 flex flex-row flex-nowrap w-5/6 mt-12">
-        <div className="w-[800px] h-full flex flex-col ml-12">
+      <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-12">
+        <div className="w-[900px] h-full flex flex-col ml-12">
           <div className="flex flex-row">
-            <div className="flex flex-col mx-4 w-[300px]">
+            <div className="flex flex-col mx-4 text-lg">
               <div className="pb-2">
                 <div className="font-bold">Given:</div>
                 <div>{this.props.givens.staticText()}</div>
@@ -122,16 +119,16 @@ export class StaticAppPage extends React.Component<
           </div>
           {this.texts.map((item, i) => this.renderRow(item, i))}
         </div>
-        <div className="min-w-[300px] max-w-[400px]">
+        <div className="min-w-[400px] max-w-[500px]">
           <div className="flex flex-col justify-start">
             <div className="font-bold text-base text-slate-500 pb-2">
               Reasons Applied:
             </div>
             {this.reasons.map((reason) => this.renderReason(reason))}
           </div>
-          <div className="mt-10">
-            <TestQuestions questions={this.props.questions} />
-          </div>
+        </div>
+        <div className="w-[400px] h-fit ml-10 p-8 rounded-lg border-dotted border-4 border-violet-300">
+          <TestQuestions questions={this.props.questions} />
         </div>
       </div>
     );
