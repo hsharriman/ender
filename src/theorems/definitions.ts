@@ -6,7 +6,6 @@ const Parallel: Definition = {
   keyword: "Parallel",
   definition: "Lines that don't intersect.",
 };
-
 const Perpendicular: Definition = {
   keyword: "Perpendicular",
   definition: "Lines that intersect at 90\u00B0.",

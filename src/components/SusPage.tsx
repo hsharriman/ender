@@ -1,12 +1,13 @@
 import React from "react";
-import { Question } from "../questions/completeQuestions";
-import { susQuestions } from "../questions/susQuestions";
-import { staticFollowUpQuestions } from "../questions/susQuestions";
-import { interactiveFollowUpQuestions } from "../questions/susQuestions";
-import SusQuestion from "./SusQuestion";
-import { SubmitQuestion } from "./SubmitQuestion";
-import staticScreenshot from "../assets/StaticPageScreenshot.png";
 import interactiveScreenshot from "../assets/InteractivePageScreenshot.png";
+import staticScreenshot from "../assets/StaticPageScreenshot.png";
+import {
+  interactiveFollowUpQuestions,
+  staticFollowUpQuestions,
+  susQuestions,
+} from "../questions/susQuestions";
+import { SubmitQuestion } from "./SubmitQuestion";
+import SusQuestion from "./SusQuestion";
 
 interface susPageProps {
   type: string;

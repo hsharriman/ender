@@ -1,3 +1,4 @@
+import { GIVEN_ID } from "../theorems/utils";
 import { Angle } from "./geometry/Angle";
 import { Point } from "./geometry/Point";
 import { Quadrilateral } from "./geometry/Quadrilateral";
@@ -67,34 +68,6 @@ export class Content {
       triangles: this.triangles,
     });
   }
-
-  // update(e: Segment): void;
-  // update(e: Angle): void;
-  // update(e: Triangle): void;
-  // update(e: Segment | Angle | Triangle) {
-  //   switch (e.tag) {
-  //     case Obj.Segment:
-  //       let s = this.getSegment(e.label);
-  //       if (s) {
-  //         this.segments[this.segments.indexOf(s)] = e as Segment;
-  //       }
-  //       return;
-  //     case Obj.Angle:
-  //       let a = this.getAngle(e.label);
-  //       if (a) {
-  //         this.angles[this.angles.indexOf(a)] = e as Angle;
-  //       }
-  //       return;
-  //     case Obj.Triangle:
-  //       let t = this.getTriangle(e.label);
-  //       if (t) {
-  //         this.triangles[this.triangles.indexOf(t)] = e as Triangle;
-  //       }
-  //       return;
-  //     default:
-  //       return;
-  //   }
-  // }
 
   push(e: Point): Point;
   push(e: Segment): Segment;
@@ -183,12 +156,21 @@ export class Content {
   };
 
   allSvgElements =
-    (mini = false) =>
+    (pageNum: number, mini = false) =>
     (activeFrame: string) => {
-      let pts = this.points.flatMap((p) => p.svg());
-      let segs = this.segments.flatMap((s) => s.svg(activeFrame, mini));
-      let angs = this.angles.flatMap((a) => a.svg(activeFrame, mini));
-      let ticks = this.ticks.flatMap((t) => t.svg(activeFrame, mini));
-      return pts.concat(segs).concat(angs).concat(ticks);
+      let pts = this.points.flatMap((p) => p.svg(pageNum));
+      let segs = this.segments.flatMap((s) =>
+        s.svg(activeFrame, pageNum, mini)
+      );
+      // let angs = this.angles.flatMap((a) => a.svg(activeFrame, mini));
+      let ticks = this.ticks.flatMap((t) => t.svg(activeFrame, pageNum, mini));
+      return pts.concat(segs).concat(ticks);
     };
+
+  allStaticSvgElements = (pageNum: number) => {
+    let pts = this.points.flatMap((p) => p.svg(pageNum));
+    let segs = this.segments.flatMap((s) => s.svg(GIVEN_ID, pageNum, false));
+    // let angs = this.angles.flatMap((a) => a.svg(GIVEN_ID, false));
+    return pts.concat(segs);
+  };
 }

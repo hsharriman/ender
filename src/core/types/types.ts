@@ -1,5 +1,6 @@
-import { InPlaceLayoutProps } from "../../components/layouts/InPlaceLayout";
-import { StaticLayoutProps } from "../../components/layouts/StaticLayout";
+import { Question } from "../../questions/completeQuestions";
+import { Content } from "../diagramContent";
+import { StepMeta } from "./stepTypes";
 
 // -------- GEOMETRY TYPES --------
 export type Vector = [number, number];
@@ -46,7 +47,19 @@ export enum SVGModes {
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------
-export type LayoutProps = InPlaceLayoutProps & StaticLayoutProps;
+export interface StaticLayoutProps {
+  baseContent: (showPoints: boolean, frame?: string) => Content;
+  steps: StepMeta[];
+  givens: StepMeta;
+  proves: StepMeta;
+  questions: Question[];
+}
+
+export interface InteractiveLayoutProps extends StaticLayoutProps {
+  miniContent: Content;
+}
+
+export type LayoutProps = InteractiveLayoutProps & StaticLayoutProps;
 
 export interface Reason {
   title: string;
