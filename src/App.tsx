@@ -37,9 +37,8 @@ const randomizeProofs = (arr: LayoutProps[]) => {
   const order = fisherYates(arr.length);
   const newArr = order.map((i) => arr[i]);
   // only 2 proofs are needed per experiment
-  // if (arr.length === 2) return newArr;  // TODO uncomment
-  // return newArr.slice(1);
-  return newArr;
+  if (arr.length === 2) return newArr; // TODO uncomment
+  return newArr.slice(1);
 };
 
 const staticLayout = (proofMeta: LayoutProps): AppMeta => {
@@ -82,20 +81,18 @@ export class App extends React.Component<AppProps, AppState> {
     const randomCheckingProofs = randomizeLayout(
       randomizeProofs([PC1, PC2, PC3])
     );
-    const randomIncompleteProofs = randomizeLayout(randomizeProofs([IP1, IP2]));
+    const randomIncompleteProofs = randomizeLayout(
+      randomizeProofs([IP1, IP2, IP3])
+    );
 
     // TODO uncomment
-    // let randomProofOrder = randomCompleteProofs.concat(
-    //   randomCheckingProofs,
-    //   randomIncompleteProofs
-    // );
-    let randomProofOrder = randomCompleteProofs.concat(randomCheckingProofs);
+    let randomProofOrder = randomCompleteProofs.concat(
+      randomCheckingProofs,
+      randomIncompleteProofs
+    );
     // shuffle activities
     const shuffleProofOrder = fisherYates(randomProofOrder.length);
     this.meta = shuffleProofOrder.map((i) => randomProofOrder[i]);
-    this.meta = [staticLayout(IP3), interactiveLayout(IP3)]
-      .concat(randomIncompleteProofs)
-      .concat(this.meta);
   }
 
   onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {

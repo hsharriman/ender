@@ -85,12 +85,9 @@ export class InteractiveAppPage extends React.Component<
   };
 
   render() {
-    // To avoid re-building ctx too many times, only build if the activeFrame is "given" (is by default on initial load)
     // TODO ideally ctx should be formatted in a way that react can detect when it changes, this hack is necessary
     // because only calling this method once means that the ctx doesn't update between pages
-    if (this.state.activeFrame === "given") {
-      this.buildCtx();
-    }
+    this.buildCtx();
     return (
       <>
         {this.ctx.getReliesOn() && (
