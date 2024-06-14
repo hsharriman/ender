@@ -222,9 +222,9 @@ const step3: StepMeta = makeStepMeta({
 });
 
 const step4SASProps: SASProps = {
-  seg1s: ["AM", "BM"],
-  seg2s: ["CM", "DM"],
-  angles: ["CMA", "DMB"],
+  seg1s: { s: ["AM", "BM"], ticks: 1 },
+  seg2s: { s: ["CM", "DM"], ticks: 2 },
+  angles: { a: ["CMA", "DMB"] },
   triangles: ["ACM", "BDM"],
 };
 const step4: StepMeta = makeStepMeta({
@@ -288,9 +288,9 @@ const miniContent = () => {
   SAS.additions(
     { ...defaultStepProps, frame: step4 },
     {
-      seg1s: ["AM", "BM"],
-      seg2s: ["CM", "DM"],
-      angles: ["CMA", "DMB"],
+      seg1s: { s: ["AM", "BM"], ticks: 1 },
+      seg2s: { s: ["CM", "DM"], ticks: 2 },
+      angles: { a: ["CMA", "DMB"] },
       triangles: ["ACM", "BDM"],
     },
     SVGModes.Blue

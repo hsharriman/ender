@@ -46,7 +46,12 @@ export class Segment extends BaseGeometryObject {
     setStyle(ele);
   };
 
-  svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
+  svg = (
+    frameIdx: string,
+    pageNum: number,
+    miniScale = false,
+    style?: React.CSSProperties
+  ) => {
     let svgItems: JSX.Element[] = [];
     // add line
     svgItems.push(
@@ -60,6 +65,7 @@ export class Segment extends BaseGeometryObject {
           activeFrame: frameIdx,
           hoverable: true, // TODO make a prop
         }}
+        key={`${this.id}-${pageNum}`}
       />
     );
     return svgItems;

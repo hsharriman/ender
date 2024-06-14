@@ -45,3 +45,8 @@ export const strs = {
   right: " = 90°",
   perpendicular: "\u22A5",
 };
+
+// for segments in questions
+export const segmentQuestion = (s: string, clr?: string) => (
+  <span style={{ borderTop: `2px solid ${clr || "black"}` }}>{s}</span>
+);

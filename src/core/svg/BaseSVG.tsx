@@ -19,7 +19,6 @@ export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
     super(props);
     this.geoId = props.geoId;
     this.mode = props.mode;
-    // this.tag = props.tag;
     this.style = props.style ?? {};
     this.state = {
       isActive: false,

@@ -1,8 +1,14 @@
-import { linked } from "../../theorems/utils";
+import { definitions } from "../../theorems/definitions";
+import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { congruent, segmentStr } from "../geometryText";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
+import { congruent, segmentStr, strs } from "../geometryText";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepTextProps,
+  StepUnfocusProps,
+} from "../types/stepTypes";
+import { Obj, Reason, SVGModes } from "../types/types";
 
 export class EqualSegments {
   static additions = (
@@ -38,7 +44,7 @@ export class EqualSegments {
         {linked(s1, s1s, [
           props.ctx.getTick(s1s, Obj.EqualLengthTick, options),
         ])}
-        {congruent}
+        {tooltip(strs.congruent, definitions.CongruentLines)}
         {linked(s2, s2s, [
           props.ctx.getTick(s2s, Obj.EqualLengthTick, options),
         ])}
@@ -49,7 +55,7 @@ export class EqualSegments {
     return (
       <span>
         {linked(s1, ctx.getSegment(s1))}
-        {congruent}
+        {tooltip(strs.congruent, definitions.CongruentLines)}
         {linked(s2, ctx.getSegment(s2))}
       </span>
     );
@@ -64,3 +70,26 @@ export class EqualSegments {
     );
   };
 }
+
+export const EqualSegmentStep = (
+  s: [string, string],
+  reason: Reason,
+  step: StepMeta,
+  num?: number,
+  dependsOn?: number[]
+) =>
+  makeStepMeta({
+    reason,
+    dependsOn,
+    unfocused: (props: StepUnfocusProps) => {
+      step.unfocused(props);
+      step.additions({ ...props, mode: SVGModes.Unfocused });
+    },
+    additions: (props: StepFocusProps) => {
+      EqualSegments.additions(props, s, num);
+    },
+    text: (props: StepTextProps) => {
+      return EqualSegments.text(props, s, num);
+    },
+    staticText: () => EqualSegments.staticText(s),
+  });

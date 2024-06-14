@@ -218,11 +218,10 @@ const step5: StepMeta = makeStepMeta({
 });
 
 const s6SASProps: SASProps = {
-  seg1s: ["LM", "KN"],
-  seg2s: ["MK", "MK"],
-  angles: ["KLM", "MNK"],
+  seg1s: { s: ["LM", "KN"], ticks: 1 },
+  seg2s: { s: ["MK", "MK"], ticks: 2 },
+  angles: { a: ["KLM", "MNK"], type: Obj.RightTick },
   triangles: ["KLM", "MNK"],
-  tickOverride: Obj.RightTick,
 };
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.HL,
@@ -266,11 +265,10 @@ export const miniContent = () => {
   SAS.additions(
     { ...defaultStepProps, frame: step6 },
     {
-      seg1s: ["LM", "NK"],
-      seg2s: ["MK", "MK"],
-      angles: ["KLM", "MNK"],
+      seg1s: { s: ["LM", "NK"], ticks: 1 },
+      seg2s: { s: ["MK", "MK"], ticks: 2 },
+      angles: { a: ["KLM", "MNK"], type: Obj.RightTick },
       triangles: ["KLM", "MNK"],
-      tickOverride: Obj.RightTick,
     },
     SVGModes.Blue
   );
