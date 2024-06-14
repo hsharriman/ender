@@ -86,16 +86,40 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
           <div className="grid grid-rows-[auto,1fr] gap-2 justify-center w-full min-w-[1300px]">
             <div>
               {this.props.type === "Static" ? (
-                <h2 className="text-2xl font-bold mb-8 text-center">
+                <h2 className="text-2xl font-bold mb-8 text-center mt-8">
                   Static Proof
                 </h2>
               ) : (
-                <h2 className="text-2xl font-bold mb-8 text-center">
+                <h2 className="text-2xl font-bold mb-8 text-center mt-8">
                   Interactive Proof
                 </h2>
               )}
               <div className="grid grid-cols-2">
-                <div className="col-start-1 justify-start">
+                <div className="col-start-1 mr-[50px] w-[700px]">
+                  <span>
+                    You've completed all the geometry questions! Please answer
+                    the following questions based on your experiences with the
+                    (interactive/static) proofs in this picture.
+                    <br />
+                    <br />
+                    The word "system" in the questions mean the proof and not
+                    the multiple choice/written question interface.
+                  </span>
+                  {this.props.type === "Static" ? (
+                    <img
+                      src={staticScreenshot}
+                      alt="Static Proof"
+                      className="w-[700px] h-[400px] mr-4 mt-10"
+                    />
+                  ) : (
+                    <img
+                      src={interactiveScreenshot}
+                      alt="Interactive Proof"
+                      className="w-[700px] h-[400px] mr-4 mt-10"
+                    />
+                  )}
+                </div>
+                <div className="col-start-2 justify-start">
                   {/* <h2 className="text-xl font-bold mb-2">
                     Survey Instructions
                   </h2>
@@ -107,7 +131,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                     For each statement, select the response that best matches
                     your opinion.
                   </p> */}
-                  <div className="left-column mr-10">
+                  <div className="right-column ml-[50px]">
                     {susQuestions.map((question, index) => (
                       <SusQuestion
                         key={index}
@@ -119,25 +143,13 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                       />
                     ))}
                   </div>
-                </div>
-                <div className="col-start-2 ml-[50px]">
-                  {this.props.type === "Static" ? (
-                    <img
-                      src={staticScreenshot}
-                      alt="Static Proof"
-                      className="w-[700px] h-[400px] mr-4"
-                    />
-                  ) : (
-                    <img
-                      src={interactiveScreenshot}
-                      alt="Interactive Proof"
-                      className="w-[700px] h-[400px] mr-4"
-                    />
-                  )}
+                  <div className="ml-[50px]">
+                    <SubmitQuestion onClick={this.handleSubmit} />
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mt-10">
+            <div className="grid grid-cols-2 gap-4 mt-10 ml-[50px]">
               {/* <div className="right-column ml-10">
                 {this.textQuestions.map((question, index) => (
                   <>
@@ -163,7 +175,6 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                   </>
                 ))}
               </div> */}
-              <SubmitQuestion onClick={this.handleSubmit} />
             </div>
           </div>
         )}
