@@ -1,63 +1,56 @@
-import { linked } from "../../theorems/utils";
-import { congruent } from "../geometryText";
-import { tooltip } from "../../theorems/utils";
+import { definitions } from "../../theorems/definitions";
+import { linked, tooltip } from "../../theorems/utils";
+import { Content } from "../diagramContent";
+import { strs } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes, TickType } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
-import { strs } from "../geometryText";
-import { definitions } from "../../theorems/definitions";
 
+interface TickedSegments {
+  s: [string, string];
+  ticks: number;
+}
+interface TickedAngles {
+  a: [string, string];
+  ticks?: number;
+  type?: TickType;
+}
+
+const segmentTick = (ctx: Content, seg: TickedSegments, frame?: string) => {
+  return seg.s.map((s) =>
+    ctx.getTick(ctx.getSegment(s), Obj.EqualLengthTick, {
+      frame,
+      num: seg.ticks,
+    })
+  );
+};
+const angleTick = (ctx: Content, angle: TickedAngles, frame?: string) => {
+  return angle.a.map((a) =>
+    ctx.getTick(ctx.getAngle(a), angle.type || Obj.EqualAngleTick, {
+      frame,
+      num: angle.ticks,
+    })
+  );
+};
 export interface SASProps {
-  seg1s: [string, string];
-  seg2s: [string, string];
-  angles: [string, string];
+  seg1s: TickedSegments;
+  seg2s: TickedSegments;
+  angles: TickedAngles;
   triangles: [string, string];
-  tickOverride?: TickType;
 }
 export class SAS {
   static text = (props: StepTextProps, labels: SASProps) => {
-    const [t1s1, t2s1] = labels.seg1s;
-    const [t1s2, t2s2] = labels.seg2s;
-    const [t1a, t2a] = labels.angles;
+    const s1s = segmentTick(props.ctx, labels.seg1s, props.frame);
+    const s2s = segmentTick(props.ctx, labels.seg2s, props.frame);
+    const as = angleTick(props.ctx, labels.angles, props.frame);
     const [t1, t2] = labels.triangles;
-    const options = { frame: props.frame };
     return (
       <span>
-        {linked(t1, props.ctx.getTriangle(t1), [
-          props.ctx.getTick(
-            props.ctx.getSegment(t1s1),
-            Obj.EqualLengthTick,
-            options
-          ),
-          props.ctx.getTick(props.ctx.getSegment(t1s2), Obj.EqualLengthTick, {
-            ...options,
-            num: 2,
-          }),
-          props.ctx.getTick(
-            props.ctx.getAngle(t1a),
-            labels.tickOverride || Obj.EqualAngleTick,
-            options
-          ),
-        ])}
+        {linked(t1, props.ctx.getTriangle(t1), [s1s[0], s2s[0], as[0]])}
         {tooltip(strs.congruent, definitions.CongruentTriangles)}
-        {linked(t2, props.ctx.getTriangle(t2), [
-          props.ctx.getTick(
-            props.ctx.getSegment(t2s1),
-            Obj.EqualLengthTick,
-            options
-          ),
-          props.ctx.getTick(props.ctx.getSegment(t2s2), Obj.EqualLengthTick, {
-            ...options,
-            num: 2,
-          }),
-          props.ctx.getTick(
-            props.ctx.getAngle(t2a),
-            labels.tickOverride || Obj.EqualAngleTick,
-            options
-          ),
-        ])}
+        {linked(t2, props.ctx.getTriangle(t2), [s1s[1], s2s[1], as[1]])}
       </span>
     );
   };
@@ -71,12 +64,17 @@ export class SAS {
     props.ctx
       .getTriangle(labels.triangles[1])
       .mode(props.frame, t2Mode || props.mode);
-    EqualSegments.additions(props, labels.seg1s, 1, t2Mode);
-    EqualSegments.additions(props, labels.seg2s, 2, t2Mode);
-    if (labels.tickOverride === Obj.RightTick) {
-      EqualRightAngles.additions(props, labels.angles, t2Mode);
+    EqualSegments.additions(props, labels.seg1s.s, labels.seg1s.ticks, t2Mode);
+    EqualSegments.additions(props, labels.seg2s.s, labels.seg2s.ticks, t2Mode);
+    if (labels.angles.type === Obj.RightTick) {
+      EqualRightAngles.additions(props, labels.angles.a, t2Mode);
     } else {
-      EqualAngles.additions(props, labels.angles, 1, t2Mode);
+      EqualAngles.additions(
+        props,
+        labels.angles.a,
+        labels.angles.ticks || 1,
+        t2Mode
+      );
     }
   };
 }

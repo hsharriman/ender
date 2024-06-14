@@ -1,11 +1,15 @@
-import { linked } from "../../theorems/utils";
-import { tooltip } from "../../theorems/utils";
-import { congruent } from "../geometryText";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
-import { Obj } from "../types/types";
-import { EqualSegments } from "./EqualSegments";
-import { strs } from "../geometryText";
 import { definitions } from "../../theorems/definitions";
+import { Reasons } from "../../theorems/reasons";
+import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
+import { strs } from "../geometryText";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepTextProps,
+  StepUnfocusProps,
+} from "../types/stepTypes";
+import { Obj, SVGModes } from "../types/types";
+import { EqualSegments } from "./EqualSegments";
 
 export class Reflexive {
   static additions = (props: StepFocusProps, s: string, num = 1) => {
@@ -32,3 +36,17 @@ export class Reflexive {
     return EqualSegments.staticText([s, s]);
   };
 }
+
+export const ReflexiveStep = (seg: string, num: number, step: StepMeta) =>
+  makeStepMeta({
+    reason: Reasons.Reflexive,
+    unfocused: (props: StepUnfocusProps) => {
+      step.unfocused(props);
+      step.additions({ ...props, mode: SVGModes.Unfocused });
+    },
+    additions: (props: StepFocusProps) => {
+      Reflexive.additions(props, seg, num);
+    },
+    text: (props: StepTextProps) => Reflexive.text(props, seg, num),
+    staticText: () => Reflexive.staticText(seg),
+  });
