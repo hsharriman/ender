@@ -6,9 +6,9 @@ export interface ProofRowsProps {
   items: ProofTextItem[];
   onClick: (n: string) => void; // callback that returns new selected idx when clicked
   reliesOn?: Map<string, Set<string>>;
+  refresh: boolean;
 }
 export interface ProofRowsState {
-  active: string;
   idx: number;
 }
 export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
@@ -16,7 +16,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   constructor(props: ProofRowsProps) {
     super(props);
     this.state = {
-      active: this.props.active,
       idx: 0,
     };
   }
@@ -39,11 +38,10 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     } else if (event.key === "ArrowUp" && this.state.idx > 0) {
       newIdx = this.state.idx - 1;
     }
-    if (newIdx !== this.state.idx) {
+    if (newIdx !== this.state.idx && this.props.items[newIdx] !== undefined) {
       const newActive = this.props.items[newIdx].k;
       this.setState({
         idx: newIdx,
-        active: newActive,
       });
       this.props.onClick(newActive);
     }
@@ -51,7 +49,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
 
   onClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     const active = event.currentTarget.id.replace(this.idPrefix, "");
-    if (active !== this.state.active) {
+    if (active !== this.props.active) {
       const newIdx = this.props.items.findIndex((item) => item.k === active);
       if (newIdx === -1) {
         console.error(
@@ -60,7 +58,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         );
       }
       this.setState({
-        active: active,
         idx: newIdx,
       });
       this.props.onClick(active);
@@ -73,7 +70,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         id="active-bar"
         className="w-4 h-16 transition-all ease-in-out duration-300"
         style={
-          this.state.active === k ? { borderLeft: "10px double #9A76FF" } : {}
+          this.props.active === k ? { borderLeft: "10px double #9A76FF" } : {}
         }
       ></div>
     );
@@ -97,10 +94,17 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     );
   };
 
+  resetRow = () => {
+    if (this.props.refresh || !this.props.items[this.state.idx]) {
+      this.setState({ idx: 0 });
+    }
+  };
+
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
     const isActive =
-      activeItem.k === item.k || activeItem.dependsOn?.has(item.k);
+      activeItem &&
+      (activeItem.k === item.k || activeItem.dependsOn?.has(item.k));
     const textColor = isActive ? "text-slate-800" : "text-slate-400";
     const strokeColor = isActive ? "border-slate-800" : "border-gray-300";
     return (
@@ -130,6 +134,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   render() {
     // TODO change style based on the state
     if (this.props.items.length > 0) {
+      this.resetRow();
       // first 2 rows are "given" and "prove"
       const given = this.props.items[0];
       const prove = this.props.items[1];

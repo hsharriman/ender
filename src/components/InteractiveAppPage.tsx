@@ -11,6 +11,8 @@ import { TestQuestions } from "./TestQuestions";
 
 export interface InteractiveAppPageProps extends InteractiveLayoutProps {
   pageNum: number;
+  reset: boolean;
+  onClickCallback: () => void;
 }
 
 interface InteractiveAppPageState {
@@ -32,10 +34,12 @@ export class InteractiveAppPage extends React.Component<
   }
 
   buildCtx = () => {
+    if (!this.props.reset) return;
     // reset stored variables
     this.ctx = this.props.baseContent(true);
     this.linkedTexts = [];
     this.reasonMap = new Map<string, Reason>();
+    this.handleClick("given");
 
     // GIVEN
     this.ctx.addFrame(GIVEN_ID);
@@ -74,6 +78,7 @@ export class InteractiveAppPage extends React.Component<
         reason: step.reason.title,
       });
     });
+    this.props.onClickCallback();
   };
 
   handleClick = (active: string) => {
@@ -104,6 +109,7 @@ export class InteractiveAppPage extends React.Component<
                 items={this.linkedTexts}
                 active={this.state.activeFrame}
                 onClick={this.handleClick}
+                refresh={this.props.reset}
               />
             </div>
           </div>

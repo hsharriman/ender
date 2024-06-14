@@ -29,12 +29,12 @@ import { makeStepMeta } from "../utils";
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
     [
-      [0, 0], //A
-      [2.5, 4], //B
-      [5, 0], //C
-      [2.5, 1.5], //D
-      [2.5, 0], //E
-      [2.5, -1.5], //G
+      [1.5, 1], //A
+      [3.5, 4.25], //B
+      [5.5, 1], //C
+      [3.5, 2.25], //D
+      [3.5, 1], //E
+      [3.5, -0.25], //G
     ],
   ];
   let ctx = new Content();
@@ -43,9 +43,9 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
     [-12, -15],
     [-20, -10],
     [5, -8],
-    [5, 2],
-    [-15, -18],
-    [-18, 0],
+    [-18, -5],
+    [-18, -18],
+    [-20, -5],
   ];
   const pts = coords[0];
   const [A, B, C, D, E, G] = pts.map((c, i) =>
@@ -227,9 +227,10 @@ const miniContent = () => {
     1
   );
   const s5 = ctx.addFrame("s5");
+  ctx.push(new Segment({ p1: ctx.getPoint("C"), p2: ctx.getPoint("A") }));
   Reflexive.additions(
     { ctx, frame: s5, mode: SVGModes.Purple, inPlace: true },
-    "CE",
+    "AC",
     1
   );
   const s6 = ctx.addFrame("s6");
@@ -244,7 +245,7 @@ const miniContent = () => {
   const s7 = ctx.addFrame("s7");
   SAS.additions(
     { ctx, frame: s7, mode: SVGModes.Purple, inPlace: true },
-    s7SASProps,
+    { ...s7SASProps, seg2s: { ...s7SASProps.seg2s, ticks: 2 } },
     SVGModes.Blue
   );
   return ctx;

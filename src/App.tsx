@@ -67,6 +67,7 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
+  refresh: boolean;
 }
 export class App extends React.Component<AppProps, AppState> {
   private meta: AppMeta[] = [];
@@ -75,6 +76,7 @@ export class App extends React.Component<AppProps, AppState> {
     this.state = {
       activePage: 0,
       activeTest: 0,
+      refresh: true,
     };
 
     const randomCompleteProofs = randomizeLayout(randomizeProofs([P1, P2, P3])); // 2 random complete proofs
@@ -98,8 +100,15 @@ export class App extends React.Component<AppProps, AppState> {
     if (this.state.activePage + direction < 0) {
       this.setState({ activeTest: 0 });
     } else {
-      this.setState({ activePage: this.state.activePage + direction });
+      this.setState({
+        activePage: this.state.activePage + direction,
+        refresh: true,
+      });
     }
+  };
+
+  onClickCallback = () => {
+    this.setState({ refresh: false });
   };
 
   render() {
@@ -136,11 +145,21 @@ export class App extends React.Component<AppProps, AppState> {
           {this.state.activePage <= this.meta.length - 1 ? (
             currMeta.layout === "static" ? (
               <StaticAppPage
-                {...{ ...currMeta.proofMeta, pageNum: this.state.activePage }}
+                {...{
+                  ...currMeta.proofMeta,
+                  pageNum: this.state.activePage,
+                  reset: this.state.refresh,
+                  onClickCallback: this.onClickCallback,
+                }}
               />
             ) : (
               <InteractiveAppPage
-                {...{ ...currMeta.proofMeta, pageNum: this.state.activePage }}
+                {...{
+                  ...currMeta.proofMeta,
+                  pageNum: this.state.activePage,
+                  reset: this.state.refresh,
+                  onClickCallback: this.onClickCallback,
+                }}
               />
             )
           ) : (
