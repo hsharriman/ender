@@ -180,9 +180,9 @@ const step4: StepMeta = makeStepMeta({
   },
   text: (props: StepTextProps) => {
     return SAS.text(props, {
-      seg1s: ["AD", "BC"],
-      seg2s: ["AB", "DC"],
-      angles: ["ABD", "CDB"],
+      seg1s: { s: ["AD", "BC"], ticks: 1 },
+      seg2s: { s: ["AB", "DC"], ticks: 2 },
+      angles: { a: ["ABD", "CDB"] },
       triangles: ["ABD", "CDB"],
     });
   },
@@ -218,9 +218,9 @@ const miniContent = () => {
   SAS.additions(
     { ...defaultStepProps, frame: step4 },
     {
-      seg1s: ["BD", "BD"],
-      seg2s: ["AB", "DC"],
-      angles: ["ABD", "CDB"],
+      seg1s: { s: ["BD", "BD"], ticks: 1 },
+      seg2s: { s: ["AB", "DC"], ticks: 2 },
+      angles: { a: ["ABD", "CDB"] },
       triangles: ["ABD", "CDB"],
     },
     SVGModes.Blue

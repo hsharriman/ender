@@ -1,3 +1,4 @@
+import { Content } from "../diagramContent";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
@@ -27,6 +28,15 @@ export class EqualRightAngles {
             frame: props.frame,
           }),
         ])}
+      </span>
+    );
+  };
+  static ticklesstText = (ctx: Content, [a1, a2]: [string, string]) => {
+    return (
+      <span>
+        {BaseAngle.ticklessText(ctx, a1)}
+        {this.equalNinety}
+        {BaseAngle.ticklessText(ctx, a2)}
       </span>
     );
   };

@@ -9,6 +9,9 @@ import { PC3 } from "./theorems/checking/pc3";
 import { P1 } from "./theorems/complete/proof1";
 import { P2 } from "./theorems/complete/proof2";
 import { P3 } from "./theorems/complete/proof3";
+import { IP1 } from "./theorems/incomplete/ip1";
+import { IP2 } from "./theorems/incomplete/ip2";
+import { IP3 } from "./theorems/incomplete/ip3";
 
 interface AppMeta {
   layout: LayoutOptions;
@@ -31,9 +34,10 @@ const fisherYates = (arrLen: number) => {
 };
 
 const randomizeProofs = (arr: LayoutProps[]) => {
-  const order = fisherYates(3);
+  const order = fisherYates(arr.length);
   const newArr = order.map((i) => arr[i]);
   // only 2 proofs are needed per experiment
+  if (arr.length === 2) return newArr;
   return newArr.slice(1);
 };
 
@@ -63,6 +67,7 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
+  refresh: boolean;
 }
 export class App extends React.Component<AppProps, AppState> {
   private meta: AppMeta[] = [];
@@ -71,13 +76,21 @@ export class App extends React.Component<AppProps, AppState> {
     this.state = {
       activePage: 0,
       activeTest: 0,
+      refresh: true,
     };
 
     const randomCompleteProofs = randomizeLayout(randomizeProofs([P1, P2, P3])); // 2 random complete proofs
     const randomCheckingProofs = randomizeLayout(
       randomizeProofs([PC1, PC2, PC3])
     );
-    let randomProofOrder = randomCompleteProofs.concat(randomCheckingProofs);
+    const randomIncompleteProofs = randomizeLayout(
+      randomizeProofs([IP1, IP2, IP3])
+    );
+
+    let randomProofOrder = randomCompleteProofs.concat(
+      randomCheckingProofs,
+      randomIncompleteProofs
+    );
     // shuffle activities
     const shuffleProofOrder = fisherYates(randomProofOrder.length);
     this.meta = shuffleProofOrder.map((i) => randomProofOrder[i]);
@@ -87,8 +100,15 @@ export class App extends React.Component<AppProps, AppState> {
     if (this.state.activePage + direction < 0) {
       this.setState({ activeTest: 0 });
     } else {
-      this.setState({ activePage: this.state.activePage + direction });
+      this.setState({
+        activePage: this.state.activePage + direction,
+        refresh: true,
+      });
     }
+  };
+
+  onClickCallback = () => {
+    this.setState({ refresh: false });
   };
 
   render() {
@@ -125,11 +145,21 @@ export class App extends React.Component<AppProps, AppState> {
           {this.state.activePage <= this.meta.length - 1 ? (
             currMeta.layout === "static" ? (
               <StaticAppPage
-                {...{ ...currMeta.proofMeta, pageNum: this.state.activePage }}
+                {...{
+                  ...currMeta.proofMeta,
+                  pageNum: this.state.activePage,
+                  reset: this.state.refresh,
+                  onClickCallback: this.onClickCallback,
+                }}
               />
             ) : (
               <InteractiveAppPage
-                {...{ ...currMeta.proofMeta, pageNum: this.state.activePage }}
+                {...{
+                  ...currMeta.proofMeta,
+                  pageNum: this.state.activePage,
+                  reset: this.state.refresh,
+                  onClickCallback: this.onClickCallback,
+                }}
               />
             )
           ) : (

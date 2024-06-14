@@ -57,4 +57,12 @@ export const Reasons = {
     title: "HL Triangle Congruence",
     body: "Hypotenuse-Leg (HL) Triangle Congruence. If the hypotenuse and a leg of one right triangle are congruent to the hypotenuse and a leg of another right triangle, then the triangles are congruent.",
   },
+  SSS: {
+    title: "Side-Side-Side",
+    body: "Side-Side-Side (SSS) Triangle Congruence. If the three sides of one triangle are congruent to the corresponding sides of another triangle, then the triangles are congruent.",
+  },
+  AAS: {
+    title: "Angle-Angle-Side",
+    body: "Angle-Angle-Side (AAS) Triangle Congruence. If they have two equal angles and a side adjacent to only one of those angles that are also equal.", // TODO
+  },
 };

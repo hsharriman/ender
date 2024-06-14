@@ -1,11 +1,14 @@
-import { linked } from "../../theorems/utils";
-import { tooltip } from "../../theorems/utils";
-import { Content } from "../diagramContent";
-import { congruent, segmentStr } from "../geometryText";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
-import { strs } from "../geometryText";
 import { definitions } from "../../theorems/definitions";
+import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
+import { Content } from "../diagramContent";
+import { congruent, segmentStr, strs } from "../geometryText";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepTextProps,
+  StepUnfocusProps,
+} from "../types/stepTypes";
+import { Obj, Reason, SVGModes } from "../types/types";
 
 export class EqualSegments {
   static additions = (
@@ -67,3 +70,26 @@ export class EqualSegments {
     );
   };
 }
+
+export const EqualSegmentStep = (
+  s: [string, string],
+  reason: Reason,
+  step: StepMeta,
+  num?: number,
+  dependsOn?: number[]
+) =>
+  makeStepMeta({
+    reason,
+    dependsOn,
+    unfocused: (props: StepUnfocusProps) => {
+      step.unfocused(props);
+      step.additions({ ...props, mode: SVGModes.Unfocused });
+    },
+    additions: (props: StepFocusProps) => {
+      EqualSegments.additions(props, s, num);
+    },
+    text: (props: StepTextProps) => {
+      return EqualSegments.text(props, s, num);
+    },
+    staticText: () => EqualSegments.staticText(s),
+  });

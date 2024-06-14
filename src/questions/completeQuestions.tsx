@@ -1,4 +1,4 @@
-import { strs, segmentQuestion } from "../core/geometryText";
+import { segmentQuestion, strs } from "../core/geometryText";
 
 export interface Question {
   prompt: string | JSX.Element;

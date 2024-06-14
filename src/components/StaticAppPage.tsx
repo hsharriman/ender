@@ -1,4 +1,5 @@
 import React from "react";
+import { Content } from "../core/diagramContent";
 import { StaticProofTextItem } from "../core/types/stepTypes";
 import { Reason, StaticLayoutProps } from "../core/types/types";
 import { Reasons } from "../theorems/reasons";
@@ -8,6 +9,8 @@ import { TestQuestions } from "./TestQuestions";
 
 export interface StaticAppPageProps extends StaticLayoutProps {
   pageNum: number;
+  reset: boolean;
+  onClickCallback: () => void;
 }
 
 interface StaticAppPageState {
@@ -20,35 +23,39 @@ export class StaticAppPage extends React.Component<
 > {
   reasons: Reason[] = [];
   texts: StaticProofTextItem[] = [];
+  ctx: Content;
   constructor(props: StaticAppPageProps) {
     super(props);
     // build diagram from given construction
+    this.ctx = this.props.baseContent(true);
     this.state = {
       page: this.props.pageNum,
     };
   }
 
   buildCtxAndText = () => {
-    // reset stored variables
-    const ctx = this.props.baseContent(true);
-    this.reasons = [];
-    this.texts = [];
+    if (this.props.reset) {
+      // reset stored variables
+      this.ctx = this.props.baseContent(true);
+      this.reasons = [];
+      this.texts = [];
 
-    ctx.addFrame(GIVEN_ID);
-    this.props.givens.diagram(ctx, GIVEN_ID, false);
-    this.props.steps.map((step) => {
-      this.texts.push({
-        stmt: step.staticText(),
-        reason: step.reason.title,
+      this.ctx.addFrame(GIVEN_ID);
+      this.props.givens.diagram(this.ctx, GIVEN_ID, false);
+      this.props.steps.map((step) => {
+        this.texts.push({
+          stmt: step.staticText(),
+          reason: step.reason.title,
+        });
+        if (
+          step.reason.body !== "" &&
+          step.reason.title !== Reasons.Given.title
+        ) {
+          this.reasons.push(step.reason);
+        }
       });
-      if (
-        step.reason.body !== "" &&
-        step.reason.title !== Reasons.Given.title
-      ) {
-        this.reasons.push(step.reason);
-      }
-    });
-    return ctx;
+      this.props.onClickCallback();
+    }
   };
 
   renderRow = (item: StaticProofTextItem, i: number) => {
@@ -88,7 +95,7 @@ export class StaticAppPage extends React.Component<
   };
 
   render() {
-    const ctx = this.buildCtxAndText();
+    this.buildCtxAndText();
     return (
       <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-12">
         <div className="w-[900px] h-full flex flex-col ml-12">
@@ -105,7 +112,7 @@ export class StaticAppPage extends React.Component<
             </div>
             <StaticDiagram
               svgIdSuffix={`static-${GIVEN_ID}`}
-              svgElements={ctx.allStaticSvgElements(this.props.pageNum)}
+              svgElements={this.ctx.allStaticSvgElements(this.props.pageNum)}
               width="400px"
               height="275px"
             />

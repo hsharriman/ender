@@ -11,6 +11,8 @@ import { TestQuestions } from "./TestQuestions";
 
 export interface InteractiveAppPageProps extends InteractiveLayoutProps {
   pageNum: number;
+  reset: boolean;
+  onClickCallback: () => void;
 }
 
 interface InteractiveAppPageState {
@@ -32,10 +34,12 @@ export class InteractiveAppPage extends React.Component<
   }
 
   buildCtx = () => {
+    if (!this.props.reset) return;
     // reset stored variables
     this.ctx = this.props.baseContent(true);
     this.linkedTexts = [];
     this.reasonMap = new Map<string, Reason>();
+    this.handleClick("given");
 
     // GIVEN
     this.ctx.addFrame(GIVEN_ID);
@@ -74,6 +78,7 @@ export class InteractiveAppPage extends React.Component<
         reason: step.reason.title,
       });
     });
+    this.props.onClickCallback();
   };
 
   handleClick = (active: string) => {
@@ -85,12 +90,9 @@ export class InteractiveAppPage extends React.Component<
   };
 
   render() {
-    // To avoid re-building ctx too many times, only build if the activeFrame is "given" (is by default on initial load)
     // TODO ideally ctx should be formatted in a way that react can detect when it changes, this hack is necessary
     // because only calling this method once means that the ctx doesn't update between pages
-    if (this.state.activeFrame === "given") {
-      this.buildCtx();
-    }
+    this.buildCtx();
     return (
       <>
         {this.ctx.getReliesOn() && (
@@ -107,6 +109,7 @@ export class InteractiveAppPage extends React.Component<
                 items={this.linkedTexts}
                 active={this.state.activeFrame}
                 onClick={this.handleClick}
+                refresh={this.props.reset}
               />
             </div>
           </div>
