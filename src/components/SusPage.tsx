@@ -104,7 +104,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                     <br />
                     The word "system" in the questions mean anything that's
                     visible in the image below. It does not include the test
-                    questions interface.
+                    questions.
                   </span>
                   {this.props.type === "Static" ? (
                     <img
