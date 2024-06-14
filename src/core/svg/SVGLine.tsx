@@ -124,8 +124,7 @@ interface LabelTextState {
   isClicked: boolean;
 }
 class LabelText extends React.Component<LabelTextProps, LabelTextState> {
-  private defaultCSS =
-    "ease-in-out duration-300 fill-purple-500 text-purple-500";
+  private defaultCSS = "ease-out duration-300 fill-purple-500 text-purple-500";
   constructor(props: LabelTextProps) {
     super(props);
     this.state = {
@@ -134,11 +133,17 @@ class LabelText extends React.Component<LabelTextProps, LabelTextState> {
   }
   getClassName = () => {
     if (this.state.isClicked || this.props.isHovered) {
-      return this.defaultCSS + "opacity-100 visible cursor-pointer";
+      return (
+        this.defaultCSS +
+        " opacity-100 cursor-pointer pointer-events-auto cursor-pointer"
+      );
     } else if (!this.props.isHovered) {
-      return this.defaultCSS + "opacity-0 invisible delay-700 cursor-default";
+      return (
+        this.defaultCSS +
+        " opacity-0 pointer-events-auto delay-700 cursor-pointer"
+      );
     } else {
-      return this.defaultCSS + "opacity-0 invisible cursor-default";
+      return this.defaultCSS + " opacity-0 pointer-events-none";
     }
   };
   onClick = () => {
