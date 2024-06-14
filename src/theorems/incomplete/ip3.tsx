@@ -1,9 +1,20 @@
 import { Content } from "../../core/diagramContent";
-import { makeStepMeta } from "../utils";
+import { Angle } from "../../core/geometry/Angle";
+import { Point } from "../../core/geometry/Point";
+import { Segment } from "../../core/geometry/Segment";
+import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
 import { EqualAngles } from "../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
+import {
+  EqualSegmentStep,
+  EqualSegments,
+} from "../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../core/templates/EqualTriangles";
 import { Midpoint } from "../../core/templates/Midpoint";
+import { Reflexive, ReflexiveStep } from "../../core/templates/Reflexive";
+import { RightAngle } from "../../core/templates/RightAngle";
+import { SAS, SASProps } from "../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
@@ -11,41 +22,89 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
+import { incompleteProof3 } from "../../questions/incompleteQuestions";
 import { Reasons } from "../reasons";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { VerticalAngles } from "../../core/templates/VerticalAngles";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { ASAAngleMeta, ASAProps, ASA } from "../../core/templates/ASA";
+import { makeStepMeta } from "../utils";
+
+export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+  const coords: Vector[][] = [
+    [
+      [0, 0], //A
+      [2.5, 4], //B
+      [5, 0], //C
+      [2.5, 1.5], //D
+      [2.5, 0], //E
+      [2.5, -1.5], //G
+    ],
+  ];
+  let ctx = new Content();
+  const labels = ["A", "B", "C", "D", "E", "G"];
+  const offsets: Vector[] = [
+    [-12, -15],
+    [-20, -10],
+    [5, -8],
+    [5, 2],
+    [-15, -18],
+    [-18, 0],
+  ];
+  const pts = coords[0];
+  const [A, B, C, D, E, G] = pts.map((c, i) =>
+    // TODO option to make point labels invisible
+    ctx.push(
+      new Point({
+        pt: c,
+        label: labels[i],
+        showLabel: labeledPoints,
+        offset: offsets[i],
+        parentFrame: parentFrame,
+      })
+    )
+  );
+
+  ctx.push(new Triangle({ pts: [A, B, E], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [B, E, C], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [D, E, C], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [G, E, C], parentFrame }, ctx));
+
+  // for given step:
+  ctx.push(new Segment({ p1: B, p2: G }));
+  ctx.push(new Angle({ start: A, center: B, end: G }));
+  ctx.push(new Angle({ start: C, center: B, end: G }));
+  return ctx;
+};
 
 const givens: StepMeta = makeStepMeta({
   // TODO: looks like equalrightangles doesn't have tickless text?
   text: (props: StepTextProps) => {
-    const PeqM = EqualRightAngles.text(props, ["P", "M"]);
-
     return (
       <span>
-        {PeqM}
+        {RightAngle.text(props, "AEB")}
         {comma}
-        {Midpoint.text(props, "PM", ["PR", "MR"], "R")}
+        {Midpoint.text(props, "AC", ["AE", "EC"], "E")}
+        {comma}
+        {EqualSegments.text(props, ["DE", "EG"])}
       </span>
     );
   },
 
   ticklessText: (ctx: Content) => {
-    const PeqM = EqualRightAngles.ticklesstText(ctx, ["P", "M"]);
-
     return (
       <span>
-        {PeqM}
+        {RightAngle.ticklessText(ctx, "AEB")}
         {comma}
-        {Midpoint.ticklessText(ctx, "PM", ["PR", "MR"], "R")}
+        {Midpoint.ticklessText(ctx, "AC", ["AE", "EC"], "E")}
+        {comma}
+        {EqualSegments.ticklessText(ctx, ["DE", "EG"])}
       </span>
     );
   },
 
   additions: (props: StepFocusProps) => {
-    props.ctx.getTriangle("QRP").mode(props.frame, props.mode);
-    props.ctx.getTriangle("MRN").mode(props.frame, props.mode);
+    props.ctx.getTriangle("AEB").mode(props.frame, props.mode);
+    props.ctx.getTriangle("CEB").mode(props.frame, props.mode);
+    props.ctx.getTriangle("DEC").mode(props.frame, props.mode);
+    props.ctx.getTriangle("GEC").mode(props.frame, props.mode);
+    props.ctx.getSegment("BG").mode(props.frame, SVGModes.Unfocused); // TODO this segment causes visual problems
   },
 
   diagram: (ctx: Content, frame: string) => {
@@ -54,9 +113,11 @@ const givens: StepMeta = makeStepMeta({
   staticText: () => {
     return (
       <span>
-        {EqualRightAngles.staticText(["P", "M"])}
+        {RightAngle.staticText("AEB")}
         {comma}
-        {Midpoint.staticText("R", "PM")}
+        {Midpoint.staticText("AC", "E")}
+        {comma}
+        {EqualSegments.staticText(["DE", "EG"])}
       </span>
     );
   },
@@ -67,12 +128,12 @@ const proves: StepMeta = makeStepMeta({
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "R", ["QR", "NR"]);
+    EqualAngles.additions(props, ["DCE", "GCE"]);
   },
   text: (props: StepTextProps) => {
-    return Midpoint.text(props, "QN", ["QR", "NR"], "R");
+    return EqualAngles.text(props, ["DCE", "GCE"]);
   },
-  staticText: () => Midpoint.staticText("R", "QN"),
+  staticText: () => EqualAngles.staticText(["DCE", "GCE"]),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -81,12 +142,12 @@ const step1: StepMeta = makeStepMeta({
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
-    EqualRightAngles.additions(props, ["P", "M"]);
+    RightAngle.additions(props, "AEB");
   },
   text: (props: StepTextProps) => {
-    return EqualRightAngles.text(props, ["P", "M"]);
+    return RightAngle.text(props, "AEB");
   },
-  staticText: () => EqualRightAngles.staticText(["P", "M"]),
+  staticText: () => RightAngle.staticText("AEB"),
 });
 
 const step2: StepMeta = makeStepMeta({
@@ -96,78 +157,104 @@ const step2: StepMeta = makeStepMeta({
     step1.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
-    EqualSegments.additions(props, ["PR", "RM"]);
+    Midpoint.additions(props, "E", ["AE", "EC"]);
   },
   text: (props: StepTextProps) => {
-    return EqualSegments.text(props, ["PR", "RM"]);
+    return Midpoint.text(props, "AC", ["AE", "EC"], "E");
   },
-  staticText: () => EqualSegments.staticText(["PR", "RM"]),
+  staticText: () => Midpoint.staticText("AC", "E"),
 });
 
-const step3: StepMeta = makeStepMeta({
-  reason: Reasons.VerticalAngles,
-  unfocused: (props: StepUnfocusProps) => {
-    step2.unfocused(props);
-    step2.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  additions: (props: StepFocusProps) => {
-    EqualAngles.additions(props, ["QRP", "MRN"]);
-  },
-  text: (props: StepTextProps) => EqualAngles.text(props, ["QRP", "MRN"]),
-  staticText: () => EqualAngles.staticText(["QRP", "MRN"]),
-});
+const step3: StepMeta = EqualSegmentStep(["DE", "EG"], Reasons.Given, step2, 2);
 
-const step4ASAAngleMeta1: ASAAngleMeta = {
-  angles: ["QRP", "MRN"],
-  tick: Obj.EqualAngleTick,
-};
-const step4ASAAngleMeta2: ASAAngleMeta = {
-  angles: ["QPR", "RMN"],
-  tick: Obj.RightTick,
-};
-const step4SASProps: ASAProps = {
-  a1s: step4ASAAngleMeta1,
-  a2s: step4ASAAngleMeta2,
-  segs: ["PR", "RM"],
-  triangles: ["QRP", "MRN"],
-};
-const step4: StepMeta = makeStepMeta({
-  reason: Reasons.ASA,
-  dependsOn: [1, 2, 3],
-  unfocused: (props: StepUnfocusProps) => {
-    step3.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  additions: (props: StepFocusProps) => {
-    ASA.additions(props, step4SASProps);
-  },
-  text: (props: StepTextProps) => ASA.text(props, step4SASProps),
-  staticText: () => EqualTriangles.staticText(["QRP", "MRN"]),
-});
+const step4: StepMeta = ReflexiveStep("BE", 3, step3);
 
-const step5: StepMeta = makeStepMeta({
-  reason: Reasons.CorrespondingSegments,
-  dependsOn: [4],
-  unfocused: (props: StepUnfocusProps) => {
-    step4.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  additions: (props: StepFocusProps) => {
-    EqualSegments.additions(props, ["QR", "RN"]);
-  },
-  text: (props: StepTextProps) => {
-    return EqualSegments.text(props, ["QR", "RN"]);
-  },
-  staticText: () => EqualSegments.staticText(["QR", "RN"]),
-});
+const step5: StepMeta = ReflexiveStep("CE", 1, step4);
 
 const step6: StepMeta = makeStepMeta({
-  reason: Reasons.Midpoint,
-  dependsOn: [5],
+  reason: Reasons.CongAdjAngles,
+  dependsOn: [1],
   unfocused: (props: StepUnfocusProps) => {
     step5.unfocused(props);
     step5.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  additions: (props: StepFocusProps) => step6.additions(props),
-  text: (props: StepTextProps) =>
-    Midpoint.text(props, "AC", ["AD", "DC"], "D", 2),
-  staticText: () => Midpoint.staticText("D", "AC"),
+  additions: (props: StepFocusProps) =>
+    EqualRightAngles.additions(props, ["AEB", "CEB"]),
+  text: (props: StepTextProps) => EqualRightAngles.text(props, ["AEB", "CEB"]),
+  staticText: () => EqualRightAngles.staticText(["AEB", "CEB"]),
 });
+
+const s7SASProps: SASProps = {
+  seg1s: { s: ["AE", "CE"], ticks: 1 },
+  seg2s: { s: ["BE", "BE"], ticks: 3 },
+  angles: { a: ["AEB", "CEB"], type: Obj.RightTick },
+  triangles: ["AEB", "CEB"],
+};
+const step7: StepMeta = makeStepMeta({
+  reason: Reasons.SAS,
+  dependsOn: [1, 2, 4],
+  unfocused: (props: StepUnfocusProps) => {
+    step6.unfocused(props);
+  },
+  additions: (props: StepFocusProps) => SAS.additions(props, s7SASProps),
+  text: (props: StepTextProps) => SAS.text(props, s7SASProps),
+  staticText: () => EqualTriangles.staticText(["AEB", "CEB"]),
+});
+
+const step8: StepMeta = makeStepMeta({
+  reason: Reasons.Empty,
+  unfocused: (props: StepUnfocusProps) => {
+    step7.unfocused(props);
+    step7.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  text: (props: StepTextProps) => (
+    <span style={{ color: "black", fontStyle: "italic" }}>
+      Which step can be applied here?
+    </span>
+  ),
+  staticText: () => (
+    <span style={{ fontStyle: "italic" }}>Which step can be applied here?</span>
+  ),
+});
+
+const miniContent = () => {
+  let ctx = baseContent(false);
+
+  const s4 = ctx.addFrame("s4");
+  Reflexive.additions(
+    { ctx, frame: s4, mode: SVGModes.Purple, inPlace: true },
+    "BE",
+    1
+  );
+  const s5 = ctx.addFrame("s5");
+  Reflexive.additions(
+    { ctx, frame: s5, mode: SVGModes.Purple, inPlace: true },
+    "CE",
+    1
+  );
+  const s6 = ctx.addFrame("s6");
+  ctx.getSegment("BE").mode(s6, SVGModes.Default);
+  ctx.getSegment("CE").mode(s6, SVGModes.Default);
+  ctx.getSegment("AE").mode(s6, SVGModes.Default);
+  EqualRightAngles.additions(
+    { ctx, frame: s6, mode: SVGModes.Purple, inPlace: true },
+    ["AEB", "CEB"],
+    SVGModes.Blue
+  );
+  const s7 = ctx.addFrame("s7");
+  SAS.additions(
+    { ctx, frame: s7, mode: SVGModes.Purple, inPlace: true },
+    s7SASProps,
+    SVGModes.Blue
+  );
+  return ctx;
+};
+
+export const IP3: LayoutProps = {
+  questions: incompleteProof3,
+  miniContent: miniContent(),
+  baseContent,
+  givens,
+  proves,
+  steps: [step1, step2, step3, step4, step5, step6, step7, step8],
+};

@@ -11,6 +11,7 @@ import { P2 } from "./theorems/complete/proof2";
 import { P3 } from "./theorems/complete/proof3";
 import { IP1 } from "./theorems/incomplete/ip1";
 import { IP2 } from "./theorems/incomplete/ip2";
+import { IP3 } from "./theorems/incomplete/ip3";
 
 interface AppMeta {
   layout: LayoutOptions;
@@ -36,8 +37,9 @@ const randomizeProofs = (arr: LayoutProps[]) => {
   const order = fisherYates(arr.length);
   const newArr = order.map((i) => arr[i]);
   // only 2 proofs are needed per experiment
-  if (arr.length === 2) return newArr;
-  return newArr.slice(1);
+  // if (arr.length === 2) return newArr;  // TODO uncomment
+  // return newArr.slice(1);
+  return newArr;
 };
 
 const staticLayout = (proofMeta: LayoutProps): AppMeta => {
@@ -81,13 +83,19 @@ export class App extends React.Component<AppProps, AppState> {
       randomizeProofs([PC1, PC2, PC3])
     );
     const randomIncompleteProofs = randomizeLayout(randomizeProofs([IP1, IP2]));
-    let randomProofOrder = randomCompleteProofs.concat(
-      randomCheckingProofs,
-      randomIncompleteProofs
-    );
+
+    // TODO uncomment
+    // let randomProofOrder = randomCompleteProofs.concat(
+    //   randomCheckingProofs,
+    //   randomIncompleteProofs
+    // );
+    let randomProofOrder = randomCompleteProofs.concat(randomCheckingProofs);
     // shuffle activities
     const shuffleProofOrder = fisherYates(randomProofOrder.length);
     this.meta = shuffleProofOrder.map((i) => randomProofOrder[i]);
+    this.meta = [staticLayout(IP3), interactiveLayout(IP3)]
+      .concat(randomIncompleteProofs)
+      .concat(this.meta);
   }
 
   onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {

@@ -1,11 +1,10 @@
 import { Content } from "../../core/diagramContent";
-import { Point } from "../../core/geometry/Point";
 import { Angle } from "../../core/geometry/Angle";
+import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
-import { makeStepMeta } from "../utils";
 import { comma } from "../../core/geometryText";
-import { EqualAngles } from "../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
+import { EqualSegmentStep } from "../../core/templates/EqualSegments";
 import { Midpoint } from "../../core/templates/Midpoint";
 import {
   StepFocusProps,
@@ -13,13 +12,10 @@ import {
   StepTextProps,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
+import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
+import { incompleteProof2b } from "../../questions/incompleteQuestions";
 import { Reasons } from "../reasons";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { VerticalAngles } from "../../core/templates/VerticalAngles";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { ASAAngleMeta, ASAProps, ASA } from "../../core/templates/ASA";
-import { incompleteProof2a } from "../../questions/incompleteQuestions";
+import { makeStepMeta } from "../utils";
 
 export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   const coords: Vector[][] = [
@@ -34,11 +30,11 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
   let ctx = new Content();
   const labels = ["Q", "R", "M", "N", "P"];
   const offsets: Vector[] = [
-    [-15, -15],
+    [-18, -15],
     [0, 5],
-    [0, -17],
-    [-5, -18],
-    [0, 0],
+    [5, -8],
+    [5, 0],
+    [-15, -8],
   ];
   const pts = coords[0];
   const [Q, R, M, N, P] = pts.map((c, i) =>
@@ -135,90 +131,69 @@ const step1: StepMeta = makeStepMeta({
   staticText: () => EqualRightAngles.staticText(["QPR", "RMN"]),
 });
 
-const step2: StepMeta = makeStepMeta({
-  reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  additions: (props: StepFocusProps) => {
-    EqualSegments.additions(props, ["PR", "RM"]);
-  },
-  text: (props: StepTextProps) => {
-    return EqualSegments.text(props, ["PR", "RM"]);
-  },
-  staticText: () => EqualSegments.staticText(["PR", "RM"]),
-});
+const step2: StepMeta = EqualSegmentStep(["PR", "RM"], Reasons.Given, step1);
 
 const step3: StepMeta = makeStepMeta({
-  reason: Reasons.VerticalAngles,
+  reason: Reasons.Empty,
   unfocused: (props: StepUnfocusProps) => {
     step2.unfocused(props);
     step2.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  additions: (props: StepFocusProps) => {
-    EqualAngles.additions(props, ["QRP", "MRN"]);
-  },
-  text: (props: StepTextProps) => EqualAngles.text(props, ["QRP", "MRN"]),
-  staticText: () => EqualAngles.staticText(["QRP", "MRN"]),
+  text: (props: StepTextProps) => (
+    <span style={{ color: "black", fontStyle: "italic" }}>
+      Which step can be applied here?
+    </span>
+  ),
+  staticText: () => (
+    <span style={{ fontStyle: "italic" }}>Which step can be applied here?</span>
+  ),
 });
 
-const step4ASAAngleMeta1: ASAAngleMeta = {
-  angles: ["QRP", "MRN"],
-  tick: Obj.EqualAngleTick,
-};
-const step4ASAAngleMeta2: ASAAngleMeta = {
-  angles: ["QPR", "RMN"],
-  tick: Obj.RightTick,
-};
-const step4SASProps: ASAProps = {
-  a1s: step4ASAAngleMeta1,
-  a2s: step4ASAAngleMeta2,
-  segs: ["PR", "RM"],
-  triangles: ["QRP", "MRN"],
-};
-const step4: StepMeta = makeStepMeta({
-  reason: Reasons.ASA,
-  dependsOn: [1, 2, 3],
-  unfocused: (props: StepUnfocusProps) => {
-    step3.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  additions: (props: StepFocusProps) => {
-    ASA.additions(props, step4SASProps);
-  },
-  text: (props: StepTextProps) => ASA.text(props, step4SASProps),
-  staticText: () => EqualTriangles.staticText(["QRP", "MRN"]),
-});
+// const step4: StepMeta = makeStepMeta({
+//   reason: Reasons.Empty,
+//   unfocused: (props: StepUnfocusProps) => {
+//     step3.additions({ ...props, mode: SVGModes.Unfocused });
+//     step3.unfocused(props);
+//   },
+//   text: (props: StepTextProps) => (
+//     <span style={{ color: "black", fontStyle: "italic" }}>
+//       Which step can be applied here?
+//     </span>
+//   ),
+//   staticText: () => (
+//     <span style={{ fontStyle: "italic" }}>Which step can be applied here?</span>
+//   ),
+// });
 
-const step5: StepMeta = makeStepMeta({
-  reason: Reasons.CorrespondingSegments,
-  dependsOn: [4],
-  unfocused: (props: StepUnfocusProps) => {
-    step4.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  additions: (props: StepFocusProps) => {
-    EqualSegments.additions(props, ["QR", "RN"]);
-  },
-  text: (props: StepTextProps) => {
-    return EqualSegments.text(props, ["QR", "RN"]);
-  },
-  staticText: () => EqualSegments.staticText(["QR", "RN"]),
-});
+// const step5: StepMeta = makeStepMeta({
+//   reason: Reasons.CorrespondingSegments,
+//   dependsOn: [4],
+//   unfocused: (props: StepUnfocusProps) => {
+//     step4.additions({ ...props, mode: SVGModes.Unfocused });
+//   },
+//   additions: (props: StepFocusProps) => {
+//     EqualSegments.additions(props, ["QR", "RN"], 2);
+//   },
+//   text: (props: StepTextProps) => {
+//     return EqualSegments.text(props, ["QR", "RN"], 2);
+//   },
+//   staticText: () => EqualSegments.staticText(["QR", "RN"]),
+// });
 
-const step6: StepMeta = makeStepMeta({
-  reason: Reasons.Midpoint,
-  dependsOn: [5],
-  unfocused: (props: StepUnfocusProps) => {
-    step5.unfocused(props);
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "R", ["QR", "NR"]);
-  },
-  text: (props: StepTextProps) =>
-    Midpoint.text(props, "QN", ["QR", "NR"], "R", 2),
-  staticText: () => Midpoint.staticText("R", "QN"),
-});
+// const step6: StepMeta = makeStepMeta({
+//   reason: Reasons.Midpoint,
+//   dependsOn: [5],
+//   unfocused: (props: StepUnfocusProps) => {
+//     step5.unfocused(props);
+//     step5.additions({ ...props, mode: SVGModes.Unfocused });
+//   },
+//   additions: (props: StepFocusProps) => {
+//     Midpoint.additions(props, "R", ["QR", "NR"], 2);
+//   },
+//   text: (props: StepTextProps) =>
+//     Midpoint.text(props, "QN", ["QR", "NR"], "R", 2),
+//   staticText: () => Midpoint.staticText("R", "QN"),
+// });
 
 const miniContent = () => {
   let ctx = baseContent(false);
@@ -226,10 +201,10 @@ const miniContent = () => {
 };
 
 export const IP2: LayoutProps = {
-  questions: incompleteProof2a,
+  questions: incompleteProof2b,
   miniContent: miniContent(),
   baseContent,
   givens,
   proves,
-  steps: [step1, step2, step3, step4, step5, step6],
+  steps: [step1, step2, step3],
 };
