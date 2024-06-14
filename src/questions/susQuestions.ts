@@ -1,8 +1,14 @@
-import { Question, QuestionType } from "./completeQuestions";
+import { QuestionType } from "./completeQuestions";
+
+export interface susQuestionType {
+  prompt: string;
+  answers?: string[];
+  type: QuestionType;
+}
 
 const likertAnswers = ["1", "2", "3", "4", "5"];
 
-export const susQuestions: Question[] = [
+export const susQuestions: susQuestionType[] = [
   {
     prompt: " I think that I would like to use this interface frequently.",
     answers: likertAnswers,
@@ -59,7 +65,7 @@ export const susQuestions: Question[] = [
   },
 ];
 
-export const staticFollowUpQuestions: Question[] = [
+export const staticFollowUpQuestions: susQuestionType[] = [
   {
     prompt:
       "What do you like about this presentation style of the proof, layout etc.?",
@@ -83,7 +89,7 @@ export const staticFollowUpQuestions: Question[] = [
   },
 ];
 
-export const interactiveFollowUpQuestions: Question[] = [
+export const interactiveFollowUpQuestions: susQuestionType[] = [
   {
     prompt:
       "What do you like about this presentation style of the proof, layout, interactions etc.?",

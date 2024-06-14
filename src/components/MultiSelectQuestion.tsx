@@ -1,13 +1,6 @@
 import React from "react";
-
+import { QuestionProps } from "./RadioQuestion";
 import { SubmitQuestion } from "./SubmitQuestion";
-
-interface QuestionProps {
-  questionNum: string;
-  question: string;
-  answers: string[];
-  onSubmit: (answers: string[]) => void;
-}
 
 interface QuestionState {
   selectedOptions: string[];
@@ -45,10 +38,10 @@ export class MultiSelectQuestion extends React.Component<
   handleSubmit = () => {
     const { selectedOptions } = this.state;
     if (selectedOptions.length === 0) {
-      alert("Please select at least one answer.");
+      // TODO: add alert for empty input
       return;
     }
-    this.props.onSubmit(this.state.selectedOptions);
+    this.props.onSubmit(this.state.selectedOptions.join(", "));
     this.setState({
       selectedOptions: [],
     });
@@ -59,14 +52,14 @@ export class MultiSelectQuestion extends React.Component<
     const selectedOptions = this.state.selectedOptions;
 
     return (
-      <div className="">
+      <div className="text-lg">
         <div className="flex flex-col justify-start pb-1">
-          <div className="font-bold text-base text-slate-500">
+          <div className="font-bold text-slate-500">
             Question {questionNum}:
           </div>
         </div>
-        <div className="font-bold text-base pb-1">{question}</div>
-        <div className="text-base">
+        <div className="font-bold pb-1">{question}</div>
+        <div>
           {answers.map((answer, index) => {
             return (
               <div className="py-0.5" key={index}>

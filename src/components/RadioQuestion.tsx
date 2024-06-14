@@ -1,14 +1,14 @@
 import React from "react";
 import { SubmitQuestion } from "./SubmitQuestion";
 
-interface QuestionProps {
+export interface QuestionProps {
   questionNum: string;
-  question: string;
+  question: string | JSX.Element;
   answers: string[];
   onSubmit: (answer: string) => void;
 }
 
-interface QuestionState {
+export interface QuestionState {
   selectedOption: string;
 }
 
@@ -33,7 +33,7 @@ export class RadioQuestion extends React.Component<
   handleSubmit = () => {
     const { selectedOption } = this.state;
     if (selectedOption.length === 0) {
-      alert("Please select an answer.");
+      // TODO: add alert for empty input
       return;
     }
     this.props.onSubmit(this.state.selectedOption);
@@ -47,14 +47,14 @@ export class RadioQuestion extends React.Component<
     const selectedOption = this.state.selectedOption;
 
     return (
-      <div className="">
+      <div className="text-lg">
         <div className="flex flex-col justify-start pb-1">
-          <div className="font-bold text-base text-slate-500">
+          <div className="font-bold text-slate-500">
             Question {questionNum}:
           </div>
         </div>
-        <div className="font-bold text-base pb-1">{question}</div>
-        <div className="text-base">
+        <div className="font-bold pb-1">{question}</div>
+        <div>
           {answers.map((answer, index) => {
             return (
               <div className="py-0.5" key={index}>

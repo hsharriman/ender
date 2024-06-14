@@ -39,8 +39,6 @@ export class TestQuestions extends React.Component<
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,
       }));
-    } else {
-      alert("Survey completed!");
     }
   };
 
@@ -85,8 +83,12 @@ export class TestQuestions extends React.Component<
             <TextQuestion
               questionNum={(this.state.currentQuestionIndex + 1).toString()}
               question={currentQuestion.prompt}
+              answers={[]}
               onSubmit={this.handleSubmit}
             />
+          )}
+          {currentQuestion.type === QuestionType.Next && (
+            <span>{currentQuestion.prompt}</span>
           )}
         </div>
       </>
