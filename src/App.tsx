@@ -97,18 +97,18 @@ export class App extends React.Component<AppProps, AppState> {
       <div>
         <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
           <button
-            className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+            className="absolute top-0 left-0 p-3 font-bold underline underline-offset-2 z-30 text-lg"
             id="prev-arrow"
             style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
             onClick={this.onClick(-1)}
           >
             {"Previous"}
           </button>
-          <div className="absolute top-0 p-3 left-24 z-30">{`${
+          <div className="absolute top-0 p-3 left-24 z-30 font-bold text-lg">{`${
             this.state.activePage + 1
           } / ${this.meta.length + 2}`}</div>
           <button
-            className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+            className="absolute top-0 right-0 p-3 font-bold underline underline-offset-2 z-30 text-lg"
             id="next-arrow"
             style={{
               display:

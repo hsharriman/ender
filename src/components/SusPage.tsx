@@ -159,7 +159,10 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                   </>
                 ))}
               </div>
-              <SubmitQuestion onClick={this.handleSubmit} />
+              <SubmitQuestion
+                disabled={!this.state.completed}
+                onClick={this.handleSubmit}
+              />
             </div>
           </div>
         )}
