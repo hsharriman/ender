@@ -37,7 +37,7 @@ const randomizeProofs = (arr: LayoutProps[]) => {
   const order = fisherYates(arr.length);
   const newArr = order.map((i) => arr[i]);
   // only 2 proofs are needed per experiment
-  if (arr.length === 2) return newArr; // TODO uncomment
+  if (arr.length === 2) return newArr;
   return newArr.slice(1);
 };
 
@@ -85,7 +85,6 @@ export class App extends React.Component<AppProps, AppState> {
       randomizeProofs([IP1, IP2, IP3])
     );
 
-    // TODO uncomment
     let randomProofOrder = randomCompleteProofs.concat(
       randomCheckingProofs,
       randomIncompleteProofs

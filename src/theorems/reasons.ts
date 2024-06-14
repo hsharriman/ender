@@ -59,10 +59,10 @@ export const Reasons = {
   },
   SSS: {
     title: "Side-Side-Side",
-    body: "Two triangles are said to be congruent if the three sides of a triangle is equal to the corresponding sides of the other triangle.",
+    body: "Side-Side-Side (SSS) Triangle Congruence. If the three sides of one triangle are congruent to the corresponding sides of another triangle, then the triangles are congruent.",
   },
   AAS: {
     title: "Angle-Angle-Side",
-    body: "Two triangles are said to be congruent if they have two equal angles and a side adjacent to only one of those angles that are also equal.",
+    body: "Angle-Angle-Side (AAS) Triangle Congruence. If they have two equal angles and a side adjacent to only one of those angles that are also equal.", // TODO
   },
 };
