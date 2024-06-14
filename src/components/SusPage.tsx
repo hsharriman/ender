@@ -102,8 +102,9 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                     (interactive/static) proofs in this picture.
                     <br />
                     <br />
-                    The word "system" in the questions mean the proof and not
-                    the multiple choice/written question interface.
+                    The word "system" in the questions mean anything that's
+                    visible in the image below. It does not include the test
+                    questions interface.
                   </span>
                   {this.props.type === "Static" ? (
                     <img
