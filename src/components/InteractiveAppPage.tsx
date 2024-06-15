@@ -13,10 +13,14 @@ export interface InteractiveAppPageProps extends InteractiveLayoutProps {
   pageNum: number;
   reset: boolean;
   onClickCallback: () => void;
+  updateAnswers: (proofName: string, question: string, answer: string) => void;
+  answers: { [question: string]: string };
+  proofName: string;
 }
 
 interface InteractiveAppPageState {
   activeFrame: string;
+  localAnswers: { [question: string]: string };
 }
 export class InteractiveAppPage extends React.Component<
   InteractiveAppPageProps,
@@ -30,6 +34,7 @@ export class InteractiveAppPage extends React.Component<
     this.ctx = this.props.baseContent(true);
     this.state = {
       activeFrame: "given",
+      localAnswers: {},
     };
   }
 
@@ -89,6 +94,20 @@ export class InteractiveAppPage extends React.Component<
     }
   };
 
+  handleAnswerUpdate = (question: string, answer: string) => {
+    this.setState(
+      (prevState) => ({
+        localAnswers: {
+          ...prevState.localAnswers,
+          [question]: answer,
+        },
+      }),
+      () => {
+        this.props.updateAnswers(this.props.proofName, question, answer);
+      }
+    );
+  };
+
   render() {
     // TODO ideally ctx should be formatted in a way that react can detect when it changes, this hack is necessary
     // because only calling this method once means that the ctx doesn't update between pages
@@ -144,7 +163,11 @@ export class InteractiveAppPage extends React.Component<
             </div>
           </div>
           <div className="w-[400px] h-fit col-start-3 mt-12 p-8 rounded-lg border-dotted border-4 border-violet-300">
-            <TestQuestions questions={this.props.questions} />
+            <TestQuestions
+              questions={this.props.questions}
+              answers={this.props.answers}
+              onAnswerUpdate={this.handleAnswerUpdate}
+            />
           </div>
         </div>
       </>

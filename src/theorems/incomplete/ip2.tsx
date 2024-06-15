@@ -201,6 +201,7 @@ const miniContent = () => {
 };
 
 export const IP2: LayoutProps = {
+  name: "Incomplete Proof 2",
   questions: incompleteProof2b,
   miniContent: miniContent(),
   baseContent,

@@ -11,11 +11,14 @@ import SusQuestion from "./SusQuestion";
 
 interface susPageProps {
   type: string;
+  answers: { [question: string]: string };
+  updateAnswers: (name: string, question: string, answer: string) => void;
 }
 
 interface susPageState {
   answers: { [key: string]: string };
   completed: Boolean;
+  submitted: Boolean;
 }
 
 export class SusPage extends React.Component<susPageProps, susPageState> {
@@ -37,16 +40,33 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
         }, {} as { [key: string]: string }),
       },
       completed: false,
+      submitted: false,
     };
   }
 
   handleAnswerChange = (questionNum: string, answer: string) => {
-    this.setState((prevState) => ({
-      answers: {
-        ...prevState.answers,
-        [questionNum]: answer,
-      },
-    }));
+    this.setState(
+      (prevState) => ({
+        answers: {
+          ...prevState.answers,
+          [questionNum]: answer,
+        },
+      }),
+      () => {
+        const allAnswered = Object.values(this.state.answers).every(
+          (answer) => answer !== ""
+        );
+        if (allAnswered) {
+          this.setState({
+            completed: true,
+          });
+        } else {
+          this.setState({
+            completed: false,
+          });
+        }
+      }
+    );
   };
 
   handleInputChange = (
@@ -55,25 +75,41 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
   ) => {
     const { value } = event.target;
     this.handleAnswerChange(`text${index}`, value);
+    const localAnswers = this.state.answers;
+    const allAnswered = Object.values(localAnswers).every(
+      (answer) => answer !== ""
+    );
+    if (allAnswered) {
+      this.setState({
+        completed: true,
+      });
+    }
   };
 
   handleSubmit = () => {
-    const { answers } = this.state;
-    const allAnswered = Object.values(answers).every((answer) => answer !== "");
+    const localAnswers = this.state.answers;
+    const allAnswered = Object.values(localAnswers).every(
+      (answer) => answer !== ""
+    );
 
     if (!allAnswered) {
       return;
     }
-    console.log("Survey results:", answers);
-    this.setState((prevState) => ({
-      completed: true,
-    }));
+
+    const { updateAnswers, type } = this.props;
+    Object.keys(localAnswers).forEach((questionNum) => {
+      updateAnswers(type, questionNum, localAnswers[questionNum]);
+    });
+
+    this.setState({
+      submitted: true,
+    });
   };
 
   render() {
     return (
       <>
-        {this.state.completed ? (
+        {this.state.submitted ? (
           <div className="grid grid-rows-[auto,1fr] gap-2 justify-center flex w-full min-w-[1300px] pt-20">
             <span>
               <h2>

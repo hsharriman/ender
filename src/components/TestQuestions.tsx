@@ -7,6 +7,8 @@ import { Question } from "../questions/completeQuestions";
 
 interface QuestionsProps {
   questions: Question[];
+  answers: { [question: string]: string };
+  onAnswerUpdate: (question: string, answer: string) => void;
 }
 
 interface QuestionsState {
@@ -31,10 +33,10 @@ export class TestQuestions extends React.Component<
   };
 
   handleSubmit = (answer: any) => {
-    console.log(
-      `Answer for question ${this.state.currentQuestionIndex + 1}:`,
-      answer
-    );
+    const currentQuestionIndex = this.state.currentQuestionIndex;
+    const currentQuestion = this.props.questions[currentQuestionIndex];
+    const question = currentQuestion.prompt;
+    this.props.onAnswerUpdate(` Q${currentQuestionIndex + 1}`, answer);
     if (this.state.currentQuestionIndex < this.props.questions.length - 1) {
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,

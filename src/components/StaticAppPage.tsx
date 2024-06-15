@@ -11,10 +11,14 @@ export interface StaticAppPageProps extends StaticLayoutProps {
   pageNum: number;
   reset: boolean;
   onClickCallback: () => void;
+  updateAnswers: (proofName: string, question: string, answer: string) => void;
+  answers: { [question: string]: string };
+  proofName: string;
 }
 
 interface StaticAppPageState {
   page: number;
+  localAnswers: { [question: string]: string };
 }
 
 export class StaticAppPage extends React.Component<
@@ -30,6 +34,7 @@ export class StaticAppPage extends React.Component<
     this.ctx = this.props.baseContent(true);
     this.state = {
       page: this.props.pageNum,
+      localAnswers: {},
     };
   }
 
@@ -94,8 +99,23 @@ export class StaticAppPage extends React.Component<
     );
   };
 
+  handleAnswerUpdate = (question: string, answer: string) => {
+    this.setState(
+      (prevState) => ({
+        localAnswers: {
+          ...prevState.localAnswers,
+          [question]: answer,
+        },
+      }),
+      () => {
+        this.props.updateAnswers(this.props.proofName, question, answer);
+      }
+    );
+  };
+
   render() {
     this.buildCtxAndText();
+    const localAnswers = this.state.localAnswers;
     return (
       <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-12">
         <div className="w-[900px] h-full flex flex-col ml-12">
@@ -135,7 +155,11 @@ export class StaticAppPage extends React.Component<
           </div>
         </div>
         <div className="w-[400px] h-fit ml-10 p-8 rounded-lg border-dotted border-4 border-violet-300">
-          <TestQuestions questions={this.props.questions} />
+          <TestQuestions
+            questions={this.props.questions}
+            answers={localAnswers}
+            onAnswerUpdate={this.handleAnswerUpdate}
+          />
         </div>
       </div>
     );

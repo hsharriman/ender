@@ -376,6 +376,7 @@ export const miniContent = () => {
 };
 
 export const P3: LayoutProps = {
+  name: "Complete Proof 3",
   questions: completeProof3,
   baseContent,
   miniContent: miniContent(),

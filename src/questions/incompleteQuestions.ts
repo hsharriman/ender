@@ -1,5 +1,5 @@
 import { strs } from "../core/geometryText";
-import { Question, QuestionType } from "./completeQuestions";
+import { Question, QuestionType, endQuestion } from "./completeQuestions";
 
 export const incompleteProof1: Question[] = [
   {
@@ -12,6 +12,7 @@ export const incompleteProof1: Question[] = [
     ],
     type: QuestionType.Single,
   },
+  endQuestion,
 ];
 
 //fill in step 4
@@ -26,6 +27,7 @@ export const incompleteProof2a: Question[] = [
     ],
     type: QuestionType.Single,
   },
+  endQuestion,
 ];
 
 //fill in step 3
@@ -40,6 +42,7 @@ export const incompleteProof2b: Question[] = [
     ],
     type: QuestionType.Single,
   },
+  endQuestion,
 ];
 
 //fill in step 3

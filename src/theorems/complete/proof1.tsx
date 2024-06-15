@@ -330,6 +330,7 @@ const miniContent = () => {
 };
 
 export const P1: LayoutProps = {
+  name: "Complete Proof 1",
   questions: completeProof1,
   miniContent: miniContent(),
   baseContent,

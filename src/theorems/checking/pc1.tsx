@@ -251,6 +251,7 @@ const miniContent = () => {
 };
 
 export const PC1: LayoutProps = {
+  name: "Checking Proof 1",
   questions: checkingProof1,
   miniContent: miniContent(),
   baseContent,
