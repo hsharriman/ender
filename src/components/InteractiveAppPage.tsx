@@ -27,7 +27,7 @@ export class InteractiveAppPage extends React.Component<
   ctx: Content;
   constructor(props: InteractiveAppPageProps) {
     super(props);
-    this.ctx = this.props.baseContent(true);
+    this.ctx = this.props.baseContent(true, true);
     this.state = {
       activeFrame: "given",
     };
@@ -36,7 +36,7 @@ export class InteractiveAppPage extends React.Component<
   buildCtx = () => {
     if (!this.props.reset) return;
     // reset stored variables
-    this.ctx = this.props.baseContent(true);
+    this.ctx = this.props.baseContent(true, true);
     this.linkedTexts = [];
     this.reasonMap = new Map<string, Reason>();
     this.handleClick("given");

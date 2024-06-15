@@ -20,7 +20,7 @@ import { completeProof1 } from "../../questions/completeQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 
-const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
       [1, 4],
@@ -48,18 +48,18 @@ const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     )
   );
 
   [
-    new Triangle({ pts: [A, C, M], parentFrame }, ctx),
-    new Triangle({ pts: [B, D, M], parentFrame }, ctx),
+    new Triangle({ pts: [A, C, M], hoverable }, ctx),
+    new Triangle({ pts: [B, D, M], hoverable }, ctx),
   ].map((t) => ctx.push(t));
 
-  ctx.push(new Segment({ p1: A, p2: B, parentFrame }));
-  ctx.push(new Segment({ p1: C, p2: D, parentFrame }));
+  ctx.push(new Segment({ p1: A, p2: B, hoverable }));
+  ctx.push(new Segment({ p1: C, p2: D, hoverable }));
   return ctx;
 };
 
@@ -261,7 +261,7 @@ const step6: StepMeta = makeStepMeta({
 });
 
 const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
 
   const defaultStepProps: StepFocusProps = {
     ctx,

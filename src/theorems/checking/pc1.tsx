@@ -18,7 +18,7 @@ import { checkingProof1 } from "../../questions/checkingQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
-const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
       [1, 0],
@@ -44,14 +44,14 @@ const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     )
   );
 
   [
-    new Triangle({ pts: [A, B, D], parentFrame }, ctx),
-    new Triangle({ pts: [B, C, D], parentFrame }, ctx),
+    new Triangle({ pts: [A, B, D], hoverable }, ctx),
+    new Triangle({ pts: [B, C, D], hoverable }, ctx),
   ].map((t) => ctx.push(t));
   return ctx;
 };
@@ -205,7 +205,7 @@ const step5: StepMeta = makeStepMeta({
 });
 
 const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
 
   const defaultStepProps: StepFocusProps = {
     ctx,

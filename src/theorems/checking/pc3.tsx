@@ -21,7 +21,7 @@ import { checkingProof3 } from "../../questions/checkingQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const pts: Vector[] = [
     [1, 0], // L BL
     [1, 3], // M TL
@@ -44,16 +44,16 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     );
   });
-  ctx.push(new Triangle({ pts: [L, M, K], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [K, N, M], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [L, M, K], hoverable }, ctx));
+  ctx.push(new Triangle({ pts: [K, N, M], hoverable }, ctx));
 
   // for mini figures
-  ctx.push(new Angle({ start: L, center: M, end: N }));
-  ctx.push(new Angle({ start: L, center: K, end: N }));
+  ctx.push(new Angle({ start: L, center: M, end: N, hoverable }));
+  ctx.push(new Angle({ start: L, center: K, end: N, hoverable }));
   return ctx;
 };
 
@@ -66,12 +66,11 @@ const givens: StepMeta = makeStepMeta({
 
     return (
       <span>
-        {linked("KLMN", new BaseGeometryObject(Obj.Quadrilateral, {}), [
-          LK,
-          LM,
-          MN,
-          NK,
-        ])}
+        {linked(
+          "KLMN",
+          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
+          [LK, LM, MN, NK]
+        )}
         {" is a quadrilateral"}
         {comma}
         {EqualSegments.text(props, ["LM", "NK"])}
@@ -89,12 +88,11 @@ const givens: StepMeta = makeStepMeta({
 
     return (
       <span>
-        {linked("EFGH", new BaseGeometryObject(Obj.Quadrilateral, {}), [
-          LK,
-          LM,
-          MN,
-          NK,
-        ])}
+        {linked(
+          "EFGH",
+          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
+          [LK, LM, MN, NK]
+        )}
         {" is a quadrilateral"}
         {comma}
         {EqualSegments.ticklessText(ctx, ["LM", "NK"])}
@@ -147,12 +145,16 @@ const step1: StepMeta = makeStepMeta({
   text: (props: StepTextProps) => {
     return (
       <span>
-        {linked("KLMN", new BaseGeometryObject(Obj.Quadrilateral, {}), [
-          props.ctx.getSegment("LK"),
-          props.ctx.getSegment("LM"),
-          props.ctx.getSegment("MN"),
-          props.ctx.getSegment("NK"),
-        ])}
+        {linked(
+          "KLMN",
+          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
+          [
+            props.ctx.getSegment("LK"),
+            props.ctx.getSegment("LM"),
+            props.ctx.getSegment("MN"),
+            props.ctx.getSegment("NK"),
+          ]
+        )}
         {" is a quadrilateral"}
       </span>
     );
@@ -236,7 +238,7 @@ const step6: StepMeta = makeStepMeta({
 });
 
 export const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
 
   const defaultStepProps: StepFocusProps = {
     ctx,

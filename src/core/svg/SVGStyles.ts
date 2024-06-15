@@ -7,4 +7,6 @@ export const ModeCSS = {
   PURPLE: "stroke-violet-500 stroke-[3px] fill-none opacity-1",
   BLUE: "stroke-blue-500 stroke-[3px] fill-none opacity-1",
   ACTIVETEXT: "fill-violet-500 stroke-violet-500 stroke-[1px]",
+  PINNED: "stroke-violet-500 stroke-[4px] pinnedSVG",
+  DIAGRAMHOVER: "stroke-[#8b5cf6] stroke-[3px] drop-shadow-[0_0_5px_#8b5cf6]",
 };

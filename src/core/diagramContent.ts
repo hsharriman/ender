@@ -122,6 +122,7 @@ export class Content {
       type,
       num: numTicks,
       parentFrame: options?.frame,
+      hoverable: false,
     });
     this.ticks.push(tick);
     return tick;

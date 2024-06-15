@@ -38,8 +38,17 @@ export class Segment extends BaseGeometryObject {
   override onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        const cls = ModeCSS.ACTIVE.split(" ");
-        isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
+        const cls = ModeCSS.DIAGRAMHOVER.split(" ");
+        const matches = ele.classList.value
+          .split(" ")
+          .filter((cls) => cls.includes("pinnedSVG"));
+        const alreadyActive = matches.length > 0;
+
+        if (isActive) {
+          ele.classList.add(...cls);
+        } else {
+          ele.classList.remove(...cls);
+        }
       }
     };
     const ele = document.getElementById(this.id);
@@ -63,16 +72,11 @@ export class Segment extends BaseGeometryObject {
           style: style, // TODO needed?
           mode: this.modes.get(frameIdx) ?? SVGModes.Hidden,
           activeFrame: frameIdx,
-          hoverable: true, // TODO make a prop
+          hoverable: this.hoverable,
         }}
         key={`${this.id}-${pageNum}`}
       />
     );
     return svgItems;
-  };
-
-  override mode = (frameKey: string, mode: SVGModes) => {
-    this.modes.set(frameKey, mode);
-    return this;
   };
 }

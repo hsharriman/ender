@@ -16,9 +16,9 @@ export class SVGLine extends BaseSVG {
     this.wrapperRef = React.createRef<HTMLDivElement>();
     this.state = {
       isActive: false,
-      css: this.state.isPinned
-        ? this.updateStyle(SVGModes.Active)
-        : this.updateStyle(this.props.mode),
+      css: this.updateStyle(
+        this.state.isPinned ? SVGModes.Active : this.props.mode
+      ),
     };
   }
 
@@ -45,7 +45,7 @@ export class SVGLine extends BaseSVG {
     this.setState({
       isActive,
       isPinned: isActive,
-      css: this.updateStyle(isActive ? SVGModes.Active : this.props.mode),
+      css: this.updateStyle(isActive ? SVGModes.Pinned : this.props.mode),
     });
   };
 
@@ -87,26 +87,34 @@ export class SVGLine extends BaseSVG {
           y2={this.end[1]}
           key={this.geoId}
           id={this.geoId}
-          className={this.state.css}
+          className={
+            this.state.isActive || this.state.isPinned
+              ? this.state.css
+              : this.updateStyle(this.props.mode)
+          }
         />
-        <line
-          x1={this.start[0]}
-          x2={this.end[0]}
-          y1={this.start[1]}
-          y2={this.end[1]}
-          key={this.geoId + "-hover"}
-          id={this.geoId + "-hover"}
-          onPointerEnter={() => this.onHover(true)}
-          onPointerLeave={() => this.onHover(false)}
-          style={{ opacity: 0, stroke: "red", strokeWidth: 18 }} // TODO make invisible
-        />
-        <LabelText
-          pt={vops.add(midpt, norm)}
-          rot={angleDeg}
-          text={this.props.geoId.replace("segment.", "")}
-          isHovered={this.state.isActive}
-          clickedCallback={this.onTextClick}
-        />
+        {this.props.hoverable && (
+          <line
+            x1={this.start[0]}
+            x2={this.end[0]}
+            y1={this.start[1]}
+            y2={this.end[1]}
+            key={this.geoId + "-hover"}
+            id={this.geoId + "-hover"}
+            onPointerEnter={() => this.onHover(true)}
+            onPointerLeave={() => this.onHover(false)}
+            style={{ opacity: 0, stroke: "red", strokeWidth: 18 }} // TODO make invisible
+          />
+        )}
+        {this.props.hoverable && (
+          <LabelText
+            pt={vops.add(midpt, norm)}
+            rot={angleDeg}
+            text={this.props.geoId.replace("segment.", "")}
+            isHovered={this.state.isActive}
+            clickedCallback={this.onTextClick}
+          />
+        )}
       </>
     );
   }
@@ -124,7 +132,7 @@ interface LabelTextState {
   isClicked: boolean;
 }
 class LabelText extends React.Component<LabelTextProps, LabelTextState> {
-  private defaultCSS = "ease-out duration-300 fill-purple-500 text-purple-500";
+  private defaultCSS = "ease-out duration-300 fill-violet-500 text-violet-500";
   constructor(props: LabelTextProps) {
     super(props);
     this.state = {

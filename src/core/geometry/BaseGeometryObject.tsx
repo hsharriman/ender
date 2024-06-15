@@ -14,9 +14,10 @@ const MINI_SVG_XSHIFT = 20;
 const MINI_SVG_YSHIFT = -70;
 
 export interface BaseGeometryProps {
-  modes?: Map<string, SVGModes>; // all modes for all states
+  // modes: Map<string, SVGModes>; // all modes for all states
   activeIdx?: number; // follows the state of the app
-  parentFrame?: string; // for long-form objects
+  parentFrame?: string;
+  hoverable: boolean;
 }
 
 export class BaseGeometryObject {
@@ -25,11 +26,13 @@ export class BaseGeometryObject {
   public label: string = "";
   protected modes: Map<string, SVGModes>;
   public activeIdx: number;
+  readonly hoverable: boolean;
   getId = getId;
   constructor(tag: Obj, props: BaseGeometryProps) {
     this.tag = tag;
-    this.modes = props.modes ? props.modes : new Map();
+    this.modes = new Map<string, SVGModes>();
     this.activeIdx = props.activeIdx ? props.activeIdx : -1;
+    this.hoverable = props.hoverable;
   }
 
   mode = (frameKey: string, mode: SVGModes) => {

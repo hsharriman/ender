@@ -27,7 +27,7 @@ export class StaticAppPage extends React.Component<
   constructor(props: StaticAppPageProps) {
     super(props);
     // build diagram from given construction
-    this.ctx = this.props.baseContent(true);
+    this.ctx = this.props.baseContent(true, false);
     this.state = {
       page: this.props.pageNum,
     };
@@ -36,7 +36,7 @@ export class StaticAppPage extends React.Component<
   buildCtxAndText = () => {
     if (this.props.reset) {
       // reset stored variables
-      this.ctx = this.props.baseContent(true);
+      this.ctx = this.props.baseContent(true, false);
       this.reasons = [];
       this.texts = [];
 

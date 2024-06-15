@@ -10,6 +10,7 @@ export type PointProps = {
   showLabel?: boolean;
   offset: Vector;
   parentFrame?: string;
+  hoverable: boolean;
 };
 
 export class Point extends BaseGeometryObject {
@@ -19,7 +20,7 @@ export class Point extends BaseGeometryObject {
   private showLabel: boolean;
   private offset: Vector = [3, 3]; // TODO better label placement
   constructor(props: PointProps) {
-    super(Obj.Point, {});
+    super(Obj.Point, { hoverable: props.hoverable });
     this.pt = props.pt;
     this.label = props.label;
     this.names = [this.label];
@@ -98,6 +99,7 @@ export class Point extends BaseGeometryObject {
           },
           mode: SVGModes.Default,
           activeFrame: "",
+          hoverable: this.hoverable,
         }}
         key={`${this.getId(Obj.Text, this.label)}-${pageNum}`}
       />
