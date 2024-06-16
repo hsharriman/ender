@@ -43,6 +43,8 @@ export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
         return ModeCSS.BLUE;
       case SVGModes.Pinned:
         return ModeCSS.PINNED;
+      case SVGModes.ActiveText:
+        return ModeCSS.ACTIVETEXT;
       case SVGModes.Hidden:
       default:
         return ModeCSS.HIDDEN;

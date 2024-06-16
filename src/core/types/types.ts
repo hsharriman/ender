@@ -47,6 +47,7 @@ export enum SVGModes {
   Blue = "blue",
   Undefined = "",
   Pinned = "pinned",
+  ActiveText = "activetext",
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------
