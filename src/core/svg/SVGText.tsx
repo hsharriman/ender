@@ -16,9 +16,7 @@ export class SVGText extends BaseSVG {
     this.wrapperRef = React.createRef<HTMLDivElement>();
     this.state = {
       isActive: false,
-      css: this.updateStyle(
-        this.state.isPinned ? SVGModes.Active : this.props.mode
-      ),
+      css: this.state.isPinned ? this.updateStyle(SVGModes.Active) : "",
     };
   }
 
@@ -35,30 +33,29 @@ export class SVGText extends BaseSVG {
       this.wrapperRef &&
       !this.wrapperRef.current?.contains(event.target as Node)
     ) {
-      this.onHover(false);
+      if (!this.state.isPinned) this.onHover(false);
     }
   };
 
-  onTextClick = (isPinned?: boolean) => {
-    if (isPinned) {
-      this.setState({
-        isPinned,
-        css: this.updateStyle(isPinned ? SVGModes.Pinned : this.props.mode),
-      });
-      const matches = document.querySelectorAll(
-        `#${Obj.Point}-text-${this.props.geoId.replace("point.", "")}`
-      );
-      matches.forEach((ele) => {
-        if (ele) {
-          const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
-          if (isPinned) {
-            ele.classList.add(...cls);
-          } else {
-            ele.classList.remove(...cls);
-          }
+  onTextClick = () => {
+    const pin = !this.state.isPinned === true;
+    this.setState({
+      isPinned: pin,
+      css: pin ? this.updateStyle(SVGModes.ActiveText) : "",
+    });
+    const matches = document.querySelectorAll(
+      `#${Obj.Point}-text-${this.props.geoId.replace("text.", "")}`
+    );
+    matches.forEach((ele) => {
+      if (ele) {
+        const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
+        if (pin) {
+          ele.classList.add(...cls);
+        } else {
+          ele.classList.remove(...cls);
         }
-      });
-    }
+      }
+    });
   };
 
   onHover = (isActive: boolean) => {
@@ -69,34 +66,40 @@ export class SVGText extends BaseSVG {
     ) {
       this.setState({
         isActive,
-        css: this.updateStyle(isActive ? SVGModes.ActiveText : this.props.mode),
+        css: isActive ? this.updateStyle(SVGModes.ActiveText) : "",
       });
     }
   };
 
   render() {
     return (
-      <text
-        x={this.point[0]}
-        y={this.point[1]}
-        id={this.geoId}
-        key={this.geoId}
-        style={this.style}
-        onPointerEnter={() => this.onHover(true)}
-        onPointerLeave={() => this.onHover(false)}
-        onClick={() =>
-          this.props.hoverable
-            ? this.onTextClick(!this.state.isPinned)
-            : () => {}
-        }
-        className={
-          this.state.isActive || this.state.isPinned
-            ? this.state.css
-            : this.updateStyle(this.props.mode)
-        }
-      >
-        {this.text}
-      </text>
+      <>
+        <text
+          x={this.point[0]}
+          y={this.point[1]}
+          id={this.geoId}
+          key={this.geoId}
+          style={this.style}
+          className={this.state.isActive ? this.state.css : ""}
+        >
+          {this.text}
+        </text>
+        {this.props.hoverable && (
+          <text
+            x={this.point[0]}
+            y={this.point[1]}
+            id={this.geoId + "-hover"}
+            key={this.geoId + "-hover"}
+            style={{ opacity: 0, color: "red", cursor: "pointer" }}
+            onPointerEnter={() => this.onHover(true)}
+            onPointerLeave={() => this.onHover(false)}
+            onClick={() => this.onTextClick()}
+            className="text-xl"
+          >
+            {this.text}
+          </text>
+        )}
+      </>
     );
   }
 }

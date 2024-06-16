@@ -38,7 +38,7 @@ export class Segment extends BaseGeometryObject {
   override onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMHOVER.split(" ");
+        const cls = ModeCSS.DIAGRAMGLOW.split(" ");
         const matches = ele.classList.value
           .split(" ")
           .filter((cls) => cls.includes("pinnedSVG"));

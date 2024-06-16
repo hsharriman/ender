@@ -5,11 +5,10 @@ import { Obj } from "../core/types/types";
 
 export interface LinkedTextProps {
   val: string;
-  activeColor?: string;
+  // activeColor?: string;
   obj: BaseGeometryObject; // TODO correct type
   isActive?: boolean;
   linkedObjs?: BaseGeometryObject[];
-  // clickCallback?: (isActive: boolean) => void;
 }
 
 export interface LinkedTextState {
@@ -19,14 +18,14 @@ export class LinkedText extends React.Component<
   LinkedTextProps,
   LinkedTextState
 > {
-  private activeColor = "#9A76FF"; // TODO
+  // private activeColor = "#9A76FF"; // TODO
   private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: LinkedTextProps) {
     super(props);
     this.state = {
       isClicked: Boolean(this.props.isActive),
     };
-    this.activeColor = this.props.activeColor || this.activeColor;
+    // this.activeColor = this.props.activeColor || this.activeColor;
     this.wrapperRef = React.createRef<HTMLDivElement>();
   }
 
@@ -90,7 +89,6 @@ export class LinkedText extends React.Component<
     return (
       <span
         className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150`}
-        // style={this.getStyle()}
         onPointerEnter={() => this.onClick(true)}
         onPointerLeave={() => this.onClick(false)}
         id={`${this.props.obj.tag}-text-${this.props.val}`}

@@ -45,7 +45,7 @@ export class Point extends BaseGeometryObject {
   onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        const cls = ModeCSS.ACTIVETEXT.split(" ");
+        const cls = ModeCSS.DIAGRAMTEXTGLOW.split(" ");
         isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
       }
     };
