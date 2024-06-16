@@ -42,7 +42,6 @@ export class Segment extends BaseGeometryObject {
         const matches = ele.classList.value
           .split(" ")
           .filter((cls) => cls.includes("pinnedSVG"));
-        const alreadyActive = matches.length > 0;
 
         if (isActive) {
           ele.classList.add(...cls);

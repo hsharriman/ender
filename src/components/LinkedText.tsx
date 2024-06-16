@@ -93,6 +93,7 @@ export class LinkedText extends React.Component<
         // style={this.getStyle()}
         onPointerEnter={() => this.onClick(true)}
         onPointerLeave={() => this.onClick(false)}
+        id={`${this.props.obj.tag}-text-${this.props.val}`}
         ref={this.wrapperRef}
       >
         {this.renderText()}

@@ -1,7 +1,9 @@
 import React from "react";
-import { SVGModes, Vector } from "../types/types";
+import { Obj, SVGModes, Vector } from "../types/types";
 import { vops } from "../vectorOps";
 import { BaseSVG } from "./BaseSVG";
+import { HoverTextLabel } from "./HoverTextLabel";
+import { ModeCSS } from "./SVGStyles";
 import { LineSVGProps } from "./svgTypes";
 
 export class SVGLine extends BaseSVG {
@@ -39,13 +41,26 @@ export class SVGLine extends BaseSVG {
     }
   };
 
-  // TODO
   onTextClick = (isActive: boolean) => {
-    console.log(isActive);
     this.setState({
       isActive,
       isPinned: isActive,
       css: this.updateStyle(isActive ? SVGModes.Pinned : this.props.mode),
+    });
+    const prefix = `#${Obj.Segment}-text-`;
+    const seg = this.props.geoId.replace("segment.", "");
+    const matches = document.querySelectorAll(
+      prefix + seg + ", " + prefix + seg.split("").reverse().join("") // TODO delete when all segments are alphabetical
+    );
+    matches.forEach((ele) => {
+      if (ele) {
+        const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
+        if (isActive) {
+          ele.classList.add(...cls);
+        } else {
+          ele.classList.remove(...cls);
+        }
+      }
     });
   };
 
@@ -57,10 +72,9 @@ export class SVGLine extends BaseSVG {
     ) {
       this.setState({
         isActive,
-        css: this.updateStyle(isActive ? SVGModes.Active : this.props.mode), // TODO default is focused resetting style is not working right
+        css: this.updateStyle(isActive ? SVGModes.Active : this.props.mode),
       });
     }
-    // this.props.clickCallback && this.props.clickCallback(isClicked);
   };
 
   render() {
@@ -103,11 +117,11 @@ export class SVGLine extends BaseSVG {
             id={this.geoId + "-hover"}
             onPointerEnter={() => this.onHover(true)}
             onPointerLeave={() => this.onHover(false)}
-            style={{ opacity: 0, stroke: "red", strokeWidth: 18 }} // TODO make invisible
+            style={{ opacity: 0, stroke: "red", strokeWidth: 22 }} // TODO make invisible
           />
         )}
         {this.props.hoverable && (
-          <LabelText
+          <HoverTextLabel
             pt={vops.add(midpt, norm)}
             rot={angleDeg}
             text={this.props.geoId.replace("segment.", "")}
@@ -116,59 +130,6 @@ export class SVGLine extends BaseSVG {
           />
         )}
       </>
-    );
-  }
-}
-
-export interface LabelTextProps {
-  pt: Vector;
-  rot: number;
-  text: string;
-  isHovered: boolean;
-  clickedCallback: (isClicked: boolean) => void;
-}
-
-interface LabelTextState {
-  isClicked: boolean;
-}
-class LabelText extends React.Component<LabelTextProps, LabelTextState> {
-  private defaultCSS = "ease-out duration-300 fill-violet-500 text-violet-500";
-  constructor(props: LabelTextProps) {
-    super(props);
-    this.state = {
-      isClicked: false,
-    };
-  }
-  getClassName = () => {
-    if (this.state.isClicked || this.props.isHovered) {
-      return (
-        this.defaultCSS +
-        " opacity-100 cursor-pointer pointer-events-auto cursor-pointer"
-      );
-    } else if (!this.props.isHovered) {
-      return (
-        this.defaultCSS +
-        " opacity-0 pointer-events-auto delay-700 cursor-pointer"
-      );
-    } else {
-      return this.defaultCSS + " opacity-0 pointer-events-none";
-    }
-  };
-  onClick = () => {
-    this.props.clickedCallback(!this.state.isClicked);
-    this.setState({ isClicked: !this.state.isClicked });
-  };
-  render() {
-    return (
-      <text
-        textAnchor="middle"
-        transform={`translate(${this.props.pt[0]},${this.props.pt[1]}) rotate(${this.props.rot})`}
-        className={this.getClassName()}
-        onClick={() => this.onClick()} // TODO
-        key={this.props.text + "-label"}
-      >
-        {this.props.text}
-      </text>
     );
   }
 }

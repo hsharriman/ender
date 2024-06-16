@@ -67,7 +67,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   ctx.push(new Triangle({ pts: [G, E, C], hoverable }, ctx));
 
   // for given step:
-  ctx.push(new Segment({ p1: B, p2: G, hoverable }));
+  ctx.push(new Segment({ p1: B, p2: G, hoverable: false }));
   ctx.push(new Angle({ start: A, center: B, end: G, hoverable }));
   ctx.push(new Angle({ start: C, center: B, end: G, hoverable }));
   return ctx;
