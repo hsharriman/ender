@@ -9,6 +9,8 @@ interface QuestionsProps {
   questions: Question[];
   answers: { [question: string]: string };
   onAnswerUpdate: (question: string, answer: string) => void;
+  proofName: string;
+  proofType: string;
 }
 
 interface QuestionsState {
@@ -37,6 +39,13 @@ export class TestQuestions extends React.Component<
     const currentQuestion = this.props.questions[currentQuestionIndex];
     const question = currentQuestion.prompt;
     this.props.onAnswerUpdate(` Q${currentQuestionIndex + 1}`, answer);
+    console.log(
+      `${this.props.proofType},${this.props.proofName},Q${
+        currentQuestionIndex + 1
+      },` +
+        answer +
+        `,time: ${Date.now()}`
+    );
     if (this.state.currentQuestionIndex < this.props.questions.length - 1) {
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,

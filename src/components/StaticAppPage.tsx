@@ -159,6 +159,8 @@ export class StaticAppPage extends React.Component<
             questions={this.props.questions}
             answers={localAnswers}
             onAnswerUpdate={this.handleAnswerUpdate}
+            proofName={this.props.proofName}
+            proofType="Static"
           />
         </div>
       </div>

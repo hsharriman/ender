@@ -167,6 +167,8 @@ export class InteractiveAppPage extends React.Component<
               questions={this.props.questions}
               answers={this.props.answers}
               onAnswerUpdate={this.handleAnswerUpdate}
+              proofName={this.props.proofName}
+              proofType="Interactive"
             />
           </div>
         </div>

@@ -97,9 +97,15 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
     }
 
     const { updateAnswers, type } = this.props;
+    let toLogAnswers = "";
     Object.keys(localAnswers).forEach((questionNum) => {
       updateAnswers(type, questionNum, localAnswers[questionNum]);
+      toLogAnswers += `Question ${questionNum}: ${localAnswers[questionNum]},`;
     });
+
+    console.log(
+      `${this.props.type},SUS,` + toLogAnswers + `,time: ${Date.now()}`
+    );
 
     this.setState({
       submitted: true,

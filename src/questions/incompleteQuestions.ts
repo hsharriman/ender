@@ -57,6 +57,7 @@ export const incompleteProof2c: Question[] = [
     ],
     type: QuestionType.Single,
   },
+  endQuestion,
 ];
 
 export const incompleteProof3: Question[] = [
@@ -70,4 +71,5 @@ export const incompleteProof3: Question[] = [
     ],
     type: QuestionType.Single,
   },
+  endQuestion,
 ];
