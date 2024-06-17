@@ -23,8 +23,7 @@ export const completeProof1: Question[] = [
   {
     prompt: (
       <span>
-        Do you agree that segment {segmentQuestion("AC")} {strs.congruent}{" "}
-        {segmentQuestion("BD")}?
+        Does {segmentQuestion("AC")} {strs.congruent} {segmentQuestion("BD")}?
       </span>
     ),
     answers: ["Yes", "No", "Can't Tell"],
@@ -42,7 +41,7 @@ export const completeProof1: Question[] = [
   },
   {
     prompt:
-      "Besides the given conditions, which statements can be directly applied without any explanation? Select all that apply.",
+      "Besides the given conditions, which reasons can be directly applied without any explanation? Select all that apply.",
     answers: [
       "Vertical Angles Theorem",
       "SAS Triangle Congruency",
@@ -53,18 +52,18 @@ export const completeProof1: Question[] = [
   },
   {
     prompt:
-      "If someone suggests that the proof process is correct after line 2 and 3 are interchanged, would you agree with them?",
+      "Would this proof still be correct after lines 2 and 3 are swapped?",
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
     prompt:
-      "If someone suggests that the proof process is correct after line 3 and 4 are interchanged, would you agree?",
+      "Would this proof still be correct after lines 3 and 4 are swapped?",
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
-    prompt: `Which of the following conditions is used to confirm AC ${strs.parallel} BD?`,
+    prompt: `Which of the following statements is used to confirm AC ${strs.parallel} BD?`,
     answers: ["Statement 2", "Statement 3", "Statement 4", "Statement 5"],
     type: QuestionType.Single,
   },
@@ -88,39 +87,43 @@ export const completeProof1: Question[] = [
     type: QuestionType.Single,
   },
   {
-    prompt:
-      "Explain it as you would to a classmate who has not seen this proof yet. For instance: 'Given _______, we first determine _______ in order to conclude that  _______.'",
+    prompt: (
+      <span>
+        An important intermediate result is derived before demonstrating that{" "}
+        {segmentQuestion("AC")} {strs.parallel} {segmentQuestion("BD")}. What is
+        the important intermediate result?
+      </span>
+    ),
     type: QuestionType.Text,
   },
   {
     prompt: (
       <span>
-        If a quadrilateral PURV has 2 diagonals {segmentQuestion("PR")} and{" "}
-        {segmentQuestion("UV")}, and Q is the midpoint of both{" "}
-        {segmentQuestion("PR")} and {segmentQuestion("UV")}, then is this
-        quadrilateral a parallelogram?
+        Extension 1A: If a quadrilateral PURV has 2 diagonals{" "}
+        {segmentQuestion("PR")} and {segmentQuestion("UV")}, and Q is the
+        midpoint of both diagonals, then is this quadrilateral a parallelogram?
       </span>
     ),
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
-    prompt: "Explain your reasoning in 1 sentence.",
+    prompt: "Extension 1B: Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
   },
   {
     prompt: (
       <span>
-        If QRST forms a quadrilateral, {segmentQuestion("QS")} and{" "}
-        {segmentQuestion("RT")} intersect at point U, then is QRST a
-        parallelogram?
+        Extension 2A: If QRST forms a quadrilateral with diagaonals{" "}
+        {segmentQuestion("QS")} and {segmentQuestion("RT")} that intersect at
+        point U, then is QRST a parallelogram?
       </span>
     ),
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
-    prompt: "Explain your reasoning in 1 sentence.",
+    prompt: "Extension 2B: Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
   },
   endQuestion,
@@ -130,8 +133,7 @@ export const completeProof2: Question[] = [
   {
     prompt: (
       <span>
-        Do you agree that segment {segmentQuestion("AD")} {strs.congruent}{" "}
-        {segmentQuestion("DC")}?
+        Does {segmentQuestion("AD")} {strs.congruent} {segmentQuestion("DC")}?
       </span>
     ),
     answers: ["Yes", "No", "Can't Tell"],
@@ -156,13 +158,13 @@ export const completeProof2: Question[] = [
   },
   {
     prompt:
-      "If someone suggests that the proof process is correct after lines 2 and 3 are interchanged, would you agree?",
+      "Would this proof still be correct after lines 2 and 3 are swapped?",
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
     prompt:
-      "If someone suggests that the proof process is correct after lines 3 and 4 are interchanged, would you agree?",
+      "Would this proof still be correct after lines 3 and 4 are swapped?",
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
@@ -175,58 +177,66 @@ export const completeProof2: Question[] = [
     prompt: (
       <span>
         If {strs.angle}ADB is a right angle and {segmentQuestion("BD")} bisects{" "}
-        {strs.angle}ABC, then D is the midpoint of {segmentQuestion("AC")}. Does
-        this proof demonstrate that this statement is always correct?
+        {strs.angle}ABC, then {segmentQuestion("AD")} {strs.congruent}{" "}
+        {segmentQuestion("DC")}. Does this proof demonstrate that this statement
+        is always correct?
       </span>
     ),
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
-    prompt:
-      "Explain it as you would to a classmate who has not seen this proof yet. For instance: 'Given _______, we first determine _______ in order to conclude that  _______.'",
-    type: QuestionType.Text,
-  },
-  {
-    prompt: "Do you agree that the proof is correct?",
+    prompt: "Do you agree that this proof is correct?",
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
     prompt: (
       <span>
-        Based on the given information below, is it possible to conclude that K
-        is the midpoint of {segmentQuestion("JL")}?
+        In one sentence, summarize the high-level strategy used to prove that D
+        is the midpoint of {segmentQuestion("AC")}.
       </span>
     ),
-    answers: ["Yes", "No", "Can't Tell"],
-    type: QuestionType.Single,
-  },
-  {
-    prompt: "Explain your reasoning in 1 sentence.",
-    type: QuestionType.Text,
-  },
-  {
-    prompt: `Given that ${strs.triangle}DEH and ${strs.triangle}GEH are congruent, must ${strs.angle}EHD be a right angle?`,
-    answers: ["Yes", "No", "Can't Tell"],
-    type: QuestionType.Single,
-  },
-  {
-    prompt: "Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
   },
   {
     prompt: (
       <span>
-        Given that {strs.triangle}DEH and {strs.triangle}GEH are congruent, must{" "}
-        {segmentQuestion("DH")} {strs.congruent} {segmentQuestion("EH")}?
+        Extension 1A: If the givens in this proof are replaced with{" "}
+        {segmentQuestion("AB")} {strs.congruent} {segmentQuestion("BC")},{" "}
+        {strs.angle}ABD {strs.congruent} {strs.angle}DBC, is it still possible
+        to conclude that D is the midpoint of {segmentQuestion("AC")}?
       </span>
     ),
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
-    prompt: "Explain your reasoning in 1 sentence.",
+    prompt: "Extension 1B: Explain your reasoning in 1 sentence.",
+    type: QuestionType.Text,
+  },
+  {
+    prompt: `Extension 2A: If the givens in this proof are replaced with ${strs.triangle}ABD ${strs.congruent} ${strs.triangle}DBC, must ${strs.angle}EHD be a right angle?`,
+    answers: ["Yes", "No", "Can't Tell"],
+    type: QuestionType.Single,
+  },
+  {
+    prompt: "Extension 2B: Explain your reasoning in 1 sentence.",
+    type: QuestionType.Text,
+  },
+  {
+    prompt: (
+      <span>
+        Extension 3A: If the givens in this proof are replaced with
+        {strs.triangle}ABD {strs.congruent} {strs.triangle}DBC, must{" "}
+        {segmentQuestion("AC")} {strs.congruent} {segmentQuestion("DC")}?
+      </span>
+    ),
+    answers: ["Yes", "No", "Can't Tell"],
+    type: QuestionType.Single,
+  },
+  {
+    prompt: "Extension 3B: Explain your reasoning in 1 sentence.",
     type: QuestionType.Text,
   },
   endQuestion,
@@ -234,7 +244,7 @@ export const completeProof2: Question[] = [
 
 export const completeProof3: Question[] = [
   {
-    prompt: `Does ${strs.angle}EFJ = ${strs.angle}GJH?`,
+    prompt: `Does ${strs.angle}EFJ ${strs.congruent} ${strs.angle}GJH?`,
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
@@ -262,19 +272,24 @@ export const completeProof3: Question[] = [
   },
   {
     prompt:
-      "If someone suggests that the proof process is correct after lines 3 and 4 are interchanged, would you agree?",
+      "Would this proof still be correct after lines 3 and 4 are swapped?",
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
     prompt:
-      "If someone suggests that the proof process is correct after lines 6 and 7 are interchanged, would you agree?",
+      "Would this proof still be correct after lines 6 and 7 are swapped?",
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
   },
   {
-    prompt: `Which statements are necessary to prove that ${strs.triangle}FJG is isosceles? Select all that apply.`,
-    answers: ["Statement 1", "Statement 2", "Statement 3", "Statement 4"],
+    prompt: (
+      <span>
+        Which statements are necessary to prove that {segmentQuestion("FE")}{" "}
+        {strs.congruent} {segmentQuestion("GH")}? Select all that apply.
+      </span>
+    ),
+    answers: ["Statement 1", "Statement 2", "Statement 3"],
     type: QuestionType.Mutli,
   },
   {
@@ -289,8 +304,7 @@ export const completeProof3: Question[] = [
     type: QuestionType.Single,
   },
   {
-    prompt:
-      "Explain it as you would to a classmate who has not seen this proof yet. For instance: 'Given _______, we first determine _______ in order to conclude that  _______.'",
+    prompt: `In one sentence, summarize the high-level strategy used to prove that ${strs.triangle}FJG is isosceles.`,
     type: QuestionType.Text,
   },
   {
@@ -301,8 +315,9 @@ export const completeProof3: Question[] = [
   {
     prompt: (
       <span>
-        If {segmentQuestion("QR")} {strs.parallel} {segmentQuestion("ST")} and{" "}
-        {segmentQuestion("QS")} {strs.parallel} {segmentQuestion("RT")}, must be
+        Extension 1A: If QRST forms a quadrilateral, {segmentQuestion("QR")}{" "}
+        {strs.parallel} {segmentQuestion("ST")}, and {segmentQuestion("QS")}{" "}
+        {strs.parallel} {segmentQuestion("RT")}, must be
         {strs.triangle}QRS and {strs.triangle}RST be congruent?
       </span>
     ),
@@ -310,15 +325,23 @@ export const completeProof3: Question[] = [
     type: QuestionType.Single,
   },
   {
+    prompt: "Extension 1B: Explain your reasoning in 1 sentence.",
+    type: QuestionType.Text,
+  },
+  {
     prompt: (
       <span>
         Given that EFGH is a quadrilateral and {segmentQuestion("EJ")}{" "}
         {strs.congruent} {segmentQuestion("JH")}, must {strs.triangle}FEJ and
-        {strs.triangle}JGH be congruent?
+        {strs.triangle}JHG be congruent?
       </span>
     ),
     answers: ["Yes", "No", "Can't Tell"],
     type: QuestionType.Single,
+  },
+  {
+    prompt: "Extension 2B: Explain your reasoning in 1 sentence.",
+    type: QuestionType.Text,
   },
   endQuestion,
 ];
