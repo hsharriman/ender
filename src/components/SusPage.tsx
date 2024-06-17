@@ -102,7 +102,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                     (interactive/static) proofs in this picture.
                     <br />
                     <br />
-                    The word "system" in the questions mean anything that's
+                    The word "system" in the questions means anything that's
                     visible in the image below. It does not include the test
                     questions.
                   </span>
