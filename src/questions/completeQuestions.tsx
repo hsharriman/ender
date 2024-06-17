@@ -41,13 +41,8 @@ export const completeProof1: Question[] = [
   },
   {
     prompt:
-      "Besides the given conditions, which reasons can be directly applied without any explanation? Select all that apply.",
-    answers: [
-      "Vertical Angles Theorem",
-      "SAS Triangle Congruency",
-      "Corresponding Angles",
-      "Alternate Angles Theorem",
-    ],
+      "Which of the following statements could be applied in any order? Select all that apply.",
+    answers: ["Statement 3", "Statement 4", "Statement 5", "Statement 6"],
     type: QuestionType.Mutli,
   },
   {
@@ -63,7 +58,7 @@ export const completeProof1: Question[] = [
     type: QuestionType.Single,
   },
   {
-    prompt: `Which of the following statements is used to confirm AC ${strs.parallel} BD?`,
+    prompt: `Which of the following statements is directly used to confirm AC ${strs.parallel} BD?`,
     answers: ["Statement 2", "Statement 3", "Statement 4", "Statement 5"],
     type: QuestionType.Single,
   },
@@ -146,7 +141,7 @@ export const completeProof2: Question[] = [
   },
   {
     prompt:
-      "Besides the given information, which statements can be directly applied without any explanation? Select all that apply.",
+      "Which of the following statements could be applied in any order? Select all that apply.",
     answers: [
       "Statement 3",
       "Statement 4",
@@ -169,7 +164,7 @@ export const completeProof2: Question[] = [
     type: QuestionType.Single,
   },
   {
-    prompt: `Which statements were necessary to determine that ${strs.triangle}ABD and ${strs.triangle}CBD are congruent? Select all that apply.`,
+    prompt: `Which statements are directly necessary to determine that ${strs.triangle}ABD and ${strs.triangle}CBD are congruent? Select all that apply.`,
     answers: ["Statement 1", "Statement 2", "Statement 3", "Statement 4"],
     type: QuestionType.Mutli,
   },
@@ -260,7 +255,7 @@ export const completeProof3: Question[] = [
   },
   {
     prompt:
-      "Besides the given information, which statements can be directly applied without any explanation? Select all that apply.",
+      "Besides the given information, which statements do not rely on other statements to be applied? Select all that apply.",
     answers: [
       "Statement 3",
       "Statement 4",
