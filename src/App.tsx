@@ -132,24 +132,24 @@ export class App extends React.Component<AppProps, AppState> {
     }));
   };
 
-  saveAnswersAsCSV = () => {
-    const csvRows = [["Proof", "Question", "Answer"]];
-    for (const proof in this.state.answers) {
-      for (const question in this.state.answers[proof]) {
-        csvRows.push([proof, question, this.state.answers[proof][question]]);
-      }
-    }
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      csvRows.map((e) => e.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "answers.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // saveAnswersAsCSV = () => {
+  //   const csvRows = [["Proof", "Question", "Answer"]];
+  //   for (const proof in this.state.answers) {
+  //     for (const question in this.state.answers[proof]) {
+  //       csvRows.push([proof, question, this.state.answers[proof][question]]);
+  //     }
+  //   }
+  //   const csvContent =
+  //     "data:text/csv;charset=utf-8," +
+  //     csvRows.map((e) => e.join(",")).join("\n");
+  //   const encodedUri = encodeURI(csvContent);
+  //   const link = document.createElement("a");
+  //   link.setAttribute("href", encodedUri);
+  //   link.setAttribute("download", "answers.csv");
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
 
   render() {
     const currMeta = this.meta[this.state.activePage];
