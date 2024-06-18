@@ -53,6 +53,7 @@ export interface StaticLayoutProps {
   givens: StepMeta;
   proves: StepMeta;
   questions: Question[];
+  name: string;
 }
 
 export interface InteractiveLayoutProps extends StaticLayoutProps {

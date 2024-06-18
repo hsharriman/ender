@@ -6,7 +6,13 @@ import { QuestionType } from "../questions/completeQuestions";
 import { Question } from "../questions/completeQuestions";
 
 interface QuestionsProps {
+  proofName: string;
+  proofType: string;
   questions: Question[];
+  activeQuestionIndex: number;
+  changeActiveQuestionIndex: (newIndex: number) => void;
+  answers: { [question: string]: string };
+  onAnswerUpdate: (question: string, answer: string) => void;
 }
 
 interface QuestionsState {
@@ -28,23 +34,31 @@ export class TestQuestions extends React.Component<
     this.setState({
       currentQuestionIndex: Number(event.target.value),
     });
+    this.props.changeActiveQuestionIndex(Number(event.target.value));
   };
 
   handleSubmit = (answer: any) => {
+    const currentQuestionIndex = this.state.currentQuestionIndex;
+    const currentQuestion = this.props.questions[currentQuestionIndex];
+    this.props.onAnswerUpdate(` Q${currentQuestionIndex + 1}`, answer);
     console.log(
-      `Answer for question ${this.state.currentQuestionIndex + 1}:`,
-      answer
+      `${this.props.proofType},${this.props.proofName},Q${
+        currentQuestionIndex + 1
+      },` +
+        answer +
+        `,time: ${Date.now()}`
     );
     if (this.state.currentQuestionIndex < this.props.questions.length - 1) {
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,
       }));
+      this.props.changeActiveQuestionIndex(this.props.activeQuestionIndex + 1);
     }
   };
 
   render() {
     const currentQuestion =
-      this.props.questions[this.state.currentQuestionIndex];
+      this.props.questions[this.props.activeQuestionIndex];
     const answers = currentQuestion.answers || [];
 
     return (
@@ -52,7 +66,7 @@ export class TestQuestions extends React.Component<
         <div className="flex items-center mb-4">
           <select
             onChange={this.handleQuestionChange}
-            value={this.state.currentQuestionIndex}
+            value={this.props.activeQuestionIndex}
             className="border p-2 rounded"
           >
             {this.props.questions.map((q, index) => (
@@ -65,7 +79,7 @@ export class TestQuestions extends React.Component<
         <div>
           {currentQuestion.type === QuestionType.Single && (
             <RadioQuestion
-              questionNum={(this.state.currentQuestionIndex + 1).toString()}
+              questionNum={(this.props.activeQuestionIndex + 1).toString()}
               question={currentQuestion.prompt}
               answers={answers}
               onSubmit={this.handleSubmit}
@@ -73,7 +87,7 @@ export class TestQuestions extends React.Component<
           )}
           {currentQuestion.type === QuestionType.Mutli && (
             <MultiSelectQuestion
-              questionNum={(this.state.currentQuestionIndex + 1).toString()}
+              questionNum={(this.props.activeQuestionIndex + 1).toString()}
               question={currentQuestion.prompt}
               answers={answers}
               onSubmit={this.handleSubmit}
@@ -81,7 +95,7 @@ export class TestQuestions extends React.Component<
           )}
           {currentQuestion.type === QuestionType.Text && (
             <TextQuestion
-              questionNum={(this.state.currentQuestionIndex + 1).toString()}
+              questionNum={(this.props.activeQuestionIndex + 1).toString()}
               question={currentQuestion.prompt}
               answers={[]}
               onSubmit={this.handleSubmit}

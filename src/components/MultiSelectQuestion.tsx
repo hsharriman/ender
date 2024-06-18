@@ -75,7 +75,10 @@ export class MultiSelectQuestion extends React.Component<
             );
           })}
         </div>
-        <SubmitQuestion onClick={this.handleSubmit} />
+        <SubmitQuestion
+          disabled={selectedOptions.length === 0}
+          onClick={this.handleSubmit}
+        />
       </div>
     );
   }

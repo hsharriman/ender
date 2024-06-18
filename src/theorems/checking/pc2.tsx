@@ -223,6 +223,7 @@ export const miniContent = () => {
 };
 
 export const PC2: LayoutProps = {
+  name: "Checking Proof 2",
   questions: checkingProof2,
   baseContent,
   steps: [step1, step2, step3, step4, step5],
