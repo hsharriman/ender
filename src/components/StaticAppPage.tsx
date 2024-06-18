@@ -11,9 +11,11 @@ export interface StaticAppPageProps extends StaticLayoutProps {
   pageNum: number;
   reset: boolean;
   onClickCallback: () => void;
-  updateAnswers: (proofName: string, question: string, answer: string) => void;
-  answers: { [question: string]: string };
+  activeQuestionIndex: number;
+  changeActiveQuestionIndex: (newIndex: number) => void;
   proofName: string;
+  answers: { [question: string]: string };
+  updateAnswers: (proofName: string, question: string, answer: string) => void;
 }
 
 interface StaticAppPageState {
@@ -161,6 +163,8 @@ export class StaticAppPage extends React.Component<
             onAnswerUpdate={this.handleAnswerUpdate}
             proofName={this.props.proofName}
             proofType="Static"
+            activeQuestionIndex={this.props.activeQuestionIndex}
+            changeActiveQuestionIndex={this.props.changeActiveQuestionIndex}
           />
         </div>
       </div>

@@ -70,6 +70,8 @@ interface AppState {
   activeTest: number;
   refresh: boolean;
   activePageName: string;
+  activeQuestionIndex: number;
+  changeActiveQuestionIndex: (newIndex: number) => void;
   answers: {
     [proofName: string]: {
       [question: string]: string;
@@ -85,6 +87,8 @@ export class App extends React.Component<AppProps, AppState> {
       activeTest: 0,
       refresh: true,
       activePageName: "",
+      activeQuestionIndex: 0,
+      changeActiveQuestionIndex: this.setActiveQuestionIndex,
       answers: {},
     };
 
@@ -107,17 +111,22 @@ export class App extends React.Component<AppProps, AppState> {
 
   onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
     if (this.state.activePage + direction < 0) {
-      this.setState({ activeTest: 0 });
+      this.setState({ activeTest: 0, activeQuestionIndex: 0 });
     } else {
       this.setState({
         activePage: this.state.activePage + direction,
         refresh: true,
+        activeQuestionIndex: 0,
       });
     }
   };
 
   onClickCallback = () => {
     this.setState({ refresh: false });
+  };
+
+  setActiveQuestionIndex = (newIndex: number) => {
+    this.setState({ activeQuestionIndex: newIndex });
   };
 
   updateAnswers = (proofName: string, question: string, answer: string) => {
@@ -193,6 +202,9 @@ export class App extends React.Component<AppProps, AppState> {
                   proofName: currMeta.proofMeta.name,
                   updateAnswers: this.updateAnswers,
                   answers: this.state.answers[currMeta.proofMeta.name] || {},
+                  activeQuestionIndex: this.state.activeQuestionIndex,
+                  changeActiveQuestionIndex:
+                    this.state.changeActiveQuestionIndex,
                 }}
               />
             ) : (
@@ -205,6 +217,9 @@ export class App extends React.Component<AppProps, AppState> {
                   proofName: currMeta.proofMeta.name,
                   updateAnswers: this.updateAnswers,
                   answers: this.state.answers[currMeta.proofMeta.name] || {},
+                  activeQuestionIndex: this.state.activeQuestionIndex,
+                  changeActiveQuestionIndex:
+                    this.state.changeActiveQuestionIndex,
                 }}
               />
             )

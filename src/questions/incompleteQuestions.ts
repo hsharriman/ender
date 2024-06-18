@@ -31,7 +31,7 @@ export const incompleteProof2a: Question[] = [
 ];
 
 //fill in step 3
-export const incompleteProof2b: Question[] = [
+export const incompleteProof2: Question[] = [
   {
     prompt: "Which step can be applied at step 3?",
     answers: [
@@ -42,22 +42,6 @@ export const incompleteProof2b: Question[] = [
     ],
     type: QuestionType.Single,
   },
-  endQuestion,
-];
-
-//fill in step 3
-export const incompleteProof2c: Question[] = [
-  {
-    prompt: "Which step can be applied at step 3?",
-    answers: [
-      `QR${strs.congruent}RN by Corresponding Segments`, // TODO display segment
-      `${strs.angle}RQP${strs.congruent}${strs.angle}RNM by Alternate Angles`,
-      `${strs.angle}QRP${strs.congruent}${strs.angle}MRN by Vertical Angles`,
-      `${strs.triangle}QRP${strs.congruent}${strs.triangle}MRN by Hypotenuse-Leg (HL) Congruence`, // TODO display segment
-    ],
-    type: QuestionType.Single,
-  },
-  endQuestion,
 ];
 
 export const incompleteProof3: Question[] = [
