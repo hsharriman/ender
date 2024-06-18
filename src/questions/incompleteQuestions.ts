@@ -42,6 +42,7 @@ export const incompleteProof2: Question[] = [
     ],
     type: QuestionType.Single,
   },
+  endQuestion,
 ];
 
 export const incompleteProof3: Question[] = [

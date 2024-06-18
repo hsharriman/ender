@@ -22,10 +22,10 @@ interface susPageState {
 }
 
 export class SusPage extends React.Component<susPageProps, susPageState> {
-  private textQuestions =
-    this.props.type === "Static"
-      ? staticFollowUpQuestions
-      : interactiveFollowUpQuestions;
+  // private textQuestions =
+  //   this.props.type === "Static"
+  //     ? staticFollowUpQuestions
+  //     : interactiveFollowUpQuestions;
   constructor(props: susPageProps) {
     super(props);
     this.state = {
@@ -34,10 +34,10 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
           acc[index.toString()] = "";
           return acc;
         }, {} as { [key: string]: string }),
-        ...this.textQuestions.reduce((acc, _, index) => {
-          acc[`text${index}`] = "";
-          return acc;
-        }, {} as { [key: string]: string }),
+        // ...this.textQuestions.reduce((acc, _, index) => {
+        //   acc[`text${index}`] = "";
+        //   return acc;
+        // }, {} as { [key: string]: string }),
       },
       completed: false,
       submitted: false,
