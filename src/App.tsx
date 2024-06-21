@@ -66,7 +66,7 @@ const randomizeLayout = (proofMetas: LayoutProps[]): AppMeta[] => {
 interface AppProps {}
 interface AppState {
   activePage: number;
-  activeTest: number;
+  page: string;
   refresh: boolean;
 }
 export class App extends React.Component<AppProps, AppState> {
@@ -75,7 +75,7 @@ export class App extends React.Component<AppProps, AppState> {
     super(props);
     this.state = {
       activePage: 0,
-      activeTest: 0,
+      page: "home",
       refresh: true,
     };
 
@@ -98,7 +98,7 @@ export class App extends React.Component<AppProps, AppState> {
 
   onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
     if (this.state.activePage + direction < 0) {
-      this.setState({ activeTest: 0 });
+      this.setState({ page: "home" });
     } else {
       this.setState({
         activePage: this.state.activePage + direction,
@@ -111,7 +111,38 @@ export class App extends React.Component<AppProps, AppState> {
     this.setState({ refresh: false });
   };
 
-  render() {
+  renderHeader = () => {
+    return (
+      <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+        <button
+          className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+          id="prev-arrow"
+          style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+          onClick={this.onClick(-1)}
+        >
+          {"Previous"}
+        </button>
+        <div className="absolute top-0 p-3 left-24 z-30">{`${
+          this.state.activePage + 1
+        } / ${this.meta.length + 2}`}</div>
+        <button
+          className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+          id="next-arrow"
+          style={{
+            display:
+              this.state.activePage < this.meta.length + 2 - 1
+                ? "block"
+                : "none",
+          }}
+          onClick={this.onClick(1)}
+        >
+          {"Next"}
+        </button>
+      </div>
+    );
+  };
+
+  renderProofPages = () => {
     const currMeta = this.meta[this.state.activePage];
     return (
       <div>
@@ -175,6 +206,61 @@ export class App extends React.Component<AppProps, AppState> {
         </div>
       </div>
     );
+  };
+
+  onClickTest = (test: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
+    this.setState({ page: test });
+  };
+
+  render() {
+    if (this.state.page === "demo") {
+      return (
+        <>
+          <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+            <button
+              className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+              id="prev-arrow"
+              style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+              onClick={this.onClick(-1)}
+            >
+              {"Home"}
+            </button>
+          </div>
+          <div className="w-full h-full flex justify-start">
+            <InteractiveAppPage
+              {...{
+                ...P1,
+                pageNum: this.state.activePage,
+                reset: this.state.refresh,
+                onClickCallback: this.onClickCallback,
+              }}
+            />
+          </div>
+        </>
+      );
+    } else if (this.state.page === "procedure") {
+      return this.renderProofPages();
+    } else if (this.state.page === "home") {
+      return (
+        <div className="flex w-screen h-screen justify-center items-center">
+          <div className="flex flex-row w-[1100px] h-32 justify-center">
+            <button
+              className="py-4 px-8 m-4 text-3xl bg-violet-300 rounded-md text-white"
+              onClick={this.onClickTest("demo")}
+            >
+              Demo
+            </button>
+            <button
+              className="py-4 px-8 m-4 text-3xl bg-violet-500 rounded-md text-white"
+              onClick={this.onClickTest("procedure")}
+            >
+              Procedure
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <></>;
   }
 }
 
