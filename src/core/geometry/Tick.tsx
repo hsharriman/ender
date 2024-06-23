@@ -45,6 +45,7 @@ export class Tick extends BaseGeometryObject {
         : this.id;
   }
 
+  // TODO deprecate
   override onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {

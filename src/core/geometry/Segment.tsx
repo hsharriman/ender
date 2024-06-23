@@ -35,13 +35,11 @@ export class Segment extends BaseGeometryObject {
     };
   };
 
+  // TODO used in linkedText, needs a better location? Could just put in linkedText if linkedText knows the id
   override onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
         const cls = ModeCSS.DIAGRAMGLOW.split(" ");
-        const matches = ele.classList.value
-          .split(" ")
-          .filter((cls) => cls.includes("pinnedSVG"));
 
         if (isActive) {
           ele.classList.add(...cls);
@@ -51,7 +49,9 @@ export class Segment extends BaseGeometryObject {
       }
     };
     const ele = document.getElementById(this.id);
+    const eleTick = document.getElementById(`${this.id}-tick`);
     setStyle(ele);
+    setStyle(eleTick);
   };
 
   svg = (
@@ -76,6 +76,9 @@ export class Segment extends BaseGeometryObject {
         key={`${this.id}-${pageNum}`}
       />
     );
+    // tick should get rendered at this level for segments and angles
+    // tick can either be equallength or parallel, visible or invisible. it will always have the same mode as the segment
+    // if the frameIdx finds a tick, then render here otherwise do nothing
     return svgItems;
   };
 }

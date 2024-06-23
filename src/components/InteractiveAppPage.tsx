@@ -7,7 +7,6 @@ import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
-import { TestQuestions } from "./TestQuestions";
 
 export interface InteractiveAppPageProps extends InteractiveLayoutProps {
   pageNum: number;
@@ -143,9 +142,9 @@ export class InteractiveAppPage extends React.Component<
               </div>
             </div>
           </div>
-          <div className="w-[400px] h-fit col-start-3 mt-12 p-8 rounded-lg border-dotted border-4 border-violet-300">
+          {/* <div className="w-[400px] h-fit col-start-3 mt-12 p-8 rounded-lg border-dotted border-4 border-violet-300">
             <TestQuestions questions={this.props.questions} />
-          </div>
+          </div> */}
         </div>
       </>
     );

@@ -1,21 +1,32 @@
 import React from "react";
-import { Obj, SVGModes, Vector } from "../types/types";
-import { vops } from "../vectorOps";
-import { BaseSVG } from "./BaseSVG";
-import { HoverTextLabel } from "./HoverTextLabel";
-import { ModeCSS } from "./SVGStyles";
-import { LineSVGProps } from "./svgTypes";
+import { LSegment, Obj, SVGModes, TickType, Vector } from "../../types/types";
+import { vops } from "../../vectorOps";
+import { BaseSVG } from "../BaseSVG";
+import { HoverTextLabel } from "../HoverTextLabel";
+import { ModeCSS } from "../SVGStyles";
+import { BaseSVGProps } from "../svgTypes";
+import { coordsToSvg } from "../svgUtils";
+import { SVGTick } from "./SVGTick";
 
-export class SVGLine extends BaseSVG {
-  private start: Vector;
-  private end: Vector;
+// this implementation assumes that it is being told what state it should be in for ONE FRAME
+export type SVGSegmentProps = {
+  s: LSegment;
+  mode: SVGModes;
+  miniScale: boolean;
+  tick?: { type: TickType; num: number };
+} & BaseSVGProps;
+
+export class SVGSegment extends BaseSVG {
+  private s: LSegment;
+  private miniScale: boolean;
+  private tick?: { type: TickType; num: number };
   private wrapperRef: React.RefObject<HTMLDivElement>;
-  constructor(props: LineSVGProps) {
+  constructor(props: SVGSegmentProps) {
     super(props);
-    const { start, end } = props;
-    this.start = start;
-    this.end = end;
     this.wrapperRef = React.createRef<HTMLDivElement>();
+    this.s = props.s;
+    this.miniScale = props.miniScale;
+    this.tick = props.tick;
     this.state = {
       isActive: false,
       css: this.updateStyle(
@@ -78,13 +89,12 @@ export class SVGLine extends BaseSVG {
   };
 
   render() {
-    const midpt: Vector = [
-      (this.start[0] + this.end[0]) / 2,
-      (this.start[1] + this.end[1]) / 2,
-    ];
+    const start = coordsToSvg(this.s.p1, this.miniScale);
+    const end = coordsToSvg(this.s.p2, this.miniScale);
+    const midpt: Vector = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
     let padding = [0, 0];
     // match rotation of text to be parallel with line
-    let unit = vops.unit(vops.sub(this.start, this.end));
+    let unit = vops.unit(vops.sub(start, end));
     // make sure unit vector is within -90 to 90 deg from origin
     if (unit[0] < 0) {
       unit = vops.smul(unit, -1);
@@ -95,18 +105,28 @@ export class SVGLine extends BaseSVG {
     return (
       <>
         <line
-          x1={this.start[0]}
-          x2={this.end[0]}
-          y1={this.start[1]}
-          y2={this.end[1]}
-          key={this.geoId}
-          id={this.geoId}
+          x1={start[0]}
+          x2={end[0]}
+          y1={start[1]}
+          y2={end[1]}
+          key={this.props.geoId}
+          id={this.props.geoId}
           className={
             this.state.isActive || this.state.isPinned
               ? this.state.css
               : this.updateStyle(this.props.mode)
           }
         />
+        {this.tick && (
+          <SVGTick
+            parent={this.s}
+            type={this.tick.type}
+            mode={this.props.mode} // TODO must match css i think
+            num={this.tick.num}
+            miniScale={this.miniScale}
+            geoId={this.geoId + "-tick"} // TODO make this discoverable from linkedtext
+          />
+        )}
         {this.props.hoverable && (
           <HoverTextLabel
             pt={vops.add(midpt, norm)}
@@ -118,21 +138,20 @@ export class SVGLine extends BaseSVG {
         )}
         {this.props.hoverable && (
           <line
-            x1={this.start[0]}
-            x2={this.end[0]}
-            y1={this.start[1]}
-            y2={this.end[1]}
-            key={this.geoId + "-hover"}
-            id={this.geoId + "-hover"}
+            x1={start[0]}
+            x2={end[0]}
+            y1={start[1]}
+            y2={end[1]}
+            key={this.props.geoId + "-hover"}
+            id={this.props.geoId + "-hover"}
             onPointerEnter={() => this.onHover(true)}
             onPointerLeave={() => this.onHover(false)}
             onClick={() => this.onTextClick(!this.state.isPinned)}
             style={{
               opacity: 0,
-              stroke: "red",
               strokeWidth: 28,
               cursor: "pointer",
-            }} // TODO make invisible
+            }}
           />
         )}
       </>

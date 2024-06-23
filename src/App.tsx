@@ -37,8 +37,9 @@ const randomizeProofs = (arr: LayoutProps[]) => {
   const order = fisherYates(arr.length);
   const newArr = order.map((i) => arr[i]);
   // only 2 proofs are needed per experiment
-  if (arr.length === 2) return newArr;
-  return newArr.slice(1);
+  // if (arr.length === 2) return newArr;
+  // return newArr.slice(1);
+  return newArr;
 };
 
 const staticLayout = (proofMeta: LayoutProps): AppMeta => {
@@ -59,8 +60,16 @@ const randomizeLayout = (proofMetas: LayoutProps[]): AppMeta[] => {
   // if 1, then the first proof is static, else interactive
   const staticFirst = Math.round(Math.random()) === 1;
   return staticFirst
-    ? [staticLayout(proofMetas[0]), interactiveLayout(proofMetas[1])]
-    : [interactiveLayout(proofMetas[0]), staticLayout(proofMetas[1])];
+    ? [
+        interactiveLayout(proofMetas[0]),
+        interactiveLayout(proofMetas[1]),
+        interactiveLayout(proofMetas[2]),
+      ]
+    : [
+        interactiveLayout(proofMetas[0]),
+        interactiveLayout(proofMetas[1]),
+        interactiveLayout(proofMetas[2]),
+      ];
 };
 
 interface AppProps {}

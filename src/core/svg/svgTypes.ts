@@ -11,7 +11,7 @@ export enum SVGObj {
 export type BaseSVGProps = {
   geoId: string;
   mode: SVGModes;
-  activeFrame: string;
+  activeFrame?: string; // TODO deprecate
   hoverable?: boolean;
   style?: React.CSSProperties;
 };
