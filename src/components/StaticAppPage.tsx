@@ -28,6 +28,7 @@ export class StaticAppPage extends React.Component<
     super(props);
     // build diagram from given construction
     this.ctx = this.props.baseContent(true, false);
+    this.buildCtxAndText();
     this.state = {
       page: this.props.pageNum,
     };
@@ -95,7 +96,7 @@ export class StaticAppPage extends React.Component<
   };
 
   render() {
-    this.buildCtxAndText();
+    // this.buildCtxAndText();
     return (
       <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-12">
         <div className="w-[900px] h-full flex flex-col ml-12">
@@ -112,7 +113,7 @@ export class StaticAppPage extends React.Component<
             </div>
             <StaticDiagram
               svgIdSuffix={`static-${GIVEN_ID}`}
-              svgElements={this.ctx.allStaticSvgElements(this.props.pageNum)}
+              ctx={this.ctx.getCtx()}
               width="400px"
               height="275px"
             />

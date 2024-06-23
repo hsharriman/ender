@@ -1,7 +1,6 @@
 import { ModeCSS } from "../svg/SVGStyles";
 import { SVGText } from "../svg/SVGText";
 import { LPoint, Obj, SVGModes, Vector } from "../types/types";
-import { vops } from "../vectorOps";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 
 export type PointProps = {
@@ -18,7 +17,7 @@ export class Point extends BaseGeometryObject {
   public readonly pt: Vector;
   public readonly id: string;
   private showLabel: boolean;
-  private offset: Vector = [3, 3]; // TODO better label placement
+  public offset: Vector = [3, 3]; // TODO better label placement
   constructor(props: PointProps) {
     super(Obj.Point, { hoverable: props.hoverable });
     this.pt = props.pt;
@@ -32,10 +31,6 @@ export class Point extends BaseGeometryObject {
 
   labeled = (): LPoint => {
     return { pt: this.pt, label: this.label };
-  };
-
-  isEqual = (p: LPoint) => {
-    return this.label === p.label && vops.eq(this.pt, p.pt);
   };
 
   setOffset = (offset: Vector) => {

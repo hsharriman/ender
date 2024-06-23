@@ -11,7 +11,7 @@ import { vops } from "../../vectorOps";
 import { PathSVG } from "../PathSVG";
 import { pops } from "../pathBuilderUtils";
 import { BaseSVGProps } from "../svgTypes";
-import { coordsToSvg, scaleToSvg } from "../svgUtils";
+import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "../svgUtils";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.3;
@@ -27,12 +27,13 @@ export type SVGTickProps = {
   num: number;
   miniScale: boolean;
   geoId: string;
+  hover?: boolean;
 } & BaseSVGProps;
 
 // Tick should always match the style set by the parent if it is initialized.
 // ticks are not interactive and do not need state
 
-export class SVGTick extends React.Component<SVGTickProps> {
+export class SVGGeometryTick extends React.Component<SVGTickProps> {
   parallelMark = (s: LSegment) => {
     // find midpoint on segment
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
@@ -101,7 +102,7 @@ export class SVGTick extends React.Component<SVGTickProps> {
   };
 
   equalAngle = (a: LAngle) => {
-    const sweep = this.arcSweepsCCW(a.center, a.start, a.end);
+    const sweep = arcSweepsCCW(a.center, a.start, a.end);
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
@@ -139,7 +140,7 @@ export class SVGTick extends React.Component<SVGTickProps> {
   };
 
   rightAngle = (a: LAngle) => {
-    const sweep = this.arcSweepsCCW(a.center, a.start, a.end);
+    const sweep = arcSweepsCCW(a.center, a.start, a.end);
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
@@ -180,18 +181,6 @@ export class SVGTick extends React.Component<SVGTickProps> {
     return shifts.map((shift) => {
       return vops.smul(unit, shift);
     });
-  };
-
-  // true if arc should sweep CCW
-  private arcSweepsCCW = (
-    center: Vector,
-    start: Vector,
-    end: Vector
-  ): number => {
-    const st = vops.unit(vops.sub(start, center));
-    const en = vops.unit(vops.sub(end, center));
-    const cross = vops.cross(st, en);
-    return cross > 0 ? 0 : 1;
   };
 
   render() {

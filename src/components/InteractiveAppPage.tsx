@@ -26,6 +26,7 @@ export class InteractiveAppPage extends React.Component<
   ctx: Content;
   constructor(props: InteractiveAppPageProps) {
     super(props);
+    this.buildCtx();
     this.ctx = this.props.baseContent(true, true);
     this.state = {
       activeFrame: "given",
@@ -91,7 +92,7 @@ export class InteractiveAppPage extends React.Component<
   render() {
     // TODO ideally ctx should be formatted in a way that react can detect when it changes, this hack is necessary
     // because only calling this method once means that the ctx doesn't update between pages
-    this.buildCtx();
+    // this.buildCtx();
     return (
       <>
         {this.ctx.getReliesOn() && (
@@ -118,7 +119,8 @@ export class InteractiveAppPage extends React.Component<
               height="320px"
               svgIdSuffix={`construction-${this.props.pageNum}`}
               activeFrame={this.state.activeFrame}
-              svgElements={this.ctx.allSvgElements(this.props.pageNum, false)}
+              ctx={this.ctx.getCtx()}
+              miniScale={false}
             />
             <div className="grid grid-rows-1 grid-cols-8 h-44 mt-6">
               <div className="col-span-3">
@@ -127,10 +129,8 @@ export class InteractiveAppPage extends React.Component<
                   height="100%"
                   svgIdSuffix={`mini-${this.props.pageNum}`}
                   activeFrame={this.state.activeFrame}
-                  svgElements={this.props.miniContent.allSvgElements(
-                    this.props.pageNum,
-                    true
-                  )}
+                  ctx={this.ctx.getCtx()}
+                  miniScale={true}
                 />
               </div>
               <div className="col-span-5">

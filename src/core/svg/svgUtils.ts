@@ -35,3 +35,15 @@ export const coordsToSvg = (
 
 export const scaleToSvg = (n: number, miniScale: boolean) =>
   n * (miniScale ? MINI_SVG_SCALE : SVG_SCALE);
+
+// true if arc should sweep CCW
+export const arcSweepsCCW = (
+  center: Vector,
+  start: Vector,
+  end: Vector
+): number => {
+  const st = vops.unit(vops.sub(start, center));
+  const en = vops.unit(vops.sub(end, center));
+  const cross = vops.cross(st, en);
+  return cross > 0 ? 0 : 1;
+};

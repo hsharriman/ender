@@ -91,16 +91,16 @@ export class Triangle extends BaseGeometryObject {
     return [aa, ab, ac];
   };
 
-  svg = (
-    frameIdx: string,
-    pageNum: number,
-    miniScale = false,
-    style?: React.CSSProperties
-  ) => {
-    return this.s
-      .flatMap((seg) => seg.svg(frameIdx, pageNum, miniScale, style))
-      .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
-  };
+  // svg = (
+  //   frameIdx: string,
+  //   pageNum: number,
+  //   miniScale = false,
+  //   style?: React.CSSProperties
+  // ) => {
+  //   return this.s
+  //     .flatMap((seg) => seg.svg(frameIdx, pageNum, miniScale, style))
+  //     .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
+  // };
 
   onClickText = (isActive: boolean) => {
     // for each segment use onClickText

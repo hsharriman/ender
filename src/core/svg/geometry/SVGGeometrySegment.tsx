@@ -6,17 +6,16 @@ import { HoverTextLabel } from "../HoverTextLabel";
 import { ModeCSS } from "../SVGStyles";
 import { BaseSVGProps } from "../svgTypes";
 import { coordsToSvg } from "../svgUtils";
-import { SVGTick } from "./SVGTick";
+import { SVGGeometryTick } from "./SVGGeometryTick";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
 export type SVGSegmentProps = {
   s: LSegment;
-  mode: SVGModes;
   miniScale: boolean;
   tick?: { type: TickType; num: number };
 } & BaseSVGProps;
 
-export class SVGSegment extends BaseSVG {
+export class SVGGeometrySegment extends BaseSVG {
   private s: LSegment;
   private miniScale: boolean;
   private tick?: { type: TickType; num: number };
@@ -52,7 +51,7 @@ export class SVGSegment extends BaseSVG {
     }
   };
 
-  onTextClick = (isActive: boolean) => {
+  onHoverLabelClick = (isActive: boolean) => {
     this.setState({
       isActive,
       isPinned: isActive,
@@ -118,7 +117,7 @@ export class SVGSegment extends BaseSVG {
           }
         />
         {this.tick && (
-          <SVGTick
+          <SVGGeometryTick
             parent={this.s}
             type={this.tick.type}
             mode={this.props.mode} // TODO must match css i think
@@ -127,7 +126,7 @@ export class SVGSegment extends BaseSVG {
             geoId={this.geoId + "-tick"} // TODO make this discoverable from linkedtext
           />
         )}
-        {this.props.hoverable && (
+        {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel
             pt={vops.add(midpt, norm)}
             rot={angleDeg}
@@ -136,7 +135,7 @@ export class SVGSegment extends BaseSVG {
             isPinned={Boolean(this.state.isPinned)}
           />
         )}
-        {this.props.hoverable && (
+        {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <line
             x1={start[0]}
             x2={end[0]}
@@ -146,7 +145,7 @@ export class SVGSegment extends BaseSVG {
             id={this.props.geoId + "-hover"}
             onPointerEnter={() => this.onHover(true)}
             onPointerLeave={() => this.onHover(false)}
-            onClick={() => this.onTextClick(!this.state.isPinned)}
+            onClick={() => this.onHoverLabelClick(!this.state.isPinned)}
             style={{
               opacity: 0,
               strokeWidth: 28,
