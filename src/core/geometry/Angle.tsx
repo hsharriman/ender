@@ -74,9 +74,4 @@ export class Angle extends BaseGeometryObject {
   };
 
   getTick = (frame: string) => this.ticks.get(frame);
-
-  svg = (frameIdx: string, miniScale = false, style?: React.CSSProperties) => {
-    // TODO?
-    return <></>;
-  };
 }

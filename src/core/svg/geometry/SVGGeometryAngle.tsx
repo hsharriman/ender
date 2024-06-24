@@ -1,7 +1,7 @@
 import React from "react";
 import { LAngle, Obj, SVGModes, TickType } from "../../types/types";
 import { vops } from "../../vectorOps";
-import { BaseSVG, BaseSVGState } from "../BaseSVG";
+import { BaseSVGState } from "../BaseSVG";
 import { HoverTextLabel } from "../HoverTextLabel";
 import { ModeCSS } from "../SVGStyles";
 import { pops } from "../pathBuilderUtils";
@@ -20,10 +20,8 @@ export class SVGGeometryAngle extends React.Component<
   SVGAngleProps,
   BaseSVGState
 > {
-  private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: SVGAngleProps) {
     super(props);
-    this.wrapperRef = React.createRef<HTMLDivElement>();
     this.state = {
       isActive: false,
       isPinned: false,
@@ -105,9 +103,13 @@ export class SVGGeometryAngle extends React.Component<
         <SVGGeometryTick
           parent={this.props.a}
           tick={this.props.tick}
-          css={this.state.css} // TODO must match css i think
+          css={
+            this.state.isActive || this.state.isPinned
+              ? this.state.css
+              : updateStyle(this.props.mode)
+          }
           miniScale={this.props.miniScale}
-          geoId={this.props.geoId + "-tick"} // TODO make this discoverable from linkedtext
+          geoId={this.props.geoId + "-tick"}
         />
         {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel

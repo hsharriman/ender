@@ -1,7 +1,7 @@
 import React from "react";
 import { LSegment, Obj, SVGModes, TickType, Vector } from "../../types/types";
 import { vops } from "../../vectorOps";
-import { BaseSVG, BaseSVGState } from "../BaseSVG";
+import { BaseSVGState } from "../BaseSVG";
 import { HoverTextLabel } from "../HoverTextLabel";
 import { ModeCSS } from "../SVGStyles";
 import { BaseSVGProps } from "../svgTypes";
@@ -19,33 +19,14 @@ export class SVGGeometrySegment extends React.Component<
   SVGSegmentProps,
   BaseSVGState
 > {
-  private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: SVGSegmentProps) {
     super(props);
-    this.wrapperRef = React.createRef<HTMLDivElement>();
     this.state = {
       isActive: false,
       isPinned: false,
       css: updateStyle(this.props.mode),
     };
   }
-
-  componentDidMount() {
-    document.addEventListener("mouseover", this.handleClickOutside);
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener("mouseover", this.handleClickOutside);
-  }
-
-  handleClickOutside = (event: MouseEvent) => {
-    if (
-      this.wrapperRef &&
-      !this.wrapperRef.current?.contains(event.target as Node)
-    ) {
-      this.onHover(false);
-    }
-  };
 
   onHoverLabelClick = (isActive: boolean) => {
     this.setState({
@@ -115,7 +96,11 @@ export class SVGGeometrySegment extends React.Component<
         <SVGGeometryTick
           parent={this.props.s}
           tick={this.props.tick}
-          css={this.state.css}
+          css={
+            this.state.isActive || this.state.isPinned
+              ? this.state.css
+              : updateStyle(this.props.mode)
+          }
           miniScale={this.props.miniScale}
           geoId={this.props.geoId + "-tick"} // TODO make this discoverable from linkedtext
         />

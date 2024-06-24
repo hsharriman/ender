@@ -1,16 +1,7 @@
 import React from "react";
-import {
-  LAngle,
-  LSegment,
-  Obj,
-  SVGModes,
-  TickType,
-  Vector,
-} from "../../types/types";
+import { LAngle, LSegment, Obj, TickType, Vector } from "../../types/types";
 import { vops } from "../../vectorOps";
-import { PathSVG } from "../PathSVG";
 import { pops } from "../pathBuilderUtils";
-import { BaseSVGProps } from "../svgTypes";
 import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "../svgUtils";
 
 const TICK_PADDING = 0.35;
@@ -130,7 +121,6 @@ export class SVGGeometryTick extends React.Component<SVGTickProps> {
   };
 
   rightAngle = (a: LAngle) => {
-    const sweep = arcSweepsCCW(a.center, a.start, a.end);
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
@@ -196,13 +186,14 @@ export class SVGGeometryTick extends React.Component<SVGTickProps> {
         pathStr = this.rightAngle(this.props.parent as LAngle);
       }
     }
-    console.log(
-      "rendering tick",
-      this.props.geoId,
-      this.props.miniScale,
-      this.props.tick,
-      pathStr
-    );
+    // console.log(
+    //   "rendering tick",
+    //   this.props.geoId,
+    //   this.props.miniScale,
+    //   this.props.tick,
+    //   pathStr,
+    //   this.props.css
+    // );
     return pathStr !== "" ? (
       <path
         d={pathStr}

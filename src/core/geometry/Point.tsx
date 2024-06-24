@@ -44,60 +44,8 @@ export class Point extends BaseGeometryObject {
         isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
       }
     };
-    const textId = this.getId(Obj.Text, this.label);
+    const textId = this.getId(Obj.Point, this.label);
     const ele = document.getElementById(textId);
     setStyle(ele);
-  };
-
-  svg = (
-    pageNum: number,
-    parentFrame?: string,
-    miniScale = false,
-    style?: React.CSSProperties
-  ): JSX.Element[] => {
-    let svgItems: JSX.Element[] = [];
-    // TODO fix point rendering
-    //   <SVGCircle
-    //     {...{
-    //       center: this.coordsToSvg(this.pt, miniScale),
-    //       r: 2,
-    //       geoId:
-    //         parentFrame !== undefined ? `${parentFrame}-${this.id}` : this.id,
-    //       style: {
-    //         fill: "black",
-    //         ...style,
-    //       },
-    //       mode: SVGModes.Hidden, // TODO unnecessary rn
-    //       activeFrame: "",
-    //     }}
-    //   />,
-    // ];
-    if (this.showLabel) svgItems.push(this.addLabel(miniScale, pageNum));
-    return svgItems;
-  };
-
-  addLabel = (
-    miniScale: boolean,
-    pageNum: number,
-    style?: React.CSSProperties
-  ) => {
-    return (
-      <SVGText
-        {...{
-          point: this.coordsToSvg(this.pt, miniScale, this.offset),
-          geoId: this.getId(Obj.Text, this.label),
-          text: this.label,
-          style: {
-            font: "18px serif",
-            fontStyle: "italic",
-            ...style,
-          },
-          mode: SVGModes.Default,
-          activeFrame: "",
-          hoverable: this.hoverable,
-        }}
-        key={`${this.getId(Obj.Text, this.label)}-${pageNum}`}
-      />
-    );
   };
 }

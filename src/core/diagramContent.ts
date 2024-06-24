@@ -37,15 +37,6 @@ export class Content {
       deps: new Map(),
     };
   }
-  // // abstract object tracking
-  // public points: Point[] = [];
-  // public segments: Segment[] = [];
-  // public angles: Angle[] = [];
-  // public ticks: Tick[] = [];
-  // private triangles: Triangle[] = []; // not rendered, just tracking
-  // private rectangles: Quadrilateral[] = []; // not rendered, just tracking
-  // private deps: Map<string, Set<string>> = new Map();
-  // private ctx: ContentMap = new Map();
   getId = getId;
 
   reliesOn = (id: string, deps: string[]) => {
@@ -104,34 +95,6 @@ export class Content {
     }
   }
 
-  pushTick = (
-    parent: Segment | Angle,
-    frame: string,
-    type: TickType,
-    num: number = 1
-  ) => {
-    // get current frame, get previous frame
-    parent.addTick(frame, type, num);
-    // const existing = this.getTick(parent, type, options);
-    // debugging
-    // let id = this.getId(type, parent.labeled().label, numTicks);
-    // const hasParent = options?.frame && options.frame !== undefined;
-    // if (hasParent) {
-    //   id = `${options?.frame}-${id}`;
-    // }
-    // const existing = this.ticks.filter((t) => t.id === id)[0];
-    // if (existing) return existing;
-    // let tick = new Tick({
-    //   parent: parent.labeled(),
-    //   type,
-    //   num: numTicks,
-    //   parentFrame: options?.frame,
-    //   hoverable: false,
-    // });
-    // this.ctx.ticks.push(tick);
-    // return tick;
-  };
-
   getPoint = (label: string) =>
     this.ctx.points.filter((p) => p.matches(label))[0];
   getSegment = (label: string) =>
@@ -161,27 +124,4 @@ export class Content {
     // }
     return match[0];
   };
-
-  // allSvgElements =
-  //   (pageNum: number, mini = false) =>
-  //   (activeFrame: string) => {
-  //     let pts = this.ctx.points.flatMap((p) => p.svg(pageNum));
-  //     let segs = this.ctx.segments.flatMap((s) =>
-  //       s.svg(activeFrame, pageNum, mini)
-  //     );
-  //     // let angs = this.angles.flatMap((a) => a.svg(activeFrame, mini));
-  //     let ticks = this.ctx.ticks.flatMap((t) =>
-  //       t.svg(activeFrame, pageNum, mini)
-  //     );
-  //     return pts.concat(segs).concat(ticks);
-  //   };
-
-  // allStaticSvgElements = (pageNum: number) => {
-  //   let pts = this.ctx.points.flatMap((p) => p.svg(pageNum));
-  //   let segs = this.ctx.segments.flatMap((s) =>
-  //     s.svg(GIVEN_ID, pageNum, false)
-  //   );
-  //   // let angs = this.angles.flatMap((a) => a.svg(GIVEN_ID, false));
-  //   return pts.concat(segs);
-  // };
 }
