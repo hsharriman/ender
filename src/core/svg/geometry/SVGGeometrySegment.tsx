@@ -116,16 +116,13 @@ export class SVGGeometrySegment extends BaseSVG {
               : this.updateStyle(this.props.mode)
           }
         />
-        {this.tick && (
-          <SVGGeometryTick
-            parent={this.s}
-            type={this.tick.type}
-            mode={this.props.mode} // TODO must match css i think
-            num={this.tick.num}
-            miniScale={this.miniScale}
-            geoId={this.geoId + "-tick"} // TODO make this discoverable from linkedtext
-          />
-        )}
+        <SVGGeometryTick
+          parent={this.s}
+          tick={this.tick}
+          mode={this.props.mode} // TODO must match css i think
+          miniScale={this.miniScale}
+          geoId={this.geoId + "-tick"} // TODO make this discoverable from linkedtext
+        />
         {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel
             pt={vops.add(midpt, norm)}
@@ -147,8 +144,9 @@ export class SVGGeometrySegment extends BaseSVG {
             onPointerLeave={() => this.onHover(false)}
             onClick={() => this.onHoverLabelClick(!this.state.isPinned)}
             style={{
-              opacity: 0,
-              strokeWidth: 28,
+              opacity: 0.1,
+              stroke: "green",
+              strokeWidth: 18,
               cursor: "pointer",
             }}
           />

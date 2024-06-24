@@ -31,7 +31,7 @@ export class SVGGeometryPoint extends BaseSVG {
     return (
       <>
         // TODO fix point rendering
-        <SVGCircle
+        {/* <SVGCircle
           {...{
             center: coordsToSvg(this.p.pt, this.miniScale),
             r: 2,
@@ -39,7 +39,7 @@ export class SVGGeometryPoint extends BaseSVG {
             mode: this.props.mode, // TODO unnecessary rn
             activeFrame: "",
           }}
-        />
+        /> */}
         {this.showLabel && (
           <SVGText
             {...{

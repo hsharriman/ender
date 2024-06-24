@@ -6,7 +6,6 @@ export interface ProofRowsProps {
   items: ProofTextItem[];
   onClick: (n: string) => void; // callback that returns new selected idx when clicked
   reliesOn?: Map<string, Set<string>>;
-  refresh: boolean;
 }
 export interface ProofRowsState {
   idx: number;
@@ -94,11 +93,11 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     );
   };
 
-  resetRow = () => {
-    if (this.props.refresh || !this.props.items[this.state.idx]) {
-      this.setState({ idx: 0 });
-    }
-  };
+  // resetRow = () => {
+  //   if (this.props.refresh || !this.props.items[this.state.idx]) {
+  //     this.setState({ idx: 0 });
+  //   }
+  // };
 
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
@@ -134,7 +133,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   render() {
     // TODO change style based on the state
     if (this.props.items.length > 0) {
-      this.resetRow();
+      // this.resetRow();
       // first 2 rows are "given" and "prove"
       const given = this.props.items[0];
       const prove = this.props.items[1];

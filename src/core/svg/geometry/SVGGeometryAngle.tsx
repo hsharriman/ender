@@ -65,9 +65,9 @@ export class SVGGeometryAngle extends BaseSVG {
     const sUnit = vops.unit(vops.sub(this.a.start, this.a.center));
     const eUnit = vops.unit(vops.sub(this.a.end, this.a.center));
 
-    const scalar = 18;
+    const scalar = 0.5;
     let dStr = "";
-    dStr = dStr + pops.moveTo(coordsToSvg(this.a.center, this.miniScale));
+    const tip = coordsToSvg(this.a.center, this.miniScale);
     const end = coordsToSvg(
       vops.add(this.a.center, vops.smul(eUnit, scalar)),
       this.miniScale
@@ -76,31 +76,34 @@ export class SVGGeometryAngle extends BaseSVG {
       vops.add(this.a.center, vops.smul(sUnit, scalar)),
       this.miniScale
     );
-    dStr = dStr + pops.lineTo(start);
-    dStr = dStr + pops.moveTo(start) + pops.arcTo(scalar, 0, sweep, end);
-    dStr = dStr + pops.moveTo(end);
 
+    dStr =
+      dStr +
+      pops.moveTo(tip) +
+      pops.lineTo(start) +
+      pops.arcTo(scalar, 0, sweep, end) +
+      pops.lineTo(tip);
     return dStr;
   };
 
   render() {
+    if (this.tick) {
+      console.log(this.tick, this.props.mode, this.a.label);
+    }
     return (
       <>
-        {this.tick && (
-          <SVGGeometryTick
-            parent={this.a}
-            type={this.tick.type}
-            mode={this.props.mode} // TODO must match css i think
-            num={this.tick.num}
-            miniScale={this.miniScale}
-            geoId={this.props.geoId + "-tick"} // TODO make this discoverable from linkedtext
-          />
-        )}
+        <SVGGeometryTick
+          parent={this.a}
+          tick={this.tick}
+          mode={this.props.mode} // TODO must match css i think
+          miniScale={this.miniScale}
+          geoId={this.props.geoId + "-tick"} // TODO make this discoverable from linkedtext
+        />
         {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel
-            pt={this.a.center}
+            pt={coordsToSvg(this.a.center, this.miniScale)}
             rot={0}
-            text={"<" + this.props.geoId.replace("angle.", "")}
+            text={"<" + this.a.label}
             isHovered={this.state.isActive}
             isPinned={Boolean(this.state.isPinned)}
           />

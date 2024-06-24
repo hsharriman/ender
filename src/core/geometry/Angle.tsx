@@ -1,3 +1,4 @@
+import { ModeCSS } from "../svg/SVGStyles";
 import { LAngle, Obj, TickType } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
@@ -13,7 +14,7 @@ export class Angle extends BaseGeometryObject {
   public readonly center: Point;
   public readonly end: Point;
   public id: string;
-  private ticks: Map<string, { type: TickType; num: number }>; // frame to tick
+  public ticks: Map<string, { type: TickType; num: number }>; // frame to tick
   constructor(props: AngleProps) {
     super(Obj.Angle, props);
     this.start = props.start;
@@ -37,10 +38,30 @@ export class Angle extends BaseGeometryObject {
     };
   };
 
+  override onClickText = (isActive: boolean) => {
+    const setStyle = (ele: HTMLElement | null) => {
+      if (ele) {
+        const cls = ModeCSS.DIAGRAMGLOW.split(" ");
+
+        if (isActive) {
+          ele.classList.add(...cls);
+        } else {
+          ele.classList.remove(...cls);
+        }
+      }
+    };
+    const ele = document.getElementById(this.id);
+    const eleTick = document.getElementById(`${this.id}-tick`);
+    console.log(this.id, `${this.id}-tick`);
+    setStyle(ele);
+    setStyle(eleTick);
+  };
+
   getMode = (frameKey: string) => this.modes.get(frameKey);
 
   addTick = (frame: string, type: TickType, num: number = 1) => {
     this.ticks.set(frame, { type, num });
+    return this;
   };
 
   inheritTick = (frame: string, prevFrame: string) => {
@@ -50,6 +71,7 @@ export class Angle extends BaseGeometryObject {
 
   hideTick = (frame: string) => {
     this.ticks.delete(frame);
+    return this;
   };
 
   getTick = (frame: string) => this.ticks.get(frame);

@@ -12,7 +12,7 @@ export class Segment extends BaseGeometryObject {
   public readonly p1: Point;
   public readonly p2: Point;
   public readonly id: string;
-  private ticks: Map<string, { type: TickType; num: number }>; // frame to tick
+  public ticks: Map<string, { type: TickType; num: number }>; // frame to tick
   constructor(props: SegmentProps) {
     super(Obj.Segment, props);
     this.p1 = props.p1;
@@ -44,6 +44,7 @@ export class Segment extends BaseGeometryObject {
 
   addTick = (frame: string, type: TickType, num: number = 1) => {
     this.ticks.set(frame, { type, num });
+    return this;
   };
 
   inheritTick = (frame: string, prevFrame: string) => {

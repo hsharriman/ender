@@ -283,15 +283,9 @@ const step7: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
   text: (props: StepTextProps) => {
-    const FJ = props.ctx.getSegment("FJ");
-    const GJ = props.ctx.getSegment("GJ");
-    const options = { frame: props.frame, num: 3 };
     return (
       <span>
-        {linked("FGJ", props.ctx.getTriangle("FGJ"), [
-          props.ctx.getTick(FJ, Obj.EqualLengthTick, options),
-          props.ctx.getTick(GJ, Obj.EqualLengthTick, options),
-        ])}
+        {linked("FGJ", props.ctx.getTriangle("FGJ"))}
         {" is isosceles "}
       </span>
     );

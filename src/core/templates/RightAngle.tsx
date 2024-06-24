@@ -7,19 +7,15 @@ import { BaseAngle } from "./BaseAngle";
 export class RightAngle {
   private static rightText = " = 90°";
   static additions = (props: StepFocusProps, a: string) => {
-    const ang = props.ctx.getAngle(a);
-    const options = props.inPlace ? {} : { frame: props.frame };
     props.ctx
-      .pushTick(ang, Obj.RightTick, options)
+      .getAngle(a)
+      .addTick(props.frame, Obj.RightTick)
       .mode(props.frame, props.mode);
   };
   static text = (props: StepTextProps, a: string) => {
-    const ang = props.ctx.getAngle(a);
     return (
       <span>
-        {BaseAngle.text(props, a, [
-          props.ctx.getTick(ang, Obj.RightTick, { frame: props.frame }),
-        ])}
+        {BaseAngle.text(props, a)}
         {this.rightText}
       </span>
     );

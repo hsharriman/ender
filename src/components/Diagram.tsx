@@ -31,7 +31,7 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   renderPoints = () => {
     return this.props.ctx.points.flatMap((p, i) => {
-      return (
+      return !this.props.miniScale ? (
         <SVGGeometryPoint
           geoId={p.id}
           mode={this.props.miniScale ? SVGModes.Hidden : SVGModes.Default}
@@ -44,12 +44,17 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
             miniScale: this.props.miniScale,
           }}
         />
+      ) : (
+        <></>
       );
     });
   };
 
   renderSegments = (frame: string) => {
     return this.props.ctx.segments.flatMap((seg, i) => {
+      if (seg.getTick(frame)) {
+        console.log(seg.id, frame, seg.ticks, seg.getTick(frame));
+      }
       return (
         <SVGGeometrySegment
           geoId={seg.id}
@@ -68,6 +73,9 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   renderAngles = (frame: string) => {
     return this.props.ctx.angles.flatMap((ang, i) => {
+      if (ang.getTick(frame)) {
+        console.log(ang.id, frame, ang.ticks, ang.getTick(frame));
+      }
       return (
         <SVGGeometryAngle
           mode={ang.getMode(frame) ?? SVGModes.Hidden}
@@ -95,8 +103,8 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
         >
           {/* {this.props.svgElements(this.props.activeFrame)} */}
           {this.renderPoints()}
-          {this.renderAngles(this.props.activeFrame)}
           {this.renderSegments(this.props.activeFrame)}
+          {this.renderAngles(this.props.activeFrame)}
         </svg>
       </div>
     );

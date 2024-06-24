@@ -146,9 +146,10 @@ const step1: StepMeta = makeStepMeta({
         {comma}
         {linked("BD", BD)}
         {" bisects "}
-        {BaseAngle.text(props, "ABC", [
-          props.ctx.getTick(ABD, Obj.EqualAngleTick, { frame: props.frame }),
-          props.ctx.getTick(DBC, Obj.EqualAngleTick, { frame: props.frame }),
+        {linked("ABC", ABD, [
+          DBC,
+          props.ctx.getSegment("AB"),
+          props.ctx.getSegment("BC"),
         ])}
       </span>
     );
@@ -358,10 +359,8 @@ export const miniContent = () => {
   const step7 = ctx.addFrame("s7");
   AD.mode(step7, SVGModes.Purple);
   CD.mode(step7, SVGModes.Blue);
-  ctx
-    .pushTick(AD, Obj.EqualLengthTick, { num: 2 })
-    .mode(step7, SVGModes.Purple);
-  ctx.pushTick(CD, Obj.EqualLengthTick, { num: 2 }).mode(step7, SVGModes.Blue);
+  AD.addTick(step7, Obj.EqualLengthTick, 2).mode(step7, SVGModes.Purple);
+  CD.addTick(step7, Obj.EqualLengthTick, 2).mode(step7, SVGModes.Blue);
 
   return ctx;
 };

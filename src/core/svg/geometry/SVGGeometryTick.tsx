@@ -22,9 +22,8 @@ const ARC_PADDING = 0.2;
 
 export type SVGTickProps = {
   parent: LSegment | LAngle;
-  type: TickType;
+  tick?: { type: TickType; num: number };
   mode: SVGModes;
-  num: number;
   miniScale: boolean;
   geoId: string;
   hover?: boolean;
@@ -34,7 +33,7 @@ export type SVGTickProps = {
 // ticks are not interactive and do not need state
 
 export class SVGGeometryTick extends React.Component<SVGTickProps> {
-  parallelMark = (s: LSegment) => {
+  parallelMark = (s: LSegment, num: number) => {
     // find midpoint on segment
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
 
@@ -53,11 +52,7 @@ export class SVGGeometryTick extends React.Component<SVGTickProps> {
     // if odd number of ticks, start at midpoint
     const points = [startDir, midpoint, endDir];
 
-    const tickVectors = this.tickPlacement(
-      unit,
-      this.props.num,
-      this.props.miniScale
-    );
+    const tickVectors = this.tickPlacement(unit, num, this.props.miniScale);
     let dStr = "";
     tickVectors.map((shift, i) => {
       const polyPts = points.map((v) =>
@@ -73,7 +68,7 @@ export class SVGGeometryTick extends React.Component<SVGTickProps> {
     return dStr;
   };
 
-  equalLength = (s: LSegment) => {
+  equalLength = (s: LSegment, num: number) => {
     // find midpoint on segment
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
     const unit = vops.unit(vops.sub(s.p2, s.p1));
@@ -88,11 +83,7 @@ export class SVGGeometryTick extends React.Component<SVGTickProps> {
 
     // add evenly spaced ticks based on numTicks
     let dStr = "";
-    const tickVectors = this.tickPlacement(
-      unit,
-      this.props.num,
-      this.props.miniScale
-    );
+    const tickVectors = this.tickPlacement(unit, num, this.props.miniScale);
     tickVectors.map((shift) => {
       const st = coordsToSvg(vops.add(start, shift), this.props.miniScale);
       const en = coordsToSvg(vops.add(end, shift), this.props.miniScale);
@@ -101,25 +92,24 @@ export class SVGGeometryTick extends React.Component<SVGTickProps> {
     return dStr;
   };
 
-  equalAngle = (a: LAngle) => {
+  equalAngle = (a: LAngle, num: number) => {
     const sweep = arcSweepsCCW(a.center, a.start, a.end);
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
-    let arcR = this.props.miniScale || this.props.num === 1 ? ARC_RADIUS : 0.2;
+    let arcR = this.props.miniScale || num === 1 ? ARC_RADIUS : 0.2;
     arcR = this.props.miniScale ? 0.18 : arcR;
-    let arcPad =
-      this.props.miniScale || this.props.num === 1 ? ARC_PADDING : 0.15;
-    if (this.props.num === 1 && this.props.miniScale) {
+    let arcPad = this.props.miniScale || num === 1 ? ARC_PADDING : 0.15;
+    if (num === 1 && this.props.miniScale) {
       arcR = SINGLE_MINI_ARC_RADIUS;
       arcPad = SINGLE_MINI_ARC_PADDING;
     }
 
     let dStr = "";
     // increase radius according to numticks
-    for (let i = 0; i < this.props.num; i++) {
+    for (let i = 0; i < num; i++) {
       let radius;
-      if (i === 0 && this.props.num > 1) {
+      if (i === 0 && num > 1) {
         radius =
           arcR * (i + 1) + scaleToSvg(arcPad * (i + 1), this.props.miniScale);
       }
@@ -186,14 +176,25 @@ export class SVGGeometryTick extends React.Component<SVGTickProps> {
   render() {
     // frame-specific render-logic
     let pathStr = "";
-    if (this.props.type === Obj.ParallelTick) {
-      pathStr = this.parallelMark(this.props.parent as LSegment);
-    } else if (this.props.type === Obj.EqualLengthTick) {
-      pathStr = this.equalLength(this.props.parent as LSegment);
-    } else if (this.props.type === Obj.EqualAngleTick) {
-      pathStr = this.equalAngle(this.props.parent as LAngle);
-    } else if (this.props.type === Obj.RightTick) {
-      pathStr = this.rightAngle(this.props.parent as LAngle);
+    if (this.props.tick) {
+      if (this.props.tick.type === Obj.ParallelTick) {
+        pathStr = this.parallelMark(
+          this.props.parent as LSegment,
+          this.props.tick.num
+        );
+      } else if (this.props.tick.type === Obj.EqualLengthTick) {
+        pathStr = this.equalLength(
+          this.props.parent as LSegment,
+          this.props.tick.num
+        );
+      } else if (this.props.tick.type === Obj.EqualAngleTick) {
+        pathStr = this.equalAngle(
+          this.props.parent as LAngle,
+          this.props.tick.num
+        );
+      } else if (this.props.tick.type === Obj.RightTick) {
+        pathStr = this.rightAngle(this.props.parent as LAngle);
+      }
     }
     return (
       <PathSVG

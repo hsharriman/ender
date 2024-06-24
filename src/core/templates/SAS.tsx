@@ -18,22 +18,6 @@ interface TickedAngles {
   type?: TickType;
 }
 
-const segmentTick = (ctx: Content, seg: TickedSegments, frame?: string) => {
-  return seg.s.map((s) =>
-    ctx.getTick(ctx.getSegment(s), Obj.EqualLengthTick, {
-      frame,
-      num: seg.ticks,
-    })
-  );
-};
-const angleTick = (ctx: Content, angle: TickedAngles, frame?: string) => {
-  return angle.a.map((a) =>
-    ctx.getTick(ctx.getAngle(a), angle.type || Obj.EqualAngleTick, {
-      frame,
-      num: angle.ticks,
-    })
-  );
-};
 export interface SASProps {
   seg1s: TickedSegments;
   seg2s: TickedSegments;
@@ -42,15 +26,13 @@ export interface SASProps {
 }
 export class SAS {
   static text = (props: StepTextProps, labels: SASProps) => {
-    const s1s = segmentTick(props.ctx, labels.seg1s, props.frame);
-    const s2s = segmentTick(props.ctx, labels.seg2s, props.frame);
-    const as = angleTick(props.ctx, labels.angles, props.frame);
+    // TODO problem if some information is not relevant to SAS, all of the ticks on the triangle will be highlighted anyway
     const [t1, t2] = labels.triangles;
     return (
       <span>
-        {linked(t1, props.ctx.getTriangle(t1), [s1s[0], s2s[0], as[0]])}
+        {linked(t1, props.ctx.getTriangle(t1))}
         {tooltip(strs.congruent, definitions.CongruentTriangles)}
-        {linked(t2, props.ctx.getTriangle(t2), [s1s[1], s2s[1], as[1]])}
+        {linked(t2, props.ctx.getTriangle(t2))}
       </span>
     );
   };
