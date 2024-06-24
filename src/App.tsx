@@ -5,6 +5,7 @@ import {
 } from "./components/InteractiveAppPage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage } from "./components/SusPage";
+import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason } from "./core/types/types";
 import { PC1 } from "./theorems/checking/pc1";
 import { PC2 } from "./theorems/checking/pc2";
@@ -15,9 +16,8 @@ import { P3 } from "./theorems/complete/proof3";
 import { IP1 } from "./theorems/incomplete/ip1";
 import { IP2 } from "./theorems/incomplete/ip2";
 import { IP3 } from "./theorems/incomplete/ip3";
-import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
-import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
 import { Reasons } from "./theorems/reasons";
+import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
 
 interface AppMeta {
   layout: LayoutOptions;
@@ -153,7 +153,6 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
-  refresh: boolean;
 }
 export class App extends React.Component<AppProps, AppState> {
   private meta: AppMeta[] = [];
@@ -162,7 +161,6 @@ export class App extends React.Component<AppProps, AppState> {
     this.state = {
       activePage: 0,
       activeTest: 0,
-      refresh: true,
     };
 
     const randomCompleteProofs = randomizeLayout(randomizeProofs([P1, P2, P3])); // 2 random complete proofs
@@ -188,14 +186,9 @@ export class App extends React.Component<AppProps, AppState> {
     } else {
       this.setState({
         activePage: this.state.activePage + direction,
-        // refresh: true,
       });
     }
   };
-
-  // onClickCallback = () => {
-  //   this.setState({ refresh: false });
-  // };
 
   render() {
     const currMeta = this.meta[this.state.activePage];

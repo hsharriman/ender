@@ -1,8 +1,8 @@
 import React from "react";
-import { Content, DiagramContent } from "../core/diagramContent";
+import { DiagramContent } from "../core/diagramContent";
 import { ProofTextItem } from "../core/types/stepTypes";
-import { InteractiveLayoutProps, Reason } from "../core/types/types";
-import { GIVEN_ID, PROVE_ID, getReasonFn } from "../theorems/utils";
+import { Reason } from "../core/types/types";
+import { getReasonFn } from "../theorems/utils";
 import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
@@ -39,9 +39,6 @@ export class InteractiveAppPage extends React.Component<
   };
 
   render() {
-    // TODO ideally ctx should be formatted in a way that react can detect when it changes, this hack is necessary
-    // because only calling this method once means that the ctx doesn't update between pages
-    // this.buildCtx();
     return (
       <>
         {this.props.ctx.deps && (
