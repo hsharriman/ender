@@ -112,7 +112,7 @@ export class SVGGeoTriangle extends React.Component<
             onPointerLeave={() => this.onHover(false)}
             onClick={() => this.onHoverLabelClick(!this.state.isPinned)}
             style={{
-              opacity: 0.1,
+              opacity: 0,
               fill: "blue",
               cursor: "pointer",
             }}

@@ -93,6 +93,20 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
     if (this.props.tick) {
       console.log(this.props.tick, this.props.mode, this.props.a.label);
     }
+    // calculate angle bisector of angle, rotate along vector and position label
+    // angle bisector is unit(u)*v + unit(v)*u
+    const u = vops.sub(this.props.a.start, this.props.a.center);
+    const v = vops.sub(this.props.a.end, this.props.a.center);
+    const bisector = vops.unit(
+      vops.add(vops.smul(v, vops.mag(u)), vops.smul(u, vops.mag(v)))
+    );
+    // make sure unit vector is within -90 to 90 deg from origin
+    let angle = -1 * Math.atan2(bisector[1], bisector[0]) * (180 / Math.PI) - 5;
+    if (bisector[0] < 0) {
+      angle = angle + 180;
+    }
+
+    const pos = vops.add(this.props.a.center, vops.smul(bisector, 0.8));
     return (
       <>
         <SVGGeoTick
@@ -108,8 +122,8 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
         />
         {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel
-            pt={coordsToSvg(this.props.a.center, this.props.miniScale)}
-            rot={0}
+            pt={coordsToSvg(pos, this.props.miniScale)}
+            rot={angle}
             text={strs.angle + this.props.a.label}
             isHovered={this.state.isActive}
             isPinned={Boolean(this.state.isPinned)}
@@ -125,7 +139,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
             onPointerLeave={() => this.onHover(false)}
             onClick={() => this.onHoverLabelClick(!this.state.isPinned)}
             style={{
-              opacity: 0.1,
+              opacity: 0,
               fill: "red",
               cursor: "pointer",
             }}

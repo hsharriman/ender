@@ -123,7 +123,7 @@ export class SVGGeoSegment extends React.Component<
             onPointerLeave={() => this.onHover(false)}
             onClick={() => this.onHoverLabelClick(!this.state.isPinned)}
             style={{
-              opacity: 0.1,
+              opacity: 0,
               stroke: "green",
               strokeWidth: 18,
               cursor: "pointer",
