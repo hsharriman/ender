@@ -34,37 +34,9 @@ export class ASA {
 
     return (
       <span>
-        {linked(t1, props.ctx.getTriangle(t1), [
-          props.ctx.getTick(
-            props.ctx.getSegment(t1s),
-            meta.segTickType || Obj.EqualLengthTick,
-            { ...options, num: meta.segTickNum }
-          ),
-          props.ctx.getTick(props.ctx.getAngle(t1a1), a1tick, {
-            ...options,
-            num: meta.a1s.numTicks,
-          }),
-          props.ctx.getTick(props.ctx.getAngle(t1a2), a2tick, {
-            ...options,
-            num: meta.a2s.numTicks,
-          }),
-        ])}
+        {linked(t1, props.ctx.getTriangle(t1))}
         {tooltip(strs.congruent, definitions.CongruentTriangles)}
-        {linked(t2, props.ctx.getTriangle(t2), [
-          props.ctx.getTick(
-            props.ctx.getSegment(t2s),
-            meta.segTickType || Obj.EqualLengthTick,
-            { ...options, num: meta.segTickNum }
-          ),
-          props.ctx.getTick(props.ctx.getAngle(t2a1), a1tick, {
-            ...options,
-            num: meta.a1s.numTicks,
-          }),
-          props.ctx.getTick(props.ctx.getAngle(t2a2), a2tick, {
-            ...options,
-            num: meta.a2s.numTicks,
-          }),
-        ])}
+        {linked(t2, props.ctx.getTriangle(t2))}
       </span>
     );
   };

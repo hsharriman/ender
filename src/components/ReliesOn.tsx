@@ -1,6 +1,4 @@
 import React from "react";
-import { SVGPolyline } from "../core/svg/SVGPolyline";
-
 export interface ReliesOnProps {
   reliesOn: Map<string, Set<string>>;
   activeFrame: string;

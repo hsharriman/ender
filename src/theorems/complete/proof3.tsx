@@ -57,9 +57,9 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   );
   // ctx.push(new Quadrilateral({ pts: [E, F, G, H], parentFrame }, ctx));
 
-  ctx.push(new Triangle({ pts: [E, F, J], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [J, G, H], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [F, G, J], hoverable }, ctx));
+  ctx.push(new Triangle({ pts: [E, F, J], hoverable, label: "FEJ" }, ctx));
+  ctx.push(new Triangle({ pts: [J, G, H], hoverable, label: "JHG" }, ctx));
+  ctx.push(new Triangle({ pts: [F, G, J], hoverable, label: "FGJ" }, ctx));
 
   // for mini figures
   ctx.push(new Angle({ start: E, center: F, end: G, hoverable }));
@@ -283,15 +283,9 @@ const step7: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
   text: (props: StepTextProps) => {
-    const FJ = props.ctx.getSegment("FJ");
-    const GJ = props.ctx.getSegment("GJ");
-    const options = { frame: props.frame, num: 3 };
     return (
       <span>
-        {linked("FGJ", props.ctx.getTriangle("FGJ"), [
-          props.ctx.getTick(FJ, Obj.EqualLengthTick, options),
-          props.ctx.getTick(GJ, Obj.EqualLengthTick, options),
-        ])}
+        {linked("FGJ", props.ctx.getTriangle("FGJ"))}
         {" is isosceles "}
       </span>
     );

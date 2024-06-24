@@ -1,7 +1,5 @@
-import React from "react";
-import { SVGLine } from "../svg/SVGLine";
 import { ModeCSS } from "../svg/SVGStyles";
-import { LSegment, Obj, SVGModes } from "../types/types";
+import { LSegment, Obj, SVGModes, TickType } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 
@@ -14,6 +12,7 @@ export class Segment extends BaseGeometryObject {
   public readonly p1: Point;
   public readonly p2: Point;
   public readonly id: string;
+  public ticks: Map<string, { type: TickType; num: number }>; // frame to tick
   constructor(props: SegmentProps) {
     super(Obj.Segment, props);
     this.p1 = props.p1;
@@ -25,6 +24,7 @@ export class Segment extends BaseGeometryObject {
         ? `${props.parentFrame}-${this.id}`
         : this.id;
     this.names = this.permutator([this.p1.label, this.p2.label]);
+    this.ticks = new Map<string, { type: TickType; num: number }>();
   }
   // deprecated?
   labeled = (): LSegment => {
@@ -35,13 +35,45 @@ export class Segment extends BaseGeometryObject {
     };
   };
 
+  override mode = (frameKey: string, mode: SVGModes) => {
+    this.modes.set(frameKey, mode);
+    return this;
+  };
+
+  getMode = (frameKey: string) => this.modes.get(frameKey);
+
+  addTick = (frame: string, type: TickType, num: number = 1) => {
+    this.ticks.set(frame, { type, num });
+    return this;
+  };
+
+  inheritTick = (frame: string, prevFrame: string) => {
+    this.ticks.get(prevFrame) &&
+      this.ticks.set(frame, this.ticks.get(prevFrame)!);
+  };
+
+  hideTick = (frame: string) => {
+    this.ticks.delete(frame);
+  };
+
+  getTick = (frame: string) => this.ticks.get(frame);
+
+  frameElements = (frame: string) => {
+    if (this.modes.has(frame)) {
+      return {
+        mode: this.modes.get(frame) ?? SVGModes.Hidden,
+        tick: this.ticks.get(frame),
+        s: this.labeled(),
+      };
+    }
+    return;
+  };
+
+  // TODO used in linkedText, needs a better location? Could just put in linkedText if linkedText knows the id
   override onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
         const cls = ModeCSS.DIAGRAMGLOW.split(" ");
-        const matches = ele.classList.value
-          .split(" ")
-          .filter((cls) => cls.includes("pinnedSVG"));
 
         if (isActive) {
           ele.classList.add(...cls);
@@ -51,31 +83,8 @@ export class Segment extends BaseGeometryObject {
       }
     };
     const ele = document.getElementById(this.id);
+    const eleTick = document.getElementById(`${this.id}-tick`);
     setStyle(ele);
-  };
-
-  svg = (
-    frameIdx: string,
-    pageNum: number,
-    miniScale = false,
-    style?: React.CSSProperties
-  ) => {
-    let svgItems: JSX.Element[] = [];
-    // add line
-    svgItems.push(
-      <SVGLine
-        {...{
-          start: this.coordsToSvg(this.p1.pt, miniScale),
-          end: this.coordsToSvg(this.p2.pt, miniScale),
-          geoId: this.id,
-          style: style, // TODO needed?
-          mode: this.modes.get(frameIdx) ?? SVGModes.Hidden,
-          activeFrame: frameIdx,
-          hoverable: this.hoverable,
-        }}
-        key={`${this.id}-${pageNum}`}
-      />
-    );
-    return svgItems;
+    setStyle(eleTick);
   };
 }

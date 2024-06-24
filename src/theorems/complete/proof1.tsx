@@ -54,8 +54,8 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   );
 
   [
-    new Triangle({ pts: [A, C, M], hoverable }, ctx),
-    new Triangle({ pts: [B, D, M], hoverable }, ctx),
+    new Triangle({ pts: [A, C, M], hoverable, label: "ACM" }, ctx),
+    new Triangle({ pts: [B, D, M], hoverable, label: "BDM" }, ctx),
   ].map((t) => ctx.push(t));
 
   ctx.push(new Segment({ p1: A, p2: B, hoverable: false }));
@@ -280,8 +280,8 @@ const miniContent = () => {
   // .mode(step2, SVGModes.Purple);
   let DMB = ctx.getAngle("DMB");
   // .mode(step2, SVGModes.Blue);
-  ctx.pushTick(CMA, Obj.EqualAngleTick).mode(step3, SVGModes.Purple);
-  ctx.pushTick(DMB, Obj.EqualAngleTick).mode(step3, SVGModes.Blue);
+  CMA.addTick(step3, Obj.EqualAngleTick).mode(step3, SVGModes.Purple);
+  DMB.addTick(step3, Obj.EqualAngleTick).mode(step3, SVGModes.Blue);
 
   // STEP 3 - SAS TRIANGLE CONGRUENCE
   const step4 = ctx.addFrame("s4");

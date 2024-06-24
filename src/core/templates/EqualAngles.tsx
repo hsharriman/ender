@@ -16,14 +16,11 @@ export class EqualAngles {
   ) => {
     const a1a = props.ctx.getAngle(a1);
     const a2a = props.ctx.getAngle(a2);
-    const options = props.inPlace
-      ? { num: numTicks }
-      : { frame: props.frame, num: numTicks };
-    props.ctx
-      .pushTick(a1a, Obj.EqualAngleTick, options)
+    a1a
+      .addTick(props.frame, Obj.EqualAngleTick, numTicks)
       .mode(props.frame, props.mode);
-    props.ctx
-      .pushTick(a2a, Obj.EqualAngleTick, options)
+    a2a
+      .addTick(props.frame, Obj.EqualAngleTick, numTicks)
       .mode(props.frame, a2Mode || props.mode);
   };
   static text = (
@@ -34,21 +31,9 @@ export class EqualAngles {
     const options = { frame: props.frame, num };
     return (
       <span>
-        {BaseAngle.text(props, a1, [
-          props.ctx.getTick(
-            props.ctx.getAngle(a1),
-            Obj.EqualAngleTick,
-            options
-          ),
-        ])}
+        {BaseAngle.text(props, a1)}
         {tooltip(strs.congruent, definitions.CongruentAngles)}
-        {BaseAngle.text(props, a2, [
-          props.ctx.getTick(
-            props.ctx.getAngle(a2),
-            Obj.EqualAngleTick,
-            options
-          ),
-        ])}
+        {BaseAngle.text(props, a2)}
       </span>
     );
   };

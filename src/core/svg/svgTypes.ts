@@ -1,55 +1,15 @@
-import { SVGModes, Vector } from "../types/types";
-
-export enum SVGObj {
-  Circle,
-  Line,
-  Curve,
-  Polyline,
-  Text,
-}
+import { SVGModes } from "../types/types";
 
 export type BaseSVGProps = {
   geoId: string;
   mode: SVGModes;
-  activeFrame: string;
   hoverable?: boolean;
   style?: React.CSSProperties;
+  miniScale: boolean;
 };
 
-export type CircleSVGProps = {
-  center: Vector;
-  r: number;
-} & BaseSVGProps;
-
-export type LineSVGProps = {
-  start: Vector;
-  end: Vector;
-  style?: React.CSSProperties;
-} & BaseSVGProps;
-
-export type TextSVGProps = {
-  point: Vector;
-  text: string;
-} & BaseSVGProps;
-
-export type PolylineSVGProps = {
-  points: Vector[];
-} & BaseSVGProps;
-
-export type CircularArcSVGProps = {
-  end: Vector;
-  start: Vector;
-  r: number;
-  majorArc: number;
-  sweep: number;
-} & BaseSVGProps;
-
-export type QuadBezierSVGProps = {
-  start: Vector;
-  anchor: Vector;
-  end: Vector;
-} & BaseSVGProps;
-
-export type PathSVGProps = {
-  d: string;
-} & BaseSVGProps;
+export interface BaseSVGState {
+  isActive: boolean;
+  css: string;
+  isPinned?: boolean;
+}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Content } from "../core/diagramContent";
+import { Content, DiagramContent } from "../core/diagramContent";
 import { ProofTextItem } from "../core/types/stepTypes";
 import { InteractiveLayoutProps, Reason } from "../core/types/types";
 import { GIVEN_ID, PROVE_ID, getReasonFn } from "../theorems/utils";
@@ -7,12 +7,13 @@ import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
-import { TestQuestions } from "./TestQuestions";
 
-export interface InteractiveAppPageProps extends InteractiveLayoutProps {
+export interface InteractiveAppPageProps {
+  ctx: DiagramContent;
+  linkedTexts: ProofTextItem[];
+  reasonMap: Map<string, Reason>;
+  miniCtx: DiagramContent;
   pageNum: number;
-  reset: boolean;
-  onClickCallback: () => void;
 }
 
 interface InteractiveAppPageState {
@@ -22,64 +23,12 @@ export class InteractiveAppPage extends React.Component<
   InteractiveAppPageProps,
   InteractiveAppPageState
 > {
-  linkedTexts: ProofTextItem[] = [];
-  reasonMap = new Map<string, Reason>();
-  ctx: Content;
   constructor(props: InteractiveAppPageProps) {
     super(props);
-    this.ctx = this.props.baseContent(true, true);
     this.state = {
       activeFrame: "given",
     };
   }
-
-  buildCtx = () => {
-    if (!this.props.reset) return;
-    // reset stored variables
-    this.ctx = this.props.baseContent(true, true);
-    this.linkedTexts = [];
-    this.reasonMap = new Map<string, Reason>();
-    this.handleClick("given");
-
-    // GIVEN
-    this.ctx.addFrame(GIVEN_ID);
-    this.props.givens.diagram(this.ctx, GIVEN_ID, false);
-
-    // PROVE
-    this.ctx.addFrame(PROVE_ID);
-    this.props.proves.diagram(this.ctx, PROVE_ID, true);
-
-    // add given and prove to linkedTexts
-    this.linkedTexts.push({
-      k: GIVEN_ID,
-      v: this.props.givens.ticklessText(this.ctx),
-      alwaysActive: true,
-    });
-    this.linkedTexts.push({
-      k: PROVE_ID,
-      v: this.props.proves.text({ ctx: this.ctx }),
-      alwaysActive: true,
-    });
-
-    this.props.steps.map((step, i) => {
-      let textMeta = {};
-      const s = this.ctx.addFrame(`s${i + 1}`);
-      step.diagram(this.ctx, s, true);
-      if (step.dependsOn) {
-        const depIds = step.dependsOn.map((i) => `s${i}`);
-        this.ctx.reliesOn(s, depIds);
-        textMeta = { dependsOn: new Set(depIds) };
-      }
-      this.reasonMap.set(s, step.reason);
-      this.linkedTexts.push({
-        ...textMeta,
-        k: s,
-        v: step.text({ ctx: this.ctx }),
-        reason: step.reason.title,
-      });
-    });
-    this.props.onClickCallback();
-  };
 
   handleClick = (active: string) => {
     if (active !== this.state.activeFrame) {
@@ -92,60 +41,64 @@ export class InteractiveAppPage extends React.Component<
   render() {
     // TODO ideally ctx should be formatted in a way that react can detect when it changes, this hack is necessary
     // because only calling this method once means that the ctx doesn't update between pages
-    this.buildCtx();
+    // this.buildCtx();
     return (
       <>
-        {this.ctx.getReliesOn() && (
+        {this.props.ctx.deps && (
           <ReliesOn
-            reliesOn={this.ctx.getReliesOn()}
+            reliesOn={this.props.ctx.deps}
             activeFrame={this.state.activeFrame}
             rowHeight={64}
           />
         )}
-        <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-2 pl-6 gap-4">
-          <div id="proof-steps" className="col-start-1 w-[700px]">
+        <div className="top-0 left-0 max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-12 pl-6 gap-4">
+          <div id="proof-steps" className="col-start-1 col-span-4 w-[700px]">
             <div className="pt-16">
               <ProofRows
-                items={this.linkedTexts}
+                items={this.props.linkedTexts}
                 active={this.state.activeFrame}
                 onClick={this.handleClick}
-                refresh={this.props.reset}
               />
             </div>
           </div>
-          <div id="canvas-container" className="col-start-2 row-span-5 ml-4">
-            <Diagram
-              width="100%"
-              height="320px"
-              svgIdSuffix={`construction-${this.props.pageNum}`}
-              activeFrame={this.state.activeFrame}
-              svgElements={this.ctx.allSvgElements(this.props.pageNum, false)}
-            />
-            <div className="grid grid-rows-1 grid-cols-8 h-44 mt-6">
+          <div
+            id="canvas-container"
+            className="col-start-6 col-span-5 flex flex-col ml-4"
+          >
+            <div className="pt-4">
+              <Diagram
+                width="650px"
+                height="300px"
+                svgIdSuffix={`construction-${this.props.pageNum}`}
+                activeFrame={this.state.activeFrame}
+                ctx={this.props.ctx}
+                miniScale={false}
+              />
+            </div>
+
+            <div className="grid grid-rows-1 grid-cols-8 h-44 mt-12">
               <div className="col-span-3">
                 <Diagram
                   width="100%"
-                  height="100%"
+                  height="200px"
                   svgIdSuffix={`mini-${this.props.pageNum}`}
                   activeFrame={this.state.activeFrame}
-                  svgElements={this.props.miniContent.allSvgElements(
-                    this.props.pageNum,
-                    true
-                  )}
+                  ctx={this.props.miniCtx}
+                  miniScale={true}
                 />
               </div>
               <div className="col-span-5">
                 <ReasonText
                   activeFrame={this.state.activeFrame}
-                  textFn={getReasonFn(this.reasonMap)}
+                  textFn={getReasonFn(this.props.reasonMap)}
                   displayHeader={true}
                 />
               </div>
             </div>
           </div>
-          <div className="w-[400px] h-fit col-start-3 mt-12 p-8 rounded-lg border-dotted border-4 border-violet-300">
+          {/* <div className="w-[400px] h-fit col-start-3 mt-12 p-8 rounded-lg border-dotted border-4 border-violet-300">
             <TestQuestions questions={this.props.questions} />
-          </div>
+          </div> */}
         </div>
       </>
     );

@@ -7,12 +7,14 @@ import { Segment } from "./Segment";
 
 export type TriangleProps = {
   pts: [Point, Point, Point];
+  label: string;
   // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
 export class Triangle extends BaseGeometryObject {
   readonly s: [Segment, Segment, Segment];
   readonly a: [Angle, Angle, Angle];
   readonly p: [Point, Point, Point];
+  readonly id: string;
 
   constructor(props: TriangleProps, ctx: Content) {
     super(Obj.Triangle, props);
@@ -22,6 +24,8 @@ export class Triangle extends BaseGeometryObject {
     this.p = props.pts;
     this.a = this.buildAngles(props.pts, ctx);
     this.names = this.permutator(props.pts.map((pt) => pt.label));
+    this.label = props.label;
+    this.id = this.getId(Obj.Triangle, this.label);
   }
 
   private buildSegments = (
@@ -89,17 +93,6 @@ export class Triangle extends BaseGeometryObject {
       })
     );
     return [aa, ab, ac];
-  };
-
-  svg = (
-    frameIdx: string,
-    pageNum: number,
-    miniScale = false,
-    style?: React.CSSProperties
-  ) => {
-    return this.s
-      .flatMap((seg) => seg.svg(frameIdx, pageNum, miniScale, style))
-      .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
   };
 
   onClickText = (isActive: boolean) => {

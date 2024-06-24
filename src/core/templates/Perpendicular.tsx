@@ -34,17 +34,7 @@ export class Perpendicular {
       <span>
         {linked(perp, perp1)}
         {tooltip(strs.perpendicular, definitions.Perpendicular)}
-        {linked(label, s1, [
-          s2,
-          props.ctx.getTick(s1, Obj.EqualLengthTick, {
-            frame: props.frame,
-            num,
-          }),
-          props.ctx.getTick(s2, Obj.EqualLengthTick, {
-            frame: props.frame,
-            num,
-          }),
-        ])}
+        {linked(label, s1, [s2])}
       </span>
     );
   };

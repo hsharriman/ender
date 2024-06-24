@@ -1,8 +1,11 @@
 import React from "react";
-import { InteractiveAppPage } from "./components/InteractiveAppPage";
-import { StaticAppPage } from "./components/StaticAppPage";
+import {
+  InteractiveAppPage,
+  InteractiveAppPageProps,
+} from "./components/InteractiveAppPage";
+import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage } from "./components/SusPage";
-import { LayoutProps } from "./core/types/types";
+import { LayoutProps, Reason } from "./core/types/types";
 import { PC1 } from "./theorems/checking/pc1";
 import { PC2 } from "./theorems/checking/pc2";
 import { PC3 } from "./theorems/checking/pc3";
@@ -12,10 +15,13 @@ import { P3 } from "./theorems/complete/proof3";
 import { IP1 } from "./theorems/incomplete/ip1";
 import { IP2 } from "./theorems/incomplete/ip2";
 import { IP3 } from "./theorems/incomplete/ip3";
+import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
+import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
+import { Reasons } from "./theorems/reasons";
 
 interface AppMeta {
   layout: LayoutOptions;
-  proofMeta: LayoutProps;
+  props: StaticAppPageProps | InteractiveAppPageProps;
 }
 type LayoutOptions = "static" | "interactive";
 
@@ -37,20 +43,92 @@ const randomizeProofs = (arr: LayoutProps[]) => {
   const order = fisherYates(arr.length);
   const newArr = order.map((i) => arr[i]);
   // only 2 proofs are needed per experiment
-  if (arr.length === 2) return newArr;
-  return newArr.slice(1);
+  // if (arr.length === 2) return newArr;
+  // return newArr.slice(1);
+  return newArr;
 };
 
 const staticLayout = (proofMeta: LayoutProps): AppMeta => {
+  // reset stored variables
+  const ctx = proofMeta.baseContent(true, false);
+  const reasons: Reason[] = [];
+  const texts: StaticProofTextItem[] = [];
+
+  ctx.addFrame(GIVEN_ID);
+  proofMeta.givens.diagram(ctx, GIVEN_ID, false);
+  proofMeta.steps.map((step) => {
+    texts.push({
+      stmt: step.staticText(),
+      reason: step.reason.title,
+    });
+    if (step.reason.body !== "" && step.reason.title !== Reasons.Given.title) {
+      reasons.push(step.reason);
+    }
+  });
   return {
     layout: "static",
-    proofMeta,
+    props: {
+      ctx: ctx.getCtx(),
+      texts: texts,
+      reasons: reasons,
+      pageNum: -1,
+      givenText: proofMeta.givens.staticText(),
+      provesText: proofMeta.proves.staticText(),
+      questions: proofMeta.questions,
+    },
   };
 };
 const interactiveLayout = (proofMeta: LayoutProps): AppMeta => {
+  const ctx = proofMeta.baseContent(true, true);
+  const linkedTexts: ProofTextItem[] = [];
+  const reasonMap = new Map<string, Reason>();
+
+  // GIVEN
+  ctx.addFrame(GIVEN_ID);
+  proofMeta.givens.diagram(ctx, GIVEN_ID, false);
+
+  // PROVE
+  ctx.addFrame(PROVE_ID);
+  proofMeta.proves.diagram(ctx, PROVE_ID, true);
+
+  // add given and prove to linkedTexts
+  linkedTexts.push({
+    k: GIVEN_ID,
+    v: proofMeta.givens.ticklessText(ctx),
+    alwaysActive: true,
+  });
+  linkedTexts.push({
+    k: PROVE_ID,
+    v: proofMeta.proves.text({ ctx: ctx }),
+    alwaysActive: true,
+  });
+
+  proofMeta.steps.map((step, i) => {
+    let textMeta = {};
+    const s = ctx.addFrame(`s${i + 1}`);
+    step.diagram(ctx, s, true);
+    if (step.dependsOn) {
+      const depIds = step.dependsOn.map((i) => `s${i}`);
+      ctx.reliesOn(s, depIds);
+      textMeta = { dependsOn: new Set(depIds) };
+    }
+    reasonMap.set(s, step.reason);
+    linkedTexts.push({
+      ...textMeta,
+      k: s,
+      v: step.text({ ctx: ctx }),
+      reason: step.reason.title,
+    });
+  });
   return {
     layout: "interactive",
-    proofMeta,
+    props: {
+      ctx: ctx.getCtx(),
+      miniCtx: proofMeta.miniContent.getCtx(),
+      reasonMap: reasonMap,
+      linkedTexts: linkedTexts,
+      pageNum: -1,
+    },
   };
 };
 
@@ -58,9 +136,17 @@ const randomizeLayout = (proofMetas: LayoutProps[]): AppMeta[] => {
   // randomly pick 0 or 1
   // if 1, then the first proof is static, else interactive
   const staticFirst = Math.round(Math.random()) === 1;
-  return staticFirst
-    ? [staticLayout(proofMetas[0]), interactiveLayout(proofMetas[1])]
-    : [interactiveLayout(proofMetas[0]), staticLayout(proofMetas[1])];
+  return proofMetas.map((p) => interactiveLayout(p));
+  // return proofMetas.map((p) => staticLayout(p));
+  // return staticFirst
+  //   ? [
+  //       staticLayout(proofMetas[0]),
+  //       interactiveLayout(proofMetas[1]),
+  //     ]
+  //   : [
+  //       interactiveLayout(proofMetas[0]),
+  //       staticLayout(proofMetas[1]),
+  //     ];
 };
 
 interface AppProps {}
@@ -102,14 +188,14 @@ export class App extends React.Component<AppProps, AppState> {
     } else {
       this.setState({
         activePage: this.state.activePage + direction,
-        refresh: true,
+        // refresh: true,
       });
     }
   };
 
-  onClickCallback = () => {
-    this.setState({ refresh: false });
-  };
+  // onClickCallback = () => {
+  //   this.setState({ refresh: false });
+  // };
 
   render() {
     const currMeta = this.meta[this.state.activePage];
@@ -146,20 +232,18 @@ export class App extends React.Component<AppProps, AppState> {
             currMeta.layout === "static" ? (
               <StaticAppPage
                 {...{
-                  ...currMeta.proofMeta,
+                  ...(currMeta.props as StaticAppPageProps),
                   pageNum: this.state.activePage,
-                  reset: this.state.refresh,
-                  onClickCallback: this.onClickCallback,
                 }}
+                key={"static-pg" + this.state.activePage}
               />
             ) : (
               <InteractiveAppPage
                 {...{
-                  ...currMeta.proofMeta,
+                  ...(currMeta.props as InteractiveAppPageProps),
                   pageNum: this.state.activePage,
-                  reset: this.state.refresh,
-                  onClickCallback: this.onClickCallback,
                 }}
+                key={"interactive-pg" + this.state.activePage}
               />
             )
           ) : (

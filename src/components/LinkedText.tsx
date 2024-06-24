@@ -59,9 +59,11 @@ export class LinkedText extends React.Component<
       this.setState({
         isClicked,
       });
+      if (!this.props.obj) console.error("can't find ", this.props.val);
       this.props.obj.onClickText(isClicked);
       if (this.props.linkedObjs) {
         this.props.linkedObjs.forEach((obj) => {
+          if (!obj) console.error("can't find ", this.props.val);
           obj.onClickText(isClicked);
         });
       }

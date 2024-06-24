@@ -13,7 +13,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
-import { incompleteProof2b } from "../../questions/incompleteQuestions";
+import { incompleteProof2 } from "../../questions/incompleteQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -50,8 +50,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     )
   );
 
-  ctx.push(new Triangle({ pts: [Q, P, R], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [R, M, N], hoverable }, ctx));
+  ctx.push(new Triangle({ pts: [Q, P, R], hoverable, label: "QPR" }, ctx));
+  ctx.push(new Triangle({ pts: [R, M, N], hoverable, label: "RMN" }, ctx));
 
   // for given step:
   ctx.push(new Angle({ start: Q, center: P, end: R, hoverable }));
@@ -201,7 +201,7 @@ const miniContent = () => {
 };
 
 export const IP2: LayoutProps = {
-  questions: incompleteProof2b,
+  questions: incompleteProof2,
   miniContent: miniContent(),
   baseContent,
   givens,

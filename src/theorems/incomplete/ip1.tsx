@@ -50,8 +50,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     )
   );
 
-  ctx.push(new Triangle({ pts: [A, B, C], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [A, C, D], hoverable }, ctx));
+  ctx.push(new Triangle({ pts: [A, B, C], hoverable, label: "ABC" }, ctx));
+  ctx.push(new Triangle({ pts: [A, C, D], hoverable, label: "ACD" }, ctx));
 
   return ctx;
 };

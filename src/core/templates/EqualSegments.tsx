@@ -17,18 +17,13 @@ export class EqualSegments {
     numTicks = 1,
     s2Mode?: SVGModes
   ) => {
-    const options = props.inPlace
-      ? { num: numTicks }
-      : { frame: props.frame, num: numTicks };
-    const s1Seg = props.ctx.getSegment(s1).mode(props.frame, props.mode);
-    const s2Seg = props.ctx
-      .getSegment(s2)
-      .mode(props.frame, s2Mode || props.mode);
     props.ctx
-      .pushTick(s1Seg, Obj.EqualLengthTick, options)
+      .getSegment(s1)
+      .addTick(props.frame, Obj.EqualLengthTick, numTicks)
       .mode(props.frame, props.mode);
     props.ctx
-      .pushTick(s2Seg, Obj.EqualLengthTick, options)
+      .getSegment(s2)
+      .addTick(props.frame, Obj.EqualLengthTick, numTicks)
       .mode(props.frame, s2Mode || props.mode);
   };
   static text = (
@@ -38,16 +33,11 @@ export class EqualSegments {
   ) => {
     const s1s = props.ctx.getSegment(s1);
     const s2s = props.ctx.getSegment(s2);
-    const options = { frame: props.frame, num };
     return (
       <span>
-        {linked(s1, s1s, [
-          props.ctx.getTick(s1s, Obj.EqualLengthTick, options),
-        ])}
+        {linked(s1, s1s)}
         {tooltip(strs.congruent, definitions.CongruentLines)}
-        {linked(s2, s2s, [
-          props.ctx.getTick(s2s, Obj.EqualLengthTick, options),
-        ])}
+        {linked(s2, s2s)}
       </span>
     );
   };
