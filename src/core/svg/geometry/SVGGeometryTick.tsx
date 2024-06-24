@@ -23,11 +23,11 @@ const ARC_PADDING = 0.2;
 export type SVGTickProps = {
   parent: LSegment | LAngle;
   tick?: { type: TickType; num: number };
-  mode: SVGModes;
+  css: string;
   miniScale: boolean;
   geoId: string;
   hover?: boolean;
-} & BaseSVGProps;
+};
 
 // Tick should always match the style set by the parent if it is initialized.
 // ticks are not interactive and do not need state
@@ -196,11 +196,22 @@ export class SVGGeometryTick extends React.Component<SVGTickProps> {
         pathStr = this.rightAngle(this.props.parent as LAngle);
       }
     }
-    return (
-      <PathSVG
-        {...{ d: pathStr, geoId: this.props.geoId, mode: this.props.mode }}
+    console.log(
+      "rendering tick",
+      this.props.geoId,
+      this.props.miniScale,
+      this.props.tick,
+      pathStr
+    );
+    return pathStr !== "" ? (
+      <path
+        d={pathStr}
+        id={this.props.geoId}
         key={this.props.geoId}
+        className={this.props.css + " fill-none"}
       />
+    ) : (
+      <></>
     );
   }
 }

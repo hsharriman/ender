@@ -11,8 +11,6 @@ export interface BaseSVGState {
 
 export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
   readonly geoId: string;
-  readonly names: string[] = [];
-  readonly activeColor?: string;
   readonly mode: SVGModes;
   style: CSSProperties;
   constructor(props: BaseSVGProps) {
@@ -56,9 +54,6 @@ export class BaseSVG extends React.Component<BaseSVGProps, BaseSVGState> {
       this.setState({ isActive });
     }
   };
-
-  isMatch = (name: string) =>
-    this.names.find((n) => name === n) ? true : false;
 
   render() {
     return <></>;

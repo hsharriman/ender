@@ -1,11 +1,11 @@
 import React from "react";
 import { LSegment, Obj, SVGModes, TickType, Vector } from "../../types/types";
 import { vops } from "../../vectorOps";
-import { BaseSVG } from "../BaseSVG";
+import { BaseSVG, BaseSVGState } from "../BaseSVG";
 import { HoverTextLabel } from "../HoverTextLabel";
 import { ModeCSS } from "../SVGStyles";
 import { BaseSVGProps } from "../svgTypes";
-import { coordsToSvg } from "../svgUtils";
+import { coordsToSvg, updateStyle } from "../svgUtils";
 import { SVGGeometryTick } from "./SVGGeometryTick";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
@@ -15,22 +15,18 @@ export type SVGSegmentProps = {
   tick?: { type: TickType; num: number };
 } & BaseSVGProps;
 
-export class SVGGeometrySegment extends BaseSVG {
-  private s: LSegment;
-  private miniScale: boolean;
-  private tick?: { type: TickType; num: number };
+export class SVGGeometrySegment extends React.Component<
+  SVGSegmentProps,
+  BaseSVGState
+> {
   private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: SVGSegmentProps) {
     super(props);
     this.wrapperRef = React.createRef<HTMLDivElement>();
-    this.s = props.s;
-    this.miniScale = props.miniScale;
-    this.tick = props.tick;
     this.state = {
       isActive: false,
-      css: this.updateStyle(
-        this.state.isPinned ? SVGModes.Active : this.props.mode
-      ),
+      isPinned: false,
+      css: updateStyle(this.props.mode),
     };
   }
 
@@ -55,7 +51,7 @@ export class SVGGeometrySegment extends BaseSVG {
     this.setState({
       isActive,
       isPinned: isActive,
-      css: this.updateStyle(isActive ? SVGModes.Pinned : this.props.mode),
+      css: updateStyle(isActive ? SVGModes.Pinned : this.props.mode),
     });
     const prefix = `#${Obj.Segment}-text-`;
     const seg = this.props.geoId.replace("segment.", "");
@@ -82,14 +78,14 @@ export class SVGGeometrySegment extends BaseSVG {
     ) {
       this.setState({
         isActive,
-        css: this.updateStyle(isActive ? SVGModes.Active : this.props.mode),
+        css: updateStyle(isActive ? SVGModes.Active : this.props.mode),
       });
     }
   };
 
   render() {
-    const start = coordsToSvg(this.s.p1, this.miniScale);
-    const end = coordsToSvg(this.s.p2, this.miniScale);
+    const start = coordsToSvg(this.props.s.p1, this.props.miniScale);
+    const end = coordsToSvg(this.props.s.p2, this.props.miniScale);
     const midpt: Vector = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
     let padding = [0, 0];
     // match rotation of text to be parallel with line
@@ -113,15 +109,15 @@ export class SVGGeometrySegment extends BaseSVG {
           className={
             this.state.isActive || this.state.isPinned
               ? this.state.css
-              : this.updateStyle(this.props.mode)
+              : updateStyle(this.props.mode)
           }
         />
         <SVGGeometryTick
-          parent={this.s}
-          tick={this.tick}
-          mode={this.props.mode} // TODO must match css i think
-          miniScale={this.miniScale}
-          geoId={this.geoId + "-tick"} // TODO make this discoverable from linkedtext
+          parent={this.props.s}
+          tick={this.props.tick}
+          css={this.state.css}
+          miniScale={this.props.miniScale}
+          geoId={this.props.geoId + "-tick"} // TODO make this discoverable from linkedtext
         />
         {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel

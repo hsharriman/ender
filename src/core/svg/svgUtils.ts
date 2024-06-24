@@ -1,5 +1,6 @@
-import { Vector } from "../types/types";
+import { SVGModes, Vector } from "../types/types";
 import { vops } from "../vectorOps";
+import { ModeCSS } from "./SVGStyles";
 
 const TICK_SCALE = 20;
 const SVG_SCALE = 60;
@@ -46,4 +47,28 @@ export const arcSweepsCCW = (
   const en = vops.unit(vops.sub(end, center));
   const cross = vops.cross(st, en);
   return cross > 0 ? 0 : 1;
+};
+
+export const updateStyle = (mode: SVGModes) => {
+  switch (mode) {
+    case SVGModes.Active:
+      return ModeCSS.ACTIVE;
+    case SVGModes.Default:
+      return ModeCSS.DEFAULT;
+    case SVGModes.Focused:
+      return ModeCSS.FOCUSED;
+    case SVGModes.Unfocused:
+      return ModeCSS.UNFOCUSED;
+    case SVGModes.Purple:
+      return ModeCSS.PURPLE;
+    case SVGModes.Blue:
+      return ModeCSS.BLUE;
+    case SVGModes.Pinned:
+      return ModeCSS.PINNED;
+    case SVGModes.ActiveText:
+      return ModeCSS.ACTIVETEXT;
+    case SVGModes.Hidden:
+    default:
+      return ModeCSS.HIDDEN;
+  }
 };

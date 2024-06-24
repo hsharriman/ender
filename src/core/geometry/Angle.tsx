@@ -52,7 +52,6 @@ export class Angle extends BaseGeometryObject {
     };
     const ele = document.getElementById(this.id);
     const eleTick = document.getElementById(`${this.id}-tick`);
-    console.log(this.id, `${this.id}-tick`);
     setStyle(ele);
     setStyle(eleTick);
   };
