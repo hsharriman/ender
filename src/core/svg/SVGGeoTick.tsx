@@ -1,8 +1,8 @@
 import React from "react";
-import { LAngle, LSegment, Obj, TickType, Vector } from "../../types/types";
-import { vops } from "../../vectorOps";
-import { pops } from "../pathBuilderUtils";
-import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "../svgUtils";
+import { LAngle, LSegment, Obj, TickType, Vector } from "../types/types";
+import { vops } from "../vectorOps";
+import { pops } from "./pathBuilderUtils";
+import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "./svgUtils";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.3;
@@ -23,7 +23,7 @@ export type SVGTickProps = {
 // Tick should always match the style set by the parent if it is initialized.
 // ticks are not interactive and do not need state
 
-export class SVGGeometryTick extends React.Component<SVGTickProps> {
+export class SVGGeoTick extends React.Component<SVGTickProps> {
   parallelMark = (s: LSegment, num: number) => {
     // find midpoint on segment
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);

@@ -1,9 +1,8 @@
 import React from "react";
-import { LPoint, Obj, SVGModes, Vector } from "../../types/types";
-import { BaseSVGState } from "../BaseSVG";
-import { BaseSVGProps } from "../svgTypes";
-import { coordsToSvg, updateStyle } from "../svgUtils";
-import { ModeCSS } from "../SVGStyles";
+import { LPoint, Obj, SVGModes, Vector } from "../types/types";
+import { BaseSVGProps, BaseSVGState } from "./svgTypes";
+import { coordsToSvg, updateStyle } from "./svgUtils";
+import { ModeCSS } from "./SVGStyles";
 
 export type SVGPointProps = {
   p: LPoint;
@@ -13,10 +12,7 @@ export type SVGPointProps = {
   miniScale: boolean;
 } & BaseSVGProps;
 
-export class SVGGeometryPoint extends React.Component<
-  SVGPointProps,
-  BaseSVGState
-> {
+export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
   showLabel: boolean;
   constructor(props: SVGPointProps) {
     super(props);

@@ -1,10 +1,10 @@
 import React from "react";
 import { DiagramContent } from "../core/diagramContent";
-import { SVGGeometryAngle } from "../core/svg/geometry/SVGGeometryAngle";
-import { SVGGeometrySegment } from "../core/svg/geometry/SVGGeometrySegment";
 import { SVGModes } from "../core/types/types";
 import { GIVEN_ID } from "../theorems/utils";
-import { SVGGeometryPoint } from "../core/svg/geometry/SVGGeometryPoint";
+import { SVGGeoAngle } from "../core/svg/SVGGeoAngle";
+import { SVGGeoPoint } from "../core/svg/SVGGeoPoint";
+import { SVGGeoSegment } from "../core/svg/SVGGeoSegment";
 
 export interface DiagramProps {
   svgIdSuffix: string;
@@ -34,7 +34,7 @@ export class StaticDiagram extends React.Component<DiagramProps, {}> {
         >
           {this.props.ctx.points.flatMap((p, i) => {
             return (
-              <SVGGeometryPoint
+              <SVGGeoPoint
                 geoId={p.id}
                 mode={SVGModes.Default}
                 hoverable={false}
@@ -50,7 +50,7 @@ export class StaticDiagram extends React.Component<DiagramProps, {}> {
           })}
           {this.props.ctx.angles.flatMap((ang, i) => {
             return (
-              <SVGGeometryAngle
+              <SVGGeoAngle
                 mode={ang.getMode(GIVEN_ID) ?? SVGModes.Hidden}
                 geoId={ang.id}
                 hoverable={false}
@@ -65,7 +65,7 @@ export class StaticDiagram extends React.Component<DiagramProps, {}> {
           })}
           {this.props.ctx.segments.flatMap((seg, i) => {
             return (
-              <SVGGeometrySegment
+              <SVGGeoSegment
                 geoId={seg.id}
                 mode={seg.getMode(GIVEN_ID) ?? SVGModes.Hidden}
                 hoverable={false}

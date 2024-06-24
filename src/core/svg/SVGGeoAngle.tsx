@@ -1,14 +1,13 @@
 import React from "react";
-import { LAngle, Obj, SVGModes, TickType } from "../../types/types";
-import { vops } from "../../vectorOps";
-import { BaseSVGState } from "../BaseSVG";
-import { HoverTextLabel } from "../HoverTextLabel";
-import { ModeCSS } from "../SVGStyles";
-import { pops } from "../pathBuilderUtils";
-import { BaseSVGProps } from "../svgTypes";
-import { arcSweepsCCW, coordsToSvg, updateStyle } from "../svgUtils";
-import { SVGGeometryTick } from "./SVGGeometryTick";
-import { strs } from "../../geometryText";
+import { LAngle, Obj, SVGModes, TickType } from "../types/types";
+import { vops } from "../vectorOps";
+import { HoverTextLabel } from "./HoverTextLabel";
+import { ModeCSS } from "./SVGStyles";
+import { pops } from "./pathBuilderUtils";
+import { BaseSVGProps, BaseSVGState } from "./svgTypes";
+import { arcSweepsCCW, coordsToSvg, updateStyle } from "./svgUtils";
+import { SVGGeoTick } from "./SVGGeoTick";
+import { strs } from "../geometryText";
 
 export type SVGAngleProps = {
   a: LAngle;
@@ -16,10 +15,7 @@ export type SVGAngleProps = {
   miniScale: boolean;
 } & BaseSVGProps;
 
-export class SVGGeometryAngle extends React.Component<
-  SVGAngleProps,
-  BaseSVGState
-> {
+export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
   constructor(props: SVGAngleProps) {
     super(props);
     this.state = {
@@ -100,7 +96,7 @@ export class SVGGeometryAngle extends React.Component<
     }
     return (
       <>
-        <SVGGeometryTick
+        <SVGGeoTick
           parent={this.props.a}
           tick={this.props.tick}
           css={

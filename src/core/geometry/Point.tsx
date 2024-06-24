@@ -1,6 +1,5 @@
 import { ModeCSS } from "../svg/SVGStyles";
-import { SVGText } from "../svg/SVGText";
-import { LPoint, Obj, SVGModes, Vector } from "../types/types";
+import { LPoint, Obj, Vector } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 
 export type PointProps = {

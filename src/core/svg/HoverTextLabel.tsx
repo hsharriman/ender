@@ -12,9 +12,7 @@ export interface HoverTextLabelProps {
 export class HoverTextLabel extends React.Component<HoverTextLabelProps, {}> {
   private defaultCSS =
     "ease-out duration-300 fill-violet-500 text-violet-500 select-none";
-  constructor(props: HoverTextLabelProps) {
-    super(props);
-  }
+
   getClassName = () => {
     if (this.props.isHovered || this.props.isPinned) {
       return (

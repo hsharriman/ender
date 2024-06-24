@@ -1,9 +1,9 @@
 import React from "react";
 import { DiagramContent } from "../core/diagramContent";
-import { SVGGeometryAngle } from "../core/svg/geometry/SVGGeometryAngle";
-import { SVGGeometryPoint } from "../core/svg/geometry/SVGGeometryPoint";
-import { SVGGeometrySegment } from "../core/svg/geometry/SVGGeometrySegment";
 import { SVGModes } from "../core/types/types";
+import { SVGGeoAngle } from "../core/svg/SVGGeoAngle";
+import { SVGGeoPoint } from "../core/svg/SVGGeoPoint";
+import { SVGGeoSegment } from "../core/svg/SVGGeoSegment";
 
 export interface DiagramProps {
   svgIdSuffix: string;
@@ -32,7 +32,7 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
   renderPoints = () => {
     return this.props.ctx.points.flatMap((p, i) => {
       return !this.props.miniScale ? (
-        <SVGGeometryPoint
+        <SVGGeoPoint
           geoId={p.id}
           mode={this.props.miniScale ? SVGModes.Hidden : SVGModes.Default}
           hoverable={!this.props.miniScale}
@@ -56,7 +56,7 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
         console.log(seg.id, frame, seg.ticks, seg.getTick(frame));
       }
       return (
-        <SVGGeometrySegment
+        <SVGGeoSegment
           geoId={seg.id}
           mode={seg.getMode(frame) ?? SVGModes.Hidden}
           hoverable={!this.props.miniScale}
@@ -77,7 +77,7 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
         console.log(ang.id, frame, ang.ticks, ang.getTick(frame));
       }
       return (
-        <SVGGeometryAngle
+        <SVGGeoAngle
           mode={ang.getMode(frame) ?? SVGModes.Hidden}
           geoId={ang.id}
           hoverable={!this.props.miniScale}

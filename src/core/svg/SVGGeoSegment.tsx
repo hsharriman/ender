@@ -1,12 +1,11 @@
 import React from "react";
-import { LSegment, Obj, SVGModes, TickType, Vector } from "../../types/types";
-import { vops } from "../../vectorOps";
-import { BaseSVGState } from "../BaseSVG";
-import { HoverTextLabel } from "../HoverTextLabel";
-import { ModeCSS } from "../SVGStyles";
-import { BaseSVGProps } from "../svgTypes";
-import { coordsToSvg, updateStyle } from "../svgUtils";
-import { SVGGeometryTick } from "./SVGGeometryTick";
+import { LSegment, Obj, SVGModes, TickType, Vector } from "../types/types";
+import { vops } from "../vectorOps";
+import { HoverTextLabel } from "./HoverTextLabel";
+import { ModeCSS } from "./SVGStyles";
+import { BaseSVGProps, BaseSVGState } from "./svgTypes";
+import { coordsToSvg, updateStyle } from "./svgUtils";
+import { SVGGeoTick } from "./SVGGeoTick";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
 export type SVGSegmentProps = {
@@ -15,7 +14,7 @@ export type SVGSegmentProps = {
   tick?: { type: TickType; num: number };
 } & BaseSVGProps;
 
-export class SVGGeometrySegment extends React.Component<
+export class SVGGeoSegment extends React.Component<
   SVGSegmentProps,
   BaseSVGState
 > {
@@ -93,7 +92,7 @@ export class SVGGeometrySegment extends React.Component<
               : updateStyle(this.props.mode)
           }
         />
-        <SVGGeometryTick
+        <SVGGeoTick
           parent={this.props.s}
           tick={this.props.tick}
           css={
