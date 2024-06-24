@@ -17,7 +17,7 @@ import { incompleteProof2 } from "../../questions/incompleteQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
       [0, 4.5], //Q
@@ -45,17 +45,17 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     )
   );
 
-  ctx.push(new Triangle({ pts: [Q, P, R], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [R, M, N], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [Q, P, R], hoverable, label: "QPR" }, ctx));
+  ctx.push(new Triangle({ pts: [R, M, N], hoverable, label: "RMN" }, ctx));
 
   // for given step:
-  ctx.push(new Angle({ start: Q, center: P, end: R }));
-  ctx.push(new Angle({ start: R, center: M, end: N }));
+  ctx.push(new Angle({ start: Q, center: P, end: R, hoverable }));
+  ctx.push(new Angle({ start: R, center: M, end: N, hoverable }));
   return ctx;
 };
 
@@ -196,7 +196,7 @@ const step3: StepMeta = makeStepMeta({
 // });
 
 const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
   return ctx;
 };
 

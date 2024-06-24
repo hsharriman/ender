@@ -20,7 +20,7 @@ import { completeProof1 } from "../../questions/completeQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 
-const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
       [1, 4],
@@ -48,18 +48,18 @@ const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     )
   );
 
   [
-    new Triangle({ pts: [A, C, M], parentFrame }, ctx),
-    new Triangle({ pts: [B, D, M], parentFrame }, ctx),
+    new Triangle({ pts: [A, C, M], hoverable, label: "ACM" }, ctx),
+    new Triangle({ pts: [B, D, M], hoverable, label: "BDM" }, ctx),
   ].map((t) => ctx.push(t));
 
-  ctx.push(new Segment({ p1: A, p2: B, parentFrame }));
-  ctx.push(new Segment({ p1: C, p2: D, parentFrame }));
+  ctx.push(new Segment({ p1: A, p2: B, hoverable: false }));
+  ctx.push(new Segment({ p1: C, p2: D, hoverable: false }));
   return ctx;
 };
 
@@ -145,35 +145,6 @@ const step1: StepMeta = makeStepMeta({
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  additions: (props: StepFocusProps) => {
-    EqualSegments.additions(props, ["AM", "BM"]);
-    EqualSegments.additions(props, ["CM", "DM"], 2);
-  },
-  text: (props: StepTextProps) => {
-    return (
-      <span>
-        {EqualSegments.text(props, ["AM", "BM"])}
-        {comma}
-        {EqualSegments.text(props, ["CM", "DM"], 2)}
-      </span>
-    );
-  },
-  staticText: () => {
-    return (
-      <span>
-        {EqualSegments.staticText(["AM", "BM"])}
-        {comma}
-        {EqualSegments.staticText(["CM", "DM"])}
-      </span>
-    );
-  },
-});
-
-const step2: StepMeta = makeStepMeta({
-  reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
   text: (props: StepTextProps) => {
     const AM = props.ctx.getSegment("AM");
     const BM = props.ctx.getSegment("BM");
@@ -208,12 +179,41 @@ const step2: StepMeta = makeStepMeta({
   },
 });
 
-const step3: StepMeta = makeStepMeta({
-  reason: Reasons.VerticalAngles,
-  dependsOn: [2],
+const step2: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
+    EqualSegments.additions(props, ["AM", "BM"]);
+    EqualSegments.additions(props, ["CM", "DM"], 2);
+  },
+  text: (props: StepTextProps) => {
+    return (
+      <span>
+        {EqualSegments.text(props, ["AM", "BM"])}
+        {comma}
+        {EqualSegments.text(props, ["CM", "DM"], 2)}
+      </span>
+    );
+  },
+  staticText: () => {
+    return (
+      <span>
+        {EqualSegments.staticText(["AM", "BM"])}
+        {comma}
+        {EqualSegments.staticText(["CM", "DM"])}
+      </span>
+    );
+  },
+});
+
+const step3: StepMeta = makeStepMeta({
+  reason: Reasons.VerticalAngles,
+  dependsOn: [1],
+  unfocused: (props: StepUnfocusProps) => {
+    step2.unfocused(props);
+    step2.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CMA", "DMB"]),
@@ -261,7 +261,7 @@ const step6: StepMeta = makeStepMeta({
 });
 
 const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
 
   const defaultStepProps: StepFocusProps = {
     ctx,
@@ -280,8 +280,8 @@ const miniContent = () => {
   // .mode(step2, SVGModes.Purple);
   let DMB = ctx.getAngle("DMB");
   // .mode(step2, SVGModes.Blue);
-  ctx.pushTick(CMA, Obj.EqualAngleTick).mode(step3, SVGModes.Purple);
-  ctx.pushTick(DMB, Obj.EqualAngleTick).mode(step3, SVGModes.Blue);
+  CMA.addTick(step3, Obj.EqualAngleTick).mode(step3, SVGModes.Purple);
+  DMB.addTick(step3, Obj.EqualAngleTick).mode(step3, SVGModes.Blue);
 
   // STEP 3 - SAS TRIANGLE CONGRUENCE
   const step4 = ctx.addFrame("s4");

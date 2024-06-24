@@ -14,18 +14,13 @@ export class VerticalAngles {
     sMode?: SVGModes,
     numTicks = 1
   ) => {
-    const options = props.inPlace
-      ? { num: numTicks }
-      : { frame: props.frame, num: numTicks };
-    const a1 = props.ctx.getAngle(labels.angs[0]).mode(props.frame, props.mode);
-    const a2 = props.ctx
-      .getAngle(labels.angs[1])
-      .mode(props.frame, a2Mode || props.mode);
     props.ctx
-      .pushTick(a1, Obj.EqualAngleTick, options)
+      .getAngle(labels.angs[0])
+      .addTick(props.frame, Obj.EqualAngleTick, numTicks)
       .mode(props.frame, props.mode);
     props.ctx
-      .pushTick(a2, Obj.EqualAngleTick, options)
+      .getAngle(labels.angs[1])
+      .addTick(props.frame, Obj.EqualAngleTick, numTicks)
       .mode(props.frame, a2Mode || props.mode);
 
     // lines that intersect

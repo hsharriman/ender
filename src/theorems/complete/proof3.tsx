@@ -23,7 +23,7 @@ import { completeProof3 } from "../../questions/completeQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
       [1, 0],
@@ -51,19 +51,19 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     )
   );
   // ctx.push(new Quadrilateral({ pts: [E, F, G, H], parentFrame }, ctx));
 
-  ctx.push(new Triangle({ pts: [E, F, J], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [J, G, H], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [F, G, J], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [E, F, J], hoverable, label: "FEJ" }, ctx));
+  ctx.push(new Triangle({ pts: [J, G, H], hoverable, label: "JHG" }, ctx));
+  ctx.push(new Triangle({ pts: [F, G, J], hoverable, label: "FGJ" }, ctx));
 
   // for mini figures
-  ctx.push(new Angle({ start: E, center: F, end: G }));
-  ctx.push(new Angle({ start: F, center: G, end: H }));
+  ctx.push(new Angle({ start: E, center: F, end: G, hoverable }));
+  ctx.push(new Angle({ start: F, center: G, end: H, hoverable }));
   return ctx;
 };
 
@@ -77,13 +77,11 @@ const givens: StepMeta = makeStepMeta({
 
     return (
       <span>
-        {linked("EFGH", new BaseGeometryObject(Obj.Quadrilateral, {}), [
-          EF,
-          FG,
-          GH,
-          EJ,
-          HJ,
-        ])}
+        {linked(
+          "EFGH",
+          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
+          [EF, FG, GH, EJ, HJ]
+        )}
         {" is a rectangle"}
         {comma}
         {Midpoint.text(props, "EH", ["EJ", "HJ"], "J")}
@@ -100,13 +98,11 @@ const givens: StepMeta = makeStepMeta({
 
     return (
       <span>
-        {linked("EFGH", new BaseGeometryObject(Obj.Quadrilateral, {}), [
-          EF,
-          FG,
-          GH,
-          EJ,
-          HJ,
-        ])}
+        {linked(
+          "EFGH",
+          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }), // TODO? hoverable?
+          [EF, FG, GH, EJ, HJ]
+        )}
         {" is a rectangle"}
         {comma}
         {Midpoint.ticklessText(ctx, "EH", ["EJ", "HJ"], "J")}
@@ -183,13 +179,17 @@ const step1: StepMeta = makeStepMeta({
   text: (props: StepTextProps) => {
     return (
       <span>
-        {linked("EFGH", new BaseGeometryObject(Obj.Quadrilateral, {}), [
-          props.ctx.getSegment("EF"),
-          props.ctx.getSegment("FG"),
-          props.ctx.getSegment("GH"),
-          props.ctx.getSegment("EJ"),
-          props.ctx.getSegment("JH"),
-        ])}
+        {linked(
+          "EFGH",
+          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }), // TODO? hoverable?
+          [
+            props.ctx.getSegment("EF"),
+            props.ctx.getSegment("FG"),
+            props.ctx.getSegment("GH"),
+            props.ctx.getSegment("EJ"),
+            props.ctx.getSegment("JH"),
+          ]
+        )}
         {" is a rectangle"}
       </span>
     );
@@ -283,15 +283,9 @@ const step7: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
   text: (props: StepTextProps) => {
-    const FJ = props.ctx.getSegment("FJ");
-    const GJ = props.ctx.getSegment("GJ");
-    const options = { frame: props.frame, num: 3 };
     return (
       <span>
-        {linked("FGJ", props.ctx.getTriangle("FGJ"), [
-          props.ctx.getTick(FJ, Obj.EqualLengthTick, options),
-          props.ctx.getTick(GJ, Obj.EqualLengthTick, options),
-        ])}
+        {linked("FGJ", props.ctx.getTriangle("FGJ"))}
         {" is isosceles "}
       </span>
     );
@@ -300,7 +294,7 @@ const step7: StepMeta = makeStepMeta({
 });
 
 export const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
 
   const defaultStepProps: StepFocusProps = {
     ctx,
@@ -327,7 +321,11 @@ export const miniContent = () => {
 
   const step4 = ctx.addFrame("s4");
   const EH = ctx.push(
-    new Segment({ p1: ctx.getPoint("E"), p2: ctx.getPoint("H") })
+    new Segment({
+      p1: ctx.getPoint("E"),
+      p2: ctx.getPoint("H"),
+      hoverable: false,
+    })
   );
   EqualSegments.additions(
     { ...defaultStepProps, frame: step4 },

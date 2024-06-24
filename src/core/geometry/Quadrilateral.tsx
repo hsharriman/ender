@@ -29,10 +29,38 @@ export class Quadrilateral extends BaseGeometryObject {
     ctx: Content,
     parentFrame?: string
   ): [Segment, Segment, Segment, Segment] => {
-    const sa = ctx.push(new Segment({ p1: pts[0], p2: pts[1], parentFrame }));
-    const sb = ctx.push(new Segment({ p1: pts[1], p2: pts[2], parentFrame }));
-    const sc = ctx.push(new Segment({ p1: pts[2], p2: pts[3], parentFrame }));
-    const sd = ctx.push(new Segment({ p1: pts[3], p2: pts[0], parentFrame }));
+    const sa = ctx.push(
+      new Segment({
+        p1: pts[0],
+        p2: pts[1],
+        parentFrame,
+        hoverable: this.hoverable,
+      })
+    );
+    const sb = ctx.push(
+      new Segment({
+        p1: pts[1],
+        p2: pts[2],
+        parentFrame,
+        hoverable: this.hoverable,
+      })
+    );
+    const sc = ctx.push(
+      new Segment({
+        p1: pts[2],
+        p2: pts[3],
+        parentFrame,
+        hoverable: this.hoverable,
+      })
+    );
+    const sd = ctx.push(
+      new Segment({
+        p1: pts[3],
+        p2: pts[0],
+        parentFrame,
+        hoverable: this.hoverable,
+      })
+    );
     return [sa, sb, sc, sd];
   };
 
@@ -47,6 +75,7 @@ export class Quadrilateral extends BaseGeometryObject {
         center: pts[1],
         end: pts[2],
         parentFrame,
+        hoverable: this.hoverable,
       })
     );
     const ab = ctx.push(
@@ -55,6 +84,7 @@ export class Quadrilateral extends BaseGeometryObject {
         center: pts[2],
         end: pts[3],
         parentFrame,
+        hoverable: this.hoverable,
       })
     );
     const ac = ctx.push(
@@ -63,6 +93,7 @@ export class Quadrilateral extends BaseGeometryObject {
         center: pts[0],
         end: pts[1],
         parentFrame,
+        hoverable: this.hoverable,
       })
     );
     const ad = ctx.push(
@@ -71,20 +102,10 @@ export class Quadrilateral extends BaseGeometryObject {
         center: pts[3],
         end: pts[0],
         parentFrame,
+        hoverable: this.hoverable,
       })
     );
     return [aa, ab, ac, ad];
-  };
-
-  svg = (
-    frameIdx: string,
-    pageNum: number,
-    miniScale = false,
-    style?: React.CSSProperties
-  ) => {
-    return this.s
-      .flatMap((seg) => seg.svg(frameIdx, pageNum, miniScale, style))
-      .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
   };
 
   onClickText = (isActive: boolean) => {

@@ -19,7 +19,7 @@ import { incompleteProof1 } from "../../questions/incompleteQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
       [2, 4], //A
@@ -45,13 +45,13 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     )
   );
 
-  ctx.push(new Triangle({ pts: [A, B, C], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [A, C, D], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [A, B, C], hoverable, label: "ABC" }, ctx));
+  ctx.push(new Triangle({ pts: [A, C, D], hoverable, label: "ACD" }, ctx));
 
   return ctx;
 };
@@ -137,7 +137,7 @@ const step4: StepMeta = makeStepMeta({
 // });
 
 const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
 
   // STEP 3 - REFLEXIVE PROPERTY
   const s3 = ctx.addFrame("s3");

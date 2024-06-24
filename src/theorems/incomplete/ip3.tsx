@@ -26,7 +26,7 @@ import { incompleteProof3 } from "../../questions/incompleteQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
       [1.5, 1], //A
@@ -56,20 +56,20 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     )
   );
 
-  ctx.push(new Triangle({ pts: [A, B, E], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [B, E, C], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [D, E, C], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [G, E, C], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [A, B, E], hoverable, label: "AEB" }, ctx));
+  ctx.push(new Triangle({ pts: [B, E, C], hoverable, label: "CEB" }, ctx));
+  ctx.push(new Triangle({ pts: [D, E, C], hoverable, label: "DEC" }, ctx));
+  ctx.push(new Triangle({ pts: [G, E, C], hoverable, label: "GEC" }, ctx));
 
   // for given step:
-  ctx.push(new Segment({ p1: B, p2: G }));
-  ctx.push(new Angle({ start: A, center: B, end: G }));
-  ctx.push(new Angle({ start: C, center: B, end: G }));
+  ctx.push(new Segment({ p1: B, p2: G, hoverable: false }));
+  ctx.push(new Angle({ start: A, center: B, end: G, hoverable }));
+  ctx.push(new Angle({ start: C, center: B, end: G, hoverable }));
   return ctx;
 };
 
@@ -218,7 +218,7 @@ const step8: StepMeta = makeStepMeta({
 });
 
 const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
 
   const s4 = ctx.addFrame("s4");
   Reflexive.additions(
@@ -227,7 +227,13 @@ const miniContent = () => {
     1
   );
   const s5 = ctx.addFrame("s5");
-  ctx.push(new Segment({ p1: ctx.getPoint("C"), p2: ctx.getPoint("A") }));
+  ctx.push(
+    new Segment({
+      p1: ctx.getPoint("C"),
+      p2: ctx.getPoint("A"),
+      hoverable: false,
+    })
+  );
   Reflexive.additions(
     { ctx, frame: s5, mode: SVGModes.Purple, inPlace: true },
     "AC",

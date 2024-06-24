@@ -24,7 +24,7 @@ import { completeProof2 } from "../../questions/completeQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
+export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
       [1, 0],
@@ -50,16 +50,16 @@ export const baseContent = (labeledPoints: boolean, parentFrame?: string) => {
         label: labels[i],
         showLabel: labeledPoints,
         offset: offsets[i],
-        parentFrame: parentFrame,
+        hoverable,
       })
     )
   );
 
-  ctx.push(new Triangle({ pts: [A, B, D], parentFrame }, ctx));
-  ctx.push(new Triangle({ pts: [C, B, D], parentFrame }, ctx));
+  ctx.push(new Triangle({ pts: [A, B, D], hoverable, label: "ABD" }, ctx));
+  ctx.push(new Triangle({ pts: [C, B, D], hoverable, label: "CBD" }, ctx));
 
   // for given step:
-  ctx.push(new Angle({ start: A, center: B, end: C }));
+  ctx.push(new Angle({ start: A, center: B, end: C, hoverable }));
   return ctx;
 };
 
@@ -146,9 +146,10 @@ const step1: StepMeta = makeStepMeta({
         {comma}
         {linked("BD", BD)}
         {" bisects "}
-        {BaseAngle.text(props, "ABC", [
-          props.ctx.getTick(ABD, Obj.EqualAngleTick, { frame: props.frame }),
-          props.ctx.getTick(DBC, Obj.EqualAngleTick, { frame: props.frame }),
+        {linked("ABC", ABD, [
+          DBC,
+          props.ctx.getSegment("AB"),
+          props.ctx.getSegment("BC"),
         ])}
       </span>
     );
@@ -239,7 +240,7 @@ const step7: StepMeta = makeStepMeta({
 });
 
 export const miniContent = () => {
-  let ctx = baseContent(false);
+  let ctx = baseContent(false, false);
 
   const defaultStepProps: StepFocusProps = {
     ctx,
@@ -358,10 +359,8 @@ export const miniContent = () => {
   const step7 = ctx.addFrame("s7");
   AD.mode(step7, SVGModes.Purple);
   CD.mode(step7, SVGModes.Blue);
-  ctx
-    .pushTick(AD, Obj.EqualLengthTick, { num: 2 })
-    .mode(step7, SVGModes.Purple);
-  ctx.pushTick(CD, Obj.EqualLengthTick, { num: 2 }).mode(step7, SVGModes.Blue);
+  AD.addTick(step7, Obj.EqualLengthTick, 2).mode(step7, SVGModes.Purple);
+  CD.addTick(step7, Obj.EqualLengthTick, 2).mode(step7, SVGModes.Blue);
 
   return ctx;
 };

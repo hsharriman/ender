@@ -17,17 +17,9 @@ export class EqualRightAngles {
   static text = (props: StepTextProps, [a1, a2]: [string, string]) => {
     return (
       <span>
-        {BaseAngle.text(props, a1, [
-          props.ctx.getTick(props.ctx.getAngle(a1), Obj.RightTick, {
-            frame: props.frame,
-          }),
-        ])}
+        {BaseAngle.text(props, a1)}
         {this.equalNinety}
-        {BaseAngle.text(props, a2, [
-          props.ctx.getTick(props.ctx.getAngle(a2), Obj.RightTick, {
-            frame: props.frame,
-          }),
-        ])}
+        {BaseAngle.text(props, a2)}
       </span>
     );
   };

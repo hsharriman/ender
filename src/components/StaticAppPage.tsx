@@ -1,16 +1,20 @@
 import React from "react";
-import { Content } from "../core/diagramContent";
+import { DiagramContent } from "../core/diagramContent";
 import { StaticProofTextItem } from "../core/types/stepTypes";
-import { Reason, StaticLayoutProps } from "../core/types/types";
-import { Reasons } from "../theorems/reasons";
+import { Reason } from "../core/types/types";
+import { Question } from "../questions/completeQuestions";
 import { GIVEN_ID } from "../theorems/utils";
 import { StaticDiagram } from "./StaticDiagram";
 import { TestQuestions } from "./TestQuestions";
 
-export interface StaticAppPageProps extends StaticLayoutProps {
+export interface StaticAppPageProps {
   pageNum: number;
-  reset: boolean;
-  onClickCallback: () => void;
+  ctx: DiagramContent;
+  reasons: Reason[];
+  texts: StaticProofTextItem[];
+  givenText: JSX.Element;
+  provesText: JSX.Element;
+  questions: Question[];
 }
 
 interface StaticAppPageState {
@@ -21,42 +25,14 @@ export class StaticAppPage extends React.Component<
   StaticAppPageProps,
   StaticAppPageState
 > {
-  reasons: Reason[] = [];
-  texts: StaticProofTextItem[] = [];
-  ctx: Content;
   constructor(props: StaticAppPageProps) {
     super(props);
     // build diagram from given construction
-    this.ctx = this.props.baseContent(true);
     this.state = {
       page: this.props.pageNum,
     };
+    // this.buildCtxAndText();
   }
-
-  buildCtxAndText = () => {
-    if (this.props.reset) {
-      // reset stored variables
-      this.ctx = this.props.baseContent(true);
-      this.reasons = [];
-      this.texts = [];
-
-      this.ctx.addFrame(GIVEN_ID);
-      this.props.givens.diagram(this.ctx, GIVEN_ID, false);
-      this.props.steps.map((step) => {
-        this.texts.push({
-          stmt: step.staticText(),
-          reason: step.reason.title,
-        });
-        if (
-          step.reason.body !== "" &&
-          step.reason.title !== Reasons.Given.title
-        ) {
-          this.reasons.push(step.reason);
-        }
-      });
-      this.props.onClickCallback();
-    }
-  };
 
   renderRow = (item: StaticProofTextItem, i: number) => {
     const textColor = "text-slate-800";
@@ -95,7 +71,7 @@ export class StaticAppPage extends React.Component<
   };
 
   render() {
-    this.buildCtxAndText();
+    // this.buildCtxAndText();
     return (
       <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-12">
         <div className="w-[900px] h-full flex flex-col ml-12">
@@ -103,16 +79,16 @@ export class StaticAppPage extends React.Component<
             <div className="flex flex-col mx-4 text-lg">
               <div className="pb-2">
                 <div className="font-bold">Given:</div>
-                <div>{this.props.givens.staticText()}</div>
+                <div>{this.props.givenText}</div>
               </div>
               <div>
                 <div className="font-bold">Prove:</div>
-                <div>{this.props.proves.staticText()}</div>
+                <div>{this.props.provesText}</div>
               </div>
             </div>
             <StaticDiagram
               svgIdSuffix={`static-${GIVEN_ID}`}
-              svgElements={this.ctx.allStaticSvgElements(this.props.pageNum)}
+              ctx={this.props.ctx}
               width="400px"
               height="275px"
             />
@@ -124,14 +100,14 @@ export class StaticAppPage extends React.Component<
             </div>
             <div>Reason</div>
           </div>
-          {this.texts.map((item, i) => this.renderRow(item, i))}
+          {this.props.texts.map((item, i) => this.renderRow(item, i))}
         </div>
         <div className="min-w-[400px] max-w-[500px]">
           <div className="flex flex-col justify-start">
             <div className="font-bold text-base text-slate-500 pb-2">
               Reasons Applied:
             </div>
-            {this.reasons.map((reason) => this.renderReason(reason))}
+            {this.props.reasons.map((reason) => this.renderReason(reason))}
           </div>
         </div>
         <div className="w-[400px] h-fit ml-10 p-8 rounded-lg border-dotted border-4 border-violet-300">

@@ -7,21 +7,25 @@ import { Segment } from "./Segment";
 
 export type TriangleProps = {
   pts: [Point, Point, Point];
+  label: string;
   // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
 export class Triangle extends BaseGeometryObject {
   readonly s: [Segment, Segment, Segment];
   readonly a: [Angle, Angle, Angle];
   readonly p: [Point, Point, Point];
+  readonly id: string;
 
   constructor(props: TriangleProps, ctx: Content) {
     super(Obj.Triangle, props);
     this.p = props.pts;
 
-    this.s = this.buildSegments(props.pts, ctx, props.parentFrame);
+    this.s = this.buildSegments(props.pts, ctx);
     this.p = props.pts;
-    this.a = this.buildAngles(props.pts, ctx, props.parentFrame);
+    this.a = this.buildAngles(props.pts, ctx);
     this.names = this.permutator(props.pts.map((pt) => pt.label));
+    this.label = props.label;
+    this.id = this.getId(Obj.Triangle, this.label);
   }
 
   private buildSegments = (
@@ -29,9 +33,30 @@ export class Triangle extends BaseGeometryObject {
     ctx: Content,
     parentFrame?: string
   ): [Segment, Segment, Segment] => {
-    const sa = ctx.push(new Segment({ p1: pts[0], p2: pts[1], parentFrame }));
-    const sb = ctx.push(new Segment({ p1: pts[0], p2: pts[2], parentFrame }));
-    const sc = ctx.push(new Segment({ p1: pts[1], p2: pts[2], parentFrame }));
+    const sa = ctx.push(
+      new Segment({
+        p1: pts[0],
+        p2: pts[1],
+        parentFrame,
+        hoverable: this.hoverable,
+      })
+    );
+    const sb = ctx.push(
+      new Segment({
+        p1: pts[0],
+        p2: pts[2],
+        parentFrame,
+        hoverable: this.hoverable,
+      })
+    );
+    const sc = ctx.push(
+      new Segment({
+        p1: pts[1],
+        p2: pts[2],
+        parentFrame,
+        hoverable: this.hoverable,
+      })
+    );
     return [sa, sb, sc];
   };
 
@@ -46,6 +71,7 @@ export class Triangle extends BaseGeometryObject {
         center: pts[1],
         end: pts[2],
         parentFrame,
+        hoverable: this.hoverable,
       })
     );
     const ab = ctx.push(
@@ -54,6 +80,7 @@ export class Triangle extends BaseGeometryObject {
         center: pts[0],
         end: pts[2],
         parentFrame,
+        hoverable: this.hoverable,
       })
     );
     const ac = ctx.push(
@@ -62,20 +89,10 @@ export class Triangle extends BaseGeometryObject {
         center: pts[2],
         end: pts[1],
         parentFrame,
+        hoverable: this.hoverable,
       })
     );
     return [aa, ab, ac];
-  };
-
-  svg = (
-    frameIdx: string,
-    pageNum: number,
-    miniScale = false,
-    style?: React.CSSProperties
-  ) => {
-    return this.s
-      .flatMap((seg) => seg.svg(frameIdx, pageNum, miniScale, style))
-      .concat(this.a.flatMap((ang) => ang.svg(frameIdx, miniScale, style)));
   };
 
   onClickText = (isActive: boolean) => {

@@ -13,17 +13,14 @@ import { EqualSegments } from "./EqualSegments";
 
 export class Reflexive {
   static additions = (props: StepFocusProps, s: string, num = 1) => {
-    const options = props.inPlace ? { num } : { frame: props.frame, num };
-    const seg = props.ctx.getSegment(s).mode(props.frame, props.mode);
     props.ctx
-      .pushTick(seg, Obj.EqualLengthTick, options)
+      .getSegment(s)
+      .addTick(props.frame, Obj.EqualLengthTick, num)
       .mode(props.frame, props.mode);
   };
   static text = (props: StepTextProps, s: string, num = 1) => {
     const seg = props.ctx.getSegment(s);
-    const MKLinked = linked(s, seg, [
-      props.ctx.getTick(seg, Obj.EqualLengthTick, { frame: props.frame, num }),
-    ]);
+    const MKLinked = linked(s, seg);
     return (
       <span>
         {MKLinked}

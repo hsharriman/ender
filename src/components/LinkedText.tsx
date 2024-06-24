@@ -1,16 +1,13 @@
 import React from "react";
-import { Obj } from "../core/types/types";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
-import { triangleStr } from "../core/geometryText";
-import { angleStr } from "../core/geometryText";
+import { angleStr, triangleStr } from "../core/geometryText";
+import { Obj } from "../core/types/types";
 
 export interface LinkedTextProps {
   val: string;
-  activeColor?: string;
   obj: BaseGeometryObject; // TODO correct type
   isActive?: boolean;
   linkedObjs?: BaseGeometryObject[];
-  // clickCallback?: (isActive: boolean) => void;
 }
 
 export interface LinkedTextState {
@@ -20,14 +17,13 @@ export class LinkedText extends React.Component<
   LinkedTextProps,
   LinkedTextState
 > {
-  private activeColor = "#9A76FF"; // TODO
+  // private activeColor = "#9A76FF"; // TODO
   private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: LinkedTextProps) {
     super(props);
     this.state = {
       isClicked: Boolean(this.props.isActive),
     };
-    this.activeColor = this.props.activeColor || this.activeColor;
     this.wrapperRef = React.createRef<HTMLDivElement>();
   }
 
@@ -61,9 +57,11 @@ export class LinkedText extends React.Component<
       this.setState({
         isClicked,
       });
+      if (!this.props.obj) console.error("can't find ", this.props.val);
       this.props.obj.onClickText(isClicked);
       if (this.props.linkedObjs) {
         this.props.linkedObjs.forEach((obj) => {
+          if (!obj) console.error("can't find ", this.props.val);
           obj.onClickText(isClicked);
         });
       }
@@ -91,9 +89,9 @@ export class LinkedText extends React.Component<
     return (
       <span
         className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150`}
-        // style={this.getStyle()}
-        onMouseEnter={() => this.onClick(true)}
-        onMouseLeave={() => this.onClick(false)}
+        onPointerEnter={() => this.onClick(true)}
+        onPointerLeave={() => this.onClick(false)}
+        id={`${this.props.obj.tag}-text-${this.props.val}`}
         ref={this.wrapperRef}
       >
         {this.renderText()}

@@ -40,15 +40,19 @@ export enum SVGModes {
   Hidden = "hidden",
   Focused = "focused",
   Active = "active",
+  DiagramHover = "diagramhover",
   Unfocused = "unfocused",
   Default = "default",
   Purple = "purple",
   Blue = "blue",
+  Undefined = "",
+  Pinned = "pinned",
+  ActiveText = "activetext",
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------
 export interface StaticLayoutProps {
-  baseContent: (showPoints: boolean, frame?: string) => Content;
+  baseContent: (showPoints: boolean, hoverable: boolean) => Content;
   steps: StepMeta[];
   givens: StepMeta;
   proves: StepMeta;
