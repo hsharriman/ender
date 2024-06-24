@@ -1,9 +1,10 @@
 import React from "react";
 import { DiagramContent } from "../core/diagramContent";
-import { SVGModes } from "../core/types/types";
 import { SVGGeoAngle } from "../core/svg/SVGGeoAngle";
 import { SVGGeoPoint } from "../core/svg/SVGGeoPoint";
 import { SVGGeoSegment } from "../core/svg/SVGGeoSegment";
+import { SVGGeoTriangle } from "../core/svg/SVGGeoTriangle";
+import { SVGModes } from "../core/types/types";
 
 export interface DiagramProps {
   svgIdSuffix: string;
@@ -92,6 +93,22 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
     });
   };
 
+  renderTriangles = (frame: string) => {
+    return this.props.ctx.triangles.flatMap((tri, i) => {
+      return (
+        <SVGGeoTriangle
+          geoId={tri.id}
+          hoverable={!this.props.miniScale}
+          {...{
+            miniScale: this.props.miniScale,
+            t: tri,
+          }}
+          key={`${tri.id}-${i}`}
+        />
+      );
+    });
+  };
+
   render() {
     return (
       <div style={{ width: this.props.width, height: this.props.height }}>
@@ -101,7 +118,7 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid meet"
         >
-          {/* {this.props.svgElements(this.props.activeFrame)} */}
+          {this.renderTriangles(this.props.activeFrame)}
           {this.renderPoints()}
           {this.renderSegments(this.props.activeFrame)}
           {this.renderAngles(this.props.activeFrame)}

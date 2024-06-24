@@ -61,10 +61,10 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     )
   );
 
-  ctx.push(new Triangle({ pts: [A, B, E], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [B, E, C], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [D, E, C], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [G, E, C], hoverable }, ctx));
+  ctx.push(new Triangle({ pts: [A, B, E], hoverable, label: "AEB" }, ctx));
+  ctx.push(new Triangle({ pts: [B, E, C], hoverable, label: "CEB" }, ctx));
+  ctx.push(new Triangle({ pts: [D, E, C], hoverable, label: "DEC" }, ctx));
+  ctx.push(new Triangle({ pts: [G, E, C], hoverable, label: "GEC" }, ctx));
 
   // for given step:
   ctx.push(new Segment({ p1: B, p2: G, hoverable: false }));

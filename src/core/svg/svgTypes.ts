@@ -5,6 +5,7 @@ export type BaseSVGProps = {
   mode: SVGModes;
   hoverable?: boolean;
   style?: React.CSSProperties;
+  miniScale: boolean;
 };
 
 export interface BaseSVGState {

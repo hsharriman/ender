@@ -1,18 +1,17 @@
 import React from "react";
+import { strs } from "../geometryText";
 import { LAngle, Obj, SVGModes, TickType } from "../types/types";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
+import { SVGGeoTick } from "./SVGGeoTick";
 import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { arcSweepsCCW, coordsToSvg, updateStyle } from "./svgUtils";
-import { SVGGeoTick } from "./SVGGeoTick";
-import { strs } from "../geometryText";
 
 export type SVGAngleProps = {
   a: LAngle;
   tick?: { type: TickType; num: number };
-  miniScale: boolean;
 } & BaseSVGProps;
 
 export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {

@@ -1,15 +1,14 @@
 import React from "react";
 import { LPoint, Obj, SVGModes, Vector } from "../types/types";
+import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
-import { ModeCSS } from "./SVGStyles";
 
 export type SVGPointProps = {
   p: LPoint;
   offset: Vector;
   label: string;
   showLabel?: boolean;
-  miniScale: boolean;
 } & BaseSVGProps;
 
 export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {

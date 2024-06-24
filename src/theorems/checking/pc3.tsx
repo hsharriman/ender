@@ -48,8 +48,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
       })
     );
   });
-  ctx.push(new Triangle({ pts: [L, M, K], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [K, N, M], hoverable }, ctx));
+  ctx.push(new Triangle({ pts: [L, M, K], hoverable, label: "KLM" }, ctx));
+  ctx.push(new Triangle({ pts: [K, N, M], hoverable, label: "MNK" }, ctx));
 
   // for mini figures
   ctx.push(new Angle({ start: L, center: M, end: N, hoverable }));
@@ -126,10 +126,10 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     givens.additions(props);
   },
-  text: (props: StepTextProps) => EqualTriangles.text(props, ["LMK", "KMN"]),
+  text: (props: StepTextProps) => EqualTriangles.text(props, ["KLM", "MNK"]),
   ticklessText: (ctx: Content) =>
-    EqualTriangles.ticklessText(ctx, ["LMK", "KMN"]),
-  staticText: () => EqualTriangles.staticText(["LMK", "KMN"]),
+    EqualTriangles.ticklessText(ctx, ["KLM", "MNK"]),
+  staticText: () => EqualTriangles.staticText(["KLM", "MNK"]),
 });
 
 const step1: StepMeta = makeStepMeta({

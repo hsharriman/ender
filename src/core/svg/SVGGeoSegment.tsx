@@ -2,15 +2,14 @@ import React from "react";
 import { LSegment, Obj, SVGModes, TickType, Vector } from "../types/types";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
+import { SVGGeoTick } from "./SVGGeoTick";
 import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
-import { SVGGeoTick } from "./SVGGeoTick";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
 export type SVGSegmentProps = {
   s: LSegment;
-  miniScale: boolean;
   tick?: { type: TickType; num: number };
 } & BaseSVGProps;
 

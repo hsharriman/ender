@@ -17,7 +17,6 @@ export type SVGTickProps = {
   css: string;
   miniScale: boolean;
   geoId: string;
-  hover?: boolean;
 };
 
 // Tick should always match the style set by the parent if it is initialized.

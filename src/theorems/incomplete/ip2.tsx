@@ -50,8 +50,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     )
   );
 
-  ctx.push(new Triangle({ pts: [Q, P, R], hoverable }, ctx));
-  ctx.push(new Triangle({ pts: [R, M, N], hoverable }, ctx));
+  ctx.push(new Triangle({ pts: [Q, P, R], hoverable, label: "QPR" }, ctx));
+  ctx.push(new Triangle({ pts: [R, M, N], hoverable, label: "RMN" }, ctx));
 
   // for given step:
   ctx.push(new Angle({ start: Q, center: P, end: R, hoverable }));
