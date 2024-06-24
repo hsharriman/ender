@@ -15,7 +15,6 @@ import { P3 } from "./theorems/complete/proof3";
 import { IP1 } from "./theorems/incomplete/ip1";
 import { IP2 } from "./theorems/incomplete/ip2";
 import { IP3 } from "./theorems/incomplete/ip3";
-import { DiagramContent } from "./core/diagramContent";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
 import { Reasons } from "./theorems/reasons";
@@ -137,17 +136,17 @@ const randomizeLayout = (proofMetas: LayoutProps[]): AppMeta[] => {
   // randomly pick 0 or 1
   // if 1, then the first proof is static, else interactive
   const staticFirst = Math.round(Math.random()) === 1;
-  return staticFirst
-    ? [
-        interactiveLayout(proofMetas[0]),
-        interactiveLayout(proofMetas[1]),
-        interactiveLayout(proofMetas[2]),
-      ]
-    : [
-        interactiveLayout(proofMetas[0]),
-        interactiveLayout(proofMetas[1]),
-        interactiveLayout(proofMetas[2]),
-      ];
+  return proofMetas.map((p) => interactiveLayout(p));
+  // return proofMetas.map((p) => staticLayout(p));
+  // return staticFirst
+  //   ? [
+  //       staticLayout(proofMetas[0]),
+  //       interactiveLayout(proofMetas[1]),
+  //     ]
+  //   : [
+  //       interactiveLayout(proofMetas[0]),
+  //       staticLayout(proofMetas[1]),
+  //     ];
 };
 
 interface AppProps {}
@@ -200,7 +199,6 @@ export class App extends React.Component<AppProps, AppState> {
 
   render() {
     const currMeta = this.meta[this.state.activePage];
-    console.log(currMeta);
     return (
       <div>
         <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">

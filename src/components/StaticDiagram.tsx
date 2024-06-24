@@ -4,6 +4,7 @@ import { SVGGeometryAngle } from "../core/svg/geometry/SVGGeometryAngle";
 import { SVGGeometrySegment } from "../core/svg/geometry/SVGGeometrySegment";
 import { SVGModes } from "../core/types/types";
 import { GIVEN_ID } from "../theorems/utils";
+import { SVGGeometryPoint } from "../core/svg/geometry/SVGGeometryPoint";
 
 export interface DiagramProps {
   svgIdSuffix: string;
@@ -31,6 +32,22 @@ export class StaticDiagram extends React.Component<DiagramProps, {}> {
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid meet"
         >
+          {this.props.ctx.points.flatMap((p, i) => {
+            return (
+              <SVGGeometryPoint
+                geoId={p.id}
+                mode={SVGModes.Default}
+                hoverable={false}
+                key={`${p.id}-${i}`}
+                {...{
+                  p: p.labeled(),
+                  offset: p.offset,
+                  label: p.label,
+                  miniScale: false,
+                }}
+              />
+            );
+          })}
           {this.props.ctx.angles.flatMap((ang, i) => {
             return (
               <SVGGeometryAngle
