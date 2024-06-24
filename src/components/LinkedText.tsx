@@ -5,7 +5,6 @@ import { Obj } from "../core/types/types";
 
 export interface LinkedTextProps {
   val: string;
-  // activeColor?: string;
   obj: BaseGeometryObject; // TODO correct type
   isActive?: boolean;
   linkedObjs?: BaseGeometryObject[];
@@ -25,7 +24,6 @@ export class LinkedText extends React.Component<
     this.state = {
       isClicked: Boolean(this.props.isActive),
     };
-    // this.activeColor = this.props.activeColor || this.activeColor;
     this.wrapperRef = React.createRef<HTMLDivElement>();
   }
 

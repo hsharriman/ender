@@ -185,14 +185,6 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
         pathStr = this.rightAngle(this.props.parent as LAngle);
       }
     }
-    // console.log(
-    //   "rendering tick",
-    //   this.props.geoId,
-    //   this.props.miniScale,
-    //   this.props.tick,
-    //   pathStr,
-    //   this.props.css
-    // );
     return pathStr !== "" ? (
       <path
         d={pathStr}

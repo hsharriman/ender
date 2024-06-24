@@ -93,12 +93,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     );
   };
 
-  // resetRow = () => {
-  //   if (this.props.refresh || !this.props.items[this.state.idx]) {
-  //     this.setState({ idx: 0 });
-  //   }
-  // };
-
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
     const isActive =
@@ -133,7 +127,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   render() {
     // TODO change style based on the state
     if (this.props.items.length > 0) {
-      // this.resetRow();
       // first 2 rows are "given" and "prove"
       const given = this.props.items[0];
       const prove = this.props.items[1];

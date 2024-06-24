@@ -1,12 +1,11 @@
 import React from "react";
-import { Content, DiagramContent } from "../core/diagramContent";
+import { DiagramContent } from "../core/diagramContent";
 import { StaticProofTextItem } from "../core/types/stepTypes";
-import { Reason, StaticLayoutProps } from "../core/types/types";
-import { Reasons } from "../theorems/reasons";
+import { Reason } from "../core/types/types";
+import { Question } from "../questions/completeQuestions";
 import { GIVEN_ID } from "../theorems/utils";
 import { StaticDiagram } from "./StaticDiagram";
 import { TestQuestions } from "./TestQuestions";
-import { Question } from "../questions/completeQuestions";
 
 export interface StaticAppPageProps {
   pageNum: number;
@@ -34,30 +33,6 @@ export class StaticAppPage extends React.Component<
     };
     // this.buildCtxAndText();
   }
-
-  // buildCtxAndText = () => {
-  //   if (this.props.reset) {
-  //     // reset stored variables
-  //     this.ctx = this.props.baseContent(true, false);
-  //     this.reasons = [];
-  //     this.texts = [];
-
-  //     this.ctx.addFrame(GIVEN_ID);
-  //     this.props.givens.diagram(this.ctx, GIVEN_ID, false);
-  //     this.props.steps.map((step) => {
-  //       this.texts.push({
-  //         stmt: step.staticText(),
-  //         reason: step.reason.title,
-  //       });
-  //       if (
-  //         step.reason.body !== "" &&
-  //         step.reason.title !== Reasons.Given.title
-  //       ) {
-  //         this.reasons.push(step.reason);
-  //       }
-  //     });
-  //   }
-  // };
 
   renderRow = (item: StaticProofTextItem, i: number) => {
     const textColor = "text-slate-800";

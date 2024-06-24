@@ -1,20 +1,7 @@
-import { Obj, SVGModes, Vector } from "../types/types";
+import { Obj, SVGModes } from "../types/types";
 import { getId } from "../utils";
-import { vops } from "../vectorOps";
-
-const SVG_XSHIFT = 60;
-const SVG_YSHIFT = -200;
-const TICK_SCALE = 20;
-const SVG_SCALE = 60;
-const SVG_DIM = 120;
-
-const MINI_SVG_DIM = 40;
-const MINI_SVG_SCALE = 25;
-const MINI_SVG_XSHIFT = 20;
-const MINI_SVG_YSHIFT = -70;
 
 export interface BaseGeometryProps {
-  // modes: Map<string, SVGModes>; // all modes for all states
   activeIdx?: number; // follows the state of the app
   parentFrame?: string;
   hoverable: boolean;
@@ -63,6 +50,4 @@ export class BaseGeometryObject {
   };
 
   matches = (name: string) => this.names.find((n) => n === name) !== undefined;
-
-  // method to check whether ticks should be included in the render or not
 }
