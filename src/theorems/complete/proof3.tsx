@@ -253,7 +253,8 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     SAS.additions(props, step5SASProps);
   },
-  text: (props: StepTextProps) => SAS.text(props, step5SASProps),
+  text: (props: StepTextProps) =>
+    EqualTriangles.text(props, step5SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step5SASProps.triangles),
 });
 

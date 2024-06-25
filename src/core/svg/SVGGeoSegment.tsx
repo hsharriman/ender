@@ -74,7 +74,7 @@ export class SVGGeoSegment extends React.Component<
       unit = vops.smul(unit, -1);
       padding = [0, 0];
     }
-    const norm = vops.smul(vops.rot(unit, 90), 20);
+    const norm = vops.smul(vops.rot(unit, 90), 17);
     const angleDeg = Math.atan2(unit[1], unit[0]) * (180 / Math.PI);
     return (
       <>

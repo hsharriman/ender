@@ -1,7 +1,4 @@
-import { definitions } from "../../theorems/definitions";
-import { linked, tooltip } from "../../theorems/utils";
-import { resizedStrs } from "../geometryText";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { StepFocusProps } from "../types/stepTypes";
 import { Obj, SVGModes, TickType } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
@@ -24,18 +21,6 @@ export interface SASProps {
   triangles: [string, string];
 }
 export class SAS {
-  static text = (props: StepTextProps, labels: SASProps) => {
-    // TODO problem if some information is not relevant to SAS, all of the ticks on the triangle will be highlighted anyway
-    const [t1, t2] = labels.triangles;
-    return (
-      <span>
-        {linked(t1, props.ctx.getTriangle(t1))}
-        {tooltip(resizedStrs.congruent, definitions.CongruentTriangles)}
-        {linked(t2, props.ctx.getTriangle(t2))}
-      </span>
-    );
-  };
-
   static additions = (
     props: StepFocusProps,
     labels: SASProps,

@@ -106,7 +106,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         <button
           id={`${this.idPrefix}${item.k}`}
           onClick={this.onClick}
-          className="border-gray-300 border-b-2 w-full h-16 ml-2 text-lg"
+          className="border-gray-300 border-b-2 w-full h-16 ml-2 text-lg focus:outline-none"
         >
           <div
             className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}

@@ -178,14 +178,7 @@ const step4: StepMeta = makeStepMeta({
     step2.additions(props);
     step3.additions(props);
   },
-  text: (props: StepTextProps) => {
-    return SAS.text(props, {
-      seg1s: { s: ["AD", "BC"], ticks: 1 },
-      seg2s: { s: ["AB", "DC"], ticks: 2 },
-      angles: { a: ["ABD", "CDB"] },
-      triangles: ["ABD", "CDB"],
-    });
-  },
+  text: (props: StepTextProps) => EqualTriangles.text(props, ["ABD", "CDB"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CDB"]),
 });
 
