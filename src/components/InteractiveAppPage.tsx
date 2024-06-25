@@ -7,6 +7,7 @@ import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
+import { Question } from "../questions/funcTypeQuestions";
 
 export interface InteractiveAppPageProps {
   ctx: DiagramContent;
@@ -14,6 +15,7 @@ export interface InteractiveAppPageProps {
   reasonMap: Map<string, Reason>;
   miniCtx: DiagramContent;
   pageNum: number;
+  questions: Question[];
 }
 
 interface InteractiveAppPageState {

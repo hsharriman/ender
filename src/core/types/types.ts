@@ -1,4 +1,4 @@
-import { Question } from "../../questions/completeQuestions";
+import { Question } from "../../questions/funcTypeQuestions";
 import { Content } from "../diagramContent";
 import { StepMeta } from "./stepTypes";
 

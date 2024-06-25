@@ -17,7 +17,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { checkingProof3 } from "../../questions/checkingQuestions";
+import { checkingProof3 } from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 
