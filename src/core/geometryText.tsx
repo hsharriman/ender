@@ -46,6 +46,24 @@ export const strs = {
   perpendicular: "\u22A5",
 };
 
+export const resizedStrs = {
+  congruent: (
+    <span style={{ fontSize: "32px", verticalAlign: "baseline" }}>
+      {"\u2245"}
+    </span>
+  ),
+  parallel: (
+    <span style={{ fontSize: "32px", verticalAlign: "baseline" }}>
+      {" \u2225 "}
+    </span>
+  ),
+  perpendicular: (
+    <span style={{ fontSize: "32px", verticalAlign: "baseline" }}>
+      {" \u22A5 "}
+    </span>
+  ),
+};
+
 // for segments in questions
 export const segmentQuestion = (s: string, clr?: string) => (
   <span style={{ borderTop: `2px solid ${clr || "black"}` }}>{s}</span>

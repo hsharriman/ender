@@ -22,7 +22,7 @@ export const linked = (
   objs?: BaseGeometryObject[]
 ) => <LinkedText val={val} obj={obj} linkedObjs={objs} />;
 
-export const tooltip = (obj: string, definition: Definition) => (
+export const tooltip = (obj: JSX.Element, definition: Definition) => (
   <DefinitionTooltip obj={obj} definition={definition} />
 );
 

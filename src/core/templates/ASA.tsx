@@ -1,13 +1,11 @@
-import { linked } from "../../theorems/utils";
-import { tooltip } from "../../theorems/utils";
-import { congruent } from "../geometryText";
+import { definitions } from "../../theorems/definitions";
+import { linked, tooltip } from "../../theorems/utils";
+import { resizedStrs } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes, TickType } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
-import { definitions } from "../../theorems/definitions";
-import { strs } from "../geometryText";
 
 export interface ASAAngleMeta {
   angles: [string, string];
@@ -23,19 +21,12 @@ export interface ASAProps {
   segTickNum?: number;
 }
 export class ASA {
-  static text = (props: StepTextProps, meta: ASAProps) => {
-    const [t1s, t2s] = meta.segs;
-    const [t1, t2] = meta.triangles;
-    const [t1a1, t2a1] = meta.a1s.angles;
-    const a1tick = meta.a1s.tick;
-    const a2tick = meta.a2s.tick;
-    const [t1a2, t2a2] = meta.a2s.angles;
-    const options = { frame: props.frame };
-
+  static text = (props: StepTextProps, triangles: [string, string]) => {
+    const [t1, t2] = triangles;
     return (
       <span>
         {linked(t1, props.ctx.getTriangle(t1))}
-        {tooltip(strs.congruent, definitions.CongruentTriangles)}
+        {tooltip(resizedStrs.congruent, definitions.CongruentTriangles)}
         {linked(t2, props.ctx.getTriangle(t2))}
       </span>
     );

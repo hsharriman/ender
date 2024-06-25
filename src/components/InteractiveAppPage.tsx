@@ -74,16 +74,20 @@ export class InteractiveAppPage extends React.Component<
             </div>
 
             <div className="grid grid-rows-1 grid-cols-8 h-44 mt-12">
-              <div className="col-span-3">
-                <Diagram
-                  width="100%"
-                  height="200px"
-                  svgIdSuffix={`mini-${this.props.pageNum}`}
-                  activeFrame={this.state.activeFrame}
-                  ctx={this.props.miniCtx}
-                  miniScale={true}
-                />
-              </div>
+              {this.props.miniCtx.frames.find(
+                (s) => s === this.state.activeFrame
+              ) && (
+                <div className="col-span-3">
+                  <Diagram
+                    width="100%"
+                    height="200px"
+                    svgIdSuffix={`mini-${this.props.pageNum}`}
+                    activeFrame={this.state.activeFrame}
+                    ctx={this.props.miniCtx}
+                    miniScale={true}
+                  />
+                </div>
+              )}
               <div className="col-span-5">
                 <ReasonText
                   activeFrame={this.state.activeFrame}

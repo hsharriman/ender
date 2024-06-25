@@ -70,7 +70,7 @@ export class SVGGeoSegment extends React.Component<
     // match rotation of text to be parallel with line
     let unit = vops.unit(vops.sub(start, end));
     // make sure unit vector is within -90 to 90 deg from origin
-    if (unit[0] < 0) {
+    if (unit[0] < 0 || unit[1] === -1) {
       unit = vops.smul(unit, -1);
       padding = [0, 0];
     }

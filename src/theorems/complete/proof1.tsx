@@ -229,7 +229,7 @@ const step4SASProps: SASProps = {
 };
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [1, 3],
+  dependsOn: [2, 3],
   additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
   text: (props: StepTextProps) => SAS.text(props, step4SASProps),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
@@ -299,7 +299,7 @@ const miniContent = () => {
   // STEP 4 - CORRESPONDING ANGLES
   const step5 = ctx.addFrame("s5");
   CongruentTriangles.additions(
-    { ...defaultStepProps, frame: step5 },
+    { ...defaultStepProps, frame: step5, mode: SVGModes.Focused },
     {
       s1s: ["AM", "BM"],
       s2s: ["CM", "DM"],
@@ -307,7 +307,12 @@ const miniContent = () => {
       a1s: ["CMA", "DMB"],
       a2s: ["CAM", "DBM"],
       a3s: ["ACM", "BDM"],
-    },
+    }
+  );
+  EqualAngles.additions(
+    { ...defaultStepProps, frame: step5 },
+    ["CAM", "DBM"],
+    2,
     SVGModes.Blue
   );
 

@@ -1,7 +1,6 @@
 import { definitions } from "../../theorems/definitions";
 import { linked, tooltip } from "../../theorems/utils";
-import { Content } from "../diagramContent";
-import { strs } from "../geometryText";
+import { resizedStrs } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes, TickType } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
@@ -31,7 +30,7 @@ export class SAS {
     return (
       <span>
         {linked(t1, props.ctx.getTriangle(t1))}
-        {tooltip(strs.congruent, definitions.CongruentTriangles)}
+        {tooltip(resizedStrs.congruent, definitions.CongruentTriangles)}
         {linked(t2, props.ctx.getTriangle(t2))}
       </span>
     );
