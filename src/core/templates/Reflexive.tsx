@@ -1,7 +1,7 @@
 import { definitions } from "../../theorems/definitions";
 import { Reasons } from "../../theorems/reasons";
 import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
-import { strs } from "../geometryText";
+import { resizedStrs } from "../geometryText";
 import {
   StepFocusProps,
   StepMeta,
@@ -24,7 +24,7 @@ export class Reflexive {
     return (
       <span>
         {MKLinked}
-        {tooltip(strs.congruent, definitions.CongruentLines)}
+        {tooltip(resizedStrs.congruent, definitions.CongruentLines)}
         {MKLinked}
       </span>
     );

@@ -1,7 +1,7 @@
 import { definitions } from "../../theorems/definitions";
 import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { congruent, segmentStr, strs } from "../geometryText";
+import { congruent, resizedStrs, segmentStr, strs } from "../geometryText";
 import {
   StepFocusProps,
   StepMeta,
@@ -36,7 +36,7 @@ export class EqualSegments {
     return (
       <span>
         {linked(s1, s1s)}
-        {tooltip(strs.congruent, definitions.CongruentLines)}
+        {tooltip(resizedStrs.congruent, definitions.CongruentLines)}
         {linked(s2, s2s)}
       </span>
     );
@@ -45,7 +45,7 @@ export class EqualSegments {
     return (
       <span>
         {linked(s1, ctx.getSegment(s1))}
-        {tooltip(strs.congruent, definitions.CongruentLines)}
+        {tooltip(resizedStrs.congruent, definitions.CongruentLines)}
         {linked(s2, ctx.getSegment(s2))}
       </span>
     );

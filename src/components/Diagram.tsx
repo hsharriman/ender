@@ -53,14 +53,11 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   renderSegments = (frame: string) => {
     return this.props.ctx.segments.flatMap((seg, i) => {
-      if (seg.getTick(frame)) {
-        console.log(seg.id, frame, seg.ticks, seg.getTick(frame));
-      }
       return (
         <SVGGeoSegment
           geoId={seg.id}
           mode={seg.getMode(frame) ?? SVGModes.Hidden}
-          hoverable={!this.props.miniScale}
+          hoverable={seg.hoverable}
           {...{
             miniScale: this.props.miniScale,
             s: seg.labeled(),
@@ -74,14 +71,11 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   renderAngles = (frame: string) => {
     return this.props.ctx.angles.flatMap((ang, i) => {
-      if (ang.getTick(frame)) {
-        console.log(ang.id, frame, ang.ticks, ang.getTick(frame));
-      }
       return (
         <SVGGeoAngle
           mode={ang.getMode(frame) ?? SVGModes.Hidden}
           geoId={ang.id}
-          hoverable={!this.props.miniScale}
+          hoverable={ang.hoverable}
           {...{
             a: ang.labeled(),
             miniScale: this.props.miniScale,

@@ -98,7 +98,7 @@ const givens: StepMeta = makeStepMeta({
   },
 
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
   staticText: () => {
     return (
@@ -211,7 +211,7 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     ASA.additions(props, step5ASAProps);
   },
-  text: (props: StepTextProps) => ASA.text(props, step5ASAProps),
+  text: (props: StepTextProps) => EqualTriangles.text(props, ["ABD", "CBD"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
 });
 
@@ -246,7 +246,6 @@ export const miniContent = () => {
     ctx,
     frame: "",
     mode: SVGModes.Purple,
-    inPlace: true,
   };
 
   // STEP 2 - PERPENDICULAR LINES
@@ -267,8 +266,8 @@ export const miniContent = () => {
   );
 
   // STEP 3 - REFLEXIVE PROPERTY
-  const step4 = ctx.addFrame("s4");
-  Reflexive.additions({ ...defaultStepProps, frame: step4 }, "BD");
+  // const step4 = ctx.addFrame("s4");
+  // Reflexive.additions({ ...defaultStepProps, frame: step4 }, "BD");
 
   // STEP 4 - ASA CONGRUENCE
   const step5 = ctx.addFrame("s5");

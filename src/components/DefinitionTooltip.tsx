@@ -1,9 +1,8 @@
 import React from "react";
-import { strs } from "../core/geometryText";
 import { Definition } from "../theorems/definitions";
 
 interface TooltipProps {
-  obj: string;
+  obj: JSX.Element;
   definition: Definition;
   isActive?: boolean;
 }
@@ -61,6 +60,7 @@ export class DefinitionTooltip extends React.Component<
   render() {
     const keyword = this.props.definition.keyword;
     const definition = this.props.definition.definition;
+    console.log(this.props.obj);
     return (
       <span
         className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150 group relative`}
@@ -72,11 +72,7 @@ export class DefinitionTooltip extends React.Component<
           <h2 className="text-[15px]">{keyword}</h2>
           <p className="font-normal text-sm">{definition}</p>
         </span>
-        {this.props.obj === strs.parallel || strs.perpendicular ? (
-          <span> {this.props.obj} </span>
-        ) : (
-          <span>{this.props.obj}</span>
-        )}
+        <span>{this.props.obj}</span>
       </span>
     );
   }

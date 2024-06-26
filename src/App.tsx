@@ -55,7 +55,7 @@ const staticLayout = (proofMeta: LayoutProps): AppMeta => {
   const texts: StaticProofTextItem[] = [];
 
   ctx.addFrame(GIVEN_ID);
-  proofMeta.givens.diagram(ctx, GIVEN_ID, false);
+  proofMeta.givens.diagram(ctx, GIVEN_ID);
   proofMeta.steps.map((step) => {
     texts.push({
       stmt: step.staticText(),
@@ -85,11 +85,11 @@ const interactiveLayout = (proofMeta: LayoutProps): AppMeta => {
 
   // GIVEN
   ctx.addFrame(GIVEN_ID);
-  proofMeta.givens.diagram(ctx, GIVEN_ID, false);
+  proofMeta.givens.diagram(ctx, GIVEN_ID);
 
   // PROVE
   ctx.addFrame(PROVE_ID);
-  proofMeta.proves.diagram(ctx, PROVE_ID, true);
+  proofMeta.proves.diagram(ctx, PROVE_ID);
 
   // add given and prove to linkedTexts
   linkedTexts.push({
@@ -106,7 +106,7 @@ const interactiveLayout = (proofMeta: LayoutProps): AppMeta => {
   proofMeta.steps.map((step, i) => {
     let textMeta = {};
     const s = ctx.addFrame(`s${i + 1}`);
-    step.diagram(ctx, s, true);
+    step.diagram(ctx, s);
     if (step.dependsOn) {
       const depIds = step.dependsOn.map((i) => `s${i}`);
       ctx.reliesOn(s, depIds);
@@ -178,6 +178,10 @@ export class App extends React.Component<AppProps, AppState> {
     // shuffle activities
     const shuffleProofOrder = fisherYates(randomProofOrder.length);
     this.meta = shuffleProofOrder.map((i) => randomProofOrder[i]);
+  }
+
+  componentDidMount() {
+    window.document.title = "Ender";
   }
 
   onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {

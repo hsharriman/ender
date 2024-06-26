@@ -107,7 +107,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("KMN").mode(props.frame, props.mode);
   },
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
   staticText: () => {
     return (
@@ -231,9 +231,8 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     SAS.additions(props, s6SASProps);
   },
-  text: (props: StepTextProps) => {
-    return SAS.text(props, s6SASProps);
-  },
+  text: (props: StepTextProps) =>
+    EqualTriangles.text(props, s6SASProps.triangles),
   staticText: () => EqualTriangles.staticText(s6SASProps.triangles),
 });
 
@@ -244,7 +243,6 @@ export const miniContent = () => {
     ctx,
     frame: "",
     mode: SVGModes.Purple,
-    inPlace: true,
   };
 
   const step4 = ctx.addFrame("s4");

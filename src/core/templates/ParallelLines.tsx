@@ -1,11 +1,9 @@
-import { linked } from "../../theorems/utils";
-import { tooltip } from "../../theorems/utils";
+import { definitions } from "../../theorems/definitions";
+import { linked, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { parallel, segmentStr } from "../geometryText";
+import { parallel, resizedStrs, segmentStr } from "../geometryText";
 import { StepFocusProps, StepTextProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
-import { strs } from "../geometryText";
-import { definitions } from "../../theorems/definitions";
 
 export class ParallelLines {
   static additions = (
@@ -35,7 +33,7 @@ export class ParallelLines {
     return (
       <span>
         {linked(s1, s1s)}
-        {tooltip(strs.parallel, definitions.Parallel)}
+        {tooltip(resizedStrs.parallel, definitions.Parallel)}
         {linked(s2, s2s)}
       </span>
     );
@@ -45,7 +43,7 @@ export class ParallelLines {
     return (
       <span>
         {linked(s1, ctx.getSegment(s1))}
-        {tooltip(strs.parallel, definitions.Parallel)}
+        {tooltip(resizedStrs.parallel, definitions.Parallel)}
         {linked(s2, ctx.getSegment(s2))}
       </span>
     );
