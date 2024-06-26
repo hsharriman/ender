@@ -207,30 +207,61 @@ export class App extends React.Component<AppProps, AppState> {
     const currMeta = this.meta[this.state.activePage];
     return (
       <div>
-        <div
-          className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-dashed border-2 border-indigo-600"
-          id="header"
-        >
-          <div className="flex items-center">
+        {this.state.activePage <= this.meta.length - 1 ? (
+          <div
+            className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
+            id="header"
+          >
+            <div className="flex items-center">
+              <button
+                className="p-3 underline underline-offset-2 z-30 text-sm"
+                id="prev-arrow"
+                style={{
+                  display: this.state.activePage >= 0 ? "block" : "none",
+                }}
+                onClick={this.onClick(-1)}
+              >
+                {"Previous"}
+              </button>
+              <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
+                this.meta.length + 2
+              }`}</div>
+              <div className="ml-10 flex-1">
+                <TestQuestions
+                  questions={currMeta.props.questions}
+                  onNext={this.onNext}
+                />
+              </div>
+              <button
+                className="p-3 underline underline-offset-2 z-30 text-sm"
+                id="next-arrow"
+                style={{
+                  display:
+                    this.state.activePage < this.meta.length + 2 - 1
+                      ? "block"
+                      : "none",
+                }}
+                onClick={this.onClick(1)}
+              >
+                {"Next"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
             <button
-              className="p-3 underline underline-offset-2 z-30 text-sm"
+              className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
               id="prev-arrow"
               style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
               onClick={this.onClick(-1)}
             >
               {"Previous"}
             </button>
-            <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
-              this.meta.length + 2
-            }`}</div>
-            <div className="ml-10 flex-1">
-              <TestQuestions
-                questions={currMeta.props.questions}
-                onNext={this.onNext}
-              />
-            </div>
+            <div className="absolute top-0 p-3 left-24 z-30">{`${
+              this.state.activePage + 1
+            } / ${this.meta.length + 2}`}</div>
             <button
-              className="p-3 underline underline-offset-2 z-30 text-sm"
+              className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
               id="next-arrow"
               style={{
                 display:
@@ -243,7 +274,7 @@ export class App extends React.Component<AppProps, AppState> {
               {"Next"}
             </button>
           </div>
-        </div>
+        )}
         <div className="w-full h-full flex justify-start">
           {this.state.activePage <= this.meta.length - 1 ? (
             currMeta.layout === "static" ? (

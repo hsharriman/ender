@@ -2,6 +2,7 @@ import React from "react";
 
 export interface QuestionProps {
   questionNum: string;
+  fullScaffold?: string | JSX.Element;
   question: string | JSX.Element;
   answers: string[];
   onSubmit: (answer: string) => void;
@@ -22,16 +23,9 @@ export class YesNoQuestion extends React.Component<
     };
   }
 
-  handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    this.setState(
-      {
-        selectedOption: value,
-      },
-      () => {
-        this.handleSubmit();
-      }
-    );
+  handleButtonClick = (answer: string) => {
+    this.props.onSubmit(answer);
+    this.setState({ selectedOption: "" });
   };
 
   handleKeyPress = (event: KeyboardEvent) => {
@@ -39,7 +33,7 @@ export class YesNoQuestion extends React.Component<
     const index = parseInt(event.key) - 1;
     if (index >= 0 && index < answers.length) {
       this.setState({ selectedOption: answers[index] }, () => {
-        this.handleSubmit();
+        this.props.onSubmit(answers[index]); // Automatically submit when a key is pressed
       });
     }
   };
@@ -52,41 +46,24 @@ export class YesNoQuestion extends React.Component<
     document.removeEventListener("keydown", this.handleKeyPress);
   }
 
-  handleSubmit = () => {
-    const { selectedOption } = this.state;
-    if (selectedOption.length === 0) {
-      // TODO: add alert for empty input
-      return;
-    }
-    this.props.onSubmit(this.state.selectedOption);
-    this.setState({
-      selectedOption: "",
-    });
-  };
-
   render() {
     const { question, answers } = this.props;
     const selectedOption = this.state.selectedOption;
 
     return (
-      <div className="text-2xl">
-        <div className="flex">
-          <div className="font-bold pb-1 pr-10">{question}</div>
-          {answers.map((answer, index) => {
-            return (
-              <div className="py-0.5 mr-6" key={index}>
-                <input
-                  type="radio"
-                  value={answer}
-                  name={answer}
-                  checked={selectedOption === answer}
-                  onChange={this.handleRadioChange}
-                  className="mr-1"
-                />
-                <label> {answer} </label>
-              </div>
-            );
-          })}
+      <div className="text-xl">
+        <div className="flex ">
+          {/* <div className="font-bold pr-[300px]">{this.props.fullScaffold}</div> */}
+          <div className="font-bold pr-10 pb-1">{question}</div>
+          {answers.map((answer, index) => (
+            <button
+              key={index}
+              className={`px-2.5 mr-6 bg-gray-500 hover:bg-violet-500 rounded-md text-slate-100`}
+              onClick={() => this.handleButtonClick(answer)}
+            >
+              {answer}
+            </button>
+          ))}
         </div>
       </div>
     );

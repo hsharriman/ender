@@ -70,9 +70,11 @@ export class TestQuestions extends React.Component<
             ))}
           </select>
         </div> */}
-        <div>
+        <div className="flex text-xl">
+          <span className="pr-6">Q{this.state.currentQuestionIndex + 1}:</span>
           <YesNoQuestion
             questionNum={(this.state.currentQuestionIndex + 1).toString()}
+            fullScaffold={currentQuestion.fullScaffold}
             question={currentQuestion.prompt}
             answers={answers}
             onSubmit={this.handleSubmit}

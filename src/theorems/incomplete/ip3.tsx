@@ -22,7 +22,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { incompleteProof2 } from "../../questions/funcTypeQuestions";
+import { placeholder } from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -259,7 +259,7 @@ const miniContent = () => {
 
 export const IP3: LayoutProps = {
   // TODO: Replace questions
-  questions: incompleteProof2,
+  questions: placeholder,
   miniContent: miniContent(),
   baseContent,
   givens,
