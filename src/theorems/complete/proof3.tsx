@@ -120,7 +120,7 @@ const givens: StepMeta = makeStepMeta({
   },
 
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
   staticText: () => {
     return (
@@ -301,7 +301,6 @@ export const miniContent = () => {
     ctx,
     frame: "",
     mode: SVGModes.Purple,
-    inPlace: true,
   };
 
   const step3 = ctx.addFrame("s3");

@@ -11,7 +11,7 @@ export interface HoverTextLabelProps {
 
 export class HoverTextLabel extends React.Component<HoverTextLabelProps, {}> {
   private defaultCSS =
-    "font-serif ease-out duration-300 fill-violet-500 text-violet-500 select-none text-xs";
+    "font-serif ease-in-out duration-300 fill-violet-500 text-violet-500 select-none text-xs tracking-wide";
 
   getClassName = () => {
     if (this.props.isHovered || this.props.isPinned) {
@@ -20,10 +20,7 @@ export class HoverTextLabel extends React.Component<HoverTextLabelProps, {}> {
         " opacity-100 cursor-pointer pointer-events-auto cursor-default"
       );
     } else {
-      return (
-        this.defaultCSS +
-        " opacity-0 pointer-events-auto delay-700 cursor-default"
-      );
+      return this.defaultCSS + " opacity-0 pointer-events-auto cursor-default";
     }
   };
   render() {

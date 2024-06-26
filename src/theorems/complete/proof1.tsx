@@ -125,7 +125,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("BDM").mode(props.frame, props.mode);
   },
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
 });
 
@@ -261,7 +261,6 @@ const miniContent = () => {
     ctx,
     frame: "",
     mode: SVGModes.Purple,
-    inPlace: true,
   };
 
   // STEP 4 - VERTICAL ANGLES

@@ -93,7 +93,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("ADC").mode(props.frame, props.mode);
   },
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
 });
 
@@ -141,15 +141,12 @@ const miniContent = () => {
 
   // STEP 3 - REFLEXIVE PROPERTY
   const s3 = ctx.addFrame("s3");
-  Reflexive.additions(
-    { ctx, frame: s3, mode: SVGModes.Purple, inPlace: true },
-    "AC"
-  );
+  Reflexive.additions({ ctx, frame: s3, mode: SVGModes.Purple }, "AC");
 
   // STEP 4 - SAS
   const s4 = ctx.addFrame("s4");
   SAS.additions(
-    { ctx, frame: "s4", mode: SVGModes.Purple, inPlace: true },
+    { ctx, frame: "s4", mode: SVGModes.Purple },
     step4SASProps,
     SVGModes.Blue
   );

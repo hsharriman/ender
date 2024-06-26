@@ -37,9 +37,9 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   const defaultText = (props: StepTextProps) => <></>;
   const defaultTicklessText = (ctx: Content) => <></>;
   const defaultUnfocused = (props: StepUnfocusProps) => {};
-  const diagram = (ctx: Content, frame: string, inPlace = true) => {
-    const unfocusedProps = { ctx, frame, inPlace };
-    const additionProps = { ctx, frame, mode: SVGModes.Focused, inPlace };
+  const diagram = (ctx: Content, frame: string) => {
+    const unfocusedProps = { ctx, frame };
+    const additionProps = { ctx, frame, mode: SVGModes.Focused };
     meta.unfocused
       ? meta.unfocused(unfocusedProps)
       : defaultUnfocused(unfocusedProps);

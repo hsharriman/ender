@@ -81,7 +81,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("LMK").mode(props.frame, props.mode);
   },
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
   staticText: () => {
     return (
@@ -190,7 +190,6 @@ export const miniContent = () => {
     ctx,
     frame: "",
     mode: SVGModes.Purple,
-    inPlace: true,
   };
   // STEP 3 - PERPENDICULAR LINES
   const step3 = ctx.addFrame("s3");

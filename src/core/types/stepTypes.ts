@@ -5,7 +5,6 @@ import { Reason, SVGModes } from "./types";
 export interface StepUnfocusProps {
   ctx: Content;
   frame: string;
-  inPlace: boolean;
 }
 export interface StepFocusProps extends StepUnfocusProps {
   mode: SVGModes;
@@ -29,7 +28,7 @@ export interface StaticProofTextItem {
 
 export interface SetupStepMeta {
   unfocused: (props: StepUnfocusProps) => void;
-  diagram: (ctx: Content, frame: string, inPlace?: boolean) => void;
+  diagram: (ctx: Content, frame: string) => void;
   text: (props: StepTextProps) => JSX.Element;
   ticklessText: (ctx: Content) => JSX.Element;
   staticText: () => JSX.Element;

@@ -3,6 +3,7 @@ import { Angle } from "../../core/geometry/Angle";
 import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
+import { ASA, ASAProps } from "../../core/templates/ASA";
 import { EqualAngles } from "../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../core/templates/EqualSegments";
@@ -14,7 +15,7 @@ import {
   StepTextProps,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { incompleteProof2 } from "../../questions/incompleteQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
@@ -93,7 +94,7 @@ const givens: StepMeta = makeStepMeta({
   },
 
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
   staticText: () => {
     return (
@@ -206,6 +207,53 @@ const step6: StepMeta = makeStepMeta({
 
 const miniContent = () => {
   let ctx = baseContent(false, false);
+  const defaultProps = { ctx, frame: "", mode: SVGModes.Purple };
+
+  // VERTICAL ANGLES
+  const step3 = ctx.addFrame("s3");
+  ctx.getSegment("QR").mode(step3, SVGModes.Focused);
+  ctx.getSegment("RN").mode(step3, SVGModes.Focused);
+  ctx.getSegment("PR").mode(step3, SVGModes.Focused);
+  ctx.getSegment("RM").mode(step3, SVGModes.Focused);
+  EqualAngles.additions(
+    { ...defaultProps, frame: step3 },
+    ["QRP", "MRN"],
+    1,
+    SVGModes.Blue
+  );
+  // ASA
+  const step4 = ctx.addFrame("s4");
+  const asaProps: ASAProps = {
+    a1s: { angles: ["QRP", "MRN"], tick: Obj.EqualAngleTick },
+    a2s: { angles: ["QPR", "NMR"], tick: Obj.RightTick },
+    segs: ["PR", "RM"],
+    triangles: ["QPR", "RMN"],
+  };
+  ASA.additions({ ...defaultProps, frame: step4 }, asaProps, SVGModes.Blue);
+  // CORRESPONDING SEGMENTS
+  const step5 = ctx.addFrame("s5");
+  const s5props = { ctx, mode: SVGModes.Focused, frame: step5 };
+  EqualSegments.additions(
+    { ...defaultProps, frame: step5 },
+    ["QR", "RN"],
+    2,
+    SVGModes.Blue
+  );
+  EqualSegments.additions(s5props, ["PR", "RM"], 1);
+  EqualSegments.additions(s5props, ["QP", "MN"], 3);
+  EqualAngles.additions(s5props, ["QRP", "MRN"], 1);
+  EqualRightAngles.additions(s5props, ["QPR", "NMR"]);
+  EqualAngles.additions(s5props, ["PQR", "MNR"], 2);
+
+  // MIDPOINT
+  const step6 = ctx.addFrame("s6");
+  Midpoint.additions(
+    { ...defaultProps, frame: step6 },
+    "R",
+    ["QR", "NR"],
+    2,
+    SVGModes.Blue
+  );
   return ctx;
 };
 

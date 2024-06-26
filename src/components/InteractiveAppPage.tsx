@@ -48,9 +48,9 @@ export class InteractiveAppPage extends React.Component<
             rowHeight={64}
           />
         )}
-        <div className="top-0 left-0 max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-12 pl-6 gap-4">
+        <div className="top-0 left-0 max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-12 pl-6">
           <div id="proof-steps" className="col-start-1 col-span-4 w-[700px]">
-            <div className="pt-16">
+            <div className="pt-8">
               <ProofRows
                 items={this.props.linkedTexts}
                 active={this.state.activeFrame}
@@ -60,7 +60,7 @@ export class InteractiveAppPage extends React.Component<
           </div>
           <div
             id="canvas-container"
-            className="col-start-6 col-span-5 flex flex-col ml-4"
+            className="col-start-7 col-span-5 flex flex-col ml-4"
           >
             <div className="pt-4">
               <Diagram
@@ -79,8 +79,8 @@ export class InteractiveAppPage extends React.Component<
               ) && (
                 <div className="col-span-3">
                   <Diagram
-                    width="100%"
-                    height="200px"
+                    width="250px"
+                    height="100%"
                     svgIdSuffix={`mini-${this.props.pageNum}`}
                     activeFrame={this.state.activeFrame}
                     ctx={this.props.miniCtx}
