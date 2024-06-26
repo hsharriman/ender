@@ -15,7 +15,6 @@ import { SAS, SASProps } from "../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
@@ -68,28 +67,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (props: StepTextProps) => {
-    const EF = props.ctx.getSegment("EF");
-    const FG = props.ctx.getSegment("FG");
-    const GH = props.ctx.getSegment("GH");
-    const EJ = props.ctx.getSegment("EJ");
-    const HJ = props.ctx.getSegment("HJ");
-
-    return (
-      <span>
-        {linked(
-          "EFGH",
-          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
-          [EF, FG, GH, EJ, HJ]
-        )}
-        {" is a rectangle"}
-        {comma}
-        {Midpoint.text(props, "EH", ["EJ", "HJ"], "J")}
-      </span>
-    );
-  },
-
-  ticklessText: (ctx: Content) => {
+  text: (ctx: Content) => {
     const EF = ctx.getSegment("EF");
     const FG = ctx.getSegment("FG");
     const GH = ctx.getSegment("GH");
@@ -100,12 +78,12 @@ const givens: StepMeta = makeStepMeta({
       <span>
         {linked(
           "EFGH",
-          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }), // TODO? hoverable?
+          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
           [EF, FG, GH, EJ, HJ]
         )}
         {" is a rectangle"}
         {comma}
-        {Midpoint.ticklessText(ctx, "EH", ["EJ", "HJ"], "J")}
+        {Midpoint.text(ctx, "EH", ["EJ", "HJ"], "J")}
       </span>
     );
   },
@@ -146,10 +124,10 @@ const proves: StepMeta = makeStepMeta({
     props.ctx.getSegment("GJ").mode(props.frame, props.mode);
     props.ctx.getSegment("FJ").mode(props.frame, props.mode);
   },
-  text: (props: StepTextProps) => {
+  text: (ctx: Content) => {
     return (
       <span>
-        {linked("FGJ", props.ctx.getTriangle("FGJ"))}
+        {linked("FGJ", ctx.getTriangle("FGJ"))}
         {" is isosceles"}
       </span>
     );
@@ -176,18 +154,18 @@ const step1: StepMeta = makeStepMeta({
     props.ctx.getSegment("EJ").mode(props.frame, props.mode);
     props.ctx.getSegment("JH").mode(props.frame, props.mode);
   },
-  text: (props: StepTextProps) => {
+  text: (ctx: Content) => {
     return (
       <span>
         {linked(
           "EFGH",
           new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }), // TODO? hoverable?
           [
-            props.ctx.getSegment("EF"),
-            props.ctx.getSegment("FG"),
-            props.ctx.getSegment("GH"),
-            props.ctx.getSegment("EJ"),
-            props.ctx.getSegment("JH"),
+            ctx.getSegment("EF"),
+            ctx.getSegment("FG"),
+            ctx.getSegment("GH"),
+            ctx.getSegment("EJ"),
+            ctx.getSegment("JH"),
           ]
         )}
         {" is a rectangle"}
@@ -206,7 +184,7 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "J", ["EJ", "JH"]);
   },
-  text: (props: StepTextProps) => Midpoint.text(props, "EH", ["EJ", "JH"], "J"),
+  text: (ctx: Content) => Midpoint.text(ctx, "EH", ["EJ", "JH"], "J"),
   staticText: () => Midpoint.staticText("J", "EH"),
 });
 
@@ -220,7 +198,7 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["FEJ", "JHG"]);
   },
-  text: (props: StepTextProps) => EqualRightAngles.text(props, ["FEJ", "JHG"]),
+  text: (ctx: Content) => EqualRightAngles.text(ctx, ["FEJ", "JHG"]),
   staticText: () => EqualRightAngles.staticText(["FEJ", "JHG"]),
 });
 
@@ -234,7 +212,7 @@ const step4: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["FE", "GH"], 2);
   },
-  text: (props: StepTextProps) => EqualSegments.text(props, ["FE", "GH"], 2),
+  text: (ctx: Content) => EqualSegments.text(ctx, ["FE", "GH"]),
   staticText: () => EqualSegments.staticText(["FE", "GH"]),
 });
 
@@ -253,8 +231,7 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     SAS.additions(props, step5SASProps);
   },
-  text: (props: StepTextProps) =>
-    EqualTriangles.text(props, step5SASProps.triangles),
+  text: (ctx: Content) => EqualTriangles.text(ctx, step5SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step5SASProps.triangles),
 });
 
@@ -268,7 +245,7 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
-  text: (props: StepTextProps) => EqualSegments.text(props, ["FJ", "GJ"], 3),
+  text: (ctx: Content) => EqualSegments.text(ctx, ["FJ", "GJ"]),
   staticText: () => EqualSegments.staticText(["FJ", "GJ"]),
 });
 
@@ -283,10 +260,10 @@ const step7: StepMeta = makeStepMeta({
     props.ctx.getSegment("FG").mode(props.frame, props.mode);
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
-  text: (props: StepTextProps) => {
+  text: (ctx: Content) => {
     return (
       <span>
-        {linked("FGJ", props.ctx.getTriangle("FGJ"))}
+        {linked("FGJ", ctx.getTriangle("FGJ"))}
         {" is isosceles "}
       </span>
     );

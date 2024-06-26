@@ -13,6 +13,7 @@ import { PC3 } from "./theorems/checking/pc3";
 import { P1 } from "./theorems/complete/proof1";
 import { P2 } from "./theorems/complete/proof2";
 import { P3 } from "./theorems/complete/proof3";
+import { P4 } from "./theorems/complete/proof4";
 import { IP1 } from "./theorems/incomplete/ip1";
 import { IP2 } from "./theorems/incomplete/ip2";
 import { IP3 } from "./theorems/incomplete/ip3";
@@ -94,12 +95,12 @@ const interactiveLayout = (proofMeta: LayoutProps): AppMeta => {
   // add given and prove to linkedTexts
   linkedTexts.push({
     k: GIVEN_ID,
-    v: proofMeta.givens.ticklessText(ctx),
+    v: proofMeta.givens.text(ctx),
     alwaysActive: true,
   });
   linkedTexts.push({
     k: PROVE_ID,
-    v: proofMeta.proves.text({ ctx: ctx }),
+    v: proofMeta.proves.text(ctx),
     alwaysActive: true,
   });
 
@@ -116,7 +117,7 @@ const interactiveLayout = (proofMeta: LayoutProps): AppMeta => {
     linkedTexts.push({
       ...textMeta,
       k: s,
-      v: step.text({ ctx: ctx }),
+      v: step.text(ctx),
       reason: step.reason.title,
     });
   });
@@ -163,7 +164,9 @@ export class App extends React.Component<AppProps, AppState> {
       activeTest: 0,
     };
 
-    const randomCompleteProofs = randomizeLayout(randomizeProofs([P1, P2, P3])); // 2 random complete proofs
+    const randomCompleteProofs = randomizeLayout(
+      randomizeProofs([P1, P2, P3, P4])
+    ); // 2 random complete proofs
     const randomCheckingProofs = randomizeLayout(
       randomizeProofs([PC1, PC2, PC3])
     );

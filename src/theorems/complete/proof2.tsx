@@ -16,7 +16,6 @@ import { RightAngle } from "../../core/templates/RightAngle";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
@@ -64,30 +63,16 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (props: StepTextProps) => {
-    const BD = props.ctx.getSegment("BD");
-
-    return (
-      <span>
-        {RightAngle.text(props, "ADB")}
-        {comma}
-        {linked("BD", BD)}
-        {" bisects "}
-        {BaseAngle.text(props, "ABC")}
-      </span>
-    );
-  },
-
-  ticklessText: (ctx: Content) => {
+  text: (ctx: Content) => {
     const BD = ctx.getSegment("BD");
 
     return (
       <span>
-        {RightAngle.ticklessText(ctx, "ADB")}
+        {RightAngle.text(ctx, "ADB")}
         {comma}
         {linked("BD", BD)}
         {" bisects "}
-        {BaseAngle.ticklessText(ctx, "ABC")}
+        {BaseAngle.text(ctx, "ABC")}
       </span>
     );
   },
@@ -120,8 +105,8 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "D", ["AD", "CD"]);
   },
-  text: (props: StepTextProps) => {
-    return Midpoint.text(props, "AC", ["AD", "CD"], "D");
+  text: (ctx: Content) => {
+    return Midpoint.text(ctx, "AC", ["AD", "CD"], "D");
   },
   staticText: () => Midpoint.staticText("D", "AC"),
 });
@@ -135,22 +120,18 @@ const step1: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["ABD", "CBD"]);
     RightAngle.additions(props, "ADB");
   },
-  text: (props: StepTextProps) => {
-    const BD = props.ctx.getSegment("BD");
-    const ABD = props.ctx.getAngle("ABD");
-    const DBC = props.ctx.getAngle("CBD");
+  text: (ctx: Content) => {
+    const BD = ctx.getSegment("BD");
+    const ABD = ctx.getAngle("ABD");
+    const DBC = ctx.getAngle("CBD");
 
     return (
       <span>
-        {RightAngle.text(props, "ADB")}
+        {RightAngle.text(ctx, "ADB")}
         {comma}
         {linked("BD", BD)}
         {" bisects "}
-        {linked("ABC", ABD, [
-          DBC,
-          props.ctx.getSegment("AB"),
-          props.ctx.getSegment("BC"),
-        ])}
+        {linked("ABC", ABD, [DBC, ctx.getSegment("AB"), ctx.getSegment("BC")])}
       </span>
     );
   },
@@ -167,8 +148,7 @@ const step2: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "BD", ["AD", "DC"]),
-  text: (props: StepTextProps) =>
-    Perpendicular.text(props, "AC", ["AD", "DC"], "BD"),
+  text: (ctx: Content) => Perpendicular.text(ctx, "AC", ["AD", "DC"], "BD"),
   staticText: () => Perpendicular.staticText("BD", "AC"),
 });
 
@@ -182,7 +162,7 @@ const step3: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
-  text: (props: StepTextProps) => EqualRightAngles.text(props, ["ADB", "BDC"]),
+  text: (ctx: Content) => EqualRightAngles.text(ctx, ["ADB", "BDC"]),
   staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
 });
 
@@ -195,14 +175,14 @@ const step4: StepMeta = makeStepMeta({
     step2.additions(stepProps);
   },
   additions: (props: StepFocusProps) => Reflexive.additions(props, "BD"),
-  text: (props: StepTextProps) => Reflexive.text(props, "BD"),
+  text: (ctx: Content) => Reflexive.text(ctx, "BD"),
   staticText: () => Reflexive.staticText("BD"),
 });
 
 const step5ASAProps: ASAProps = {
-  a1s: { angles: ["ADB", "BDC"], tick: Obj.RightTick },
-  a2s: { angles: ["ABD", "CBD"], tick: Obj.EqualAngleTick },
-  segs: ["BD", "BD"],
+  a1s: { a: ["ADB", "BDC"], type: Obj.RightTick },
+  a2s: { a: ["ABD", "CBD"], type: Obj.EqualAngleTick },
+  segs: { s: ["BD", "BD"] },
   triangles: ["ABD", "CBD"],
 };
 const step5: StepMeta = makeStepMeta({
@@ -211,7 +191,7 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     ASA.additions(props, step5ASAProps);
   },
-  text: (props: StepTextProps) => EqualTriangles.text(props, ["ABD", "CBD"]),
+  text: (ctx: Content) => EqualTriangles.text(ctx, ["ABD", "CBD"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
 });
 
@@ -223,7 +203,7 @@ const step6: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AD", "DC"], 2),
-  text: (props: StepTextProps) => EqualSegments.text(props, ["AD", "DC"], 2),
+  text: (ctx: Content) => EqualSegments.text(ctx, ["AD", "DC"]),
   staticText: () => EqualSegments.staticText(["AD", "DC"]),
 });
 
@@ -234,8 +214,7 @@ const step7: StepMeta = makeStepMeta({
     step5.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => step6.additions(props),
-  text: (props: StepTextProps) =>
-    Midpoint.text(props, "AC", ["AD", "DC"], "D", 2),
+  text: (ctx: Content) => Midpoint.text(ctx, "AC", ["AD", "DC"], "D"),
   staticText: () => Midpoint.staticText("D", "AC"),
 });
 
@@ -274,9 +253,9 @@ export const miniContent = () => {
   ASA.additions(
     { ...defaultStepProps, frame: step5 },
     {
-      a1s: { angles: ["ADB", "BDC"], tick: Obj.RightTick },
-      a2s: { angles: ["ABD", "CBD"], tick: Obj.EqualAngleTick },
-      segs: ["BD", "BD"],
+      a1s: { a: ["ADB", "BDC"], type: Obj.RightTick },
+      a2s: { a: ["ABD", "CBD"], type: Obj.EqualAngleTick },
+      segs: { s: ["BD", "BD"] },
       triangles: ["ABD", "CBD"],
     },
     SVGModes.Blue

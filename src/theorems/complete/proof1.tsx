@@ -12,7 +12,6 @@ import { SAS, SASProps } from "../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
@@ -64,28 +63,7 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (props: StepTextProps) => {
-    const AM = props.ctx.getSegment("AM");
-    const BM = props.ctx.getSegment("BM");
-    const CM = props.ctx.getSegment("CM");
-    const DM = props.ctx.getSegment("DM");
-
-    return (
-      <span>
-        {linked("AB", AM, [BM])}
-        {" and "}
-        {linked("CD", CM, [DM])}
-        {" intersect at "}
-        {linked("M", props.ctx.getPoint("M"))}
-        {comma}
-        {EqualSegments.text(props, ["AM", "BM"])}
-        {comma}
-        {EqualSegments.text(props, ["CM", "DM"], 2)}
-      </span>
-    );
-  },
-
-  ticklessText: (ctx: Content) => {
+  text: (ctx: Content) => {
     const AM = ctx.getSegment("AM");
     const BM = ctx.getSegment("BM");
     const CM = ctx.getSegment("CM");
@@ -96,12 +74,12 @@ const givens: StepMeta = makeStepMeta({
         {linked("AB", AM, [BM])}
         {" and "}
         {linked("CD", CM, [DM])}
-        {" intersect at point "}
+        {" intersect at "}
         {linked("M", ctx.getPoint("M"))}
         {comma}
-        {EqualSegments.ticklessText(ctx, ["AM", "BM"])}
+        {EqualSegments.text(ctx, ["AM", "BM"])}
         {comma}
-        {EqualSegments.ticklessText(ctx, ["CM", "DM"])}
+        {EqualSegments.text(ctx, ["CM", "DM"])}
       </span>
     );
   },
@@ -136,7 +114,7 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     ParallelLines.additions(props, ["AC", "BD"]);
   },
-  text: (props: StepTextProps) => ParallelLines.text(props, ["AC", "BD"]),
+  text: (ctx: Content) => ParallelLines.text(ctx, ["AC", "BD"]),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
 });
 
@@ -145,18 +123,18 @@ const step1: StepMeta = makeStepMeta({
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  text: (props: StepTextProps) => {
-    const AM = props.ctx.getSegment("AM");
-    const BM = props.ctx.getSegment("BM");
-    const CM = props.ctx.getSegment("CM");
-    const DM = props.ctx.getSegment("DM");
+  text: (ctx: Content) => {
+    const AM = ctx.getSegment("AM");
+    const BM = ctx.getSegment("BM");
+    const CM = ctx.getSegment("CM");
+    const DM = ctx.getSegment("DM");
     return (
       <span>
         {linked("AB", AM, [BM])}
         {" and "}
         {linked("CD", CM, [DM])}
         {" intersect at "}
-        {linked("M", props.ctx.getPoint("M"))}
+        {linked("M", ctx.getPoint("M"))}
       </span>
     );
   },
@@ -185,7 +163,7 @@ const step2: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AM", "BM"]),
-  text: (props: StepTextProps) => EqualSegments.text(props, ["AM", "BM"]),
+  text: (ctx: Content) => EqualSegments.text(ctx, ["AM", "BM"]),
   staticText: () => EqualSegments.staticText(["AM", "BM"]),
 });
 
@@ -197,7 +175,7 @@ const step3: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["CM", "DM"], 2),
-  text: (props: StepTextProps) => EqualSegments.text(props, ["CM", "DM"], 2),
+  text: (ctx: Content) => EqualSegments.text(ctx, ["CM", "DM"]),
   staticText: () => EqualSegments.staticText(["CM", "DM"]),
 });
 
@@ -210,7 +188,7 @@ const step4: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CMA", "DMB"]),
-  text: (props: StepTextProps) => EqualAngles.text(props, ["CMA", "DMB"]),
+  text: (ctx: Content) => EqualAngles.text(ctx, ["CMA", "DMB"]),
   staticText: () => EqualAngles.staticText(["CMA", "DMB"]),
 });
 
@@ -224,8 +202,7 @@ const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: [2, 3, 4],
   additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
-  text: (props: StepTextProps) =>
-    EqualTriangles.text(props, step4SASProps.triangles),
+  text: (ctx: Content) => EqualTriangles.text(ctx, step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
 });
 
@@ -237,7 +214,7 @@ const step6: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CAM", "DBM"], 2),
-  text: (props: StepTextProps) => EqualAngles.text(props, ["CAM", "DBM"], 2),
+  text: (ctx: Content) => EqualAngles.text(ctx, ["CAM", "DBM"]),
   staticText: () => EqualAngles.staticText(["CAM", "DBM"]),
 });
 
@@ -250,7 +227,7 @@ const step7: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     ParallelLines.additions(props, ["AC", "BD"]),
-  text: (props: StepTextProps) => ParallelLines.text(props, ["AC", "BD"]),
+  text: (ctx: Content) => ParallelLines.text(ctx, ["AC", "BD"]),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
 });
 

@@ -1,18 +1,12 @@
-import { StepFocusProps } from "../types/stepTypes";
-import { Obj, SVGModes, TickType } from "../types/types";
+import {
+  StepFocusProps,
+  TickedAngles,
+  TickedSegments,
+} from "../types/stepTypes";
+import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
-
-interface TickedSegments {
-  s: [string, string];
-  ticks: number;
-}
-interface TickedAngles {
-  a: [string, string];
-  ticks?: number;
-  type?: TickType;
-}
 
 export interface SASProps {
   seg1s: TickedSegments;

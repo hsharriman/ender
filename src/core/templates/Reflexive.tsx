@@ -1,13 +1,9 @@
 import { definitions } from "../../theorems/definitions";
 import { Reasons } from "../../theorems/reasons";
 import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
+import { Content } from "../diagramContent";
 import { resizedStrs } from "../geometryText";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepTextProps,
-  StepUnfocusProps,
-} from "../types/stepTypes";
+import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
 
@@ -18,8 +14,8 @@ export class Reflexive {
       .addTick(props.frame, Obj.EqualLengthTick, num)
       .mode(props.frame, props.mode);
   };
-  static text = (props: StepTextProps, s: string, num = 1) => {
-    const seg = props.ctx.getSegment(s);
+  static text = (ctx: Content, s: string) => {
+    const seg = ctx.getSegment(s);
     const MKLinked = linked(s, seg);
     return (
       <span>
@@ -44,6 +40,6 @@ export const ReflexiveStep = (seg: string, num: number, step: StepMeta) =>
     additions: (props: StepFocusProps) => {
       Reflexive.additions(props, seg, num);
     },
-    text: (props: StepTextProps) => Reflexive.text(props, seg, num),
+    text: (ctx: Content) => Reflexive.text(ctx, seg),
     staticText: () => Reflexive.staticText(seg),
   });

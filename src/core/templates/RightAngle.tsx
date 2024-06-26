@@ -1,7 +1,8 @@
+import { makeStepMeta } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { angleStr } from "../geometryText";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
-import { Obj } from "../types/types";
+import { StepFocusProps, StepUnfocusProps } from "../types/stepTypes";
+import { Obj, Reason } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 
 export class RightAngle {
@@ -12,18 +13,10 @@ export class RightAngle {
       .addTick(props.frame, Obj.RightTick)
       .mode(props.frame, props.mode);
   };
-  static text = (props: StepTextProps, a: string) => {
+  static text = (ctx: Content, a: string) => {
     return (
       <span>
-        {BaseAngle.text(props, a)}
-        {this.rightText}
-      </span>
-    );
-  };
-  static ticklessText = (ctx: Content, a: string) => {
-    return (
-      <span>
-        {BaseAngle.ticklessText(ctx, a)}
+        {BaseAngle.text(ctx, a)}
         {this.rightText}
       </span>
     );
@@ -37,3 +30,19 @@ export class RightAngle {
     );
   };
 }
+
+export const RightAngleStep = (
+  a: string,
+  reason: Reason,
+  dependsOn?: number[],
+  unfocused?: (props: StepUnfocusProps) => void
+) => {
+  return makeStepMeta({
+    reason,
+    dependsOn,
+    unfocused,
+    additions: (props: StepFocusProps) => RightAngle.additions(props, a),
+    text: (ctx: Content) => RightAngle.text(ctx, a),
+    staticText: () => RightAngle.staticText(a),
+  });
+};

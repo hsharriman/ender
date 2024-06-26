@@ -12,7 +12,6 @@ import { Midpoint } from "../../core/templates/Midpoint";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
@@ -64,30 +63,17 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   // TODO: looks like equalrightangles doesn't have tickless text?
-  text: (props: StepTextProps) => {
-    const PeqM = EqualRightAngles.text(props, ["QPR", "RMN"]);
+  text: (ctx: Content) => {
+    const PeqM = EqualRightAngles.text(ctx, ["QPR", "RMN"]);
 
     return (
       <span>
         {PeqM}
         {comma}
-        {Midpoint.text(props, "PM", ["PR", "MR"], "R")}
+        {Midpoint.text(ctx, "PM", ["PR", "MR"], "R")}
       </span>
     );
   },
-
-  ticklessText: (ctx: Content) => {
-    const PeqM = EqualRightAngles.ticklesstText(ctx, ["QPR", "RMN"]);
-
-    return (
-      <span>
-        {PeqM}
-        {comma}
-        {Midpoint.ticklessText(ctx, "PM", ["PR", "MR"], "R")}
-      </span>
-    );
-  },
-
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("QRP").mode(props.frame, props.mode);
     props.ctx.getTriangle("MRN").mode(props.frame, props.mode);
@@ -114,8 +100,8 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["QR", "NR"]);
   },
-  text: (props: StepTextProps) => {
-    return Midpoint.text(props, "QN", ["QR", "NR"], "R");
+  text: (ctx: Content) => {
+    return Midpoint.text(ctx, "QN", ["QR", "NR"], "R");
   },
   staticText: () => Midpoint.staticText("R", "QN"),
 });
@@ -128,8 +114,8 @@ const step1: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["QPR", "RMN"]);
   },
-  text: (props: StepTextProps) => {
-    return EqualRightAngles.text(props, ["QPR", "RMN"]);
+  text: (ctx: Content) => {
+    return EqualRightAngles.text(ctx, ["QPR", "RMN"]);
   },
   staticText: () => EqualRightAngles.staticText(["QPR", "RMN"]),
 });
@@ -143,8 +129,8 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["PR", "RM"]);
   },
-  text: (props: StepTextProps) => {
-    return Midpoint.text(props, "PM", ["PR", "RM"], "R");
+  text: (ctx: Content) => {
+    return Midpoint.text(ctx, "PM", ["PR", "RM"], "R");
   },
   staticText: () => Midpoint.staticText("R", "PM"),
 });
@@ -155,7 +141,7 @@ const step3: StepMeta = makeStepMeta({
     step2.additions({ ...props, mode: SVGModes.Unfocused });
     step2.unfocused(props);
   },
-  text: (props: StepTextProps) => EqualAngles.text(props, ["QRP", "MRN"]),
+  text: (ctx: Content) => EqualAngles.text(ctx, ["QRP", "MRN"]),
   staticText: () => EqualAngles.staticText(["QRP", "MRN"]),
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["QRP", "MRN"]),
@@ -164,7 +150,7 @@ const step3: StepMeta = makeStepMeta({
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
   dependsOn: [1, 2, 3],
-  text: (props: StepTextProps) => EqualTriangles.text(props, ["QPR", "RMN"]),
+  text: (ctx: Content) => EqualTriangles.text(ctx, ["QPR", "RMN"]),
   staticText: () => EqualTriangles.staticText(["QPR", "RMN"]),
 
   additions: (props: StepFocusProps) => {
@@ -184,8 +170,8 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["QR", "RN"], 2);
   },
-  text: (props: StepTextProps) => {
-    return EqualSegments.text(props, ["QR", "RN"], 2);
+  text: (ctx: Content) => {
+    return EqualSegments.text(ctx, ["QR", "RN"]);
   },
   staticText: () => EqualSegments.staticText(["QR", "RN"]),
 });
@@ -200,8 +186,7 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["QR", "NR"], 2);
   },
-  text: (props: StepTextProps) =>
-    Midpoint.text(props, "QN", ["QR", "NR"], "R", 2),
+  text: (ctx: Content) => Midpoint.text(ctx, "QN", ["QR", "NR"], "R"),
   staticText: () => Midpoint.staticText("R", "QN"),
 });
 
@@ -224,9 +209,9 @@ const miniContent = () => {
   // ASA
   const step4 = ctx.addFrame("s4");
   const asaProps: ASAProps = {
-    a1s: { angles: ["QRP", "MRN"], tick: Obj.EqualAngleTick },
-    a2s: { angles: ["QPR", "NMR"], tick: Obj.RightTick },
-    segs: ["PR", "RM"],
+    a1s: { a: ["QRP", "MRN"], type: Obj.EqualAngleTick },
+    a2s: { a: ["QPR", "NMR"], type: Obj.RightTick },
+    segs: { s: ["PR", "RM"] },
     triangles: ["QPR", "RMN"],
   };
   ASA.additions({ ...defaultProps, frame: step4 }, asaProps, SVGModes.Blue);

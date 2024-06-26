@@ -5,7 +5,6 @@ import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
 } from "../core/types/stepTypes";
 import { Reason, SVGModes } from "../core/types/types";
@@ -34,8 +33,7 @@ export const getReasonFn =
 export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   const defaultStaticText = () => <></>;
   const defaultAdditions = (props: StepFocusProps) => {};
-  const defaultText = (props: StepTextProps) => <></>;
-  const defaultTicklessText = (ctx: Content) => <></>;
+  const defaultText = (ctx: Content) => <></>;
   const defaultUnfocused = (props: StepUnfocusProps) => {};
   const diagram = (ctx: Content, frame: string) => {
     const unfocusedProps = { ctx, frame };
@@ -54,7 +52,6 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
     unfocused: meta.unfocused || defaultUnfocused,
     diagram,
     text: meta.text || defaultText,
-    ticklessText: meta.ticklessText || defaultTicklessText,
     staticText: meta.staticText || defaultStaticText,
     additions: meta.additions || defaultAdditions,
   };
