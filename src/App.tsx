@@ -18,6 +18,7 @@ import { IP2 } from "./theorems/incomplete/ip2";
 import { IP3 } from "./theorems/incomplete/ip3";
 import { Reasons } from "./theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
+import { BackgroundQuestions } from "./components/BackgroundQuestions";
 
 interface AppMeta {
   layout: LayoutOptions;
@@ -195,7 +196,9 @@ export class App extends React.Component<AppProps, AppState> {
   };
 
   render() {
-    const currMeta = this.meta[this.state.activePage];
+    const page = this.state.activePage - 1; // For current page of proof
+    const numPage = this.meta.length + 3; // For total num of pages
+    const currMeta = this.meta[page];
     return (
       <div>
         <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
@@ -209,15 +212,12 @@ export class App extends React.Component<AppProps, AppState> {
           </button>
           <div className="absolute top-0 p-3 left-24 z-30">{`${
             this.state.activePage + 1
-          } / ${this.meta.length + 2}`}</div>
+          } / ${numPage}`}</div>
           <button
             className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
             id="next-arrow"
             style={{
-              display:
-                this.state.activePage < this.meta.length + 2 - 1
-                  ? "block"
-                  : "none",
+              display: this.state.activePage < numPage - 1 ? "block" : "none",
             }}
             onClick={this.onClick(1)}
           >
@@ -225,12 +225,14 @@ export class App extends React.Component<AppProps, AppState> {
           </button>
         </div>
         <div className="w-full h-full flex justify-start">
-          {this.state.activePage <= this.meta.length - 1 ? (
+          {this.state.activePage === 0 ? (
+            <BackgroundQuestions />
+          ) : this.state.activePage <= this.meta.length ? (
             currMeta.layout === "static" ? (
               <StaticAppPage
                 {...{
                   ...(currMeta.props as StaticAppPageProps),
-                  pageNum: this.state.activePage,
+                  pageNum: page,
                 }}
                 key={"static-pg" + this.state.activePage}
               />
@@ -238,7 +240,7 @@ export class App extends React.Component<AppProps, AppState> {
               <InteractiveAppPage
                 {...{
                   ...(currMeta.props as InteractiveAppPageProps),
-                  pageNum: this.state.activePage,
+                  pageNum: page,
                 }}
                 key={"interactive-pg" + this.state.activePage}
               />
@@ -247,7 +249,7 @@ export class App extends React.Component<AppProps, AppState> {
             <SusPage
               key={this.state.activePage}
               type={
-                this.state.activePage === this.meta.length
+                this.state.activePage === this.meta.length + 1
                   ? "Static"
                   : "Interactive"
               }
