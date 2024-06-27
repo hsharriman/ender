@@ -5,6 +5,7 @@ import {
 } from "./components/InteractiveAppPage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage } from "./components/SusPage";
+import { TestQuestions } from "./components/TestQuestions";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason } from "./core/types/types";
 import { PC1 } from "./theorems/checking/pc1";
@@ -15,14 +16,14 @@ import { P2 } from "./theorems/complete/proof2";
 import { P3 } from "./theorems/complete/proof3";
 import { P4 } from "./theorems/complete/proof4";
 import { P5 } from "./theorems/complete/proof5";
+import { P6 } from "./theorems/complete/proof6";
 import { IP1 } from "./theorems/incomplete/ip1";
 import { IP2 } from "./theorems/incomplete/ip2";
 import { IP3 } from "./theorems/incomplete/ip3";
 import { Reasons } from "./theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
-import { P6 } from "./theorems/complete/proof6";
 
-interface AppMeta {
+interface ProofMeta {
   layout: LayoutOptions;
   props: StaticAppPageProps | InteractiveAppPageProps;
 }
@@ -51,7 +52,7 @@ const randomizeProofs = (arr: LayoutProps[]) => {
   return newArr;
 };
 
-const staticLayout = (proofMeta: LayoutProps): AppMeta => {
+const staticLayout = (proofMeta: LayoutProps): ProofMeta => {
   // reset stored variables
   const ctx = proofMeta.baseContent(true, false);
   const reasons: Reason[] = [];
@@ -81,7 +82,7 @@ const staticLayout = (proofMeta: LayoutProps): AppMeta => {
     },
   };
 };
-const interactiveLayout = (proofMeta: LayoutProps): AppMeta => {
+const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
   const ctx = proofMeta.baseContent(true, true);
   const linkedTexts: ProofTextItem[] = [];
   const reasonMap = new Map<string, Reason>();
@@ -131,11 +132,12 @@ const interactiveLayout = (proofMeta: LayoutProps): AppMeta => {
       reasonMap: reasonMap,
       linkedTexts: linkedTexts,
       pageNum: -1,
+      questions: proofMeta.questions,
     },
   };
 };
 
-const randomizeLayout = (proofMetas: LayoutProps[]): AppMeta[] => {
+const randomizeLayout = (proofMetas: LayoutProps[]): ProofMeta[] => {
   // randomly pick 0 or 1
   // if 1, then the first proof is static, else interactive
   const staticFirst = Math.round(Math.random()) === 1;
@@ -158,7 +160,7 @@ interface AppState {
   activeTest: number;
 }
 export class App extends React.Component<AppProps, AppState> {
-  private meta: AppMeta[] = [];
+  private meta: ProofMeta[] = [];
   constructor(props: AppProps) {
     super(props);
     this.state = {
@@ -199,36 +201,88 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
+  onNext = (direction: number) => {
+    if (this.state.activePage + direction < 0) {
+      this.setState({ activeTest: 0 });
+    } else {
+      this.setState({
+        activePage: this.state.activePage + direction,
+      });
+    }
+  };
+
   render() {
     const currMeta = this.meta[this.state.activePage];
     return (
       <div>
-        <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
-          <button
-            className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
-            id="prev-arrow"
-            style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
-            onClick={this.onClick(-1)}
+        {this.state.activePage <= this.meta.length - 1 ? (
+          <div
+            className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
+            id="header"
           >
-            {"Previous"}
-          </button>
-          <div className="absolute top-0 p-3 left-24 z-30">{`${
-            this.state.activePage + 1
-          } / ${this.meta.length + 2}`}</div>
-          <button
-            className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
-            id="next-arrow"
-            style={{
-              display:
-                this.state.activePage < this.meta.length + 2 - 1
-                  ? "block"
-                  : "none",
-            }}
-            onClick={this.onClick(1)}
-          >
-            {"Next"}
-          </button>
-        </div>
+            <div className="flex items-center">
+              <button
+                className="p-3 underline underline-offset-2 z-30 text-sm"
+                id="prev-arrow"
+                style={{
+                  display: this.state.activePage >= 0 ? "block" : "none",
+                }}
+                onClick={this.onClick(-1)}
+              >
+                {"Previous"}
+              </button>
+              <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
+                this.meta.length + 2
+              }`}</div>
+              <div className="ml-10 flex-1">
+                <TestQuestions
+                  questions={currMeta.props.questions}
+                  onNext={this.onNext}
+                />
+              </div>
+              <button
+                className="p-3 underline underline-offset-2 z-30 text-sm"
+                id="next-arrow"
+                style={{
+                  display:
+                    this.state.activePage < this.meta.length + 2 - 1
+                      ? "block"
+                      : "none",
+                }}
+                onClick={this.onClick(1)}
+              >
+                {"Next"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+            <button
+              className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+              id="prev-arrow"
+              style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+              onClick={this.onClick(-1)}
+            >
+              {"Previous"}
+            </button>
+            <div className="absolute top-0 p-3 left-24 z-30">{`${
+              this.state.activePage + 1
+            } / ${this.meta.length + 2}`}</div>
+            <button
+              className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+              id="next-arrow"
+              style={{
+                display:
+                  this.state.activePage < this.meta.length + 2 - 1
+                    ? "block"
+                    : "none",
+              }}
+              onClick={this.onClick(1)}
+            >
+              {"Next"}
+            </button>
+          </div>
+        )}
         <div className="w-full h-full flex justify-start">
           {this.state.activePage <= this.meta.length - 1 ? (
             currMeta.layout === "static" ? (

@@ -2,7 +2,7 @@ import React from "react";
 import { DiagramContent } from "../core/diagramContent";
 import { StaticProofTextItem } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
-import { Question } from "../questions/completeQuestions";
+import { Question } from "../questions/funcTypeQuestions";
 import { GIVEN_ID } from "../theorems/utils";
 import { StaticDiagram } from "./StaticDiagram";
 import { TestQuestions } from "./TestQuestions";
@@ -110,9 +110,9 @@ export class StaticAppPage extends React.Component<
             {this.props.reasons.map((reason) => this.renderReason(reason))}
           </div>
         </div>
-        <div className="w-[400px] h-fit ml-10 p-8 rounded-lg border-dotted border-4 border-violet-300">
+        {/* <div className="w-[400px] h-fit ml-10 p-8 rounded-lg border-dotted border-4 border-violet-300">
           <TestQuestions questions={this.props.questions} />
-        </div>
+        </div> */}
       </div>
     );
   }
