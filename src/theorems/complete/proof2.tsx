@@ -117,8 +117,20 @@ const step1: StepMeta = makeStepMeta({
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
-    EqualAngles.additions(props, ["ABD", "CBD"]);
     RightAngle.additions(props, "ADB");
+  },
+  text: (ctx: Content) => RightAngle.text(ctx, "ADB"),
+  staticText: () => RightAngle.staticText("ADB"),
+});
+
+const step2: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
+  unfocused: (props: StepUnfocusProps) => {
+    step1.additions({ ...props, mode: SVGModes.Unfocused });
+    step1.unfocused(props);
+  },
+  additions: (props: StepFocusProps) => {
+    EqualAngles.additions(props, ["ABD", "CBD"]);
   },
   text: (ctx: Content) => {
     const BD = ctx.getSegment("BD");
@@ -127,24 +139,21 @@ const step1: StepMeta = makeStepMeta({
 
     return (
       <span>
-        {RightAngle.text(ctx, "ADB")}
-        {comma}
         {linked("BD", BD)}
         {" bisects "}
         {linked("ABC", ABD, [DBC, ctx.getSegment("AB"), ctx.getSegment("BC")])}
       </span>
     );
   },
-  staticText: () => givens.staticText(),
+  staticText: () => EqualAngles.staticText(["ABD", "CBD"]),
 });
 
-const step2: StepMeta = makeStepMeta({
+const step3: StepMeta = makeStepMeta({
   reason: Reasons.PerpendicularLines,
   dependsOn: [1],
   unfocused: (props: StepUnfocusProps) => {
-    const stepProps = { ...props, mode: SVGModes.Unfocused };
-    givens.additions(stepProps);
-    step1.additions(stepProps);
+    step2.additions({ ...props, mode: SVGModes.Unfocused });
+    step2.unfocused(props);
   },
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "BD", ["AD", "DC"]),
@@ -152,13 +161,12 @@ const step2: StepMeta = makeStepMeta({
   staticText: () => Perpendicular.staticText("BD", "AC"),
 });
 
-const step3: StepMeta = makeStepMeta({
+const step4: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
-  dependsOn: [2],
+  dependsOn: [3],
   unfocused: (props: StepUnfocusProps) => {
-    const stepProps = { ...props, mode: SVGModes.Unfocused };
-    givens.additions(stepProps);
-    step1.additions(stepProps);
+    step3.additions({ ...props, mode: SVGModes.Unfocused });
+    step3.unfocused(props);
   },
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
@@ -166,13 +174,11 @@ const step3: StepMeta = makeStepMeta({
   staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
 });
 
-const step4: StepMeta = makeStepMeta({
+const step5: StepMeta = makeStepMeta({
   reason: Reasons.Reflexive,
   unfocused: (props: StepUnfocusProps) => {
-    const stepProps = { ...props, mode: SVGModes.Unfocused };
-    givens.additions(stepProps);
-    step1.additions(stepProps);
-    step2.additions(stepProps);
+    step4.additions({ ...props, mode: SVGModes.Unfocused });
+    step4.unfocused(props);
   },
   additions: (props: StepFocusProps) => Reflexive.additions(props, "BD"),
   text: (ctx: Content) => Reflexive.text(ctx, "BD"),
@@ -185,9 +191,9 @@ const step5ASAProps: ASAProps = {
   segs: { s: ["BD", "BD"] },
   triangles: ["ABD", "CBD"],
 };
-const step5: StepMeta = makeStepMeta({
+const step6: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
-  dependsOn: [1, 3, 4],
+  dependsOn: [2, 4, 5],
   additions: (props: StepFocusProps) => {
     ASA.additions(props, step5ASAProps);
   },
@@ -195,11 +201,11 @@ const step5: StepMeta = makeStepMeta({
   staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
 });
 
-const step6: StepMeta = makeStepMeta({
+const step7: StepMeta = makeStepMeta({
   reason: Reasons.CorrespondingSegments,
-  dependsOn: [5],
+  dependsOn: [6],
   unfocused: (props: StepUnfocusProps) => {
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
+    step6.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AD", "DC"], 2),
@@ -207,13 +213,13 @@ const step6: StepMeta = makeStepMeta({
   staticText: () => EqualSegments.staticText(["AD", "DC"]),
 });
 
-const step7: StepMeta = makeStepMeta({
+const step8: StepMeta = makeStepMeta({
   reason: Reasons.Midpoint,
-  dependsOn: [6],
+  dependsOn: [7],
   unfocused: (props: StepUnfocusProps) => {
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
+    step7.unfocused(props);
   },
-  additions: (props: StepFocusProps) => step6.additions(props),
+  additions: (props: StepFocusProps) => step7.additions(props),
   text: (ctx: Content) => Midpoint.text(ctx, "AC", ["AD", "DC"], "D"),
   staticText: () => Midpoint.staticText("D", "AC"),
 });
@@ -228,13 +234,13 @@ export const miniContent = () => {
   };
 
   // STEP 2 - PERPENDICULAR LINES
-  const step2 = ctx.addFrame("s2");
+  const step2 = ctx.addFrame("s3");
   const BD = ctx.getSegment("BD").mode(step2, SVGModes.Focused);
   const AD = ctx.getSegment("AD").mode(step2, SVGModes.Focused);
   const CD = ctx.getSegment("CD").mode(step2, SVGModes.Focused);
   RightAngle.additions({ ...defaultStepProps, frame: step2 }, "ADB");
 
-  const step3 = ctx.addFrame("s3");
+  const step3 = ctx.addFrame("s4");
   BD.mode(step3, SVGModes.Focused);
   AD.mode(step3, SVGModes.Focused);
   CD.mode(step3, SVGModes.Focused);
@@ -245,11 +251,11 @@ export const miniContent = () => {
   );
 
   // STEP 3 - REFLEXIVE PROPERTY
-  // const step4 = ctx.addFrame("s4");
-  // Reflexive.additions({ ...defaultStepProps, frame: step4 }, "BD");
+  const step4 = ctx.addFrame("s5");
+  Reflexive.additions({ ...defaultStepProps, frame: step4 }, "BD");
 
   // STEP 4 - ASA CONGRUENCE
-  const step5 = ctx.addFrame("s5");
+  const step5 = ctx.addFrame("s6");
   ASA.additions(
     { ...defaultStepProps, frame: step5 },
     {
@@ -260,43 +266,21 @@ export const miniContent = () => {
     },
     SVGModes.Blue
   );
-  const ABD = ctx.getTriangle("ABD");
-  // BD.mode(step4, SVGModes.Purple);
-  // // ADB.mode(step4, SVGModes.Purple);
-  const aABD = ctx.getAngle("ABD");
-  // ctx.pushTick(ADB, Obj.RightTick).mode(step4, SVGModes.Purple);
-  // ctx.pushTick(aABD, Obj.EqualAngleTick).mode(step4, SVGModes.Purple);
-
-  const CBD = ctx.getTriangle("CBD");
-  const DBC = ctx.getAngle("CBD");
-  // ctx.pushTick(DBC, Obj.EqualAngleTick).mode(step4, SVGModes.Blue);
-  const aBDC = ctx.getAngle("BDC");
-  // ctx.pushTick(aBDC, Obj.RightTick).mode(step4, SVGModes.Blue);
-  // ctx.pushTick(BD, Obj.EqualLengthTick).mode(step4, SVGModes.Blue);
 
   // STEP 5 - CORRESPONDING SEGMENTS
-  const step6 = ctx.addFrame("s6");
-  // ABD.mode(step6, SVGModes.Focused);
-  // CBD.mode(step6, SVGModes.Focused);
+  const step6 = ctx.addFrame("s7");
   EqualAngles.additions(
     { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
     ["ABD", "CBD"]
   );
-  // BD.mode(step6, SVGModes.Focused);
-  // ctx.pushTick(BD, Obj.EqualLengthTick).mode(step6, SVGModes.Focused);
   Reflexive.additions(
     { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
     "BD"
   );
-  // ctx
-  //   .pushTick(ctx.getAngle("ADB"), Obj.RightTick)
-  //   .mode(step6, SVGModes.Focused);
   EqualRightAngles.additions(
     { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
     ["ADB", "BDC"]
   );
-  // ctx.pushTick(DBC, Obj.EqualAngleTick).mode(step6, SVGModes.Focused);
-  // ctx.pushTick(aABD, Obj.EqualAngleTick).mode(step6, SVGModes.Focused);
   EqualAngles.additions(
     { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
     ["ABD", "CBD"]
@@ -317,24 +301,9 @@ export const miniContent = () => {
     ["AB", "CB"],
     3
   );
-  // ctx.pushTick(aBDC, Obj.RightTick).mode(step6, SVGModes.Focused);
-  // AD.mode(step6, SVGModes.Purple);
-  // CD.mode(step6, SVGModes.Blue);
-  // ctx
-  //   .pushTick(AD, Obj.EqualLengthTick, { num: 2 })
-  //   .mode(step6, SVGModes.Purple);
-  // ctx.pushTick(CD, Obj.EqualLengthTick, { num: 2 }).mode(step6, SVGModes.Blue);
-  // const AB = ctx.getSegment("AB").mode(step6, SVGModes.Focused);
-  // const CB = ctx.getSegment("CB").mode(step6, SVGModes.Focused);
-  // ctx
-  //   .pushTick(AB, Obj.EqualLengthTick, { num: 3 })
-  //   .mode(step5, SVGModes.Focused);
-  // ctx
-  //   .pushTick(CB, Obj.EqualLengthTick, { num: 3 })
-  //   .mode(step5, SVGModes.Focused);
 
   // STEP 6 - MIDPOINT
-  const step7 = ctx.addFrame("s7");
+  const step7 = ctx.addFrame("s8");
   AD.mode(step7, SVGModes.Purple);
   CD.mode(step7, SVGModes.Blue);
   AD.addTick(step7, Obj.EqualLengthTick, 2).mode(step7, SVGModes.Purple);
@@ -349,5 +318,5 @@ export const P2: LayoutProps = {
   miniContent: miniContent(),
   givens,
   proves,
-  steps: [step1, step2, step3, step4, step5, step6, step7],
+  steps: [step1, step2, step3, step4, step5, step6, step7, step8],
 };
