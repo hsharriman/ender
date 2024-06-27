@@ -14,6 +14,7 @@ import { P1 } from "./theorems/complete/proof1";
 import { P2 } from "./theorems/complete/proof2";
 import { P3 } from "./theorems/complete/proof3";
 import { P4 } from "./theorems/complete/proof4";
+import { P5 } from "./theorems/complete/proof5";
 import { IP1 } from "./theorems/incomplete/ip1";
 import { IP2 } from "./theorems/incomplete/ip2";
 import { IP3 } from "./theorems/incomplete/ip3";
@@ -165,7 +166,7 @@ export class App extends React.Component<AppProps, AppState> {
     };
 
     const randomCompleteProofs = randomizeLayout(
-      randomizeProofs([P1, P2, P3, P4])
+      randomizeProofs([P1, P2, P3, P4, P5])
     ); // 2 random complete proofs
     const randomCheckingProofs = randomizeLayout(
       randomizeProofs([PC1, PC2, PC3])
