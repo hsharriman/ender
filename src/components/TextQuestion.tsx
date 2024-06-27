@@ -52,7 +52,7 @@ export class TextQuestion extends React.Component<
             onChange={this.handleInputChange}
           />
         </div>
-        <SubmitQuestion onClick={this.handleSubmit} />
+        {/* <SubmitQuestion onClick={this.handleSubmit} /> */}
       </div>
     );
   }

@@ -9,6 +9,7 @@ interface BackgroundPageState {
   questions: BackgroundQuestionType[];
   answers: { [key: string]: string };
   completed: boolean;
+  submitted: boolean;
 }
 
 export class BackgroundQuestions extends React.Component<
@@ -31,16 +32,33 @@ export class BackgroundQuestions extends React.Component<
       ],
       answers: {},
       completed: false,
+      submitted: false,
     };
   }
 
   handleAnswerChange = (questionNum: string, answer: string) => {
-    this.setState((prevState) => ({
-      answers: {
-        ...prevState.answers,
-        [questionNum]: answer,
-      },
-    }));
+    this.setState(
+      (prevState) => ({
+        answers: {
+          ...prevState.answers,
+          [questionNum]: answer,
+        },
+      }),
+      () => {
+        const allAnswered = Object.values(this.state.answers).every(
+          (answer) => answer !== ""
+        );
+        if (allAnswered) {
+          this.setState({
+            completed: true,
+          });
+        } else {
+          this.setState({
+            completed: false,
+          });
+        }
+      }
+    );
   };
 
   handleInputChange = (
@@ -61,14 +79,14 @@ export class BackgroundQuestions extends React.Component<
     }
     console.log("Survey results:", answers);
     this.setState({
-      completed: true,
+      submitted: true,
     });
   };
 
   render() {
     return (
       <>
-        {this.state.completed ? (
+        {this.state.submitted ? (
           <div className="justify-center flex w-full min-w-[1300px] pt-20">
             <span>
               <h2>
@@ -118,7 +136,10 @@ export class BackgroundQuestions extends React.Component<
                 </div>
               ))}
               <div className="mt-4">
-                <SubmitQuestion onClick={this.handleSubmit} />
+                <SubmitQuestion
+                  disabled={!this.state.completed}
+                  onClick={this.handleSubmit}
+                />
               </div>
             </div>
           </div>
