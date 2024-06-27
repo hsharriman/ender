@@ -58,101 +58,85 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
   renderDepEdge = (d: Dims, highest: boolean, lastBottom: number) => {
     const divHeight = Math.round(d.b - d.t);
     return (
-      <>
-        <div
-          className="absolute w-8"
-          style={{
-            top: `${d.t}px`,
-            left: `${d.l - this.left}px`,
-            height: `${divHeight}px`,
-          }}
-        >
-          <svg width="100%" height="100%">
-            <circle r="5px" cx="5px" cy="50%" fill={this.DEFAULT_CLR} />
-            <polyline
-              points={`0,${this.props.rowHeight / 2} 30, ${
-                this.props.rowHeight / 2
-              } 30, ${this.props.rowHeight}`}
-              stroke={this.DEFAULT_CLR}
-              fill="none"
-              strokeWidth="3px"
-            />
-            {!highest && (
-              <line
-                x1="30px"
-                y1="0"
-                x2="30px"
-                y2={`${this.props.rowHeight / 2}px`}
-                strokeWidth="3px"
-                stroke={this.DEFAULT_CLR}
-              />
-            )}
-          </svg>
-        </div>
-        {d.b - lastBottom > this.props.rowHeight &&
-          this.renderConnector(lastBottom, d)}
-      </>
+      <div
+        className="absolute w-8"
+        style={{
+          top: `${d.t}px`,
+          left: `${d.l - this.left}px`,
+          height: `${divHeight}px`,
+        }}
+      >
+        <svg width="100%" height="100%">
+          <circle r="5px" cx="5px" cy="50%" fill={this.DEFAULT_CLR} />
+          <polyline
+            points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH},${
+              this.props.rowHeight / 2
+            }`}
+            stroke={this.DEFAULT_CLR}
+            fill="none"
+            strokeWidth="3px"
+          />
+        </svg>
+      </div>
     );
   };
 
   renderArrow = (d: Dims, lastBottom: number) => {
     // TODO make less absolutely calculated by pixel values + assumed row height
     return (
-      <>
-        <div
-          className="absolute w-8"
-          style={{
-            top: `${d.t}px`,
-            left: `${d.l - this.left}px`,
-            height: `${this.props.rowHeight}px`,
-          }}
-        >
-          <svg width="100%" height="100%">
-            <polyline
-              points={`16,18 1,32 16,46`}
-              stroke={this.DEFAULT_CLR}
-              fill="none"
-              strokeWidth="3px"
-            />
-            <line
-              x1="0%"
-              y1="50%"
-              x2="30px"
-              y2="50%"
-              stroke={this.DEFAULT_CLR}
-              strokeWidth="3px"
-            />
-            <polyline
-              points={`0,${this.props.rowHeight / 2} 30, ${
-                this.props.rowHeight / 2
-              } 30,0`}
-              stroke={this.DEFAULT_CLR}
-              fill="none"
-              strokeWidth="3px"
-            />
-          </svg>
-        </div>
-        {d.b - lastBottom > this.props.rowHeight &&
-          this.renderConnector(lastBottom, d)}
-      </>
+      <div
+        className="absolute w-8"
+        style={{
+          top: `${d.t}px`,
+          left: `${d.l - this.left}px`,
+          height: `${this.props.rowHeight}px`,
+        }}
+      >
+        <svg width="100%" height="100%">
+          <polyline
+            points={`16,18 1,32 16,46`}
+            stroke={this.DEFAULT_CLR}
+            fill="none"
+            strokeWidth="3px"
+          />
+          <line
+            x1="0%"
+            y1="50%"
+            x2={`${this.SVGWIDTH}px`}
+            y2="50%"
+            stroke={this.DEFAULT_CLR}
+            strokeWidth="3px"
+          />
+          <polyline
+            points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH},${
+              this.props.rowHeight / 2
+            }`}
+            stroke={this.DEFAULT_CLR}
+            fill="none"
+            strokeWidth="3px"
+          />
+        </svg>
+      </div>
     );
   };
 
-  renderConnector = (lastBottom: number, d: Dims) => {
-    const divHeight = Math.round(d.t - lastBottom);
+  renderFullConnector = (dims: Dims[]) => {
+    let arrow = dims[0].t + this.props.rowHeight / 2;
+    let end = dims[dims.length - 1].b - this.props.rowHeight / 2;
+    let divHeight = Math.abs(arrow - end);
     return (
       <div
         className="absolute w-8"
         style={{
-          top: `${lastBottom}px`,
-          left: `${d.l - this.left}px`,
+          top: `${Math.min(arrow, end)}px`,
+          left: `${dims[0].l - this.left}px`,
           height: `${divHeight}px`,
         }}
       >
         <svg width="100%" height="100%">
           <line
-            x1={`30px`}
-            x2={`30px`}
+            x1={`${this.SVGWIDTH}px`}
+            x2={`${this.SVGWIDTH}px`}
             y1={0}
             y2={`${divHeight}px`}
             stroke={this.DEFAULT_CLR}
@@ -183,6 +167,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
       });
       innerContent = (
         <div>
+          {this.renderFullConnector(dims)}
           {svgs}
           <div
             className="text-purple-400 font-notoSans w-6 text-base absolute text-nowrap flex align-middle"

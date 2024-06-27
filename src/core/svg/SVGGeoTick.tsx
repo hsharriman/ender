@@ -99,10 +99,10 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     // increase radius according to numticks
     for (let i = 0; i < num; i++) {
       let radius;
-      if (i === 0 && num > 1) {
-        radius =
-          arcR * (i + 1) + scaleToSvg(arcPad * (i + 1), this.props.miniScale);
-      }
+      // if (i === 0 && num > 1) {
+      //   radius =
+      //     arcR * (i + 1) + scaleToSvg(arcPad * (i + 1), this.props.miniScale);
+      // }
       radius =
         arcR * (i + 1) + scaleToSvg(arcPad * (i + 1), this.props.miniScale);
       const scalar = arcR + arcPad * i;
