@@ -11,11 +11,14 @@ import SusQuestion from "./SusQuestion";
 
 interface susPageProps {
   type: string;
+  // answers: { [question: string]: string };
+  // updateAnswers: (name: string, question: string, answer: string) => void;
 }
 
 interface susPageState {
   answers: { [key: string]: string };
-  completed: Boolean;
+  completed: boolean;
+  submitted: boolean;
 }
 
 export class SusPage extends React.Component<susPageProps, susPageState> {
@@ -31,49 +34,66 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
           acc[index.toString()] = "";
           return acc;
         }, {} as { [key: string]: string }),
-        ...this.textQuestions.reduce((acc, _, index) => {
-          acc[`text${index}`] = "";
-          return acc;
-        }, {} as { [key: string]: string }),
       },
       completed: false,
+      submitted: false,
     };
   }
 
   handleAnswerChange = (questionNum: string, answer: string) => {
-    this.setState((prevState) => ({
-      answers: {
-        ...prevState.answers,
-        [questionNum]: answer,
-      },
-    }));
-  };
-
-  handleInputChange = (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-    index: number
-  ) => {
-    const { value } = event.target;
-    this.handleAnswerChange(`text${index}`, value);
+    this.setState(
+      (prevState) => ({
+        answers: {
+          ...prevState.answers,
+          [questionNum]: answer,
+        },
+      }),
+      () => {
+        const allAnswered = Object.values(this.state.answers).every(
+          (answer) => answer !== ""
+        );
+        if (allAnswered) {
+          this.setState({
+            completed: true,
+          });
+        } else {
+          this.setState({
+            completed: false,
+          });
+        }
+      }
+    );
+    console.log(this.state.completed);
   };
 
   handleSubmit = () => {
-    const { answers } = this.state;
-    const allAnswered = Object.values(answers).every((answer) => answer !== "");
+    const localAnswers = this.state.answers;
+    const allAnswered = Object.values(localAnswers).every(
+      (answer) => answer !== ""
+    );
 
     if (!allAnswered) {
       return;
     }
-    console.log("Survey results:", answers);
-    this.setState((prevState) => ({
-      completed: true,
-    }));
+
+    let toLogAnswers = "";
+    Object.keys(localAnswers).forEach((questionNum) => {
+      toLogAnswers += `Question ${questionNum}: ${localAnswers[questionNum]},`;
+    });
+
+    console.log(
+      `${this.props.type},SUS,` + toLogAnswers + `,time: ${Date.now()}`
+    );
+
+    this.setState({
+      submitted: true,
+    });
   };
 
   render() {
     return (
       <>
-        {this.state.completed ? (
+        {this.state.submitted ? (
           <div className="grid grid-rows-[auto,1fr] gap-2 justify-center flex w-full min-w-[1300px] pt-20">
             <span>
               <h2>
@@ -121,17 +141,6 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                   )}
                 </div>
                 <div className="col-start-2 justify-start">
-                  {/* <h2 className="text-xl font-bold mb-2">
-                    Survey Instructions
-                  </h2>
-                  <p className="text-base">
-                    Please answer the questions honestly based on your
-                    experience.
-                  </p>
-                  <p className="text-base">
-                    For each statement, select the response that best matches
-                    your opinion.
-                  </p> */}
                   <div className="right-column ml-[50px]">
                     {susQuestions.map((question, index) => (
                       <SusQuestion
@@ -145,37 +154,13 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                     ))}
                   </div>
                   <div className="ml-[50px]">
-                    <SubmitQuestion onClick={this.handleSubmit} />
+                    <SubmitQuestion
+                      disabled={!this.state.completed}
+                      onClick={this.handleSubmit}
+                    />
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-10 ml-[50px]">
-              {/* <div className="right-column ml-10">
-                {this.textQuestions.map((question, index) => (
-                  <>
-                    <div className="flex flex-col justify-start pb-1">
-                      <div className="font-bold text-base text-slate-500">
-                        Question {index + 1}:
-                      </div>
-                    </div>
-                    <div className="font-bold text-base pb-1">
-                      {question.prompt}
-                    </div>
-                    <div className="text-base">
-                      <textarea
-                        name={question.prompt}
-                        className="border-2 border-black w-full p-1.5 rounded-sm"
-                        value={this.state.answers[`text${index}`]}
-                        onChange={(event) =>
-                          this.handleInputChange(event, index)
-                        }
-                        rows={6}
-                      />
-                    </div>
-                  </>
-                ))}
-              </div> */}
             </div>
           </div>
         )}

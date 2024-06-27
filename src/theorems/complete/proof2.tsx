@@ -20,7 +20,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { completeProof2 } from "../../questions/completeQuestions";
+import { completeProof2 } from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 

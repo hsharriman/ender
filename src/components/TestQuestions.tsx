@@ -3,10 +3,12 @@ import { RadioQuestion } from "./RadioQuestion";
 import { MultiSelectQuestion } from "./MultiSelectQuestion";
 import { TextQuestion } from "./TextQuestion";
 import { QuestionType } from "../questions/completeQuestions";
-import { Question } from "../questions/completeQuestions";
+import { Question } from "../questions/funcTypeQuestions";
+import { YesNoQuestion } from "./YesNoQuestion";
 
 interface QuestionsProps {
   questions: Question[];
+  onNext: (direction: number) => void;
 }
 
 interface QuestionsState {
@@ -39,17 +41,22 @@ export class TestQuestions extends React.Component<
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,
       }));
+    } else {
+      this.props.onNext(1);
+      this.setState({
+        currentQuestionIndex: 0,
+      });
     }
   };
 
   render() {
     const currentQuestion =
       this.props.questions[this.state.currentQuestionIndex];
-    const answers = currentQuestion.answers || [];
+    const answers = currentQuestion.answers;
 
     return (
       <>
-        <div className="flex items-center mb-4">
+        {/* <div className="flex items-center mb-4">
           <select
             onChange={this.handleQuestionChange}
             value={this.state.currentQuestionIndex}
@@ -61,35 +68,16 @@ export class TestQuestions extends React.Component<
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          {currentQuestion.type === QuestionType.Single && (
-            <RadioQuestion
-              questionNum={(this.state.currentQuestionIndex + 1).toString()}
-              question={currentQuestion.prompt}
-              answers={answers}
-              onSubmit={this.handleSubmit}
-            />
-          )}
-          {currentQuestion.type === QuestionType.Mutli && (
-            <MultiSelectQuestion
-              questionNum={(this.state.currentQuestionIndex + 1).toString()}
-              question={currentQuestion.prompt}
-              answers={answers}
-              onSubmit={this.handleSubmit}
-            />
-          )}
-          {currentQuestion.type === QuestionType.Text && (
-            <TextQuestion
-              questionNum={(this.state.currentQuestionIndex + 1).toString()}
-              question={currentQuestion.prompt}
-              answers={[]}
-              onSubmit={this.handleSubmit}
-            />
-          )}
-          {currentQuestion.type === QuestionType.Next && (
-            <span>{currentQuestion.prompt}</span>
-          )}
+        </div> */}
+        <div className="flex text-xl">
+          <span className="pr-6">Q{this.state.currentQuestionIndex + 1}:</span>
+          <YesNoQuestion
+            questionNum={(this.state.currentQuestionIndex + 1).toString()}
+            fullScaffold={currentQuestion.fullScaffold}
+            question={currentQuestion.prompt}
+            answers={answers}
+            onSubmit={this.handleSubmit}
+          />
         </div>
       </>
     );

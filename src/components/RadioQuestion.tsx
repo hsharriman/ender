@@ -70,7 +70,7 @@ export class RadioQuestion extends React.Component<
             );
           })}
         </div>
-        <SubmitQuestion onClick={this.handleSubmit} />
+        {/* <SubmitQuestion onClick={this.handleSubmit} /> */}
       </div>
     );
   }
