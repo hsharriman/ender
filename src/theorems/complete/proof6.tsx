@@ -18,7 +18,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { completeProof1 } from "../../questions/completeQuestions";
+import { exploratoryQuestion } from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -278,7 +278,7 @@ const miniContent = () => {
 };
 
 export const P6: LayoutProps = {
-  questions: completeProof1,
+  questions: exploratoryQuestion,
   miniContent: miniContent(),
   baseContent,
   givens,

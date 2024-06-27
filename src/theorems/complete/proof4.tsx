@@ -19,7 +19,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { completeProof3 } from "../../questions/completeQuestions";
+import { exploratoryQuestion } from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -259,6 +259,18 @@ export const miniContent = () => {
   EqualSegments.additions(s7Props, ["PL", "PU"], 3);
 
   const corang2 = ctx.addFrame("s8");
+  const s8Props = { ctx, frame: corang2, mode: SVGModes.Focused };
+  EqualAngles.additions(s8Props, ["ULQ", "LUQ"], 2);
+  EqualAngles.additions(
+    { ...defaultStepProps, frame: corang2 },
+    ["UQL", "LNU"],
+    3,
+    SVGModes.Blue
+  );
+  EqualAngles.additions(s8Props, ["QLU", "LUN"], 1);
+  EqualSegments.additions(s8Props, ["LU", "LU"], 3);
+  EqualSegments.additions(s8Props, ["LN", "QU"], 1);
+  EqualSegments.additions(s8Props, ["LQ", "NU"], 2);
 
   const asa2 = ctx.addFrame("s9");
   ASA.additions(
@@ -270,7 +282,7 @@ export const miniContent = () => {
 };
 
 export const P4: LayoutProps = {
-  questions: completeProof3,
+  questions: exploratoryQuestion,
   baseContent,
   miniContent: miniContent(),
   givens,

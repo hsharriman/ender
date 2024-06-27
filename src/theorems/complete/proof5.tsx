@@ -16,7 +16,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
-import { completeProof1 } from "../../questions/completeQuestions";
+import { exploratoryQuestion } from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { linked, makeStepMeta } from "../utils";
 
@@ -207,7 +207,6 @@ const miniContent = () => {
     mode: SVGModes.Purple,
   };
 
-  // // STEP 4 - VERTICAL ANGLES
   const step4 = ctx.addFrame("s5");
   ctx.getTriangle("MYZ").mode(step4, SVGModes.Focused);
   ctx.getTriangle("MWX").mode(step4, SVGModes.Focused);
@@ -220,7 +219,6 @@ const miniContent = () => {
     SVGModes.Blue
   );
 
-  // // STEP 5 - SAS TRIANGLE CONGRUENCE
   const step5 = ctx.addFrame("s6");
   SAS.additions(
     { ...defaultStepProps, frame: step5 },
@@ -233,7 +231,6 @@ const miniContent = () => {
     SVGModes.Blue
   );
 
-  // // STEP 6 - CORRESPONDING ANGLES
   const step6 = ctx.addFrame("s7");
   CongruentTriangles.additions(
     { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
@@ -253,7 +250,6 @@ const miniContent = () => {
     SVGModes.Blue
   );
 
-  // // STEP 7 - ALTERNATE ANGLES
   const step7 = ctx.addFrame("s8");
   ctx.getSegment("YM").mode(step7, SVGModes.Focused);
   ctx.getSegment("XM").mode(step7, SVGModes.Focused);
@@ -272,7 +268,7 @@ const miniContent = () => {
 };
 
 export const P5: LayoutProps = {
-  questions: completeProof1,
+  questions: exploratoryQuestion,
   miniContent: miniContent(),
   baseContent,
   givens,
