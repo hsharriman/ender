@@ -44,7 +44,7 @@ export class BackgroundQuestions extends React.Component<
   };
 
   handleInputChange = (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
+    event: React.ChangeEvent<HTMLInputElement>,
     index: number
   ) => {
     const { value } = event.target;
@@ -84,10 +84,10 @@ export class BackgroundQuestions extends React.Component<
               <div className="mb-8 w-[1000px]">
                 <span>
                   Thank you for participating in our study. Your input is
-                  invaluable and will contribute to our understanding of how
+                  important and will contribute to our understanding of how
                   students like you use different ways to read and solve math
                   problems about geometric proofs on computers. We’re also
-                  checking if making these problems interactive helps you
+                  seeing if making these problems interactive helps you
                   understand them better.
                   <br />
                   <br />
@@ -107,12 +107,12 @@ export class BackgroundQuestions extends React.Component<
                     {question.prompt}
                   </div>
                   <div className="text-base">
-                    <textarea
+                    <input
+                      type="text"
                       name={question.prompt}
                       className="border-2 border-black w-[100px] p-1.5 rounded-sm"
                       value={this.state.answers[`text${index}`] || ""}
                       onChange={(event) => this.handleInputChange(event, index)}
-                      rows={1}
                     />
                   </div>
                 </div>
