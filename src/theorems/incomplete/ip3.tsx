@@ -108,7 +108,7 @@ const givens: StepMeta = makeStepMeta({
   },
 
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
   staticText: () => {
     return (
@@ -197,8 +197,9 @@ const step7: StepMeta = makeStepMeta({
     step6.unfocused(props);
   },
   additions: (props: StepFocusProps) => SAS.additions(props, s7SASProps),
-  text: (props: StepTextProps) => SAS.text(props, s7SASProps),
-  staticText: () => EqualTriangles.staticText(["AEB", "CEB"]),
+  text: (props: StepTextProps) =>
+    EqualTriangles.text(props, s7SASProps.triangles),
+  staticText: () => EqualTriangles.staticText(s7SASProps.triangles),
 });
 
 const step8: StepMeta = makeStepMeta({
@@ -221,11 +222,7 @@ const miniContent = () => {
   let ctx = baseContent(false, false);
 
   const s4 = ctx.addFrame("s4");
-  Reflexive.additions(
-    { ctx, frame: s4, mode: SVGModes.Purple, inPlace: true },
-    "BE",
-    1
-  );
+  Reflexive.additions({ ctx, frame: s4, mode: SVGModes.Purple }, "BE", 1);
   const s5 = ctx.addFrame("s5");
   ctx.push(
     new Segment({
@@ -234,23 +231,19 @@ const miniContent = () => {
       hoverable: false,
     })
   );
-  Reflexive.additions(
-    { ctx, frame: s5, mode: SVGModes.Purple, inPlace: true },
-    "AC",
-    1
-  );
+  Reflexive.additions({ ctx, frame: s5, mode: SVGModes.Purple }, "AC", 1);
   const s6 = ctx.addFrame("s6");
   ctx.getSegment("BE").mode(s6, SVGModes.Default);
   ctx.getSegment("CE").mode(s6, SVGModes.Default);
   ctx.getSegment("AE").mode(s6, SVGModes.Default);
   EqualRightAngles.additions(
-    { ctx, frame: s6, mode: SVGModes.Purple, inPlace: true },
+    { ctx, frame: s6, mode: SVGModes.Purple },
     ["AEB", "CEB"],
     SVGModes.Blue
   );
   const s7 = ctx.addFrame("s7");
   SAS.additions(
-    { ctx, frame: s7, mode: SVGModes.Purple, inPlace: true },
+    { ctx, frame: s7, mode: SVGModes.Purple },
     { ...s7SASProps, seg2s: { ...s7SASProps.seg2s, ticks: 2 } },
     SVGModes.Blue
   );

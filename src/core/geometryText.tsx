@@ -46,6 +46,55 @@ export const strs = {
   perpendicular: "\u22A5",
 };
 
+// TODO check that these scale for windows and mac
+export const resizedStrs = {
+  congruent: (
+    <span
+      style={
+        navigator.userAgent.includes("Mac")
+          ? {
+              fontSize: "2rem",
+              verticalAlign: "baseline",
+              lineHeight: "24px",
+            }
+          : {}
+      }
+    >
+      {"\u2245"}
+    </span>
+  ),
+  parallel: (
+    <span
+      style={
+        navigator.userAgent.includes("Mac")
+          ? {
+              fontSize: "2rem",
+              verticalAlign: "baseline",
+              lineHeight: "24px",
+            }
+          : {}
+      }
+    >
+      {" \u2225 "}
+    </span>
+  ),
+  perpendicular: (
+    <span
+      style={
+        navigator.userAgent.includes("Mac")
+          ? {
+              fontSize: "2rem",
+              verticalAlign: "baseline",
+              lineHeight: "24px",
+            }
+          : {}
+      }
+    >
+      {" \u22A5 "}
+    </span>
+  ),
+};
+
 // for segments in questions
 export const segmentQuestion = (s: string, clr?: string) => (
   <span style={{ borderTop: `2px solid ${clr || "black"}` }}>{s}</span>

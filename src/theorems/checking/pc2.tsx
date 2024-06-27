@@ -81,7 +81,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("LMK").mode(props.frame, props.mode);
   },
   diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default, inPlace: true });
+    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
   staticText: () => {
     return (
@@ -178,7 +178,7 @@ const step5: StepMeta = makeStepMeta({
     SAS.additions(props, step5Labels);
   },
   text: (props: StepTextProps) => {
-    return SAS.text(props, step5Labels);
+    return EqualTriangles.text(props, ["JMK", "LMK"]);
   },
   staticText: () => EqualTriangles.staticText(["JMK", "LMK"]),
 });
@@ -190,7 +190,6 @@ export const miniContent = () => {
     ctx,
     frame: "",
     mode: SVGModes.Purple,
-    inPlace: true,
   };
   // STEP 3 - PERPENDICULAR LINES
   const step3 = ctx.addFrame("s3");
