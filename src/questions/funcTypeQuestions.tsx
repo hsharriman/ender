@@ -110,7 +110,7 @@ export const completeProof1: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply SAS triangle congruence between step 2 and 3",
+      "Is there enough information to apply SAS triangle congruence between step 2 and 3?",
     answers: ["Yes", "No"],
     type: QuestionType.ReliesOn,
   },
@@ -125,21 +125,21 @@ export const completeProof2: Question[] = [
   },
   {
     fullScaffold: "Placeholder: ",
-    prompt: "Is midpoint correctly applied?",
+    prompt: "Is Def. Midpoint correctly applied?",
     answers: ["Yes", "No"],
     type: QuestionType.Minifigures,
   },
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply Congruent Adjacent Angles at this point?",
+      "Is there enough information to apply Congruent Adjacent Angles at step 3?",
     answers: ["Yes", "No"],
     type: QuestionType.ReliesOn,
   },
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply ASA triangle congruence at this point?",
+      "Is there enough information to apply ASA triangle congruence at step 6?",
     answers: ["Yes", "No"],
     type: QuestionType.ReliesOn,
   },
@@ -162,7 +162,7 @@ export const incompleteProof2: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply midpoint between step 4 and 5?",
+      "Is there enough information to apply Def. Midpoint between step 4 and 5?",
     answers: ["Yes", "No"],
     type: QuestionType.ReliesOn,
   },

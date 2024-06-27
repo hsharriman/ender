@@ -33,7 +33,6 @@ export class TestQuestions extends React.Component<
   };
 
   handleSubmit = (answer: any) => {
-    console.log(this.props.questions.length);
     console.log(
       `Answer for question ${this.state.currentQuestionIndex + 1}:`,
       answer
