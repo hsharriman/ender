@@ -20,6 +20,7 @@ import { IP2 } from "./theorems/incomplete/ip2";
 import { IP3 } from "./theorems/incomplete/ip3";
 import { Reasons } from "./theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
+import { P6 } from "./theorems/complete/proof6";
 
 interface AppMeta {
   layout: LayoutOptions;
@@ -166,7 +167,7 @@ export class App extends React.Component<AppProps, AppState> {
     };
 
     const randomCompleteProofs = randomizeLayout(
-      randomizeProofs([P1, P2, P3, P4, P5])
+      randomizeProofs([P1, P2, P3, P4, P5, P6])
     ); // 2 random complete proofs
     const randomCheckingProofs = randomizeLayout(
       randomizeProofs([PC1, PC2, PC3])

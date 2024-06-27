@@ -2,7 +2,7 @@ import { definitions } from "../../theorems/definitions";
 import { makeStepMeta, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { angleStr, congruent, resizedStrs } from "../geometryText";
-import { StepFocusProps, StepUnfocusProps } from "../types/stepTypes";
+import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, Reason, SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 
@@ -45,15 +45,19 @@ export class EqualAngles {
 export const EqualAngleStep = (
   [a1, a2]: [string, string],
   reason: Reason,
-  dependsOn?: number[],
-  unfocused?: (props: StepUnfocusProps) => void
+  step: StepMeta,
+  num?: number,
+  dependsOn?: number[]
 ) => {
   return makeStepMeta({
     reason,
     dependsOn,
-    unfocused,
+    unfocused: (props: StepUnfocusProps) => {
+      step.unfocused(props);
+      step.additions({ ...props, mode: SVGModes.Unfocused });
+    },
     additions: (props: StepFocusProps) =>
-      EqualAngles.additions(props, [a1, a2]),
+      EqualAngles.additions(props, [a1, a2], num),
     text: (ctx: Content) => EqualAngles.text(ctx, [a1, a2]),
     staticText: () => EqualAngles.staticText([a1, a2]),
   });

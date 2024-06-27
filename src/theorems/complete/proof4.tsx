@@ -127,15 +127,7 @@ const step1: StepMeta = RightAngleStep(
 
 const step2: StepMeta = EqualSegmentStep(["LN", "QU"], Reasons.Given, step1);
 
-const step3: StepMeta = EqualAngleStep(
-  ["LPS", "UPS"],
-  Reasons.Given,
-  undefined,
-  (props: StepUnfocusProps) => {
-    step2.unfocused(props);
-    step2.additions({ ...props, mode: SVGModes.Unfocused });
-  }
-);
+const step3: StepMeta = EqualAngleStep(["LPS", "UPS"], Reasons.Given, step2);
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,

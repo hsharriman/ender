@@ -65,7 +65,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
 
     // segments to make up the tick mark
     const seg = vops.rot(
-      vops.smul(unit, this.props.miniScale ? 0.2 : 0.15),
+      vops.smul(unit, this.props.miniScale ? 0.2 : 0.12),
       90
     );
     const start = vops.add(seg, midpoint);
