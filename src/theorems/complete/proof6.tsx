@@ -1,9 +1,7 @@
 import { Content } from "../../core/diagramContent";
 import { Point } from "../../core/geometry/Point";
-import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
-import { comma, segmentStr } from "../../core/geometryText";
-import { CongruentTriangles } from "../../core/templates/CongruentTriangles";
+import { comma } from "../../core/geometryText";
 import { EqualAngleStep, EqualAngles } from "../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
 import {
@@ -11,20 +9,18 @@ import {
   EqualSegments,
 } from "../../core/templates/EqualSegments";
 import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Midpoint } from "../../core/templates/Midpoint";
-import { ParallelLines } from "../../core/templates/ParallelLines";
 import { Perpendicular } from "../../core/templates/Perpendicular";
-import { ReflexiveStep } from "../../core/templates/Reflexive";
-import { SAS, SASProps } from "../../core/templates/SAS";
+import { Reflexive, ReflexiveStep } from "../../core/templates/Reflexive";
+import { SAS } from "../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { completeProof1 } from "../../questions/completeQuestions";
 import { Reasons } from "../reasons";
-import { linked, makeStepMeta } from "../utils";
+import { makeStepMeta } from "../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -40,12 +36,12 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   let ctx = new Content();
   const labels = ["F", "A", "B", "C", "D", "G"];
   const offsets: Vector[] = [
-    [-15, 0],
-    [5, -3],
-    [-17, -17],
-    [3, -10],
-    [10, -5],
-    [0, 0],
+    [-12, 0],
+    [-10, -15],
+    [-3, 10],
+    [-3, -15],
+    [-5, -18],
+    [3, 0],
   ];
   const pts = coords[0];
   const [F, A, B, C, D, G] = pts.map((c, i) =>
@@ -210,66 +206,73 @@ const miniContent = () => {
     mode: SVGModes.Purple,
   };
 
-  // // // STEP 4 - VERTICAL ANGLES
-  // const step4 = ctx.addFrame("s5");
-  // ctx.getTriangle("MYZ").mode(step4, SVGModes.Focused);
-  // ctx.getTriangle("MWX").mode(step4, SVGModes.Focused);
-  // ctx.getSegment("WX").mode(step4, SVGModes.Hidden);
-  // ctx.getSegment("YZ").mode(step4, SVGModes.Hidden);
-  // EqualAngles.additions(
-  //   { ...defaultStepProps, frame: step4 },
-  //   ["WMX", "YMZ"],
-  //   1,
-  //   SVGModes.Blue
-  // );
+  const reflex = ctx.addFrame("s5");
+  Reflexive.additions({ ...defaultStepProps, frame: reflex }, "BD", 3);
 
-  // // // STEP 5 - SAS TRIANGLE CONGRUENCE
-  // const step5 = ctx.addFrame("s6");
-  // SAS.additions(
-  //   { ...defaultStepProps, frame: step5 },
-  //   {
-  //     seg1s: { s: ["WM", "MZ"], ticks: 1 },
-  //     seg2s: { s: ["XM", "YM"], ticks: 2 },
-  //     angles: { a: ["WMX", "YMZ"] },
-  //     triangles: ["MWX", "MYZ"],
-  //   },
-  //   SVGModes.Blue
-  // );
+  const perpLines = ctx.addFrame("s6");
+  Perpendicular.additions(
+    { ...defaultStepProps, frame: perpLines, mode: SVGModes.Focused },
+    "BD",
+    ["AD", "CD"]
+  );
+  EqualRightAngles.additions(
+    { ...defaultStepProps, frame: perpLines },
+    ["ADB", "BDC"],
+    SVGModes.Blue
+  );
 
-  // // // STEP 6 - CORRESPONDING ANGLES
-  // const step6 = ctx.addFrame("s7");
-  // CongruentTriangles.additions(
-  //   { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
-  //   {
-  //     s1s: ["WM", "MZ"],
-  //     s2s: ["XM", "YM"],
-  //     s3s: ["WX", "YZ"],
-  //     a1s: ["WMX", "YMZ"],
-  //     a2s: ["MXW", "MYZ"],
-  //     a3s: ["MWX", "MZY"],
-  //   }
-  // );
-  // EqualAngles.additions(
-  //   { ...defaultStepProps, frame: step6 },
-  //   ["MXW", "MYZ"],
-  //   2,
-  //   SVGModes.Blue
-  // );
+  const s7SAS = ctx.addFrame("s7");
+  SAS.additions(
+    { ...defaultStepProps, frame: s7SAS },
+    {
+      seg1s: { s: ["AD", "DC"], ticks: 1 },
+      seg2s: { s: ["BD", "BD"], ticks: 3 },
+      angles: { a: ["ADB", "BDC"], type: Obj.RightTick },
+      triangles: ["ADB", "BCD"],
+    },
+    SVGModes.Blue
+  );
+  ctx.getSegment("AB").mode(s7SAS, SVGModes.Purple); // TODO why doesn't this show as part of triangle?
 
-  // // // STEP 7 - ALTERNATE ANGLES
-  // const step7 = ctx.addFrame("s8");
-  // ctx.getSegment("YM").mode(step7, SVGModes.Focused);
-  // ctx.getSegment("XM").mode(step7, SVGModes.Focused);
-  // EqualAngles.additions(
-  //   { ...defaultStepProps, mode: SVGModes.Focused, frame: step7 },
-  //   ["MYZ", "MXW"]
-  // );
-  // ParallelLines.additions(
-  //   { ...defaultStepProps, frame: step7 },
-  //   ["WX", "YZ"],
-  //   1,
-  //   SVGModes.Blue
-  // );
+  const s8corresponding = ctx.addFrame("s8");
+  const s8Props = { ctx, frame: s8corresponding, mode: SVGModes.Focused };
+  EqualSegments.additions(s8Props, ["AD", "DC"], 1);
+  EqualSegments.additions(s8Props, ["BD", "BD"], 3);
+  EqualSegments.additions(
+    { ...defaultStepProps, frame: s8corresponding },
+    ["AB", "CB"],
+    4,
+    SVGModes.Blue
+  );
+  EqualRightAngles.additions(s8Props, ["ADB", "CDB"]);
+  EqualAngles.additions(s8Props, ["BAD", "BCD"], 2);
+  EqualAngles.additions(s8Props, ["ABD", "CBD"], 1);
+
+  const s9SAS = ctx.addFrame("s9");
+  SAS.additions(
+    { ...defaultStepProps, frame: s9SAS },
+    {
+      seg1s: { s: ["AB", "CB"], ticks: 4 },
+      seg2s: { s: ["FA", "GC"], ticks: 2 },
+      angles: { a: ["FAB", "GCB"], type: Obj.EqualAngleTick },
+      triangles: ["FAB", "GCB"],
+    },
+    SVGModes.Blue
+  );
+
+  const s10 = ctx.addFrame("s10");
+  const s10Props = { ctx, frame: s10, mode: SVGModes.Focused };
+  EqualSegments.additions(s10Props, ["AB", "CB"], 4);
+  EqualSegments.additions(s10Props, ["FA", "GC"], 2);
+  EqualSegments.additions(s10Props, ["FB", "GB"], 1);
+  EqualAngles.additions(s10Props, ["FAB", "GCB"], 1);
+  EqualAngles.additions(s10Props, ["FBA", "GBC"], 3);
+  EqualAngles.additions(
+    { ...defaultStepProps, frame: s10 },
+    ["AFB", "CGB"],
+    2,
+    SVGModes.Blue
+  );
 
   return ctx;
 };

@@ -60,7 +60,6 @@ export class DefinitionTooltip extends React.Component<
   render() {
     const keyword = this.props.definition.keyword;
     const definition = this.props.definition.definition;
-    console.log(this.props.obj);
     return (
       <span
         className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150 group relative`}

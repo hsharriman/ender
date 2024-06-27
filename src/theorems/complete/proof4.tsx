@@ -10,7 +10,8 @@ import {
   EqualSegments,
 } from "../../core/templates/EqualSegments";
 import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { ReflexiveStep } from "../../core/templates/Reflexive";
+import { Perpendicular } from "../../core/templates/Perpendicular";
+import { Reflexive, ReflexiveStep } from "../../core/templates/Reflexive";
 import { RightAngle, RightAngleStep } from "../../core/templates/RightAngle";
 import {
   StepFocusProps,
@@ -145,9 +146,9 @@ const step4: StepMeta = makeStepMeta({
 const step5: StepMeta = ReflexiveStep("PS", 2, step4);
 
 const step6ASAProps: ASAProps = {
-  a1s: { a: ["PSU", "PSL"], type: Obj.RightTick },
+  a1s: { a: ["PSL", "PSU"], type: Obj.RightTick },
   a2s: { a: ["LPS", "UPS"], type: Obj.EqualAngleTick },
-  segs: { s: ["PS", "PS"] },
+  segs: { s: ["PS", "PS"], ticks: 2 },
   triangles: ["LSP", "USP"],
 };
 const step6: StepMeta = makeStepMeta({
@@ -220,6 +221,51 @@ export const miniContent = () => {
     frame: "",
     mode: SVGModes.Purple,
   };
+
+  const congadj = ctx.addFrame("s4");
+  Perpendicular.additions(
+    { ctx, mode: SVGModes.Focused, frame: congadj },
+    "PS",
+    ["LS", "SU"]
+  );
+  EqualRightAngles.additions(
+    { ...defaultStepProps, frame: congadj },
+    ["PSL", "PSU"],
+    SVGModes.Blue
+  );
+
+  const reflex = ctx.addFrame("s5");
+  Reflexive.additions({ ...defaultStepProps, frame: reflex }, "PS", 2);
+
+  const asa = ctx.addFrame("s6");
+  ASA.additions(
+    { ...defaultStepProps, frame: asa },
+    step6ASAProps,
+    SVGModes.Blue
+  );
+
+  const corang1 = ctx.addFrame("s7");
+  const s7Props = { ctx, frame: corang1, mode: SVGModes.Focused };
+  EqualRightAngles.additions(s7Props, ["PSL", "PSU"]);
+  EqualAngles.additions(s7Props, ["LPS", "UPS"], 1);
+  EqualAngles.additions(
+    { ...defaultStepProps, frame: corang1 },
+    ["SLP", "SUP"],
+    2,
+    SVGModes.Blue
+  );
+  EqualSegments.additions(s7Props, ["PS", "PS"], 2);
+  EqualSegments.additions(s7Props, ["LS", "SU"], 1);
+  EqualSegments.additions(s7Props, ["PL", "PU"], 3);
+
+  const corang2 = ctx.addFrame("s8");
+
+  const asa2 = ctx.addFrame("s9");
+  ASA.additions(
+    { ...defaultStepProps, frame: asa2 },
+    step9ASAProps,
+    SVGModes.Blue
+  );
   return ctx;
 };
 

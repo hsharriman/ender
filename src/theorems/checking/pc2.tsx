@@ -193,15 +193,15 @@ export const miniContent = () => {
 
   // STEP 3 - REFLEXIVE PROPERTY
   const step4 = ctx.addFrame("s4");
-  Reflexive.additions({ ...defaultStepProps, frame: step4 }, "MK", 1);
+  Reflexive.additions({ ...defaultStepProps, frame: step4 }, "MK", 2);
 
   // STEP 4 - SAS CONGRUENCE
   const step5 = ctx.addFrame("s5");
   SAS.additions(
     { ...defaultStepProps, frame: step5 },
     {
-      seg1s: { s: ["MK", "MK"], ticks: 1 },
-      seg2s: { s: ["JM", "LM"], ticks: 2 },
+      seg1s: { s: ["MK", "MK"], ticks: 2 },
+      seg2s: { s: ["JM", "LM"], ticks: 1 },
       angles: { a: ["JMK", "LMK"], type: Obj.RightTick },
       triangles: ["JMK", "LMK"],
     },
