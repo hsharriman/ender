@@ -26,7 +26,6 @@ export class SAS {
     const t2 = props.ctx
       .getTriangle(labels.triangles[1])
       .mode(props.frame, t2Mode || props.mode);
-    console.log("SAS additions", t1, t2);
     EqualSegments.additions(props, labels.seg1s.s, labels.seg1s.ticks, t2Mode);
     EqualSegments.additions(props, labels.seg2s.s, labels.seg2s.ticks, t2Mode);
     if (labels.angles.type === Obj.RightTick) {

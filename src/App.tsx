@@ -30,22 +30,14 @@ interface ProofMeta {
 type LayoutOptions = "static" | "interactive";
 
 /* Helper methods related to randomizing the proof order */
-const fisherYates = (arrLen: number) => {
-  // create a range of numbers from 0 to arrLen in an array
-  const arr = Array.from({ length: arrLen }, (_, i) => i);
+const fisherYates = (arr: any[]) => {
   // shuffle the array with Fisher-Yates algorithm
-  for (let i = arrLen - 1; i >= 0; i--) {
-    const randomIndex = Math.floor(Math.random() * (i + 1));
-    arr.push(arr[randomIndex]);
-    arr.splice(randomIndex, 1);
+  for (let i = arr.length - 1; i >= 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   // return the shuffled array
   return arr;
-};
-
-const randomizeProofs = (arr: LayoutProps[]) => {
-  const order = fisherYates(arr.length);
-  return order.map((i) => arr[i]);
 };
 
 const staticLayout = (proofMeta: LayoutProps): ProofMeta => {
@@ -134,20 +126,14 @@ const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
 };
 
 const randomizeLayout = (proofMetas: LayoutProps[]): ProofMeta[] => {
-  // randomly pick 0 or 1
-  // if 1, then the first proof is static, else interactive
-  const staticFirst = Math.round(Math.random()) === 1;
-  return proofMetas.map((p) => interactiveLayout(p));
+  let modes = proofMetas.map((p, i) => {
+    return i % 2 === 0 ? "s" : "i";
+  });
+  return fisherYates(modes).map((m, i) =>
+    m === "s" ? staticLayout(proofMetas[i]) : interactiveLayout(proofMetas[i])
+  );
+  // return proofMetas.map((p) => interactiveLayout(p));
   // return proofMetas.map((p) => staticLayout(p));
-  // return staticFirst
-  //   ? [
-  //       staticLayout(proofMetas[0]),
-  //       interactiveLayout(proofMetas[1]),
-  //     ]
-  //   : [
-  //       interactiveLayout(proofMetas[0]),
-  //       staticLayout(proofMetas[1]),
-  //     ];
 };
 
 interface AppProps {}
@@ -164,8 +150,9 @@ export class App extends React.Component<AppProps, AppState> {
       activeTest: 0,
     };
     const tutorial = [interactiveLayout(TutorialProof1)];
+    // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented
     const stage1 = randomizeLayout(
-      randomizeProofs([
+      fisherYates([
         T1_S1_C1,
         T1_S1_C2,
         T1_S1_C3,
@@ -173,11 +160,11 @@ export class App extends React.Component<AppProps, AppState> {
         T1_S1_IN2,
         T1_S1_IN3,
       ])
-    ); // 2 random complete proofs
-    const stage2 = randomizeLayout(
-      randomizeProofs([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2])
     );
-    const challenge = randomizeLayout(randomizeProofs([T1_CH1_IN1]));
+    const stage2 = randomizeLayout(
+      fisherYates([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2])
+    );
+    const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]));
 
     this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
   }
