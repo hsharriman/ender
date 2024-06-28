@@ -63,7 +63,6 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
         }
       }
     );
-    console.log(this.state.completed);
   };
 
   handleSubmit = () => {

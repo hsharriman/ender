@@ -22,6 +22,9 @@ import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
+import { Question } from "./questions/funcTypeQuestions";
+import { TestQuestions } from "./components/TestQuestions";
+import { BackgroundQuestions } from "./components/BackgroundQuestions";
 
 interface ProofMeta {
   layout: LayoutOptions;
@@ -211,10 +214,13 @@ export class App extends React.Component<AppProps, AppState> {
   };
 
   render() {
-    const currMeta = this.meta[this.state.activePage];
+    const page = this.state.activePage - 1; // For current page of proof
+    const numPage = this.meta.length + 3; // For total num of pages
+    const currMeta = this.meta[page];
     return (
       <div>
-        {this.state.activePage <= this.meta.length - 1 ? (
+        {this.state.activePage !== 0 &&
+        this.state.activePage <= this.meta.length - 1 ? (
           <div
             className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
             id="header"
@@ -230,9 +236,9 @@ export class App extends React.Component<AppProps, AppState> {
               >
                 {"Previous"}
               </button>
-              <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
-                this.meta.length + 2
-              }`}</div>
+              <div className="p-3 z-30">{`${
+                this.state.activePage + 1
+              } / ${numPage}`}</div>
               <div className="ml-10 flex-1">
                 <TestQuestions
                   questions={currMeta.props.questions}
@@ -244,9 +250,7 @@ export class App extends React.Component<AppProps, AppState> {
                 id="next-arrow"
                 style={{
                   display:
-                    this.state.activePage < this.meta.length + 2 - 1
-                      ? "block"
-                      : "none",
+                    this.state.activePage < numPage - 1 ? "block" : "none",
                 }}
                 onClick={this.onClick(1)}
               >
@@ -266,15 +270,12 @@ export class App extends React.Component<AppProps, AppState> {
             </button>
             <div className="absolute top-0 p-3 left-24 z-30">{`${
               this.state.activePage + 1
-            } / ${this.meta.length + 2}`}</div>
+            } / ${numPage}`}</div>
             <button
               className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
               id="next-arrow"
               style={{
-                display:
-                  this.state.activePage < this.meta.length + 2 - 1
-                    ? "block"
-                    : "none",
+                display: this.state.activePage < numPage - 1 ? "block" : "none",
               }}
               onClick={this.onClick(1)}
             >
@@ -283,12 +284,14 @@ export class App extends React.Component<AppProps, AppState> {
           </div>
         )}
         <div className="w-full h-full flex justify-start">
-          {this.state.activePage <= this.meta.length - 1 ? (
+          {this.state.activePage === 0 ? (
+            <BackgroundQuestions />
+          ) : this.state.activePage <= this.meta.length ? (
             currMeta.layout === "static" ? (
               <StaticAppPage
                 {...{
                   ...(currMeta.props as StaticAppPageProps),
-                  pageNum: this.state.activePage,
+                  pageNum: page,
                 }}
                 key={"static-pg" + this.state.activePage}
               />
@@ -296,7 +299,7 @@ export class App extends React.Component<AppProps, AppState> {
               <InteractiveAppPage
                 {...{
                   ...(currMeta.props as InteractiveAppPageProps),
-                  pageNum: this.state.activePage,
+                  pageNum: page,
                 }}
                 key={"interactive-pg" + this.state.activePage}
               />
@@ -305,7 +308,7 @@ export class App extends React.Component<AppProps, AppState> {
             <SusPage
               key={this.state.activePage}
               type={
-                this.state.activePage === this.meta.length
+                this.state.activePage === this.meta.length + 1
                   ? "Static"
                   : "Interactive"
               }
