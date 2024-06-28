@@ -88,9 +88,6 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
   };
 
   render() {
-    if (this.props.tick) {
-      console.log(this.props.tick, this.props.mode, this.props.a.label);
-    }
     // calculate angle bisector of angle, rotate along vector and position label
     // angle bisector is unit(u)*v + unit(v)*u
     const u = vops.sub(this.props.a.start, this.props.a.center);

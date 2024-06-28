@@ -5,18 +5,22 @@ import {
 } from "./components/InteractiveAppPage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage } from "./components/SusPage";
+import { TestQuestions } from "./components/TestQuestions";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason } from "./core/types/types";
-import { PC1 } from "./theorems/checking/pc1";
-import { PC2 } from "./theorems/checking/pc2";
-import { PC3 } from "./theorems/checking/pc3";
-import { P1 } from "./theorems/complete/proof1";
-import { P2 } from "./theorems/complete/proof2";
-import { P3 } from "./theorems/complete/proof3";
-import { IP1 } from "./theorems/incomplete/ip1";
-import { IP2 } from "./theorems/incomplete/ip2";
-import { IP3 } from "./theorems/incomplete/ip3";
+import { T1_CH1_IN1 } from "./theorems/challenge/ip3";
 import { Reasons } from "./theorems/reasons";
+import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
+import { T1_S1_C2 } from "./theorems/testA/stage1/C2";
+import { T1_S1_C3 } from "./theorems/testA/stage1/C3";
+import { T1_S1_IN1 } from "./theorems/testA/stage1/IN1";
+import { T1_S1_IN2 } from "./theorems/testA/stage1/IN2";
+import { T1_S1_IN3 } from "./theorems/testA/stage1/IN3";
+import { T1_S2_C1 } from "./theorems/testA/stage2/C1";
+import { T1_S2_C2 } from "./theorems/testA/stage2/C2";
+import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
+import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
+import { TutorialProof1 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
 import { Question } from "./questions/funcTypeQuestions";
 import { TestQuestions } from "./components/TestQuestions";
@@ -29,29 +33,21 @@ interface ProofMeta {
 type LayoutOptions = "static" | "interactive";
 
 /* Helper methods related to randomizing the proof order */
-const fisherYates = (arrLen: number) => {
-  // create a range of numbers from 0 to arrLen in an array
-  const arr = Array.from({ length: arrLen }, (_, i) => i);
+const fisherYates = (arr: any[]) => {
   // shuffle the array with Fisher-Yates algorithm
-  for (let i = arrLen - 1; i >= 0; i--) {
-    const randomIndex = Math.floor(Math.random() * (i + 1));
-    arr.push(arr[randomIndex]);
-    arr.splice(randomIndex, 1);
+  const arrCopy = arr.slice();
+  for (let i = arrCopy.length - 1; i >= 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arrCopy[i], arrCopy[j]] = [arrCopy[j], arrCopy[i]];
   }
   // return the shuffled array
-  return arr;
+  return arrCopy;
 };
 
-const randomizeProofs = (arr: LayoutProps[]) => {
-  const order = fisherYates(arr.length);
-  const newArr = order.map((i) => arr[i]);
-  // only 2 proofs are needed per experiment
-  // if (arr.length === 2) return newArr;
-  // return newArr.slice(1);
-  return newArr;
-};
-
-const staticLayout = (proofMeta: LayoutProps): ProofMeta => {
+const staticLayout = (
+  proofMeta: LayoutProps,
+  shuffleQuestions: boolean = true
+): ProofMeta => {
   // reset stored variables
   const ctx = proofMeta.baseContent(true, false);
   const reasons: Reason[] = [];
@@ -77,11 +73,16 @@ const staticLayout = (proofMeta: LayoutProps): ProofMeta => {
       pageNum: -1,
       givenText: proofMeta.givens.staticText(),
       provesText: proofMeta.proves.staticText(),
-      questions: proofMeta.questions,
+      questions: shuffleQuestions
+        ? fisherYates(proofMeta.questions)
+        : proofMeta.questions,
     },
   };
 };
-const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
+const interactiveLayout = (
+  proofMeta: LayoutProps,
+  shuffleQuestions: boolean = true
+): ProofMeta => {
   const ctx = proofMeta.baseContent(true, true);
   const linkedTexts: ProofTextItem[] = [];
   const reasonMap = new Map<string, Reason>();
@@ -97,12 +98,12 @@ const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
   // add given and prove to linkedTexts
   linkedTexts.push({
     k: GIVEN_ID,
-    v: proofMeta.givens.ticklessText(ctx),
+    v: proofMeta.givens.text(ctx),
     alwaysActive: true,
   });
   linkedTexts.push({
     k: PROVE_ID,
-    v: proofMeta.proves.text({ ctx: ctx }),
+    v: proofMeta.proves.text(ctx),
     alwaysActive: true,
   });
 
@@ -119,7 +120,7 @@ const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
     linkedTexts.push({
       ...textMeta,
       k: s,
-      v: step.text({ ctx: ctx }),
+      v: step.text(ctx),
       reason: step.reason.title,
     });
   });
@@ -131,26 +132,27 @@ const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
       reasonMap: reasonMap,
       linkedTexts: linkedTexts,
       pageNum: -1,
-      questions: proofMeta.questions,
+      questions: shuffleQuestions
+        ? fisherYates(proofMeta.questions)
+        : proofMeta.questions,
     },
   };
 };
 
-const randomizeLayout = (proofMetas: LayoutProps[]): ProofMeta[] => {
-  // randomly pick 0 or 1
-  // if 1, then the first proof is static, else interactive
-  const staticFirst = Math.round(Math.random()) === 1;
-  return proofMetas.map((p) => interactiveLayout(p));
+const randomizeLayout = (
+  proofMetas: LayoutProps[],
+  shuffleQuestions: boolean = true
+): ProofMeta[] => {
+  let modes = proofMetas.map((p, i) => {
+    return i % 2 === 0 ? "s" : "i";
+  });
+  return fisherYates(modes).map((m, i) =>
+    m === "s"
+      ? staticLayout(proofMetas[i], shuffleQuestions)
+      : interactiveLayout(proofMetas[i], shuffleQuestions)
+  );
+  // return proofMetas.map((p) => interactiveLayout(p));
   // return proofMetas.map((p) => staticLayout(p));
-  // return staticFirst
-  //   ? [
-  //       staticLayout(proofMetas[0]),
-  //       interactiveLayout(proofMetas[1]),
-  //     ]
-  //   : [
-  //       interactiveLayout(proofMetas[0]),
-  //       staticLayout(proofMetas[1]),
-  //     ];
 };
 
 interface AppProps {}
@@ -166,22 +168,25 @@ export class App extends React.Component<AppProps, AppState> {
       activePage: 0,
       activeTest: 0,
     };
+    const tutorial = [interactiveLayout(TutorialProof1, false)];
+    // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented
+    const stage1 = randomizeLayout(
+      fisherYates([
+        T1_S1_C1,
+        T1_S1_C2,
+        T1_S1_C3,
+        T1_S1_IN1,
+        T1_S1_IN2,
+        T1_S1_IN3,
+      ])
+    );
+    const stage2 = randomizeLayout(
+      fisherYates([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
+      false
+    );
+    const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]));
 
-    const randomCompleteProofs = randomizeLayout(randomizeProofs([P1, P2, P3])); // 2 random complete proofs
-    const randomCheckingProofs = randomizeLayout(
-      randomizeProofs([PC1, PC2, PC3])
-    );
-    const randomIncompleteProofs = randomizeLayout(
-      randomizeProofs([IP1, IP2, IP3])
-    );
-
-    let randomProofOrder = randomCompleteProofs.concat(
-      randomCheckingProofs,
-      randomIncompleteProofs
-    );
-    // shuffle activities
-    const shuffleProofOrder = fisherYates(randomProofOrder.length);
-    this.meta = shuffleProofOrder.map((i) => randomProofOrder[i]);
+    this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
   }
 
   componentDidMount() {

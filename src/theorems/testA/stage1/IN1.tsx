@@ -1,22 +1,21 @@
-import { Content } from "../../core/diagramContent";
-import { Point } from "../../core/geometry/Point";
-import { Triangle } from "../../core/geometry/Triangle";
-import { comma } from "../../core/geometryText";
-import { CongruentTriangles } from "../../core/templates/CongruentTriangles";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { SAS } from "../../core/templates/SAS";
+import { Content } from "../../../core/diagramContent";
+import { Point } from "../../../core/geometry/Point";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { comma } from "../../../core/geometryText";
+import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
+import { EqualAngles } from "../../../core/templates/EqualAngles";
+import { EqualSegments } from "../../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { SAS } from "../../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
-import { checkingProof1 } from "../../questions/funcTypeQuestions";
-import { Reasons } from "../reasons";
-import { makeStepMeta } from "../utils";
+} from "../../../core/types/stepTypes";
+import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
+import { checkingProof1 } from "../../../questions/funcTypeQuestions";
+import { Reasons } from "../../reasons";
+import { makeStepMeta } from "../../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -57,26 +56,10 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (props: StepTextProps) => {
-    const ADeqBC = EqualSegments.text(props, ["AD", "BC"]);
-    const ABeqDC = EqualSegments.text(props, ["AB", "DC"], 2);
-    const ABDeqCDB = EqualAngles.text(props, ["ABD", "CDB"]);
-
-    return (
-      <span>
-        {ADeqBC}
-        {comma}
-        {ABeqDC}
-        {comma}
-        {ABDeqCDB}
-      </span>
-    );
-  },
-
-  ticklessText: (ctx: Content) => {
-    const ADeqBC = EqualSegments.ticklessText(ctx, ["AD", "BC"]);
-    const ABeqDC = EqualSegments.ticklessText(ctx, ["AB", "DC"]);
-    const ABDeqCDB = EqualAngles.ticklessText(ctx, ["ABD", "CDB"]);
+  text: (ctx: Content) => {
+    const ADeqBC = EqualSegments.text(ctx, ["AD", "BC"]);
+    const ABeqDC = EqualSegments.text(ctx, ["AB", "DC"]);
+    const ABDeqCDB = EqualAngles.text(ctx, ["ABD", "CDB"]);
 
     return (
       <span>
@@ -116,8 +99,8 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["BAD", "DCB"]);
   },
-  text: (props: StepTextProps) => {
-    return EqualAngles.text(props, ["BAD", "DCB"]);
+  text: (ctx: Content) => {
+    return EqualAngles.text(ctx, ["BAD", "DCB"]);
   },
   staticText: () => EqualAngles.staticText(["BAD", "DCB"]),
 });
@@ -130,8 +113,8 @@ const step1: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["AD", "BC"]);
   },
-  text: (props: StepTextProps) => {
-    return EqualSegments.text(props, ["AD", "BC"]);
+  text: (ctx: Content) => {
+    return EqualSegments.text(ctx, ["AD", "BC"]);
   },
   staticText: () => EqualSegments.staticText(["AD", "BC"]),
 });
@@ -146,8 +129,8 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["AB", "DC"], 2);
   },
-  text: (props: StepTextProps) => {
-    return EqualSegments.text(props, ["AB", "DC"], 2);
+  text: (ctx: Content) => {
+    return EqualSegments.text(ctx, ["AB", "DC"]);
   },
   staticText: () => EqualSegments.staticText(["AB", "DC"]),
 });
@@ -163,8 +146,8 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["ABD", "CDB"]);
   },
-  text: (props: StepTextProps) => {
-    return EqualAngles.text(props, ["ABD", "CDB"]);
+  text: (ctx: Content) => {
+    return EqualAngles.text(ctx, ["ABD", "CDB"]);
   },
   staticText: () => EqualAngles.staticText(["ABD", "CDB"]),
 });
@@ -178,7 +161,7 @@ const step4: StepMeta = makeStepMeta({
     step2.additions(props);
     step3.additions(props);
   },
-  text: (props: StepTextProps) => EqualTriangles.text(props, ["ABD", "CDB"]),
+  text: (ctx: Content) => EqualTriangles.text(ctx, ["ABD", "CDB"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CDB"]),
 });
 
@@ -191,8 +174,8 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["BAD", "DCB"], 2);
   },
-  text: (props: StepTextProps) => {
-    return EqualAngles.text(props, ["BAD", "DCB"], 2);
+  text: (ctx: Content) => {
+    return EqualAngles.text(ctx, ["BAD", "DCB"]);
   },
   staticText: () => EqualAngles.staticText(["BAD", "DCB"]),
 });
@@ -242,7 +225,7 @@ const miniContent = () => {
   return ctx;
 };
 
-export const PC1: LayoutProps = {
+export const T1_S1_IN1: LayoutProps = {
   questions: checkingProof1,
   miniContent: miniContent(),
   baseContent,

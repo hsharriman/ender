@@ -27,7 +27,6 @@ export class SVGGeoTriangle extends React.Component<
       isPinned: false,
       css: "",
     };
-    console.log("Triangle", this.props.t.label);
   }
   onHover = (isActive: boolean) => {
     if (

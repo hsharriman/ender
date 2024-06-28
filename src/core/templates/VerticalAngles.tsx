@@ -1,4 +1,5 @@
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { Content } from "../diagramContent";
+import { StepFocusProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 
@@ -28,11 +29,7 @@ export class VerticalAngles {
     props.ctx.getSegment(labels.segs[1]).mode(props.frame, sMode || props.mode);
   };
 
-  static text = (
-    props: StepTextProps,
-    labels: [string, string],
-    num?: number
-  ) => {
-    return EqualAngles.text(props, labels, num);
+  static text = (ctx: Content, labels: [string, string]) => {
+    return EqualAngles.text(ctx, labels);
   };
 }

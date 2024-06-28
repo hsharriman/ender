@@ -13,7 +13,6 @@ import { SAS, SASProps } from "../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
@@ -59,22 +58,12 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (props: StepTextProps) => {
+  text: (ctx: Content) => {
     return (
       <span>
-        {EqualSegments.text(props, ["AB", "AD"])}
+        {EqualSegments.text(ctx, ["AB", "AD"])}
         {comma}
-        {EqualSegments.text(props, ["BC", "DC"], 2)}
-      </span>
-    );
-  },
-
-  ticklessText: (ctx: Content) => {
-    return (
-      <span>
-        {EqualSegments.ticklessText(ctx, ["AB", "AD"])}
-        {comma}
-        {EqualSegments.ticklessText(ctx, ["BC", "DC"])}
+        {EqualSegments.text(ctx, ["BC", "DC"])}
       </span>
     );
   },
@@ -101,7 +90,7 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     givens.additions(props);
   },
-  text: (props: StepTextProps) => EqualTriangles.text(props, ["ABC", "ADC"]),
+  text: (ctx: Content) => EqualTriangles.text(ctx, ["ABC", "ADC"]),
   staticText: () => EqualTriangles.staticText(["ABC", "ADC"]),
 });
 
@@ -113,7 +102,7 @@ const step2: StepMeta = makeStepMeta({
     step1.unfocused(props);
     step1.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  text: (props: StepTextProps) => EqualAngles.text(props, ["BAC", "DAC"]),
+  text: (ctx: Content) => EqualAngles.text(ctx, ["BAC", "DAC"]),
   staticText: () => EqualAngles.staticText(["BAC", "DAC"]),
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["BAC", "DAC"]),
@@ -130,8 +119,7 @@ const step4SASProps: SASProps = {
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: [1, 2, 3],
-  text: (props: StepTextProps) =>
-    EqualTriangles.text(props, step4SASProps.triangles),
+  text: (ctx: Content) => EqualTriangles.text(ctx, step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step4SASProps.triangles),
   additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
 });
@@ -154,7 +142,7 @@ const miniContent = () => {
   return ctx;
 };
 
-export const IP1: LayoutProps = {
+export const TutorialProof1: LayoutProps = {
   // TODO: Replace questions
   questions: placeholder,
   miniContent: miniContent(),

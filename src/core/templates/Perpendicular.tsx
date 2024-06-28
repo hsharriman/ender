@@ -2,7 +2,7 @@ import { definitions } from "../../theorems/definitions";
 import { linked, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { perpendicular, resizedStrs, segmentStr } from "../geometryText";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
+import { StepFocusProps } from "../types/stepTypes";
 import { SVGModes } from "../types/types";
 
 export class Perpendicular {
@@ -10,7 +10,6 @@ export class Perpendicular {
     props: StepFocusProps,
     perp: string,
     segs: [string, string],
-    num?: number,
     s2Mode?: SVGModes,
     ptMode?: SVGModes
   ) => {
@@ -19,34 +18,19 @@ export class Perpendicular {
     props.ctx.getSegment(segs[1]).mode(props.frame, ptMode || props.mode);
   };
   static text = (
-    props: StepTextProps,
-    label: string,
-    segs: [string, string],
-    perp: string,
-    num?: number
-  ) => {
-    const perp1 = props.ctx.getSegment(perp);
-    const s1 = props.ctx.getSegment(segs[0]);
-    const s2 = props.ctx.getSegment(segs[1]);
-    return (
-      <span>
-        {linked(perp, perp1)}
-        {tooltip(resizedStrs.perpendicular, definitions.Perpendicular)}
-        {linked(label, s1, [s2])}
-      </span>
-    );
-  };
-  static ticklessText = (
     ctx: Content,
     label: string,
     segs: [string, string],
     perp: string
   ) => {
+    const perp1 = ctx.getSegment(perp);
+    const s1 = ctx.getSegment(segs[0]);
+    const s2 = ctx.getSegment(segs[1]);
     return (
       <span>
-        {linked(perp, ctx.getSegment(perp))}
+        {linked(perp, perp1)}
         {tooltip(resizedStrs.perpendicular, definitions.Perpendicular)}
-        {linked(label, ctx.getSegment(segs[0]), [ctx.getSegment(segs[1])])}
+        {linked(label, s1, [s2])}
       </span>
     );
   };

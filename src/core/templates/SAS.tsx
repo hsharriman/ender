@@ -1,18 +1,12 @@
-import { StepFocusProps } from "../types/stepTypes";
-import { Obj, SVGModes, TickType } from "../types/types";
+import {
+  StepFocusProps,
+  TickedAngles,
+  TickedSegments,
+} from "../types/stepTypes";
+import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
-
-interface TickedSegments {
-  s: [string, string];
-  ticks: number;
-}
-interface TickedAngles {
-  a: [string, string];
-  ticks?: number;
-  type?: TickType;
-}
 
 export interface SASProps {
   seg1s: TickedSegments;
@@ -26,8 +20,10 @@ export class SAS {
     labels: SASProps,
     t2Mode?: SVGModes
   ) => {
-    props.ctx.getTriangle(labels.triangles[0]).mode(props.frame, props.mode);
-    props.ctx
+    const t1 = props.ctx
+      .getTriangle(labels.triangles[0])
+      .mode(props.frame, props.mode);
+    const t2 = props.ctx
       .getTriangle(labels.triangles[1])
       .mode(props.frame, t2Mode || props.mode);
     EqualSegments.additions(props, labels.seg1s.s, labels.seg1s.ticks, t2Mode);
