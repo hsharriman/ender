@@ -1,4 +1,5 @@
 import React from "react";
+import { BackgroundQuestions } from "./components/BackgroundQuestions";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
@@ -22,9 +23,6 @@ import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
-import { Question } from "./questions/funcTypeQuestions";
-import { TestQuestions } from "./components/TestQuestions";
-import { BackgroundQuestions } from "./components/BackgroundQuestions";
 
 interface ProofMeta {
   layout: LayoutOptions;
