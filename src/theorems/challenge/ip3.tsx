@@ -236,7 +236,8 @@ const miniContent = () => {
   return ctx;
 };
 
-export const IP3: LayoutProps = {
+// TODO rename depending on right/wrong?
+export const T1_CH1_IN1: LayoutProps = {
   // TODO: Replace questions
   questions: placeholder,
   miniContent: miniContent(),

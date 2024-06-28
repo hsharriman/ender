@@ -142,7 +142,7 @@ const miniContent = () => {
   return ctx;
 };
 
-export const IP1: LayoutProps = {
+export const TutorialProof1: LayoutProps = {
   // TODO: Replace questions
   questions: placeholder,
   miniContent: miniContent(),

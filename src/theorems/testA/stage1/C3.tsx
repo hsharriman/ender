@@ -1,23 +1,23 @@
-import { Content } from "../../core/diagramContent";
-import { Angle } from "../../core/geometry/Angle";
-import { Point } from "../../core/geometry/Point";
-import { Triangle } from "../../core/geometry/Triangle";
-import { comma } from "../../core/geometryText";
-import { ASA, ASAProps } from "../../core/templates/ASA";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Midpoint } from "../../core/templates/Midpoint";
+import { Content } from "../../../core/diagramContent";
+import { Angle } from "../../../core/geometry/Angle";
+import { Point } from "../../../core/geometry/Point";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { comma } from "../../../core/geometryText";
+import { ASA, ASAProps } from "../../../core/templates/ASA";
+import { EqualAngles } from "../../../core/templates/EqualAngles";
+import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
+import { EqualSegments } from "../../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { Midpoint } from "../../../core/templates/Midpoint";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { incompleteProof2 } from "../../questions/funcTypeQuestions";
-import { Reasons } from "../reasons";
-import { makeStepMeta } from "../utils";
+} from "../../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { incompleteProof2 } from "../../../questions/funcTypeQuestions";
+import { Reasons } from "../../reasons";
+import { makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -242,7 +242,7 @@ const miniContent = () => {
   return ctx;
 };
 
-export const IP2: LayoutProps = {
+export const T1_S1_C3: LayoutProps = {
   questions: incompleteProof2,
   miniContent: miniContent(),
   baseContent,

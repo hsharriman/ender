@@ -1,27 +1,27 @@
-import { Content } from "../../core/diagramContent";
-import { Angle } from "../../core/geometry/Angle";
-import { Point } from "../../core/geometry/Point";
-import { Triangle } from "../../core/geometry/Triangle";
-import { angleStr, comma, segmentStr } from "../../core/geometryText";
-import { ASA, ASAProps } from "../../core/templates/ASA";
-import { BaseAngle } from "../../core/templates/BaseAngle";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Midpoint } from "../../core/templates/Midpoint";
-import { Perpendicular } from "../../core/templates/Perpendicular";
-import { Reflexive } from "../../core/templates/Reflexive";
-import { RightAngle } from "../../core/templates/RightAngle";
+import { Content } from "../../../core/diagramContent";
+import { Angle } from "../../../core/geometry/Angle";
+import { Point } from "../../../core/geometry/Point";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { angleStr, comma, segmentStr } from "../../../core/geometryText";
+import { ASA, ASAProps } from "../../../core/templates/ASA";
+import { BaseAngle } from "../../../core/templates/BaseAngle";
+import { EqualAngles } from "../../../core/templates/EqualAngles";
+import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
+import { EqualSegments } from "../../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { Midpoint } from "../../../core/templates/Midpoint";
+import { Perpendicular } from "../../../core/templates/Perpendicular";
+import { Reflexive } from "../../../core/templates/Reflexive";
+import { RightAngle } from "../../../core/templates/RightAngle";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { completeProof2 } from "../../questions/funcTypeQuestions";
-import { Reasons } from "../reasons";
-import { linked, makeStepMeta } from "../utils";
+} from "../../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { completeProof2 } from "../../../questions/funcTypeQuestions";
+import { Reasons } from "../../reasons";
+import { linked, makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -312,7 +312,7 @@ export const miniContent = () => {
   return ctx;
 };
 
-export const P2: LayoutProps = {
+export const T1_S1_C2: LayoutProps = {
   questions: completeProof2,
   baseContent,
   miniContent: miniContent(),

@@ -1,23 +1,23 @@
-import { Content } from "../../core/diagramContent";
-import { Point } from "../../core/geometry/Point";
-import { Segment } from "../../core/geometry/Segment";
-import { Triangle } from "../../core/geometry/Triangle";
-import { comma, segmentStr } from "../../core/geometryText";
-import { CongruentTriangles } from "../../core/templates/CongruentTriangles";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { ParallelLines } from "../../core/templates/ParallelLines";
-import { SAS, SASProps } from "../../core/templates/SAS";
+import { Content } from "../../../core/diagramContent";
+import { Point } from "../../../core/geometry/Point";
+import { Segment } from "../../../core/geometry/Segment";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { comma, segmentStr } from "../../../core/geometryText";
+import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
+import { EqualAngles } from "../../../core/templates/EqualAngles";
+import { EqualSegments } from "../../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { ParallelLines } from "../../../core/templates/ParallelLines";
+import { SAS, SASProps } from "../../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../core/types/types";
-import { completeProof1 } from "../../questions/funcTypeQuestions";
-import { Reasons } from "../reasons";
-import { linked, makeStepMeta } from "../utils";
+} from "../../../core/types/stepTypes";
+import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
+import { completeProof1 } from "../../../questions/funcTypeQuestions";
+import { Reasons } from "../../reasons";
+import { linked, makeStepMeta } from "../../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -304,7 +304,7 @@ const miniContent = () => {
   return ctx;
 };
 
-export const P1: LayoutProps = {
+export const T1_S1_C1: LayoutProps = {
   questions: completeProof1,
   miniContent: miniContent(),
   baseContent,

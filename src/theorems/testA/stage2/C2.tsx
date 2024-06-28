@@ -1,26 +1,29 @@
-import { Content } from "../../core/diagramContent";
-import { Point } from "../../core/geometry/Point";
-import { Triangle } from "../../core/geometry/Triangle";
-import { comma } from "../../core/geometryText";
-import { EqualAngleStep, EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
+import { Content } from "../../../core/diagramContent";
+import { Point } from "../../../core/geometry/Point";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { comma } from "../../../core/geometryText";
 import {
-  EqualSegmentStep,
+  EqualAngles,
+  EqualAngleStep,
+} from "../../../core/templates/EqualAngles";
+import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
+import {
   EqualSegments,
-} from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Perpendicular } from "../../core/templates/Perpendicular";
-import { Reflexive, ReflexiveStep } from "../../core/templates/Reflexive";
-import { SAS } from "../../core/templates/SAS";
+  EqualSegmentStep,
+} from "../../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { Perpendicular } from "../../../core/templates/Perpendicular";
+import { Reflexive, ReflexiveStep } from "../../../core/templates/Reflexive";
+import { SAS } from "../../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { exploratoryQuestion } from "../../questions/funcTypeQuestions";
-import { Reasons } from "../reasons";
-import { makeStepMeta } from "../utils";
+} from "../../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { exploratoryQuestion } from "../../../questions/funcTypeQuestions";
+import { Reasons } from "../../reasons";
+import { makeStepMeta } from "../../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -277,7 +280,7 @@ const miniContent = () => {
   return ctx;
 };
 
-export const P6: LayoutProps = {
+export const T1_S2_C2: LayoutProps = {
   questions: exploratoryQuestion,
   miniContent: miniContent(),
   baseContent,

@@ -8,19 +8,19 @@ import { SusPage } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason } from "./core/types/types";
-import { PC1 } from "./theorems/checking/pc1";
-import { PC2 } from "./theorems/checking/pc2";
-import { PC3 } from "./theorems/checking/pc3";
-import { P1 } from "./theorems/complete/proof1";
-import { P2 } from "./theorems/complete/proof2";
-import { P3 } from "./theorems/complete/proof3";
-import { P4 } from "./theorems/complete/proof4";
-import { P5 } from "./theorems/complete/proof5";
-import { P6 } from "./theorems/complete/proof6";
-import { IP1 } from "./theorems/incomplete/ip1";
-import { IP2 } from "./theorems/incomplete/ip2";
-import { IP3 } from "./theorems/incomplete/ip3";
+import { T1_CH1_IN1 } from "./theorems/challenge/ip3";
 import { Reasons } from "./theorems/reasons";
+import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
+import { T1_S1_C2 } from "./theorems/testA/stage1/C2";
+import { T1_S1_C3 } from "./theorems/testA/stage1/C3";
+import { T1_S1_IN1 } from "./theorems/testA/stage1/IN1";
+import { T1_S1_IN2 } from "./theorems/testA/stage1/IN2";
+import { T1_S1_IN3 } from "./theorems/testA/stage1/IN3";
+import { T1_S2_C1 } from "./theorems/testA/stage2/C1";
+import { T1_S2_C2 } from "./theorems/testA/stage2/C2";
+import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
+import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
+import { TutorialProof1 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
 
 interface ProofMeta {
@@ -45,11 +45,7 @@ const fisherYates = (arrLen: number) => {
 
 const randomizeProofs = (arr: LayoutProps[]) => {
   const order = fisherYates(arr.length);
-  const newArr = order.map((i) => arr[i]);
-  // only 2 proofs are needed per experiment
-  // if (arr.length === 2) return newArr;
-  // return newArr.slice(1);
-  return newArr;
+  return order.map((i) => arr[i]);
 };
 
 const staticLayout = (proofMeta: LayoutProps): ProofMeta => {
@@ -167,24 +163,23 @@ export class App extends React.Component<AppProps, AppState> {
       activePage: 0,
       activeTest: 0,
     };
-
-    const randomCompleteProofs = randomizeLayout(
-      randomizeProofs([P1, P2, P3, P4, P5, P6])
+    const tutorial = [interactiveLayout(TutorialProof1)];
+    const stage1 = randomizeLayout(
+      randomizeProofs([
+        T1_S1_C1,
+        T1_S1_C2,
+        T1_S1_C3,
+        T1_S1_IN1,
+        T1_S1_IN2,
+        T1_S1_IN3,
+      ])
     ); // 2 random complete proofs
-    const randomCheckingProofs = randomizeLayout(
-      randomizeProofs([PC1, PC2, PC3])
+    const stage2 = randomizeLayout(
+      randomizeProofs([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2])
     );
-    const randomIncompleteProofs = randomizeLayout(
-      randomizeProofs([IP1, IP2, IP3])
-    );
+    const challenge = randomizeLayout(randomizeProofs([T1_CH1_IN1]));
 
-    let randomProofOrder = randomCompleteProofs.concat(
-      randomCheckingProofs,
-      randomIncompleteProofs
-    );
-    // shuffle activities
-    const shuffleProofOrder = fisherYates(randomProofOrder.length);
-    this.meta = shuffleProofOrder.map((i) => randomProofOrder[i]);
+    this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
   }
 
   componentDidMount() {

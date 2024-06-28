@@ -1,26 +1,26 @@
-import { Content } from "../../core/diagramContent";
-import { Angle } from "../../core/geometry/Angle";
-import { BaseGeometryObject } from "../../core/geometry/BaseGeometryObject";
-import { Point } from "../../core/geometry/Point";
-import { Segment } from "../../core/geometry/Segment";
-import { Triangle } from "../../core/geometry/Triangle";
-import { comma, triangleStr } from "../../core/geometryText";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Midpoint } from "../../core/templates/Midpoint";
-import { RightAngle } from "../../core/templates/RightAngle";
-import { SAS, SASProps } from "../../core/templates/SAS";
+import { Content } from "../../../core/diagramContent";
+import { Angle } from "../../../core/geometry/Angle";
+import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
+import { Point } from "../../../core/geometry/Point";
+import { Segment } from "../../../core/geometry/Segment";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { comma, triangleStr } from "../../../core/geometryText";
+import { EqualAngles } from "../../../core/templates/EqualAngles";
+import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
+import { EqualSegments } from "../../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { Midpoint } from "../../../core/templates/Midpoint";
+import { RightAngle } from "../../../core/templates/RightAngle";
+import { SAS, SASProps } from "../../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { placeholder } from "../../questions/funcTypeQuestions";
-import { Reasons } from "../reasons";
-import { linked, makeStepMeta } from "../utils";
+} from "../../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { exploratoryQuestion } from "../../../questions/funcTypeQuestions";
+import { Reasons } from "../../reasons";
+import { linked, makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -350,9 +350,9 @@ export const miniContent = () => {
   return ctx;
 };
 
-export const P3: LayoutProps = {
+export const T1_S2_C1: LayoutProps = {
   // TODO: Replace questions
-  questions: placeholder,
+  questions: exploratoryQuestion,
   baseContent,
   miniContent: miniContent(),
   givens,

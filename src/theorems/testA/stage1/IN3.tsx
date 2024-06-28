@@ -1,24 +1,24 @@
-import { Content } from "../../core/diagramContent";
-import { Angle } from "../../core/geometry/Angle";
-import { BaseGeometryObject } from "../../core/geometry/BaseGeometryObject";
-import { Point } from "../../core/geometry/Point";
-import { Triangle } from "../../core/geometry/Triangle";
-import { comma } from "../../core/geometryText";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Reflexive } from "../../core/templates/Reflexive";
-import { RightAngle } from "../../core/templates/RightAngle";
-import { SAS, SASProps } from "../../core/templates/SAS";
+import { Content } from "../../../core/diagramContent";
+import { Angle } from "../../../core/geometry/Angle";
+import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
+import { Point } from "../../../core/geometry/Point";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { comma } from "../../../core/geometryText";
+import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
+import { EqualSegments } from "../../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { Reflexive } from "../../../core/templates/Reflexive";
+import { RightAngle } from "../../../core/templates/RightAngle";
+import { SAS, SASProps } from "../../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { checkingProof3 } from "../../questions/funcTypeQuestions";
-import { Reasons } from "../reasons";
-import { linked, makeStepMeta } from "../utils";
+} from "../../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { checkingProof3 } from "../../../questions/funcTypeQuestions";
+import { Reasons } from "../../reasons";
+import { linked, makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const pts: Vector[] = [
@@ -249,7 +249,7 @@ export const miniContent = () => {
   return ctx;
 };
 
-export const PC3: LayoutProps = {
+export const T1_S1_IN3: LayoutProps = {
   questions: checkingProof3,
   baseContent,
   miniContent: miniContent(),
