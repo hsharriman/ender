@@ -45,18 +45,12 @@ export class BackgroundQuestions extends React.Component<
         },
       }),
       () => {
-        const allAnswered = Object.values(this.state.answers).every(
-          (answer) => answer !== ""
+        const allAnswered = this.state.questions.every(
+          (_, index) =>
+            this.state.answers[`text${index}`] &&
+            this.state.answers[`text${index}`].trim() !== ""
         );
-        if (allAnswered) {
-          this.setState({
-            completed: true,
-          });
-        } else {
-          this.setState({
-            completed: false,
-          });
-        }
+        this.setState({ completed: allAnswered });
       }
     );
   };
@@ -70,17 +64,10 @@ export class BackgroundQuestions extends React.Component<
   };
 
   handleSubmit = () => {
-    const { answers } = this.state;
-    const allAnswered = Object.values(answers).every((answer) => answer !== "");
-
-    if (!allAnswered) {
-      alert("Please answer all questions before submitting.");
-      return;
+    if (this.state.completed) {
+      console.log("Survey results:", this.state.answers);
+      this.setState({ submitted: true });
     }
-    console.log("Survey results:", answers);
-    this.setState({
-      submitted: true,
-    });
   };
 
   render() {
