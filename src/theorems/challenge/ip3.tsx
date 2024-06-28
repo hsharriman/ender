@@ -18,7 +18,6 @@ import { SAS, SASProps } from "../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
@@ -75,26 +74,14 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   // TODO: looks like equalrightangles doesn't have tickless text?
-  text: (props: StepTextProps) => {
+  text: (ctx: Content) => {
     return (
       <span>
-        {RightAngle.text(props, "AEB")}
+        {RightAngle.text(ctx, "AEB")}
         {comma}
-        {Midpoint.text(props, "AC", ["AE", "EC"], "E")}
+        {Midpoint.text(ctx, "AC", ["AE", "EC"], "E")}
         {comma}
-        {EqualSegments.text(props, ["DE", "EG"])}
-      </span>
-    );
-  },
-
-  ticklessText: (ctx: Content) => {
-    return (
-      <span>
-        {RightAngle.ticklessText(ctx, "AEB")}
-        {comma}
-        {Midpoint.ticklessText(ctx, "AC", ["AE", "EC"], "E")}
-        {comma}
-        {EqualSegments.ticklessText(ctx, ["DE", "EG"])}
+        {EqualSegments.text(ctx, ["DE", "EG"])}
       </span>
     );
   },
@@ -130,8 +117,8 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["DCE", "GCE"]);
   },
-  text: (props: StepTextProps) => {
-    return EqualAngles.text(props, ["DCE", "GCE"]);
+  text: (ctx: Content) => {
+    return EqualAngles.text(ctx, ["DCE", "GCE"]);
   },
   staticText: () => EqualAngles.staticText(["DCE", "GCE"]),
 });
@@ -144,8 +131,8 @@ const step1: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     RightAngle.additions(props, "AEB");
   },
-  text: (props: StepTextProps) => {
-    return RightAngle.text(props, "AEB");
+  text: (ctx: Content) => {
+    return RightAngle.text(ctx, "AEB");
   },
   staticText: () => RightAngle.staticText("AEB"),
 });
@@ -159,8 +146,8 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "E", ["AE", "EC"]);
   },
-  text: (props: StepTextProps) => {
-    return Midpoint.text(props, "AC", ["AE", "EC"], "E");
+  text: (ctx: Content) => {
+    return Midpoint.text(ctx, "AC", ["AE", "EC"], "E");
   },
   staticText: () => Midpoint.staticText("AC", "E"),
 });
@@ -180,7 +167,7 @@ const step6: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["AEB", "CEB"]),
-  text: (props: StepTextProps) => EqualRightAngles.text(props, ["AEB", "CEB"]),
+  text: (ctx: Content) => EqualRightAngles.text(ctx, ["AEB", "CEB"]),
   staticText: () => EqualRightAngles.staticText(["AEB", "CEB"]),
 });
 
@@ -197,8 +184,7 @@ const step7: StepMeta = makeStepMeta({
     step6.unfocused(props);
   },
   additions: (props: StepFocusProps) => SAS.additions(props, s7SASProps),
-  text: (props: StepTextProps) =>
-    EqualTriangles.text(props, s7SASProps.triangles),
+  text: (ctx: Content) => EqualTriangles.text(ctx, s7SASProps.triangles),
   staticText: () => EqualTriangles.staticText(s7SASProps.triangles),
 });
 
@@ -208,7 +194,7 @@ const step8: StepMeta = makeStepMeta({
     step7.unfocused(props);
     step7.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  text: (props: StepTextProps) => (
+  text: (ctx: Content) => (
     <span style={{ color: "black", fontStyle: "italic" }}>
       Which step can be applied here?
     </span>
@@ -250,7 +236,8 @@ const miniContent = () => {
   return ctx;
 };
 
-export const IP3: LayoutProps = {
+// TODO rename depending on right/wrong?
+export const T1_CH1_IN1: LayoutProps = {
   // TODO: Replace questions
   questions: placeholder,
   miniContent: miniContent(),

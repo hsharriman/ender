@@ -2,16 +2,14 @@ import { Angle } from "./geometry/Angle";
 import { Point } from "./geometry/Point";
 import { Quadrilateral } from "./geometry/Quadrilateral";
 import { Segment } from "./geometry/Segment";
-import { Tick } from "./geometry/Tick";
 import { Triangle } from "./geometry/Triangle";
-import { Obj, TickType } from "./types/types";
+import { Obj } from "./types/types";
 import { getId } from "./utils";
 
 export interface DiagramContent {
   points: Point[];
   segments: Segment[]; // every segment tracks its own mode during build
   angles: Angle[];
-  ticks: Tick[];
   triangles: Triangle[];
   rectangles: Quadrilateral[];
   frames: string[];
@@ -30,7 +28,6 @@ export class Content {
       points: [],
       segments: [],
       angles: [],
-      ticks: [],
       triangles: [],
       rectangles: [],
       frames: [],
@@ -70,7 +67,7 @@ export class Content {
   push(e: Angle): Angle;
   push(e: Triangle): Triangle;
   push(e: Quadrilateral): Quadrilateral;
-  push(e: Point | Segment | Angle | Triangle | Tick | Quadrilateral) {
+  push(e: Point | Segment | Angle | Triangle | Quadrilateral) {
     switch (e.tag) {
       case Obj.Point:
         if (!this.getPoint(e.label)) this.ctx.points.push(e as Point);
@@ -105,23 +102,4 @@ export class Content {
     this.ctx.triangles.filter((t) => t.matches(label))[0];
   getQuadrilateral = (label: string) =>
     this.ctx.rectangles.filter((r) => r.matches(label))[0];
-
-  getTick = (
-    parent: Segment | Angle,
-    type: TickType,
-    options?: { num?: number; frame?: string }
-  ) => {
-    let numTicks = options?.num || 1;
-    let id = this.getId(type, parent.labeled().label, numTicks);
-    const hasParent = options?.frame && options.frame !== undefined;
-    if (hasParent) {
-      id = `${options?.frame}-${id}`;
-    }
-    const match = this.ctx.ticks.filter((t) => t.id === id);
-    // if (match.length === 0) { // debugging
-    //   const tickStr = this.ticks.map((t) => t.id).join(", ");
-    //   console.error("no match for tick", id, "from ticks", tickStr, options);
-    // }
-    return match[0];
-  };
 }

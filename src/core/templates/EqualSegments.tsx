@@ -1,13 +1,8 @@
 import { definitions } from "../../theorems/definitions";
 import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { congruent, resizedStrs, segmentStr, strs } from "../geometryText";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepTextProps,
-  StepUnfocusProps,
-} from "../types/stepTypes";
+import { congruent, resizedStrs, segmentStr } from "../geometryText";
+import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, Reason, SVGModes } from "../types/types";
 
 export class EqualSegments {
@@ -26,27 +21,14 @@ export class EqualSegments {
       .addTick(props.frame, Obj.EqualLengthTick, numTicks)
       .mode(props.frame, s2Mode || props.mode);
   };
-  static text = (
-    props: StepTextProps,
-    [s1, s2]: [string, string],
-    num?: number
-  ) => {
-    const s1s = props.ctx.getSegment(s1);
-    const s2s = props.ctx.getSegment(s2);
+  static text = (ctx: Content, [s1, s2]: [string, string]) => {
+    const s1s = ctx.getSegment(s1);
+    const s2s = ctx.getSegment(s2);
     return (
       <span>
         {linked(s1, s1s)}
         {tooltip(resizedStrs.congruent, definitions.CongruentLines)}
         {linked(s2, s2s)}
-      </span>
-    );
-  };
-  static ticklessText = (ctx: Content, [s1, s2]: [string, string]) => {
-    return (
-      <span>
-        {linked(s1, ctx.getSegment(s1))}
-        {tooltip(resizedStrs.congruent, definitions.CongruentLines)}
-        {linked(s2, ctx.getSegment(s2))}
       </span>
     );
   };
@@ -78,8 +60,8 @@ export const EqualSegmentStep = (
     additions: (props: StepFocusProps) => {
       EqualSegments.additions(props, s, num);
     },
-    text: (props: StepTextProps) => {
-      return EqualSegments.text(props, s, num);
+    text: (ctx: Content) => {
+      return EqualSegments.text(ctx, s);
     },
     staticText: () => EqualSegments.staticText(s),
   });

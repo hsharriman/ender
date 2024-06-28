@@ -6,10 +6,11 @@ import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "./svgUtils";
 
 const TICK_PADDING = 0.35;
 const ARC_RADIUS = 0.3;
-const SINGLE_MINI_ARC_RADIUS = 0.4;
-const SINGLE_MINI_ARC_PADDING = 0.5;
+const MINI_ARC_R = 0.3;
+const SINGLE_MINI_ARC_RADIUS = 0.6;
+const MINI_ARC_PADDING = 0.18;
 const RIGHT_ANGLE_SCALE = 0.45;
-const ARC_PADDING = 0.2;
+const ARC_PADDING = 0.15;
 
 export type SVGTickProps = {
   parent: LSegment | LAngle;
@@ -65,7 +66,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
 
     // segments to make up the tick mark
     const seg = vops.rot(
-      vops.smul(unit, this.props.miniScale ? 0.2 : 0.15),
+      vops.smul(unit, this.props.miniScale ? 0.2 : 0.12),
       90
     );
     const start = vops.add(seg, midpoint);
@@ -87,34 +88,31 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
-    let arcR = this.props.miniScale || num === 1 ? ARC_RADIUS : 0.2;
-    arcR = this.props.miniScale ? 0.18 : arcR;
-    let arcPad = this.props.miniScale || num === 1 ? ARC_PADDING : 0.15;
+    // scale start and end by radius per tick
+    let arcR = num === 1 ? ARC_RADIUS : 0.2;
+    arcR = this.props.miniScale ? MINI_ARC_R : arcR;
+    let arcPad =
+      this.props.miniScale || num === 1 ? MINI_ARC_PADDING : ARC_PADDING;
     if (num === 1 && this.props.miniScale) {
       arcR = SINGLE_MINI_ARC_RADIUS;
-      arcPad = SINGLE_MINI_ARC_PADDING;
     }
 
     let dStr = "";
     // increase radius according to numticks
     for (let i = 0; i < num; i++) {
-      let radius;
-      if (i === 0 && num > 1) {
-        radius =
-          arcR * (i + 1) + scaleToSvg(arcPad * (i + 1), this.props.miniScale);
-      }
-      radius =
-        arcR * (i + 1) + scaleToSvg(arcPad * (i + 1), this.props.miniScale);
-      const scalar = arcR + arcPad * i;
+      const r = arcR + arcPad * i;
       const end = coordsToSvg(
-        vops.add(a.center, vops.smul(eUnit, scalar)),
+        vops.add(a.center, vops.smul(eUnit, r)),
         this.props.miniScale
       );
       const start = coordsToSvg(
-        vops.add(a.center, vops.smul(sUnit, scalar)),
+        vops.add(a.center, vops.smul(sUnit, r)),
         this.props.miniScale
       );
-      dStr = dStr + pops.moveTo(start) + pops.arcTo(radius, 0, sweep, end);
+      dStr =
+        dStr +
+        pops.moveTo(start) +
+        pops.arcTo(scaleToSvg(r, this.props.miniScale), 0, sweep, end);
     }
     return dStr;
   };
@@ -150,7 +148,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
   ): Vector[] => {
     let dir = 1;
     const even = numTicks % 2 === 0;
-    const padding = miniScale ? 0.25 : 0.15;
+    const padding = miniScale ? 0.22 : 0.15;
     let shifts = even ? [padding / 2] : [0];
     for (let i = 1; i < numTicks; i++) {
       if (even && i === 1) dir = -1;

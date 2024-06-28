@@ -1,9 +1,9 @@
 import { definitions } from "../../theorems/definitions";
-import { tooltip } from "../../theorems/utils";
+import { makeStepMeta, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { angleStr, congruent, resizedStrs } from "../geometryText";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
+import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
+import { Obj, Reason, SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 
 export class EqualAngles {
@@ -22,26 +22,12 @@ export class EqualAngles {
       .addTick(props.frame, Obj.EqualAngleTick, numTicks)
       .mode(props.frame, a2Mode || props.mode);
   };
-  static text = (
-    props: StepTextProps,
-    [a1, a2]: [string, string],
-    num?: number
-  ) => {
-    const options = { frame: props.frame, num };
+  static text = (ctx: Content, [a1, a2]: [string, string]) => {
     return (
       <span>
-        {BaseAngle.text(props, a1)}
+        {BaseAngle.text(ctx, a1)}
         {tooltip(resizedStrs.congruent, definitions.CongruentAngles)}
-        {BaseAngle.text(props, a2)}
-      </span>
-    );
-  };
-  static ticklessText = (ctx: Content, [a1, a2]: [string, string]) => {
-    return (
-      <span>
-        {BaseAngle.ticklessText(ctx, a1)}
-        {tooltip(resizedStrs.congruent, definitions.CongruentAngles)}
-        {BaseAngle.ticklessText(ctx, a2)}
+        {BaseAngle.text(ctx, a2)}
       </span>
     );
   };
@@ -55,3 +41,24 @@ export class EqualAngles {
     );
   };
 }
+
+export const EqualAngleStep = (
+  [a1, a2]: [string, string],
+  reason: Reason,
+  step: StepMeta,
+  num?: number,
+  dependsOn?: number[]
+) => {
+  return makeStepMeta({
+    reason,
+    dependsOn,
+    unfocused: (props: StepUnfocusProps) => {
+      step.unfocused(props);
+      step.additions({ ...props, mode: SVGModes.Unfocused });
+    },
+    additions: (props: StepFocusProps) =>
+      EqualAngles.additions(props, [a1, a2], num),
+    text: (ctx: Content) => EqualAngles.text(ctx, [a1, a2]),
+    staticText: () => EqualAngles.staticText([a1, a2]),
+  });
+};

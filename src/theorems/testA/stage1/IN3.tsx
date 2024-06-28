@@ -1,25 +1,24 @@
-import { Content } from "../../core/diagramContent";
-import { Angle } from "../../core/geometry/Angle";
-import { BaseGeometryObject } from "../../core/geometry/BaseGeometryObject";
-import { Point } from "../../core/geometry/Point";
-import { Triangle } from "../../core/geometry/Triangle";
-import { comma } from "../../core/geometryText";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Reflexive } from "../../core/templates/Reflexive";
-import { RightAngle } from "../../core/templates/RightAngle";
-import { SAS, SASProps } from "../../core/templates/SAS";
+import { Content } from "../../../core/diagramContent";
+import { Angle } from "../../../core/geometry/Angle";
+import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
+import { Point } from "../../../core/geometry/Point";
+import { Triangle } from "../../../core/geometry/Triangle";
+import { comma } from "../../../core/geometryText";
+import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
+import { EqualSegments } from "../../../core/templates/EqualSegments";
+import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { Reflexive } from "../../../core/templates/Reflexive";
+import { RightAngle } from "../../../core/templates/RightAngle";
+import { SAS, SASProps } from "../../../core/templates/SAS";
 import {
   StepFocusProps,
   StepMeta,
-  StepTextProps,
   StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { checkingProof3 } from "../../questions/funcTypeQuestions";
-import { Reasons } from "../reasons";
-import { linked, makeStepMeta } from "../utils";
+} from "../../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { checkingProof3 } from "../../../questions/funcTypeQuestions";
+import { Reasons } from "../../reasons";
+import { linked, makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const pts: Vector[] = [
@@ -58,11 +57,11 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (props: StepTextProps) => {
-    const LK = props.ctx.getSegment("LK");
-    const LM = props.ctx.getSegment("LM");
-    const MN = props.ctx.getSegment("MN");
-    const NK = props.ctx.getSegment("NK");
+  text: (ctx: Content) => {
+    const LK = ctx.getSegment("LK");
+    const LM = ctx.getSegment("LM");
+    const MN = ctx.getSegment("MN");
+    const NK = ctx.getSegment("NK");
 
     return (
       <span>
@@ -73,31 +72,9 @@ const givens: StepMeta = makeStepMeta({
         )}
         {" is a quadrilateral"}
         {comma}
-        {EqualSegments.text(props, ["LM", "NK"])}
+        {EqualSegments.text(ctx, ["LM", "NK"])}
         {comma}
-        {RightAngle.text(props, "KLM")}
-      </span>
-    );
-  },
-
-  ticklessText: (ctx: Content) => {
-    const LK = ctx.getSegment("LK");
-    const LM = ctx.getSegment("LM");
-    const MN = ctx.getSegment("MN");
-    const NK = ctx.getSegment("NK");
-
-    return (
-      <span>
-        {linked(
-          "EFGH",
-          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
-          [LK, LM, MN, NK]
-        )}
-        {" is a quadrilateral"}
-        {comma}
-        {EqualSegments.ticklessText(ctx, ["LM", "NK"])}
-        {comma}
-        {RightAngle.ticklessText(ctx, "KLM")}
+        {RightAngle.text(ctx, "KLM")}
       </span>
     );
   },
@@ -126,9 +103,7 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     givens.additions(props);
   },
-  text: (props: StepTextProps) => EqualTriangles.text(props, ["KLM", "MNK"]),
-  ticklessText: (ctx: Content) =>
-    EqualTriangles.ticklessText(ctx, ["KLM", "MNK"]),
+  text: (ctx: Content) => EqualTriangles.text(ctx, ["KLM", "MNK"]),
   staticText: () => EqualTriangles.staticText(["KLM", "MNK"]),
 });
 
@@ -142,17 +117,17 @@ const step1: StepMeta = makeStepMeta({
       props.ctx.getSegment(s).mode(props.frame, props.mode)
     );
   },
-  text: (props: StepTextProps) => {
+  text: (ctx: Content) => {
     return (
       <span>
         {linked(
           "KLMN",
           new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
           [
-            props.ctx.getSegment("LK"),
-            props.ctx.getSegment("LM"),
-            props.ctx.getSegment("MN"),
-            props.ctx.getSegment("NK"),
+            ctx.getSegment("LK"),
+            ctx.getSegment("LM"),
+            ctx.getSegment("MN"),
+            ctx.getSegment("NK"),
           ]
         )}
         {" is a quadrilateral"}
@@ -171,7 +146,7 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["LM", "NK"]);
   },
-  text: (props: StepTextProps) => EqualSegments.text(props, ["LM", "NK"]),
+  text: (ctx: Content) => EqualSegments.text(ctx, ["LM", "NK"]),
   staticText: () => EqualSegments.staticText(["LM", "NK"]),
 });
 
@@ -184,7 +159,7 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     RightAngle.additions(props, "KLM");
   },
-  text: (props: StepTextProps) => RightAngle.text(props, "KLM"),
+  text: (ctx: Content) => RightAngle.text(ctx, "KLM"),
   staticText: () => RightAngle.staticText("KLM"),
 });
 
@@ -198,8 +173,8 @@ const step4: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["KLM", "MNK"]);
   },
-  text: (props: StepTextProps) => {
-    return EqualRightAngles.text(props, ["KLM", "MNK"]);
+  text: (ctx: Content) => {
+    return EqualRightAngles.text(ctx, ["KLM", "MNK"]);
   },
   staticText: () => {
     return EqualRightAngles.staticText(["KLM", "MNK"]);
@@ -215,7 +190,7 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Reflexive.additions(props, "MK", 2);
   },
-  text: (props: StepTextProps) => Reflexive.text(props, "MK", 2),
+  text: (ctx: Content) => Reflexive.text(ctx, "MK"),
   staticText: () => Reflexive.staticText("MK"),
 });
 
@@ -231,8 +206,7 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     SAS.additions(props, s6SASProps);
   },
-  text: (props: StepTextProps) =>
-    EqualTriangles.text(props, s6SASProps.triangles),
+  text: (ctx: Content) => EqualTriangles.text(ctx, s6SASProps.triangles),
   staticText: () => EqualTriangles.staticText(s6SASProps.triangles),
 });
 
@@ -275,7 +249,7 @@ export const miniContent = () => {
   return ctx;
 };
 
-export const PC3: LayoutProps = {
+export const T1_S1_IN3: LayoutProps = {
   questions: checkingProof3,
   baseContent,
   miniContent: miniContent(),

@@ -1,33 +1,31 @@
 import { definitions } from "../../theorems/definitions";
 import { linked, tooltip } from "../../theorems/utils";
+import { Content } from "../diagramContent";
 import { resizedStrs } from "../geometryText";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
-import { Obj, SVGModes, TickType } from "../types/types";
+import {
+  StepFocusProps,
+  TickedAngles,
+  TickedSegments,
+} from "../types/stepTypes";
+import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
 
-export interface ASAAngleMeta {
-  angles: [string, string];
-  tick: TickType;
-  numTicks?: number;
-}
 export interface ASAProps {
-  a1s: ASAAngleMeta;
-  a2s: ASAAngleMeta;
-  segs: [string, string];
+  a1s: TickedAngles;
+  a2s: TickedAngles;
+  segs: TickedSegments;
   triangles: [string, string];
-  segTickType?: TickType;
-  segTickNum?: number;
 }
 export class ASA {
-  static text = (props: StepTextProps, triangles: [string, string]) => {
+  static text = (ctx: Content, triangles: [string, string]) => {
     const [t1, t2] = triangles;
     return (
       <span>
-        {linked(t1, props.ctx.getTriangle(t1))}
+        {linked(t1, ctx.getTriangle(t1))}
         {tooltip(resizedStrs.congruent, definitions.CongruentTriangles)}
-        {linked(t2, props.ctx.getTriangle(t2))}
+        {linked(t2, ctx.getTriangle(t2))}
       </span>
     );
   };
@@ -41,12 +39,17 @@ export class ASA {
     props.ctx
       .getTriangle(labels.triangles[1])
       .mode(props.frame, t2Mode || props.mode);
-    EqualSegments.additions(props, labels.segs, labels.segTickNum || 1, t2Mode);
+    EqualSegments.additions(
+      props,
+      labels.segs.s,
+      labels.segs.ticks || 1,
+      t2Mode
+    );
     [labels.a1s, labels.a2s].forEach((a, i) => {
-      if (a.tick === Obj.RightTick) {
-        EqualRightAngles.additions(props, a.angles, t2Mode);
+      if (a.type === Obj.RightTick) {
+        EqualRightAngles.additions(props, a.a, t2Mode);
       } else {
-        EqualAngles.additions(props, a.angles, a.numTicks || 1, t2Mode);
+        EqualAngles.additions(props, a.a, a.ticks || 1, t2Mode);
       }
     });
   };

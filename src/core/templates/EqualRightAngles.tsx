@@ -1,6 +1,6 @@
 import { Content } from "../diagramContent";
-import { StepFocusProps, StepTextProps } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
+import { StepFocusProps } from "../types/stepTypes";
+import { SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 import { RightAngle } from "./RightAngle";
 
@@ -14,21 +14,12 @@ export class EqualRightAngles {
     RightAngle.additions({ ...props }, a1);
     RightAngle.additions({ ...props, mode: a2Mode || props.mode }, a2);
   };
-  static text = (props: StepTextProps, [a1, a2]: [string, string]) => {
+  static text = (ctx: Content, [a1, a2]: [string, string]) => {
     return (
       <span>
-        {BaseAngle.text(props, a1)}
+        {BaseAngle.text(ctx, a1)}
         {this.equalNinety}
-        {BaseAngle.text(props, a2)}
-      </span>
-    );
-  };
-  static ticklesstText = (ctx: Content, [a1, a2]: [string, string]) => {
-    return (
-      <span>
-        {BaseAngle.ticklessText(ctx, a1)}
-        {this.equalNinety}
-        {BaseAngle.ticklessText(ctx, a2)}
+        {BaseAngle.text(ctx, a2)}
       </span>
     );
   };
