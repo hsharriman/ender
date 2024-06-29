@@ -1,4 +1,4 @@
-import { segmentQuestion, strs } from "../core/geometryText";
+import { segmentQuestion, strs, triangleStr } from "../core/geometryText";
 
 export interface Question {
   fullScaffold?: string | JSX.Element;
@@ -13,6 +13,7 @@ export enum QuestionType {
   ReliesOn = "ReliesOn",
   DiagramState = "DiagramState",
   Correctness = "Correctness",
+  TutorialInstructions = "TutorialInstructions",
 }
 
 const yesNoAnswers = ["Yes", "No", "Not Sure"];
@@ -194,6 +195,34 @@ export const exploratoryQuestion: Question[] = [
     prompt: "Is this proof correct?",
     answers: yesNoAnswers,
     type: QuestionType.Correctness,
+  },
+];
+
+export const tutorial1Questions: Question[] = [
+  {
+    prompt:
+      "Tutorial: This is an interactive proof. Press the Down arrow key to progress through the steps of the proof.",
+    answers: [],
+    type: QuestionType.TutorialInstructions,
+  },
+  {
+    prompt:
+      "Tutorial: Notice that the construction updates at every step. Tick marks show relationships between segments and angles. The construction keeps track of what information is known at each step of the proof.",
+    answers: [],
+    type: QuestionType.TutorialInstructions,
+  },
+  {
+    prompt: `Tutorial: Try hovering over the triangle ${strs.triangle}ABC. Notice that the triangle is also highlighted in the diagram`,
+    answers: [],
+    type: QuestionType.TutorialInstructions,
+  },
+];
+
+export const tutorial2Questions: Question[] = [
+  {
+    prompt: "Tutorial: This version of the proof has a mistake in it. ",
+    answers: yesNoAnswers,
+    type: QuestionType.DiagramState,
   },
 ];
 
