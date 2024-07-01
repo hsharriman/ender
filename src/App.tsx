@@ -159,6 +159,7 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
+  page: string;
 }
 export class App extends React.Component<AppProps, AppState> {
   private meta: ProofMeta[] = [];
@@ -167,6 +168,7 @@ export class App extends React.Component<AppProps, AppState> {
     this.state = {
       activePage: 0,
       activeTest: 0,
+      page: "home",
     };
     const tutorial = [interactiveLayout(TutorialProof1, false)];
     // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented
@@ -186,7 +188,8 @@ export class App extends React.Component<AppProps, AppState> {
     );
     const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]));
 
-    this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
+    // this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
+    this.meta = stage1.concat(stage2).concat(challenge);
   }
 
   componentDidMount() {
@@ -195,12 +198,16 @@ export class App extends React.Component<AppProps, AppState> {
 
   onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
     if (this.state.activePage + direction < 0) {
-      this.setState({ activeTest: 0 });
+      this.setState({ activeTest: 0, page: "home" });
     } else {
       this.setState({
         activePage: this.state.activePage + direction,
       });
     }
+  };
+
+  onClickTest = (test: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
+    this.setState({ page: test });
   };
 
   onNext = (direction: number) => {
@@ -213,8 +220,7 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  render() {
-    const page = this.state.activePage - 1; // For current page of proof
+  renderExperimentPages = (page: number) => {
     const numPage = this.meta.length + 3; // For total num of pages
     const currMeta = this.meta[page];
     return (
@@ -323,6 +329,58 @@ export class App extends React.Component<AppProps, AppState> {
         </div>
       </div>
     );
+  };
+
+  render() {
+    const page = this.state.activePage - 1; // For current page of proof
+    if (this.state.page === "demo") {
+      return (
+        <>
+          <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+            <button
+              className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+              id="prev-arrow"
+              style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+              onClick={this.onClick(-1)}
+            >
+              {"Home"}
+            </button>
+          </div>
+          <div className="w-full h-full flex justify-start">
+            <InteractiveAppPage
+              {...{
+                ...(interactiveLayout(T1_S1_C1)
+                  .props as InteractiveAppPageProps),
+                pageNum: this.state.activePage,
+              }}
+              key={"interactive-pg" + this.state.activePage}
+            />
+          </div>
+        </>
+      );
+    } else if (this.state.page === "procedure") {
+      return this.renderExperimentPages(page);
+    } else if (this.state.page === "home") {
+      return (
+        <div className="flex w-screen h-screen justify-center items-center">
+          <div className="flex flex-row w-[1100px] h-32 justify-center">
+            <button
+              className="py-4 px-8 m-4 text-3xl bg-violet-300 rounded-md text-white"
+              onClick={this.onClickTest("demo")}
+            >
+              Demo
+            </button>
+            <button
+              className="py-4 px-8 m-4 text-3xl bg-violet-500 rounded-md text-white"
+              onClick={this.onClickTest("procedure")}
+            >
+              Procedure
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <></>;
   }
 }
 
