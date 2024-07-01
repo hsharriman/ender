@@ -23,6 +23,7 @@ import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
+import SavePage from "./components/SavePage";
 
 interface ProofMeta {
   layout: LayoutOptions;
@@ -74,6 +75,7 @@ const staticLayout = (
       questions: shuffleQuestions
         ? fisherYates(proofMeta.questions)
         : proofMeta.questions,
+      name: proofMeta.name,
     },
   };
 };
@@ -133,6 +135,7 @@ const interactiveLayout = (
       questions: shuffleQuestions
         ? fisherYates(proofMeta.questions)
         : proofMeta.questions,
+      name: proofMeta.name,
     },
   };
 };
@@ -157,6 +160,11 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
+  answers: {
+    [proofName: string]: {
+      [question: string]: string;
+    };
+  };
 }
 export class App extends React.Component<AppProps, AppState> {
   private meta: ProofMeta[] = [];
@@ -165,6 +173,7 @@ export class App extends React.Component<AppProps, AppState> {
     this.state = {
       activePage: 0,
       activeTest: 0,
+      answers: {},
     };
     const tutorial = [interactiveLayout(TutorialProof1, false)];
     // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented
@@ -211,9 +220,34 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
+  updateAnswers = (proofName: string) => (question: string, answer: string) => {
+    const storedAnswers = localStorage.getItem("answers");
+    const existingAnswers = storedAnswers ? JSON.parse(storedAnswers) : {};
+
+    const updatedAnswers = {
+      ...existingAnswers,
+      [proofName]: {
+        ...existingAnswers[proofName],
+        [question]: answer,
+      },
+    };
+
+    // this.setState((prevState) => ({
+    //   answers: {
+    //     ...prevState.answers,
+    //     [proofName]: {
+    //       ...prevState.answers[proofName],
+    //       [question]: answer,
+    //     },
+    //   },
+    // }));
+
+    localStorage.setItem("answers", JSON.stringify(updatedAnswers));
+  };
+
   render() {
     const page = this.state.activePage - 1; // For current page of proof
-    const numPage = this.meta.length + 3; // For total num of pages
+    const numPage = this.meta.length + 4; // For total num of pages
     const currMeta = this.meta[page];
     return (
       <div>
@@ -241,6 +275,8 @@ export class App extends React.Component<AppProps, AppState> {
                 <TestQuestions
                   questions={currMeta.props.questions}
                   onNext={this.onNext}
+                  proofType={currMeta.layout}
+                  onAnswerUpdate={this.updateAnswers(currMeta.props.name)}
                 />
               </div>
               <button
@@ -283,7 +319,9 @@ export class App extends React.Component<AppProps, AppState> {
         )}
         <div className="w-full h-full flex justify-start">
           {this.state.activePage === 0 ? (
-            <BackgroundQuestions />
+            <BackgroundQuestions
+              updateAnswers={this.updateAnswers("Background Questions")}
+            />
           ) : this.state.activePage <= this.meta.length ? (
             currMeta.layout === "static" ? (
               <StaticAppPage
@@ -302,15 +340,22 @@ export class App extends React.Component<AppProps, AppState> {
                 key={"interactive-pg" + this.state.activePage}
               />
             )
+          ) : this.state.activePage < numPage - 1 ? (
+            this.state.activePage === this.meta.length + 1 ? (
+              <SusPage
+                key={this.state.activePage}
+                type={"Static SUS"}
+                updateAnswers={this.updateAnswers("Static SUS")}
+              />
+            ) : (
+              <SusPage
+                key={this.state.activePage}
+                type={"Interactive SUS"}
+                updateAnswers={this.updateAnswers("Interactive SUS")}
+              />
+            )
           ) : (
-            <SusPage
-              key={this.state.activePage}
-              type={
-                this.state.activePage === this.meta.length + 1
-                  ? "Static"
-                  : "Interactive"
-              }
-            />
+            <SavePage answers={this.state.answers} />
           )}
         </div>
       </div>

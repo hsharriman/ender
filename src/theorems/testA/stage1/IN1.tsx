@@ -226,6 +226,7 @@ const miniContent = () => {
 };
 
 export const T1_S1_IN1: LayoutProps = {
+  name: "T1_S1_IN1",
   questions: checkingProof1,
   miniContent: miniContent(),
   baseContent,
