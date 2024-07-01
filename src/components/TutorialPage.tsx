@@ -93,14 +93,15 @@ export class TutorialPage extends React.Component<
     if (elem) {
       const dims = elem.getBoundingClientRect();
       const style = {
-        top: `${dims.top + dims.height / 2 + window.scrollY}px`,
+        top: `${dims.top + window.scrollY}px`,
         left: `${dims.right + window.scrollX}px`,
       };
       return (
-        <div className="absolute top-0 left-0 w-full h-full z-50">
+        <div>
           <div
-            className={`absolute top-[${style.top}] left-[${style.left}] z-50 grid w-[28rem] grid-cols-2 overflow-hidden whitespace-normal break-words rounded-lg border border-blue-gray-50 bg-white p-0 font-sans text-sm font-normal text-blue-gray-500 shadow-lg shadow-blue-gray-500/10 focus:outline-none`}
+            className={`absolute z-50 grid w-[28rem] grid-cols-2 overflow-hidden whitespace-normal break-words rounded-lg border border-blue-gray-50 bg-white p-0 font-sans text-sm font-normal text-blue-gray-500 shadow-lg shadow-blue-gray-500/10 focus:outline-none`}
             id="popover-with-image"
+            style={{ top: style.top, left: style.left }}
           >
             <div className="p-4">
               <p className="block mb-2 font-sans text-lg antialiased font-bold text-blue-gray-900">
@@ -108,7 +109,7 @@ export class TutorialPage extends React.Component<
                   step.headerText
                 }`}
               </p>
-              <p className="block font-sans text-sm antialiased font-normal leading-normal mb-14 text-blue-gray-500">
+              <p className="block font-sans text-sm antialiased font-normal leading-normal mb-8 text-blue-gray-500">
                 {step.text}
               </p>
               <a href="#" className="inline-block -ml-3">
@@ -136,13 +137,13 @@ export class TutorialPage extends React.Component<
                 </button>
               </a>
             </div>
-            <div className="min-h-full !w-full p-3">
+            {/* <div className="min-h-full !w-full p-3">
               <img
                 src="https://images.unsplash.com/photo-1544928147-79a2dbc1f389?ixlib=rb-4.0.3&amp;ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dGVhbSUyMGJ1aWxkaW5nfGVufDB8fDB8fA%3D%3D&amp;auto=format&amp;fit=crop&amp;w=800&amp;q=60"
                 alt="image"
                 className="object-cover w-full h-full rounded-lg"
               />
-            </div>
+            </div> */}
           </div>
         </div>
       );

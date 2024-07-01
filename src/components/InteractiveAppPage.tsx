@@ -2,12 +2,12 @@ import React from "react";
 import { DiagramContent } from "../core/diagramContent";
 import { ProofTextItem } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
+import { Question } from "../questions/funcTypeQuestions";
 import { getReasonFn } from "../theorems/utils";
 import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
-import { Question } from "../questions/funcTypeQuestions";
 
 export interface InteractiveAppPageProps {
   ctx: DiagramContent;
@@ -68,7 +68,7 @@ export class InteractiveAppPage extends React.Component<
               <Diagram
                 width="650px"
                 height="300px"
-                svgIdSuffix={`construction-${this.props.pageNum}`}
+                svgIdSuffix={`construction`}
                 activeFrame={this.state.activeFrame}
                 ctx={this.props.ctx}
                 miniScale={false}
@@ -83,7 +83,7 @@ export class InteractiveAppPage extends React.Component<
                   <Diagram
                     width="250px"
                     height="100%"
-                    svgIdSuffix={`mini-${this.props.pageNum}`}
+                    svgIdSuffix={`mini`}
                     activeFrame={this.state.activeFrame}
                     ctx={this.props.miniCtx}
                     miniScale={true}

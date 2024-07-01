@@ -11,9 +11,15 @@ export const tutorial1Steps = [
     listenerId: "prooftext-proves",
   },
   {
-    elemId: "prooftext-proves",
+    elemId: "point.D",
     headerText: "Seeing the steps",
-    text: "Notice that the construction keeps track of what information is known at each step of the proof with tick marks, which show relationships between segments and angles.",
+    text: "The construction keeps track of known information at each step of the proof with tick marks, showing relationships between segments and angles.",
+    listenerId: "prooftext-proves",
+  },
+  {
+    elemId: "point.D",
+    headerText: "Seeing the steps",
+    text: "The construction keeps track of known information at each step of the proof with tick marks, showing relationships between segments and angles.",
     listenerId: "prooftext-proves",
   },
 ];

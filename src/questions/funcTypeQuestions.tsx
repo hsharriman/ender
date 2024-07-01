@@ -200,12 +200,6 @@ export const exploratoryQuestion: Question[] = [
 
 export const tutorial1Questions: Question[] = [
   {
-    prompt:
-      "Press the Up/Down arrow keys to progress through the steps of the proof. Notice that the construction updates at every step. Tick marks show relationships between segments and angles. The construction keeps track of what information is known at each step of the proof.",
-    answers: ["Next"], // should be an ID instead of a question?
-    type: QuestionType.TutorialInstructions,
-  },
-  {
     prompt: `Try hovering over the triangle ${strs.triangle}ABC.`,
     answers: ["Next"],
     type: QuestionType.TutorialInstructions,
