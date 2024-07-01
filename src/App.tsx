@@ -7,8 +7,10 @@ import {
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
+import { TutorialPage } from "./components/TutorialPage";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason } from "./core/types/types";
+import { tutorial1Steps } from "./questions/tutorialContent";
 import { T1_CH1_IN1 } from "./theorems/challenge/ip3";
 import { Reasons } from "./theorems/reasons";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
@@ -284,6 +286,12 @@ export class App extends React.Component<AppProps, AppState> {
         <div className="w-full h-full flex justify-start">
           {this.state.activePage === 0 ? (
             <BackgroundQuestions />
+          ) : this.state.activePage === 1 ? (
+            <TutorialPage
+              proof={currMeta.props as InteractiveAppPageProps}
+              questions={currMeta.props.questions}
+              steps={tutorial1Steps}
+            />
           ) : this.state.activePage <= this.meta.length ? (
             currMeta.layout === "static" ? (
               <StaticAppPage

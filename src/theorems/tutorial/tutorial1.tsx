@@ -16,7 +16,7 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { placeholder } from "../../questions/funcTypeQuestions";
+import { tutorial1Questions } from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -144,7 +144,7 @@ const miniContent = () => {
 
 export const TutorialProof1: LayoutProps = {
   // TODO: Replace questions
-  questions: placeholder,
+  questions: tutorial1Questions,
   miniContent: miniContent(),
   baseContent,
   givens,

@@ -1,4 +1,4 @@
-import { segmentQuestion, strs, triangleStr } from "../core/geometryText";
+import { segmentQuestion, strs } from "../core/geometryText";
 
 export interface Question {
   fullScaffold?: string | JSX.Element;
@@ -201,19 +201,23 @@ export const exploratoryQuestion: Question[] = [
 export const tutorial1Questions: Question[] = [
   {
     prompt:
-      "Tutorial: This is an interactive proof. Press the Down arrow key to progress through the steps of the proof.",
-    answers: [],
+      "Press the Up/Down arrow keys to progress through the steps of the proof. Notice that the construction updates at every step. Tick marks show relationships between segments and angles. The construction keeps track of what information is known at each step of the proof.",
+    answers: ["Next"], // should be an ID instead of a question?
     type: QuestionType.TutorialInstructions,
   },
   {
-    prompt:
-      "Tutorial: Notice that the construction updates at every step. Tick marks show relationships between segments and angles. The construction keeps track of what information is known at each step of the proof.",
-    answers: [],
+    prompt: `Try hovering over the triangle ${strs.triangle}ABC.`,
+    answers: ["Next"],
     type: QuestionType.TutorialInstructions,
   },
   {
-    prompt: `Tutorial: Try hovering over the triangle ${strs.triangle}ABC. Notice that the triangle is also highlighted in the diagram`,
-    answers: [],
+    prompt: `The triangle is now highlighted in the diagram.`,
+    answers: ["Next"],
+    type: QuestionType.TutorialInstructions,
+  },
+  {
+    prompt: `Must AB = AC? To find the answer, click on the last step of the proof and look at the diagram.`,
+    answers: yesNoAnswers,
     type: QuestionType.TutorialInstructions,
   },
 ];
