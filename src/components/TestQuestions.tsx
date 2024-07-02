@@ -33,16 +33,12 @@ export class TestQuestions extends React.Component<
   };
 
   handleSubmit = (answer: any) => {
-    console.log(
-      `Answer for question ${this.state.currentQuestionIndex + 1}:`,
-      answer
-    );
-    const currentQuestionIndex = this.state.currentQuestionIndex;
-    this.props.onAnswerUpdate(
-      this.props.questions[this.state.currentQuestionIndex].id.toString(),
-      answer
-    );
-    if (this.state.currentQuestionIndex < this.props.questions.length - 1) {
+    const currIdx = this.state.currentQuestionIndex;
+    const id = this.props.questions[currIdx].id;
+    console.log(`Answer for question ${currIdx + 1}, id: ${id}:`, answer);
+
+    this.props.onAnswerUpdate(id, answer);
+    if (currIdx < this.props.questions.length - 1) {
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,
       }));
