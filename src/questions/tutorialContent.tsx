@@ -213,8 +213,7 @@ export const tutorial2Steps: TutorialStep[] = [
       <span>
         The tick marks are inconsistent between the illustration and the
         construction! This indicates that the proof is{" "}
-        {bold("incorrectly applying SSS")}
-        to this proof.
+        {bold("incorrectly applying SSS")} to this proof.
       </span>
     ),
     listenerId: "prooftext-proves",

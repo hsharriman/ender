@@ -49,7 +49,7 @@ export class TutorialPopover extends React.Component<
             style={{ top: `${style.top}px`, left: `${style.left + 18}px` }}
           >
             <div className="p-4 block font-sans">
-              <p className="text-sm antialiased font-normal leading-normal mb-8 text-blue-gray-500">
+              <p className="text-sm antialiased font-normal leading-relaxed mb-8 text-blue-gray-500">
                 <span className="mb-2 text-md antialiased font-bold text-blue-gray-900">
                   {`${this.props.currStep}/${this.props.numSteps - 1}: `}
                 </span>
