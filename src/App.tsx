@@ -375,7 +375,7 @@ export class App extends React.Component<AppProps, AppState> {
       pageContent = (
         <SusPage
           key={this.state.activePage}
-          type={"Static SUS"}
+          type={"Static"}
           updateAnswers={this.updateAnswers("Static SUS")}
         />
       );
@@ -383,7 +383,7 @@ export class App extends React.Component<AppProps, AppState> {
       pageContent = (
         <SusPage
           key={this.state.activePage}
-          type={"Interactive SUS"}
+          type={"Interactive"}
           updateAnswers={this.updateAnswers("Interactive SUS")}
         />
       );
