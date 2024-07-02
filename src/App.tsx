@@ -146,7 +146,7 @@ const interactiveLayout = (
 
 const randomizeLayout = (
   proofMetas: LayoutProps[],
-  shuffleQuestions: boolean = true
+  shuffleQuestions: boolean
 ): ProofMeta[] => {
   let modes = proofMetas.map((p, i) => {
     return i % 2 === 0 ? "s" : "i";
@@ -195,13 +195,14 @@ export class App extends React.Component<AppProps, AppState> {
         T1_S1_IN1,
         T1_S1_IN2,
         T1_S1_IN3,
-      ])
+      ]),
+      true
     );
     const stage2 = randomizeLayout(
       fisherYates([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
       false
     );
-    // const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]));
+    // const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]), false);
     const challenge: ProofMeta[] = [];
 
     this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
@@ -252,55 +253,57 @@ export class App extends React.Component<AppProps, AppState> {
     localStorage.setItem("answers", JSON.stringify(updatedAnswers));
   };
 
-  renderQuestionHeader = (
-    meta: StaticAppPageProps | InteractiveAppPageProps,
-    onSubmit?: () => void,
-    questionsCompleted?: () => void
-  ) => {
-    return (
-      <div
-        className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
-        id="header"
-      >
-        <div className="flex items-center">
-          <button
-            className="p-3 underline underline-offset-2 z-30 text-sm"
-            id="prev-arrow"
-            style={{
-              display: this.state.activePage >= 0 ? "block" : "none",
-            }}
-            onClick={this.onClick(-1)}
-          >
-            {"Previous"}
-          </button>
-          <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
-            this.numPages
-          }`}</div>
-          <div className="ml-10 flex-1">
-            <TestQuestions
-              questions={meta.questions}
-              onNext={this.onNext}
-              onSubmit={onSubmit}
-              proofType={this.meta[this.state.activePage].layout}
-              onAnswerUpdate={this.updateAnswers(meta.name)}
-              questionsCompleted={questionsCompleted}
-            />
+  renderQuestionHeader =
+    (proofType: string) =>
+    (
+      meta: StaticAppPageProps | InteractiveAppPageProps,
+      onSubmit?: () => void,
+      questionsCompleted?: () => void
+    ) => {
+      return (
+        <div
+          className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
+          id="header"
+        >
+          <div className="flex items-center">
+            <button
+              className="p-3 underline underline-offset-2 z-30 text-sm"
+              id="prev-arrow"
+              style={{
+                display: this.state.activePage >= 0 ? "block" : "none",
+              }}
+              onClick={this.onClick(-1)}
+            >
+              {"Previous"}
+            </button>
+            <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
+              this.numPages
+            }`}</div>
+            <div className="ml-10 flex-1">
+              <TestQuestions
+                questions={meta.questions}
+                onNext={this.onNext}
+                onSubmit={onSubmit}
+                proofType={proofType}
+                onAnswerUpdate={this.updateAnswers(meta.name)}
+                questionsCompleted={questionsCompleted}
+              />
+            </div>
+            <button
+              className="p-3 underline underline-offset-2 z-30 text-sm"
+              id="next-arrow"
+              style={{
+                display:
+                  this.state.activePage < this.numPages - 1 ? "block" : "none",
+              }}
+              onClick={this.onClick(1)}
+            >
+              {"Next"}
+            </button>
           </div>
-          <button
-            className="p-3 underline underline-offset-2 z-30 text-sm"
-            id="next-arrow"
-            style={{
-              display:
-                this.state.activePage < this.numPages - 1 ? "block" : "none",
-            }}
-            onClick={this.onClick(1)}
-          >
-            {"Next"}
-          </button>
         </div>
-      </div>
-    );
-  };
+      );
+    };
 
   renderShortHeader = () => {
     return (
@@ -346,7 +349,7 @@ export class App extends React.Component<AppProps, AppState> {
         <TutorialPage
           proof={currMeta.props as InteractiveAppPageProps}
           steps={currMeta.tutorial || []}
-          headerFn={this.renderQuestionHeader}
+          headerFn={this.renderQuestionHeader(currMeta.layout)}
         />
       );
     } else if (this.state.activePage <= this.meta.length) {
@@ -394,8 +397,8 @@ export class App extends React.Component<AppProps, AppState> {
         ) : (
           <>
             {this.state.activePage > 0 &&
-            this.state.activePage < this.meta.length
-              ? this.renderQuestionHeader(currMeta.props)
+            this.state.activePage <= this.meta.length
+              ? this.renderQuestionHeader(currMeta.layout)(currMeta.props)
               : this.renderShortHeader()}
             <div className="w-full h-full flex justify-start">
               {pageContent}
