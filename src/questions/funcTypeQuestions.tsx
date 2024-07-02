@@ -6,7 +6,7 @@ export interface Question {
   prompt: string | JSX.Element;
   answers: string[];
   type: QuestionType;
-  id?: number;
+  id: number;
 }
 
 export enum QuestionType {
@@ -208,6 +208,7 @@ export const placeholder: Question[] = [
     prompt: "This is a placeholder",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 1,
   },
 ];
 
@@ -216,6 +217,7 @@ export const exploratoryQuestion: Question[] = [
     prompt: "Is this proof correct?",
     answers: yesNoAnswers,
     type: QuestionType.Correctness,
+    id: 1,
   },
 ];
 
@@ -228,12 +230,14 @@ export const tutorial1Questions: Question[] = [
     ),
     answers: yesNoAnswers,
     type: QuestionType.TutorialInstructions,
+    id: 1,
   },
   {
     prompt:
       "Is there enough information to apply SAS Triangle Congruence between steps 2 and 3?",
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
+    id: 2,
   },
 ];
 
@@ -242,6 +246,7 @@ export const tutorial2Questions: Question[] = [
     prompt: "Is SSS Triangle Congruence Correctly Applied?",
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
+    id: 1,
   },
 ];
 
