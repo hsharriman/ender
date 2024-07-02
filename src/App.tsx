@@ -198,7 +198,6 @@ export class App extends React.Component<AppProps, AppState> {
       ]),
       true
     );
-    stage1.map((s) => console.log(s.props.questions.map((q) => q.id)));
     const stage2 = randomizeLayout(
       fisherYates([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
       false

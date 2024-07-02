@@ -23,7 +23,7 @@ const SavePage: React.FC<SavePageProps> = ({ answers }) => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.setAttribute("href", url);
-    a.setAttribute("download", "answers.csv");
+    a.setAttribute("download", `answers-${new Date().valueOf()}.csv`);
     a.click();
   };
 
