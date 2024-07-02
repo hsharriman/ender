@@ -113,7 +113,9 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
               : updateStyle(this.props.mode)
           }
           miniScale={this.props.miniScale}
-          geoId={this.props.geoId + "-tick"}
+          geoId={`${this.props.geoId}-tick${
+            this.props.miniScale ? "-mini" : ""
+          }`}
         />
         {/* {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel

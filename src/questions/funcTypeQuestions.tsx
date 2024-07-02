@@ -6,7 +6,7 @@ export interface Question {
   prompt: string | JSX.Element;
   answers: string[];
   type: QuestionType;
-  id?: number;
+  id: number;
 }
 
 export enum QuestionType {
@@ -14,9 +14,10 @@ export enum QuestionType {
   ReliesOn = "ReliesOn",
   DiagramState = "DiagramState",
   Correctness = "Correctness",
+  TutorialInstructions = "TutorialInstructions",
 }
 
-const yesNoAnswers = ["Yes", "No", "Not Sure"];
+const yesNoAnswers = ["Yes", "No"];
 
 export const checkingProof1: Question[] = [
   {
@@ -117,7 +118,7 @@ export const completeProof1: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply Vertical Angles between step 1 and 2?",
+      "Is there enough information to apply Vertical Angles between steps 1 and 2?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
     id: 2,
@@ -125,7 +126,7 @@ export const completeProof1: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply SAS triangle congruence between step 2 and 3?",
+      "Is there enough information to apply SAS triangle congruence between steps 2 and 3?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
     id: 3,
@@ -176,7 +177,7 @@ export const incompleteProof2: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply ASA triangle congruence between step 3 and 4?",
+      "Is there enough information to apply ASA triangle congruence between steps 3 and 4?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
     id: 2,
@@ -184,7 +185,7 @@ export const incompleteProof2: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply Def. Midpoint between step 4 and 5?",
+      "Is there enough information to apply Def. Midpoint between steps 4 and 5?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
     id: 3,
@@ -207,6 +208,7 @@ export const placeholder: Question[] = [
     prompt: "This is a placeholder",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 1,
   },
 ];
 
@@ -215,6 +217,36 @@ export const exploratoryQuestion: Question[] = [
     prompt: "Is this proof correct?",
     answers: yesNoAnswers,
     type: QuestionType.Correctness,
+    id: 1,
+  },
+];
+
+export const tutorial1Questions: Question[] = [
+  {
+    prompt: (
+      <span>
+        Must {segmentQuestion("AB")} {strs.congruent} {segmentQuestion("AC")}?
+      </span>
+    ),
+    answers: yesNoAnswers,
+    type: QuestionType.TutorialInstructions,
+    id: 1,
+  },
+  {
+    prompt:
+      "Is there enough information to apply SAS Triangle Congruence between steps 2 and 3?",
+    answers: yesNoAnswers,
+    type: QuestionType.DiagramState,
+    id: 2,
+  },
+];
+
+export const tutorial2Questions: Question[] = [
+  {
+    prompt: "Is SSS Triangle Congruence Correctly Applied?",
+    answers: yesNoAnswers,
+    type: QuestionType.DiagramState,
+    id: 1,
   },
 ];
 

@@ -236,7 +236,7 @@ const step5: StepMeta = makeStepMeta({
 });
 
 const step6: StepMeta = makeStepMeta({
-  reason: Reasons.CorrespondingSegments,
+  reason: Reasons.CPCTC,
   dependsOn: [5],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });

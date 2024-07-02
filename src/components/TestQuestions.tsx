@@ -5,6 +5,8 @@ import { YesNoQuestion } from "./YesNoQuestion";
 interface QuestionsProps {
   proofType: string;
   questions: Question[];
+  onSubmit?: () => void;
+  questionsCompleted?: () => void;
   onNext: (direction: number) => void;
   onAnswerUpdate: (question: string, answer: string) => void;
 }
@@ -36,16 +38,25 @@ export class TestQuestions extends React.Component<
       answer
     );
     const currentQuestionIndex = this.state.currentQuestionIndex;
-    this.props.onAnswerUpdate(` Q${currentQuestionIndex + 1}`, answer);
+    this.props.onAnswerUpdate(
+      this.props.questions[this.state.currentQuestionIndex].id.toString(),
+      answer
+    );
     if (this.state.currentQuestionIndex < this.props.questions.length - 1) {
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,
       }));
+      if (this.props.onSubmit) {
+        this.props.onSubmit();
+      }
     } else {
       this.props.onNext(1);
       this.setState({
         currentQuestionIndex: 0,
       });
+      if (this.props.questionsCompleted) {
+        this.props.questionsCompleted();
+      }
     }
   };
 

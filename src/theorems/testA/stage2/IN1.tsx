@@ -64,9 +64,9 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   );
 
   ctx.push(new Triangle({ pts: [L, P, S], hoverable, label: "LPS" }, ctx));
+  ctx.push(new Triangle({ pts: [U, P, S], hoverable, label: "UPS" }, ctx));
   ctx.push(new Triangle({ pts: [L, N, U], hoverable, label: "LNU" }, ctx));
   ctx.push(new Triangle({ pts: [U, Q, L], hoverable, label: "UQL" }, ctx));
-  ctx.push(new Triangle({ pts: [U, P, S], hoverable, label: "UPS" }, ctx));
 
   // for ASA at the end
   // ctx.push(new Angle({ start: L, center: N, end: U, hoverable }));
@@ -168,7 +168,7 @@ const step6: StepMeta = makeStepMeta({
 });
 
 const step7: StepMeta = makeStepMeta({
-  reason: Reasons.CorrespondingAngles,
+  reason: Reasons.CPCTC,
   dependsOn: [6],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });
@@ -183,7 +183,7 @@ const step7: StepMeta = makeStepMeta({
 
 // INCORRECT VERSION -- Correct would be reflexive LU
 const step8: StepMeta = makeStepMeta({
-  reason: Reasons.CorrespondingAngles,
+  reason: Reasons.CPCTC,
   dependsOn: [9],
   unfocused: (props: StepUnfocusProps) => {
     step7.additions({ ...props, mode: SVGModes.Unfocused });

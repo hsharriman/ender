@@ -169,7 +169,7 @@ const step7: StepMeta = makeStepMeta({
 
 const step8: StepMeta = EqualSegmentStep(
   ["AB", "BC"],
-  Reasons.CorrespondingSegments,
+  Reasons.CPCTC,
   step7,
   4,
   [7]
@@ -194,7 +194,7 @@ const step9: StepMeta = makeStepMeta({
 
 const step10: StepMeta = EqualAngleStep(
   ["AFB", "CGB"],
-  Reasons.CorrespondingAngles,
+  Reasons.CPCTC,
   step9,
   2,
   [9]

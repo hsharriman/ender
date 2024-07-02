@@ -60,6 +60,7 @@ export class YesNoQuestion extends React.Component<
               key={index}
               className={`px-2.5 mr-6 bg-gray-500 hover:bg-violet-500 rounded-md text-slate-100`}
               onClick={() => this.handleButtonClick(answer)}
+              id={"answer-button-" + index}
             >
               {answer}
             </button>
