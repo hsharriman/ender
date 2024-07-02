@@ -20,6 +20,17 @@ export enum QuestionType {
 const yesNoAnswers = ["Yes", "No"];
 const id = (n: number) => `qID-${n}`;
 
+const mini = (reason: string) =>
+  `(Hint: click the row with ${reason} to check if there are any differences between the big construction and the mini one.)`;
+const relies = (reason: string) =>
+  `(Hint: click on the row with ${reason} to check if everything it relies on would still appear earlier in the proof.)`;
+export const scaffolding = {
+  mini,
+  relies,
+  diagram:
+    "(Hint: click the last row of the proof and check if they have the same tick marks.)",
+};
+
 export const checkingProof1: Question[] = [
   {
     fullScaffold: "Placeholder: ",
@@ -41,14 +52,10 @@ export const checkingProof1: Question[] = [
   },
   {
     fullScaffold: "Placeholder: ",
-    prompt: (
-      <span>
-        Must {segmentQuestion("CB")} {strs.congruent} {segmentQuestion("AD")}?
-      </span>
-    ),
+    prompt: `Must ${strs.angle}DBA ${strs.congruent} ${strs.angle}BCD?`,
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
-    id: id(3),
+    id: id(2),
   },
 ];
 
@@ -59,13 +66,6 @@ export const checkingProof2: Question[] = [
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
     id: id(1),
-  },
-  {
-    fullScaffold: "Placeholder: ",
-    prompt: `Must ${strs.angle}DAB ${strs.congruent} ${strs.angle}BDC?`,
-    answers: yesNoAnswers,
-    type: QuestionType.DiagramState,
-    id: id(2),
   },
   {
     fullScaffold: "Placeholder: ",
@@ -111,7 +111,7 @@ export const checkingProof3: Question[] = [
 export const completeProof1: Question[] = [
   {
     fullScaffold: "Placeholder: ",
-    prompt: "Is Alternative Interior Angles correctly applied?",
+    prompt: "Is Alternate Interior Angles correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
     id: id(1),
@@ -137,7 +137,7 @@ export const completeProof1: Question[] = [
 export const completeProof2: Question[] = [
   {
     fullScaffold: "Placeholder: ",
-    prompt: "Is Def. Perpendicular correctly applied?",
+    prompt: "Is Def. Perpendicular Lines correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
     id: id(1),
@@ -152,7 +152,7 @@ export const completeProof2: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply Congruent Adjacent Angles at step 3?",
+      "Is there enough information to apply Congruent Adjacent Angles at step 4?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
     id: id(3),
@@ -215,8 +215,20 @@ export const placeholder: Question[] = [
 
 export const exploratoryQuestion: Question[] = [
   {
-    prompt: "Is this proof correct?",
+    prompt: "Is there a mistake in this proof?",
     answers: yesNoAnswers,
+    type: QuestionType.Correctness,
+    id: id(1),
+  },
+  {
+    prompt:
+      "If so, is the mistake due to a wrong statement, reason, or proof order? If there is no mistake, choose 'No Mistake'.",
+    answers: [
+      "Wrong Statement",
+      "Wrong Reason",
+      "Wrong Proof Order",
+      "No Mistake",
+    ],
     type: QuestionType.Correctness,
     id: id(1),
   },
