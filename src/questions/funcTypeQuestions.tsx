@@ -6,6 +6,7 @@ export interface Question {
   prompt: string | JSX.Element;
   answers: string[];
   type: QuestionType;
+  id?: number;
 }
 
 export enum QuestionType {
@@ -24,6 +25,7 @@ export const checkingProof1: Question[] = [
     prompt: "Is SAS triangle congruence correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 1,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -34,6 +36,7 @@ export const checkingProof1: Question[] = [
     ),
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
+    id: 2,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -44,6 +47,7 @@ export const checkingProof1: Question[] = [
     ),
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
+    id: 3,
   },
 ];
 
@@ -53,12 +57,14 @@ export const checkingProof2: Question[] = [
     prompt: "Is Congruent Adjacent Angles correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 1,
   },
   {
     fullScaffold: "Placeholder: ",
     prompt: `Must ${strs.angle}DAB ${strs.congruent} ${strs.angle}BDC?`,
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
+    id: 2,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -69,6 +75,7 @@ export const checkingProof2: Question[] = [
     ),
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
+    id: 3,
   },
 ];
 
@@ -78,12 +85,14 @@ export const checkingProof3: Question[] = [
     prompt: "Is HL congruence correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 1,
   },
   {
     fullScaffold: "Placeholder: ",
     prompt: "Is Def. Rectangle correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 2,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -94,6 +103,7 @@ export const checkingProof3: Question[] = [
     ),
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
+    id: 3,
   },
 ];
 
@@ -103,6 +113,7 @@ export const completeProof1: Question[] = [
     prompt: "Is Alternative Interior Angles correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 1,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -110,6 +121,7 @@ export const completeProof1: Question[] = [
       "Is there enough information to apply Vertical Angles between steps 1 and 2?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
+    id: 2,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -117,6 +129,7 @@ export const completeProof1: Question[] = [
       "Is there enough information to apply SAS triangle congruence between steps 2 and 3?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
+    id: 3,
   },
 ];
 
@@ -126,12 +139,14 @@ export const completeProof2: Question[] = [
     prompt: "Is Def. Perpendicular correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 1,
   },
   {
     fullScaffold: "Placeholder: ",
     prompt: "Is Def. Midpoint correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 2,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -139,6 +154,7 @@ export const completeProof2: Question[] = [
       "Is there enough information to apply Congruent Adjacent Angles at step 3?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
+    id: 3,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -146,6 +162,7 @@ export const completeProof2: Question[] = [
       "Is there enough information to apply ASA triangle congruence at step 6?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
+    id: 4,
   },
 ];
 
@@ -155,6 +172,7 @@ export const incompleteProof2: Question[] = [
     prompt: "Is Vertical Angles correctly applied?",
     answers: yesNoAnswers,
     type: QuestionType.Minifigures,
+    id: 1,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -162,6 +180,7 @@ export const incompleteProof2: Question[] = [
       "Is there enough information to apply ASA triangle congruence between steps 3 and 4?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
+    id: 2,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -169,6 +188,7 @@ export const incompleteProof2: Question[] = [
       "Is there enough information to apply Def. Midpoint between steps 4 and 5?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
+    id: 3,
   },
   {
     fullScaffold: "Placeholder: ",
@@ -179,6 +199,7 @@ export const incompleteProof2: Question[] = [
     ),
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
+    id: 4,
   },
 ];
 

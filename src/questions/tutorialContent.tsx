@@ -119,7 +119,7 @@ export const tutorial1Steps: TutorialStep[] = [
     type: TutorialStepType.Intro,
     elemId: "",
     headerText: "Nicely done!",
-    text: <span>Let's look at another question together.</span>,
+    text: <span>Let's look at another question.</span>,
   },
   {
     type: TutorialStepType.Default,
@@ -173,7 +173,7 @@ export const tutorial2Steps: TutorialStep[] = [
     headerText: "Great!",
     text: (
       <span>
-        Let's look at one more question together, this time on a (very) slightly
+        Let's look at one more question, this time on a (very) slightly
         different proof.
       </span>
     ),

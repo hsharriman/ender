@@ -305,6 +305,7 @@ const miniContent = () => {
 };
 
 export const T1_S1_C1: LayoutProps = {
+  name: "T1_S1_C1",
   questions: completeProof1,
   miniContent: miniContent(),
   baseContent,

@@ -3,10 +3,12 @@ import { Question } from "../questions/funcTypeQuestions";
 import { YesNoQuestion } from "./YesNoQuestion";
 
 interface QuestionsProps {
+  proofType: string;
   questions: Question[];
   onSubmit?: () => void;
   questionsCompleted?: () => void;
   onNext: (direction: number) => void;
+  onAnswerUpdate: (question: string, answer: string) => void;
 }
 
 interface QuestionsState {
@@ -35,6 +37,8 @@ export class TestQuestions extends React.Component<
       `Answer for question ${this.state.currentQuestionIndex + 1}:`,
       answer
     );
+    const currentQuestionIndex = this.state.currentQuestionIndex;
+    this.props.onAnswerUpdate(` Q${currentQuestionIndex + 1}`, answer);
     if (this.state.currentQuestionIndex < this.props.questions.length - 1) {
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,

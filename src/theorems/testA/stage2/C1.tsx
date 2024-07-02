@@ -351,6 +351,7 @@ export const miniContent = () => {
 };
 
 export const T1_S2_C1: LayoutProps = {
+  name: "T1_S2_C1",
   // TODO: Replace questions
   questions: exploratoryQuestion,
   baseContent,

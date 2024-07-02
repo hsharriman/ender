@@ -5,6 +5,10 @@ interface BackgroundQuestionType {
   prompt: string;
 }
 
+interface BackgroundPageProps {
+  updateAnswers: (question: string, answer: string) => void;
+}
+
 interface BackgroundPageState {
   questions: BackgroundQuestionType[];
   answers: { [key: string]: string };
@@ -13,10 +17,10 @@ interface BackgroundPageState {
 }
 
 export class BackgroundQuestions extends React.Component<
-  {},
+  BackgroundPageProps,
   BackgroundPageState
 > {
-  constructor(props: {}) {
+  constructor(props: BackgroundPageProps) {
     super(props);
     this.state = {
       questions: [
@@ -47,8 +51,8 @@ export class BackgroundQuestions extends React.Component<
       () => {
         const allAnswered = this.state.questions.every(
           (_, index) =>
-            this.state.answers[`text${index}`] &&
-            this.state.answers[`text${index}`].trim() !== ""
+            this.state.answers[`${index}`] &&
+            this.state.answers[`${index}`].trim() !== ""
         );
         this.setState({ completed: allAnswered });
       }
@@ -60,11 +64,15 @@ export class BackgroundQuestions extends React.Component<
     index: number
   ) => {
     const { value } = event.target;
-    this.handleAnswerChange(`text${index}`, value);
+    this.handleAnswerChange(`${index}`, value);
   };
 
   handleSubmit = () => {
     if (this.state.completed) {
+      let localAnswers = this.state.answers;
+      Object.keys(localAnswers).forEach((questionNum) => {
+        this.props.updateAnswers(questionNum, localAnswers[questionNum]);
+      });
       console.log("Survey results:", this.state.answers);
       this.setState({ submitted: true });
     }
@@ -116,7 +124,7 @@ export class BackgroundQuestions extends React.Component<
                       type="text"
                       name={question.prompt}
                       className="border-2 border-black w-[100px] p-1.5 rounded-sm"
-                      value={this.state.answers[`text${index}`] || ""}
+                      value={this.state.answers[`${index}`] || ""}
                       onChange={(event) => this.handleInputChange(event, index)}
                     />
                   </div>

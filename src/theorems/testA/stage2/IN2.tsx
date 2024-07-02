@@ -268,6 +268,7 @@ const miniContent = () => {
 };
 
 export const T1_S2_IN2: LayoutProps = {
+  name: "T1_S2_IN2",
   questions: exploratoryQuestion,
   miniContent: miniContent(),
   baseContent,

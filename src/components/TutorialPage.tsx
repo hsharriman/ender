@@ -1,17 +1,17 @@
 import React from "react";
 import { TutorialStep, TutorialStepType } from "../core/types/types";
-import { Question } from "../questions/funcTypeQuestions";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
 } from "./InteractiveAppPage";
+import { StaticAppPageProps } from "./StaticAppPage";
 import { TutorialPopover } from "./TutorialPopover";
 
 export interface TutorialPageProps {
   steps: TutorialStep[]; // ID for each item where popover should be attached, should include L, R, T, B to know where to attach
   proof: InteractiveAppPageProps;
   headerFn: (
-    questions: Question[],
+    meta: StaticAppPageProps | InteractiveAppPageProps,
     onSubmit: () => void,
     questionsCompleted: () => void
   ) => JSX.Element;
@@ -103,7 +103,7 @@ export class TutorialPage extends React.Component<
     return (
       <>
         {this.props.headerFn(
-          this.props.proof.questions,
+          this.props.proof,
           this.onSubmitQuestion,
           this.onQuestionsCompleted
         )}

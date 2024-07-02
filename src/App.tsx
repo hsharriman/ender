@@ -4,13 +4,13 @@ import {
   InteractiveAppPage,
   InteractiveAppPageProps,
 } from "./components/InteractiveAppPage";
+import SavePage from "./components/SavePage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
 import { TutorialPage } from "./components/TutorialPage";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason, TutorialStep } from "./core/types/types";
-import { Question } from "./questions/funcTypeQuestions";
 import { tutorial1Steps, tutorial2Steps } from "./questions/tutorialContent";
 import { T1_CH1_IN1 } from "./theorems/challenge/ip3";
 import { Reasons } from "./theorems/reasons";
@@ -78,6 +78,7 @@ const staticLayout = (
       questions: shuffleQuestions
         ? fisherYates(proofMeta.questions)
         : proofMeta.questions,
+      name: proofMeta.name,
     },
   };
 };
@@ -138,6 +139,7 @@ const interactiveLayout = (
       questions: shuffleQuestions
         ? fisherYates(proofMeta.questions)
         : proofMeta.questions,
+      name: proofMeta.name,
     },
     tutorial,
   };
@@ -163,6 +165,11 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
+  answers: {
+    [proofName: string]: {
+      [question: string]: string;
+    };
+  };
   page: string;
 }
 export class App extends React.Component<AppProps, AppState> {
@@ -173,6 +180,7 @@ export class App extends React.Component<AppProps, AppState> {
     this.state = {
       activePage: 0,
       activeTest: 0,
+      answers: {},
       page: "home",
     };
     const tutorial = [
@@ -198,7 +206,7 @@ export class App extends React.Component<AppProps, AppState> {
 
     this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
     // this.meta = stage1.concat(stage2).concat(challenge);
-    this.numPages = this.meta.length + 3; // 2 for SUS, 1 for basic questions
+    this.numPages = this.meta.length + 4; // 2 for SUS, 1 for basic questions, 1 for downloading
   }
 
   componentDidMount() {
@@ -229,8 +237,23 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
+  updateAnswers = (proofName: string) => (question: string, answer: string) => {
+    const storedAnswers = localStorage.getItem("answers");
+    const existingAnswers = storedAnswers ? JSON.parse(storedAnswers) : {};
+
+    const updatedAnswers = {
+      ...existingAnswers,
+      [proofName]: {
+        ...existingAnswers[proofName],
+        [question]: answer,
+      },
+    };
+
+    localStorage.setItem("answers", JSON.stringify(updatedAnswers));
+  };
+
   renderQuestionHeader = (
-    questions: Question[],
+    meta: StaticAppPageProps | InteractiveAppPageProps,
     onSubmit?: () => void,
     questionsCompleted?: () => void
   ) => {
@@ -255,9 +278,11 @@ export class App extends React.Component<AppProps, AppState> {
           }`}</div>
           <div className="ml-10 flex-1">
             <TestQuestions
-              questions={questions}
+              questions={meta.questions}
               onNext={this.onNext}
               onSubmit={onSubmit}
+              proofType={this.meta[this.state.activePage].layout}
+              onAnswerUpdate={this.updateAnswers(meta.name)}
               questionsCompleted={questionsCompleted}
             />
           </div>
@@ -309,10 +334,13 @@ export class App extends React.Component<AppProps, AppState> {
   renderExperimentPages = () => {
     const page = this.state.activePage - 1; // For current page of proof
     const currMeta = this.meta[page];
-    console.log(currMeta);
     let pageContent = <></>;
     if (this.state.activePage === 0) {
-      pageContent = <BackgroundQuestions />;
+      pageContent = (
+        <BackgroundQuestions
+          updateAnswers={this.updateAnswers("Background Questions")}
+        />
+      );
     } else if (this.state.activePage <= 2) {
       pageContent = (
         <TutorialPage
@@ -340,17 +368,24 @@ export class App extends React.Component<AppProps, AppState> {
             key={"interactive-pg" + this.state.activePage}
           />
         );
-    } else {
+    } else if (this.state.activePage === this.meta.length + 1) {
       pageContent = (
         <SusPage
           key={this.state.activePage}
-          type={
-            this.state.activePage === this.meta.length + 1
-              ? "Static"
-              : "Interactive"
-          }
+          type={"Static SUS"}
+          updateAnswers={this.updateAnswers("Static SUS")}
         />
       );
+    } else if (this.state.activePage === this.meta.length + 2) {
+      pageContent = (
+        <SusPage
+          key={this.state.activePage}
+          type={"Interactive SUS"}
+          updateAnswers={this.updateAnswers("Interactive SUS")}
+        />
+      );
+    } else {
+      pageContent = <SavePage answers={this.state.answers} />;
     }
     return (
       <>
@@ -360,7 +395,7 @@ export class App extends React.Component<AppProps, AppState> {
           <>
             {this.state.activePage > 0 &&
             this.state.activePage < this.meta.length
-              ? this.renderQuestionHeader(currMeta.props.questions)
+              ? this.renderQuestionHeader(currMeta.props)
               : this.renderShortHeader()}
             <div className="w-full h-full flex justify-start">
               {pageContent}

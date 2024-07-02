@@ -178,6 +178,7 @@ const miniContent2 = () => {
 };
 
 export const TutorialProof1: LayoutProps = {
+  name: "TutorialProof1",
   // TODO: Replace questions
   questions: tutorial1Questions,
   miniContent: miniContent(),
@@ -188,6 +189,7 @@ export const TutorialProof1: LayoutProps = {
 };
 
 export const TutorialProof2: LayoutProps = {
+  name: "TutorialProof2",
   questions: tutorial2Questions,
   miniContent: miniContent2(),
   baseContent,

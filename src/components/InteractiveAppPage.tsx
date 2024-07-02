@@ -10,6 +10,7 @@ import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
 
 export interface InteractiveAppPageProps {
+  name: string;
   ctx: DiagramContent;
   linkedTexts: ProofTextItem[];
   reasonMap: Map<string, Reason>;

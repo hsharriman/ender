@@ -238,6 +238,7 @@ const miniContent = () => {
 
 // TODO rename depending on right/wrong?
 export const T1_CH1_IN1: LayoutProps = {
+  name: "T1_CH1_IN1",
   // TODO: Replace questions
   questions: placeholder,
   miniContent: miniContent(),
