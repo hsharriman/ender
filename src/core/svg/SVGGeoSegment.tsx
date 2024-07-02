@@ -102,7 +102,7 @@ export class SVGGeoSegment extends React.Component<
           miniScale={this.props.miniScale}
           geoId={`${this.props.geoId}-tick${
             this.props.miniScale ? "-mini" : ""
-          }`} // TODO make this discoverable from linkedtext
+          }`}
         />
         {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel

@@ -40,17 +40,17 @@ export class TutorialPopover extends React.Component<
       return (
         <div className="">
           <div
-            className="absolute z-50 h-[20px] w-[20px] bg-white transform rotate-45 origin-top-left rounded-sm border-2 border-gray-300 shadow-lg shadow-blue-gray-500/10 focus:outline-none"
+            className="absolute z-50 h-[20px] w-[20px] bg-white transform rotate-45 origin-top-left rounded-sm border-2 border-gray-300 shadow-lg focus:outline-none"
             style={{ top: `${style.top + 8}px`, left: `${style.left + 20}px` }}
           ></div>
           <div
-            className={`absolute z-50 w-[20rem] break-words rounded-lg border-2 border-gray-300 bg-white p-0 text-sm text-blue-gray-500 shadow-lg shadow-blue-gray-500/10 focus:outline-none`}
+            className={`absolute z-50 w-[20rem] p-4 break-words rounded-lg border-2 border-gray-300 bg-white text-sm shadow-lg sfocus:outline-none`}
             id="popover"
             style={{ top: `${style.top}px`, left: `${style.left + 18}px` }}
           >
-            <div className="p-4 block font-sans">
+            <div className="block">
               <p className="text-sm antialiased font-normal leading-relaxed mb-8 text-blue-gray-500">
-                <span className="mb-2 text-md antialiased font-bold text-blue-gray-900">
+                <span className="font-bold">
                   {`${this.props.currStep}/${this.props.numSteps - 1}: `}
                 </span>
                 {step.text}
@@ -86,13 +86,6 @@ export class TutorialPopover extends React.Component<
                 </button>
               )}
             </div>
-            {/* <div className="min-h-full !w-full p-3">
-              <img
-                src="https://images.unsplash.com/photo-1544928147-79a2dbc1f389?ixlib=rb-4.0.3&amp;ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dGVhbSUyMGJ1aWxkaW5nfGVufDB8fDB8fA%3D%3D&amp;auto=format&amp;fit=crop&amp;w=800&amp;q=60"
-                alt="image"
-                className="object-cover w-full h-full rounded-lg"
-              />
-            </div> */}
           </div>
         </div>
       );
