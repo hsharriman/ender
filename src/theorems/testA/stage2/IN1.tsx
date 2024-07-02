@@ -168,7 +168,7 @@ const step6: StepMeta = makeStepMeta({
 });
 
 const step7: StepMeta = makeStepMeta({
-  reason: Reasons.CorrespondingAngles,
+  reason: Reasons.CPCTC,
   dependsOn: [6],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });
@@ -183,7 +183,7 @@ const step7: StepMeta = makeStepMeta({
 
 // INCORRECT VERSION -- Correct would be reflexive LU
 const step8: StepMeta = makeStepMeta({
-  reason: Reasons.CorrespondingAngles,
+  reason: Reasons.CPCTC,
   dependsOn: [9],
   unfocused: (props: StepUnfocusProps) => {
     step7.additions({ ...props, mode: SVGModes.Unfocused });

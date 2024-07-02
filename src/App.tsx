@@ -9,8 +9,9 @@ import { SusPage } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
 import { TutorialPage } from "./components/TutorialPage";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
-import { LayoutProps, Reason } from "./core/types/types";
-import { tutorial1Steps } from "./questions/tutorialContent";
+import { LayoutProps, Reason, TutorialStep } from "./core/types/types";
+import { Question } from "./questions/funcTypeQuestions";
+import { tutorial1Steps, tutorial2Steps } from "./questions/tutorialContent";
 import { T1_CH1_IN1 } from "./theorems/challenge/ip3";
 import { Reasons } from "./theorems/reasons";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
@@ -23,12 +24,13 @@ import { T1_S2_C1 } from "./theorems/testA/stage2/C1";
 import { T1_S2_C2 } from "./theorems/testA/stage2/C2";
 import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
-import { TutorialProof1 } from "./theorems/tutorial/tutorial1";
+import { TutorialProof1, TutorialProof2 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
 
 interface ProofMeta {
   layout: LayoutOptions;
   props: StaticAppPageProps | InteractiveAppPageProps;
+  tutorial?: TutorialStep[];
 }
 type LayoutOptions = "static" | "interactive";
 
@@ -81,7 +83,8 @@ const staticLayout = (
 };
 const interactiveLayout = (
   proofMeta: LayoutProps,
-  shuffleQuestions: boolean = true
+  shuffleQuestions: boolean = true,
+  tutorial?: TutorialStep[]
 ): ProofMeta => {
   const ctx = proofMeta.baseContent(true, true);
   const linkedTexts: ProofTextItem[] = [];
@@ -136,6 +139,7 @@ const interactiveLayout = (
         ? fisherYates(proofMeta.questions)
         : proofMeta.questions,
     },
+    tutorial,
   };
 };
 
@@ -163,6 +167,7 @@ interface AppState {
 }
 export class App extends React.Component<AppProps, AppState> {
   private meta: ProofMeta[] = [];
+  private numPages: number;
   constructor(props: AppProps) {
     super(props);
     this.state = {
@@ -170,7 +175,10 @@ export class App extends React.Component<AppProps, AppState> {
       activeTest: 0,
       page: "home",
     };
-    const tutorial = [interactiveLayout(TutorialProof1, false)];
+    const tutorial = [
+      interactiveLayout(TutorialProof1, false, tutorial1Steps),
+      interactiveLayout(TutorialProof2, false, tutorial2Steps),
+    ];
     // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented
     const stage1 = randomizeLayout(
       fisherYates([
@@ -188,8 +196,9 @@ export class App extends React.Component<AppProps, AppState> {
     );
     const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]));
 
-    // this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
-    this.meta = stage1.concat(stage2).concat(challenge);
+    this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
+    // this.meta = stage1.concat(stage2).concat(challenge);
+    this.numPages = this.meta.length + 3; // 2 for SUS, 1 for basic questions
   }
 
   componentDidMount() {
@@ -220,119 +229,149 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  renderExperimentPages = (page: number) => {
-    const numPage = this.meta.length + 3; // For total num of pages
-    const currMeta = this.meta[page];
+  renderQuestionHeader = (
+    questions: Question[],
+    onSubmit?: () => void,
+    questionsCompleted?: () => void
+  ) => {
     return (
-      <div>
-        {this.state.activePage !== 0 &&
-        this.state.activePage <= this.meta.length - 1 ? (
-          <div
-            className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
-            id="header"
+      <div
+        className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
+        id="header"
+      >
+        <div className="flex items-center">
+          <button
+            className="p-3 underline underline-offset-2 z-30 text-sm"
+            id="prev-arrow"
+            style={{
+              display: this.state.activePage >= 0 ? "block" : "none",
+            }}
+            onClick={this.onClick(-1)}
           >
-            <div className="flex items-center">
-              <button
-                className="p-3 underline underline-offset-2 z-30 text-sm"
-                id="prev-arrow"
-                style={{
-                  display: this.state.activePage >= 0 ? "block" : "none",
-                }}
-                onClick={this.onClick(-1)}
-              >
-                {"Previous"}
-              </button>
-              <div className="p-3 z-30">{`${
-                this.state.activePage + 1
-              } / ${numPage}`}</div>
-              <div className="ml-10 flex-1">
-                <TestQuestions
-                  questions={currMeta.props.questions}
-                  onNext={this.onNext}
-                />
-              </div>
-              <button
-                className="p-3 underline underline-offset-2 z-30 text-sm"
-                id="next-arrow"
-                style={{
-                  display:
-                    this.state.activePage < numPage - 1 ? "block" : "none",
-                }}
-                onClick={this.onClick(1)}
-              >
-                {"Next"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
-            <button
-              className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
-              id="prev-arrow"
-              style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
-              onClick={this.onClick(-1)}
-            >
-              {"Previous"}
-            </button>
-            <div className="absolute top-0 p-3 left-24 z-30">{`${
-              this.state.activePage + 1
-            } / ${numPage}`}</div>
-            <button
-              className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
-              id="next-arrow"
-              style={{
-                display: this.state.activePage < numPage - 1 ? "block" : "none",
-              }}
-              onClick={this.onClick(1)}
-            >
-              {"Next"}
-            </button>
-          </div>
-        )}
-        <div className="w-full h-full flex justify-start">
-          {this.state.activePage === 0 ? (
-            <BackgroundQuestions />
-          ) : this.state.activePage === 1 ? (
-            <TutorialPage
-              proof={currMeta.props as InteractiveAppPageProps}
-              questions={currMeta.props.questions}
-              steps={tutorial1Steps}
+            {"Previous"}
+          </button>
+          <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
+            this.numPages
+          }`}</div>
+          <div className="ml-10 flex-1">
+            <TestQuestions
+              questions={questions}
+              onNext={this.onNext}
+              onSubmit={onSubmit}
+              questionsCompleted={questionsCompleted}
             />
-          ) : this.state.activePage <= this.meta.length ? (
-            currMeta.layout === "static" ? (
-              <StaticAppPage
-                {...{
-                  ...(currMeta.props as StaticAppPageProps),
-                  pageNum: page,
-                }}
-                key={"static-pg" + this.state.activePage}
-              />
-            ) : (
-              <InteractiveAppPage
-                {...{
-                  ...(currMeta.props as InteractiveAppPageProps),
-                  pageNum: page,
-                }}
-                key={"interactive-pg" + this.state.activePage}
-              />
-            )
-          ) : (
-            <SusPage
-              key={this.state.activePage}
-              type={
-                this.state.activePage === this.meta.length + 1
-                  ? "Static"
-                  : "Interactive"
-              }
-            />
-          )}
+          </div>
+          <button
+            className="p-3 underline underline-offset-2 z-30 text-sm"
+            id="next-arrow"
+            style={{
+              display:
+                this.state.activePage < this.numPages - 1 ? "block" : "none",
+            }}
+            onClick={this.onClick(1)}
+          >
+            {"Next"}
+          </button>
         </div>
       </div>
     );
   };
 
-  render() {
+  renderShortHeader = () => {
+    return (
+      <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+        <button
+          className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+          id="prev-arrow"
+          style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+          onClick={this.onClick(-1)}
+        >
+          {"Previous"}
+        </button>
+        <div className="absolute top-0 p-3 left-24 z-30">{`${
+          this.state.activePage + 1
+        } / ${this.numPages}`}</div>
+        <button
+          className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+          id="next-arrow"
+          style={{
+            display:
+              this.state.activePage < this.numPages - 1 ? "block" : "none",
+          }}
+          onClick={this.onClick(1)}
+        >
+          {"Next"}
+        </button>
+      </div>
+    );
+  };
+
+  renderExperimentPages = () => {
     const page = this.state.activePage - 1; // For current page of proof
+    const currMeta = this.meta[page];
+    console.log(currMeta);
+    let pageContent = <></>;
+    if (this.state.activePage === 0) {
+      pageContent = <BackgroundQuestions />;
+    } else if (this.state.activePage <= 2) {
+      pageContent = (
+        <TutorialPage
+          proof={currMeta.props as InteractiveAppPageProps}
+          steps={currMeta.tutorial || []}
+          headerFn={this.renderQuestionHeader}
+        />
+      );
+    } else if (this.state.activePage <= this.meta.length) {
+      pageContent =
+        currMeta.layout === "static" ? (
+          <StaticAppPage
+            {...{
+              ...(currMeta.props as StaticAppPageProps),
+              pageNum: page,
+            }}
+            key={"static-pg" + this.state.activePage}
+          />
+        ) : (
+          <InteractiveAppPage
+            {...{
+              ...(currMeta.props as InteractiveAppPageProps),
+              pageNum: page,
+            }}
+            key={"interactive-pg" + this.state.activePage}
+          />
+        );
+    } else {
+      pageContent = (
+        <SusPage
+          key={this.state.activePage}
+          type={
+            this.state.activePage === this.meta.length + 1
+              ? "Static"
+              : "Interactive"
+          }
+        />
+      );
+    }
+    return (
+      <>
+        {this.state.activePage > 0 && this.state.activePage <= 2 ? (
+          pageContent
+        ) : (
+          <>
+            {this.state.activePage > 0 &&
+            this.state.activePage < this.meta.length
+              ? this.renderQuestionHeader(currMeta.props.questions)
+              : this.renderShortHeader()}
+            <div className="w-full h-full flex justify-start">
+              {pageContent}
+            </div>
+          </>
+        )}
+      </>
+    );
+  };
+
+  render() {
     if (this.state.page === "demo") {
       return (
         <>
@@ -359,7 +398,7 @@ export class App extends React.Component<AppProps, AppState> {
         </>
       );
     } else if (this.state.page === "procedure") {
-      return this.renderExperimentPages(page);
+      return this.renderExperimentPages();
     } else if (this.state.page === "home") {
       return (
         <div className="flex w-screen h-screen justify-center items-center">

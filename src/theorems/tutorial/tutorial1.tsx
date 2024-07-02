@@ -16,7 +16,10 @@ import {
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { tutorial1Questions } from "../../questions/funcTypeQuestions";
+import {
+  tutorial1Questions,
+  tutorial2Questions,
+} from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -134,8 +137,40 @@ const miniContent = () => {
   // STEP 4 - SAS
   const s4 = ctx.addFrame("s4");
   SAS.additions(
-    { ctx, frame: "s4", mode: SVGModes.Purple },
+    { ctx, frame: s4, mode: SVGModes.Purple },
     step4SASProps,
+    SVGModes.Blue
+  );
+
+  return ctx;
+};
+
+// TUTORIAL 2
+const step4t2 = {
+  ...step4,
+  reason: Reasons.SSS,
+};
+
+const miniContent2 = () => {
+  let ctx = baseContent(false, false);
+
+  // STEP 3 - REFLEXIVE PROPERTY
+  const s3 = ctx.addFrame("s3");
+  Reflexive.additions({ ctx, frame: s3, mode: SVGModes.Purple }, "AC");
+
+  // STEP 4 - SSS
+  const s4 = ctx.addFrame("s4");
+  EqualSegments.additions(
+    { ctx, frame: s4, mode: SVGModes.Purple },
+    ["AB", "AD"],
+    1,
+    SVGModes.Blue
+  );
+  Reflexive.additions({ ctx, frame: s4, mode: SVGModes.Blue }, "AC", 2);
+  EqualSegments.additions(
+    { ctx, frame: s4, mode: SVGModes.Purple },
+    ["BC", "CD"],
+    3,
     SVGModes.Blue
   );
 
@@ -150,4 +185,13 @@ export const TutorialProof1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4],
+};
+
+export const TutorialProof2: LayoutProps = {
+  questions: tutorial2Questions,
+  miniContent: miniContent2(),
+  baseContent,
+  givens,
+  proves,
+  steps: [step1, step2, step3, step4t2],
 };

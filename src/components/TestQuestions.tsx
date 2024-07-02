@@ -1,13 +1,11 @@
 import React from "react";
-import { RadioQuestion } from "./RadioQuestion";
-import { MultiSelectQuestion } from "./MultiSelectQuestion";
-import { TextQuestion } from "./TextQuestion";
-import { QuestionType } from "../questions/completeQuestions";
 import { Question } from "../questions/funcTypeQuestions";
 import { YesNoQuestion } from "./YesNoQuestion";
 
 interface QuestionsProps {
   questions: Question[];
+  onSubmit?: () => void;
+  questionsCompleted?: () => void;
   onNext: (direction: number) => void;
 }
 
@@ -41,11 +39,17 @@ export class TestQuestions extends React.Component<
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,
       }));
+      if (this.props.onSubmit) {
+        this.props.onSubmit();
+      }
     } else {
       this.props.onNext(1);
       this.setState({
         currentQuestionIndex: 0,
       });
+      if (this.props.questionsCompleted) {
+        this.props.questionsCompleted();
+      }
     }
   };
 

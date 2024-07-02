@@ -5,9 +5,9 @@ export const Reasons = {
     title: "SAS Triangle Congruence",
     body: "Side-Angle-Side (SAS) Congruence. If two triangles have two sides and the included angle of one triangle are congruent to two sides and the included angle of another triangle, then the triangles are congruent.",
   },
-  CorrespondingAngles: {
-    title: "Corresponding Angles Postulate",
-    body: "If two triangles are congruent, then corresponding angles are the pairs of angles that have the same measurement.",
+  CPCTC: {
+    title: "CPCTC",
+    body: "Corresponding Parts of Congruent Triangles are Congruent (CPCTC). If two triangles are congruent, then their corresponding angles and sides are also congruent.",
   },
   VerticalAngles: {
     title: "Vertical Angles Theorem",
@@ -28,10 +28,6 @@ export const Reasons = {
   ASA: {
     title: "ASA Triangle Congruence",
     body: "Angle-Side-Angle (ASA) Triangle Congruence. If two triangles have 2 congruent angles and 1 included congruent side, then the triangles are congruent.",
-  },
-  CorrespondingSegments: {
-    title: "Corresponding Segments Postulate",
-    body: "If two triangles are congruent, then the corresponding segments of each triangle are also congruent.",
   },
   Midpoint: {
     title: "Def. Midpoint",
@@ -58,11 +54,11 @@ export const Reasons = {
     body: "Hypotenuse-Leg (HL) Triangle Congruence. If the hypotenuse and a leg of one right triangle are congruent to the hypotenuse and a leg of another right triangle, then the triangles are congruent.",
   },
   SSS: {
-    title: "Side-Side-Side",
+    title: "SSS Triangle Congruence",
     body: "Side-Side-Side (SSS) Triangle Congruence. If the three sides of one triangle are congruent to the corresponding sides of another triangle, then the triangles are congruent.",
   },
   AAS: {
-    title: "Angle-Angle-Side",
+    title: "AAS Triangle Congruence",
     body: "Angle-Angle-Side (AAS) Triangle Congruence. If they have two equal angles and a side adjacent to only one of those angles that are also equal.", // TODO
   },
 };

@@ -69,3 +69,19 @@ export interface Reason {
   title: string;
   body: string;
 }
+
+export interface TutorialStep {
+  elemId: string;
+  headerText: string;
+  text: JSX.Element;
+  exercise?: JSX.Element;
+  listenerId?: string; // the element that needs to be interacted with to be able to move on
+  type: TutorialStepType;
+  paddingL?: number;
+}
+
+export enum TutorialStepType {
+  Intro = "intro",
+  Default = "default",
+  HideContinue = "hideContinue",
+}

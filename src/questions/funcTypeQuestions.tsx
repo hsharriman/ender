@@ -16,7 +16,7 @@ export enum QuestionType {
   TutorialInstructions = "TutorialInstructions",
 }
 
-const yesNoAnswers = ["Yes", "No", "Not Sure"];
+const yesNoAnswers = ["Yes", "No"];
 
 export const checkingProof1: Question[] = [
   {
@@ -107,14 +107,14 @@ export const completeProof1: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply Vertical Angles between step 1 and 2?",
+      "Is there enough information to apply Vertical Angles between steps 1 and 2?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
   },
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply SAS triangle congruence between step 2 and 3?",
+      "Is there enough information to apply SAS triangle congruence between steps 2 and 3?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
   },
@@ -159,14 +159,14 @@ export const incompleteProof2: Question[] = [
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply ASA triangle congruence between step 3 and 4?",
+      "Is there enough information to apply ASA triangle congruence between steps 3 and 4?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
   },
   {
     fullScaffold: "Placeholder: ",
     prompt:
-      "Is there enough information to apply Def. Midpoint between step 4 and 5?",
+      "Is there enough information to apply Def. Midpoint between steps 4 and 5?",
     answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
   },
@@ -200,25 +200,25 @@ export const exploratoryQuestion: Question[] = [
 
 export const tutorial1Questions: Question[] = [
   {
-    prompt: `Try hovering over the triangle ${strs.triangle}ABC.`,
-    answers: ["Next"],
-    type: QuestionType.TutorialInstructions,
-  },
-  {
-    prompt: `The triangle is now highlighted in the diagram.`,
-    answers: ["Next"],
-    type: QuestionType.TutorialInstructions,
-  },
-  {
-    prompt: `Must AB = AC? To find the answer, click on the last step of the proof and look at the diagram.`,
+    prompt: (
+      <span>
+        Must {segmentQuestion("AB")} {strs.congruent} {segmentQuestion("AC")}?
+      </span>
+    ),
     answers: yesNoAnswers,
     type: QuestionType.TutorialInstructions,
+  },
+  {
+    prompt:
+      "Is there enough information to apply SAS Triangle Congruence between steps 2 and 3?",
+    answers: yesNoAnswers,
+    type: QuestionType.DiagramState,
   },
 ];
 
 export const tutorial2Questions: Question[] = [
   {
-    prompt: "Tutorial: This version of the proof has a mistake in it. ",
+    prompt: "Is SSS Triangle Congruence Correctly Applied?",
     answers: yesNoAnswers,
     type: QuestionType.DiagramState,
   },

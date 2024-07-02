@@ -90,7 +90,7 @@ export class InteractiveAppPage extends React.Component<
                   />
                 </div>
               )}
-              <div className="col-span-5">
+              <div className="col-span-5 pl-2">
                 <ReasonText
                   activeFrame={this.state.activeFrame}
                   textFn={getReasonFn(this.props.reasonMap)}

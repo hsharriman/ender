@@ -86,6 +86,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     return (
       <div
         className="absolute w-8"
+        id="relies-on-arrow"
         style={{
           top: `${d.t}px`,
           left: `${d.l - this.left}px`,
