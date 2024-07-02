@@ -15,7 +15,6 @@ export const tutorial1Steps: TutorialStep[] = [
   },
   {
     elemId: "prooftext-given",
-    headerText: "Seeing the steps",
     text: (
       <span>
         <p>
@@ -34,12 +33,10 @@ export const tutorial1Steps: TutorialStep[] = [
         </p>
       </span>
     ),
-    listenerId: "prooftext-proves",
     type: TutorialStepType.Default,
   },
   {
     elemId: "point.D",
-    headerText: "Seeing the steps",
     text: (
       <span>
         The {bold("construction")} keeps up-to-date with the{" "}
@@ -53,12 +50,10 @@ export const tutorial1Steps: TutorialStep[] = [
         construction changes.
       </span>
     ),
-    listenerId: "prooftext-proves",
     type: TutorialStepType.Default,
   },
   {
     elemId: "triangle-text-ADC",
-    headerText: "Highlighting elements",
     text: (
       <span>
         {bold("Hovering over symbols")} in the statements highlights their
@@ -66,12 +61,10 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     exercise: <span>{`Try hovering over ${strs.triangle}ADC here.`}</span>,
-    listenerId: "prooftext-proves",
     type: TutorialStepType.Default,
   },
   {
     elemId: "point.D",
-    headerText: "Highlighting elements",
     text: (
       <span>
         Similarly, {bold("clicking on parts of the construction")} highlights
@@ -81,12 +74,10 @@ export const tutorial1Steps: TutorialStep[] = [
     exercise: (
       <span>Try clicking on {segmentQuestion("CD")} on the diagram.</span>
     ),
-    listenerId: "prooftext-proves",
     type: TutorialStepType.Default,
   },
   {
     elemId: "answer-button-1",
-    headerText: "Answering questions",
     text: (
       <span>
         Let's find the answer to this question together. In the interactive
@@ -103,7 +94,6 @@ export const tutorial1Steps: TutorialStep[] = [
   },
   {
     elemId: "point.D",
-    headerText: "Answering questions",
     text: (
       <span>
         {segmentQuestion("AB")} has 1 tick but {segmentQuestion("AC")} has 2!
@@ -124,7 +114,6 @@ export const tutorial1Steps: TutorialStep[] = [
   {
     type: TutorialStepType.Default,
     elemId: "answer-button-1",
-    headerText: "Seeing the steps",
     text: (
       <span>
         This question asks about the placement of{" "}
@@ -133,12 +122,10 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     exercise: <span>Click on the row applying SAS Triangle Congruence.</span>,
-    listenerId: "prooftext-proves",
   },
   {
     type: TutorialStepType.Default,
     elemId: "prooftext-s4",
-    headerText: "Seeing the steps",
     text: (
       <span>
         Recall that SAS Triangle Congruence has {bold("three requirements")}:
@@ -147,13 +134,11 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     exercise: <span>Imagine moving row 4 between rows 2 and 3.</span>,
-    listenerId: "prooftext-proves",
     paddingL: 30,
   },
   {
     type: TutorialStepType.HideContinue,
     elemId: "prooftext-s4",
-    headerText: "Seeing the steps",
     text: (
       <span>
         If we move row 4 between rows 2 and 3, then SAS would rely on statements
@@ -161,7 +146,6 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     exercise: <span>Click the "No" button to submit your answer.</span>,
-    listenerId: "prooftext-proves",
     paddingL: 30,
   },
 ];
@@ -177,12 +161,10 @@ export const tutorial2Steps: TutorialStep[] = [
         different proof.
       </span>
     ),
-    listenerId: "prooftext-proves",
   },
   {
     type: TutorialStepType.Default,
     elemId: "answer-button-1",
-    headerText: "Seeing the steps",
     text: (
       <span>
         This question asks about {bold("SSS Triangle Congruence")}{" "}
@@ -190,25 +172,21 @@ export const tutorial2Steps: TutorialStep[] = [
       </span>
     ),
     exercise: <span>Click on the row applying SSS Triangle Congruence.</span>,
-    listenerId: "prooftext-proves",
   },
   {
     type: TutorialStepType.Default,
     elemId: "svg-object-mini",
-    headerText: "Seeing the steps",
     text: (
       <span>
         Compare this {bold("illustration of SSS Triangle Congruence")} to the
         construction. What do you see?
       </span>
     ),
-    listenerId: "prooftext-proves",
     paddingL: -100,
   },
   {
     type: TutorialStepType.Default,
     elemId: "svg-object-mini",
-    headerText: "Highlighting elements",
     text: (
       <span>
         The tick marks are inconsistent between the illustration and the
@@ -216,13 +194,11 @@ export const tutorial2Steps: TutorialStep[] = [
         {bold("incorrectly applying SSS")} to this proof.
       </span>
     ),
-    listenerId: "prooftext-proves",
     paddingL: -100,
   },
   {
     type: TutorialStepType.HideContinue,
     elemId: "svg-object-mini",
-    headerText: "Answering questions",
     text: (
       <span>
         If the proof was correct, the{" "}

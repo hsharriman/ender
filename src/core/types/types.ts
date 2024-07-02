@@ -73,7 +73,7 @@ export interface Reason {
 
 export interface TutorialStep {
   elemId: string;
-  headerText: string;
+  headerText?: string;
   text: JSX.Element;
   exercise?: JSX.Element;
   listenerId?: string; // the element that needs to be interacted with to be able to move on
