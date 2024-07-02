@@ -12,7 +12,6 @@ import { TutorialPage } from "./components/TutorialPage";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason, TutorialStep } from "./core/types/types";
 import { tutorial1Steps, tutorial2Steps } from "./questions/tutorialContent";
-import { T1_CH1_IN1 } from "./theorems/challenge/ip3";
 import { Reasons } from "./theorems/reasons";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "./theorems/testA/stage1/C2";
@@ -202,7 +201,8 @@ export class App extends React.Component<AppProps, AppState> {
       fisherYates([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
       false
     );
-    const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]));
+    // const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]));
+    const challenge: ProofMeta[] = [];
 
     this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
     // this.meta = stage1.concat(stage2).concat(challenge);
