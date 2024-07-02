@@ -143,6 +143,7 @@ const miniContent = () => {
 };
 
 export const TutorialProof1: LayoutProps = {
+  name: "TutorialProof1",
   // TODO: Replace questions
   questions: placeholder,
   miniContent: miniContent(),

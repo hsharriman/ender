@@ -23,6 +23,7 @@ import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
+import SavePage from "./components/SavePage";
 
 interface ProofMeta {
   layout: LayoutOptions;
@@ -74,6 +75,7 @@ const staticLayout = (
       questions: shuffleQuestions
         ? fisherYates(proofMeta.questions)
         : proofMeta.questions,
+      name: proofMeta.name,
     },
   };
 };
@@ -133,6 +135,7 @@ const interactiveLayout = (
       questions: shuffleQuestions
         ? fisherYates(proofMeta.questions)
         : proofMeta.questions,
+      name: proofMeta.name,
     },
   };
 };
@@ -157,6 +160,11 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
+  answers: {
+    [proofName: string]: {
+      [question: string]: string;
+    };
+  };
   page: string;
 }
 export class App extends React.Component<AppProps, AppState> {
@@ -166,6 +174,7 @@ export class App extends React.Component<AppProps, AppState> {
     this.state = {
       activePage: 0,
       activeTest: 0,
+      answers: {},
       page: "home",
     };
     const tutorial = [interactiveLayout(TutorialProof1, false)];
@@ -218,65 +227,58 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  renderExperimentPages = (page: number) => {
-    const numPage = this.meta.length + 3; // For total num of pages
+  updateAnswers = (proofName: string) => (question: string, answer: string) => {
+    const storedAnswers = localStorage.getItem("answers");
+    const existingAnswers = storedAnswers ? JSON.parse(storedAnswers) : {};
+
+    const updatedAnswers = {
+      ...existingAnswers,
+      [proofName]: {
+        ...existingAnswers[proofName],
+        [question]: answer,
+      },
+    };
+
+    localStorage.setItem("answers", JSON.stringify(updatedAnswers));
+  };
+
+  renderHeader = (page: number) => {
+    const numPage = this.meta.length + 4;
+    //for proof questions header
     const currMeta = this.meta[page];
-    return (
-      <div>
-        {this.state.activePage !== 0 &&
-        this.state.activePage <= this.meta.length - 1 ? (
-          <div
-            className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
-            id="header"
-          >
-            <div className="flex items-center">
-              <button
-                className="p-3 underline underline-offset-2 z-30 text-sm"
-                id="prev-arrow"
-                style={{
-                  display: this.state.activePage >= 0 ? "block" : "none",
-                }}
-                onClick={this.onClick(-1)}
-              >
-                {"Previous"}
-              </button>
-              <div className="p-3 z-30">{`${
-                this.state.activePage + 1
-              } / ${numPage}`}</div>
-              <div className="ml-10 flex-1">
-                <TestQuestions
-                  questions={currMeta.props.questions}
-                  onNext={this.onNext}
-                />
-              </div>
-              <button
-                className="p-3 underline underline-offset-2 z-30 text-sm"
-                id="next-arrow"
-                style={{
-                  display:
-                    this.state.activePage < numPage - 1 ? "block" : "none",
-                }}
-                onClick={this.onClick(1)}
-              >
-                {"Next"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+    if (
+      this.state.activePage !== 0 &&
+      this.state.activePage <= this.meta.length - 1
+    ) {
+      return (
+        <div
+          className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
+          id="header"
+        >
+          <div className="flex items-center">
             <button
-              className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+              className="p-3 underline underline-offset-2 z-30 text-sm"
               id="prev-arrow"
-              style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+              style={{
+                display: this.state.activePage >= 0 ? "block" : "none",
+              }}
               onClick={this.onClick(-1)}
             >
               {"Previous"}
             </button>
-            <div className="absolute top-0 p-3 left-24 z-30">{`${
+            <div className="p-3 z-30">{`${
               this.state.activePage + 1
             } / ${numPage}`}</div>
+            <div className="ml-10 flex-1">
+              <TestQuestions
+                questions={currMeta.props.questions}
+                onNext={this.onNext}
+                proofType={currMeta.layout}
+                onAnswerUpdate={this.updateAnswers(currMeta.props.name)}
+              />
+            </div>
             <button
-              className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+              className="p-3 underline underline-offset-2 z-30 text-sm"
               id="next-arrow"
               style={{
                 display: this.state.activePage < numPage - 1 ? "block" : "none",
@@ -286,12 +288,59 @@ export class App extends React.Component<AppProps, AppState> {
               {"Next"}
             </button>
           </div>
-        )}
-        <div className="w-full h-full flex justify-start">
-          {this.state.activePage === 0 ? (
-            <BackgroundQuestions />
-          ) : this.state.activePage <= this.meta.length ? (
-            currMeta.layout === "static" ? (
+        </div>
+      );
+    } else {
+      return (
+        <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+          <button
+            className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+            id="prev-arrow"
+            style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+            onClick={this.onClick(-1)}
+          >
+            {"Previous"}
+          </button>
+          <div className="absolute top-0 p-3 left-24 z-30">{`${
+            this.state.activePage + 1
+          } / ${numPage}`}</div>
+          <button
+            className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+            id="next-arrow"
+            style={{
+              display: this.state.activePage < numPage - 1 ? "block" : "none",
+            }}
+            onClick={this.onClick(1)}
+          >
+            {"Next"}
+          </button>
+        </div>
+      );
+    }
+  };
+
+  renderExperimentPages = (page: number) => {
+    const numPage = this.meta.length + 4; // For total num of pages (added are background + 2 SUS + Save log page)
+    const currMeta = this.meta[page];
+    // background question
+    if (this.state.activePage === 0) {
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
+            <BackgroundQuestions
+              updateAnswers={this.updateAnswers("Background Questions")}
+            />
+          </div>
+        </div>
+      );
+    } else if (this.state.activePage <= this.meta.length) {
+      // proofs
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
+            {currMeta.layout === "static" ? (
               <StaticAppPage
                 {...{
                   ...(currMeta.props as StaticAppPageProps),
@@ -307,20 +356,48 @@ export class App extends React.Component<AppProps, AppState> {
                 }}
                 key={"interactive-pg" + this.state.activePage}
               />
-            )
-          ) : (
+            )}
+          </div>
+        </div>
+      );
+    } else if (this.state.activePage === this.meta.length + 1) {
+      // static SUS
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
             <SusPage
               key={this.state.activePage}
-              type={
-                this.state.activePage === this.meta.length + 1
-                  ? "Static"
-                  : "Interactive"
-              }
+              type={"Static SUS"}
+              updateAnswers={this.updateAnswers("Static SUS")}
             />
-          )}
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else if (this.state.activePage === this.meta.length + 2) {
+      // interactive SUS
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
+            <SusPage
+              key={this.state.activePage}
+              type={"Interactive SUS"}
+              updateAnswers={this.updateAnswers("Interactive SUS")}
+            />
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
+            <SavePage answers={this.state.answers} />
+          </div>
+        </div>
+      );
+    }
   };
 
   render() {

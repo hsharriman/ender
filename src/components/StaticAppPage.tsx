@@ -8,6 +8,7 @@ import { StaticDiagram } from "./StaticDiagram";
 import { TestQuestions } from "./TestQuestions";
 
 export interface StaticAppPageProps {
+  name: string;
   pageNum: number;
   ctx: DiagramContent;
   reasons: Reason[];

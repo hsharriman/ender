@@ -11,8 +11,7 @@ import SusQuestion from "./SusQuestion";
 
 interface susPageProps {
   type: string;
-  // answers: { [question: string]: string };
-  // updateAnswers: (name: string, question: string, answer: string) => void;
+  updateAnswers: (question: string, answer: string) => void;
 }
 
 interface susPageState {
@@ -77,6 +76,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
 
     let toLogAnswers = "";
     Object.keys(localAnswers).forEach((questionNum) => {
+      this.props.updateAnswers(questionNum, localAnswers[questionNum]);
       toLogAnswers += `Question ${questionNum}: ${localAnswers[questionNum]},`;
     });
 

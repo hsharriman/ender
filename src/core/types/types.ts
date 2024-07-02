@@ -52,6 +52,7 @@ export enum SVGModes {
 
 // -------- TYPES RELATED TO PROOF SETUP --------
 export interface StaticLayoutProps {
+  name: string;
   baseContent: (showPoints: boolean, hoverable: boolean) => Content;
   steps: StepMeta[];
   givens: StepMeta;

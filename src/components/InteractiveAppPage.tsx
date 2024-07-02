@@ -10,6 +10,7 @@ import { ReliesOn } from "./ReliesOn";
 import { Question } from "../questions/funcTypeQuestions";
 
 export interface InteractiveAppPageProps {
+  name: string;
   ctx: DiagramContent;
   linkedTexts: ProofTextItem[];
   reasonMap: Map<string, Reason>;
