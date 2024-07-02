@@ -242,67 +242,43 @@ export class App extends React.Component<AppProps, AppState> {
     localStorage.setItem("answers", JSON.stringify(updatedAnswers));
   };
 
-  renderExperimentPages = (page: number) => {
-    const numPage = this.meta.length + 3; // For total num of pages
+  renderHeader = (page: number) => {
+    const numPage = this.meta.length + 4;
+    //for proof questions header
     const currMeta = this.meta[page];
-    return (
-      <div>
-        {this.state.activePage !== 0 &&
-        this.state.activePage <= this.meta.length - 1 ? (
-          <div
-            className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
-            id="header"
-          >
-            <div className="flex items-center">
-              <button
-                className="p-3 underline underline-offset-2 z-30 text-sm"
-                id="prev-arrow"
-                style={{
-                  display: this.state.activePage >= 0 ? "block" : "none",
-                }}
-                onClick={this.onClick(-1)}
-              >
-                {"Previous"}
-              </button>
-              <div className="p-3 z-30">{`${
-                this.state.activePage + 1
-              } / ${numPage}`}</div>
-              <div className="ml-10 flex-1">
-                <TestQuestions
-                  questions={currMeta.props.questions}
-                  onNext={this.onNext}
-                  proofType={currMeta.layout}
-                  onAnswerUpdate={this.updateAnswers(currMeta.props.name)}
-                />
-              </div>
-              <button
-                className="p-3 underline underline-offset-2 z-30 text-sm"
-                id="next-arrow"
-                style={{
-                  display:
-                    this.state.activePage < numPage - 1 ? "block" : "none",
-                }}
-                onClick={this.onClick(1)}
-              >
-                {"Next"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+    if (
+      this.state.activePage !== 0 &&
+      this.state.activePage <= this.meta.length - 1
+    ) {
+      return (
+        <div
+          className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
+          id="header"
+        >
+          <div className="flex items-center">
             <button
-              className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+              className="p-3 underline underline-offset-2 z-30 text-sm"
               id="prev-arrow"
-              style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+              style={{
+                display: this.state.activePage >= 0 ? "block" : "none",
+              }}
               onClick={this.onClick(-1)}
             >
               {"Previous"}
             </button>
-            <div className="absolute top-0 p-3 left-24 z-30">{`${
+            <div className="p-3 z-30">{`${
               this.state.activePage + 1
             } / ${numPage}`}</div>
+            <div className="ml-10 flex-1">
+              <TestQuestions
+                questions={currMeta.props.questions}
+                onNext={this.onNext}
+                proofType={currMeta.layout}
+                onAnswerUpdate={this.updateAnswers(currMeta.props.name)}
+              />
+            </div>
             <button
-              className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+              className="p-3 underline underline-offset-2 z-30 text-sm"
               id="next-arrow"
               style={{
                 display: this.state.activePage < numPage - 1 ? "block" : "none",
@@ -312,14 +288,59 @@ export class App extends React.Component<AppProps, AppState> {
               {"Next"}
             </button>
           </div>
-        )}
-        <div className="w-full h-full flex justify-start">
-          {this.state.activePage === 0 ? (
+        </div>
+      );
+    } else {
+      return (
+        <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
+          <button
+            className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+            id="prev-arrow"
+            style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+            onClick={this.onClick(-1)}
+          >
+            {"Previous"}
+          </button>
+          <div className="absolute top-0 p-3 left-24 z-30">{`${
+            this.state.activePage + 1
+          } / ${numPage}`}</div>
+          <button
+            className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
+            id="next-arrow"
+            style={{
+              display: this.state.activePage < numPage - 1 ? "block" : "none",
+            }}
+            onClick={this.onClick(1)}
+          >
+            {"Next"}
+          </button>
+        </div>
+      );
+    }
+  };
+
+  renderExperimentPages = (page: number) => {
+    const numPage = this.meta.length + 4; // For total num of pages (added are background + 2 SUS + Save log page)
+    const currMeta = this.meta[page];
+    // background question
+    if (this.state.activePage === 0) {
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
             <BackgroundQuestions
               updateAnswers={this.updateAnswers("Background Questions")}
             />
-          ) : this.state.activePage <= this.meta.length ? (
-            currMeta.layout === "static" ? (
+          </div>
+        </div>
+      );
+    } else if (this.state.activePage <= this.meta.length) {
+      // proofs
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
+            {currMeta.layout === "static" ? (
               <StaticAppPage
                 {...{
                   ...(currMeta.props as StaticAppPageProps),
@@ -335,27 +356,48 @@ export class App extends React.Component<AppProps, AppState> {
                 }}
                 key={"interactive-pg" + this.state.activePage}
               />
-            )
-          ) : this.state.activePage < numPage - 1 ? (
-            this.state.activePage === this.meta.length + 1 ? (
-              <SusPage
-                key={this.state.activePage}
-                type={"Static SUS"}
-                updateAnswers={this.updateAnswers("Static SUS")}
-              />
-            ) : (
-              <SusPage
-                key={this.state.activePage}
-                type={"Interactive SUS"}
-                updateAnswers={this.updateAnswers("Interactive SUS")}
-              />
-            )
-          ) : (
-            <SavePage answers={this.state.answers} />
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else if (this.state.activePage === this.meta.length + 1) {
+      // static SUS
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
+            <SusPage
+              key={this.state.activePage}
+              type={"Static SUS"}
+              updateAnswers={this.updateAnswers("Static SUS")}
+            />
+          </div>
+        </div>
+      );
+    } else if (this.state.activePage === this.meta.length + 2) {
+      // interactive SUS
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
+            <SusPage
+              key={this.state.activePage}
+              type={"Interactive SUS"}
+              updateAnswers={this.updateAnswers("Interactive SUS")}
+            />
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          {this.renderHeader(page)}
+          <div className="w-full h-full flex justify-start">
+            <SavePage answers={this.state.answers} />
+          </div>
+        </div>
+      );
+    }
   };
 
   render() {
