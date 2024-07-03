@@ -342,6 +342,7 @@ export class App extends React.Component<AppProps, AppState> {
       pageContent = (
         <BackgroundQuestions
           updateAnswers={this.updateAnswers("Background Questions")}
+          onSubmitFn={() => this.onNext(1)}
         />
       );
     } else if (this.state.activePage <= 2) {

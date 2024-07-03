@@ -15,7 +15,7 @@ export const tutorial1Steps: TutorialStep[] = [
     type: TutorialStepType.Intro,
   },
   {
-    elemId: "prooftext-given",
+    elemId: "prooftext-s1",
     text: (
       <span>
         You can {bold("click on a row")} to see more information about it.
@@ -43,7 +43,7 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "triangle-text-ADC",
     text: (
       <span>
-        Try {bold("hovering over text in the proof")} to highlight them in the
+        Try {bold("hovering over text in the proof")} to highlight it in the
         construction.
       </span>
     ),
@@ -64,8 +64,10 @@ export const tutorial1Steps: TutorialStep[] = [
     text: (
       <span>
         In the interactive proof,{" "}
-        {bold("we can look at the construction to find the answer")}, since the
-        diagram tracks all the information established in the proof.
+        {bold(
+          "we can look at the construction to find the answer to this question"
+        )}
+        , since the diagram tracks all the information established in the proof.
       </span>
     ),
     exercise: (
@@ -79,9 +81,9 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "point.D",
     text: (
       <span>
-        {segmentQuestion("AB")} has 1 tick but {segmentQuestion("AC")} has 2!
-        That means it is not determined that {segmentQuestion("AB")} must be
-        congruent to {segmentQuestion("AC")} by the end of the proof.
+        {segmentQuestion("AB")} has 1 tick but {segmentQuestion("AC")} has 2, so
+        we do not know that {segmentQuestion("AB")} must be congruent to{" "}
+        {segmentQuestion("AC")}.
       </span>
     ),
     exercise: <span>Use the "Yes", "No" buttons to submit your answer.</span>,

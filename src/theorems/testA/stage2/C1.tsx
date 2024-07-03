@@ -188,12 +188,26 @@ const step2: StepMeta = makeStepMeta({
   staticText: () => Midpoint.staticText("J", "EH"),
 });
 
+const step22: StepMeta = makeStepMeta({
+  reason: Reasons.Midpoint,
+  dependsOn: [2],
+  unfocused: (props: StepUnfocusProps) => {
+    step2.unfocused(props);
+    step2.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) => {
+    EqualSegments.additions(props, ["EJ", "JH"]);
+  },
+  text: (ctx: Content) => EqualSegments.text(ctx, ["EJ", "JH"]),
+  staticText: () => EqualSegments.staticText(["EJ", "JH"]),
+});
+
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.Rectangle,
   dependsOn: [1],
   unfocused: (props: StepUnfocusProps) => {
-    step2.additions({ ...props, mode: SVGModes.Unfocused });
-    step2.unfocused(props);
+    step22.additions({ ...props, mode: SVGModes.Unfocused });
+    step22.unfocused(props);
   },
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["FEJ", "JHG"]);
@@ -204,7 +218,7 @@ const step3: StepMeta = makeStepMeta({
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.Rectangle,
-  dependsOn: [3],
+  dependsOn: [1],
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);
     step3.additions({ ...props, mode: SVGModes.Unfocused });
@@ -224,7 +238,7 @@ const step5SASProps: SASProps = {
 };
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [2, 3, 4],
+  dependsOn: [3, 4, 5],
   unfocused: (props: StepUnfocusProps) => {
     props.ctx.getSegment("FG").mode(props.frame, SVGModes.Unfocused);
   },
@@ -237,7 +251,7 @@ const step5: StepMeta = makeStepMeta({
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [5],
+  dependsOn: [6],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });
     step5.unfocused(props);
@@ -251,7 +265,7 @@ const step6: StepMeta = makeStepMeta({
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.Isosceles,
-  dependsOn: [6],
+  dependsOn: [7],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });
     step6.unfocused(props);
@@ -280,7 +294,16 @@ export const miniContent = () => {
     mode: SVGModes.Purple,
   };
 
-  const step3 = ctx.addFrame("s3");
+  const step2 = ctx.addFrame("s3");
+  Midpoint.additions(
+    { ...defaultStepProps, frame: step2 },
+    "J",
+    ["EJ", "JH"],
+    1,
+    SVGModes.Blue
+  );
+
+  const step3 = ctx.addFrame("s4");
   const rectangleSegs = ["EF", "FG", "GH", "EJ", "JH"];
   rectangleSegs.map((s) => ctx.getSegment(s).mode(step3, SVGModes.Focused));
   const rectangleAngles = ["EFG", "FGH"];
@@ -296,7 +319,7 @@ export const miniContent = () => {
     SVGModes.Blue
   );
 
-  const step4 = ctx.addFrame("s4");
+  const step4 = ctx.addFrame("s5");
   const EH = ctx.push(
     new Segment({
       p1: ctx.getPoint("E"),
@@ -315,7 +338,7 @@ export const miniContent = () => {
     ["FG", "EH"]
   );
 
-  const step5 = ctx.addFrame("s5");
+  const step5 = ctx.addFrame("s6");
   SAS.additions(
     { ...defaultStepProps, frame: step5 },
     {
@@ -327,7 +350,7 @@ export const miniContent = () => {
     SVGModes.Blue
   );
 
-  const step6 = ctx.addFrame("s6");
+  const step6 = ctx.addFrame("s7");
   const s6Opts = { ...defaultStepProps, frame: step6, mode: SVGModes.Focused };
   EqualSegments.additions(s6Opts, ["EJ", "JH"], 1);
   EqualSegments.additions(s6Opts, ["FE", "GH"], 2);
@@ -340,7 +363,7 @@ export const miniContent = () => {
   EqualAngles.additions(s6Opts, ["EFJ", "JGH"], 2);
   EqualAngles.additions(s6Opts, ["FJE", "GJH"], 1);
 
-  const step7 = ctx.addFrame("s7");
+  const step7 = ctx.addFrame("s8");
   ctx.getSegment("FG").mode(step7, SVGModes.Purple);
   EqualSegments.additions(
     { ...defaultStepProps, frame: step7 },
@@ -358,5 +381,5 @@ export const T1_S2_C1: LayoutProps = {
   miniContent: miniContent(),
   givens,
   proves,
-  steps: [step1, step2, step3, step4, step5, step6, step7],
+  steps: [step1, step2, step22, step3, step4, step5, step6, step7],
 };
