@@ -6,7 +6,7 @@ import {
 } from "./components/InteractiveAppPage";
 import SavePage from "./components/SavePage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
-import { SusPage } from "./components/SusPage";
+import { SusPage, SusProofType } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
 import { TutorialPage } from "./components/TutorialPage";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
@@ -376,7 +376,7 @@ export class App extends React.Component<AppProps, AppState> {
       pageContent = (
         <SusPage
           key={this.state.activePage}
-          type={"Static"}
+          type={SusProofType.Static}
           updateAnswers={this.updateAnswers("Static SUS")}
           onSubmit={() => this.onNext(1)}
         />
@@ -385,7 +385,7 @@ export class App extends React.Component<AppProps, AppState> {
       pageContent = (
         <SusPage
           key={this.state.activePage}
-          type={"Interactive"}
+          type={SusProofType.Interactive}
           updateAnswers={this.updateAnswers("Interactive SUS")}
           onSubmit={() => this.onNext(1)}
         />
