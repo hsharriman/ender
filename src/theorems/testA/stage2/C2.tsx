@@ -136,7 +136,7 @@ const step4: StepMeta = EqualSegmentStep(["AF", "CG"], Reasons.Given, step3, 2);
 const step5: StepMeta = ReflexiveStep("BD", 3, step4);
 
 const step6: StepMeta = makeStepMeta({
-  reason: Reasons.PerpendicularLines,
+  reason: Reasons.CongAdjAngles,
   dependsOn: [1],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });

@@ -2,7 +2,6 @@ import React from "react";
 
 export interface QuestionProps {
   questionNum: string;
-  fullScaffold?: string | JSX.Element;
   question: string | JSX.Element;
   answers: string[];
   onSubmit: (answer: string) => void;

@@ -90,7 +90,7 @@ export const resizedStrs = {
           : {}
       }
     >
-      {" \u22A5 "}
+      {"\u22A5"}
     </span>
   ),
 };

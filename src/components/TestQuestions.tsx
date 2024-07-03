@@ -1,5 +1,6 @@
 import React from "react";
-import { Question } from "../questions/funcTypeQuestions";
+import { AnswerType, Question } from "../questions/funcTypeQuestions";
+import { DropdownQuestion } from "./DropdownQuestion";
 import { YesNoQuestion } from "./YesNoQuestion";
 
 interface QuestionsProps {
@@ -76,15 +77,24 @@ export class TestQuestions extends React.Component<
             ))}
           </select>
         </div> */}
-        <div className="flex text-xl">
+        <div className="flex">
           <span className="pr-6">Q{this.state.currentQuestionIndex + 1}:</span>
-          <YesNoQuestion
-            questionNum={(this.state.currentQuestionIndex + 1).toString()}
-            fullScaffold={currentQuestion.fullScaffold}
-            question={currentQuestion.prompt}
-            answers={answers}
-            onSubmit={this.handleSubmit}
-          />
+          {currentQuestion.answerType === AnswerType.YesNo && (
+            <YesNoQuestion
+              questionNum={(this.state.currentQuestionIndex + 1).toString()}
+              question={currentQuestion.prompt}
+              answers={["Yes", "No"]}
+              onSubmit={this.handleSubmit}
+            />
+          )}
+          {currentQuestion.answerType === AnswerType.Dropdown && (
+            <DropdownQuestion
+              question={currentQuestion.prompt}
+              questionNum={(this.state.currentQuestionIndex + 1).toString()}
+              answers={answers || []}
+              onSubmit={this.handleSubmit}
+            />
+          )}
         </div>
       </>
     );

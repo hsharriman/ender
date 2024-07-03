@@ -1,12 +1,18 @@
 import { segmentQuestion, strs } from "../core/geometryText";
+import { Obj } from "../core/types/types";
 
 export interface Question {
-  fullScaffold?: string | JSX.Element;
+  answerType: AnswerType;
   partlyScaffold?: string | JSX.Element;
   prompt: string | JSX.Element;
-  answers: string[];
+  answers?: string[];
   type: QuestionType;
   id: string;
+}
+
+export enum AnswerType {
+  YesNo = "YesNo",
+  Dropdown = "Dropdown",
 }
 
 export enum QuestionType {
@@ -17,64 +23,66 @@ export enum QuestionType {
   TutorialInstructions = "TutorialInstructions",
 }
 
-const yesNoAnswers = ["Yes", "No"];
+const diagramStateQuestion = (x: string, y: string, type: Obj) => {
+  const strType = (s: string, type: Obj) => {
+    if (type === Obj.Angle) {
+      return strs.angle + s;
+    }
+    return segmentQuestion(s);
+  };
+  return (
+    <span>
+      By the end of the proof, has enough information been established to
+      conclude that {strType(x, type)} <span className="italic">must</span> be
+      congruent to {strType(y, type)}?
+    </span>
+  );
+};
+
 const id = (n: number) => `qID-${n}`;
+
+const mini = (reason: string) =>
+  `(Hint: click the row with ${reason} to check if there are any differences between the big construction and the mini one.)`;
+const relies = (reason: string) =>
+  `(Hint: click on the row with ${reason} to check if everything it relies on would still appear earlier in the proof.)`;
+export const scaffolding = {
+  mini,
+  relies,
+  diagram:
+    "(Hint: click the last row of the proof and check if they have the same tick marks.)",
+};
 
 export const checkingProof1: Question[] = [
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt: "Is SAS triangle congruence correctly applied?",
-    answers: yesNoAnswers,
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
-    fullScaffold: "Placeholder: ",
-    prompt: (
-      <span>
-        Must {segmentQuestion("BA")} {strs.congruent} {segmentQuestion("CB")}?
-      </span>
-    ),
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("BA", "CB", Obj.Segment),
     type: QuestionType.DiagramState,
     id: id(2),
   },
   {
-    fullScaffold: "Placeholder: ",
-    prompt: (
-      <span>
-        Must {segmentQuestion("CB")} {strs.congruent} {segmentQuestion("AD")}?
-      </span>
-    ),
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("DBA", "BCD", Obj.Angle),
     type: QuestionType.DiagramState,
-    id: id(3),
+    id: id(2),
   },
 ];
 
 export const checkingProof2: Question[] = [
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt: "Is Congruent Adjacent Angles correctly applied?",
-    answers: yesNoAnswers,
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
-    fullScaffold: "Placeholder: ",
-    prompt: `Must ${strs.angle}DAB ${strs.congruent} ${strs.angle}BDC?`,
-    answers: yesNoAnswers,
-    type: QuestionType.DiagramState,
-    id: id(2),
-  },
-  {
-    fullScaffold: "Placeholder: ",
-    prompt: (
-      <span>
-        Must {segmentQuestion("KL")} {strs.congruent} {segmentQuestion("MK")}?
-      </span>
-    ),
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("KL", "MK", Obj.Segment),
     type: QuestionType.DiagramState,
     id: id(3),
   },
@@ -82,27 +90,20 @@ export const checkingProof2: Question[] = [
 
 export const checkingProof3: Question[] = [
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt: "Is HL congruence correctly applied?",
-    answers: yesNoAnswers,
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt: "Is Def. Rectangle correctly applied?",
-    answers: yesNoAnswers,
     type: QuestionType.Minifigures,
     id: id(2),
   },
   {
-    fullScaffold: "Placeholder: ",
-    prompt: (
-      <span>
-        Must {segmentQuestion("KN")} {strs.congruent} {segmentQuestion("ML")}?
-      </span>
-    ),
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("KN", "ML", Obj.Segment),
     type: QuestionType.DiagramState,
     id: id(3),
   },
@@ -110,25 +111,22 @@ export const checkingProof3: Question[] = [
 
 export const completeProof1: Question[] = [
   {
-    fullScaffold: "Placeholder: ",
-    prompt: "Is Alternative Interior Angles correctly applied?",
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
+    prompt: "Is Converse of Alternate Interior Angles correctly applied?",
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply Vertical Angles between steps 1 and 2?",
-    answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
     id: id(2),
   },
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply SAS triangle congruence between steps 2 and 3?",
-    answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
     id: id(3),
   },
@@ -136,32 +134,28 @@ export const completeProof1: Question[] = [
 
 export const completeProof2: Question[] = [
   {
-    fullScaffold: "Placeholder: ",
-    prompt: "Is Def. Perpendicular correctly applied?",
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
+    prompt: "Is Def. Perpendicular Lines correctly applied?",
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
-    fullScaffold: "Placeholder: ",
-    prompt: "Is Def. Midpoint correctly applied?",
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
+    prompt: "Is Converse of Def. Midpoint correctly applied?",
     type: QuestionType.Minifigures,
     id: id(2),
   },
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt:
-      "Is there enough information to apply Congruent Adjacent Angles at step 3?",
-    answers: yesNoAnswers,
+      "Is there enough information to apply Congruent Adjacent Angles at step 4?",
     type: QuestionType.ReliesOn,
     id: id(3),
   },
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply ASA triangle congruence at step 6?",
-    answers: yesNoAnswers,
     type: QuestionType.ReliesOn,
     id: id(4),
   },
@@ -169,36 +163,28 @@ export const completeProof2: Question[] = [
 
 export const incompleteProof2: Question[] = [
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt: "Is Vertical Angles correctly applied?",
-    answers: yesNoAnswers,
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt:
-      "Is there enough information to apply ASA triangle congruence between steps 3 and 4?",
-    answers: yesNoAnswers,
+      "Is there enough information to apply ASA triangle congruence between steps 2 and 3?",
     type: QuestionType.ReliesOn,
     id: id(2),
   },
   {
-    fullScaffold: "Placeholder: ",
+    answerType: AnswerType.YesNo,
     prompt:
-      "Is there enough information to apply Def. Midpoint between steps 4 and 5?",
-    answers: yesNoAnswers,
+      "Is there enough information to apply Converse of Def. Midpoint between steps 4 and 5?",
     type: QuestionType.ReliesOn,
     id: id(3),
   },
   {
-    fullScaffold: "Placeholder: ",
-    prompt: (
-      <span>
-        Must {segmentQuestion("RQ")} {strs.congruent} {segmentQuestion("NR")}?
-      </span>
-    ),
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("RQ", "NR", Obj.Segment),
     type: QuestionType.DiagramState,
     id: id(4),
   },
@@ -207,7 +193,7 @@ export const incompleteProof2: Question[] = [
 export const placeholder: Question[] = [
   {
     prompt: "This is a placeholder",
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -215,37 +201,41 @@ export const placeholder: Question[] = [
 
 export const exploratoryQuestion: Question[] = [
   {
-    prompt: "Is this proof correct?",
-    answers: yesNoAnswers,
+    prompt:
+      "Is there a mistake in this proof, and if so, which of the following options best describes why it is wrong? Select 'the proof is correct' if there are no mistakes.",
+    answers: [
+      "A step uses the wrong segment/angle/triangle",
+      "A step is justified by an incorrect reason",
+      "A step of the proof is in the wrong order",
+      "The proof is correct",
+    ],
     type: QuestionType.Correctness,
     id: id(1),
+    answerType: AnswerType.Dropdown,
   },
 ];
 
 export const tutorial1Questions: Question[] = [
   {
-    prompt: (
-      <span>
-        Must {segmentQuestion("AB")} {strs.congruent} {segmentQuestion("AC")}?
-      </span>
-    ),
-    answers: yesNoAnswers,
+    prompt: diagramStateQuestion("AB", "AC", Obj.Segment),
+
     type: QuestionType.TutorialInstructions,
     id: id(1),
+    answerType: AnswerType.YesNo,
   },
   {
     prompt:
       "Is there enough information to apply SAS Triangle Congruence between steps 2 and 3?",
-    answers: yesNoAnswers,
     type: QuestionType.DiagramState,
     id: id(2),
+    answerType: AnswerType.YesNo,
   },
 ];
 
 export const tutorial2Questions: Question[] = [
   {
     prompt: "Is SSS Triangle Congruence Correctly Applied?",
-    answers: yesNoAnswers,
+    answerType: AnswerType.YesNo,
     type: QuestionType.DiagramState,
     id: id(1),
   },

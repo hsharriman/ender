@@ -186,7 +186,7 @@ const step7: StepMeta = makeStepMeta({
 });
 
 const step8: StepMeta = makeStepMeta({
-  reason: Reasons.AlternateInteriorAngles,
+  reason: Reasons.ConverseAltInteriorAngs,
   dependsOn: [7],
   unfocused: (props: StepUnfocusProps) => {
     step7.additions({ ...props, mode: SVGModes.Unfocused });
@@ -207,21 +207,38 @@ const miniContent = () => {
     mode: SVGModes.Purple,
   };
 
-  const step4 = ctx.addFrame("s5");
-  ctx.getTriangle("MYZ").mode(step4, SVGModes.Focused);
-  ctx.getTriangle("MWX").mode(step4, SVGModes.Focused);
-  ctx.getSegment("WX").mode(step4, SVGModes.Hidden);
-  ctx.getSegment("YZ").mode(step4, SVGModes.Hidden);
-  EqualAngles.additions(
+  const step3 = ctx.addFrame("s3");
+  Midpoint.additions(
+    { ...defaultStepProps, frame: step3 },
+    "M",
+    ["WM", "MZ"],
+    1,
+    SVGModes.Blue
+  );
+  const step4 = ctx.addFrame("s4");
+  Midpoint.additions(
     { ...defaultStepProps, frame: step4 },
+    "M",
+    ["YM", "XM"],
+    2,
+    SVGModes.Blue
+  );
+
+  const step5 = ctx.addFrame("s5");
+  ctx.getTriangle("MYZ").mode(step5, SVGModes.Focused);
+  ctx.getTriangle("MWX").mode(step5, SVGModes.Focused);
+  ctx.getSegment("WX").mode(step5, SVGModes.Hidden);
+  ctx.getSegment("YZ").mode(step5, SVGModes.Hidden);
+  EqualAngles.additions(
+    { ...defaultStepProps, frame: step5 },
     ["WMX", "YMZ"],
     1,
     SVGModes.Blue
   );
 
-  const step5 = ctx.addFrame("s6");
+  const step6 = ctx.addFrame("s6");
   SAS.additions(
-    { ...defaultStepProps, frame: step5 },
+    { ...defaultStepProps, frame: step6 },
     {
       seg1s: { s: ["WM", "MZ"], ticks: 1 },
       seg2s: { s: ["XM", "YM"], ticks: 2 },
@@ -231,9 +248,9 @@ const miniContent = () => {
     SVGModes.Blue
   );
 
-  const step6 = ctx.addFrame("s7");
+  const step7 = ctx.addFrame("s7");
   CongruentTriangles.additions(
-    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
+    { ...defaultStepProps, frame: step7, mode: SVGModes.Focused },
     {
       s1s: ["WM", "MZ"],
       s2s: ["XM", "YM"],
@@ -244,21 +261,21 @@ const miniContent = () => {
     }
   );
   EqualAngles.additions(
-    { ...defaultStepProps, frame: step6 },
+    { ...defaultStepProps, frame: step7 },
     ["MXW", "MYZ"],
     2,
     SVGModes.Blue
   );
 
-  const step7 = ctx.addFrame("s8");
-  ctx.getSegment("YM").mode(step7, SVGModes.Focused);
-  ctx.getSegment("XM").mode(step7, SVGModes.Focused);
+  const step8 = ctx.addFrame("s8");
+  ctx.getSegment("YM").mode(step8, SVGModes.Focused);
+  ctx.getSegment("XM").mode(step8, SVGModes.Focused);
   EqualAngles.additions(
-    { ...defaultStepProps, mode: SVGModes.Focused, frame: step7 },
+    { ...defaultStepProps, mode: SVGModes.Focused, frame: step8 },
     ["MYZ", "MXW"]
   );
   ParallelLines.additions(
-    { ...defaultStepProps, frame: step7 },
+    { ...defaultStepProps, frame: step8 },
     ["WX", "YZ"],
     1,
     SVGModes.Blue

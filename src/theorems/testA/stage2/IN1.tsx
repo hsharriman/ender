@@ -15,7 +15,6 @@ import {
 import { EqualTriangles } from "../../../core/templates/EqualTriangles";
 import { Perpendicular } from "../../../core/templates/Perpendicular";
 import { Reflexive, ReflexiveStep } from "../../../core/templates/Reflexive";
-import { RightAngle, RightAngleStep } from "../../../core/templates/RightAngle";
 import {
   StepFocusProps,
   StepMeta,
@@ -78,7 +77,7 @@ const givens: StepMeta = makeStepMeta({
   text: (ctx: Content) => {
     return (
       <span>
-        {RightAngle.text(ctx, "PSU")}
+        {Perpendicular.text(ctx, "LU", ["LS", "SU"], "PS")}
         {comma}
         {EqualSegments.text(ctx, ["LN", "QU"])}
         {comma}
@@ -100,7 +99,7 @@ const givens: StepMeta = makeStepMeta({
   staticText: () => {
     return (
       <span>
-        {RightAngle.staticText("PSU")}
+        {Perpendicular.staticText("PS", "LU")}
         {comma}
         {EqualSegments.staticText(["LN", "QU"])}
         {comma}
@@ -122,12 +121,16 @@ const proves: StepMeta = makeStepMeta({
   staticText: () => EqualTriangles.staticText(["LNU", "UQL"]),
 });
 
-const step1: StepMeta = RightAngleStep(
-  "PSU",
-  Reasons.Given,
-  undefined,
-  proves.unfocused
-);
+const step1: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
+  unfocused: (props: StepUnfocusProps) => {
+    givens.additions({ ...props, mode: SVGModes.Unfocused });
+  },
+  additions: (props: StepFocusProps) =>
+    Perpendicular.additions(props, "PS", ["LS", "SU"]),
+  text: (ctx: Content) => Perpendicular.text(ctx, "LU", ["LS", "SU"], "PS"),
+  staticText: () => Perpendicular.staticText("PS", "LU"),
+});
 
 const step2: StepMeta = EqualSegmentStep(["LN", "QU"], Reasons.Given, step1);
 

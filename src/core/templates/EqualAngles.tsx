@@ -1,7 +1,7 @@
 import { definitions } from "../../theorems/definitions";
 import { makeStepMeta, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { angleStr, congruent, resizedStrs } from "../geometryText";
+import { angleStr, resizedStrs } from "../geometryText";
 import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, Reason, SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
@@ -35,7 +35,7 @@ export class EqualAngles {
     return (
       <span>
         {angleStr(a[0])}
-        {congruent}
+        {resizedStrs.congruent}
         {angleStr(a[1])}
       </span>
     );

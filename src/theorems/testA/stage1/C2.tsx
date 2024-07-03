@@ -214,7 +214,7 @@ const step7: StepMeta = makeStepMeta({
 });
 
 const step8: StepMeta = makeStepMeta({
-  reason: Reasons.Midpoint,
+  reason: Reasons.ConverseMidpoint,
   dependsOn: [7],
   unfocused: (props: StepUnfocusProps) => {
     step7.unfocused(props);

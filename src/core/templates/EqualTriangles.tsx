@@ -1,7 +1,7 @@
 import { definitions } from "../../theorems/definitions";
 import { linked, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { congruent, resizedStrs, triangleStr } from "../geometryText";
+import { resizedStrs, triangleStr } from "../geometryText";
 
 export class EqualTriangles {
   static text = (ctx: Content, [t1, t2]: [string, string]) => {
@@ -19,7 +19,7 @@ export class EqualTriangles {
     return (
       <span>
         {triangleStr(t[0])}
-        {congruent}
+        {resizedStrs.congruent}
         {triangleStr(t[1])}
       </span>
     );

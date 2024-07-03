@@ -92,7 +92,7 @@ export class BackgroundQuestions extends React.Component<
           </div>
         ) : (
           <div className="justify-center flex w-full">
-            <div className="mb-8 text-center mt-8">
+            <div className="mb-8 text-center mt-8 font-notoSans">
               <h2 className="text-2xl font-bold mb-8">Background Questions</h2>
               <div className="mb-8 w-[1000px]">
                 <span>

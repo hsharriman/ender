@@ -1,7 +1,7 @@
 import { definitions } from "../../theorems/definitions";
 import { linked, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { perpendicular, resizedStrs, segmentStr } from "../geometryText";
+import { resizedStrs, segmentStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
 import { SVGModes } from "../types/types";
 
@@ -38,7 +38,7 @@ export class Perpendicular {
     return (
       <span>
         {segmentStr(s1)}
-        {perpendicular}
+        {resizedStrs.perpendicular}
         {segmentStr(s2)}
       </span>
     );

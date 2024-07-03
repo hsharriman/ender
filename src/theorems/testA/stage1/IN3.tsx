@@ -165,7 +165,7 @@ const step3: StepMeta = makeStepMeta({
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.Rectangle,
-  dependsOn: [1],
+  dependsOn: [1, 3],
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);
     step3.additions({ ...props, mode: SVGModes.Unfocused });
