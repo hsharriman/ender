@@ -1,4 +1,4 @@
-import { segmentQuestion, strs } from "../core/geometryText";
+import { segmentQuestion } from "../core/geometryText";
 import { TutorialStep, TutorialStepType } from "../core/types/types";
 
 const bold = (text: string) => <span className="font-bold">{text}</span>;
@@ -8,7 +8,8 @@ export const tutorial1Steps: TutorialStep[] = [
     headerText: "Welcome to the tutorial!",
     text: (
       <span>
-        Let's walk through the features of this interactive proof together.
+        This is an interactive proof with multiple features available for you to
+        use. Let's look through them together.
       </span>
     ),
     type: TutorialStepType.Intro,
@@ -17,20 +18,7 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "prooftext-given",
     text: (
       <span>
-        <p>
-          At first glance, this looks a lot like a normal two-column proof.
-          However, there are some interactive features available for you to use.
-          Most importantly, you can {bold("click on a row")} to see more
-          information about it.
-        </p>
-        <p className="py-4">
-          {bold("Try clicking on different rows of the proof")}. Don't worry
-          about the details, we'll introduce you to each feature one by one.
-        </p>
-        <p>
-          When you're ready, {bold("click 'Continue'")} on this message to move
-          on to the next step of the tutorial.
-        </p>
+        You can {bold("click on a row")} to see more information about it.
       </span>
     ),
     type: TutorialStepType.Default,
@@ -39,15 +27,14 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "point.D",
     text: (
       <span>
-        The {bold("construction")} keeps up-to-date with the{" "}
-        {bold("current state")} of the proof, updating with {bold("tick marks")}{" "}
-        that show the relationships between segments and angles.
+        The {bold("construction")} shows the {bold("current state")} of the
+        proof by adding or removing {bold("tick marks")} between steps.
       </span>
     ),
     exercise: (
       <span>
-        Try clicking on a few different rows of the proof to see how the
-        construction changes.
+        Notice how information is added or removed as you click around the
+        proof.
       </span>
     ),
     type: TutorialStepType.Default,
@@ -56,23 +43,19 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "triangle-text-ADC",
     text: (
       <span>
-        {bold("Hovering over symbols")} in the statements highlights their
-        location in the construction.
+        Try {bold("hovering over text in the proof")} to highlight them in the
+        construction.
       </span>
     ),
-    exercise: <span>{`Try hovering over ${strs.triangle}ADC here.`}</span>,
     type: TutorialStepType.Default,
   },
   {
     elemId: "point.D",
     text: (
       <span>
-        Similarly, {bold("clicking on parts of the construction")} highlights
-        their location in the proof.
+        Try {bold("clicking on parts of the construction")} to highlight their
+        location in the proof.
       </span>
-    ),
-    exercise: (
-      <span>Try clicking on {segmentQuestion("CD")} on the diagram.</span>
     ),
     type: TutorialStepType.Default,
   },
@@ -80,14 +63,14 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "answer-button-1",
     text: (
       <span>
-        Let's find the answer to this question together. In the interactive
-        proof, we can look at the construction to find the answer.
+        In the interactive proof,{" "}
+        {bold("we can look at the construction to find the answer")}, since the
+        diagram tracks all the information established in the proof.
       </span>
     ),
     exercise: (
       <span>
-        Click on the last step of the proof to show all the established
-        information.
+        Click on the last step to see the state at the end of the proof.
       </span>
     ),
     type: TutorialStepType.Default,
@@ -101,11 +84,12 @@ export const tutorial1Steps: TutorialStep[] = [
         congruent to {segmentQuestion("AC")} by the end of the proof.
       </span>
     ),
-    exercise: <span>Click the "No" button to submit your answer.</span>,
+    exercise: <span>Use the "Yes", "No" buttons to submit your answer.</span>,
     type: TutorialStepType.HideContinue,
   },
   {
     // STARTING QUESTION 2
+    // TODO make these popups have the answers to the previous questions?
     type: TutorialStepType.Intro,
     elemId: "",
     headerText: "Nicely done!",
@@ -116,38 +100,41 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "answer-button-1",
     text: (
       <span>
-        This question asks about the placement of{" "}
-        {bold("SAS Triangle Congruence")} (Side-Angle-Side) relative to the
-        other steps.
+        This question has to do with the {bold("order of the steps")} in the
+        proof. {bold("Click on the row applying SAS Triangle Congruence")}.
       </span>
     ),
-    exercise: <span>Click on the row applying SAS Triangle Congruence.</span>,
-  },
-  {
-    type: TutorialStepType.Default,
-    elemId: "prooftext-s4",
-    text: (
-      <span>
-        Recall that SAS Triangle Congruence has {bold("three requirements")}:
-        two sides and an included angle of each triangle must be congruent.
-        Right now, SAS {bold("relies on information in steps 1, 2, and 3")}.
-      </span>
-    ),
-    exercise: <span>Imagine moving row 4 between rows 2 and 3.</span>,
-    paddingL: 30,
   },
   {
     type: TutorialStepType.HideContinue,
     elemId: "prooftext-s4",
     text: (
       <span>
-        If we move row 4 between rows 2 and 3, then SAS would rely on statements
-        that aren't stated until later in the proof! This would break the rules.
+        SAS Triangle Congruence has {bold("three requirements")}: two sides and
+        an included angle of each triangle must be congruent. Right now, SAS{" "}
+        {bold("relies on information in steps 1, 2, and 3")}.
       </span>
     ),
-    exercise: <span>Click the "No" button to submit your answer.</span>,
+    exercise: (
+      <span>
+        Imagine moving row 4 between rows 2 and 3. When you're ready, submit
+        your answer at the top of the page.
+      </span>
+    ),
     paddingL: 30,
   },
+  // {
+  //   type: TutorialStepType.HideContinue,
+  //   elemId: "prooftext-s4",
+  //   text: (
+  //     <span>
+  //       Moving row 4 between rows 2 and 3 means that SAS would incorrectly rely
+  //       on statements that aren't stated until later in the proof!
+  //     </span>
+  //   ),
+  //   exercise: <span>Use the buttons to submit your answer.</span>,
+  //   paddingL: 30,
+  // },
 ];
 
 export const tutorial2Steps: TutorialStep[] = [
@@ -167,48 +154,36 @@ export const tutorial2Steps: TutorialStep[] = [
     elemId: "answer-button-1",
     text: (
       <span>
-        This question asks about {bold("SSS Triangle Congruence")}{" "}
-        (Side-Side-Side). Let's check how it is used in the proof.
+        This question is about {bold("SSS Triangle Congruence")}{" "}
+        (Side-Side-Side), so let's check out the row that applies it.
       </span>
     ),
-    exercise: <span>Click on the row applying SSS Triangle Congruence.</span>,
-  },
-  {
-    type: TutorialStepType.Default,
-    elemId: "svg-object-mini",
-    text: (
-      <span>
-        Compare this {bold("illustration of SSS Triangle Congruence")} to the
-        construction. What do you see?
-      </span>
-    ),
-    paddingL: -100,
-  },
-  {
-    type: TutorialStepType.Default,
-    elemId: "svg-object-mini",
-    text: (
-      <span>
-        The tick marks are inconsistent between the illustration and the
-        construction! This indicates that the proof is{" "}
-        {bold("incorrectly applying SSS")} to this proof.
-      </span>
-    ),
-    paddingL: -100,
   },
   {
     type: TutorialStepType.HideContinue,
     elemId: "svg-object-mini",
     text: (
       <span>
-        If the proof was correct, the{" "}
-        {bold(
-          "construction would have the same ticks in the same places as the illustration"
-        )}
-        .
+        Compare this {bold("illustration of SSS Triangle Congruence")} to the
+        {bold("construction")}. Are there any differences that you notice?
       </span>
     ),
-    exercise: <span>Click the 'No' button to submit your answer.</span>,
+    exercise: (
+      <span>When you're ready, submit your answer at the top of the page.</span>
+    ),
     paddingL: -100,
   },
+  // {
+  //   type: TutorialStepType.HideContinue,
+  //   elemId: "svg-object-mini",
+  //   text: (
+  //     <span>
+  //       The tick marks are inconsistent between the illustration and the
+  //       construction! This indicates that the proof is{" "}
+  //       {bold("incorrectly applying SSS")} to this proof.
+  //     </span>
+  //   ),
+  //   exercise: <span>Use the buttons to submit your answer.</span>,
+  //   paddingL: -100,
+  // },
 ];

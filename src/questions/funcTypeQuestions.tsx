@@ -32,12 +32,13 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
   };
   return (
     <span>
-      Based on information established during the proof, can you conclude that{" "}
-      {strType(x, type)} <span className="italic">must</span> be congruent to{" "}
-      {strType(y, type)}?
+      By the end of the proof, has enough information been established to
+      conclude that {strType(x, type)} <span className="italic">must</span> be
+      congruent to {strType(y, type)}?
     </span>
   );
 };
+
 const id = (n: number) => `qID-${n}`;
 
 const mini = (reason: string) =>
