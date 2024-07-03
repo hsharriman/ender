@@ -10,14 +10,19 @@ import { SubmitQuestion } from "./SubmitQuestion";
 import SusQuestion from "./SusQuestion";
 
 interface susPageProps {
-  type: string;
+  type: SusProofType;
+  onSubmit: () => void;
   updateAnswers: (question: string, answer: string) => void;
+}
+
+export enum SusProofType {
+  Static = "Static",
+  Interactive = "Interactive",
 }
 
 interface susPageState {
   answers: { [key: string]: string };
   completed: boolean;
-  submitted: boolean;
 }
 
 export class SusPage extends React.Component<susPageProps, susPageState> {
@@ -35,7 +40,6 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
         }, {} as { [key: string]: string }),
       },
       completed: false,
-      submitted: false,
     };
   }
 
@@ -83,86 +87,78 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
     console.log(
       `${this.props.type},SUS,` + toLogAnswers + `,time: ${Date.now()}`
     );
-
-    this.setState({
-      submitted: true,
-    });
+    this.props.onSubmit();
   };
 
   render() {
     return (
       <>
-        {this.state.submitted ? (
-          <div className="grid grid-rows-[auto,1fr] gap-2 justify-center flex w-full min-w-[1300px] pt-20">
-            <span>
-              <h2>
-                You've completed all the questions for this page, please move to
-                the next page!
+        <div className="grid grid-rows-[auto,1fr] gap-2 justify-center w-full min-w-[1300px]">
+          <div>
+            {this.props.type === SusProofType.Static ? (
+              <h2 className="text-2xl font-bold mb-8 text-center mt-8">
+                Static Proof Usability Questions
               </h2>
-            </span>
-          </div>
-        ) : (
-          <div className="grid grid-rows-[auto,1fr] gap-2 justify-center w-full min-w-[1300px]">
-            <div>
-              {this.props.type === "Static" ? (
-                <h2 className="text-2xl font-bold mb-8 text-center mt-8">
-                  Static Proof
-                </h2>
-              ) : (
-                <h2 className="text-2xl font-bold mb-8 text-center mt-8">
-                  Interactive Proof
-                </h2>
-              )}
-              <div className="grid grid-cols-2">
-                <div className="col-start-1 mr-[50px] w-[700px]">
-                  <span>
-                    You've completed all the geometry questions! Please answer
-                    the following questions based on your experiences with the
-                    (interactive/static) proofs in this picture.
-                    <br />
-                    <br />
-                    The word "system" in the questions means anything that's
-                    visible in the image below. It does not include the test
-                    questions.
+            ) : (
+              <h2 className="text-2xl font-bold mb-8 text-center mt-8">
+                Interactive Proof Usability Questions
+              </h2>
+            )}
+            <div className="grid grid-cols-2">
+              <div className="col-start-1 mr-[50px] w-[700px]">
+                <span>
+                  You've completed all the geometry questions! Please answer the
+                  following questions based on your experiences with the
+                  <span className="font-bold">
+                    {this.props.type === SusProofType.Static
+                      ? " static proofs "
+                      : " interactive proofs "}
                   </span>
-                  {this.props.type === "Static" ? (
-                    <img
-                      src={staticScreenshot}
-                      alt="Static Proof"
-                      className="w-[700px] h-[400px] mr-4 mt-10"
+                  in this picture.
+                  <br />
+                  <br />
+                  The word <span className="font-bold">"interface"</span> in the
+                  questions means anything that's visible in the image below. It{" "}
+                  <span className="font-bold">does not</span> include the test
+                  questions.
+                </span>
+                {this.props.type === SusProofType.Static ? (
+                  <img
+                    src={staticScreenshot}
+                    alt="Static Proof"
+                    className="w-[700px] h-[400px] mr-4 mt-10 border border-r-2 border-gray-300 shadow-lg"
+                  />
+                ) : (
+                  <img
+                    src={interactiveScreenshot}
+                    alt="Interactive Proof"
+                    className="w-[700px] h-[400px] mr-4 mt-10 border border-r-2 border-gray-300 shadow-lg"
+                  />
+                )}
+              </div>
+              <div className="col-start-2 justify-start">
+                <div className="right-column ml-[50px]">
+                  {susQuestions.map((question, index) => (
+                    <SusQuestion
+                      key={index}
+                      questionNum={index.toString()}
+                      question={question.prompt(this.props.type.toLowerCase())}
+                      answers={question.answers || []}
+                      selectedOption={this.state.answers[index.toString()]}
+                      onAnswerChange={this.handleAnswerChange}
                     />
-                  ) : (
-                    <img
-                      src={interactiveScreenshot}
-                      alt="Interactive Proof"
-                      className="w-[700px] h-[400px] mr-4 mt-10"
-                    />
-                  )}
+                  ))}
                 </div>
-                <div className="col-start-2 justify-start">
-                  <div className="right-column ml-[50px]">
-                    {susQuestions.map((question, index) => (
-                      <SusQuestion
-                        key={index}
-                        questionNum={index.toString()}
-                        question={question.prompt}
-                        answers={question.answers || []}
-                        selectedOption={this.state.answers[index.toString()]}
-                        onAnswerChange={this.handleAnswerChange}
-                      />
-                    ))}
-                  </div>
-                  <div className="ml-[50px]">
-                    <SubmitQuestion
-                      disabled={!this.state.completed}
-                      onClick={this.handleSubmit}
-                    />
-                  </div>
+                <div className="ml-[50px]">
+                  <SubmitQuestion
+                    disabled={!this.state.completed}
+                    onClick={this.handleSubmit}
+                  />
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </>
     );
   }
