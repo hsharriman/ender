@@ -172,7 +172,7 @@ const step1: StepMeta = makeStepMeta({
       </span>
     );
   },
-  staticText: () => givens.staticText(),
+  staticText: () => <span>EFGH is a rectangle</span>,
 });
 
 const step2: StepMeta = makeStepMeta({
@@ -203,7 +203,7 @@ const step3: StepMeta = makeStepMeta({
 });
 
 const step4: StepMeta = makeStepMeta({
-  reason: Reasons.Parallelogram,
+  reason: Reasons.Rectangle,
   dependsOn: [3],
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);

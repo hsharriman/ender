@@ -219,7 +219,7 @@ const step6: StepMeta = makeStepMeta({
 });
 
 const step7: StepMeta = makeStepMeta({
-  reason: Reasons.AlternateInteriorAngles,
+  reason: Reasons.ConverseAltInteriorAngs,
   dependsOn: [6],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });

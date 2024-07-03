@@ -151,12 +151,12 @@ const randomizeLayout = (
   let modes = proofMetas.map((p, i) => {
     return i % 2 === 0 ? "s" : "i";
   });
-  return fisherYates(modes).map((m, i) =>
-    m === "s"
-      ? staticLayout(proofMetas[i], shuffleQuestions)
-      : interactiveLayout(proofMetas[i], shuffleQuestions)
-  );
-  // return proofMetas.map((p) => interactiveLayout(p));
+  // return fisherYates(modes).map((m, i) =>
+  //   m === "s"
+  //     ? staticLayout(proofMetas[i], shuffleQuestions)
+  //     : interactiveLayout(proofMetas[i], shuffleQuestions)
+  // );
+  return proofMetas.map((p) => interactiveLayout(p));
   // return proofMetas.map((p) => staticLayout(p));
 };
 
@@ -206,7 +206,7 @@ export class App extends React.Component<AppProps, AppState> {
     const challenge: ProofMeta[] = [];
 
     this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
-    // this.meta = stage1.concat(stage2).concat(challenge);
+    // this.meta = stage1.concat(stage2);
     this.numPages = this.meta.length + 4; // 2 for SUS, 1 for basic questions, 1 for downloading
   }
 

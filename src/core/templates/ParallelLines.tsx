@@ -1,7 +1,7 @@
 import { definitions } from "../../theorems/definitions";
 import { linked, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { parallel, resizedStrs, segmentStr } from "../geometryText";
+import { resizedStrs, segmentStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 
@@ -37,7 +37,7 @@ export class ParallelLines {
     return (
       <span>
         {segmentStr(s[0])}
-        {parallel}
+        {resizedStrs.parallel}
         {segmentStr(s[1])}
       </span>
     );

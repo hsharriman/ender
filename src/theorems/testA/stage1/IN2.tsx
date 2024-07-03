@@ -5,8 +5,8 @@ import { comma } from "../../../core/geometryText";
 import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../../core/templates/EqualSegments";
 import { EqualTriangles } from "../../../core/templates/EqualTriangles";
+import { Perpendicular } from "../../../core/templates/Perpendicular";
 import { Reflexive } from "../../../core/templates/Reflexive";
-import { RightAngle } from "../../../core/templates/RightAngle";
 import { SAS, SASProps } from "../../../core/templates/SAS";
 import {
   StepFocusProps,
@@ -58,7 +58,7 @@ const givens: StepMeta = makeStepMeta({
   text: (ctx: Content) => {
     return (
       <span>
-        {RightAngle.text(ctx, "JMK")}
+        {Perpendicular.text(ctx, "JL", ["JM", "ML"], "MK")}
         {comma}
         {EqualSegments.text(ctx, ["JK", "LK"])}
       </span>
@@ -75,7 +75,7 @@ const givens: StepMeta = makeStepMeta({
   staticText: () => {
     return (
       <span>
-        {RightAngle.staticText("JMK")}
+        {Perpendicular.staticText("JL", "MK")}
         {comma}
         {EqualSegments.staticText(["JK", "LK"])}
       </span>
@@ -99,12 +99,12 @@ const step1: StepMeta = makeStepMeta({
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
-    RightAngle.additions(props, "JMK");
+    Perpendicular.additions(props, "MK", ["JM", "ML"]);
   },
   text: (ctx: Content) => {
-    return RightAngle.text(ctx, "JMK");
+    return Perpendicular.text(ctx, "JL", ["JM", "ML"], "MK");
   },
-  staticText: () => RightAngle.staticText("JMK"),
+  staticText: () => Perpendicular.staticText("JL", "MK"),
 });
 
 const step2: StepMeta = makeStepMeta({

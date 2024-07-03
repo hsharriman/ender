@@ -1,7 +1,7 @@
 import { definitions } from "../../theorems/definitions";
 import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { congruent, resizedStrs, segmentStr } from "../geometryText";
+import { resizedStrs, segmentStr } from "../geometryText";
 import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, Reason, SVGModes } from "../types/types";
 
@@ -36,7 +36,7 @@ export class EqualSegments {
     return (
       <span>
         {segmentStr(s[0])}
-        {congruent}
+        {resizedStrs.congruent}
         {segmentStr(s[1])}
       </span>
     );
