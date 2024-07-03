@@ -11,6 +11,7 @@ import SusQuestion from "./SusQuestion";
 
 interface susPageProps {
   type: string;
+  onSubmit: () => void;
   updateAnswers: (question: string, answer: string) => void;
 }
 
@@ -83,10 +84,10 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
     console.log(
       `${this.props.type},SUS,` + toLogAnswers + `,time: ${Date.now()}`
     );
-
-    this.setState({
-      submitted: true,
-    });
+    this.props.onSubmit();
+    // this.setState({
+    //   submitted: true,
+    // });
   };
 
   render() {
@@ -106,11 +107,11 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
             <div>
               {this.props.type === "Static" ? (
                 <h2 className="text-2xl font-bold mb-8 text-center mt-8">
-                  Static Proof
+                  Static Proof Usability Questions
                 </h2>
               ) : (
                 <h2 className="text-2xl font-bold mb-8 text-center mt-8">
-                  Interactive Proof
+                  Interactive Proof Usability Questions
                 </h2>
               )}
               <div className="grid grid-cols-2">
@@ -118,24 +119,30 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                   <span>
                     You've completed all the geometry questions! Please answer
                     the following questions based on your experiences with the
-                    (interactive/static) proofs in this picture.
+                    <span className="font-bold">
+                      {this.props.type === "Static"
+                        ? " static proofs "
+                        : " interactive proofs "}
+                    </span>
+                    in this picture.
                     <br />
                     <br />
-                    The word "system" in the questions means anything that's
-                    visible in the image below. It does not include the test
-                    questions.
+                    The word <span className="font-bold">"system"</span> in the
+                    questions means anything that's visible in the image below.
+                    It <span className="font-bold">does not</span> include the
+                    test questions.
                   </span>
                   {this.props.type === "Static" ? (
                     <img
                       src={staticScreenshot}
                       alt="Static Proof"
-                      className="w-[700px] h-[400px] mr-4 mt-10"
+                      className="w-[700px] h-[400px] mr-4 mt-10 border border-r-2 border-gray-300 shadow-lg"
                     />
                   ) : (
                     <img
                       src={interactiveScreenshot}
                       alt="Interactive Proof"
-                      className="w-[700px] h-[400px] mr-4 mt-10"
+                      className="w-[700px] h-[400px] mr-4 mt-10 border border-r-2 border-gray-300 shadow-lg"
                     />
                   )}
                 </div>

@@ -378,6 +378,7 @@ export class App extends React.Component<AppProps, AppState> {
           key={this.state.activePage}
           type={"Static"}
           updateAnswers={this.updateAnswers("Static SUS")}
+          onSubmit={() => this.onNext(1)}
         />
       );
     } else if (this.state.activePage === this.meta.length + 2) {
@@ -386,6 +387,7 @@ export class App extends React.Component<AppProps, AppState> {
           key={this.state.activePage}
           type={"Interactive"}
           updateAnswers={this.updateAnswers("Interactive SUS")}
+          onSubmit={() => this.onNext(1)}
         />
       );
     } else {
