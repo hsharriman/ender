@@ -98,8 +98,9 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     const isActive =
       activeItem &&
       (activeItem.k === item.k || activeItem.dependsOn?.has(item.k));
-    const textColor = isActive ? "text-slate-800" : "text-slate-400";
-    const strokeColor = isActive ? "border-slate-800" : "border-gray-300";
+    const textColor = isActive ? "text-slate-800" : "text-slate-100";
+    const strokeColor = isActive ? "border-slate-800" : "border-gray-100";
+    const opacity = isActive ? "opacity-1 block" : "opacity-0 hidden";
     return (
       <div className="flex flex-row justify-start h-16" key={item.k}>
         {this.highlightBar(item.k)}
@@ -113,9 +114,12 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           >
             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
               <div className="text-slate-400 font-bold">{i + 1}</div>
-              {item.v}
+              <div className={`${opacity}`}>{item.v}</div>
             </div>
-            <div className="flex flex-row justify-start align-baseline">
+            <div
+              className={`flex flex-row justify-start align-baseline ${opacity}`}
+              id={`reason-${i + 1}`}
+            >
               {item.reason}
             </div>
           </div>

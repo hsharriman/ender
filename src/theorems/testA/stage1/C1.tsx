@@ -53,8 +53,24 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   );
 
   [
-    new Triangle({ pts: [A, C, M], hoverable, label: "ACM" }, ctx),
-    new Triangle({ pts: [B, D, M], hoverable, label: "BDM" }, ctx),
+    new Triangle(
+      {
+        pts: [A, C, M],
+        hoverable,
+        label: "ACM",
+        backgroundColor: "lightblue",
+      },
+      ctx
+    ),
+    new Triangle(
+      {
+        pts: [B, D, M],
+        hoverable,
+        label: "BDM",
+        backgroundColor: "lavender",
+      },
+      ctx
+    ),
   ].map((t) => ctx.push(t));
 
   ctx.push(new Segment({ p1: A, p2: B, hoverable: false }));
@@ -201,7 +217,11 @@ const step4SASProps: SASProps = {
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: [2, 3, 4],
-  additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
+  additions: (props: StepFocusProps) =>
+    SAS.additions(
+      { ...props, mode: SVGModes.ActiveTriangleBlue },
+      step4SASProps
+    ),
   text: (ctx: Content) => EqualTriangles.text(ctx, step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
 });
@@ -210,6 +230,7 @@ const step6: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: [5],
   unfocused: (props: StepUnfocusProps) => {
+    EqualTriangles.unfocused(props, ["ACM", "BDM"]);
     step5.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) =>

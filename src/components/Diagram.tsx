@@ -98,6 +98,8 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
             t: tri,
           }}
           key={`${tri.id}-${i}`}
+          backgroundColor={tri.backgroundColor}
+          mode={tri.getMode(frame) ?? SVGModes.Hidden}
         />
       );
     });

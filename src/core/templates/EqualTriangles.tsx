@@ -2,6 +2,8 @@ import { definitions } from "../../theorems/definitions";
 import { linked, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { resizedStrs, triangleStr } from "../geometryText";
+import { StepFocusProps, StepUnfocusProps } from "../types/stepTypes";
+import { SVGModes } from "../types/types";
 
 export class EqualTriangles {
   static text = (ctx: Content, [t1, t2]: [string, string]) => {
@@ -23,5 +25,14 @@ export class EqualTriangles {
         {triangleStr(t[1])}
       </span>
     );
+  };
+  static additions = (props: StepFocusProps, [t1, t2]: [string, string]) => {
+    props.ctx.getTriangle(t1).mode(props.frame, props.mode);
+    props.ctx.getTriangle(t2).mode(props.frame, props.mode);
+  };
+
+  static unfocused = (props: StepUnfocusProps, [t1, t2]: [string, string]) => {
+    props.ctx.getTriangle(t1).mode(props.frame, SVGModes.UnfocusedTriangle);
+    props.ctx.getTriangle(t2).mode(props.frame, SVGModes.UnfocusedTriangle);
   };
 }

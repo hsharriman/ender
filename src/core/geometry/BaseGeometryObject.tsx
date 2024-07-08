@@ -22,6 +22,8 @@ export class BaseGeometryObject {
     this.hoverable = props.hoverable;
   }
 
+  getMode = (frameKey: string) => this.modes.get(frameKey);
+
   mode = (frameKey: string, mode: SVGModes) => {
     this.modes.set(frameKey, mode);
     return this;

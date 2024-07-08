@@ -6,15 +6,13 @@ import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
 import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
-import { BaseSVGState } from "./svgTypes";
-import { coordsToSvg } from "./svgUtils";
+import { BaseSVGProps, BaseSVGState } from "./svgTypes";
+import { coordsToSvg, updateStyle } from "./svgUtils";
 
-export interface SVGTriangleProps {
+export type SVGTriangleProps = {
   t: Triangle;
-  geoId: string;
-  hoverable?: boolean;
-  miniScale: boolean;
-}
+  backgroundColor: string;
+} & BaseSVGProps;
 
 export class SVGGeoTriangle extends React.Component<
   SVGTriangleProps,
@@ -91,8 +89,20 @@ export class SVGGeoTriangle extends React.Component<
     const [p1, p2, p3] = this.props.t.p;
     // centroid is at 1/3(u+v+w)
     const center = vops.smul(vops.add(vops.add(p1.pt, p2.pt), p3.pt), 1 / 3);
+    const triStyle = updateStyle(this.props.mode);
     return (
       <>
+        {this.props.backgroundColor && triStyle.includes("fill-triangle") && (
+          <path
+            d={this.triangleBbox()}
+            id={this.props.geoId + "-bg"}
+            key={this.props.geoId + "-bg"}
+            style={{
+              opacity: 0.5,
+              fill: this.props.backgroundColor,
+            }}
+          />
+        )}
         {this.props.hoverable && (
           <HoverTextLabel
             pt={coordsToSvg(center, this.props.miniScale)}
