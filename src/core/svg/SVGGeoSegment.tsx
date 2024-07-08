@@ -6,6 +6,7 @@ import { SVGGeoTick } from "./SVGGeoTick";
 import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
+import { logEvent } from "../utils";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
 export type SVGSegmentProps = {
@@ -47,6 +48,11 @@ export class SVGGeoSegment extends React.Component<
         }
       }
     });
+
+    logEvent("c", {
+      c: "s",
+      v: this.props.geoId,
+    });
   };
 
   onHover = (isActive: boolean) => {
@@ -58,6 +64,11 @@ export class SVGGeoSegment extends React.Component<
       this.setState({
         isActive,
         css: updateStyle(isActive ? SVGModes.Active : this.props.mode),
+      });
+
+      logEvent("h", {
+        c: "s",
+        v: this.props.geoId,
       });
     }
   };

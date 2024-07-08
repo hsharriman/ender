@@ -1,10 +1,11 @@
 import React from "react";
+import { EventLog } from "../core/utils";
 
 interface SavePageProps {
   answers: { [proofName: string]: { [question: string]: string } };
 }
 
-const SavePage: React.FC<SavePageProps> = ({ answers }) => {
+const SavePage: React.FC<SavePageProps> = () => {
   const saveAsCSV = () => {
     // Create CSV content from answers object
     const storedAnswers = localStorage.getItem("answers") || "None";
@@ -27,8 +28,29 @@ const SavePage: React.FC<SavePageProps> = ({ answers }) => {
     a.click();
   };
 
+  const saveLogsAsCSV = () => {
+    const logs = JSON.parse(
+      sessionStorage.getItem("eventLogs") || "None"
+    ) as EventLog[];
+
+    // Create CSV content
+    const header = "t,e,c,v\n";
+    const csvContent = logs.reduce((acc, log) => {
+      return acc + `${log.t},${log.e},${log.c},${log.v}\n`;
+    }, header);
+
+    // Create a blob from the CSV content
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("href", url);
+    a.setAttribute("download", `eventLogs-${new Date().valueOf()}.csv`);
+    a.click();
+  };
+
   const clearStorage = () => {
     localStorage.removeItem("answers");
+    sessionStorage.removeItem("eventLogs");
   };
 
   return (
@@ -38,6 +60,12 @@ const SavePage: React.FC<SavePageProps> = ({ answers }) => {
         onClick={saveAsCSV}
       >
         Save Data as CSV
+      </button>
+      <button
+        className="bg-green-500 text-white p-4 rounded mr-10"
+        onClick={saveLogsAsCSV}
+      >
+        Save Event Logs as CSV
       </button>
       <button
         className="bg-red-500 text-white p-4 rounded"
