@@ -126,7 +126,7 @@ export const completeProof1: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt:
-      "Is there enough information to apply SAS triangle congruence between steps 2 and 3?",
+      "Is there enough information to apply SAS triangle congruence between steps 3 and 4?",
     type: QuestionType.ReliesOn,
     id: id(3),
   },
@@ -204,9 +204,9 @@ export const exploratoryQuestion: Question[] = [
     prompt:
       "Is there a mistake in this proof, and if so, which of the following options best describes why it is wrong? Select 'the proof is correct' if there are no mistakes.",
     answers: [
-      "A step uses the wrong segment/angle/triangle",
-      "A step is justified by an incorrect reason",
-      "A step of the proof is in the wrong order",
+      "A step says the wrong segments/angles are congruent to each other",
+      "A step uses the wrong theorem or definition",
+      "Some steps of the proof are in the wrong order",
       "The proof is correct",
     ],
     type: QuestionType.Correctness,
