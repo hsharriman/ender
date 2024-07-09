@@ -3,6 +3,7 @@ import { LPoint, Obj, SVGModes, Vector } from "../types/types";
 import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
+import { logEvent } from "../utils";
 
 export type SVGPointProps = {
   p: LPoint;
@@ -41,6 +42,10 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
         }
       }
     });
+    logEvent("c", {
+      c: "po",
+      v: this.props.label,
+    });
   };
 
   onHover = (isActive: boolean) => {
@@ -52,6 +57,10 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
       this.setState({
         isActive,
         css: isActive ? updateStyle(SVGModes.ActiveText) : "",
+      });
+      logEvent("h", {
+        c: "po",
+        v: this.props.label,
       });
     }
   };

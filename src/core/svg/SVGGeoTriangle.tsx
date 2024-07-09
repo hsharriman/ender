@@ -8,6 +8,7 @@ import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGState } from "./svgTypes";
 import { coordsToSvg } from "./svgUtils";
+import { logEvent } from "../utils";
 
 export interface SVGTriangleProps {
   t: Triangle;
@@ -36,6 +37,10 @@ export class SVGGeoTriangle extends React.Component<
     ) {
       this.setState({
         isActive,
+      });
+      logEvent("h", {
+        c: "t",
+        v: this.props.geoId,
       });
     }
   };
@@ -72,6 +77,10 @@ export class SVGGeoTriangle extends React.Component<
           ele.classList.remove(...cls);
         }
       }
+    });
+    logEvent("c", {
+      c: "t",
+      v: this.props.geoId,
     });
   };
 

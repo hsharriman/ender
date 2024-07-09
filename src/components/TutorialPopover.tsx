@@ -1,5 +1,6 @@
 import React from "react";
 import { TutorialStep, TutorialStepType } from "../core/types/types";
+import { logEvent } from "../core/utils";
 
 interface TutorialPopoverProps {
   step: TutorialStep;
@@ -24,6 +25,10 @@ export class TutorialPopover extends React.Component<
 
   onClick = () => {
     if (this.state.exerciseDone) {
+      logEvent("c", {
+        c: "tu",
+        v: "",
+      });
       this.props.onClick();
     }
   };

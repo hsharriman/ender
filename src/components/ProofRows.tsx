@@ -1,5 +1,6 @@
 import React from "react";
 import { ProofTextItem } from "../core/types/stepTypes";
+import { logEvent } from "../core/utils";
 
 export interface ProofRowsProps {
   active: string;
@@ -60,6 +61,10 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         idx: newIdx,
       });
       this.props.onClick(active);
+      logEvent("c", {
+        c: "pr",
+        v: active,
+      });
     }
   };
 

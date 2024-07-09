@@ -6,6 +6,7 @@ import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { arcSweepsCCW, coordsToSvg, updateStyle } from "./svgUtils";
+import { logEvent } from "../utils";
 
 export type SVGAngleProps = {
   a: LAngle;
@@ -31,6 +32,10 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
         isActive,
         css: updateStyle(isActive ? SVGModes.Active : this.props.mode),
       });
+      logEvent("h", {
+        c: "a",
+        v: this.props.a.label,
+      });
     }
   };
   onHoverLabelClick = (isActive: boolean) => {
@@ -54,6 +59,10 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
           ele.classList.remove(...cls);
         }
       }
+    });
+    logEvent("h", {
+      c: "a",
+      v: this.props.a.label,
     });
   };
 

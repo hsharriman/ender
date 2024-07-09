@@ -246,7 +246,7 @@ export class App extends React.Component<AppProps, AppState> {
       ...existingAnswers,
       [proofName]: {
         ...existingAnswers[proofName],
-        [question]: answer,
+        [question]: { answer, timestamp: new Date().valueOf() },
       },
     };
 
