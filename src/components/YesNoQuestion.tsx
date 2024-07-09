@@ -1,10 +1,16 @@
 import React from "react";
+import { scaffolding } from "../questions/funcTypeQuestions";
 
 export interface QuestionProps {
+  proofType: string;
   questionNum: string;
   question: string | JSX.Element;
   answers: string[];
   onSubmit: (answer: string) => void;
+  type: string;
+  scaffolding: { [key: string]: boolean };
+  updateScaffolding: (questionType: string) => void;
+  scaffoldReason: string;
 }
 
 export interface QuestionState {
@@ -23,11 +29,18 @@ export class YesNoQuestion extends React.Component<
   }
 
   handleButtonClick = (answer: string) => {
+    if (this.props.proofType === "interactive") {
+      this.isFirstOfType();
+    }
     this.props.onSubmit(answer);
     this.setState({ selectedOption: "" });
   };
 
   handleKeyPress = (event: KeyboardEvent) => {
+    if (this.props.proofType === "interactive") {
+      this.isFirstOfType();
+    }
+
     const { answers } = this.props;
     const index = parseInt(event.key) - 1;
     if (index >= 0 && index < answers.length) {
@@ -45,15 +58,53 @@ export class YesNoQuestion extends React.Component<
     document.removeEventListener("keydown", this.handleKeyPress);
   }
 
+  isFirstOfType = () => {
+    const questionType = this.props.type.toString();
+    if (!this.props.scaffolding[questionType]) {
+      this.props.updateScaffolding(questionType);
+    }
+  };
+
+  renderQuestionPrompt = () => {
+    if (this.props.proofType === "static") {
+      return <div className="font-bold pr-10 pb-1">{this.props.question}</div>;
+    }
+    if (!this.props.scaffolding[this.props.type]) {
+      if (this.props.type === "Minifigures") {
+        return (
+          <div className="font-bold pr-10 pb-1">
+            {this.props.question} <br />{" "}
+            {scaffolding.mini(this.props.scaffoldReason)}
+          </div>
+        );
+      } else if (this.props.type === "ReliesOn") {
+        return (
+          <div className="font-bold pr-10 pb-1">
+            {this.props.question} <br />{" "}
+            {scaffolding.relies(this.props.scaffoldReason)}
+          </div>
+        );
+      } else {
+        return (
+          <div className="font-bold pr-10 pb-1">
+            {this.props.question} <br /> {scaffolding.diagram}
+          </div>
+        );
+      }
+    }
+    return <div className="font-bold pr-10 pb-1">{this.props.question}</div>;
+  };
+
   render() {
     const { question, answers } = this.props;
     const selectedOption = this.state.selectedOption;
 
+    console.log(this.props.scaffolding);
+
     return (
       <div className="text-xl">
         <div className="flex ">
-          {/* <div className="font-bold pr-[300px]">{this.props.fullScaffold}</div> */}
-          <div className="font-bold pr-10 pb-1">{question}</div>
+          {this.renderQuestionPrompt()}
           {answers.map((answer, index) => (
             <button
               key={index}

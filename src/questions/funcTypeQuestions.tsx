@@ -5,6 +5,7 @@ export interface Question {
   answerType: AnswerType;
   partlyScaffold?: string | JSX.Element;
   prompt: string | JSX.Element;
+  reason?: string;
   answers?: string[];
   type: QuestionType;
   id: string;
@@ -41,9 +42,9 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
 
 const id = (n: number) => `qID-${n}`;
 
-const mini = (reason: string) =>
+const mini = (reason: string | JSX.Element) =>
   `(Hint: click the row with ${reason} to check if there are any differences between the big construction and the mini one.)`;
-const relies = (reason: string) =>
+const relies = (reason: string | JSX.Element) =>
   `(Hint: click on the row with ${reason} to check if everything it relies on would still appear earlier in the proof.)`;
 export const scaffolding = {
   mini,
@@ -56,6 +57,7 @@ export const checkingProof1: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: "Is SAS triangle congruence correctly applied?",
+    reason: "SAS triangle congruence",
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -77,6 +79,7 @@ export const checkingProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: "Is Congruent Adjacent Angles correctly applied?",
+    reason: "Congruent Adjacent Angles",
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -92,12 +95,14 @@ export const checkingProof3: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: "Is HL congruence correctly applied?",
+    reason: "HL congruence",
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
     answerType: AnswerType.YesNo,
     prompt: "Is Def. Rectangle correctly applied?",
+    reason: "Def. Rectangle",
     type: QuestionType.Minifigures,
     id: id(2),
   },
@@ -113,6 +118,7 @@ export const completeProof1: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: "Is Converse of Alternate Interior Angles correctly applied?",
+    reason: "Converse of Alternate Interior Angles",
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -120,6 +126,7 @@ export const completeProof1: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply Vertical Angles between steps 1 and 2?",
+    reason: "Vertical Angles",
     type: QuestionType.ReliesOn,
     id: id(2),
   },
@@ -127,6 +134,7 @@ export const completeProof1: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply SAS triangle congruence between steps 3 and 4?",
+    reason: "SAS triangle congruence",
     type: QuestionType.ReliesOn,
     id: id(3),
   },
@@ -136,12 +144,14 @@ export const completeProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: "Is Def. Perpendicular Lines correctly applied?",
+    reason: "Def. Perpendicular Lines",
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
     answerType: AnswerType.YesNo,
     prompt: "Is Converse of Def. Midpoint correctly applied?",
+    reason: "Converse of Def. Midpoint",
     type: QuestionType.Minifigures,
     id: id(2),
   },
@@ -149,6 +159,7 @@ export const completeProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply Congruent Adjacent Angles at step 4?",
+    reason: "Congruent Adjacent Angles",
     type: QuestionType.ReliesOn,
     id: id(3),
   },
@@ -156,6 +167,7 @@ export const completeProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply ASA triangle congruence at step 6?",
+    reason: "ASA triangle congruence",
     type: QuestionType.ReliesOn,
     id: id(4),
   },
@@ -165,6 +177,7 @@ export const incompleteProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: "Is Vertical Angles correctly applied?",
+    reason: "Vertical Angles",
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -172,6 +185,7 @@ export const incompleteProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply ASA triangle congruence between steps 2 and 3?",
+    reason: "ASA triangle congruence",
     type: QuestionType.ReliesOn,
     id: id(2),
   },
@@ -179,6 +193,7 @@ export const incompleteProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply Converse of Def. Midpoint between steps 4 and 5?",
+    reason: "Converse of Def. Midpoint",
     type: QuestionType.ReliesOn,
     id: id(3),
   },
@@ -226,7 +241,7 @@ export const tutorial1Questions: Question[] = [
   {
     prompt:
       "Is there enough information to apply SAS Triangle Congruence between steps 2 and 3?",
-    type: QuestionType.DiagramState,
+    type: QuestionType.TutorialInstructions,
     id: id(2),
     answerType: AnswerType.YesNo,
   },
@@ -236,7 +251,7 @@ export const tutorial2Questions: Question[] = [
   {
     prompt: "Is SSS Triangle Congruence Correctly Applied?",
     answerType: AnswerType.YesNo,
-    type: QuestionType.DiagramState,
+    type: QuestionType.TutorialInstructions,
     id: id(1),
   },
 ];
