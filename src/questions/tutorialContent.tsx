@@ -15,6 +15,26 @@ export const tutorial1Steps: TutorialStep[] = [
     type: TutorialStepType.Intro,
   },
   {
+    elemId: "triangle-text-ADC",
+    text: (
+      <span>
+        You can {bold("hover over text in the proof")} to highlight it in the
+        construction.
+      </span>
+    ),
+    type: TutorialStepType.Default,
+  },
+  {
+    elemId: "point.D",
+    text: (
+      <span>
+        You can also {bold("click on objects in the construction")} to highlight
+        where they appear in the proof.
+      </span>
+    ),
+    type: TutorialStepType.Default,
+  },
+  {
     elemId: "prooftext-s1",
     text: (
       <span>
@@ -35,26 +55,6 @@ export const tutorial1Steps: TutorialStep[] = [
       <span>
         Notice how information is added or removed as you click around the
         proof.
-      </span>
-    ),
-    type: TutorialStepType.Default,
-  },
-  {
-    elemId: "triangle-text-ADC",
-    text: (
-      <span>
-        Try {bold("hovering over text in the proof")} to highlight it in the
-        construction.
-      </span>
-    ),
-    type: TutorialStepType.Default,
-  },
-  {
-    elemId: "point.D",
-    text: (
-      <span>
-        Try {bold("clicking on parts of the construction")} to highlight their
-        location in the proof.
       </span>
     ),
     type: TutorialStepType.Default,

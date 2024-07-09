@@ -1,5 +1,6 @@
 import { segmentQuestion, strs } from "../core/geometryText";
-import { Obj } from "../core/types/types";
+import { Obj, Reason } from "../core/types/types";
+import { Reasons } from "../theorems/reasons";
 
 export interface Question {
   answerType: AnswerType;
@@ -39,6 +40,11 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
   );
 };
 
+const miniQuestion = (r: Reason, step: number) => {
+  // TODO wording: If we pretend that all other steps in the proof are correct,...
+  return `Is ${r.title} correctly applied in step ${step}?`;
+};
+
 const id = (n: number) => `qID-${n}`;
 
 const mini = (reason: string) =>
@@ -55,7 +61,7 @@ export const scaffolding = {
 export const checkingProof1: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: "Is SAS triangle congruence correctly applied?",
+    prompt: miniQuestion(Reasons.SAS, 4),
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -76,7 +82,7 @@ export const checkingProof1: Question[] = [
 export const checkingProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: "Is Congruent Adjacent Angles correctly applied?",
+    prompt: miniQuestion(Reasons.CongAdjAngles, 3),
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -91,13 +97,13 @@ export const checkingProof2: Question[] = [
 export const checkingProof3: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: "Is HL congruence correctly applied?",
+    prompt: miniQuestion(Reasons.HL, 6),
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: "Is Def. Rectangle correctly applied?",
+    prompt: miniQuestion(Reasons.Rectangle, 4),
     type: QuestionType.Minifigures,
     id: id(2),
   },
@@ -112,7 +118,7 @@ export const checkingProof3: Question[] = [
 export const completeProof1: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: "Is Converse of Alternate Interior Angles correctly applied?",
+    prompt: miniQuestion(Reasons.ConverseAltInteriorAngs, 7),
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -135,13 +141,13 @@ export const completeProof1: Question[] = [
 export const completeProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: "Is Def. Perpendicular Lines correctly applied?",
+    prompt: miniQuestion(Reasons.PerpendicularLines, 3),
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: "Is Converse of Def. Midpoint correctly applied?",
+    prompt: miniQuestion(Reasons.ConverseMidpoint, 8),
     type: QuestionType.Minifigures,
     id: id(2),
   },
@@ -164,7 +170,7 @@ export const completeProof2: Question[] = [
 export const incompleteProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: "Is Vertical Angles correctly applied?",
+    prompt: miniQuestion(Reasons.VerticalAngles, 3),
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -201,16 +207,28 @@ export const placeholder: Question[] = [
 
 export const exploratoryQuestion: Question[] = [
   {
-    prompt:
-      "Is there a mistake in this proof, and if so, which of the following options best describes why it is wrong? Select 'the proof is correct' if there are no mistakes.",
-    answers: [
-      "A step says the wrong segments/angles are congruent to each other",
-      "A step uses the wrong theorem or definition",
-      "Some steps of the proof are in the wrong order",
-      "The proof is correct",
-    ],
+    prompt: "Is there a mistake in this proof?",
+    answerType: AnswerType.YesNo,
     type: QuestionType.Correctness,
     id: id(1),
+  },
+  {
+    prompt: "What is the first step that is wrong?",
+    answerType: AnswerType.Dropdown,
+    type: QuestionType.Correctness,
+    id: id(2),
+    answers: [], // dynamically fill in based on the proof.
+  },
+  {
+    prompt: "Which of the following options best describes why it is wrong?",
+    answers: [
+      "The step says the wrong things are congruent to each other",
+      "The step uses the wrong theorem or definition",
+      "The step relies on information that appears later in the proof",
+      "Other (write a 1 sentence explanation)", // TODO add text box option
+    ],
+    type: QuestionType.Correctness,
+    id: id(3),
     answerType: AnswerType.Dropdown,
   },
 ];
@@ -234,7 +252,7 @@ export const tutorial1Questions: Question[] = [
 
 export const tutorial2Questions: Question[] = [
   {
-    prompt: "Is SSS Triangle Congruence Correctly Applied?",
+    prompt: miniQuestion(Reasons.SSS, 4),
     answerType: AnswerType.YesNo,
     type: QuestionType.DiagramState,
     id: id(1),

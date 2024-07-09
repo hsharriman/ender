@@ -45,17 +45,17 @@ export const susQuestions: susQuestionType[] = [
   },
   {
     prompt: (s: string) =>
-      `I would imagine that most people would learn to use the ${s} interface very quickly.`,
+      `I would imagine that most people would learn to use the ${s} interface quickly.`,
     answers: likertAnswers,
     type: QuestionType.Single,
   },
   {
-    prompt: (s: string) => `I found the ${s} interface very cumbersome to use.`,
+    prompt: (s: string) => `I found the ${s} interface difficult to use.`,
     answers: likertAnswers,
     type: QuestionType.Single,
   },
   {
-    prompt: (s: string) => `I felt very confident using the ${s} interface.`,
+    prompt: (s: string) => `I felt confident using the ${s} interface.`,
     answers: likertAnswers,
     type: QuestionType.Single,
   },

@@ -95,11 +95,18 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
 
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
-    const isActive =
-      activeItem &&
-      (activeItem.k === item.k || activeItem.dependsOn?.has(item.k));
-    const textColor = isActive ? "text-slate-800" : "text-slate-100";
-    const strokeColor = isActive ? "border-slate-800" : "border-gray-100";
+    const isActive = activeItem && activeItem.k === item.k;
+    const depends = activeItem && activeItem.dependsOn?.has(item.k);
+    const textColor = isActive
+      ? "text-slate-800"
+      : depends
+      ? "text-slate-500"
+      : "text-slate-100";
+    const strokeColor = isActive
+      ? "border-slate-800"
+      : depends
+      ? "border-slate-500"
+      : "border-slate-100";
     const opacity = isActive ? "opacity-1 block" : "opacity-0 hidden";
     return (
       <div className="flex flex-row justify-start h-16" key={item.k}>
@@ -113,11 +120,17 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
             className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
           >
             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-              <div className="text-slate-400 font-bold">{i + 1}</div>
-              <div className={`${opacity}`}>{item.v}</div>
+              <div
+                className={`${
+                  isActive ? "text-violet-500" : "text-slate-400"
+                } font-bold`}
+              >
+                {i + 1}
+              </div>
+              <div className={``}>{item.v}</div>
             </div>
             <div
-              className={`flex flex-row justify-start align-baseline ${opacity}`}
+              className={`flex flex-row justify-start align-baseline`}
               id={`reason-${i + 1}`}
             >
               {item.reason}
