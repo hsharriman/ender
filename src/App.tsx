@@ -248,7 +248,7 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  updateScaffolding = (questionType: string) => {
+updateScaffolding = (questionType: string) => {
     this.setState((prevState) => ({
       scaffolding: {
         ...prevState.scaffolding,
@@ -257,20 +257,22 @@ export class App extends React.Component<AppProps, AppState> {
     }));
   };
 
-  updateAnswers = (proofName: string) => (question: string, answer: string) => {
-    const storedAnswers = localStorage.getItem("answers");
-    const existingAnswers = storedAnswers ? JSON.parse(storedAnswers) : {};
+  updateAnswers =
+    (proofName: string) =>
+    (question: string, answer: string, version?: string) => {
+      const storedAnswers = localStorage.getItem("answers");
+      const existingAnswers = storedAnswers ? JSON.parse(storedAnswers) : {};
 
-    const updatedAnswers = {
-      ...existingAnswers,
-      [proofName]: {
-        ...existingAnswers[proofName],
-        [question]: { answer, timestamp: new Date().valueOf() },
-      },
+      const updatedAnswers = {
+        ...existingAnswers,
+        [proofName]: {
+          ...existingAnswers[proofName],
+          [question]: { answer, timestamp: new Date().valueOf(), version },
+        },
+      };
+
+      localStorage.setItem("answers", JSON.stringify(updatedAnswers));
     };
-
-    localStorage.setItem("answers", JSON.stringify(updatedAnswers));
-  };
 
   renderQuestionHeader =
     (proofType: string) =>
