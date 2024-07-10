@@ -15,6 +15,7 @@ export interface QuestionProps {
 
 export interface QuestionState {
   selectedOption: string;
+  showHint: boolean;
 }
 
 export class YesNoQuestion extends React.Component<
@@ -25,6 +26,7 @@ export class YesNoQuestion extends React.Component<
     super(props);
     this.state = {
       selectedOption: "",
+      showHint: false,
     };
   }
 
@@ -65,32 +67,60 @@ export class YesNoQuestion extends React.Component<
     }
   };
 
+  renderHint = (hint: string) => {
+    return <div className="italic text-base font-semibold">{hint}</div>;
+  };
+
+  toggleHint = () => {
+    this.setState({ showHint: !this.state.showHint });
+  };
+
+  renderHintBtn = (isOpen: boolean) => {
+    return (
+      <button
+        className={`ml-1 w-4 h-4 rounded-xl text-white text-xs align-top select-none ${
+          isOpen ? "bg-slate-300" : "bg-slate-500"
+        }`}
+        onClick={this.toggleHint}
+      >
+        ?
+      </button>
+    );
+  };
+
   renderQuestionPrompt = () => {
     if (this.props.proofType === "static") {
       return <div className="font-bold pr-10 pb-1">{this.props.question}</div>;
     }
     if (!this.props.scaffolding[this.props.type]) {
-      if (this.props.type === "Minifigures") {
-        return (
-          <div className="font-bold pr-10 pb-1">
-            {this.props.question} <br />{" "}
-            {scaffolding.mini(this.props.scaffoldReason)}
-          </div>
-        );
-      } else if (this.props.type === "ReliesOn") {
-        return (
-          <div className="font-bold pr-10 pb-1">
-            {this.props.question} <br />{" "}
-            {scaffolding.relies(this.props.scaffoldReason)}
-          </div>
-        );
-      } else {
-        return (
-          <div className="font-bold pr-10 pb-1">
-            {this.props.question} <br /> {scaffolding.diagram}
-          </div>
-        );
-      }
+    }
+    const showHint =
+      !this.props.scaffolding[this.props.type] || this.state.showHint;
+    if (this.props.type === "Minifigures") {
+      return (
+        <div className="font-bold pr-10 pb-1">
+          {this.props.question} {this.renderHintBtn(showHint)}
+          <br />
+          {showHint &&
+            this.renderHint(scaffolding.mini(this.props.scaffoldReason))}
+        </div>
+      );
+    } else if (this.props.type === "ReliesOn") {
+      return (
+        <div className="font-bold pr-10 pb-1">
+          {this.props.question} {this.renderHintBtn(showHint)} <br />
+          {showHint &&
+            this.renderHint(scaffolding.relies(this.props.scaffoldReason))}
+        </div>
+      );
+    } else {
+      return (
+        <div className="font-bold pr-10 pb-1">
+          {this.props.question}
+          {this.renderHintBtn(showHint)} <br />
+          {showHint && this.renderHint(scaffolding.diagram)}
+        </div>
+      );
     }
     return <div className="font-bold pr-10 pb-1">{this.props.question}</div>;
   };
@@ -98,8 +128,6 @@ export class YesNoQuestion extends React.Component<
   render() {
     const { question, answers } = this.props;
     const selectedOption = this.state.selectedOption;
-
-    console.log(this.props.scaffolding);
 
     return (
       <div className="text-xl">

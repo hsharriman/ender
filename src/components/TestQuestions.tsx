@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  QuestionType,
-  AnswerType,
-  Question,
-} from "../questions/funcTypeQuestions";
+import { AnswerType, Question } from "../questions/funcTypeQuestions";
 import { DropdownQuestion } from "./DropdownQuestion";
 import { YesNoQuestion } from "./YesNoQuestion";
 
@@ -41,7 +37,6 @@ export class TestQuestions extends React.Component<
 
   isFirstOfType = (question: Question) => {
     const questionType = question.type.toString();
-    console.log(this.props.scaffolding);
     if (!this.props.scaffolding[questionType]) {
       this.props.updateScaffolding(questionType);
       return true;
@@ -77,7 +72,6 @@ export class TestQuestions extends React.Component<
     const currentQuestion =
       this.props.questions[this.state.currentQuestionIndex];
     const answers = currentQuestion.answers;
-    //console.log(this.props.scaffolding[currentQuestion.type.toString()]);
     return (
       <>
         {/* <div className="flex items-center mb-4">

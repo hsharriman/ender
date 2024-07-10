@@ -43,14 +43,14 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
 const id = (n: number) => `qID-${n}`;
 
 const mini = (reason: string | JSX.Element) =>
-  `(Hint: click the row with ${reason} to check if there are any differences between the big construction and the mini one.)`;
+  `(Hint: Click the row with ${reason}. Do the diagrams match? Does it rely on the right information?)`;
 const relies = (reason: string | JSX.Element) =>
-  `(Hint: click on the row with ${reason} to check if everything it relies on would still appear earlier in the proof.)`;
+  `(Hint: Click the row with ${reason}. In the proposed proof order, would the step rely only on steps that appear beforehand?)`;
 export const scaffolding = {
   mini,
   relies,
   diagram:
-    "(Hint: click the last row of the proof and check if they have the same tick marks.)",
+    "(Hint: Click the last row of the proof. Do the objects have the same number of ticks?)",
 };
 
 export const checkingProof1: Question[] = [
