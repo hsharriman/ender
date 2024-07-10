@@ -10,6 +10,8 @@ interface QuestionsProps {
   questionsCompleted?: () => void;
   onNext: (direction: number) => void;
   onAnswerUpdate: (question: string, answer: string) => void;
+  scaffolding: { [key: string]: boolean };
+  updateScaffolding: (questionType: string) => void;
 }
 
 interface QuestionsState {
@@ -31,6 +33,15 @@ export class TestQuestions extends React.Component<
     this.setState({
       currentQuestionIndex: Number(event.target.value),
     });
+  };
+
+  isFirstOfType = (question: Question) => {
+    const questionType = question.type.toString();
+    if (!this.props.scaffolding[questionType]) {
+      this.props.updateScaffolding(questionType);
+      return true;
+    }
+    return false;
   };
 
   handleSubmit = (answer: any) => {
@@ -58,10 +69,10 @@ export class TestQuestions extends React.Component<
   };
 
   render() {
+    console.log(this.props.questions, this.state.currentQuestionIndex);
     const currentQuestion =
       this.props.questions[this.state.currentQuestionIndex];
     const answers = currentQuestion.answers;
-
     return (
       <>
         {/* <div className="flex items-center mb-4">
@@ -81,18 +92,28 @@ export class TestQuestions extends React.Component<
           <span className="pr-6">Q{this.state.currentQuestionIndex + 1}:</span>
           {currentQuestion.answerType === AnswerType.YesNo && (
             <YesNoQuestion
+              proofType={this.props.proofType}
               questionNum={(this.state.currentQuestionIndex + 1).toString()}
               question={currentQuestion.prompt}
               answers={["Yes", "No"]}
               onSubmit={this.handleSubmit}
+              type={currentQuestion.type}
+              scaffolding={this.props.scaffolding}
+              updateScaffolding={this.props.updateScaffolding}
+              scaffoldReason={currentQuestion.reason || ""}
             />
           )}
           {currentQuestion.answerType === AnswerType.Dropdown && (
             <DropdownQuestion
+              proofType={this.props.proofType}
               question={currentQuestion.prompt}
               questionNum={(this.state.currentQuestionIndex + 1).toString()}
               answers={answers || []}
               onSubmit={this.handleSubmit}
+              type={currentQuestion.type}
+              scaffolding={this.props.scaffolding}
+              updateScaffolding={this.props.updateScaffolding}
+              scaffoldReason=""
             />
           )}
         </div>

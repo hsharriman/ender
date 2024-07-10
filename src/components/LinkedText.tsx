@@ -1,7 +1,8 @@
 import React from "react";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
-import { angleStr, triangleStr } from "../core/geometryText";
+import { angleStr } from "../core/geometryText";
 import { Obj } from "../core/types/types";
+import { logEvent } from "../core/utils";
 
 export interface LinkedTextProps {
   val: string;
@@ -94,6 +95,18 @@ export class LinkedText extends React.Component<
     }
   };
 
+  onPointerEnter = () => {
+    logEvent("p", {
+      c: "l",
+      v: this.props.val,
+    });
+    this.onClick(true);
+  };
+
+  onPointerLeave = () => {
+    this.onClick(false);
+  };
+
   renderText = () => {
     switch (this.props.obj.tag) {
       case Obj.Segment:
@@ -121,8 +134,8 @@ export class LinkedText extends React.Component<
     return (
       <span
         className={`font-notoSerif cursor-pointer transition ease-in-out duration-150`}
-        onPointerEnter={() => this.onClick(true)}
-        onPointerLeave={() => this.onClick(false)}
+        onPointerEnter={this.onPointerEnter}
+        onPointerLeave={this.onPointerLeave}
         id={`${this.props.obj.tag}-text-${this.props.val}`}
         ref={this.wrapperRef}
       >

@@ -14,6 +14,7 @@ export class DropdownQuestion extends React.Component<
     this.state = {
       selectedOption: "",
       isOpen: false,
+      showHint: false,
     };
   }
 

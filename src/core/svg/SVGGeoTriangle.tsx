@@ -2,6 +2,7 @@ import React from "react";
 import { Triangle } from "../geometry/Triangle";
 import { strs } from "../geometryText";
 import { Obj } from "../types/types";
+import { logEvent } from "../utils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
 import { ModeCSS } from "./SVGStyles";
@@ -34,6 +35,10 @@ export class SVGGeoTriangle extends React.Component<
     ) {
       this.setState({
         isActive,
+      });
+      logEvent("h", {
+        c: "t",
+        v: this.props.geoId,
       });
     }
   };
@@ -70,6 +75,10 @@ export class SVGGeoTriangle extends React.Component<
           ele.classList.remove(...cls);
         }
       }
+    });
+    logEvent("c", {
+      c: "t",
+      v: this.props.geoId,
     });
   };
 

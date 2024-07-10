@@ -6,6 +6,7 @@ export interface Question {
   answerType: AnswerType;
   partlyScaffold?: string | JSX.Element;
   prompt: string | JSX.Element;
+  reason?: string;
   answers?: string[];
   type: QuestionType;
   id: string;
@@ -47,21 +48,22 @@ const miniQuestion = (r: Reason, step: number) => {
 
 const id = (n: number) => `qID-${n}`;
 
-const mini = (reason: string) =>
-  `(Hint: click the row with ${reason} to check if there are any differences between the big construction and the mini one.)`;
-const relies = (reason: string) =>
-  `(Hint: click on the row with ${reason} to check if everything it relies on would still appear earlier in the proof.)`;
+const mini = (reason: string | JSX.Element) =>
+  `(Hint: Click the row with ${reason}. Do the diagrams match? Does it rely on the right information?)`;
+const relies = (reason: string | JSX.Element) =>
+  `(Hint: Click the row with ${reason}. In the proposed proof order, would the step rely only on steps that appear beforehand?)`;
 export const scaffolding = {
   mini,
   relies,
   diagram:
-    "(Hint: click the last row of the proof and check if they have the same tick marks.)",
+    "(Hint: Click the last row of the proof. Do the objects have the same number of ticks?)",
 };
 
 export const checkingProof1: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.SAS, 4),
+    reason: Reasons.SAS.title,
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -83,6 +85,7 @@ export const checkingProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.CongAdjAngles, 3),
+    reason: Reasons.CongAdjAngles.title,
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -98,12 +101,14 @@ export const checkingProof3: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.HL, 6),
+    reason: Reasons.HL.title,
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.Rectangle, 4),
+    reason: Reasons.Rectangle.title,
     type: QuestionType.Minifigures,
     id: id(2),
   },
@@ -119,6 +124,7 @@ export const completeProof1: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.ConverseAltInteriorAngs, 7),
+    reason: Reasons.ConverseAltInteriorAngs.title,
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -126,6 +132,7 @@ export const completeProof1: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply Vertical Angles between steps 1 and 2?",
+    reason: Reasons.VerticalAngles.title,
     type: QuestionType.ReliesOn,
     id: id(2),
   },
@@ -133,6 +140,7 @@ export const completeProof1: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply SAS triangle congruence between steps 3 and 4?",
+    reason: Reasons.SAS.title,
     type: QuestionType.ReliesOn,
     id: id(3),
   },
@@ -142,12 +150,14 @@ export const completeProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.PerpendicularLines, 3),
+    reason: Reasons.PerpendicularLines.title,
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.ConverseMidpoint, 8),
+    reason: Reasons.ConverseMidpoint.title,
     type: QuestionType.Minifigures,
     id: id(2),
   },
@@ -155,6 +165,7 @@ export const completeProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply Congruent Adjacent Angles at step 4?",
+    reason: Reasons.CongAdjAngles.title,
     type: QuestionType.ReliesOn,
     id: id(3),
   },
@@ -162,6 +173,7 @@ export const completeProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply ASA triangle congruence at step 6?",
+    reason: Reasons.ASA.title,
     type: QuestionType.ReliesOn,
     id: id(4),
   },
@@ -171,6 +183,7 @@ export const incompleteProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.VerticalAngles, 3),
+    reason: Reasons.VerticalAngles.title,
     type: QuestionType.Minifigures,
     id: id(1),
   },
@@ -178,6 +191,7 @@ export const incompleteProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply ASA triangle congruence between steps 2 and 3?",
+    reason: Reasons.ASA.title,
     type: QuestionType.ReliesOn,
     id: id(2),
   },
@@ -185,6 +199,7 @@ export const incompleteProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt:
       "Is there enough information to apply Converse of Def. Midpoint between steps 4 and 5?",
+    reason: Reasons.ConverseMidpoint.title,
     type: QuestionType.ReliesOn,
     id: id(3),
   },
@@ -244,7 +259,7 @@ export const tutorial1Questions: Question[] = [
   {
     prompt:
       "Is there enough information to apply SAS Triangle Congruence between steps 2 and 3?",
-    type: QuestionType.DiagramState,
+    type: QuestionType.TutorialInstructions,
     id: id(2),
     answerType: AnswerType.YesNo,
   },
@@ -254,7 +269,7 @@ export const tutorial2Questions: Question[] = [
   {
     prompt: miniQuestion(Reasons.SSS, 4),
     answerType: AnswerType.YesNo,
-    type: QuestionType.DiagramState,
+    type: QuestionType.TutorialInstructions,
     id: id(1),
   },
 ];
