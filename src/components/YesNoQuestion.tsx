@@ -75,12 +75,12 @@ export class YesNoQuestion extends React.Component<
     this.setState({ showHint: !this.state.showHint });
   };
 
-  renderHintBtn = (isOpen: boolean) => {
+  renderHintBtn = (isOpen: boolean, show: boolean) => {
     return (
       <button
         className={`ml-1 w-4 h-4 rounded-xl text-white text-xs align-top select-none ${
           isOpen ? "bg-slate-300" : "bg-slate-500"
-        }`}
+        } ${show ? "opacity-1" : "opacity-0"}`}
         onClick={this.toggleHint}
       >
         ?
@@ -99,7 +99,11 @@ export class YesNoQuestion extends React.Component<
     if (this.props.type === "Minifigures") {
       return (
         <div className="font-bold pr-10 pb-1">
-          {this.props.question} {this.renderHintBtn(showHint)}
+          {this.props.question}
+          {this.renderHintBtn(
+            showHint,
+            this.props.scaffolding[this.props.type]
+          )}
           <br />
           {showHint &&
             this.renderHint(scaffolding.mini(this.props.scaffoldReason))}
@@ -108,7 +112,12 @@ export class YesNoQuestion extends React.Component<
     } else if (this.props.type === "ReliesOn") {
       return (
         <div className="font-bold pr-10 pb-1">
-          {this.props.question} {this.renderHintBtn(showHint)} <br />
+          {this.props.question}
+          {this.renderHintBtn(
+            showHint,
+            this.props.scaffolding[this.props.type]
+          )}
+          <br />
           {showHint &&
             this.renderHint(scaffolding.relies(this.props.scaffoldReason))}
         </div>
@@ -117,7 +126,11 @@ export class YesNoQuestion extends React.Component<
       return (
         <div className="font-bold pr-10 pb-1">
           {this.props.question}
-          {this.renderHintBtn(showHint)} <br />
+          {this.renderHintBtn(
+            showHint,
+            this.props.scaffolding[this.props.type]
+          )}
+          <br />
           {showHint && this.renderHint(scaffolding.diagram)}
         </div>
       );
