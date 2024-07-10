@@ -8,6 +8,7 @@ export interface LinkedTextProps {
   obj: BaseGeometryObject; // TODO correct type
   isActive?: boolean;
   linkedObjs?: BaseGeometryObject[];
+  clr?: string;
 }
 
 export interface LinkedTextState {
@@ -18,6 +19,9 @@ export class LinkedText extends React.Component<
   LinkedTextState
 > {
   // private activeColor = "#9A76FF"; // TODO
+  private blue = "sky-600";
+  private lightblue = "sky-400";
+  private green = "green-500";
   private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: LinkedTextProps) {
     super(props);
@@ -45,11 +49,33 @@ export class LinkedText extends React.Component<
   };
 
   getColor = () => {
-    return this.state.isClicked ? "stroke-violet-500" : "";
+    return this.state.isClicked
+      ? "stroke-violet-500"
+      : this.props.clr
+      ? `stroke-${this.props.clr}`
+      : "";
   };
 
   getStyle = () => {
-    return this.state.isClicked ? "text-violet-500 font-bold" : "";
+    if (this.state.isClicked) {
+      return "text-violet-500 font-bold";
+    } else if (this.props.clr === "lightblue") {
+      return `text-${this.lightblue}`;
+    } else if (this.props.clr === "blue") {
+      return `text-${this.blue}`;
+    } else {
+      return "";
+    }
+  };
+
+  getColoredStyle = () => {
+    if (this.state.isClicked) {
+      return { color: "rgb(139, 92, 246)", fontWeight: 700 };
+    } else if (this.props.clr) {
+      return { color: this.props.clr };
+    } else {
+      return {};
+    }
   };
 
   onClick = (isClicked: boolean) => {
@@ -73,11 +99,17 @@ export class LinkedText extends React.Component<
       case Obj.Segment:
         return (
           <span
+            className={`${this.getStyle()}`}
             style={{ borderTop: `2px solid ${this.getColor()}` }}
           >{`${this.props.val}`}</span>
         );
       case Obj.Triangle:
-        return triangleStr(this.props.val);
+        return (
+          <span className={`font-notoSerif`} style={this.getColoredStyle()}>
+            <span className="text-l leading-4 font-semibold">{`\u25B3`}</span>
+            {this.props.val}
+          </span>
+        );
       case Obj.Angle:
         return angleStr(this.props.val);
       default:
@@ -88,7 +120,7 @@ export class LinkedText extends React.Component<
   render() {
     return (
       <span
-        className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150`}
+        className={`font-notoSerif cursor-pointer transition ease-in-out duration-150`}
         onPointerEnter={() => this.onClick(true)}
         onPointerLeave={() => this.onClick(false)}
         id={`${this.props.obj.tag}-text-${this.props.val}`}

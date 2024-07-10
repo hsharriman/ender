@@ -6,14 +6,19 @@ import { StepFocusProps, StepUnfocusProps } from "../types/stepTypes";
 import { SVGModes } from "../types/types";
 
 export class EqualTriangles {
-  static text = (ctx: Content, [t1, t2]: [string, string]) => {
+  static text = (
+    ctx: Content,
+    [t1, t2]: [string, string],
+    t1clr?: string,
+    t2clr?: string
+  ) => {
     const t1s = ctx.getTriangle(t1);
     const t2s = ctx.getTriangle(t2);
     return (
       <span>
-        {linked(t1, t1s)}
+        {linked(t1, t1s, undefined, t1clr)}
         {tooltip(resizedStrs.congruent, definitions.CongruentTriangles)}
-        {linked(t2, t2s)}
+        {linked(t2, t2s, undefined, t2clr)}
       </span>
     );
   };

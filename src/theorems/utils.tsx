@@ -14,12 +14,20 @@ import { Reasons } from "./reasons";
 export const GIVEN_ID = "given";
 export const PROVE_ID = "prove";
 
+export const colors = {
+  lightblue: "rgb(56, 189, 248)", //sky-400
+  blue: "rgb(59, 130, 246)", // blue-500
+  purple: "rgb(139, 92, 246)", //purple-500
+  lightpurple: "rgb(196, 181, 253)",
+};
+
 // TODO move linked and reasonFn to different place, or move all this type info to a diff place
 export const linked = (
   val: string,
   obj: BaseGeometryObject,
-  objs?: BaseGeometryObject[]
-) => <LinkedText val={val} obj={obj} linkedObjs={objs} />;
+  objs?: BaseGeometryObject[],
+  clr?: string
+) => <LinkedText val={val} obj={obj} linkedObjs={objs} clr={clr} />;
 
 export const tooltip = (obj: JSX.Element, definition: Definition) => (
   <DefinitionTooltip obj={obj} definition={definition} />

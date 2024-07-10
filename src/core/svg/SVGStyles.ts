@@ -14,5 +14,5 @@ export const ModeCSS = {
   DIAGRAMCLICKTEXT: "text-violet-500 font-black",
   ACTIVETRIPURPLE: "stroke-black stroke-2 opacity-1 fill-triangle",
   ACTIVETRIBLUE: "stroke-black stroke-2 opacity-1 fill-triangle",
-  UNFOCUSEDTRI: "opacity-70 stroke-1 fill-none",
+  UNFOCUSEDTRI: "opacity-70 stroke-black stroke-1 half-opacity fill-triangle",
 };

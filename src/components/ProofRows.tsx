@@ -9,6 +9,9 @@ export interface ProofRowsProps {
 }
 export interface ProofRowsState {
   idx: number;
+  showAll: boolean;
+  viewed: Set<string>;
+  revealed: number;
 }
 export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   private idPrefix = "prooftext-";
@@ -16,6 +19,9 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     super(props);
     this.state = {
       idx: 0,
+      showAll: false,
+      viewed: new Set(),
+      revealed: 0,
     };
   }
 
@@ -56,6 +62,11 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           active
         );
       }
+      if (active !== "given" && active !== "prove") {
+        this.setState({
+          viewed: new Set([...Array.from(this.state.viewed), active]),
+        });
+      }
       this.setState({
         idx: newIdx,
       });
@@ -93,23 +104,28 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     );
   };
 
+  onClickShowAll = () => {
+    this.setState({ ...this.state, showAll: !this.state.showAll });
+  };
+
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
     const isActive = activeItem && activeItem.k === item.k;
     const depends = activeItem && activeItem.dependsOn?.has(item.k);
+    // TODO update item.v to require a param that tells if linkedtext should be active or not, for colored text
     const textColor = isActive
-      ? "text-slate-800"
-      : depends
+      ? "text-slate-900"
+      : depends || this.state.showAll || this.state.viewed.has(item.k)
       ? "text-slate-500"
       : "text-slate-100";
     const strokeColor = isActive
       ? "border-slate-800"
-      : depends
+      : depends || this.state.showAll
       ? "border-slate-500"
       : "border-slate-100";
     const opacity = isActive ? "opacity-1 block" : "opacity-0 hidden";
     return (
-      <div className="flex flex-row justify-start h-16" key={item.k}>
+      <div className={`flex flex-row justify-start h-16`} key={item.k}>
         {this.highlightBar(item.k)}
         <button
           id={`${this.idPrefix}${item.k}`}
@@ -127,7 +143,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
               >
                 {i + 1}
               </div>
-              <div className={``}>{item.v}</div>
+              <div>{item.v}</div>
             </div>
             <div
               className={`flex flex-row justify-start align-baseline`}
@@ -142,7 +158,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   };
 
   render() {
-    // TODO change style based on the state
     if (this.props.items.length > 0) {
       // first 2 rows are "given" and "prove"
       const given = this.props.items[0];
@@ -157,7 +172,19 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
               <div className="opacity-0">0</div>
               <div>Statement</div>
             </div>
-            <div>Reason</div>
+            <div className="flex flex-row justify-between align-baseline">
+              <div>Reason</div>
+              {
+                <button
+                  className="text-xs self-end px-2 py-1 italic bg-transparent text-violet-500 justify-center rounded-md"
+                  onClick={this.onClickShowAll}
+                >
+                  {`${
+                    this.state.showAll ? "Show Current Row" : "Show All Rows"
+                  }`}
+                </button>
+              }
+            </div>
           </div>
           {this.props.items.slice(2).map((item, i) => this.renderRow(item, i))}
         </>
@@ -166,3 +193,89 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     return <></>;
   }
 }
+
+// interface ProofRowProps {
+//   isActive: boolean;
+//   depends: boolean;
+//   showAll: boolean;
+//   idPrefix: string;
+//   i: number;
+//   item: ProofTextItem;
+//   onClick: () => void;
+// }
+// interface ProofRowState {
+//   isClicked: boolean;
+// }
+// interface ProofRowState {}
+// class ProofRow extends React.Component<ProofRowProps, ProofRowState> {
+//   constructor(props: ProofRowProps) {
+//     super(props);
+//     this.state = {
+//       isClicked: false
+//     }
+//   }
+
+//   highlightBar = (k: string) => {
+//     return (
+//       <div
+//         id="active-bar"
+//         className="w-4 h-16 transition-all ease-in-out duration-300"
+//         style={
+//           this.props.isActive ? { borderLeft: "10px double #9A76FF" } : {}
+//         }
+//       ></div>
+//     );
+//   };
+
+//   onClick = () => {
+//     if (!this.state.isClicked) {
+//       this.setState({isClicked: true});
+//     }
+//     this.props.onClick();
+//   }
+
+//   render () {
+//     const textColor = this.props.isActive
+//       ? "text-slate-800"
+//       : this.props.depends || this.props.showAll
+//       ? "text-slate-500"
+//       : "text-slate-100";
+//     const strokeColor = this.props.isActive
+//       ? "border-slate-800"
+//       : this.props.depends || this.props.showAll
+//       ? "border-slate-500"
+//       : "border-slate-100";
+//     const opacity = this.props.isActive ? "opacity-1 block" : "opacity-0 hidden";
+//     return (
+//       <div className="flex flex-row justify-start h-16" key={this.props.item.k}>
+//         {this.highlightBar(this.props.item.k)}
+//         <button
+//           id={`${this.props.idPrefix}${this.props.item.k}`}
+//           onClick={this.props.onClick}
+//           className="border-gray-300 border-b-2 w-full h-16 ml-2 text-lg focus:outline-none"
+//         >
+//           <div
+//             className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
+//           >
+//             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
+//               <div
+//                 className={`${
+//                   this.props.isActive ? "text-violet-500" : "text-slate-400"
+//                 } font-bold`}
+//               >
+//                 {this.props.i + 1}
+//               </div>
+//               <div className={``}>{this.props.item.v}</div>
+//             </div>
+//             <div
+//               className={`flex flex-row justify-start align-baseline`}
+//               id={`reason-${this.props.i + 1}`}
+//             >
+//               {this.props.item.reason}
+//             </div>
+//           </div>
+//         </button>
+//       </div>
+//     );
+//   }
+// }

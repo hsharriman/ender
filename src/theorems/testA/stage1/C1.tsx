@@ -17,7 +17,7 @@ import {
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { completeProof1 } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
-import { linked, makeStepMeta } from "../../utils";
+import { colors, linked, makeStepMeta } from "../../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -58,7 +58,7 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         pts: [A, C, M],
         hoverable,
         label: "ACM",
-        backgroundColor: "lightblue",
+        backgroundColor: colors.purple,
       },
       ctx
     ),
@@ -67,7 +67,7 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         pts: [B, D, M],
         hoverable,
         label: "BDM",
-        backgroundColor: "lavender",
+        backgroundColor: colors.blue,
       },
       ctx
     ),
@@ -222,7 +222,13 @@ const step5: StepMeta = makeStepMeta({
       { ...props, mode: SVGModes.ActiveTriangleBlue },
       step4SASProps
     ),
-  text: (ctx: Content) => EqualTriangles.text(ctx, step4SASProps.triangles),
+  text: (ctx: Content) =>
+    EqualTriangles.text(
+      ctx,
+      step4SASProps.triangles,
+      colors.purple,
+      colors.blue
+    ),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
 });
 
@@ -230,8 +236,8 @@ const step6: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: [5],
   unfocused: (props: StepUnfocusProps) => {
-    EqualTriangles.unfocused(props, ["ACM", "BDM"]);
     step5.additions({ ...props, mode: SVGModes.Unfocused });
+    EqualTriangles.unfocused(props, ["ACM", "BDM"]);
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CAM", "DBM"], 2),

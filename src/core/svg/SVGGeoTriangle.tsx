@@ -98,7 +98,7 @@ export class SVGGeoTriangle extends React.Component<
             id={this.props.geoId + "-bg"}
             key={this.props.geoId + "-bg"}
             style={{
-              opacity: 0.5,
+              opacity: triStyle.includes("half-opacity") ? 0.2 : 0.5,
               fill: this.props.backgroundColor,
             }}
           />

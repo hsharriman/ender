@@ -67,10 +67,10 @@ export class DefinitionTooltip extends React.Component<
         onMouseLeave={() => this.onClick(false)}
         ref={this.wrapperRef}
       >
-        <span className="font-notoSans pointer-events-none absolute -top-20 inset-x-0 w-max opacity-0 transition-opacity group-hover:opacity-100 shadow-[rgba(0,0,15,0.1)_5px_5px_4px_1px] bg-white text-black p-2 rounded-md text-left z-40">
+        <div className="font-notoSans pointer-events-none absolute -top-20 inset-x-0 w-max opacity-0 transition-opacity group-hover:opacity-100 shadow-[rgba(0,0,15,0.1)_5px_5px_4px_1px] bg-white text-black p-2 rounded-md text-left z-40">
           <h2 className="text-[15px]">{keyword}</h2>
           <p className="font-normal text-sm">{definition}</p>
-        </span>
+        </div>
         <span>{this.props.obj}</span>
       </span>
     );
