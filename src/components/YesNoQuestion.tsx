@@ -135,7 +135,6 @@ export class YesNoQuestion extends React.Component<
         </div>
       );
     }
-    return <div className="font-bold pr-10 pb-1">{this.props.question}</div>;
   };
 
   render() {
