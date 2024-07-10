@@ -9,7 +9,7 @@ interface QuestionsProps {
   onSubmit?: () => void;
   questionsCompleted?: () => void;
   onNext: (direction: number) => void;
-  onAnswerUpdate: (question: string, answer: string) => void;
+  onAnswerUpdate: (question: string, answer: string, version: string) => void;
 }
 
 interface QuestionsState {
@@ -36,9 +36,13 @@ export class TestQuestions extends React.Component<
   handleSubmit = (answer: any) => {
     const currIdx = this.state.currentQuestionIndex;
     const id = this.props.questions[currIdx].id;
-    console.log(`Answer for question ${currIdx + 1}, id: ${id}:`, answer);
+    console.log(
+      `Answer for question ${currIdx + 1}, id: ${id}:`,
+      answer,
+      this.props.proofType
+    );
 
-    this.props.onAnswerUpdate(id, answer);
+    this.props.onAnswerUpdate(id, answer, this.props.proofType);
     if (currIdx < this.props.questions.length - 1) {
       this.setState((prevState) => ({
         currentQuestionIndex: prevState.currentQuestionIndex + 1,
