@@ -25,6 +25,7 @@ import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1, TutorialProof2 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
+import { Question } from "./questions/funcTypeQuestions";
 
 interface ProofMeta {
   layout: LayoutOptions;
@@ -170,6 +171,9 @@ interface AppState {
     };
   };
   page: string;
+  scaffolding: {
+    [questionType: string]: boolean;
+  };
 }
 export class App extends React.Component<AppProps, AppState> {
   private meta: ProofMeta[] = [];
@@ -181,6 +185,12 @@ export class App extends React.Component<AppProps, AppState> {
       activeTest: 0,
       answers: {},
       page: "home",
+      scaffolding: {
+        Minifigures: false,
+        ReliesOn: false,
+        DiagramState: false,
+        TutorialInstructions: true,
+      },
     };
     const tutorial = [
       interactiveLayout(TutorialProof1, false, tutorial1Steps),
@@ -238,6 +248,15 @@ export class App extends React.Component<AppProps, AppState> {
     }
   };
 
+updateScaffolding = (questionType: string) => {
+    this.setState((prevState) => ({
+      scaffolding: {
+        ...prevState.scaffolding,
+        [questionType]: true,
+      },
+    }));
+  };
+
   updateAnswers =
     (proofName: string) =>
     (question: string, answer: string, version?: string) => {
@@ -289,6 +308,8 @@ export class App extends React.Component<AppProps, AppState> {
                 proofType={proofType}
                 onAnswerUpdate={this.updateAnswers(meta.name)}
                 questionsCompleted={questionsCompleted}
+                scaffolding={this.state.scaffolding}
+                updateScaffolding={this.updateScaffolding}
               />
             </div>
             <button
