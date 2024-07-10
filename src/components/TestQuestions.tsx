@@ -32,11 +32,11 @@ export class TestQuestions extends React.Component<QuestionsProps> {
 
   handleSubmit = (answer: any) => {
     const id = this.props.questions[this.props.questionIdx].id;
-    console.log(
-      `Answer for question ${this.props.questionIdx + 1}, id: ${id}:`,
-      answer,
-      this.props.proofType
-    );
+    // console.log(
+    //   `Answer for question ${this.props.questionIdx + 1}, id: ${id}:`,
+    //   answer,
+    //   this.props.proofType
+    // );
 
     this.props.onAnswerUpdate(id, answer, this.props.proofType);
     if (this.props.questionIdx < this.props.questions.length - 1) {

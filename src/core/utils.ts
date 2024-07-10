@@ -40,5 +40,5 @@ export const logEvent = (e: string, additionalInfo: LogEventInfo) => {
 
   sessionStorage.setItem("eventLogs", JSON.stringify(logs));
 
-  console.log(newEvent);
+  // console.log(newEvent);
 };

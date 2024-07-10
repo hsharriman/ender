@@ -84,9 +84,9 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
       toLogAnswers += `Question ${questionNum}: ${localAnswers[questionNum]},`;
     });
 
-    console.log(
-      `${this.props.type},SUS,` + toLogAnswers + `,time: ${Date.now()}`
-    );
+    // console.log(
+    //   `${this.props.type},SUS,` + toLogAnswers + `,time: ${Date.now()}`
+    // );
     this.props.onSubmit();
   };
 
