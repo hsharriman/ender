@@ -6,27 +6,19 @@ import { YesNoQuestion } from "./YesNoQuestion";
 interface QuestionsProps {
   proofType: string;
   questions: Question[];
+  questionIdx: number;
   onSubmit?: () => void;
   questionsCompleted?: () => void;
   onNext: (direction: number) => void;
   onAnswerUpdate: (question: string, answer: string, version: string) => void;
   scaffolding: { [key: string]: boolean };
   updateScaffolding: (questionType: string) => void;
+  setActiveQuestionIndex: (index: number) => void;
 }
 
-interface QuestionsState {
-  currentQuestionIndex: number;
-}
-
-export class TestQuestions extends React.Component<
-  QuestionsProps,
-  QuestionsState
-> {
+export class TestQuestions extends React.Component<QuestionsProps> {
   constructor(props: QuestionsProps) {
     super(props);
-    this.state = {
-      currentQuestionIndex: 0,
-    };
   }
 
   handleQuestionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -45,27 +37,21 @@ export class TestQuestions extends React.Component<
   };
 
   handleSubmit = (answer: any) => {
-    const currIdx = this.state.currentQuestionIndex;
-    const id = this.props.questions[currIdx].id;
+    const id = this.props.questions[this.props.questionIdx].id;
     console.log(
-      `Answer for question ${currIdx + 1}, id: ${id}:`,
+      `Answer for question ${this.props.questionIdx + 1}, id: ${id}:`,
       answer,
       this.props.proofType
     );
 
     this.props.onAnswerUpdate(id, answer, this.props.proofType);
-    if (currIdx < this.props.questions.length - 1) {
-      this.setState((prevState) => ({
-        currentQuestionIndex: prevState.currentQuestionIndex + 1,
-      }));
+    if (this.props.questionIdx < this.props.questions.length - 1) {
+      this.props.setActiveQuestionIndex(this.props.questionIdx + 1);
       if (this.props.onSubmit) {
         this.props.onSubmit();
       }
     } else {
       this.props.onNext(1);
-      this.setState({
-        currentQuestionIndex: 0,
-      });
       if (this.props.questionsCompleted) {
         this.props.questionsCompleted();
       }
@@ -73,8 +59,7 @@ export class TestQuestions extends React.Component<
   };
 
   render() {
-    const currentQuestion =
-      this.props.questions[this.state.currentQuestionIndex];
+    const currentQuestion = this.props.questions[this.props.questionIdx];
     const answers = currentQuestion.answers;
     return (
       <>
@@ -92,11 +77,13 @@ export class TestQuestions extends React.Component<
           </select>
         </div> */}
         <div className="flex">
-          <span className="pr-6">Q{this.state.currentQuestionIndex + 1}:</span>
+          <span className="pr-6 self-center">
+            Q{this.props.questionIdx + 1}:
+          </span>
           {currentQuestion.answerType === AnswerType.YesNo && (
             <YesNoQuestion
               proofType={this.props.proofType}
-              questionNum={(this.state.currentQuestionIndex + 1).toString()}
+              questionNum={(this.props.questionIdx + 1).toString()}
               question={currentQuestion.prompt}
               answers={["Yes", "No"]}
               onSubmit={this.handleSubmit}
@@ -110,7 +97,7 @@ export class TestQuestions extends React.Component<
             <DropdownQuestion
               proofType={this.props.proofType}
               question={currentQuestion.prompt}
-              questionNum={(this.state.currentQuestionIndex + 1).toString()}
+              questionNum={(this.props.questionIdx + 1).toString()}
               answers={answers || []}
               onSubmit={this.handleSubmit}
               type={currentQuestion.type}

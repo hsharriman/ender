@@ -25,7 +25,6 @@ import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1, TutorialProof2 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
-import { Question } from "./questions/funcTypeQuestions";
 
 interface ProofMeta {
   layout: LayoutOptions;
@@ -165,6 +164,7 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
+  activeQuestionIdx: number;
   answers: {
     [proofName: string]: {
       [question: string]: string;
@@ -191,6 +191,7 @@ export class App extends React.Component<AppProps, AppState> {
         DiagramState: false,
         TutorialInstructions: true,
       },
+      activeQuestionIdx: 0,
     };
     const tutorial = [
       interactiveLayout(TutorialProof1, false, tutorial1Steps),
@@ -224,31 +225,26 @@ export class App extends React.Component<AppProps, AppState> {
     window.document.title = "Ender";
   }
 
-  onClick = (direction: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (this.state.activePage + direction < 0) {
-      this.setState({ activeTest: 0, page: "home" });
-    } else {
-      this.setState({
-        activePage: this.state.activePage + direction,
-      });
-    }
-  };
-
   onClickTest = (test: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
     this.setState({ page: test });
   };
 
   onNext = (direction: number) => {
     if (this.state.activePage + direction < 0) {
-      this.setState({ activeTest: 0 });
+      this.setState({ activeTest: 0, activeQuestionIdx: 0, page: "home" });
     } else {
       this.setState({
         activePage: this.state.activePage + direction,
+        activeQuestionIdx: 0,
       });
     }
   };
 
-updateScaffolding = (questionType: string) => {
+  setActiveQuestionIndex = (newIndex: number) => {
+    this.setState({ activeQuestionIdx: newIndex });
+  };
+
+  updateScaffolding = (questionType: string) => {
     this.setState((prevState) => ({
       scaffolding: {
         ...prevState.scaffolding,
@@ -293,7 +289,7 @@ updateScaffolding = (questionType: string) => {
               style={{
                 display: this.state.activePage >= 0 ? "block" : "none",
               }}
-              onClick={this.onClick(-1)}
+              onClick={() => this.onNext(-1)}
             >
               {"Previous"}
             </button>
@@ -306,10 +302,12 @@ updateScaffolding = (questionType: string) => {
                 onNext={this.onNext}
                 onSubmit={onSubmit}
                 proofType={proofType}
+                questionIdx={this.state.activeQuestionIdx}
                 onAnswerUpdate={this.updateAnswers(meta.name)}
                 questionsCompleted={questionsCompleted}
                 scaffolding={this.state.scaffolding}
                 updateScaffolding={this.updateScaffolding}
+                setActiveQuestionIndex={this.setActiveQuestionIndex}
               />
             </div>
             <button
@@ -319,7 +317,7 @@ updateScaffolding = (questionType: string) => {
                 display:
                   this.state.activePage < this.numPages - 1 ? "block" : "none",
               }}
-              onClick={this.onClick(1)}
+              onClick={() => this.onNext(1)}
             >
               {"Next"}
             </button>
@@ -335,7 +333,7 @@ updateScaffolding = (questionType: string) => {
           className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
           id="prev-arrow"
           style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
-          onClick={this.onClick(-1)}
+          onClick={() => this.onNext(-1)}
         >
           {"Previous"}
         </button>
@@ -349,7 +347,7 @@ updateScaffolding = (questionType: string) => {
             display:
               this.state.activePage < this.numPages - 1 ? "block" : "none",
           }}
-          onClick={this.onClick(1)}
+          onClick={() => this.onNext(1)}
         >
           {"Next"}
         </button>
@@ -444,7 +442,7 @@ updateScaffolding = (questionType: string) => {
               className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
               id="prev-arrow"
               style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
-              onClick={this.onClick(-1)}
+              onClick={() => this.onNext(-1)}
             >
               {"Home"}
             </button>
