@@ -456,8 +456,18 @@ export class App extends React.Component<AppProps, AppState> {
               <div className="absolute top-0 left-0 z-50 bg-gray-500 bg-opacity-75 w-screen h-screen flex items-center justify-center">
                 <button
                   onClick={this.handleResume}
-                  className="bg-green-500 hover:bg-green-700 text-4xl text-white font-bold py-3 px-5 rounded"
+                  className="bg-green-500 hover:bg-green-700 text-4xl text-white font-bold py-3 px-5 rounded flex items-center justify-center"
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-10 w-10 mr-2"
+                  >
+                    <polygon
+                      strokeWidth={2}
+                      points="10,5 34,20 10,35"
+                      className="fill-current text-white"
+                    />
+                  </svg>
                   Resume
                 </button>
               </div>
