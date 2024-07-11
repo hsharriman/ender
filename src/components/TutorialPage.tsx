@@ -12,8 +12,7 @@ export interface TutorialPageProps {
   proof: InteractiveAppPageProps;
   headerFn: (
     meta: StaticAppPageProps | InteractiveAppPageProps,
-    onSubmit: () => void,
-    questionsCompleted: () => void
+    onSubmit: () => void
   ) => JSX.Element;
 }
 export interface TutorialPageState {
@@ -35,6 +34,8 @@ export class TutorialPage extends React.Component<
       this.setState((prevState) => ({
         currStep: prevState.currStep + 1,
       }));
+    } else {
+      this.setState({ currStep: 0 });
     }
   };
   activeElems = () => {
@@ -43,10 +44,6 @@ export class TutorialPage extends React.Component<
     // active items are set in onClick/onHover handlers of each component
     // scan through them for the one that we need to be able to move on
     document.querySelectorAll(".activeItem").forEach((elem) => {});
-  };
-
-  onSubmitQuestion = () => {
-    this.onClick();
   };
 
   onQuestionsCompleted = () => {
@@ -96,8 +93,8 @@ export class TutorialPage extends React.Component<
       <>
         {this.props.headerFn(
           this.props.proof,
-          this.onSubmitQuestion,
-          this.onQuestionsCompleted
+          this.onClick
+          // this.onQuestionsCompleted
         )}
         <div className="w-full h-full flex justify-start">
           {step && step.type === TutorialStepType.Intro && this.popup(step)}

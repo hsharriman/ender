@@ -12,7 +12,7 @@ import { TutorialPage } from "./components/TutorialPage";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason, TutorialStep } from "./core/types/types";
 import { logEvent } from "./core/utils";
-import { tutorial1Steps, tutorial2Steps } from "./questions/tutorialContent";
+import { tutorial1Steps, tutorial3Steps } from "./questions/tutorialContent";
 import { Reasons } from "./theorems/reasons";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "./theorems/testA/stage1/C2";
@@ -198,7 +198,8 @@ export class App extends React.Component<AppProps, AppState> {
     };
     const tutorial = [
       interactiveLayout(TutorialProof1, false, tutorial1Steps),
-      interactiveLayout(TutorialProof2, false, tutorial2Steps),
+      // interactiveLayout(TutorialProof1, false, tutorial2Steps),
+      interactiveLayout(TutorialProof2, false, tutorial3Steps),
     ];
     // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented
     const stage1 = randomizeLayout(
@@ -291,7 +292,10 @@ export class App extends React.Component<AppProps, AppState> {
 
   renderQuestionHeader =
     (proofType: string) =>
-    (meta: StaticAppPageProps | InteractiveAppPageProps) => {
+    (
+      meta: StaticAppPageProps | InteractiveAppPageProps,
+      incrementTutorial?: () => void
+    ) => {
       return (
         <div
           className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
@@ -321,6 +325,7 @@ export class App extends React.Component<AppProps, AppState> {
                 scaffolding={this.state.scaffolding}
                 updateScaffolding={this.updateScaffolding}
                 setActiveQuestionIndex={this.setActiveQuestionIndex}
+                incrementTutorial={incrementTutorial}
               />
             </div>
             <button

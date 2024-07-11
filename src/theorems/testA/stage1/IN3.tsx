@@ -89,7 +89,7 @@ const givens: StepMeta = makeStepMeta({
   staticText: () => {
     return (
       <span>
-        {"EFGH is a quadrilateral"}
+        {"KLMN is a quadrilateral"}
         {comma}
         {EqualSegments.staticText(["LM", "NK"])}
         {comma}

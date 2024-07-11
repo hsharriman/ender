@@ -16,6 +16,7 @@ interface QuestionsProps {
   scaffolding: { [key: string]: boolean };
   updateScaffolding: (questionType: string) => void;
   setActiveQuestionIndex: (index: number) => void;
+  incrementTutorial?: () => void;
 }
 
 export class TestQuestions extends React.Component<QuestionsProps> {
@@ -51,7 +52,9 @@ export class TestQuestions extends React.Component<QuestionsProps> {
       this.props.onNext(1);
     } else if (this.props.questionIdx < this.props.questions.length - 1) {
       this.props.setActiveQuestionIndex(this.props.questionIdx + 1);
+      this.props.incrementTutorial && this.props.incrementTutorial();
     } else {
+      this.props.incrementTutorial && this.props.incrementTutorial();
       this.props.onNext(1);
     }
   };

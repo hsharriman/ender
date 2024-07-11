@@ -10,7 +10,7 @@ module.exports = {
       keyframes: {
         smallBounce: {
           "0%, 100%": {
-            transform: "translateY(-10%)",
+            transform: "translateY(-3%)",
             animationTimingFunction: "cubic-bezier(0.8, 0, 1, 1)",
           },
           "50%": {
