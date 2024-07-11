@@ -166,7 +166,7 @@ export const tutorial2Steps: TutorialStep[] = [
     ),
   },
   {
-    type: TutorialStepType.Default,
+    type: TutorialStepType.HideContinue,
     elemId: "svg-object-mini",
     text: (
       <span>

@@ -1,6 +1,6 @@
 import React from "react";
 import { logEvent } from "../core/utils";
-import { scaffolding } from "../questions/funcTypeQuestions";
+import { QuestionType, scaffolding } from "../questions/funcTypeQuestions";
 
 export interface QuestionProps {
   proofType: string;
@@ -95,14 +95,15 @@ export class YesNoQuestion extends React.Component<
   };
 
   renderQuestionPrompt = () => {
-    if (this.props.proofType === "static") {
+    if (
+      this.props.proofType === "static" ||
+      this.props.type === QuestionType.Correctness
+    ) {
       return <div className="font-bold pr-10 pb-1">{this.props.question}</div>;
-    }
-    if (!this.props.scaffolding[this.props.type]) {
     }
     const showHint =
       !this.props.scaffolding[this.props.type] || this.state.showHint;
-    if (this.props.type === "Minifigures") {
+    if (this.props.type === QuestionType.Minifigures) {
       return (
         <div className="font-bold pr-10 pb-1">
           {this.props.question}
@@ -115,7 +116,7 @@ export class YesNoQuestion extends React.Component<
             this.renderHint(scaffolding.mini(this.props.scaffoldReason))}
         </div>
       );
-    } else if (this.props.type === "ReliesOn") {
+    } else if (this.props.type === QuestionType.ReliesOn) {
       return (
         <div className="font-bold pr-10 pb-1">
           {this.props.question}

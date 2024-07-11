@@ -11,6 +11,7 @@ import { TestQuestions } from "./components/TestQuestions";
 import { TutorialPage } from "./components/TutorialPage";
 import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
 import { LayoutProps, Reason, TutorialStep } from "./core/types/types";
+import { logEvent } from "./core/utils";
 import { tutorial1Steps, tutorial2Steps } from "./questions/tutorialContent";
 import { Reasons } from "./theorems/reasons";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
@@ -25,7 +26,6 @@ import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1, TutorialProof2 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
-import { logEvent } from "./core/utils";
 
 interface ProofMeta {
   layout: LayoutOptions;
@@ -291,11 +291,7 @@ export class App extends React.Component<AppProps, AppState> {
 
   renderQuestionHeader =
     (proofType: string) =>
-    (
-      meta: StaticAppPageProps | InteractiveAppPageProps,
-      onSubmit?: () => void,
-      questionsCompleted?: () => void
-    ) => {
+    (meta: StaticAppPageProps | InteractiveAppPageProps) => {
       return (
         <div
           className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
@@ -319,11 +315,9 @@ export class App extends React.Component<AppProps, AppState> {
               <TestQuestions
                 questions={meta.questions}
                 onNext={this.onNext}
-                onSubmit={onSubmit}
                 proofType={proofType}
                 questionIdx={this.state.activeQuestionIdx}
                 onAnswerUpdate={this.updateAnswers(meta.name)}
-                questionsCompleted={questionsCompleted}
                 scaffolding={this.state.scaffolding}
                 updateScaffolding={this.updateScaffolding}
                 setActiveQuestionIndex={this.setActiveQuestionIndex}

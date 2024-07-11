@@ -11,8 +11,6 @@ interface QuestionsProps {
   proofType: string;
   questions: Question[];
   questionIdx: number;
-  onSubmit?: () => void;
-  questionsCompleted?: () => void;
   onNext: (direction: number) => void;
   onAnswerUpdate: (question: string, answer: string, version: string) => void;
   scaffolding: { [key: string]: boolean };
@@ -42,31 +40,19 @@ export class TestQuestions extends React.Component<QuestionsProps> {
     //   this.props.proofType
     // );
 
+    this.props.onAnswerUpdate(question.id, answer, this.props.proofType);
     if (
-      // skip subsequent questions if the first answer selected was No
       question.type === QuestionType.Correctness &&
       this.props.questionIdx === 0 &&
       question.answerType === AnswerType.YesNo &&
       answer === "No"
     ) {
-      this.props.onNext(2);
-      if (this.props.questionsCompleted) {
-        this.props.questionsCompleted();
-      }
+      // skip subsequent questions if the first answer selected was No in phase 2 questions
+      this.props.onNext(1);
+    } else if (this.props.questionIdx < this.props.questions.length - 1) {
+      this.props.setActiveQuestionIndex(this.props.questionIdx + 1);
     } else {
-      this.props.onAnswerUpdate(question.id, answer, this.props.proofType);
-
-      if (this.props.questionIdx < this.props.questions.length - 1) {
-        this.props.setActiveQuestionIndex(this.props.questionIdx + 1);
-        if (this.props.onSubmit) {
-          this.props.onSubmit();
-        }
-      } else {
-        this.props.onNext(1);
-        if (this.props.questionsCompleted) {
-          this.props.questionsCompleted();
-        }
-      }
+      this.props.onNext(1);
     }
   };
 
