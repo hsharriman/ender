@@ -24,6 +24,7 @@ export enum QuestionType {
   DiagramState = "DiagramState",
   Correctness = "Correctness",
   TutorialInstructions = "TutorialInstructions",
+  Pretest = "Pretest",
 }
 
 const diagramStateQuestion = (x: string, y: string, type: Obj) => {
