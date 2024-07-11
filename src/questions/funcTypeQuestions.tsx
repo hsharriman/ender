@@ -78,7 +78,7 @@ export const checkingProof1: Question[] = [
     answerType: AnswerType.YesNo,
     prompt: diagramStateQuestion("DBA", "BCD", Obj.Angle),
     type: QuestionType.DiagramState,
-    id: id(2),
+    id: id(3),
   },
 ];
 
@@ -94,7 +94,7 @@ export const checkingProof2: Question[] = [
     answerType: AnswerType.YesNo,
     prompt: diagramStateQuestion("KL", "MK", Obj.Segment),
     type: QuestionType.DiagramState,
-    id: id(3),
+    id: id(2),
   },
 ];
 
