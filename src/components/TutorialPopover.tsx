@@ -45,11 +45,11 @@ export class TutorialPopover extends React.Component<
       return (
         <div className="">
           <div
-            className="absolute z-50 h-[20px] w-[20px] bg-white transform rotate-45 origin-top-left rounded-sm border-2 border-gray-300 shadow-lg focus:outline-none"
+            className="absolute z-40 h-[20px] w-[20px] bg-white transform rotate-45 origin-top-left rounded-sm border-2 border-gray-300 shadow-lg focus:outline-none"
             style={{ top: `${style.top + 8}px`, left: `${style.left + 20}px` }}
           ></div>
           <div
-            className={`absolute z-50 w-[20rem] p-4 break-words rounded-lg border-2 border-gray-300 bg-white text-sm shadow-lg sfocus:outline-none`}
+            className={`absolute z-40 w-[20rem] p-4 break-words rounded-lg border-2 border-gray-300 bg-white text-sm shadow-lg sfocus:outline-none`}
             id="popover"
             style={{ top: `${style.top}px`, left: `${style.left + 18}px` }}
           >
