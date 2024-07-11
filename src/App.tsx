@@ -331,7 +331,7 @@ export class App extends React.Component<AppProps, AppState> {
             </div>
             <button
               className="absolute right-20 p-3 underline underline-offset-2 z-30 text-sm"
-              id="next-arrow"
+              id="pause"
               onClick={this.handlePause}
             >
               Pause
