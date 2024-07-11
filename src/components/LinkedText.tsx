@@ -20,9 +20,6 @@ export class LinkedText extends React.Component<
   LinkedTextState
 > {
   // private activeColor = "#9A76FF"; // TODO
-  private blue = "sky-600";
-  private lightblue = "sky-400";
-  private green = "green-500";
   private wrapperRef: React.RefObject<HTMLDivElement>;
   constructor(props: LinkedTextProps) {
     super(props);

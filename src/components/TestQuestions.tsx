@@ -36,11 +36,11 @@ export class TestQuestions extends React.Component<QuestionsProps> {
 
   handleSubmit = (answer: any) => {
     const question = this.props.questions[this.props.questionIdx];
-    console.log(
-      `Answer for question ${this.props.questionIdx + 1}, id: ${question.id}:`,
-      answer,
-      this.props.proofType
-    );
+    // console.log(
+    //   `Answer for question ${this.props.questionIdx + 1}, id: ${question.id}:`,
+    //   answer,
+    //   this.props.proofType
+    // );
 
     if (
       // skip subsequent questions if the first answer selected was No
