@@ -1,6 +1,6 @@
 import React from "react";
-import { SubmitQuestion } from "./SubmitQuestion";
 import { logEvent } from "../core/utils";
+import { SubmitQuestion } from "./SubmitQuestion";
 
 interface BackgroundQuestionType {
   prompt: string;
@@ -73,7 +73,7 @@ export class BackgroundQuestions extends React.Component<
       Object.keys(localAnswers).forEach((questionNum) => {
         this.props.updateAnswers(questionNum, localAnswers[questionNum]);
       });
-      console.log("Survey results:", this.state.answers);
+      // console.log("Survey results:", this.state.answers);
       logEvent("n", {
         c: "b",
         v: "",

@@ -1,5 +1,6 @@
 import { Content } from "../diagramContent";
 import { Obj, SVGModes } from "../types/types";
+import { permutator } from "../utils";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
@@ -21,7 +22,7 @@ export class Quadrilateral extends BaseGeometryObject {
     this.s = this.buildSegments(props.pts, ctx, props.parentFrame);
     this.p = props.pts;
     this.a = this.buildAngles(props.pts, ctx, props.parentFrame);
-    this.names = this.permutator(props.pts.map((pt) => pt.label));
+    this.names = permutator(props.pts.map((pt) => pt.label));
   }
 
   private buildSegments = (

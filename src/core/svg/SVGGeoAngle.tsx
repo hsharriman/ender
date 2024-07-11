@@ -1,12 +1,12 @@
 import React from "react";
 import { LAngle, Obj, SVGModes, TickType } from "../types/types";
+import { logEvent } from "../utils";
 import { vops } from "../vectorOps";
 import { SVGGeoTick } from "./SVGGeoTick";
 import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { arcSweepsCCW, coordsToSvg, updateStyle } from "./svgUtils";
-import { logEvent } from "../utils";
 
 export type SVGAngleProps = {
   a: LAngle;
@@ -135,7 +135,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
             isPinned={Boolean(this.state.isPinned)}
           />
         )} */}
-        {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
+        {/* {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <path
             d={this.angleBbox()}
             id={this.props.geoId + "-hover"}
@@ -150,7 +150,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
               cursor: "pointer",
             }}
           />
-        )}
+        )} */}
       </>
     );
   }

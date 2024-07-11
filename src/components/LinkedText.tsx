@@ -1,6 +1,6 @@
 import React from "react";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
-import { angleStr, triangleStr } from "../core/geometryText";
+import { angleStr } from "../core/geometryText";
 import { Obj } from "../core/types/types";
 import { logEvent } from "../core/utils";
 
@@ -9,6 +9,7 @@ export interface LinkedTextProps {
   obj: BaseGeometryObject; // TODO correct type
   isActive?: boolean;
   linkedObjs?: BaseGeometryObject[];
+  clr?: string;
 }
 
 export interface LinkedTextState {
@@ -45,13 +46,28 @@ export class LinkedText extends React.Component<
     }
   };
 
-  getColor = () => {
-    return this.state.isClicked ? "stroke-violet-500" : "";
+  getStyle = () => {
+    if (this.state.isClicked) {
+      return "text-violet-500 font-bold border-violet-400";
+    } else if (this.props.clr === "lightblue") {
+      // TODO issue is that opacity is not reduced from parent, need to set lighter color directly with this approach.
+      return "text-sky-400";
+    } else if (this.props.clr === "blue") {
+      return "text-sky-600";
+    } else {
+      return "";
+    }
   };
 
-  getStyle = () => {
-    return this.state.isClicked ? "text-violet-500 font-bold" : "";
-  };
+  // getColoredStyle = () => {
+  //   if (this.state.isClicked) {
+  //     return { color: "rgb(139, 92, 246)", fontWeight: 700 };
+  //   } else if (this.props.clr) {
+  //     return { color: this.props.clr };
+  //   } else {
+  //     return {};
+  //   }
+  // };
 
   onClick = (isClicked: boolean) => {
     if (isClicked !== this.state.isClicked) {
@@ -86,22 +102,27 @@ export class LinkedText extends React.Component<
       case Obj.Segment:
         return (
           <span
-            style={{ borderTop: `2px solid ${this.getColor()}` }}
+            className={`${this.getStyle()} border-t-2 border-solid`}
           >{`${this.props.val}`}</span>
         );
       case Obj.Triangle:
-        return triangleStr(this.props.val);
+        return (
+          <span className={`font-notoSerif opacity-inherit ${this.getStyle()}`}>
+            <span className="text-l leading-4 font-semibold opacity-inherit">{`\u25B3`}</span>
+            {this.props.val}
+          </span>
+        );
       case Obj.Angle:
         return angleStr(this.props.val);
       default:
-        return this.props.val;
+        return <span className={this.getStyle()}>{this.props.val}</span>;
     }
   };
 
   render() {
     return (
       <span
-        className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150`}
+        className={`font-notoSerif cursor-pointer transition ease-in-out duration-150`}
         onPointerEnter={this.onPointerEnter}
         onPointerLeave={this.onPointerLeave}
         id={`${this.props.obj.tag}-text-${this.props.val}`}

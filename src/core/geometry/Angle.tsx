@@ -56,8 +56,6 @@ export class Angle extends BaseGeometryObject {
     setStyle(eleTick);
   };
 
-  getMode = (frameKey: string) => this.modes.get(frameKey);
-
   addTick = (frame: string, type: TickType, num: number = 1) => {
     this.ticks.set(frame, { type, num });
     return this;

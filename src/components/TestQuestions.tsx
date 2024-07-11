@@ -1,5 +1,9 @@
 import React from "react";
-import { AnswerType, Question } from "../questions/funcTypeQuestions";
+import {
+  AnswerType,
+  Question,
+  QuestionType,
+} from "../questions/funcTypeQuestions";
 import { DropdownQuestion } from "./DropdownQuestion";
 import { YesNoQuestion } from "./YesNoQuestion";
 
@@ -21,12 +25,6 @@ export class TestQuestions extends React.Component<QuestionsProps> {
     super(props);
   }
 
-  handleQuestionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    this.setState({
-      currentQuestionIndex: Number(event.target.value),
-    });
-  };
-
   isFirstOfType = (question: Question) => {
     const questionType = question.type.toString();
     if (!this.props.scaffolding[questionType]) {
@@ -37,23 +35,37 @@ export class TestQuestions extends React.Component<QuestionsProps> {
   };
 
   handleSubmit = (answer: any) => {
-    const id = this.props.questions[this.props.questionIdx].id;
-    console.log(
-      `Answer for question ${this.props.questionIdx + 1}, id: ${id}:`,
-      answer,
-      this.props.proofType
-    );
+    const question = this.props.questions[this.props.questionIdx];
+    // console.log(
+    //   `Answer for question ${this.props.questionIdx + 1}, id: ${question.id}:`,
+    //   answer,
+    //   this.props.proofType
+    // );
 
-    this.props.onAnswerUpdate(id, answer, this.props.proofType);
-    if (this.props.questionIdx < this.props.questions.length - 1) {
-      this.props.setActiveQuestionIndex(this.props.questionIdx + 1);
-      if (this.props.onSubmit) {
-        this.props.onSubmit();
-      }
-    } else {
-      this.props.onNext(1);
+    if (
+      // skip subsequent questions if the first answer selected was No
+      question.type === QuestionType.Correctness &&
+      this.props.questionIdx === 0 &&
+      question.answerType === AnswerType.YesNo &&
+      answer === "No"
+    ) {
+      this.props.onNext(2);
       if (this.props.questionsCompleted) {
         this.props.questionsCompleted();
+      }
+    } else {
+      this.props.onAnswerUpdate(question.id, answer, this.props.proofType);
+
+      if (this.props.questionIdx < this.props.questions.length - 1) {
+        this.props.setActiveQuestionIndex(this.props.questionIdx + 1);
+        if (this.props.onSubmit) {
+          this.props.onSubmit();
+        }
+      } else {
+        this.props.onNext(1);
+        if (this.props.questionsCompleted) {
+          this.props.questionsCompleted();
+        }
       }
     }
   };
@@ -104,6 +116,9 @@ export class TestQuestions extends React.Component<QuestionsProps> {
               scaffolding={this.props.scaffolding}
               updateScaffolding={this.props.updateScaffolding}
               scaffoldReason=""
+              hasTextBox={
+                this.props.questionIdx === this.props.questions.length - 1
+              }
             />
           )}
         </div>

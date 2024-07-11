@@ -45,9 +45,11 @@ export enum SVGModes {
   Default = "default",
   Purple = "purple",
   Blue = "blue",
-  Undefined = "",
   Pinned = "pinned",
   ActiveText = "activetext",
+  ActiveTriangleBlue = "activetriangleblue",
+  ActiveTrianglePurple = "activetrianglepurple",
+  UnfocusedTriangle = "unfocusedtriangle",
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------

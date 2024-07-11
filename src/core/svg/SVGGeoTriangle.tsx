@@ -2,20 +2,18 @@ import React from "react";
 import { Triangle } from "../geometry/Triangle";
 import { strs } from "../geometryText";
 import { Obj } from "../types/types";
+import { logEvent, permutator } from "../utils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
 import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
-import { BaseSVGState } from "./svgTypes";
-import { coordsToSvg } from "./svgUtils";
-import { logEvent } from "../utils";
+import { BaseSVGProps, BaseSVGState } from "./svgTypes";
+import { coordsToSvg, updateStyle } from "./svgUtils";
 
-export interface SVGTriangleProps {
+export type SVGTriangleProps = {
   t: Triangle;
-  geoId: string;
-  hoverable?: boolean;
-  miniScale: boolean;
-}
+  backgroundColor: string;
+} & BaseSVGProps;
 
 export class SVGGeoTriangle extends React.Component<
   SVGTriangleProps,
@@ -63,11 +61,11 @@ export class SVGGeoTriangle extends React.Component<
     });
     // TODO find matches for all segments/angles and add to their class
     const prefix = `#${Obj.Triangle}-text-`;
-    const ang = this.props.t.label;
-    const flippedAng = ang[2] + ang[1] + ang[0];
-    const matches = document.querySelectorAll(
-      `${prefix + ang}, ${prefix + flippedAng}`
-    );
+    const tri = this.props.t.label;
+    const selectors = permutator(tri.split(""))
+      .map((p) => prefix + p)
+      .join(", ");
+    const matches = document.querySelectorAll(selectors);
     matches.forEach((ele) => {
       if (ele) {
         const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
@@ -100,8 +98,20 @@ export class SVGGeoTriangle extends React.Component<
     const [p1, p2, p3] = this.props.t.p;
     // centroid is at 1/3(u+v+w)
     const center = vops.smul(vops.add(vops.add(p1.pt, p2.pt), p3.pt), 1 / 3);
+    const triStyle = updateStyle(this.props.mode);
     return (
       <>
+        {this.props.backgroundColor && triStyle.includes("fill-triangle") && (
+          <path
+            d={this.triangleBbox()}
+            id={this.props.geoId + "-bg"}
+            key={this.props.geoId + "-bg"}
+            style={{
+              opacity: triStyle.includes("half-opacity") ? 0.2 : 0.5,
+              fill: this.props.backgroundColor,
+            }}
+          />
+        )}
         {this.props.hoverable && (
           <HoverTextLabel
             pt={coordsToSvg(center, this.props.miniScale)}

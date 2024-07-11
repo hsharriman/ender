@@ -1,5 +1,6 @@
 import { Content } from "../diagramContent";
 import { Obj, SVGModes } from "../types/types";
+import { permutator } from "../utils";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
@@ -8,6 +9,7 @@ import { Segment } from "./Segment";
 export type TriangleProps = {
   pts: [Point, Point, Point];
   label: string;
+  backgroundColor?: string;
   // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
 export class Triangle extends BaseGeometryObject {
@@ -15,6 +17,7 @@ export class Triangle extends BaseGeometryObject {
   readonly a: [Angle, Angle, Angle];
   readonly p: [Point, Point, Point];
   readonly id: string;
+  readonly backgroundColor: string;
 
   constructor(props: TriangleProps, ctx: Content) {
     super(Obj.Triangle, props);
@@ -23,9 +26,10 @@ export class Triangle extends BaseGeometryObject {
     this.s = this.buildSegments(props.pts, ctx);
     this.p = props.pts;
     this.a = this.buildAngles(props.pts, ctx);
-    this.names = this.permutator(props.pts.map((pt) => pt.label));
+    this.names = permutator(props.pts.map((pt) => pt.label));
     this.label = props.label;
     this.id = this.getId(Obj.Triangle, this.label);
+    this.backgroundColor = props.backgroundColor ?? "";
   }
 
   private buildSegments = (

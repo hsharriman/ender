@@ -10,6 +10,7 @@ export interface ProofRowsProps {
 }
 export interface ProofRowsState {
   idx: number;
+  revealed: number;
 }
 export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   private idPrefix = "prooftext-";
@@ -17,6 +18,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     super(props);
     this.state = {
       idx: 0,
+      revealed: 0,
     };
   }
 
@@ -27,6 +29,18 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   componentWillUnmount() {
     document.removeEventListener("keydown", this.onKeyboardPress);
   }
+
+  onReveal = () => {
+    if (this.state.revealed < this.props.items.length - 2) {
+      const newIdx = this.state.revealed + 1;
+      this.setState({ revealed: newIdx, idx: newIdx + 1 });
+      this.props.onClick(`s${newIdx}`);
+      logEvent("c", {
+        c: "pr-r",
+        v: `s${newIdx}`,
+      });
+    }
+  };
 
   onKeyboardPress = (event: KeyboardEvent) => {
     let newIdx = this.state.idx;
@@ -42,8 +56,17 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       const newActive = this.props.items[newIdx].k;
       this.setState({
         idx: newIdx,
+        revealed:
+          this.state.idx > 0 &&
+          this.state.revealed < this.props.items.length - 2
+            ? this.state.revealed + 1
+            : this.state.revealed,
       });
       this.props.onClick(newActive);
+      logEvent("a", {
+        c: "pr",
+        v: newActive,
+      });
     }
   };
 
@@ -68,11 +91,11 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     }
   };
 
-  highlightBar = (k: string) => {
+  highlightBar = (k: string, h: string) => {
     return (
       <div
         id="active-bar"
-        className="w-4 h-16 transition-all ease-in-out duration-300"
+        className={`w-4 ${h} transition-all ease-in-out duration-300`}
         style={
           this.props.active === k ? { borderLeft: "10px double #9A76FF" } : {}
         }
@@ -83,14 +106,14 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   renderPremise = (premise: string, item: ProofTextItem) => {
     return (
       <div className="flex flex-row justify-start">
-        {this.highlightBar(item.k)}
+        {this.highlightBar(item.k, "h-12")}
         <button
           id={`${this.idPrefix}${item.k}`}
           onClick={this.onClick}
-          className="py-4 border-b-2 border-gray-300 text-lg w-full h-16 ml-2 focus:outline-none"
+          className="py-2 border-b-2 border-gray-300 text-md w-full h-12 ml-2 focus:outline-none"
         >
-          <div className="flex flex-row justify-start gap-8 align-baseline ml-2">
-            <div className="font-semibold">{`${premise}:`} </div>
+          <div className="flex flex-row justify-start gap-8 align-baseline ml-2 border-slate-800">
+            <div className="font-semibold ">{`${premise}:`} </div>
             {item.v}
           </div>
         </button>
@@ -100,14 +123,42 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
 
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
-    const isActive =
-      activeItem &&
-      (activeItem.k === item.k || activeItem.dependsOn?.has(item.k));
-    const textColor = isActive ? "text-slate-800" : "text-slate-400";
-    const strokeColor = isActive ? "border-slate-800" : "border-gray-300";
+    const isActive = activeItem && activeItem.k === item.k;
+    const depends = activeItem && activeItem.dependsOn?.has(item.k);
+    const clr = isActive ? "slate-900" : depends ? "slate-600" : "slate-300";
+    // TODO update item.v to require a param that tells if linkedtext should be active or not, for colored text
+    const textColor = isActive
+      ? "text-slate-900"
+      : depends
+      ? "text-slate-500"
+      : "text-slate-300";
+    const strokeColor = isActive
+      ? "border-slate-900"
+      : depends
+      ? "border-slate-500"
+      : "border-slate-300";
+    if (this.state.revealed < i + 1) {
+      // render empty row
+      return (
+        <div className={`flex flex-row justify-start h-16`} key={item.k}>
+          <div
+            id={`${this.idPrefix}${item.k}`}
+            className="border-gray-300 border-b-2 w-full h-16 ml-6 text-lg focus:outline-none"
+          >
+            <div
+              className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
+            >
+              <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
+                <div className="text-slate-400 font-bold">{i + 1}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
-      <div className="flex flex-row justify-start h-16" key={item.k}>
-        {this.highlightBar(item.k)}
+      <div className={`flex flex-row justify-start h-16`} key={item.k}>
+        {this.highlightBar(item.k, "h-16")}
         <button
           id={`${this.idPrefix}${item.k}`}
           onClick={this.onClick}
@@ -117,10 +168,19 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
             className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
           >
             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-              <div className="text-slate-400 font-bold">{i + 1}</div>
-              {item.v}
+              <div
+                className={`${
+                  isActive ? "text-violet-500" : "text-slate-400"
+                } font-bold`}
+              >
+                {i + 1}
+              </div>
+              <div>{item.v}</div>
             </div>
-            <div className="flex flex-row justify-start align-baseline">
+            <div
+              className={`flex flex-row justify-start align-baseline`}
+              id={`reason-${i + 1}`}
+            >
               {item.reason}
             </div>
           </div>
@@ -130,7 +190,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   };
 
   render() {
-    // TODO change style based on the state
     if (this.props.items.length > 0) {
       // first 2 rows are "given" and "prove"
       const given = this.props.items[0];
@@ -145,9 +204,39 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
               <div className="opacity-0">0</div>
               <div>Statement</div>
             </div>
-            <div>Reason</div>
+            <div className="flex flex-row justify-between align-baseline">
+              <div>Reason</div>
+            </div>
           </div>
           {this.props.items.slice(2).map((item, i) => this.renderRow(item, i))}
+          <div className="w-full mt-4 text-right font-semibold text-base tracking-wide text-slate-800">
+            <div>Q.E.D.</div>
+          </div>
+          <div className="w-full flex justify-center">
+            {this.state.revealed < this.props.items.length - 2 && (
+              <button
+                onClick={this.onReveal}
+                className="text-violet-500 animate-smallBounce"
+              >
+                <div
+                  className="animate-bounce bg-violet-500 p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center"
+                  id="reveal-step-btn"
+                >
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                  </svg>
+                </div>
+              </button>
+            )}
+          </div>
         </>
       );
     }

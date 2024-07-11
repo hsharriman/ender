@@ -201,7 +201,11 @@ const step4SASProps: SASProps = {
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: [2, 3, 4],
-  additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
+  additions: (props: StepFocusProps) =>
+    SAS.additions(
+      { ...props, mode: SVGModes.ActiveTriangleBlue },
+      step4SASProps
+    ),
   text: (ctx: Content) => EqualTriangles.text(ctx, step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
 });
@@ -211,6 +215,7 @@ const step6: StepMeta = makeStepMeta({
   dependsOn: [5],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });
+    EqualTriangles.unfocused(props, ["ACM", "BDM"]);
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CAM", "DBM"], 2),
