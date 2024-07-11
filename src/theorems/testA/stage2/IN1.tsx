@@ -289,7 +289,7 @@ export const miniContent = () => {
 
 export const T1_S2_IN1: LayoutProps = {
   name: "T1_S2_IN1",
-  questions: exploratoryQuestion,
+  questions: exploratoryQuestion(4, 9),
   baseContent,
   miniContent: miniContent(),
   givens,

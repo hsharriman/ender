@@ -17,7 +17,7 @@ import {
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { completeProof1 } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
-import { colors, linked, makeStepMeta } from "../../utils";
+import { linked, makeStepMeta } from "../../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -53,24 +53,8 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   );
 
   [
-    new Triangle(
-      {
-        pts: [A, C, M],
-        hoverable,
-        label: "ACM",
-        backgroundColor: colors.purple,
-      },
-      ctx
-    ),
-    new Triangle(
-      {
-        pts: [B, D, M],
-        hoverable,
-        label: "BDM",
-        backgroundColor: colors.blue,
-      },
-      ctx
-    ),
+    new Triangle({ pts: [A, C, M], hoverable, label: "ACM" }, ctx),
+    new Triangle({ pts: [B, D, M], hoverable, label: "BDM" }, ctx),
   ].map((t) => ctx.push(t));
 
   ctx.push(new Segment({ p1: A, p2: B, hoverable: false }));
@@ -222,13 +206,7 @@ const step5: StepMeta = makeStepMeta({
       { ...props, mode: SVGModes.ActiveTriangleBlue },
       step4SASProps
     ),
-  text: (ctx: Content) =>
-    EqualTriangles.text(
-      ctx,
-      step4SASProps.triangles,
-      colors.purple,
-      colors.blue
-    ),
+  text: (ctx: Content) => EqualTriangles.text(ctx, step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
 });
 

@@ -49,35 +49,28 @@ export class LinkedText extends React.Component<
     }
   };
 
-  getColor = () => {
-    return this.state.isClicked
-      ? "stroke-violet-500"
-      : this.props.clr
-      ? `stroke-${this.props.clr}`
-      : "";
-  };
-
   getStyle = () => {
     if (this.state.isClicked) {
-      return "text-violet-500 font-bold";
+      return "text-violet-500 font-bold border-violet-400";
     } else if (this.props.clr === "lightblue") {
-      return `text-${this.lightblue}`;
+      // TODO issue is that opacity is not reduced from parent, need to set lighter color directly with this approach.
+      return "text-sky-400";
     } else if (this.props.clr === "blue") {
-      return `text-${this.blue}`;
+      return "text-sky-600";
     } else {
       return "";
     }
   };
 
-  getColoredStyle = () => {
-    if (this.state.isClicked) {
-      return { color: "rgb(139, 92, 246)", fontWeight: 700 };
-    } else if (this.props.clr) {
-      return { color: this.props.clr };
-    } else {
-      return {};
-    }
-  };
+  // getColoredStyle = () => {
+  //   if (this.state.isClicked) {
+  //     return { color: "rgb(139, 92, 246)", fontWeight: 700 };
+  //   } else if (this.props.clr) {
+  //     return { color: this.props.clr };
+  //   } else {
+  //     return {};
+  //   }
+  // };
 
   onClick = (isClicked: boolean) => {
     if (isClicked !== this.state.isClicked) {
@@ -112,21 +105,20 @@ export class LinkedText extends React.Component<
       case Obj.Segment:
         return (
           <span
-            className={`${this.getStyle()}`}
-            style={{ borderTop: `2px solid ${this.getColor()}` }}
+            className={`${this.getStyle()} border-t-2 border-solid`}
           >{`${this.props.val}`}</span>
         );
       case Obj.Triangle:
         return (
-          <span className={`font-notoSerif`} style={this.getColoredStyle()}>
-            <span className="text-l leading-4 font-semibold">{`\u25B3`}</span>
+          <span className={`font-notoSerif opacity-inherit ${this.getStyle()}`}>
+            <span className="text-l leading-4 font-semibold opacity-inherit">{`\u25B3`}</span>
             {this.props.val}
           </span>
         );
       case Obj.Angle:
         return angleStr(this.props.val);
       default:
-        return this.props.val;
+        return <span className={this.getStyle()}>{this.props.val}</span>;
     }
   };
 

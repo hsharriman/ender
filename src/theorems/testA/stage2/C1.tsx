@@ -376,7 +376,7 @@ export const miniContent = () => {
 export const T1_S2_C1: LayoutProps = {
   name: "T1_S2_C1",
   // TODO: Replace questions
-  questions: exploratoryQuestion,
+  questions: exploratoryQuestion(3, 8),
   baseContent,
   miniContent: miniContent(),
   givens,

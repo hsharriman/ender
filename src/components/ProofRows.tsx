@@ -10,8 +10,6 @@ export interface ProofRowsProps {
 }
 export interface ProofRowsState {
   idx: number;
-  showAll: boolean;
-  viewed: Set<string>;
   revealed: number;
 }
 export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
@@ -20,8 +18,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     super(props);
     this.state = {
       idx: 0,
-      showAll: false,
-      viewed: new Set(),
       revealed: 0,
     };
   }
@@ -40,7 +36,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       this.setState({ revealed: newIdx, idx: newIdx + 1 });
       this.props.onClick(`s${newIdx}`);
       logEvent("c", {
-        c: "pr",
+        c: "pr-r",
         v: `s${newIdx}`,
       });
     }
@@ -60,8 +56,17 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       const newActive = this.props.items[newIdx].k;
       this.setState({
         idx: newIdx,
+        revealed:
+          this.state.idx > 0 &&
+          this.state.revealed < this.props.items.length - 2
+            ? this.state.revealed + 1
+            : this.state.revealed,
       });
       this.props.onClick(newActive);
+      logEvent("a", {
+        c: "pr",
+        v: newActive,
+      });
     }
   };
 
@@ -74,11 +79,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           "couldn't find match in ProofRows items array for key: ",
           active
         );
-      }
-      if (active !== "given" && active !== "prove") {
-        this.setState({
-          viewed: new Set([...Array.from(this.state.viewed), active]),
-        });
       }
       this.setState({
         idx: newIdx,
@@ -112,8 +112,8 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           onClick={this.onClick}
           className="py-2 border-b-2 border-gray-300 text-md w-full h-12 ml-2 focus:outline-none"
         >
-          <div className="flex flex-row justify-start gap-8 align-baseline ml-2">
-            <div className="font-semibold">{`${premise}:`} </div>
+          <div className="flex flex-row justify-start gap-8 align-baseline ml-2 border-slate-800">
+            <div className="font-semibold ">{`${premise}:`} </div>
             {item.v}
           </div>
         </button>
@@ -121,25 +121,22 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     );
   };
 
-  onClickShowAll = () => {
-    this.setState({ ...this.state, showAll: !this.state.showAll });
-  };
-
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
     const isActive = activeItem && activeItem.k === item.k;
     const depends = activeItem && activeItem.dependsOn?.has(item.k);
+    const clr = isActive ? "slate-900" : depends ? "slate-600" : "slate-300";
     // TODO update item.v to require a param that tells if linkedtext should be active or not, for colored text
     const textColor = isActive
       ? "text-slate-900"
-      : depends || this.state.showAll || this.state.viewed.has(item.k)
+      : depends
       ? "text-slate-500"
-      : "text-slate-500";
+      : "text-slate-300";
     const strokeColor = isActive
-      ? "border-slate-800"
-      : depends || this.state.showAll
+      ? "border-slate-900"
+      : depends
       ? "border-slate-500"
-      : "border-slate-500";
+      : "border-slate-300";
     if (this.state.revealed < i + 1) {
       // render empty row
       return (
@@ -202,7 +199,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           {this.renderPremise("Given", given)}
           {this.renderPremise("Prove", prove)}
           <div className="h-8"></div>
-          <button onClick={this.onReveal}>Next Row</button>
           <div className="py-2 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-lg font-bold ml-6">
             <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
               <div className="opacity-0">0</div>
@@ -210,21 +206,36 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
             </div>
             <div className="flex flex-row justify-between align-baseline">
               <div>Reason</div>
-              {
-                <button
-                  className="text-xs self-end px-2 py-1 italic bg-transparent text-violet-500 justify-center rounded-md"
-                  onClick={this.onClickShowAll}
-                >
-                  {`${
-                    this.state.showAll ? "Show Current Row" : "Show All Rows"
-                  }`}
-                </button>
-              }
             </div>
           </div>
           {this.props.items.slice(2).map((item, i) => this.renderRow(item, i))}
           <div className="w-full mt-4 text-right font-semibold text-base tracking-wide text-slate-800">
-            Q.E.D.
+            <div>Q.E.D.</div>
+          </div>
+          <div className="w-full flex justify-center">
+            {this.state.revealed < this.props.items.length - 2 && (
+              <button
+                onClick={this.onReveal}
+                className="text-violet-500 animate-smallBounce"
+              >
+                <div
+                  className="animate-bounce bg-violet-500 p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center"
+                  id="reveal-step-btn"
+                >
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                  </svg>
+                </div>
+              </button>
+            )}
           </div>
         </>
       );

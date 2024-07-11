@@ -2,7 +2,7 @@ import React from "react";
 import { Triangle } from "../geometry/Triangle";
 import { strs } from "../geometryText";
 import { Obj } from "../types/types";
-import { logEvent } from "../utils";
+import { logEvent, permutator } from "../utils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
 import { ModeCSS } from "./SVGStyles";
@@ -61,11 +61,11 @@ export class SVGGeoTriangle extends React.Component<
     });
     // TODO find matches for all segments/angles and add to their class
     const prefix = `#${Obj.Triangle}-text-`;
-    const ang = this.props.t.label;
-    const flippedAng = ang[2] + ang[1] + ang[0];
-    const matches = document.querySelectorAll(
-      `${prefix + ang}, ${prefix + flippedAng}`
-    );
+    const tri = this.props.t.label;
+    const selectors = permutator(tri.split(""))
+      .map((p) => prefix + p)
+      .join(", ");
+    const matches = document.querySelectorAll(selectors);
     matches.forEach((ele) => {
       if (ele) {
         const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");

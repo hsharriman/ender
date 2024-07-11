@@ -1,5 +1,6 @@
 import { Content } from "../diagramContent";
 import { Obj, SVGModes } from "../types/types";
+import { permutator } from "../utils";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
@@ -25,7 +26,7 @@ export class Triangle extends BaseGeometryObject {
     this.s = this.buildSegments(props.pts, ctx);
     this.p = props.pts;
     this.a = this.buildAngles(props.pts, ctx);
-    this.names = this.permutator(props.pts.map((pt) => pt.label));
+    this.names = permutator(props.pts.map((pt) => pt.label));
     this.label = props.label;
     this.id = this.getId(Obj.Triangle, this.label);
     this.backgroundColor = props.backgroundColor ?? "";

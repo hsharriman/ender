@@ -1,6 +1,7 @@
 import { segmentQuestion, strs } from "../core/geometryText";
 import { Obj, Reason } from "../core/types/types";
 import { Reasons } from "../theorems/reasons";
+import { possibleStepAnswers } from "../theorems/utils";
 
 export interface Question {
   answerType: AnswerType;
@@ -220,7 +221,7 @@ export const placeholder: Question[] = [
   },
 ];
 
-export const exploratoryQuestion: Question[] = [
+export const exploratoryQuestion = (start: number, end: number): Question[] => [
   {
     prompt: "Is there a mistake in this proof?",
     answerType: AnswerType.YesNo,
@@ -232,7 +233,7 @@ export const exploratoryQuestion: Question[] = [
     answerType: AnswerType.Dropdown,
     type: QuestionType.Correctness,
     id: id(2),
-    answers: [], // dynamically fill in based on the proof.
+    answers: possibleStepAnswers(start, end), // dynamically fill in based on the proof.
   },
   {
     prompt: "Which of the following options best describes why it is wrong?",

@@ -1,5 +1,6 @@
 import { ModeCSS } from "../svg/SVGStyles";
 import { LSegment, Obj, SVGModes, TickType } from "../types/types";
+import { permutator } from "../utils";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
 
@@ -23,7 +24,7 @@ export class Segment extends BaseGeometryObject {
       props.parentFrame !== undefined
         ? `${props.parentFrame}-${this.id}`
         : this.id;
-    this.names = this.permutator([this.p1.label, this.p2.label]);
+    this.names = permutator([this.p1.label, this.p2.label]);
     this.ticks = new Map<string, { type: TickType; num: number }>();
   }
   // deprecated?

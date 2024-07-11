@@ -12,6 +12,7 @@ export const tutorial1Steps: TutorialStep[] = [
         use. Let's look through them together.
       </span>
     ),
+    listenerId: "", // TODO use this to check if specific actions have been taken?
     type: TutorialStepType.Intro,
   },
   {
@@ -35,10 +36,11 @@ export const tutorial1Steps: TutorialStep[] = [
     type: TutorialStepType.Default,
   },
   {
-    elemId: "prooftext-s1",
+    elemId: "reveal-step-btn",
     text: (
       <span>
-        You can {bold("click on a row")} to see more information about it.
+        You can use the {bold("Down arrow key")} or {bold("click this button")}{" "}
+        to reveal the next row of the proof.
       </span>
     ),
     type: TutorialStepType.Default,
@@ -52,10 +54,7 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     exercise: (
-      <span>
-        Notice how information is added or removed as you click around the
-        proof.
-      </span>
+      <span>Notice how the diagram changes as you add steps to the proof.</span>
     ),
     type: TutorialStepType.Default,
   },
@@ -63,39 +62,37 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "answer-button-1",
     text: (
       <span>
-        In the interactive proof,{" "}
-        {bold(
-          "we can look at the construction to find the answer to this question"
-        )}
-        , since the diagram tracks all the information established in the proof.
+        Try to use the information in this proof to answer the question. If you
+        need help, {bold("click the '?' button for a hint")}.
       </span>
     ),
-    exercise: (
-      <span>
-        Click on the last step to see the state at the end of the proof.
-      </span>
-    ),
-    type: TutorialStepType.Default,
-  },
-  {
-    elemId: "point.D",
-    text: (
-      <span>
-        {segmentQuestion("AB")} has 1 tick but {segmentQuestion("AC")} has 2, so
-        we do not know that {segmentQuestion("AB")} must be congruent to{" "}
-        {segmentQuestion("AC")}.
-      </span>
-    ),
-    exercise: <span>Use the "Yes", "No" buttons to submit your answer.</span>,
     type: TutorialStepType.HideContinue,
   },
+  // {
+  //   elemId: "point.D",
+  //   text: (
+  //     <span>
+  //       {segmentQuestion("AB")} has 1 tick but {segmentQuestion("AC")} has 2, so
+  //       we do not know that {segmentQuestion("AB")} must be congruent to{" "}
+  //       {segmentQuestion("AC")}.
+  //     </span>
+  //   ),
+  //   exercise: <span>Use the "Yes", "No" buttons to submit your answer.</span>,
+  //   type: TutorialStepType.HideContinue,
+  // },
   {
     // STARTING QUESTION 2
     // TODO make these popups have the answers to the previous questions?
     type: TutorialStepType.Intro,
     elemId: "",
-    headerText: "Nicely done!",
-    text: <span>Let's look at another question.</span>,
+    headerText: "The correct answer was 'No'.",
+    text: (
+      <span>
+        {segmentQuestion("AB")} had 1 tick but {segmentQuestion("AC")} had 2, so
+        we did not know that {segmentQuestion("AB")} must be congruent to{" "}
+        {segmentQuestion("AC")}.
+      </span>
+    ),
   },
   {
     type: TutorialStepType.Default,
@@ -103,7 +100,11 @@ export const tutorial1Steps: TutorialStep[] = [
     text: (
       <span>
         This question has to do with the {bold("order of the steps")} in the
-        proof. {bold("Click on the row applying SAS Triangle Congruence")}.
+        proof.{" "}
+        {bold(
+          "Press the Down arrow key or click to the row applying SAS Triangle Congruence"
+        )}
+        .
       </span>
     ),
   },
@@ -119,8 +120,8 @@ export const tutorial1Steps: TutorialStep[] = [
     ),
     exercise: (
       <span>
-        Imagine moving row 4 between rows 2 and 3. When you're ready, submit
-        your answer at the top of the page.
+        Try answering the question using this information. If you need help,{" "}
+        {bold("click the '?' button for a hint")}.
       </span>
     ),
     paddingL: 30,
@@ -143,11 +144,11 @@ export const tutorial2Steps: TutorialStep[] = [
   {
     type: TutorialStepType.Intro,
     elemId: "",
-    headerText: "Great!",
+    headerText: "The correct answer was 'No'.",
     text: (
       <span>
-        Let's look at one more question, this time on a (very) slightly
-        different proof.
+        Moving row 4 between rows 2 and 3 would make SAS incorrectly rely on
+        statements that aren't stated until later in the proof.
       </span>
     ),
   },
@@ -160,14 +161,17 @@ export const tutorial2Steps: TutorialStep[] = [
         (Side-Side-Side), so let's check out the row that applies it.
       </span>
     ),
+    exercise: (
+      <span>Use the arrow keys to navigate to the last row of the proof.</span>
+    ),
   },
   {
-    type: TutorialStepType.HideContinue,
+    type: TutorialStepType.Default,
     elemId: "svg-object-mini",
     text: (
       <span>
         Compare this {bold("illustration of SSS Triangle Congruence")} to the
-        {bold("construction")}. Are there any differences that you notice?
+        {bold(" construction")}. Are there any differences that you notice?
       </span>
     ),
     exercise: (
@@ -175,17 +179,17 @@ export const tutorial2Steps: TutorialStep[] = [
     ),
     paddingL: -100,
   },
-  // {
-  //   type: TutorialStepType.HideContinue,
-  //   elemId: "svg-object-mini",
-  //   text: (
-  //     <span>
-  //       The tick marks are inconsistent between the illustration and the
-  //       construction! This indicates that the proof is{" "}
-  //       {bold("incorrectly applying SSS")} to this proof.
-  //     </span>
-  //   ),
-  //   exercise: <span>Use the buttons to submit your answer.</span>,
-  //   paddingL: -100,
-  // },
+  {
+    // TODO this is not shown because the page moves on
+    type: TutorialStepType.Intro,
+    elemId: "",
+    headerText: "The correct answer was 'No'.",
+    text: (
+      <span>
+        The tick marks were inconsistent between the illustration and the
+        construction, indicating that the proof
+        {bold("incorrectly applies SSS")}.
+      </span>
+    ),
+  },
 ];

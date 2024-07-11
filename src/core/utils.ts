@@ -11,6 +11,24 @@ export const getId = (objectType: Obj, label: string, tickNumber?: number) => {
   return tickNumber ? `${id}.${tickNumber}` : id;
 };
 
+// https://stackoverflow.com/questions/9960908/permutations-in-javascript
+export const permutator = (inputArr: string[]): string[] => {
+  let result: string[] = [];
+  const permute = (arr: string[], m: string = "") => {
+    if (arr.length === 0) {
+      result.push(m);
+    } else {
+      for (let i = 0; i < arr.length; i++) {
+        let curr = arr.slice(); // copy arr
+        let next = curr.splice(i, 1);
+        permute(curr.slice(), m + next);
+      }
+    }
+  };
+  permute(inputArr);
+  return result;
+};
+
 interface LogEventInfo {
   c: string;
   v: string;

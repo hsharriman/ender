@@ -1,4 +1,5 @@
 import React from "react";
+import { logEvent } from "../core/utils";
 import { scaffolding } from "../questions/funcTypeQuestions";
 
 export interface QuestionProps {
@@ -73,6 +74,10 @@ export class YesNoQuestion extends React.Component<
 
   toggleHint = () => {
     this.setState({ showHint: !this.state.showHint });
+    logEvent("c", {
+      c: "qh",
+      v: `${this.state.showHint ? "hide" : "show"}`,
+    });
   };
 
   renderHintBtn = (isOpen: boolean, show: boolean) => {
@@ -82,6 +87,7 @@ export class YesNoQuestion extends React.Component<
           isOpen ? "bg-slate-300" : "bg-slate-500"
         } ${show ? "opacity-1" : "opacity-0"}`}
         onClick={this.toggleHint}
+        id="hint-button"
       >
         ?
       </button>

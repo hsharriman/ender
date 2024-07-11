@@ -1,20 +1,26 @@
 import React from "react";
 import { QuestionProps, QuestionState } from "./YesNoQuestion";
 
+export type DropdownQuestionProps = {
+  hasTextBox: boolean;
+} & QuestionProps;
+
 type DropdownQuestionState = {
   isOpen: boolean;
+  inputText: string;
 } & QuestionState;
 
 export class DropdownQuestion extends React.Component<
-  QuestionProps,
+  DropdownQuestionProps,
   DropdownQuestionState
 > {
-  constructor(props: QuestionProps) {
+  constructor(props: DropdownQuestionProps) {
     super(props);
     this.state = {
       selectedOption: "",
       isOpen: false,
       showHint: false,
+      inputText: "",
     };
   }
 
@@ -29,7 +35,9 @@ export class DropdownQuestion extends React.Component<
 
   onDropdownClick = (newSelect: string) => {
     if (this.state.selectedOption !== newSelect) {
-      this.setState({ selectedOption: newSelect });
+      this.setState({
+        selectedOption: newSelect,
+      });
     }
     this.toggleDropdown();
   };
@@ -53,14 +61,43 @@ export class DropdownQuestion extends React.Component<
   }
 
   renderOption = (option: string, idx: number) => {
+    if (this.props.hasTextBox && idx === this.props.answers.length - 1) {
+      return this.renderTextBox(option);
+    }
     return (
       <div
-        className="block px-4 py-2 text-sm text-gray-700"
+        className="block px-4 py-2 text-sm text-gray-700 cursor-pointer hover:text-gray-500"
         onClick={() => this.onDropdownClick(option)}
         id={`dropdown-item-${idx}`}
         key={idx}
       >
         {option}
+      </div>
+    );
+  };
+
+  handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = event.target.value;
+    this.setState({ inputText: value });
+  };
+
+  renderTextBox = (option: string) => {
+    return (
+      <div className="py-2">
+        <label
+          className="text-sm px-4 cursor-pointer hover:text-gray-500"
+          onClick={() => this.onDropdownClick(this.state.inputText)}
+        >
+          {option}
+        </label>
+        <textarea
+          id="input-group-search"
+          className="w-[300px] mx-4 p-2 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 bg-slate-100"
+          placeholder="(120 character limit)"
+          maxLength={120}
+          value={this.state.inputText}
+          onChange={this.handleInputChange}
+        />
       </div>
     );
   };
@@ -119,8 +156,9 @@ export class DropdownQuestion extends React.Component<
             </div>
             <div className="col-start-6 col-span-2">
               <button
-                className="inline-flex w-[80px] justify-center rounded-md items-center bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-400 sm:ml-3"
+                className="inline-flex w-[80px] justify-center rounded-md items-center bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-400 sm:ml-3 disabled:bg-purple-300 disabled:cursor-not-allowed"
                 onClick={this.handleSubmit}
+                disabled={this.state.selectedOption === ""}
               >
                 Submit
               </button>

@@ -1,14 +1,12 @@
 import React from "react";
-import { strs } from "../geometryText";
 import { LAngle, Obj, SVGModes, TickType } from "../types/types";
+import { logEvent } from "../utils";
 import { vops } from "../vectorOps";
-import { HoverTextLabel } from "./HoverTextLabel";
 import { SVGGeoTick } from "./SVGGeoTick";
 import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { arcSweepsCCW, coordsToSvg, updateStyle } from "./svgUtils";
-import { logEvent } from "../utils";
 
 export type SVGAngleProps = {
   a: LAngle;
@@ -128,7 +126,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
             this.props.miniScale ? "-mini" : ""
           }`}
         />
-        {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
+        {/* {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel
             pt={coordsToSvg(pos, this.props.miniScale)}
             rot={angle}
@@ -136,8 +134,8 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
             isHovered={this.state.isActive}
             isPinned={Boolean(this.state.isPinned)}
           />
-        )}
-        {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
+        )} */}
+        {/* {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <path
             d={this.angleBbox()}
             id={this.props.geoId + "-hover"}
@@ -152,7 +150,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
               cursor: "pointer",
             }}
           />
-        )}
+        )} */}
       </>
     );
   }
