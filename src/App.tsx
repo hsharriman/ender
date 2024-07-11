@@ -25,6 +25,7 @@ import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1, TutorialProof2 } from "./theorems/tutorial/tutorial1";
 import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
+import { logEvent } from "./core/utils";
 
 interface ProofMeta {
   layout: LayoutOptions;
@@ -164,6 +165,7 @@ interface AppProps {}
 interface AppState {
   activePage: number;
   activeTest: number;
+  isPaused: boolean;
   activeQuestionIdx: number;
   answers: {
     [proofName: string]: {
@@ -183,6 +185,7 @@ export class App extends React.Component<AppProps, AppState> {
     this.state = {
       activePage: 0,
       activeTest: 0,
+      isPaused: false,
       answers: {},
       page: "home",
       scaffolding: {
@@ -224,6 +227,22 @@ export class App extends React.Component<AppProps, AppState> {
   componentDidMount() {
     window.document.title = "Ender";
   }
+
+  handlePause = () => {
+    this.setState({ isPaused: true });
+    logEvent("pa", {
+      c: "",
+      v: "",
+    });
+  };
+
+  handleResume = () => {
+    this.setState({ isPaused: false });
+    logEvent("r", {
+      c: "",
+      v: "",
+    });
+  };
 
   onClickTest = (test: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
     this.setState({ page: test });
@@ -311,6 +330,13 @@ export class App extends React.Component<AppProps, AppState> {
               />
             </div>
             <button
+              className="absolute right-20 p-3 underline underline-offset-2 z-30 text-sm"
+              id="pause"
+              onClick={this.handlePause}
+            >
+              Pause
+            </button>
+            <button
               className="p-3 underline underline-offset-2 z-30 text-sm"
               id="next-arrow"
               style={{
@@ -340,6 +366,13 @@ export class App extends React.Component<AppProps, AppState> {
         <div className="absolute top-0 p-3 left-24 z-30">{`${
           this.state.activePage + 1
         } / ${this.numPages}`}</div>
+        <button
+          className="absolute top-0 right-10 p-3 underline underline-offset-2 z-30 text-sm"
+          id="pause"
+          onClick={this.handlePause}
+        >
+          Pause
+        </button>
         <button
           className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
           id="next-arrow"
@@ -414,21 +447,46 @@ export class App extends React.Component<AppProps, AppState> {
     } else {
       pageContent = <SavePage answers={this.state.answers} />;
     }
+
     return (
       <>
-        {this.state.activePage > 0 && this.state.activePage <= 2 ? (
-          pageContent
-        ) : (
+        {
           <>
-            {this.state.activePage > 0 &&
-            this.state.activePage <= this.meta.length
-              ? this.renderQuestionHeader(currMeta.layout)(currMeta.props)
-              : this.renderShortHeader()}
-            <div className="w-full h-full flex justify-start">
-              {pageContent}
-            </div>
+            {this.state.isPaused && (
+              <div className="absolute top-0 left-0 z-50 bg-gray-500 bg-opacity-75 w-screen h-screen flex items-center justify-center">
+                <button
+                  onClick={this.handleResume}
+                  className="bg-green-500 hover:bg-green-700 text-4xl text-white font-bold py-3 px-5 rounded flex items-center justify-center"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-10 w-10 mr-2"
+                  >
+                    <polygon
+                      strokeWidth={2}
+                      points="10,5 34,20 10,35"
+                      className="fill-current text-white"
+                    />
+                  </svg>
+                  Resume
+                </button>
+              </div>
+            )}
+            {this.state.activePage > 0 && this.state.activePage <= 2 ? (
+              pageContent
+            ) : (
+              <>
+                {this.state.activePage > 0 &&
+                this.state.activePage <= this.meta.length
+                  ? this.renderQuestionHeader(currMeta.layout)(currMeta.props)
+                  : this.renderShortHeader()}
+                <div className="w-full h-full flex justify-start">
+                  {pageContent}
+                </div>
+              </>
+            )}
           </>
-        )}
+        }
       </>
     );
   };
