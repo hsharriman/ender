@@ -4,6 +4,7 @@ import { Segment } from "../../core/geometry/Segment";
 import { EqualSegments } from "../../core/templates/EqualSegments";
 import { ParallelLines } from "../../core/templates/ParallelLines";
 import { SVGModes, Vector } from "../../core/types/types";
+import { segmentPretestQuestions } from "../../questions/pretestQuestions";
 
 export const segmentContent = () => {
   const coords: [string, Vector, Vector][] = [
@@ -49,4 +50,14 @@ export const segmentContent = () => {
   EqualSegments.additions(defaultProps, ["DE", "MN"], 2);
   ParallelLines.additions(defaultProps, ["FG", "HJ"]);
   return ctx;
+};
+
+export const P1 = {
+  name: "P1",
+  questions: segmentPretestQuestions,
+  // miniContent: miniContent(),
+  segmentContent,
+  // givens,
+  // proves,
+  // steps: [step1, step2, step3, step4, step5, step6, step7],
 };

@@ -37,20 +37,38 @@ export const anglePretestQuestions: Question[] = [
   {
     answerType: AnswerType.Dropdown,
     prompt: <span>{angleStr("GHJ")} is congruent to:</span>,
-    answers: ["AB", "BC", "FG", "HJ", "MN"],
+    answers: ["Angle ABC", "Angle DEF", "Angle KLM", "Angle NQP"],
     type: QuestionType.Pretest,
     id: id(2),
   },
   {
     answerType: AnswerType.Dropdown,
     prompt: "Which angle is a right angle?",
-    answers: ["AB", "BC", "DE", "HJ", "MN"],
+    answers: ["Angle ABC", "Angle DEF", "Angle GHJ", "Angle KLM", "Angle NQP"],
     type: QuestionType.Pretest,
     id: id(3),
   },
 ];
 
-export const trianglePretestQuestions: Question[] = [
+const congruenceQuestions: Question[] = [1, 2, 3, 4, 5].map((n) => {
+  const q: Question = {
+    answerType: AnswerType.Dropdown,
+    prompt: "These triangles are congruent because of:",
+    answers: [
+      "SAS (Side-Angle-Side)",
+      "SSS (Side-Side-Side)",
+      "ASA (Angle-Side-Angle)",
+      "SSA (Side-Side-Angle)",
+      "AAS (Angle-Angle-Side)",
+      "HL (Hypotenuse-Leg)",
+      "AAA (Angle-Angle-Angle)",
+    ],
+    type: QuestionType.Pretest,
+    id: id(n),
+  };
+  return q;
+});
+export const trianglePretestQuestions: Question[] = congruenceQuestions.concat([
   {
     answerType: AnswerType.Dropdown,
     prompt: <span>The definition of congruent triangles is...</span>,
@@ -63,6 +81,20 @@ export const trianglePretestQuestions: Question[] = [
       "Triangles whose angles add up to 180 degrees",
     ],
     type: QuestionType.Pretest,
-    id: id(2),
+    id: id(6),
   },
-];
+  {
+    answerType: AnswerType.YesNo,
+    prompt: <span>Is SSA is a valid triangle congruence theorem?</span>,
+    answers: ["Yes", "No"],
+    type: QuestionType.Pretest,
+    id: id(7),
+  },
+  {
+    answerType: AnswerType.YesNo,
+    prompt: <span>Is AAA is a valid triangle congruence theorem?</span>,
+    answers: ["Yes", "No"],
+    type: QuestionType.Pretest,
+    id: id(8),
+  },
+]);
