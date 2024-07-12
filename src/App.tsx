@@ -4,6 +4,10 @@ import {
   InteractiveAppPage,
   InteractiveAppPageProps,
 } from "./components/InteractiveAppPage";
+import {
+  PretestAppPage,
+  PretestAppPageProps,
+} from "./components/PretestAppPage";
 import SavePage from "./components/SavePage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage, SusProofType } from "./components/SusPage";
@@ -12,11 +16,13 @@ import { TutorialPage } from "./components/TutorialPage";
 import {
   fisherYates,
   interactiveLayout,
+  pretestLayout,
   randomizeLayout,
 } from "./core/testinfra/setupLayout";
 import { ProofMeta } from "./core/types/types";
 import { logEvent } from "./core/utils";
 import { tutorial1Steps, tutorial3Steps } from "./questions/tutorialContent";
+import { P1 } from "./theorems/pretest/segments";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "./theorems/testA/stage1/C2";
 import { T1_S1_C3 } from "./theorems/testA/stage1/C3";
@@ -64,6 +70,7 @@ export class App extends React.Component<AppProps, AppState> {
       },
       activeQuestionIdx: 0,
     };
+    const pretest: ProofMeta[] = [pretestLayout(P1)];
     const tutorial = [
       interactiveLayout(TutorialProof1, false, tutorial1Steps),
       interactiveLayout(TutorialProof2, false, tutorial3Steps),
@@ -87,7 +94,11 @@ export class App extends React.Component<AppProps, AppState> {
     // const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]), false);
     const challenge: ProofMeta[] = [];
 
-    this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
+    this.meta = tutorial
+      .concat(pretest)
+      .concat(stage1)
+      .concat(stage2)
+      .concat(challenge);
     // this.meta = stage1.concat(stage2);
     this.numPages = this.meta.length + 4; // 2 for SUS, 1 for basic questions, 1 for downloading
   }
@@ -160,7 +171,7 @@ export class App extends React.Component<AppProps, AppState> {
   renderQuestionHeader =
     (proofType: string) =>
     (
-      meta: StaticAppPageProps | InteractiveAppPageProps,
+      meta: StaticAppPageProps | InteractiveAppPageProps | PretestAppPageProps,
       incrementTutorial?: () => boolean
     ) => {
       return (
@@ -272,6 +283,15 @@ export class App extends React.Component<AppProps, AppState> {
           steps={currMeta.tutorial || []}
           headerFn={this.renderQuestionHeader(currMeta.layout)}
           onStepsComplete={() => this.onNext(1)}
+        />
+      );
+    } else if (this.state.activePage <= 3) {
+      const props = currMeta.props as PretestAppPageProps;
+      pageContent = (
+        <PretestAppPage
+          name={props.name}
+          ctx={props.ctx}
+          questions={props.questions}
         />
       );
     } else if (this.state.activePage <= this.meta.length) {

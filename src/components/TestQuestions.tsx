@@ -74,6 +74,9 @@ export class TestQuestions extends React.Component<QuestionsProps> {
   render() {
     const currentQuestion = this.props.questions[this.props.questionIdx];
     const answers = currentQuestion.answers;
+    const dropdownAnswerType =
+      currentQuestion.answerType === AnswerType.Dropdown ||
+      currentQuestion.answerType === AnswerType.DropdownTextbox;
     return (
       <>
         {/* <div className="flex items-center mb-4">
@@ -106,7 +109,7 @@ export class TestQuestions extends React.Component<QuestionsProps> {
               scaffoldReason={currentQuestion.reason || ""}
             />
           )}
-          {currentQuestion.answerType === AnswerType.Dropdown && (
+          {dropdownAnswerType && (
             <DropdownQuestion
               proofType={this.props.proofType}
               question={currentQuestion.prompt}
@@ -118,7 +121,7 @@ export class TestQuestions extends React.Component<QuestionsProps> {
               updateScaffolding={this.props.updateScaffolding}
               scaffoldReason=""
               hasTextBox={
-                this.props.questionIdx === this.props.questions.length - 1
+                currentQuestion.answerType === AnswerType.DropdownTextbox
               }
             />
           )}

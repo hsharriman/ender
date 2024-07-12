@@ -1,19 +1,15 @@
 import React from "react";
 import { DiagramContent } from "../core/diagramContent";
+import { Question } from "../questions/funcTypeQuestions";
 import { StaticDiagram } from "./StaticDiagram";
 
-interface PretestAppPageProps {
-  ctx?: DiagramContent;
+export interface PretestAppPageProps {
+  name: string;
+  ctx: DiagramContent;
+  questions: Question[];
 }
 export class PretestAppPage extends React.Component<PretestAppPageProps> {
   render() {
-    if (!this.props.ctx) {
-      return (
-        <div className="w-full flex justify-center m-4">
-          <h1>This page is intentionally left blank.</h1>
-        </div>
-      );
-    }
     return (
       <>
         <div className="w-full flex justify-center mt-4">

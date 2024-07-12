@@ -1,3 +1,4 @@
+import { PretestAppPageProps } from "../../components/PretestAppPage";
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
 import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";
@@ -111,6 +112,13 @@ export const interactiveLayout = (
       name: proofMeta.name,
     },
     tutorial,
+  };
+};
+
+export const pretestLayout = (props: PretestAppPageProps): ProofMeta => {
+  return {
+    layout: "static",
+    props: props,
   };
 };
 

@@ -16,6 +16,7 @@ export interface Question {
 export enum AnswerType {
   YesNo = "YesNo",
   Dropdown = "Dropdown",
+  DropdownTextbox = "DropdownTextbox",
 }
 
 export enum QuestionType {
@@ -246,7 +247,7 @@ export const exploratoryQuestion = (start: number, end: number): Question[] => [
     ],
     type: QuestionType.Correctness,
     id: id(3),
-    answerType: AnswerType.Dropdown,
+    answerType: AnswerType.DropdownTextbox,
   },
 ];
 
