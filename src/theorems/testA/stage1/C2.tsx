@@ -20,8 +20,9 @@ import {
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { completeProof2 } from "../../../questions/funcTypeQuestions";
+import { definitions } from "../../definitions";
 import { Reasons } from "../../reasons";
-import { linked, makeStepMeta } from "../../utils";
+import { linked, makeStepMeta, tooltip } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -71,7 +72,7 @@ const givens: StepMeta = makeStepMeta({
         {RightAngle.text(ctx, "ADB")}
         {comma}
         {linked("BD", BD)}
-        {" bisects "}
+        {tooltip(<span> bisects </span>, definitions.Bisector)}
         {BaseAngle.text(ctx, "ABC")}
       </span>
     );
@@ -140,7 +141,7 @@ const step2: StepMeta = makeStepMeta({
     return (
       <span>
         {linked("BD", BD)}
-        {" bisects "}
+        {tooltip(<span> bisects </span>, definitions.Bisector)}
         {linked("ABC", ABD, [DBC, ctx.getSegment("AB"), ctx.getSegment("BC")])}
       </span>
     );

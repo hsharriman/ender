@@ -221,19 +221,19 @@ export const miniContent = () => {
 
   const step4 = ctx.addFrame("s4");
   const rectangleSegs = ["LK", "LM", "MN", "NK"];
-  rectangleSegs.map((s) => ctx.getSegment(s).mode(step4, SVGModes.Focused));
-  const rectangleAngles = ["LMN", "NKL"];
-  rectangleAngles.map((a) =>
-    RightAngle.additions(
-      { ...defaultStepProps, frame: step4, mode: SVGModes.Focused },
-      a
-    )
-  );
-  EqualRightAngles.additions(
-    { ...defaultStepProps, frame: step4 },
-    ["KLM", "MNK"],
-    SVGModes.Blue
-  );
+  rectangleSegs.map((s) => ctx.getSegment(s).mode(step4, SVGModes.Purple));
+  // const rectangleAngles = ["LMN", "NKL"];
+  // rectangleAngles.map((a) =>
+  //   RightAngle.additions(
+  //     { ...defaultStepProps, frame: step4, mode: SVGModes.Focused },
+  //     a
+  //   )
+  // );
+  // EqualRightAngles.additions(
+  //   { ...defaultStepProps, frame: step4 },
+  //   ["KLM", "MNK"],
+  //   SVGModes.Blue
+  // );
 
   const step6 = ctx.addFrame("s6");
   SAS.additions(
