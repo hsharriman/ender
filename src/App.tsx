@@ -9,11 +9,14 @@ import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage, SusProofType } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
 import { TutorialPage } from "./components/TutorialPage";
-import { ProofTextItem, StaticProofTextItem } from "./core/types/stepTypes";
-import { LayoutProps, Reason, TutorialStep } from "./core/types/types";
+import {
+  fisherYates,
+  interactiveLayout,
+  randomizeLayout,
+} from "./core/testinfra/setupLayout";
+import { ProofMeta } from "./core/types/types";
 import { logEvent } from "./core/utils";
-import { tutorial1Steps, tutorial2Steps } from "./questions/tutorialContent";
-import { Reasons } from "./theorems/reasons";
+import { tutorial1Steps, tutorial3Steps } from "./questions/tutorialContent";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "./theorems/testA/stage1/C2";
 import { T1_S1_C3 } from "./theorems/testA/stage1/C3";
@@ -25,141 +28,6 @@ import { T1_S2_C2 } from "./theorems/testA/stage2/C2";
 import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
 import { TutorialProof1, TutorialProof2 } from "./theorems/tutorial/tutorial1";
-import { GIVEN_ID, PROVE_ID } from "./theorems/utils";
-
-interface ProofMeta {
-  layout: LayoutOptions;
-  props: StaticAppPageProps | InteractiveAppPageProps;
-  tutorial?: TutorialStep[];
-}
-type LayoutOptions = "static" | "interactive";
-
-/* Helper methods related to randomizing the proof order */
-const fisherYates = (arr: any[]) => {
-  // shuffle the array with Fisher-Yates algorithm
-  const arrCopy = arr.slice();
-  for (let i = arrCopy.length - 1; i >= 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arrCopy[i], arrCopy[j]] = [arrCopy[j], arrCopy[i]];
-  }
-  // return the shuffled array
-  return arrCopy;
-};
-
-const staticLayout = (
-  proofMeta: LayoutProps,
-  shuffleQuestions: boolean = true
-): ProofMeta => {
-  // reset stored variables
-  const ctx = proofMeta.baseContent(true, false);
-  const reasons: Reason[] = [];
-  const texts: StaticProofTextItem[] = [];
-
-  ctx.addFrame(GIVEN_ID);
-  proofMeta.givens.diagram(ctx, GIVEN_ID);
-  proofMeta.steps.map((step) => {
-    texts.push({
-      stmt: step.staticText(),
-      reason: step.reason.title,
-    });
-    if (step.reason.body !== "" && step.reason.title !== Reasons.Given.title) {
-      reasons.push(step.reason);
-    }
-  });
-  return {
-    layout: "static",
-    props: {
-      ctx: ctx.getCtx(),
-      texts: texts,
-      reasons: reasons,
-      pageNum: -1,
-      givenText: proofMeta.givens.staticText(),
-      provesText: proofMeta.proves.staticText(),
-      questions: shuffleQuestions
-        ? fisherYates(proofMeta.questions)
-        : proofMeta.questions,
-      name: proofMeta.name,
-    },
-  };
-};
-const interactiveLayout = (
-  proofMeta: LayoutProps,
-  shuffleQuestions: boolean = true,
-  tutorial?: TutorialStep[]
-): ProofMeta => {
-  const ctx = proofMeta.baseContent(true, true);
-  const linkedTexts: ProofTextItem[] = [];
-  const reasonMap = new Map<string, Reason>();
-
-  // GIVEN
-  ctx.addFrame(GIVEN_ID);
-  proofMeta.givens.diagram(ctx, GIVEN_ID);
-
-  // PROVE
-  ctx.addFrame(PROVE_ID);
-  proofMeta.proves.diagram(ctx, PROVE_ID);
-
-  // add given and prove to linkedTexts
-  linkedTexts.push({
-    k: GIVEN_ID,
-    v: proofMeta.givens.text(ctx),
-    alwaysActive: true,
-  });
-  linkedTexts.push({
-    k: PROVE_ID,
-    v: proofMeta.proves.text(ctx),
-    alwaysActive: true,
-  });
-
-  proofMeta.steps.map((step, i) => {
-    let textMeta = {};
-    const s = ctx.addFrame(`s${i + 1}`);
-    step.diagram(ctx, s);
-    if (step.dependsOn) {
-      const depIds = step.dependsOn.map((i) => `s${i}`);
-      ctx.reliesOn(s, depIds);
-      textMeta = { dependsOn: new Set(depIds) };
-    }
-    reasonMap.set(s, step.reason);
-    linkedTexts.push({
-      ...textMeta,
-      k: s,
-      v: step.text(ctx),
-      reason: step.reason.title,
-    });
-  });
-  return {
-    layout: "interactive",
-    props: {
-      ctx: ctx.getCtx(),
-      miniCtx: proofMeta.miniContent.getCtx(),
-      reasonMap: reasonMap,
-      linkedTexts: linkedTexts,
-      pageNum: -1,
-      questions: shuffleQuestions
-        ? fisherYates(proofMeta.questions)
-        : proofMeta.questions,
-      name: proofMeta.name,
-    },
-    tutorial,
-  };
-};
-
-const randomizeLayout = (
-  proofMetas: LayoutProps[],
-  shuffleQuestions: boolean
-): ProofMeta[] => {
-  let modes = proofMetas.map((p, i) => {
-    return i % 2 === 0 ? "s" : "i";
-  });
-  return fisherYates(modes).map((m, i) =>
-    m === "s"
-      ? staticLayout(proofMetas[i], shuffleQuestions)
-      : interactiveLayout(proofMetas[i], shuffleQuestions)
-  );
-  // return proofMetas.map((p) => interactiveLayout(p));
-  // return proofMetas.map((p) => staticLayout(p));
-};
 
 interface AppProps {}
 interface AppState {
@@ -198,7 +66,7 @@ export class App extends React.Component<AppProps, AppState> {
     };
     const tutorial = [
       interactiveLayout(TutorialProof1, false, tutorial1Steps),
-      interactiveLayout(TutorialProof2, false, tutorial2Steps),
+      interactiveLayout(TutorialProof2, false, tutorial3Steps),
     ];
     // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented
     const stage1 = randomizeLayout(
@@ -291,7 +159,10 @@ export class App extends React.Component<AppProps, AppState> {
 
   renderQuestionHeader =
     (proofType: string) =>
-    (meta: StaticAppPageProps | InteractiveAppPageProps) => {
+    (
+      meta: StaticAppPageProps | InteractiveAppPageProps,
+      incrementTutorial?: () => boolean
+    ) => {
       return (
         <div
           className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
@@ -321,6 +192,7 @@ export class App extends React.Component<AppProps, AppState> {
                 scaffolding={this.state.scaffolding}
                 updateScaffolding={this.updateScaffolding}
                 setActiveQuestionIndex={this.setActiveQuestionIndex}
+                incrementTutorial={incrementTutorial}
               />
             </div>
             <button
@@ -399,6 +271,7 @@ export class App extends React.Component<AppProps, AppState> {
           proof={currMeta.props as InteractiveAppPageProps}
           steps={currMeta.tutorial || []}
           headerFn={this.renderQuestionHeader(currMeta.layout)}
+          onStepsComplete={() => this.onNext(1)}
         />
       );
     } else if (this.state.activePage <= this.meta.length) {
@@ -444,43 +317,39 @@ export class App extends React.Component<AppProps, AppState> {
 
     return (
       <>
-        {
+        {this.state.isPaused && (
+          <div className="absolute top-0 left-0 z-50 bg-gray-500 bg-opacity-75 w-screen h-screen flex items-center justify-center">
+            <button
+              onClick={this.handleResume}
+              className="bg-green-500 hover:bg-green-700 text-4xl text-white font-bold py-3 px-5 rounded flex items-center justify-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10 mr-2"
+              >
+                <polygon
+                  strokeWidth={2}
+                  points="10,5 34,20 10,35"
+                  className="fill-current text-white"
+                />
+              </svg>
+              Resume
+            </button>
+          </div>
+        )}
+        {this.state.activePage > 0 && this.state.activePage <= 2 ? (
+          pageContent
+        ) : (
           <>
-            {this.state.isPaused && (
-              <div className="absolute top-0 left-0 z-50 bg-gray-500 bg-opacity-75 w-screen h-screen flex items-center justify-center">
-                <button
-                  onClick={this.handleResume}
-                  className="bg-green-500 hover:bg-green-700 text-4xl text-white font-bold py-3 px-5 rounded flex items-center justify-center"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-10 w-10 mr-2"
-                  >
-                    <polygon
-                      strokeWidth={2}
-                      points="10,5 34,20 10,35"
-                      className="fill-current text-white"
-                    />
-                  </svg>
-                  Resume
-                </button>
-              </div>
-            )}
-            {this.state.activePage > 0 && this.state.activePage <= 2 ? (
-              pageContent
-            ) : (
-              <>
-                {this.state.activePage > 0 &&
-                this.state.activePage <= this.meta.length
-                  ? this.renderQuestionHeader(currMeta.layout)(currMeta.props)
-                  : this.renderShortHeader()}
-                <div className="w-full h-full flex justify-start">
-                  {pageContent}
-                </div>
-              </>
-            )}
+            {this.state.activePage > 0 &&
+            this.state.activePage <= this.meta.length
+              ? this.renderQuestionHeader(currMeta.layout)(currMeta.props)
+              : this.renderShortHeader()}
+            <div className="w-full h-full flex justify-start">
+              {pageContent}
+            </div>
           </>
-        }
+        )}
       </>
     );
   };

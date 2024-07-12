@@ -53,7 +53,7 @@ const id = (n: number) => `qID-${n}`;
 const mini = (reason: string | JSX.Element) =>
   `(Hint: Click the row with ${reason}. Do the diagrams match? Does it rely on the right information?)`;
 const relies = (reason: string | JSX.Element) =>
-  `(Hint: Click the row with ${reason}. In the proposed proof order, would the step rely only on steps that appear beforehand?)`;
+  `(Hint: Click the row with ${reason}. In the proposed proof order, would any of the steps that the reason relies on appear afterwards?)`;
 export const scaffolding = {
   mini,
   relies,
@@ -93,7 +93,7 @@ export const checkingProof2: Question[] = [
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: diagramStateQuestion("KL", "MK", Obj.Segment),
+    prompt: diagramStateQuestion("KL", "KM", Obj.Segment),
     type: QuestionType.DiagramState,
     id: id(2),
   },

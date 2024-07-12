@@ -145,7 +145,11 @@ const step2: StepMeta = makeStepMeta({
       </span>
     );
   },
-  staticText: () => EqualAngles.staticText(["ABD", "CBD"]),
+  staticText: () => (
+    <span>
+      {segmentStr("BD")} bisects {angleStr("ABC")}
+    </span>
+  ),
 });
 
 const step3: StepMeta = makeStepMeta({

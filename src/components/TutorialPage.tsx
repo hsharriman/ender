@@ -12,12 +12,13 @@ export interface TutorialPageProps {
   proof: InteractiveAppPageProps;
   headerFn: (
     meta: StaticAppPageProps | InteractiveAppPageProps,
-    onSubmit: () => void,
-    questionsCompleted: () => void
+    onSubmit: () => boolean
   ) => JSX.Element;
+  onStepsComplete: () => void;
 }
 export interface TutorialPageState {
   currStep: number;
+  displayedStep: number;
 }
 export class TutorialPage extends React.Component<
   TutorialPageProps,
@@ -28,25 +29,44 @@ export class TutorialPage extends React.Component<
 
     this.state = {
       currStep: 0,
+      displayedStep: 1, // shows step number to user, doesn't incl popups
     };
   }
+
+  onQuestionSubmit = () => {
+    this.onClick();
+    // there are no questions remaining, ok to move to next page
+    return this.state.currStep === this.props.steps.length - 1;
+  };
+
   onClick = () => {
     if (this.state.currStep < this.props.steps.length - 1) {
+      const stepType = this.props.steps[this.state.currStep].type;
       this.setState((prevState) => ({
         currStep: prevState.currStep + 1,
+        displayedStep:
+          stepType === TutorialStepType.Popup
+            ? prevState.displayedStep
+            : prevState.displayedStep + 1,
       }));
+    } else {
+      this.setState({ currStep: 0, displayedStep: 1 });
+      // if the last step is a popup, that means it is showing information about the answer that was picked,
+      // show it before moving to the next proof.
+      if (
+        this.props.steps[this.state.currStep].type === TutorialStepType.Popup
+      ) {
+        this.props.onStepsComplete();
+      }
     }
   };
+
   activeElems = () => {
     const id = this.props.steps[this.state.currStep];
     // find all active items? could be multiple at a time
     // active items are set in onClick/onHover handlers of each component
     // scan through them for the one that we need to be able to move on
     document.querySelectorAll(".activeItem").forEach((elem) => {});
-  };
-
-  onSubmitQuestion = () => {
-    this.onClick();
   };
 
   onQuestionsCompleted = () => {
@@ -92,20 +112,19 @@ export class TutorialPage extends React.Component<
 
   render() {
     const step = this.props.steps[this.state.currStep];
+    const numSteps = this.props.steps.filter(
+      (s) => s.type !== TutorialStepType.Popup
+    ).length;
     return (
       <>
-        {this.props.headerFn(
-          this.props.proof,
-          this.onSubmitQuestion,
-          this.onQuestionsCompleted
-        )}
+        {this.props.headerFn(this.props.proof, this.onQuestionSubmit)}
         <div className="w-full h-full flex justify-start">
-          {step && step.type === TutorialStepType.Intro && this.popup(step)}
-          {step && step.type !== TutorialStepType.Intro && (
+          {step && step.type === TutorialStepType.Popup && this.popup(step)}
+          {step && step.type !== TutorialStepType.Popup && (
             <TutorialPopover
               step={step}
-              currStep={this.state.currStep}
-              numSteps={this.props.steps.length}
+              currStep={this.state.displayedStep}
+              numSteps={numSteps}
               onClick={this.onClick}
               paddingL={step.paddingL}
             />

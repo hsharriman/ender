@@ -5,7 +5,6 @@ import { Reason } from "../core/types/types";
 import { Question } from "../questions/funcTypeQuestions";
 import { GIVEN_ID } from "../theorems/utils";
 import { StaticDiagram } from "./StaticDiagram";
-import { TestQuestions } from "./TestQuestions";
 
 export interface StaticAppPageProps {
   name: string;
@@ -42,7 +41,9 @@ export class StaticAppPage extends React.Component<
       <div className="flex flex-row justify-start h-12" key={`static-row-${i}`}>
         <div
           id={`proof-row-control-${i}`}
-          className="border-gray-300 w-10/12 h-12 ml-2 text-lg"
+          className={`border-gray-300 w-10/12 h-12 ml-2 text-lg ${
+            i % 2 !== 0 ? "bg-slate-100" : "bg-transparent"
+          }`}
         >
           <div
             className={`${textColor} ${strokeColor} grid grid-rows-1 grid-cols-2 pt-2`}

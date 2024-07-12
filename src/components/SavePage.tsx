@@ -11,11 +11,11 @@ const SavePage: React.FC<SavePageProps> = () => {
     const storedAnswers = localStorage.getItem("answers") || "None";
 
     const answers = JSON.parse(storedAnswers);
-    let csvContent = "pageName,question,answer,time\n";
+    let csvContent = "pageName,question,answer,time,version\n";
     Object.keys(answers).forEach((proofName) => {
       Object.keys(answers[proofName]).forEach((question) => {
-        const { answer, timestamp } = answers[proofName][question];
-        csvContent += `"${proofName}","${question}","${answer}","${timestamp}"\n`;
+        const { answer, timestamp, version } = answers[proofName][question];
+        csvContent += `"${proofName}","${question}","${answer}","${timestamp}","${version}"\n`;
       });
     });
 
