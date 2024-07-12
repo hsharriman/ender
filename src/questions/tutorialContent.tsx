@@ -113,6 +113,9 @@ export const tutorial1Steps: TutorialStep[] = [
     ),
     paddingL: 30,
   },
+];
+
+export const tutorial3Steps: TutorialStep[] = [
   {
     type: TutorialStepType.Popup,
     elemId: "",
@@ -124,9 +127,6 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
   },
-];
-
-export const tutorial3Steps: TutorialStep[] = [
   {
     type: TutorialStepType.Default,
     elemId: "hint-button",

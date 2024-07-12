@@ -66,7 +66,6 @@ export class App extends React.Component<AppProps, AppState> {
     };
     const tutorial = [
       interactiveLayout(TutorialProof1, false, tutorial1Steps),
-      // interactiveLayout(TutorialProof1, false, tutorial2Steps),
       interactiveLayout(TutorialProof2, false, tutorial3Steps),
     ];
     // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented

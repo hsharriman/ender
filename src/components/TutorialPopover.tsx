@@ -56,7 +56,7 @@ export class TutorialPopover extends React.Component<
             <div className="block">
               <p className="text-sm antialiased font-normal leading-relaxed mb-8 text-blue-gray-500">
                 <span className="font-bold">
-                  {`${this.props.currStep}/${this.props.numSteps - 1}: `}
+                  {`${this.props.currStep}/${this.props.numSteps}: `}
                 </span>
                 {step.text}
               </p>
