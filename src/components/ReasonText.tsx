@@ -1,7 +1,7 @@
 import React from "react";
 import { Reason } from "../core/types/types";
-import { Reasons } from "../theorems/reasons";
 import { logEvent } from "../core/utils";
+import { Reasons } from "../theorems/reasons";
 
 export interface ReasonTextProps {
   activeFrame: string;
