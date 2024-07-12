@@ -2,6 +2,11 @@ import { segmentQuestion } from "../core/geometryText";
 import { TutorialStep, TutorialStepType } from "../core/types/types";
 
 const bold = (text: string) => <span className="font-bold">{text}</span>;
+const hintBtn = (
+  <span className="p-1 py-0 rounded-xl text-white text-xs font-bold align-top select-none bg-blue-500">
+    ?
+  </span>
+);
 export const tutorial1Steps: TutorialStep[] = [
   {
     elemId: "",
@@ -63,7 +68,7 @@ export const tutorial1Steps: TutorialStep[] = [
     text: (
       <span>
         Try to use the information in this proof to answer the question. If you
-        need help, {bold("click the '?' button for a hint")}.
+        need help, {bold("click the ")} {hintBtn} {bold(" button for a hint")}.
       </span>
     ),
     type: TutorialStepType.HideContinue,
@@ -108,7 +113,7 @@ export const tutorial1Steps: TutorialStep[] = [
     exercise: (
       <span>
         Try answering the question using this information. If you need help,{" "}
-        {bold("click the '?' button for a hint")}.
+        {bold("click the")} {hintBtn} {bold("button for a hint")}.
       </span>
     ),
     paddingL: 30,

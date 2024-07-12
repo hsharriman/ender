@@ -82,6 +82,8 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       }
       this.setState({
         idx: newIdx,
+        revealed:
+          newIdx - 1 > this.state.revealed ? newIdx - 1 : this.state.revealed,
       });
       this.props.onClick(active);
       logEvent("c", {
@@ -123,27 +125,31 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
 
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
-    const isActive = activeItem && activeItem.k === item.k;
-    const depends = activeItem && activeItem.dependsOn?.has(item.k);
+    const isActive = activeItem && item.k === activeItem.k;
+    // if the active row is given or prove, focus all the proof rows
+    const depends =
+      (activeItem && activeItem.dependsOn?.has(item.k)) ||
+      new Set(["given", "prove"]).has(activeItem.k);
     const clr = isActive ? "slate-900" : depends ? "slate-600" : "slate-300";
     // TODO update item.v to require a param that tells if linkedtext should be active or not, for colored text
     const textColor = isActive
-      ? "text-slate-900"
+      ? "text-slate-900 font-[500]"
       : depends
-      ? "text-slate-500"
-      : "text-slate-300";
+      ? "text-slate-800"
+      : "text-slate-400";
     const strokeColor = isActive
       ? "border-slate-900"
       : depends
-      ? "border-slate-500"
-      : "border-slate-300";
+      ? "border-slate-800"
+      : "border-slate-400";
     if (this.state.revealed < i + 1) {
       // render empty row
       return (
         <div className={`flex flex-row justify-start h-16`} key={item.k}>
-          <div
+          <button
             id={`${this.idPrefix}${item.k}`}
             className="border-gray-300 border-b-2 w-full h-16 ml-6 text-lg focus:outline-none"
+            onClick={this.onClick}
           >
             <div
               className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
@@ -152,7 +158,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
                 <div className="text-slate-400 font-bold">{i + 1}</div>
               </div>
             </div>
-          </div>
+          </button>
         </div>
       );
     }

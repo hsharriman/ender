@@ -73,7 +73,14 @@ export class StaticAppPage extends React.Component<
   };
 
   render() {
-    // this.buildCtxAndText();
+    // delete duplicates from reasons
+    const reasons = this.props.reasons.filter(
+      (reason, index, self) =>
+        index ===
+        self.findIndex(
+          (t) => t.title === reason.title && t.body === reason.body
+        )
+    );
     return (
       <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-12">
         <div className="w-[900px] h-full flex flex-col ml-12">
@@ -109,7 +116,7 @@ export class StaticAppPage extends React.Component<
             <div className="font-bold text-base text-slate-500 pb-2">
               Reasons Applied:
             </div>
-            {this.props.reasons.map((reason) => this.renderReason(reason))}
+            {reasons.map((reason) => this.renderReason(reason))}
           </div>
         </div>
         {/* <div className="w-[400px] h-fit ml-10 p-8 rounded-lg border-dotted border-4 border-violet-300">
