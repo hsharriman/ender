@@ -8,6 +8,7 @@ import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
+import { logEvent } from "../core/utils";
 
 export interface InteractiveAppPageProps {
   name: string;
@@ -39,6 +40,20 @@ export class InteractiveAppPage extends React.Component<
         activeFrame: active,
       });
     }
+  };
+
+  onMouseEnter = () => {
+    logEvent("m", {
+      c: "mi",
+      v: "",
+    });
+  };
+
+  onMouseLeave = () => {
+    logEvent("ml", {
+      c: "mi",
+      v: "",
+    });
   };
 
   render() {
@@ -80,7 +95,11 @@ export class InteractiveAppPage extends React.Component<
               {this.props.miniCtx.frames.find(
                 (s) => s === this.state.activeFrame
               ) && (
-                <div className="col-span-3">
+                <div
+                  className="col-span-3"
+                  onMouseEnter={this.onMouseEnter}
+                  onMouseLeave={this.onMouseLeave}
+                >
                   <Diagram
                     width="250px"
                     height="100%"
