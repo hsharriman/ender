@@ -1,6 +1,5 @@
 import React from "react";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
-import { angleStr } from "../core/geometryText";
 import { Obj } from "../core/types/types";
 import { logEvent } from "../core/utils";
 
@@ -113,7 +112,12 @@ export class LinkedText extends React.Component<
           </span>
         );
       case Obj.Angle:
-        return angleStr(this.props.val);
+        return (
+          <span className={`font-notoSerif opacity-inherit ${this.getStyle()}`}>
+            <span className="text-2xl leading-4">{`\u2220`}</span>
+            {this.props.val}
+          </span>
+        );
       default:
         return <span className={this.getStyle()}>{this.props.val}</span>;
     }

@@ -164,7 +164,7 @@ const step3: StepMeta = makeStepMeta({
 });
 
 const step4: StepMeta = makeStepMeta({
-  reason: Reasons.Rectangle,
+  reason: Reasons.Quadrilateral,
   dependsOn: [1, 3],
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);
