@@ -47,11 +47,11 @@ export const Reasons = {
   },
   Rectangle: {
     title: "Def. Rectangle",
-    body: "A type of parallelogram that has four right angles. The opposite sides of a rectangle are equal in length.",
+    body: "A rectangle is a type of parallelogram that has four right angles. The opposite sides of a rectangle are equal in length.",
   },
   Isosceles: {
     title: "Def. Isosceles Triangle",
-    body: "A triangle with two congruent sides.",
+    body: "An isosceles triangle is a triangle with two congruent sides.",
   },
   Parallelogram: {
     title: "Def. Parallelogram",
@@ -71,10 +71,10 @@ export const Reasons = {
   },
   Bisector: {
     title: "Def. Angle Bisector",
-    body: "A line that splits an angle into two equal parts.", // TODO
+    body: "A line that splits an angle into two equal parts.",
   },
   Quadrilateral: {
     title: "Def. Quadrilateral",
-    body: "Any four-sided polygon.", // TODO
+    body: "Any four-sided polygon.",
   },
 };

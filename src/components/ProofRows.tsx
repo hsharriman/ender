@@ -126,10 +126,10 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   renderRow = (item: ProofTextItem, i: number) => {
     const activeItem = this.props.items[this.state.idx];
     const isActive = activeItem && item.k === activeItem.k;
+    // if the active row is given or prove, focus all the proof rows
     const depends =
       (activeItem && activeItem.dependsOn?.has(item.k)) ||
       new Set(["given", "prove"]).has(activeItem.k);
-    // if the active row is given or prove, focus all the proof rows
     const clr = isActive ? "slate-900" : depends ? "slate-600" : "slate-300";
     // TODO update item.v to require a param that tells if linkedtext should be active or not, for colored text
     const textColor = isActive
