@@ -33,7 +33,7 @@ export const susQuestions: susQuestionType[] = [
   },
   {
     prompt: (s: string) =>
-      `I found the various functions in the ${s} interface were well integrated.`,
+      `I found the various interactions in the ${s} interface were well integrated.`,
     answers: likertAnswers,
     type: QuestionType.Single,
   },

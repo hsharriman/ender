@@ -1,5 +1,6 @@
 import React from "react";
 import { Reason } from "../core/types/types";
+import { logEvent } from "../core/utils";
 import { Reasons } from "../theorems/reasons";
 
 export interface ReasonTextProps {
@@ -11,6 +12,20 @@ export class ReasonText extends React.Component<ReasonTextProps> {
   constructor(props: ReasonTextProps) {
     super(props);
   }
+
+  onMouseEnter = () => {
+    logEvent("m", {
+      c: "re",
+      v: "",
+    });
+  };
+
+  onMouseLeave = () => {
+    logEvent("ml", {
+      c: "re",
+      v: "",
+    });
+  };
 
   render() {
     const { title, body } = this.props.textFn(this.props.activeFrame);
@@ -39,7 +54,13 @@ export class ReasonText extends React.Component<ReasonTextProps> {
           >
             {title}
           </div>
-          <div className="text-base">{body}</div>
+          <div
+            className="text-base"
+            onMouseEnter={this.onMouseEnter}
+            onMouseLeave={this.onMouseLeave}
+          >
+            {body}
+          </div>
         </div>
       </>
     );

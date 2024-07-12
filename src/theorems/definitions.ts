@@ -23,10 +23,16 @@ const CongruentTriangles: Definition = {
   definition: "Triangles that are the same size and shape.",
 };
 
+const Bisector: Definition = {
+  keyword: "Angle bisector",
+  definition: "A line that divides an angle into two equal angles.",
+};
+
 export const definitions = {
   Parallel,
   Perpendicular,
   CongruentLines,
   CongruentAngles,
   CongruentTriangles,
+  Bisector,
 };

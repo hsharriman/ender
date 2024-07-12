@@ -143,7 +143,7 @@ const step4: StepMeta = EqualSegmentStep(
   Reasons.Midpoint,
   step3,
   2,
-  [1]
+  [2]
 );
 
 const step5: StepMeta = makeStepMeta({

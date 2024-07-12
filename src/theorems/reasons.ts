@@ -71,6 +71,10 @@ export const Reasons = {
   },
   Bisector: {
     title: "Def. Angle Bisector",
-    body: "A line that splits an angle into two equal parts.", // TODO
+    body: "A line that splits an angle into two equal parts.",
+  },
+  Quadrilateral: {
+    title: "Def. Quadrilateral",
+    body: "Any four-sided polygon.",
   },
 };

@@ -84,7 +84,7 @@ export class YesNoQuestion extends React.Component<
     return (
       <button
         className={`ml-1 w-4 h-4 rounded-xl text-white text-xs align-top select-none ${
-          isOpen ? "bg-slate-300" : "bg-slate-500"
+          isOpen ? "bg-slate-300" : "bg-blue-500"
         } ${show ? "opacity-1" : "opacity-0"}`}
         onClick={this.toggleHint}
         id="hint-button"
@@ -155,7 +155,7 @@ export class YesNoQuestion extends React.Component<
           {answers.map((answer, index) => (
             <button
               key={index}
-              className={`px-2.5 mr-6 bg-gray-500 hover:bg-violet-500 rounded-md text-slate-100`}
+              className={`px-2.5 mr-6 bg-gray-500 hover:bg-violet-500 rounded-md text-slate-100 h-8`}
               onClick={() => this.handleButtonClick(answer)}
               id={"answer-button-" + index}
             >
