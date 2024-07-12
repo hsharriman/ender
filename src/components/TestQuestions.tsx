@@ -16,6 +16,7 @@ interface QuestionsProps {
   scaffolding: { [key: string]: boolean };
   updateScaffolding: (questionType: string) => void;
   setActiveQuestionIndex: (index: number) => void;
+  incrementTutorial?: () => boolean;
 }
 
 export class TestQuestions extends React.Component<QuestionsProps> {
@@ -50,8 +51,22 @@ export class TestQuestions extends React.Component<QuestionsProps> {
       // skip subsequent questions if the first answer selected was No in phase 2 questions
       this.props.onNext(1);
     } else if (this.props.questionIdx < this.props.questions.length - 1) {
+      // move to the next question
       this.props.setActiveQuestionIndex(this.props.questionIdx + 1);
+
+      // increment step in tutorial
+      this.props.incrementTutorial && this.props.incrementTutorial();
     } else {
+      // checks if all tutorial questions have been shown, if not, increment tutorial step
+      // but do not move to the next proof page
+      // if incrementTutorial is not defined, it means it is not a tutorial
+      if (this.props.incrementTutorial) {
+        const shouldUpdate = this.props.incrementTutorial();
+        if (!shouldUpdate) {
+          return;
+        }
+      }
+      // move to the next proof
       this.props.onNext(1);
     }
   };

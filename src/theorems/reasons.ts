@@ -15,7 +15,7 @@ export const Reasons = {
   },
   ConverseAltInteriorAngs: {
     title: "Converse of Alternate Interior Angles",
-    body: "If one line intersects with two others to form congruent alternate interior angles, then the lines it intersects with are parallel to each other.",
+    body: "If a transversal (a line that crosses two or more lines) forms opposite interior angles that are congruent, then the two lines it intersects with are parallel to each other.",
   },
   AlternateInteriorAngles: {
     title: "Alternate Interior Angles Theorem",
@@ -43,7 +43,7 @@ export const Reasons = {
   },
   CongAdjAngles: {
     title: "Congruent Adjacent Angles",
-    body: "If two lines are perpendicular, then the formed adjacent angles are congruent.",
+    body: "If two lines are perpendicular, then the formed adjacent angles are congruent. Each angle is 90°.",
   },
   Rectangle: {
     title: "Def. Rectangle",
@@ -68,5 +68,9 @@ export const Reasons = {
   AAS: {
     title: "AAS Triangle Congruence",
     body: "Angle-Angle-Side (AAS) Triangle Congruence. If a pair of triangles have two angles and one adjacent side that are congruent to each other, then the triangles are congruent.", // TODO
+  },
+  Bisector: {
+    title: "Def. Angle Bisector",
+    body: "A line that splits an angle into two equal parts.", // TODO
   },
 };

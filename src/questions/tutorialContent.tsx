@@ -13,7 +13,7 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     listenerId: "", // TODO use this to check if specific actions have been taken?
-    type: TutorialStepType.Intro,
+    type: TutorialStepType.Popup,
   },
   {
     elemId: "triangle-text-ADC",
@@ -68,22 +68,9 @@ export const tutorial1Steps: TutorialStep[] = [
     ),
     type: TutorialStepType.HideContinue,
   },
-  // {
-  //   elemId: "point.D",
-  //   text: (
-  //     <span>
-  //       {segmentQuestion("AB")} has 1 tick but {segmentQuestion("AC")} has 2, so
-  //       we do not know that {segmentQuestion("AB")} must be congruent to{" "}
-  //       {segmentQuestion("AC")}.
-  //     </span>
-  //   ),
-  //   exercise: <span>Use the "Yes", "No" buttons to submit your answer.</span>,
-  //   type: TutorialStepType.HideContinue,
-  // },
   {
-    // STARTING QUESTION 2
     // TODO make these popups have the answers to the previous questions?
-    type: TutorialStepType.Intro,
+    type: TutorialStepType.Popup,
     elemId: "",
     headerText: "The correct answer was 'No'.",
     text: (
@@ -126,23 +113,11 @@ export const tutorial1Steps: TutorialStep[] = [
     ),
     paddingL: 30,
   },
-  // {
-  //   type: TutorialStepType.HideContinue,
-  //   elemId: "prooftext-s4",
-  //   text: (
-  //     <span>
-  //       Moving row 4 between rows 2 and 3 means that SAS would incorrectly rely
-  //       on statements that aren't stated until later in the proof!
-  //     </span>
-  //   ),
-  //   exercise: <span>Use the buttons to submit your answer.</span>,
-  //   paddingL: 30,
-  // },
 ];
 
-export const tutorial2Steps: TutorialStep[] = [
+export const tutorial3Steps: TutorialStep[] = [
   {
-    type: TutorialStepType.Intro,
+    type: TutorialStepType.Popup,
     elemId: "",
     headerText: "The correct answer was 'No'.",
     text: (
@@ -154,7 +129,7 @@ export const tutorial2Steps: TutorialStep[] = [
   },
   {
     type: TutorialStepType.Default,
-    elemId: "answer-button-1",
+    elemId: "hint-button",
     text: (
       <span>
         This question is about {bold("SSS Triangle Congruence")}{" "}
@@ -181,14 +156,14 @@ export const tutorial2Steps: TutorialStep[] = [
   },
   {
     // TODO this is not shown because the page moves on
-    type: TutorialStepType.Intro,
+    type: TutorialStepType.Popup,
     elemId: "",
     headerText: "The correct answer was 'No'.",
     text: (
       <span>
         The tick marks were inconsistent between the illustration and the
         construction, indicating that the proof
-        {bold("incorrectly applies SSS")}.
+        {bold(" incorrectly applies SSS")}.
       </span>
     ),
   },

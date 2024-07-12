@@ -1,3 +1,5 @@
+import { InteractiveAppPageProps } from "../../components/InteractiveAppPage";
+import { StaticAppPageProps } from "../../components/StaticAppPage";
 import { Question } from "../../questions/funcTypeQuestions";
 import { Content } from "../diagramContent";
 import { StepMeta } from "./stepTypes";
@@ -84,7 +86,13 @@ export interface TutorialStep {
 }
 
 export enum TutorialStepType {
-  Intro = "intro",
+  Popup = "popup",
   Default = "default",
   HideContinue = "hideContinue",
 }
+export interface ProofMeta {
+  layout: LayoutOptions;
+  props: StaticAppPageProps | InteractiveAppPageProps;
+  tutorial?: TutorialStep[];
+}
+type LayoutOptions = "static" | "interactive";
