@@ -12,8 +12,9 @@ export interface TutorialPageProps {
   proof: InteractiveAppPageProps;
   headerFn: (
     meta: StaticAppPageProps | InteractiveAppPageProps,
-    onSubmit: () => void
+    onSubmit: () => boolean
   ) => JSX.Element;
+  onStepsComplete: () => void;
 }
 export interface TutorialPageState {
   currStep: number;
@@ -29,6 +30,16 @@ export class TutorialPage extends React.Component<
       currStep: 0,
     };
   }
+
+  onQuestionSubmit = () => {
+    this.onClick();
+    if (this.state.currStep < this.props.steps.length - 1) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   onClick = () => {
     if (this.state.currStep < this.props.steps.length - 1) {
       this.setState((prevState) => ({
@@ -36,6 +47,13 @@ export class TutorialPage extends React.Component<
       }));
     } else {
       this.setState({ currStep: 0 });
+      // if the last step is a popup, that means it is showing information about the answer that was picked,
+      // show it before moving to the next proof.
+      if (
+        this.props.steps[this.state.currStep].type === TutorialStepType.Popup
+      ) {
+        this.props.onStepsComplete();
+      }
     }
   };
   activeElems = () => {
@@ -93,12 +111,12 @@ export class TutorialPage extends React.Component<
       <>
         {this.props.headerFn(
           this.props.proof,
-          this.onClick
+          this.onQuestionSubmit
           // this.onQuestionsCompleted
         )}
         <div className="w-full h-full flex justify-start">
-          {step && step.type === TutorialStepType.Intro && this.popup(step)}
-          {step && step.type !== TutorialStepType.Intro && (
+          {step && step.type === TutorialStepType.Popup && this.popup(step)}
+          {step && step.type !== TutorialStepType.Popup && (
             <TutorialPopover
               step={step}
               currStep={this.state.currStep}

@@ -13,7 +13,7 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     listenerId: "", // TODO use this to check if specific actions have been taken?
-    type: TutorialStepType.Intro,
+    type: TutorialStepType.Popup,
   },
   {
     elemId: "triangle-text-ADC",
@@ -70,7 +70,7 @@ export const tutorial1Steps: TutorialStep[] = [
   },
   {
     // TODO make these popups have the answers to the previous questions?
-    type: TutorialStepType.Intro,
+    type: TutorialStepType.Popup,
     elemId: "",
     headerText: "The correct answer was 'No'.",
     text: (
@@ -113,11 +113,8 @@ export const tutorial1Steps: TutorialStep[] = [
     ),
     paddingL: 30,
   },
-];
-
-export const tutorial3Steps: TutorialStep[] = [
   {
-    type: TutorialStepType.Intro,
+    type: TutorialStepType.Popup,
     elemId: "",
     headerText: "The correct answer was 'No'.",
     text: (
@@ -127,6 +124,9 @@ export const tutorial3Steps: TutorialStep[] = [
       </span>
     ),
   },
+];
+
+export const tutorial3Steps: TutorialStep[] = [
   {
     type: TutorialStepType.Default,
     elemId: "hint-button",
@@ -156,14 +156,14 @@ export const tutorial3Steps: TutorialStep[] = [
   },
   {
     // TODO this is not shown because the page moves on
-    type: TutorialStepType.Intro,
+    type: TutorialStepType.Popup,
     elemId: "",
     headerText: "The correct answer was 'No'.",
     text: (
       <span>
         The tick marks were inconsistent between the illustration and the
         construction, indicating that the proof
-        {bold("incorrectly applies SSS")}.
+        {bold(" incorrectly applies SSS")}.
       </span>
     ),
   },
