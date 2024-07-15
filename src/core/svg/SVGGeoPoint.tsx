@@ -1,15 +1,16 @@
 import React from "react";
 import { LPoint, Obj, SVGModes, Vector } from "../types/types";
+import { logEvent } from "../utils";
 import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
-import { logEvent } from "../utils";
 
 export type SVGPointProps = {
   p: LPoint;
   offset: Vector;
   label: string;
   showLabel?: boolean;
+  showPoint: boolean;
 } & BaseSVGProps;
 
 export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
@@ -66,7 +67,8 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
   };
 
   render() {
-    const point = coordsToSvg(
+    const point = coordsToSvg(this.props.p.pt, this.props.miniScale);
+    const labelPoint = coordsToSvg(
       this.props.p.pt,
       this.props.miniScale,
       this.props.offset
@@ -74,18 +76,19 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
     return (
       <>
         // TODO fix point rendering
-        {/* <SVGCircle
-          {...{
-            center: coordsToSvg(this.p.pt, this.miniScale),
-            r: 2,
-            geoId: this.geoId + "-circle",
-            mode: this.props.mode, // TODO unnecessary rn
-            activeFrame: "",
-          }}
-        /> */}
+        {this.props.showPoint && (
+          <circle
+            cx={point[0]}
+            cy={point[1]}
+            r={3}
+            id={this.props.geoId + "-circle"}
+            key={this.props.geoId + "-circle"}
+            className="fill-black"
+          />
+        )}
         <text
-          x={point[0]}
-          y={point[1]}
+          x={labelPoint[0]}
+          y={labelPoint[1]}
           id={this.props.geoId}
           key={this.props.geoId}
           style={{

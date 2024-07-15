@@ -19,6 +19,7 @@ export interface StaticAppPageProps {
 
 interface StaticAppPageState {
   page: number;
+  activeReason: number;
 }
 
 export class StaticAppPage extends React.Component<
@@ -30,13 +31,15 @@ export class StaticAppPage extends React.Component<
     // build diagram from given construction
     this.state = {
       page: this.props.pageNum,
+      activeReason: -1,
     };
-    // this.buildCtxAndText();
   }
 
   renderRow = (item: StaticProofTextItem, i: number) => {
     const textColor = "text-slate-800";
     const strokeColor = "border-slate-800";
+    const reasonStyle =
+      item.reason === "Given" ? "" : "text-blue-600 underline";
     return (
       <div className="flex flex-row justify-start h-12" key={`static-row-${i}`}>
         <div
@@ -52,18 +55,42 @@ export class StaticAppPage extends React.Component<
               <div className="text-slate-400 font-bold">{i + 1}</div>
               {item.stmt}
             </div>
-            <div className="flex flex-row justify-start align-baseline">
+            <button
+              className={`${reasonStyle} flex flex-row justify-start align-baseline`}
+              onClick={this.showReason(i)}
+            >
               {item.reason}
-            </div>
+            </button>
           </div>
         </div>
       </div>
     );
   };
 
+  showReason = (i: number) => () => {
+    if (this.state.activeReason !== i) {
+      this.setState({ activeReason: i });
+    } else if (this.state.activeReason === i) {
+      this.clearReason();
+    }
+  };
+
+  clearReason = () => {
+    this.setState({ activeReason: -1 });
+  };
+
   renderReason = (item: Reason) => {
     return (
       <>
+        <div className="font-bold text-base text-slate-500 pb-2 flex justify-between">
+          Reasons Applied:
+          <button
+            className="bold text-black w-4 h-4 rounded-md text-base mr-3"
+            onClick={this.clearReason}
+          >
+            X
+          </button>
+        </div>
         <div className="flex flex-col justify-start pb-2">
           <div className="font-semibold text-lg">{item.title}</div>
           <div className="text-lg">{item.body}</div>
@@ -73,14 +100,9 @@ export class StaticAppPage extends React.Component<
   };
 
   render() {
-    // delete duplicates from reasons
-    const reasons = this.props.reasons.filter(
-      (reason, index, self) =>
-        index ===
-        self.findIndex(
-          (t) => t.title === reason.title && t.body === reason.body
-        )
-    );
+    const numGivens = this.props.texts.filter(
+      (item) => item.reason === "Given"
+    ).length;
     return (
       <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-12">
         <div className="w-[900px] h-full flex flex-col ml-12">
@@ -113,15 +135,12 @@ export class StaticAppPage extends React.Component<
         </div>
         <div className="min-w-[400px] max-w-[500px]">
           <div className="flex flex-col justify-start">
-            <div className="font-bold text-base text-slate-500 pb-2">
-              Reasons Applied:
-            </div>
-            {reasons.map((reason) => this.renderReason(reason))}
+            {this.state.activeReason !== -1 &&
+              this.renderReason(
+                this.props.reasons[this.state.activeReason - numGivens]
+              )}
           </div>
         </div>
-        {/* <div className="w-[400px] h-fit ml-10 p-8 rounded-lg border-dotted border-4 border-violet-300">
-          <TestQuestions questions={this.props.questions} />
-        </div> */}
       </div>
     );
   }

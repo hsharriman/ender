@@ -116,7 +116,7 @@ export class TutorialPage extends React.Component<
       (s) => s.type !== TutorialStepType.Popup
     ).length;
     return (
-      <>
+      <div className="w-full h-full flex flex-col justify-start">
         {this.props.headerFn(this.props.proof, this.onQuestionSubmit)}
         <div className="w-full h-full flex justify-start">
           {step && step.type === TutorialStepType.Popup && this.popup(step)}
@@ -131,7 +131,7 @@ export class TutorialPage extends React.Component<
           )}
           <InteractiveAppPage {...this.props.proof} />
         </div>
-      </>
+      </div>
     );
   }
 }
