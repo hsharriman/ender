@@ -88,7 +88,7 @@ export class BackgroundQuestions extends React.Component<
         <div className="justify-center flex w-full">
           <div className="mb-8 text-center mt-8 font-notoSans">
             <h2 className="text-2xl font-bold mb-8">Background Questions</h2>
-            <div className="mb-8 w-[1000px]">
+            <div className="mb-8 w-[700px]">
               <span>
                 Thank you for participating in our study. Your input is
                 important and will help us understand how students like you

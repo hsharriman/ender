@@ -69,7 +69,7 @@ export class YesNoQuestion extends React.Component<
   };
 
   renderHint = (hint: string) => {
-    return <div className="italic text-base font-semibold">{hint}</div>;
+    return <div className="italic text-sm font-semibold">{hint}</div>;
   };
 
   toggleHint = () => {
@@ -152,16 +152,18 @@ export class YesNoQuestion extends React.Component<
       <div className="text-xl">
         <div className="flex ">
           {this.renderQuestionPrompt()}
-          {answers.map((answer, index) => (
-            <button
-              key={index}
-              className={`px-2.5 mr-6 bg-gray-500 hover:bg-violet-500 rounded-md text-slate-100 h-8`}
-              onClick={() => this.handleButtonClick(answer)}
-              id={"answer-button-" + index}
-            >
-              {answer}
-            </button>
-          ))}
+          <div className="flex flex-row self-center">
+            {answers.map((answer, index) => (
+              <button
+                key={index}
+                className={`px-2.5 mr-6 bg-gray-500 hover:bg-violet-500 rounded-md text-slate-100 h-8`}
+                onClick={() => this.handleButtonClick(answer)}
+                id={"answer-button-" + index}
+              >
+                {answer}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );

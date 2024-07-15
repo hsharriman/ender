@@ -1,8 +1,13 @@
+import { triangleTextPreQuestions } from "../../questions/pretestQuestions";
 import {
   tutorial1Steps,
   tutorial3Steps,
 } from "../../questions/tutorialContent";
-import { P1, P2 } from "../../theorems/pretest/segments";
+import {
+  P1,
+  P2,
+  trianglePretestProofs,
+} from "../../theorems/pretest/pretestDiagrams";
 import { T1_S1_C1 } from "../../theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "../../theorems/testA/stage1/C2";
 import { T1_S1_C3 } from "../../theorems/testA/stage1/C3";
@@ -44,7 +49,21 @@ export type Page = {
 };
 
 export const pageOrder = () => {
-  const pretest = [pretestLayout(P1), pretestLayout(P2)];
+  let pretest = [pretestLayout(P1), pretestLayout(P2)]; // segment and angle questions
+  let tpre = trianglePretestProofs.map((p) => pretestLayout(p));
+  if (tpre[0].meta) {
+    tpre[0].meta = {
+      ...tpre[0].meta,
+      props: {
+        ...tpre[0].meta.props,
+        questions: tpre[0].meta.props.questions.concat(
+          fisherYates(triangleTextPreQuestions)
+        ),
+      },
+    };
+  }
+
+  pretest = pretest.concat(tpre);
   const tutorial = [
     interactiveLayout(TutorialProof1, false, tutorial1Steps),
     interactiveLayout(TutorialProof2, false, tutorial3Steps),
@@ -79,11 +98,7 @@ export const pageOrder = () => {
 };
 
 const background = (): Page[] => {
-  return [
-    {
-      type: PageType.Background,
-    },
-  ];
+  return [{ type: PageType.Background }];
 };
 const sus = (): Page[] => {
   return [

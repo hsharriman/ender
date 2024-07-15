@@ -14,7 +14,11 @@ import { SusPage, SusProofType } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
 import { TutorialPage } from "./components/TutorialPage";
 import { Page, PageType, pageOrder } from "./core/testinfra/pageOrder";
-import { getHeaderType, interactiveLayout } from "./core/testinfra/setupLayout";
+import {
+  fisherYates,
+  getHeaderType,
+  interactiveLayout,
+} from "./core/testinfra/setupLayout";
 import { logEvent } from "./core/utils";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
 
@@ -130,7 +134,7 @@ export class App extends React.Component<AppProps, AppState> {
     ) => {
       return (
         <div
-          className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
+          className="sticky top-0 left-0 bg-gray-50 px-6 py-3 z-30 border-solid border-b-2 border-gray-300"
           id="header"
         >
           <div className="flex items-center">
@@ -246,7 +250,7 @@ export class App extends React.Component<AppProps, AppState> {
         <PretestAppPage
           name={props.name}
           ctx={props.ctx}
-          questions={props.questions}
+          questions={fisherYates(props.questions)}
         />
       );
     } else if (currMeta.type === PageType.Static && currMeta.meta) {

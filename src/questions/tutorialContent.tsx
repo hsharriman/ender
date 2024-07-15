@@ -166,7 +166,7 @@ export const tutorial3Steps: TutorialStep[] = [
       </span>
     ),
     exercise: (
-      <span>Use the arrow keys to navigate to the last row of the proof.</span>
+      <span>Use the arrow keys or click to the last row of the proof.</span>
     ),
   },
   {

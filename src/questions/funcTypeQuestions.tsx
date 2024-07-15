@@ -36,7 +36,7 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
     return segmentQuestion(s);
   };
   return (
-    <span>
+    <span className="text-base">
       By the end of the proof, has enough information been established to
       conclude that {strType(x, type)} <span className="italic">must</span> be
       congruent to {strType(y, type)}?
@@ -45,15 +45,24 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
 };
 
 const reliesQuestion = (r: Reason, step: number, step2?: number) => {
-  if (step2) {
-    return `Is there enough information to apply ${r.title} between steps ${step} and ${step2}? For this question, assume all the other steps are correct.`;
-  }
-  return `Is there enough information to apply ${r.title} at step ${step}? For this question, assume all the other steps are correct.`;
+  const steps = step2
+    ? `between steps ${step} and ${step2}`
+    : `at step ${step}`;
+  return (
+    <span className="text-base">
+      Is there enough information to apply {r.title} {steps}?
+    </span>
+  );
 };
 
 const miniQuestion = (r: Reason, step: number) => {
   // TODO wording: If we pretend that all other steps in the proof are correct,...
-  return `Is ${r.title} correctly applied in step ${step}?`;
+  return (
+    <span className="text-base">
+      Is {r.title} correctly applied in step {step}? For this question, assume
+      that the other steps are correct.
+    </span>
+  );
 };
 
 const id = (n: number) => `qID-${n}`;
