@@ -75,7 +75,6 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
     );
     return (
       <>
-        // TODO fix point rendering
         {this.props.showPoint && (
           <circle
             cx={point[0]}

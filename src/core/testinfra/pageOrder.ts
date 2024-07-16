@@ -51,6 +51,7 @@ export type Page = {
 export const pageOrder = () => {
   let pretest = [pretestLayout(P1), pretestLayout(P2)]; // segment and angle questions
   let tpre = trianglePretestProofs.map((p) => pretestLayout(p));
+  // add extra 1-off questions to the first triangle pretest page
   if (tpre[0].meta) {
     tpre[0].meta = {
       ...tpre[0].meta,

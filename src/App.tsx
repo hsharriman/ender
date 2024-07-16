@@ -235,7 +235,6 @@ export class App extends React.Component<AppProps, AppState> {
         />
       );
     } else if (currMeta.type === PageType.Tutorial && currMeta.meta) {
-      console.log(currMeta.meta.tutorial);
       pageContent = (
         <TutorialPage
           proof={currMeta.meta.props as InteractiveAppPageProps}

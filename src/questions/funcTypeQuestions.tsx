@@ -37,9 +37,9 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
   };
   return (
     <span className="text-base">
-      By the end of the proof, has enough information been established to
-      conclude that {strType(x, type)} <span className="italic">must</span> be
-      congruent to {strType(y, type)}?
+      By the end of the proof, is there enough information to conclude that{" "}
+      {strType(x, type)} <span className="italic">must</span> be congruent to{" "}
+      {strType(y, type)}?
     </span>
   );
 };
@@ -56,11 +56,10 @@ const reliesQuestion = (r: Reason, step: number, step2?: number) => {
 };
 
 const miniQuestion = (r: Reason, step: number) => {
-  // TODO wording: If we pretend that all other steps in the proof are correct,...
   return (
     <span className="text-base">
-      Is {r.title} correctly applied in step {step}? For this question, assume
-      that the other steps are correct.
+      If we assume all previous steps are valid, is {r.title} the correct reason
+      to use in step {step}?
     </span>
   );
 };
@@ -180,7 +179,7 @@ export const completeProof2: Question[] = [
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: reliesQuestion(Reasons.CongAdjAngles, 4, 5),
+    prompt: reliesQuestion(Reasons.CongAdjAngles, 4),
     reason: Reasons.CongAdjAngles.title,
     type: QuestionType.ReliesOn,
     id: id(3),
