@@ -249,8 +249,8 @@ export const exploratoryQuestion = (start: number, end: number): Question[] => [
   {
     prompt: "Which of the following options best describes why it is wrong?",
     answers: [
-      "The step says the wrong things are congruent to each other (ex: step says AB is congruent to AC, should say AB is congruent to BC)",
-      "The step uses the wrong theorem or definition (ex: the step should have used SAS, used ASA instead)",
+      "The step says the wrong things are congruent to each other (ex: incorrectly says PA is congruent to AC)",
+      "The step uses the wrong theorem or definition (ex: incorrectly uses ASA triangle congruence)",
       "There is not enough information to apply the theorem or definition",
       "Other (write a 1 sentence explanation)", // TODO check options for length
     ],
