@@ -3,8 +3,31 @@ import { TutorialStep, TutorialStepType } from "../core/types/types";
 
 const bold = (text: string) => <span className="font-bold">{text}</span>;
 const hintBtn = (
-  <span className="p-1 py-0 rounded-xl text-white text-xs font-bold align-top select-none bg-blue-500">
-    ?
+  <span className="inline-flex">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="8" cy="8" r="8" fill="#3B82F6"></circle>
+      <text
+        x={4}
+        y={12}
+        id={"tutorial-hint-button-inline"}
+        key={"tutorial-hint-button-inline"}
+        style={{
+          font: "12px sans-serif",
+          fontStyle: "black",
+          color: "white",
+          fill: "white",
+          strokeWidth: 0.5,
+          stroke: "white",
+        }}
+      >
+        ?
+      </text>
+    </svg>
   </span>
 );
 export const tutorial1Steps: TutorialStep[] = [
@@ -44,8 +67,9 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "reveal-step-btn",
     text: (
       <span>
-        You can use the {bold("Down arrow key")} or {bold("click this button")}{" "}
-        to reveal the next row of the proof.
+        You can use the {bold("Down arrow key")}, {bold("click this button")},
+        or {bold("click on a row ")}
+        to reveal more of the proof.
       </span>
     ),
     type: TutorialStepType.Default,
@@ -142,7 +166,7 @@ export const tutorial3Steps: TutorialStep[] = [
       </span>
     ),
     exercise: (
-      <span>Use the arrow keys to navigate to the last row of the proof.</span>
+      <span>Use the arrow keys or click to the last row of the proof.</span>
     ),
   },
   {

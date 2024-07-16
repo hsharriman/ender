@@ -44,6 +44,7 @@ export class StaticDiagram extends React.Component<DiagramProps, {}> {
                   offset: p.offset,
                   label: p.label,
                   miniScale: false,
+                  showPoint: p.showPoint,
                 }}
               />
             );

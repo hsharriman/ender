@@ -16,6 +16,7 @@ export interface Question {
 export enum AnswerType {
   YesNo = "YesNo",
   Dropdown = "Dropdown",
+  DropdownTextbox = "DropdownTextbox",
 }
 
 export enum QuestionType {
@@ -24,6 +25,7 @@ export enum QuestionType {
   DiagramState = "DiagramState",
   Correctness = "Correctness",
   TutorialInstructions = "TutorialInstructions",
+  Pretest = "Pretest",
 }
 
 const diagramStateQuestion = (x: string, y: string, type: Obj) => {
@@ -34,17 +36,32 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
     return segmentQuestion(s);
   };
   return (
-    <span>
-      By the end of the proof, has enough information been established to
-      conclude that {strType(x, type)} <span className="italic">must</span> be
-      congruent to {strType(y, type)}?
+    <span className="text-base">
+      By the end of the proof, is there enough information to conclude that{" "}
+      {strType(x, type)} <span className="italic">must</span> be congruent to{" "}
+      {strType(y, type)}?
+    </span>
+  );
+};
+
+const reliesQuestion = (r: Reason, step: number, step2?: number) => {
+  const steps = step2
+    ? `between steps ${step} and ${step2}`
+    : `at step ${step}`;
+  return (
+    <span className="text-base">
+      Is there enough information to apply {r.title} {steps}?
     </span>
   );
 };
 
 const miniQuestion = (r: Reason, step: number) => {
-  // TODO wording: If we pretend that all other steps in the proof are correct,...
-  return `Is ${r.title} correctly applied in step ${step}?`;
+  return (
+    <span className="text-base">
+      If we assume all previous steps are valid, is {r.title} the correct reason
+      to use in step {step}?
+    </span>
+  );
 };
 
 const id = (n: number) => `qID-${n}`;
@@ -108,8 +125,8 @@ export const checkingProof3: Question[] = [
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.Rectangle, 4),
-    reason: Reasons.Rectangle.title,
+    prompt: miniQuestion(Reasons.Quadrilateral, 4),
+    reason: Reasons.Quadrilateral.title,
     type: QuestionType.Minifigures,
     id: id(2),
   },
@@ -131,16 +148,14 @@ export const completeProof1: Question[] = [
   },
   {
     answerType: AnswerType.YesNo,
-    prompt:
-      "Is there enough information to apply Vertical Angles between steps 1 and 2?",
+    prompt: reliesQuestion(Reasons.VerticalAngles, 1, 2),
     reason: Reasons.VerticalAngles.title,
     type: QuestionType.ReliesOn,
     id: id(2),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt:
-      "Is there enough information to apply SAS triangle congruence between steps 3 and 4?",
+    prompt: reliesQuestion(Reasons.SAS, 3, 4),
     reason: Reasons.SAS.title,
     type: QuestionType.ReliesOn,
     id: id(3),
@@ -164,16 +179,14 @@ export const completeProof2: Question[] = [
   },
   {
     answerType: AnswerType.YesNo,
-    prompt:
-      "Is there enough information to apply Congruent Adjacent Angles at step 4?",
+    prompt: reliesQuestion(Reasons.CongAdjAngles, 4),
     reason: Reasons.CongAdjAngles.title,
     type: QuestionType.ReliesOn,
     id: id(3),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt:
-      "Is there enough information to apply ASA triangle congruence at step 6?",
+    prompt: reliesQuestion(Reasons.ASA, 6),
     reason: Reasons.ASA.title,
     type: QuestionType.ReliesOn,
     id: id(4),
@@ -183,23 +196,21 @@ export const completeProof2: Question[] = [
 export const incompleteProof2: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.VerticalAngles, 3),
+    prompt: miniQuestion(Reasons.VerticalAngles, 4),
     reason: Reasons.VerticalAngles.title,
     type: QuestionType.Minifigures,
     id: id(1),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt:
-      "Is there enough information to apply ASA triangle congruence between steps 2 and 3?",
+    prompt: reliesQuestion(Reasons.ASA, 3, 4),
     reason: Reasons.ASA.title,
     type: QuestionType.ReliesOn,
     id: id(2),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt:
-      "Is there enough information to apply Converse of Def. Midpoint between steps 4 and 5?",
+    prompt: reliesQuestion(Reasons.ConverseMidpoint, 5, 6),
     reason: Reasons.ConverseMidpoint.title,
     type: QuestionType.ReliesOn,
     id: id(3),
@@ -238,14 +249,14 @@ export const exploratoryQuestion = (start: number, end: number): Question[] => [
   {
     prompt: "Which of the following options best describes why it is wrong?",
     answers: [
-      "The step says the wrong things are congruent to each other",
-      "The step uses the wrong theorem or definition",
-      "The step relies on information that appears later in the proof",
-      "Other (write a 1 sentence explanation)", // TODO add text box option
+      "The step says the wrong things are congruent to each other (ex: incorrectly says PA is congruent to AC)",
+      "The step uses the wrong theorem or definition (ex: incorrectly uses ASA triangle congruence)",
+      "There is not enough information to apply the theorem or definition",
+      "Other (write a 1 sentence explanation)", // TODO check options for length
     ],
     type: QuestionType.Correctness,
     id: id(3),
-    answerType: AnswerType.Dropdown,
+    answerType: AnswerType.DropdownTextbox,
   },
 ];
 
@@ -258,8 +269,7 @@ export const tutorial1Questions: Question[] = [
     answerType: AnswerType.YesNo,
   },
   {
-    prompt:
-      "Is there enough information to apply SAS Triangle Congruence between steps 2 and 3?",
+    prompt: reliesQuestion(Reasons.SAS, 2, 3),
     type: QuestionType.TutorialInstructions,
     id: id(2),
     answerType: AnswerType.YesNo,

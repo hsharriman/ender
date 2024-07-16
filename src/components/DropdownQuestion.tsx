@@ -110,10 +110,11 @@ export class DropdownQuestion extends React.Component<
       selectedOption.length > lineWidth
         ? selectedOption.slice(0, lineWidth) + "..."
         : selectedOption;
+    console.log(this.props);
     return (
       <div className="relative inline-block text-left">
         <div className="flex flex-row justify-between items-center">
-          <div className="font-bold pr-10 pb-1">{question}</div>
+          <div className="font-bold pr-10 pb-1 text-lg">{question}</div>
           <div className="h-[40px] min-w-[430px] grid grid-cols-8">
             <div className="absolute w-[250px]">
               <button

@@ -1,4 +1,5 @@
 import { InteractiveAppPageProps } from "../../components/InteractiveAppPage";
+import { PretestAppPageProps } from "../../components/PretestAppPage";
 import { StaticAppPageProps } from "../../components/StaticAppPage";
 import { Question } from "../../questions/funcTypeQuestions";
 import { Content } from "../diagramContent";
@@ -92,7 +93,7 @@ export enum TutorialStepType {
 }
 export interface ProofMeta {
   layout: LayoutOptions;
-  props: StaticAppPageProps | InteractiveAppPageProps;
+  props: StaticAppPageProps | InteractiveAppPageProps | PretestAppPageProps;
   tutorial?: TutorialStep[];
 }
 type LayoutOptions = "static" | "interactive";

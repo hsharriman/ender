@@ -4,30 +4,23 @@ import {
   InteractiveAppPage,
   InteractiveAppPageProps,
 } from "./components/InteractiveAppPage";
+import {
+  PretestAppPage,
+  PretestAppPageProps,
+} from "./components/PretestAppPage";
 import SavePage from "./components/SavePage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage, SusProofType } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
 import { TutorialPage } from "./components/TutorialPage";
+import { Page, PageType, pageOrder } from "./core/testinfra/pageOrder";
 import {
   fisherYates,
+  getHeaderType,
   interactiveLayout,
-  randomizeLayout,
 } from "./core/testinfra/setupLayout";
-import { ProofMeta } from "./core/types/types";
 import { logEvent } from "./core/utils";
-import { tutorial1Steps, tutorial3Steps } from "./questions/tutorialContent";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
-import { T1_S1_C2 } from "./theorems/testA/stage1/C2";
-import { T1_S1_C3 } from "./theorems/testA/stage1/C3";
-import { T1_S1_IN1 } from "./theorems/testA/stage1/IN1";
-import { T1_S1_IN2 } from "./theorems/testA/stage1/IN2";
-import { T1_S1_IN3 } from "./theorems/testA/stage1/IN3";
-import { T1_S2_C1 } from "./theorems/testA/stage2/C1";
-import { T1_S2_C2 } from "./theorems/testA/stage2/C2";
-import { T1_S2_IN1 } from "./theorems/testA/stage2/IN1";
-import { T1_S2_IN2 } from "./theorems/testA/stage2/IN2";
-import { TutorialProof1, TutorialProof2 } from "./theorems/tutorial/tutorial1";
 
 interface AppProps {}
 interface AppState {
@@ -46,7 +39,7 @@ interface AppState {
   };
 }
 export class App extends React.Component<AppProps, AppState> {
-  private meta: ProofMeta[] = [];
+  private meta: Page[] = [];
   private numPages: number;
   constructor(props: AppProps) {
     super(props);
@@ -64,32 +57,8 @@ export class App extends React.Component<AppProps, AppState> {
       },
       activeQuestionIdx: 0,
     };
-    const tutorial = [
-      interactiveLayout(TutorialProof1, false, tutorial1Steps),
-      interactiveLayout(TutorialProof2, false, tutorial3Steps),
-    ];
-    // const pickTestA = Math.round(Math.random()) === 1; // TODO use when second test implemented
-    const stage1 = randomizeLayout(
-      fisherYates([
-        T1_S1_C1,
-        T1_S1_C2,
-        T1_S1_C3,
-        T1_S1_IN1,
-        T1_S1_IN2,
-        T1_S1_IN3,
-      ]),
-      true
-    );
-    const stage2 = randomizeLayout(
-      fisherYates([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
-      false
-    );
-    // const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]), false);
-    const challenge: ProofMeta[] = [];
-
-    this.meta = tutorial.concat(stage1).concat(stage2).concat(challenge);
-    // this.meta = stage1.concat(stage2);
-    this.numPages = this.meta.length + 4; // 2 for SUS, 1 for basic questions, 1 for downloading
+    this.meta = pageOrder();
+    this.numPages = this.meta.length;
   }
 
   componentDidMount() {
@@ -160,12 +129,12 @@ export class App extends React.Component<AppProps, AppState> {
   renderQuestionHeader =
     (proofType: string) =>
     (
-      meta: StaticAppPageProps | InteractiveAppPageProps,
+      meta: StaticAppPageProps | InteractiveAppPageProps | PretestAppPageProps,
       incrementTutorial?: () => boolean
     ) => {
       return (
         <div
-          className="sticky top-0 left-0 bg-gray-50 p-6 z-30 border-solid border-b-2 border-gray-300"
+          className="sticky top-0 left-0 bg-gray-50 px-6 py-3 z-30 border-solid border-b-2 border-gray-300"
           id="header"
         >
           <div className="flex items-center">
@@ -255,45 +224,55 @@ export class App extends React.Component<AppProps, AppState> {
   };
 
   renderExperimentPages = () => {
-    const page = this.state.activePage - 1; // For current page of proof
+    const page = this.state.activePage; // For current page of proof
     const currMeta = this.meta[page];
     let pageContent = <></>;
-    if (this.state.activePage === 0) {
+    if (currMeta.type === PageType.Background) {
       pageContent = (
         <BackgroundQuestions
           updateAnswers={this.updateAnswers("Background Questions")}
           onSubmitFn={() => this.onNext(1)}
         />
       );
-    } else if (this.state.activePage <= 2) {
+    } else if (currMeta.type === PageType.Tutorial && currMeta.meta) {
       pageContent = (
         <TutorialPage
-          proof={currMeta.props as InteractiveAppPageProps}
-          steps={currMeta.tutorial || []}
-          headerFn={this.renderQuestionHeader(currMeta.layout)}
+          proof={currMeta.meta.props as InteractiveAppPageProps}
+          steps={currMeta.meta.tutorial || []}
+          headerFn={this.renderQuestionHeader(currMeta.meta.layout)}
           onStepsComplete={() => this.onNext(1)}
         />
       );
-    } else if (this.state.activePage <= this.meta.length) {
-      pageContent =
-        currMeta.layout === "static" ? (
-          <StaticAppPage
-            {...{
-              ...(currMeta.props as StaticAppPageProps),
-              pageNum: page,
-            }}
-            key={"static-pg" + this.state.activePage}
-          />
-        ) : (
-          <InteractiveAppPage
-            {...{
-              ...(currMeta.props as InteractiveAppPageProps),
-              pageNum: page,
-            }}
-            key={"interactive-pg" + this.state.activePage}
-          />
-        );
-    } else if (this.state.activePage === this.meta.length + 1) {
+    } else if (currMeta.type === PageType.Pretest && currMeta.meta) {
+      const props = currMeta.meta.props as PretestAppPageProps;
+      pageContent = (
+        <PretestAppPage
+          name={props.name}
+          ctx={props.ctx}
+          questions={fisherYates(props.questions)}
+        />
+      );
+    } else if (currMeta.type === PageType.Static && currMeta.meta) {
+      pageContent = (
+        <StaticAppPage
+          {...{
+            ...(currMeta.meta.props as StaticAppPageProps),
+            pageNum: page,
+          }}
+          key={"static-pg" + this.state.activePage}
+        />
+      );
+    } else if (currMeta.type === PageType.Interactive && currMeta.meta) {
+      pageContent = (
+        <InteractiveAppPage
+          {...{
+            ...(currMeta.meta.props as InteractiveAppPageProps),
+            pageNum: page,
+          }}
+          key={"interactive-pg" + this.state.activePage}
+        />
+      );
+    } else if (currMeta.type === PageType.StaticSUS) {
       pageContent = (
         <SusPage
           key={this.state.activePage}
@@ -302,7 +281,7 @@ export class App extends React.Component<AppProps, AppState> {
           onSubmit={() => this.onNext(1)}
         />
       );
-    } else if (this.state.activePage === this.meta.length + 2) {
+    } else if (currMeta.type === PageType.IntSUS) {
       pageContent = (
         <SusPage
           key={this.state.activePage}
@@ -315,6 +294,17 @@ export class App extends React.Component<AppProps, AppState> {
       pageContent = <SavePage answers={this.state.answers} />;
     }
 
+    const isQuestionHeader = getHeaderType(currMeta.type);
+    let header = this.renderShortHeader();
+    if (currMeta.meta) {
+      if (isQuestionHeader) {
+        header = this.renderQuestionHeader(currMeta.meta.layout)(
+          currMeta.meta.props
+        );
+      } else if (currMeta.type === PageType.Tutorial) {
+        header = <></>;
+      }
+    }
     return (
       <>
         {this.state.isPaused && (
@@ -337,49 +327,45 @@ export class App extends React.Component<AppProps, AppState> {
             </button>
           </div>
         )}
-        {this.state.activePage > 0 && this.state.activePage <= 2 ? (
-          pageContent
-        ) : (
-          <>
-            {this.state.activePage > 0 &&
-            this.state.activePage <= this.meta.length
-              ? this.renderQuestionHeader(currMeta.layout)(currMeta.props)
-              : this.renderShortHeader()}
-            <div className="w-full h-full flex justify-start">
-              {pageContent}
-            </div>
-          </>
-        )}
+        {header}
+        <div className="w-full h-full flex justify-start">{pageContent}</div>
       </>
     );
   };
 
   render() {
     if (this.state.page === "demo") {
-      return (
-        <>
-          <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
-            <button
-              className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
-              id="prev-arrow"
-              style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
-              onClick={() => this.onNext(-1)}
+      const layout = interactiveLayout(T1_S1_C1).meta;
+      if (layout) {
+        return (
+          <>
+            <div
+              className="sticky top-0 left-0 bg-gray-50 p-6 z-30"
+              id="header"
             >
-              {"Home"}
-            </button>
-          </div>
-          <div className="w-full h-full flex justify-start">
-            <InteractiveAppPage
-              {...{
-                ...(interactiveLayout(T1_S1_C1)
-                  .props as InteractiveAppPageProps),
-                pageNum: this.state.activePage,
-              }}
-              key={"interactive-pg" + this.state.activePage}
-            />
-          </div>
-        </>
-      );
+              <button
+                className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
+                id="prev-arrow"
+                style={{
+                  display: this.state.activePage >= 0 ? "block" : "none",
+                }}
+                onClick={() => this.onNext(-1)}
+              >
+                {"Home"}
+              </button>
+            </div>
+            <div className="w-full h-full flex justify-start">
+              <InteractiveAppPage
+                {...{
+                  ...(layout.props as InteractiveAppPageProps),
+                  pageNum: this.state.activePage,
+                }}
+                key={"interactive-pg" + this.state.activePage}
+              />
+            </div>
+          </>
+        );
+      }
     } else if (this.state.page === "procedure") {
       return this.renderExperimentPages();
     } else if (this.state.page === "home") {

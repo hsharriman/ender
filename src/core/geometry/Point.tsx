@@ -9,6 +9,7 @@ export type PointProps = {
   offset: Vector;
   parentFrame?: string;
   hoverable: boolean;
+  showPoint?: boolean;
 };
 
 export class Point extends BaseGeometryObject {
@@ -16,6 +17,7 @@ export class Point extends BaseGeometryObject {
   public readonly pt: Vector;
   public readonly id: string;
   private showLabel: boolean;
+  readonly showPoint: boolean;
   public offset: Vector = [3, 3]; // TODO better label placement
   constructor(props: PointProps) {
     super(Obj.Point, { hoverable: props.hoverable });
@@ -26,6 +28,7 @@ export class Point extends BaseGeometryObject {
     this.offset = props.offset;
     this.id = this.getId(Obj.Point, this.label);
     this.id = props.parentFrame ? `${props.parentFrame}-${this.id}` : this.id;
+    this.showPoint = props.showPoint ?? false;
   }
 
   labeled = (): LPoint => {

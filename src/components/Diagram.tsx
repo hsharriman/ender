@@ -43,6 +43,7 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
             offset: p.offset,
             label: p.label,
             miniScale: this.props.miniScale,
+            showPoint: p.showPoint,
           }}
         />
       ) : (
