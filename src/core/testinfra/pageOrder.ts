@@ -90,7 +90,9 @@ export const pageOrder = () => {
   const pages = background()
     .concat(pretest)
     .concat(tutorial)
+    .concat(instruction1())
     .concat(stage1)
+    .concat(instruction2())
     .concat(stage2)
     .concat(challenge)
     .concat(sus());
@@ -100,6 +102,12 @@ export const pageOrder = () => {
 
 const background = (): Page[] => {
   return [{ type: PageType.Background }];
+};
+const instruction1 = (): Page[] => {
+  return [{ type: PageType.IntroSlidePhase1 }];
+};
+const instruction2 = (): Page[] => {
+  return [{ type: PageType.IntroSlidePhase2 }];
 };
 const sus = (): Page[] => {
   return [

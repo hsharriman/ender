@@ -21,6 +21,8 @@ import {
 } from "./core/testinfra/setupLayout";
 import { logEvent } from "./core/utils";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
+import { InstructionPage } from "./components/InstructionPage";
+import { RestPage } from "./components/RestPage";
 
 interface AppProps {}
 interface AppState {
@@ -243,6 +245,10 @@ export class App extends React.Component<AppProps, AppState> {
           onStepsComplete={() => this.onNext(1)}
         />
       );
+    } else if (currMeta.type === PageType.IntroSlidePhase1) {
+      pageContent = <InstructionPage onNext={() => this.onNext(1)} />;
+    } else if (currMeta.type === PageType.IntroSlidePhase2) {
+      pageContent = <RestPage onNext={() => this.onNext(1)} />;
     } else if (currMeta.type === PageType.Pretest && currMeta.meta) {
       const props = currMeta.meta.props as PretestAppPageProps;
       pageContent = (
