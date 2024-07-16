@@ -83,7 +83,7 @@ export class RestPage extends React.Component<RestPageProps, RestPageStates> {
     }`;
 
     return (
-      <div className="flex items-center justify-center flex-col h-screen w-screen font-notoSans text-slate-800 text-xl">
+      <div className="flex items-center justify-center flex-col pt-40 w-screen font-notoSans text-slate-800 text-xl">
         <span>
           Congratulations, you're more than halfway through the experiment! :)
         </span>

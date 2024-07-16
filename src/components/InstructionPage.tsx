@@ -16,7 +16,7 @@ export class InstructionPage extends React.Component<InstructionPageProps> {
 
   render() {
     return (
-      <div className="flex items-center justify-center flex-col h-screen w-screen font-notoSans text-slate-800 text-xl">
+      <div className="flex items-center justify-center flex-col pt-40 w-screen font-notoSans text-slate-800 text-xl">
         <span>Congratulation, you've finished the tutorial! :)</span>
         <p className="max-w-[900px] text-center">
           <br />
