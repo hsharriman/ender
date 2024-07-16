@@ -145,8 +145,7 @@ export class YesNoQuestion extends React.Component<
   };
 
   render() {
-    const { question, answers } = this.props;
-    const selectedOption = this.state.selectedOption;
+    const { answers } = this.props;
 
     return (
       <div className="text-xl">

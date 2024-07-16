@@ -58,7 +58,7 @@ export const segmentContent = () => {
     [F, G],
     [H, J],
     [M, N],
-  ].map((s) => {
+  ].forEach((s) => {
     ctx.push(new Segment({ p1: s[0], p2: s[1], hoverable: false }));
   });
 
@@ -115,7 +115,7 @@ export const angleContent = () => {
     [L, M],
     [N, Q],
     [Q, P],
-  ].map((s) => {
+  ].forEach((s) => {
     const seg = ctx.push(new Segment({ p1: s[0], p2: s[1], hoverable: false }));
     seg.mode("given", SVGModes.Default);
   });

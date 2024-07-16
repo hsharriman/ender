@@ -103,7 +103,7 @@ export class DropdownQuestion extends React.Component<
   };
 
   render() {
-    const { question, answers } = this.props;
+    const { question } = this.props;
     const selectedOption = this.state.selectedOption;
     const lineWidth = 28;
     const label =
