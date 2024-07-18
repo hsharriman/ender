@@ -19,6 +19,7 @@ export interface TutorialPageProps {
 export interface TutorialPageState {
   currStep: number;
   displayedStep: number;
+  showContinue: boolean;
 }
 export class TutorialPage extends React.Component<
   TutorialPageProps,
@@ -30,7 +31,22 @@ export class TutorialPage extends React.Component<
     this.state = {
       currStep: 0,
       displayedStep: 1, // shows step number to user, doesn't incl popups
+      showContinue: false,
     };
+  }
+
+  componentDidMount() {
+    document.addEventListener("click", this.activeElems);
+    document.addEventListener("hover", this.activeElems);
+    document.addEventListener("mouseover", this.activeElems);
+    document.addEventListener("keydown", this.activeElems);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("click", this.activeElems);
+    document.removeEventListener("hover", this.activeElems);
+    document.removeEventListener("mouseover", this.activeElems);
+    document.removeEventListener("keydown", this.activeElems);
   }
 
   onQuestionSubmit = () => {
@@ -48,9 +64,12 @@ export class TutorialPage extends React.Component<
           stepType === TutorialStepType.Popup
             ? prevState.displayedStep
             : prevState.displayedStep + 1,
+        showContinue: false,
       }));
+      this.resetActiveElems();
     } else {
-      this.setState({ currStep: 0, displayedStep: 1 });
+      this.setState({ currStep: 0, displayedStep: 1, showContinue: false });
+      this.resetActiveElems();
       // if the last step is a popup, that means it is showing information about the answer that was picked,
       // show it before moving to the next proof.
       if (
@@ -61,18 +80,26 @@ export class TutorialPage extends React.Component<
     }
   };
 
-  activeElems = () => {
-    const id = this.props.steps[this.state.currStep];
-    // find all active items? could be multiple at a time
-    // active items are set in onClick/onHover handlers of each component
-    // scan through them for the one that we need to be able to move on
-    document.querySelectorAll(".activeItem").forEach((elem) => {});
+  resetActiveElems = () => {
+    const interacted = document.querySelectorAll(".activeTutorial");
+    console.log("resetting active tutorial elements: ", interacted.length);
+    Array.from(interacted).forEach((m) => m.classList.remove("activeTutorial"));
+  };
+
+  activeElems = (e: Event) => {
+    if (!this.state.showContinue) {
+      const ids = this.props.steps[this.state.currStep].listenerId;
+      ids.forEach((id) => {
+        const elem = document.getElementById(id);
+        if (elem && elem.classList.contains("activeTutorial")) {
+          this.setState({ showContinue: true });
+        }
+      });
+    }
   };
 
   onQuestionsCompleted = () => {
-    this.setState({
-      currStep: 0,
-    });
+    this.setState({ currStep: 0 });
   };
 
   popup = (step: TutorialStep) => {
@@ -125,9 +152,10 @@ export class TutorialPage extends React.Component<
               numSteps={numSteps}
               onClick={this.onClick}
               paddingL={step.paddingL}
+              showContinue={this.state.showContinue}
             />
           )}
-          <InteractiveAppPage {...this.props.proof} />
+          <InteractiveAppPage {...this.props.proof} isTutorial={true} />
         </div>
       </div>
     );

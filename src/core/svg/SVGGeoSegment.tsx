@@ -1,12 +1,12 @@
 import React from "react";
 import { LSegment, Obj, SVGModes, TickType, Vector } from "../types/types";
+import { addTutorialActive, logEvent } from "../utils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
 import { SVGGeoTick } from "./SVGGeoTick";
 import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
-import { logEvent } from "../utils";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
 export type SVGSegmentProps = {
@@ -33,6 +33,9 @@ export class SVGGeoSegment extends React.Component<
       isPinned: isActive,
       css: updateStyle(isActive ? SVGModes.Pinned : this.props.mode),
     });
+    // for tutorial
+    addTutorialActive(this.props.geoId + "-hover");
+
     const prefix = `#${Obj.Segment}-text-`;
     const seg = this.props.geoId.replace("segment.", "");
     const matches = document.querySelectorAll(

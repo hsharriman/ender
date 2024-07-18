@@ -18,6 +18,7 @@ export interface InteractiveAppPageProps {
   miniCtx: DiagramContent;
   pageNum: number;
   questions: Question[];
+  isTutorial?: boolean;
 }
 
 interface InteractiveAppPageState {
@@ -73,12 +74,13 @@ export class InteractiveAppPage extends React.Component<
                 items={this.props.linkedTexts}
                 active={this.state.activeFrame}
                 onClick={this.handleClick}
+                isTutorial={this.props.isTutorial}
               />
             </div>
           </div>
           <div
             id="canvas-container"
-            className="flex flex-col ml-4 fixed h-min left-[780px] max-w-[1020px] min-w-[720px]"
+            className="flex flex-col ml-4 sticky h-min left-[780px] max-w-[1020px] min-w-[720px]"
           >
             <div className="pt-4">
               <Diagram
@@ -88,6 +90,7 @@ export class InteractiveAppPage extends React.Component<
                 activeFrame={this.state.activeFrame}
                 ctx={this.props.ctx}
                 miniScale={false}
+                isTutorial={this.props.isTutorial}
               />
             </div>
 

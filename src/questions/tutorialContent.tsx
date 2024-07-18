@@ -1,7 +1,11 @@
-import { segmentQuestion } from "../core/geometryText";
+import { segmentQuestion, triangleStr } from "../core/geometryText";
 import { TutorialStep, TutorialStepType } from "../core/types/types";
 
 const bold = (text: string) => <span className="font-bold">{text}</span>;
+const allProofRowListenerIds = Array.from(
+  { length: 4 },
+  (_, i) => `s${i + 1}-tutorial`
+);
 const hintBtn = (
   <span className="inline-flex">
     <svg
@@ -40,7 +44,7 @@ export const tutorial1Steps: TutorialStep[] = [
         use. Let's look through them together.
       </span>
     ),
-    listenerId: "", // TODO use this to check if specific actions have been taken?
+    listenerId: [], // TODO use this to check if specific actions have been taken?
     type: TutorialStepType.Popup,
   },
   {
@@ -52,6 +56,8 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     type: TutorialStepType.Default,
+    exercise: <span>Hover over {triangleStr("ADC")}</span>,
+    listenerId: ["triangle-text-ADC"],
   },
   {
     elemId: "point.D",
@@ -62,9 +68,11 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     type: TutorialStepType.Default,
+    listenerId: ["segment.CD-hover"],
+    exercise: <span>Click on segment DC on the diagram</span>,
   },
   {
-    elemId: "reveal-step-btn",
+    elemId: "reveal-btn-container",
     text: (
       <span>
         You can use the {bold("Down arrow key")}, {bold("click this button")},
@@ -73,6 +81,8 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     type: TutorialStepType.Default,
+    listenerId: ["reveal-step-btn"].concat(allProofRowListenerIds),
+    exercise: <span>Reveal a new row of the proof</span>,
   },
   {
     elemId: "point.D",
@@ -86,6 +96,7 @@ export const tutorial1Steps: TutorialStep[] = [
       <span>Notice how the diagram changes as you add steps to the proof.</span>
     ),
     type: TutorialStepType.Default,
+    listenerId: ["reveal-step-btn"].concat(allProofRowListenerIds),
   },
   {
     elemId: "answer-button-1",
@@ -96,6 +107,7 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     type: TutorialStepType.HideContinue,
+    listenerId: [],
   },
   {
     // TODO make these popups have the answers to the previous questions?
@@ -109,6 +121,7 @@ export const tutorial1Steps: TutorialStep[] = [
         {segmentQuestion("AC")}.
       </span>
     ),
+    listenerId: [],
   },
   {
     type: TutorialStepType.Default,
@@ -116,13 +129,16 @@ export const tutorial1Steps: TutorialStep[] = [
     text: (
       <span>
         This question has to do with the {bold("order of the steps")} in the
-        proof.{" "}
-        {bold(
-          "Press the Down arrow key or click to the row applying SAS Triangle Congruence"
-        )}
-        .
+        proof.
       </span>
     ),
+    exercise: (
+      <span>
+        Press the Down arrow key or click to the row applying SAS Triangle
+        Congruence
+      </span>
+    ),
+    listenerId: ["reveal-step-btn", "s4-tutorial"],
   },
   {
     type: TutorialStepType.HideContinue,
@@ -141,6 +157,7 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     paddingL: 30,
+    listenerId: [],
   },
 ];
 
@@ -155,6 +172,7 @@ export const tutorial3Steps: TutorialStep[] = [
         statements that aren't stated until later in the proof.
       </span>
     ),
+    listenerId: [],
   },
   {
     type: TutorialStepType.Default,
@@ -168,6 +186,7 @@ export const tutorial3Steps: TutorialStep[] = [
     exercise: (
       <span>Use the arrow keys or click to the last row of the proof.</span>
     ),
+    listenerId: ["reveal-step-btn", "s4-tutorial"],
   },
   {
     type: TutorialStepType.HideContinue,
@@ -182,6 +201,7 @@ export const tutorial3Steps: TutorialStep[] = [
       <span>When you're ready, submit your answer at the top of the page.</span>
     ),
     paddingL: -100,
+    listenerId: [],
   },
   {
     // TODO this is not shown because the page moves on
@@ -195,5 +215,6 @@ export const tutorial3Steps: TutorialStep[] = [
         {bold(" incorrectly applies SSS")}.
       </span>
     ),
+    listenerId: [],
   },
 ];

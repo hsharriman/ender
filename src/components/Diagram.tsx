@@ -13,6 +13,7 @@ export interface DiagramProps {
   width: string;
   height: string;
   miniScale: boolean;
+  isTutorial?: boolean;
 }
 
 interface DiagramState {

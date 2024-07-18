@@ -7,6 +7,7 @@ interface TutorialPopoverProps {
   currStep: number;
   numSteps: number;
   paddingL?: number;
+  showContinue: boolean;
   onClick: () => void;
 }
 interface TutorialPopoverState {
@@ -42,6 +43,13 @@ export class TutorialPopover extends React.Component<
         top: dims.top + window.scrollY - 8,
         left: dims.right + window.scrollX + 4 + (this.props.paddingL || 0),
       };
+      const continueStyle = this.props.showContinue
+        ? "block opacity-1"
+        : "hidden opacity-0";
+
+      const exerciseStyle = this.props.showContinue
+        ? "text-purple-500 line-through leading-relaxed border-purple-500"
+        : "text-red-500 border-red-500";
       return (
         <div className="">
           <div
@@ -61,34 +69,41 @@ export class TutorialPopover extends React.Component<
                 {step.text}
               </p>
               {step.exercise && (
-                <span className={`font-semibold mb-2 text-blue-700`}>
-                  {step.exercise}
-                </span>
+                <div className="flex flex-col font-bold">
+                  Exercise:
+                  <span
+                    className={`font-semibold mb-2 transition-all duration-300 ${exerciseStyle}`}
+                  >
+                    {step.exercise}
+                  </span>
+                </div>
               )}
               {this.props.step.type !== TutorialStepType.HideContinue && (
-                <button
-                  className="flex w-full justify-end align-middle py-2 text-xs font-bold text-left text-gray-900 transition-all select-none disabled:pointer-events-none disabled:opacity-50 hover:text-purple-500 hover:stroke-purple-500 stroke-black underline underline-offset-4"
-                  type="button"
-                  onClick={this.props.onClick}
-                >
-                  <div className="flex gap-x-2 items-center mr-2">
-                    Continue
-                    <svg
-                      width="7"
-                      height="12"
-                      viewBox="0 0 7 12"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M1.25 1.91669L5.33333 6.00002L1.25 10.0834"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      ></path>
-                    </svg>
-                  </div>
-                </button>
+                <div className="h-8">
+                  <button
+                    className={`${continueStyle} flex w-full justify-end align-middle py-2 text-base font-bold text-left text-purple-500 transition-all select-none disabled:pointer-events-none disabled:opacity-50 hover:text-purple-300 hover:stroke-purple-300 stroke-purple-500 underline underline-offset-4`}
+                    type="button"
+                    onClick={this.props.onClick}
+                  >
+                    <div className="flex gap-x-2 items-center mr-2">
+                      Continue
+                      <svg
+                        width="7"
+                        height="12"
+                        viewBox="0 0 7 12"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M1.25 1.91669L5.33333 6.00002L1.25 10.0834"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        ></path>
+                      </svg>
+                    </div>
+                  </button>
+                </div>
               )}
             </div>
           </div>
