@@ -110,7 +110,6 @@ export const tutorial1Steps: TutorialStep[] = [
     listenerId: [],
   },
   {
-    // TODO make these popups have the answers to the previous questions?
     type: TutorialStepType.Popup,
     elemId: "",
     headerText: "The correct answer was 'No'.",
@@ -204,7 +203,6 @@ export const tutorial3Steps: TutorialStep[] = [
     listenerId: [],
   },
   {
-    // TODO this is not shown because the page moves on
     type: TutorialStepType.Popup,
     elemId: "",
     headerText: "The correct answer was 'No'.",
