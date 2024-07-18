@@ -87,16 +87,9 @@ export const pageOrder = () => {
   // const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]), false);
   const challenge: Page[] = [];
 
-  // TODO put background page back
-  // const pages = background()
-  //   .concat(pretest)
-  //   .concat(tutorial)
-  //   .concat(stage1)
-  //   .concat(stage2)
-  //   .concat(challenge)
-  //   .concat(sus());
-
-  const pages = tutorial
+  const pages = background()
+    .concat(pretest)
+    .concat(tutorial)
     .concat(stage1)
     .concat(stage2)
     .concat(challenge)
