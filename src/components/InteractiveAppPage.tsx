@@ -2,13 +2,13 @@ import React from "react";
 import { DiagramContent } from "../core/diagramContent";
 import { ProofTextItem } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
+import { logEvent } from "../core/utils";
 import { Question } from "../questions/funcTypeQuestions";
 import { getReasonFn } from "../theorems/utils";
 import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn } from "./ReliesOn";
-import { logEvent } from "../core/utils";
 
 export interface InteractiveAppPageProps {
   name: string;
@@ -18,6 +18,7 @@ export interface InteractiveAppPageProps {
   miniCtx: DiagramContent;
   pageNum: number;
   questions: Question[];
+  isTutorial?: boolean;
 }
 
 interface InteractiveAppPageState {
@@ -73,12 +74,13 @@ export class InteractiveAppPage extends React.Component<
                 items={this.props.linkedTexts}
                 active={this.state.activeFrame}
                 onClick={this.handleClick}
+                isTutorial={this.props.isTutorial}
               />
             </div>
           </div>
           <div
             id="canvas-container"
-            className="col-start-7 col-span-5 flex flex-col ml-4"
+            className="flex flex-col ml-4 sticky h-min left-[780px] max-w-[1020px] min-w-[720px]"
           >
             <div className="pt-4">
               <Diagram
@@ -88,10 +90,11 @@ export class InteractiveAppPage extends React.Component<
                 activeFrame={this.state.activeFrame}
                 ctx={this.props.ctx}
                 miniScale={false}
+                isTutorial={this.props.isTutorial}
               />
             </div>
 
-            <div className="grid grid-rows-1 grid-cols-8 h-44 mt-12">
+            <div className="flex flex-row max-w-[1000px] min-w-[700px] h-44 mt-12">
               {this.props.miniCtx.frames.find(
                 (s) => s === this.state.activeFrame
               ) && (
@@ -110,7 +113,7 @@ export class InteractiveAppPage extends React.Component<
                   />
                 </div>
               )}
-              <div className="col-span-5 pl-2">
+              <div className="col-span-5 pl-2 max-w-[500px] min-w-[460px]">
                 <ReasonText
                   activeFrame={this.state.activeFrame}
                   textFn={getReasonFn(this.props.reasonMap)}

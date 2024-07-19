@@ -252,7 +252,7 @@ export const exploratoryQuestion = (start: number, end: number): Question[] => [
       "The step says the wrong things are congruent to each other (ex: incorrectly says PA is congruent to AC)",
       "The step uses the wrong theorem or definition (ex: incorrectly uses ASA triangle congruence)",
       "There is not enough information to apply the theorem or definition",
-      "Other (write a 1 sentence explanation)", // TODO check options for length
+      "Other (write a 1 sentence explanation)",
     ],
     type: QuestionType.Correctness,
     id: id(3),

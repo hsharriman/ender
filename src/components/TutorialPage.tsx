@@ -19,6 +19,7 @@ export interface TutorialPageProps {
 export interface TutorialPageState {
   currStep: number;
   displayedStep: number;
+  showContinue: boolean;
 }
 export class TutorialPage extends React.Component<
   TutorialPageProps,
@@ -30,7 +31,22 @@ export class TutorialPage extends React.Component<
     this.state = {
       currStep: 0,
       displayedStep: 1, // shows step number to user, doesn't incl popups
+      showContinue: false,
     };
+  }
+
+  componentDidMount() {
+    document.addEventListener("click", this.activeElems);
+    document.addEventListener("hover", this.activeElems);
+    document.addEventListener("mouseover", this.activeElems);
+    document.addEventListener("keydown", this.activeElems);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("click", this.activeElems);
+    document.removeEventListener("hover", this.activeElems);
+    document.removeEventListener("mouseover", this.activeElems);
+    document.removeEventListener("keydown", this.activeElems);
   }
 
   onQuestionSubmit = () => {
@@ -48,9 +64,12 @@ export class TutorialPage extends React.Component<
           stepType === TutorialStepType.Popup
             ? prevState.displayedStep
             : prevState.displayedStep + 1,
+        showContinue: false,
       }));
+      this.resetActiveElems();
     } else {
-      this.setState({ currStep: 0, displayedStep: 1 });
+      this.setState({ currStep: 0, displayedStep: 1, showContinue: false });
+      this.resetActiveElems();
       // if the last step is a popup, that means it is showing information about the answer that was picked,
       // show it before moving to the next proof.
       if (
@@ -61,52 +80,57 @@ export class TutorialPage extends React.Component<
     }
   };
 
-  activeElems = () => {
-    const id = this.props.steps[this.state.currStep];
-    // find all active items? could be multiple at a time
-    // active items are set in onClick/onHover handlers of each component
-    // scan through them for the one that we need to be able to move on
-    document.querySelectorAll(".activeItem").forEach((elem) => {});
+  resetActiveElems = () => {
+    const interacted = document.querySelectorAll(".activeTutorial");
+    Array.from(interacted).forEach((m) => m.classList.remove("activeTutorial"));
+  };
+
+  activeElems = (e: Event) => {
+    if (!this.state.showContinue) {
+      const ids = this.props.steps[this.state.currStep].listenerId;
+      ids.forEach((id) => {
+        const elem = document.getElementById(id);
+        if (elem && elem.classList.contains("activeTutorial")) {
+          this.setState({ showContinue: true });
+        }
+      });
+    }
   };
 
   onQuestionsCompleted = () => {
-    this.setState((prevState) => ({
-      currStep: 0,
-    }));
+    this.setState({ currStep: 0 });
   };
 
   popup = (step: TutorialStep) => {
     return (
-      <>
-        <div className="absolute top-0 left-0 z-50 bg-gray-500 bg-opacity-75 w-screen h-screen">
-          <div className="flex min-h-full min-w-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div className="relative overflow-hidden rounded-lg bg-white text-left shadow-xl sm:my-8 sm:w-full sm:max-w-lg">
-              <div className="sm:flex sm:items-start px-4 py-4 sm:p-6 sm:pb-4">
-                <div className="text-center sm:text-left">
-                  <h3
-                    className="text-base font-semibold leading-6 text-gray-900"
-                    id="modal-title"
-                  >
-                    {step.headerText}
-                  </h3>
-                  <div className="mt-2">
-                    <span className="text-sm text-gray-500">{step.text}</span>
-                  </div>
+      <div className="absolute top-0 left-0 z-50 bg-gray-500 bg-opacity-75 w-screen h-screen">
+        <div className="flex min-h-full min-w-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div className="relative overflow-hidden rounded-lg bg-white text-left shadow-xl sm:my-8 sm:w-full sm:max-w-lg">
+            <div className="sm:flex sm:items-start px-4 py-4 sm:p-6 sm:pb-4">
+              <div className="text-center sm:text-left">
+                <h3
+                  className="text-base font-semibold leading-6 text-gray-900"
+                  id="modal-title"
+                >
+                  {step.headerText}
+                </h3>
+                <div className="mt-2">
+                  <span className="text-sm text-gray-500">{step.text}</span>
                 </div>
               </div>
-              <div className="bg-gray-100 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                <button
-                  type="button"
-                  className="inline-flex w-full justify-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-400 sm:ml-3 sm:w-auto"
-                  onClick={this.onClick}
-                >
-                  Continue
-                </button>
-              </div>
+            </div>
+            <div className="bg-gray-100 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              <button
+                type="button"
+                className="inline-flex w-full justify-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-400 sm:ml-3 sm:w-auto"
+                onClick={this.onClick}
+              >
+                Continue
+              </button>
             </div>
           </div>
         </div>
-      </>
+      </div>
     );
   };
 
@@ -127,9 +151,10 @@ export class TutorialPage extends React.Component<
               numSteps={numSteps}
               onClick={this.onClick}
               paddingL={step.paddingL}
+              showContinue={this.state.showContinue}
             />
           )}
-          <InteractiveAppPage {...this.props.proof} />
+          <InteractiveAppPage {...this.props.proof} isTutorial={true} />
         </div>
       </div>
     );

@@ -1,12 +1,13 @@
 import React from "react";
 import { ProofTextItem } from "../core/types/stepTypes";
-import { logEvent } from "../core/utils";
+import { addTutorialActive, logEvent } from "../core/utils";
 
 export interface ProofRowsProps {
   active: string;
   items: ProofTextItem[];
   onClick: (n: string) => void; // callback that returns new selected idx when clicked
   reliesOn?: Map<string, Set<string>>;
+  isTutorial?: boolean;
 }
 export interface ProofRowsState {
   idx: number;
@@ -34,7 +35,14 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     if (this.state.revealed < this.props.items.length - 2) {
       const newIdx = this.state.revealed + 1;
       this.setState({ revealed: newIdx, idx: newIdx + 1 });
-      this.props.onClick(`s${newIdx}`);
+      const newId = `s${newIdx}`;
+      this.props.onClick(newId);
+
+      // tutorial
+      if (this.props.isTutorial) {
+        addTutorialActive("reveal-step-btn");
+      }
+
       logEvent("c", {
         c: "pr-r",
         v: `s${newIdx}`,
@@ -44,25 +52,30 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
 
   onKeyboardPress = (event: KeyboardEvent) => {
     let newIdx = this.state.idx;
+    let reveal =
+      this.state.idx > 0 && this.state.revealed < this.props.items.length - 2;
     if (
       event.key === "ArrowDown" &&
       this.state.idx < this.props.items.length - 1
     ) {
       newIdx = this.state.idx + 1;
+      reveal = this.state.idx > this.state.revealed; // false if active idx is not beyond what has been revealed
     } else if (event.key === "ArrowUp" && this.state.idx > 0) {
       newIdx = this.state.idx - 1;
+      reveal = false; // don't reveal on Up arrow press
     }
     if (newIdx !== this.state.idx && this.props.items[newIdx] !== undefined) {
       const newActive = this.props.items[newIdx].k;
       this.setState({
         idx: newIdx,
-        revealed:
-          this.state.idx > 0 &&
-          this.state.revealed < this.props.items.length - 2
-            ? this.state.revealed + 1
-            : this.state.revealed,
+        revealed: reveal ? this.state.revealed + 1 : this.state.revealed,
       });
       this.props.onClick(newActive);
+
+      // tutorial
+      if (this.props.isTutorial) {
+        addTutorialActive(`${newActive}-tutorial`);
+      }
       logEvent("a", {
         c: "pr",
         v: newActive,
@@ -86,6 +99,11 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           newIdx - 1 > this.state.revealed ? newIdx - 1 : this.state.revealed,
       });
       this.props.onClick(active);
+
+      // tutorial
+      if (this.props.isTutorial) {
+        addTutorialActive(`${this.props.items[newIdx].k}-tutorial`);
+      }
       logEvent("c", {
         c: "pr",
         v: active,
@@ -93,22 +111,10 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     }
   };
 
-  highlightBar = (k: string, h: string) => {
-    return (
-      <div
-        id="active-bar"
-        className={`w-4 ${h} transition-all ease-in-out duration-300`}
-        style={
-          this.props.active === k ? { borderLeft: "10px double #9A76FF" } : {}
-        }
-      ></div>
-    );
-  };
-
   renderPremise = (premise: string, item: ProofTextItem) => {
     return (
       <div className="flex flex-row justify-start">
-        {this.highlightBar(item.k, "h-12")}
+        {highlightBar(this.props.active === item.k, "h-12")}
         <button
           id={`${this.idPrefix}${item.k}`}
           onClick={this.onClick}
@@ -130,68 +136,17 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     const depends =
       (activeItem && activeItem.dependsOn?.has(item.k)) ||
       new Set(["given", "prove"]).has(activeItem.k);
-    const clr = isActive ? "slate-900" : depends ? "slate-600" : "slate-300";
-    // TODO update item.v to require a param that tells if linkedtext should be active or not, for colored text
-    const textColor = isActive
-      ? "text-slate-900 font-[500]"
-      : depends
-      ? "text-slate-800"
-      : "text-slate-400";
-    const strokeColor = isActive
-      ? "border-slate-900"
-      : depends
-      ? "border-slate-800"
-      : "border-slate-400";
-    if (this.state.revealed < i + 1) {
-      // render empty row
-      return (
-        <div className={`flex flex-row justify-start h-16`} key={item.k}>
-          <button
-            id={`${this.idPrefix}${item.k}`}
-            className="border-gray-300 border-b-2 w-full h-16 ml-6 text-lg focus:outline-none"
-            onClick={this.onClick}
-          >
-            <div
-              className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
-            >
-              <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-                <div className="text-slate-400 font-bold">{i + 1}</div>
-              </div>
-            </div>
-          </button>
-        </div>
-      );
-    }
     return (
-      <div className={`flex flex-row justify-start h-16`} key={item.k}>
-        {this.highlightBar(item.k, "h-16")}
-        <button
-          id={`${this.idPrefix}${item.k}`}
-          onClick={this.onClick}
-          className="border-gray-300 border-b-2 w-full h-16 ml-2 text-lg focus:outline-none"
-        >
-          <div
-            className={`${textColor} ${strokeColor} py-4  grid grid-rows-1 grid-cols-2`}
-          >
-            <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-              <div
-                className={`${
-                  isActive ? "text-violet-500" : "text-slate-400"
-                } font-bold`}
-              >
-                {i + 1}
-              </div>
-              <div>{item.v}</div>
-            </div>
-            <div
-              className={`flex flex-row justify-start align-baseline`}
-              id={`reason-${i + 1}`}
-            >
-              {item.reason}
-            </div>
-          </div>
-        </button>
-      </div>
+      <ProofRow
+        isActive={isActive}
+        depends={depends}
+        onClick={this.onClick}
+        isTutorial={this.props.isTutorial || false}
+        revealed={this.state.revealed < i + 1}
+        item={item}
+        i={i}
+        isPremise={false}
+      />
     );
   };
 
@@ -219,29 +174,31 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
             <div>Q.E.D.</div>
           </div>
           <div className="w-full flex justify-center">
-            {this.state.revealed < this.props.items.length - 2 && (
-              <button
-                onClick={this.onReveal}
-                className="text-violet-500 animate-smallBounce"
-              >
-                <div
-                  className="animate-bounce bg-violet-500 p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center"
-                  id="reveal-step-btn"
+            <div id="reveal-btn-container">
+              {this.state.revealed < this.props.items.length - 2 && (
+                <button
+                  onClick={this.onReveal}
+                  className="text-violet-500 animate-smallBounce"
                 >
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                  <div
+                    className="animate-bounce bg-violet-500 p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center"
+                    id="reveal-step-btn"
                   >
-                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                  </svg>
-                </div>
-              </button>
-            )}
+                    <svg
+                      className="w-6 h-6 text-white"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                  </div>
+                </button>
+              )}
+            </div>
           </div>
         </>
       );
@@ -249,3 +206,101 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     return <></>;
   }
 }
+
+interface ProofRowProps {
+  isActive: boolean;
+  isTutorial: boolean;
+  revealed: boolean;
+  item: ProofTextItem;
+  i: number;
+  depends: boolean;
+  isPremise: boolean;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+}
+export class ProofRow extends React.Component<ProofRowProps> {
+  private idPrefix = "prooftext-";
+  private clr = (prefix: string) => {
+    let css = this.props.isActive
+      ? `${prefix}-slate-900`
+      : this.props.depends
+      ? `${prefix}-slate-800`
+      : `${prefix}-slate-400`;
+    if (prefix === "text" && this.props.isActive) {
+      css = css + "font-[500]";
+    }
+    return css;
+  };
+
+  render() {
+    // if the active row is given or prove, focus all the proof rows
+    return (
+      <div
+        className={`flex flex-row justify-start h-16`}
+        key={this.props.item.k}
+        id={this.props.isTutorial ? `${this.props.item.k}-tutorial` : ""}
+      >
+        {this.props.revealed ? (
+          <button
+            id={`${this.idPrefix}${this.props.item.k}`}
+            className="border-gray-300 border-b-2 w-full h-16 ml-6 text-lg focus:outline-none"
+            onClick={this.props.onClick}
+          >
+            <div
+              className={`${this.clr("text")} ${this.clr(
+                "border"
+              )} py-4  grid grid-rows-1 grid-cols-2`}
+            >
+              <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
+                <div className="text-slate-400 font-bold">
+                  {this.props.i + 1}
+                </div>
+              </div>
+            </div>
+          </button>
+        ) : (
+          <div className="flex flex-row justify-start h-16 w-full">
+            {highlightBar(this.props.isActive, "h-16")}
+            <button
+              id={`${this.idPrefix}${this.props.item.k}`}
+              onClick={this.props.onClick}
+              className="border-gray-300 border-b-2 w-full h-16 ml-2 text-lg focus:outline-none"
+            >
+              <div
+                className={`${this.clr("text")} ${this.clr(
+                  "border"
+                )} py-4  grid grid-rows-1 grid-cols-2`}
+              >
+                <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
+                  <div
+                    className={`${
+                      this.props.isActive ? "text-violet-500" : "text-slate-400"
+                    } font-bold`}
+                  >
+                    {this.props.i + 1}
+                  </div>
+                  <div>{this.props.item.v}</div>
+                </div>
+                <div
+                  className={`flex flex-row justify-start align-baseline`}
+                  id={`reason-${this.props.i + 1}`}
+                >
+                  {this.props.item.reason}
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+}
+
+const highlightBar = (active: boolean, h: string) => {
+  return (
+    <div
+      id="active-bar"
+      className={`w-4 ${h} transition-all ease-in-out duration-300`}
+      style={active ? { borderLeft: "10px double #9A76FF" } : {}}
+    ></div>
+  );
+};

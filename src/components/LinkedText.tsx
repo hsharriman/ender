@@ -1,7 +1,7 @@
 import React from "react";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
 import { Obj } from "../core/types/types";
-import { logEvent } from "../core/utils";
+import { addTutorialActive, logEvent } from "../core/utils";
 
 export interface LinkedTextProps {
   val: string;
@@ -85,6 +85,8 @@ export class LinkedText extends React.Component<
   };
 
   onPointerEnter = () => {
+    // for tutorial
+    addTutorialActive(`${this.props.obj.tag}-text-${this.props.val}`);
     logEvent("p", {
       c: "l",
       v: this.props.val,

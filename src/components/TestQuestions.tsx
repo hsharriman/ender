@@ -20,10 +20,6 @@ interface QuestionsProps {
 }
 
 export class TestQuestions extends React.Component<QuestionsProps> {
-  constructor(props: QuestionsProps) {
-    super(props);
-  }
-
   isFirstOfType = (question: Question) => {
     const questionType = question.type.toString();
     if (!this.props.scaffolding[questionType]) {
@@ -79,19 +75,6 @@ export class TestQuestions extends React.Component<QuestionsProps> {
       currentQuestion.answerType === AnswerType.DropdownTextbox;
     return (
       <>
-        {/* <div className="flex items-center mb-4">
-          <select
-            onChange={this.handleQuestionChange}
-            value={this.state.currentQuestionIndex}
-            className="border p-2 rounded"
-          >
-            {this.props.questions.map((q, index) => (
-              <option key={index} value={index}>
-                Question {index + 1}
-              </option>
-            ))}
-          </select>
-        </div> */}
         <div className="flex">
           <span className="pr-6 self-center">
             Q{this.props.questionIdx + 1}:

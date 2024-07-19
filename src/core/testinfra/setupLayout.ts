@@ -28,7 +28,7 @@ export const staticLayout = (
 
   ctx.addFrame(GIVEN_ID);
   proofMeta.givens.diagram(ctx, GIVEN_ID);
-  proofMeta.steps.map((step) => {
+  proofMeta.steps.forEach((step) => {
     texts.push({
       stmt: step.staticText(),
       reason: step.reason.title,
@@ -85,7 +85,7 @@ export const interactiveLayout = (
     alwaysActive: true,
   });
 
-  proofMeta.steps.map((step, i) => {
+  proofMeta.steps.forEach((step, i) => {
     let textMeta = {};
     const s = ctx.addFrame(`s${i + 1}`);
     step.diagram(ctx, s);
