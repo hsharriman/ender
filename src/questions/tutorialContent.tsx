@@ -75,9 +75,8 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "reveal-btn-container",
     text: (
       <span>
-        You can use the {bold("Down arrow key")}, {bold("click this button")},
-        or {bold("click on a row ")}
-        to reveal more of the proof.
+        You can {bold("click this button")}, use the {bold("\u2193 key")}, or{" "}
+        {bold("click on a row ")} to reveal more of the proof.
       </span>
     ),
     type: TutorialStepType.Default,
@@ -133,7 +132,7 @@ export const tutorial1Steps: TutorialStep[] = [
     ),
     exercise: (
       <span>
-        Press the Down arrow key or click to the row applying SAS Triangle
+        Use the {"\u2193"} key or click to the row applying SAS Triangle
         Congruence
       </span>
     ),

@@ -34,6 +34,31 @@ export class TutorialPopover extends React.Component<
     }
   };
 
+  toDoBullet = (complete: boolean) => {
+    const r = 6;
+    const styling = complete
+      ? "fill-green-400 stroke-green-400"
+      : "stroke-red-500 fill-none";
+    return (
+      <span className="inline-flex mr-2">
+        <svg
+          width={r * 2}
+          height={r * 2}
+          viewBox={`0 0 ${r * 2} ${r * 2}`}
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx={r}
+            cy={r}
+            r={r - 2}
+            strokeWidth="2"
+            // className={styling}
+          ></circle>
+        </svg>
+      </span>
+    );
+  };
+
   render() {
     const step = this.props.step;
     const elem = document.getElementById(step.elemId);
@@ -48,8 +73,8 @@ export class TutorialPopover extends React.Component<
         : "hidden opacity-0";
 
       const exerciseStyle = this.props.showContinue
-        ? "text-purple-500 line-through leading-relaxed border-purple-500"
-        : "text-red-500 border-red-500";
+        ? "text-green-400 leading-relaxed border-green-300 fill-green-300 stroke-green-300 italic"
+        : "text-red-500 border-red-500 fill-none stroke-red-500";
       return (
         <div className="">
           <div
@@ -62,7 +87,7 @@ export class TutorialPopover extends React.Component<
             style={{ top: `${style.top}px`, left: `${style.left + 18}px` }}
           >
             <div className="block">
-              <p className="text-sm antialiased font-normal leading-relaxed mb-8 text-blue-gray-500">
+              <p className="text-sm antialiased font-normal leading-relaxed mb-5 text-blue-gray-500">
                 <span className="font-bold">
                   {`${this.props.currStep}/${this.props.numSteps}: `}
                 </span>
@@ -70,23 +95,26 @@ export class TutorialPopover extends React.Component<
               </p>
               {step.exercise && (
                 <div className="flex flex-col font-bold">
-                  Exercise:
+                  Before moving on:
                   <span
                     className={`font-semibold mb-2 transition-all duration-300 ${exerciseStyle}`}
                   >
+                    {this.toDoBullet(this.props.showContinue)}
                     {step.exercise}
                   </span>
                 </div>
               )}
               {this.props.step.type !== TutorialStepType.HideContinue && (
-                <div className="h-8">
-                  <button
-                    className={`${continueStyle} flex w-full justify-end align-middle py-2 text-base font-bold text-left text-purple-500 transition-all select-none disabled:pointer-events-none disabled:opacity-50 hover:text-purple-300 hover:stroke-purple-300 stroke-purple-500 underline underline-offset-4`}
-                    type="button"
-                    onClick={this.props.onClick}
+                <div className="h-8 border-t-2 border-slate-200">
+                  <div
+                    className={`${continueStyle} flex w-full justify-end align-middle py-2 text-sm`}
                   >
-                    <div className="flex gap-x-2 items-center mr-2">
-                      Continue
+                    <button
+                      type="button"
+                      onClick={this.props.onClick}
+                      className="flex gap-x-2 items-center mr-2 px-2 py-0.5 mb-2 rounded-lg font-bold text-slate-800 border-slate-300 transition-all select-none disabled:pointer-events-none disabled:opacity-50 hover:text-purple-500 hover:stroke-purple-500 hover:border-purple-500 hover:bg-purple-200 stroke-slate-800"
+                    >
+                      Next
                       <svg
                         width="7"
                         height="12"
@@ -101,8 +129,8 @@ export class TutorialPopover extends React.Component<
                           strokeLinejoin="round"
                         ></path>
                       </svg>
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

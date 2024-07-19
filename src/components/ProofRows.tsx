@@ -52,23 +52,23 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
 
   onKeyboardPress = (event: KeyboardEvent) => {
     let newIdx = this.state.idx;
+    let reveal =
+      this.state.idx > 0 && this.state.revealed < this.props.items.length - 2;
     if (
       event.key === "ArrowDown" &&
       this.state.idx < this.props.items.length - 1
     ) {
       newIdx = this.state.idx + 1;
+      reveal = this.state.idx > this.state.revealed; // false if active idx is not beyond what has been revealed
     } else if (event.key === "ArrowUp" && this.state.idx > 0) {
       newIdx = this.state.idx - 1;
+      reveal = false; // don't reveal on Up arrow press
     }
     if (newIdx !== this.state.idx && this.props.items[newIdx] !== undefined) {
       const newActive = this.props.items[newIdx].k;
       this.setState({
         idx: newIdx,
-        revealed:
-          this.state.idx > 0 &&
-          this.state.revealed < this.props.items.length - 2
-            ? this.state.revealed + 1
-            : this.state.revealed,
+        revealed: reveal ? this.state.revealed + 1 : this.state.revealed,
       });
       this.props.onClick(newActive);
 
