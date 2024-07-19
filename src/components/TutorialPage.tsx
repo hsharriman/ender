@@ -82,7 +82,6 @@ export class TutorialPage extends React.Component<
 
   resetActiveElems = () => {
     const interacted = document.querySelectorAll(".activeTutorial");
-    console.log("resetting active tutorial elements: ", interacted.length);
     Array.from(interacted).forEach((m) => m.classList.remove("activeTutorial"));
   };
 

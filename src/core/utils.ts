@@ -65,6 +65,5 @@ export const addTutorialActive = (id: string) => {
   const elem = document.getElementById(id);
   if (elem && !elem.classList.contains("activeTutorial")) {
     elem.classList.add("activeTutorial");
-    console.log(elem.id, elem.classList);
   }
 };
