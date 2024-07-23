@@ -9,7 +9,7 @@ import {
   PretestAppPage,
   PretestAppPageProps,
 } from "./components/PretestAppPage";
-import SavePage from "./components/SavePage";
+import { SavePage } from "./components/SavePage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage, SusProofType } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";

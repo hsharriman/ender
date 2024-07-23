@@ -5,8 +5,21 @@ interface SavePageProps {
   answers: { [proofName: string]: { [question: string]: string } };
 }
 
-const SavePage: React.FC<SavePageProps> = () => {
-  const saveAnswersAsCSV = () => {
+interface SavePageStates {
+  answersSaved: boolean;
+  logsSaved: boolean;
+}
+
+export class SavePage extends React.Component<SavePageProps, SavePageStates> {
+  constructor(props: SavePageProps) {
+    super(props);
+    this.state = {
+      answersSaved: false,
+      logsSaved: false,
+    };
+  }
+
+  saveAnswersAsCSV = () => {
     // Create CSV content from answers object
     const storedAnswers = localStorage.getItem("answers") || "None";
 
@@ -26,9 +39,11 @@ const SavePage: React.FC<SavePageProps> = () => {
     a.setAttribute("href", url);
     a.setAttribute("download", `answers-${new Date().valueOf()}.csv`);
     a.click();
+
+    this.setState({ answersSaved: true });
   };
 
-  const saveLogsAsCSV = () => {
+  saveLogsAsCSV = () => {
     const logs = JSON.parse(
       sessionStorage.getItem("eventLogs") || "None"
     ) as EventLog[];
@@ -46,35 +61,53 @@ const SavePage: React.FC<SavePageProps> = () => {
     a.setAttribute("href", url);
     a.setAttribute("download", `eventLogs-${new Date().valueOf()}.csv`);
     a.click();
+
+    this.setState({ logsSaved: true });
   };
 
-  const clearStorage = () => {
+  clearStorage = () => {
     localStorage.removeItem("answers");
     sessionStorage.removeItem("eventLogs");
   };
 
-  return (
-    <div className="flex items-center justify-center h-screentop-0 left-0 pt-10 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800">
-      <button
-        className="bg-blue-500 text-white p-4 rounded mr-10"
-        onClick={saveAnswersAsCSV}
-      >
-        Save Answers as CSV
-      </button>
-      <button
-        className="bg-green-500 text-white p-4 rounded mr-10"
-        onClick={saveLogsAsCSV}
-      >
-        Save Event Logs as CSV
-      </button>
-      <button
-        className="bg-red-500 text-white p-4 rounded"
-        onClick={clearStorage}
-      >
-        Clear Storage
-      </button>
-    </div>
-  );
-};
+  render() {
+    const { answersSaved, logsSaved } = this.state;
+    const clearStorageVisible = answersSaved && logsSaved;
 
-export default SavePage;
+    return (
+      <div className="flex items-center justify-center left-0 pt-10 flex-col w-screen h-full font-notoSans text-slate-800">
+        <div className="text-center mb-4 text-2xl">
+          <p>Please don't close the browser.</p>
+          <br />
+          <p>
+            Please tell the researchers that you are done. And click on both the
+            blue and green buttons.
+          </p>
+          <br />
+        </div>
+        <div className="flex flex-row flex-nowrap">
+          <button
+            className="bg-blue-500 text-white p-4 rounded mr-10"
+            onClick={this.saveAnswersAsCSV}
+          >
+            Save Answers as CSV
+          </button>
+          <button
+            className="bg-green-500 text-white p-4 rounded mr-10"
+            onClick={this.saveLogsAsCSV}
+          >
+            Save Event Logs as CSV
+          </button>
+          {clearStorageVisible && (
+            <button
+              className="bg-red-500 text-white p-4 rounded text-sm"
+              onClick={this.clearStorage}
+            >
+              Clear Storage
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+}
