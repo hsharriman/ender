@@ -1,10 +1,10 @@
 import React from "react";
-import { Definition } from "../theorems/definitions";
+import { Reason } from "../core/types/types";
 import { logEvent } from "../core/utils";
 
 interface TooltipProps {
   obj: JSX.Element;
-  definition: Definition;
+  definition: Reason;
   isActive?: boolean;
 }
 
@@ -61,7 +61,7 @@ export class DefinitionTooltip extends React.Component<
   onMouseEnter = () => {
     logEvent("m", {
       c: "d",
-      v: this.props.definition.keyword,
+      v: this.props.definition.title,
     });
     this.onClick(true);
   };
@@ -71,8 +71,8 @@ export class DefinitionTooltip extends React.Component<
   };
 
   render() {
-    const keyword = this.props.definition.keyword;
-    const definition = this.props.definition.definition;
+    const keyword = this.props.definition.title;
+    const definition = this.props.definition.body;
     return (
       <span
         className={`font-notoSerif ${this.getStyle()} cursor-pointer transition ease-in-out duration-150 group relative`}

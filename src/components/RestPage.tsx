@@ -68,8 +68,8 @@ export class RestPage extends React.Component<RestPageProps, RestPageStates> {
   };
 
   handleContinue = () => {
-    logEvent("i", {
-      c: "",
+    logEvent("n", {
+      c: "i",
       v: "",
     });
     this.props.onNext(1);

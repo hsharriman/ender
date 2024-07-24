@@ -7,8 +7,8 @@ export interface InstructionPageProps {
 
 export class InstructionPage extends React.Component<InstructionPageProps> {
   handleContinue = () => {
-    logEvent("i", {
-      c: "",
+    logEvent("n", {
+      c: "i",
       v: "",
     });
     this.props.onNext(1);
