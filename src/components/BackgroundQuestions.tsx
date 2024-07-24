@@ -34,6 +34,10 @@ export class BackgroundQuestions extends React.Component<
         {
           prompt: "What grade will you be in September 2024?",
         },
+        {
+          prompt:
+            "If your school offered different geometry tracks, which did you take? (e.g. honors, regular, etc.)",
+        },
       ],
       answers: {},
       completed: false,
@@ -86,43 +90,38 @@ export class BackgroundQuestions extends React.Component<
     return (
       <>
         <div className="justify-center flex w-full">
-          <div className="mb-8 text-center mt-8 font-notoSans">
+          <div className="mb-8 text-center mt-8 font-notoSans w-[700px]">
             <h2 className="text-2xl font-bold mb-8">Background Questions</h2>
-            <div className="mb-8 w-[700px]">
+            <div className="mb-8">
               <span>
-                Thank you for participating in our study. Your input is
-                important and will help us understand how students like you
-                interact with geometric proofs on computers. We’re also looking
-                to see if making the proofs interactive helps you understand
-                them better.
-                <br />
-                <br />
                 Before we begin with the study, we would like to ask you a few
                 background questions. Your responses will be kept confidential
                 and will only be used for research purposes.
               </span>
             </div>
-            {this.state.questions.map((question, index) => (
-              <div key={index} className="mb-6">
-                <div className="flex flex-col justify-start pb-1">
-                  <div className="font-bold text-base text-slate-500">
-                    Question {index + 1}:
+            <div className="w-full flex justify-center flex-col">
+              {this.state.questions.map((question, index) => (
+                <div key={index} className="mb-6 w-[400px] self-center">
+                  <div className="flex flex-col justify-start pb-1">
+                    <div className="font-bold text-base text-slate-500">
+                      Question {index + 1}:
+                    </div>
+                  </div>
+                  <div className="font-bold text-base pb-1">
+                    {question.prompt}
+                  </div>
+                  <div className="text-base">
+                    <input
+                      type="text"
+                      name={question.prompt}
+                      className="border-2 border-black w-[100px] p-1.5 rounded-sm"
+                      value={this.state.answers[`${index}`] || ""}
+                      onChange={(event) => this.handleInputChange(event, index)}
+                    />
                   </div>
                 </div>
-                <div className="font-bold text-base pb-1">
-                  {question.prompt}
-                </div>
-                <div className="text-base">
-                  <input
-                    type="text"
-                    name={question.prompt}
-                    className="border-2 border-black w-[100px] p-1.5 rounded-sm"
-                    value={this.state.answers[`${index}`] || ""}
-                    onChange={(event) => this.handleInputChange(event, index)}
-                  />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
             <div className="mt-4">
               <SubmitQuestion
                 disabled={!this.state.completed}

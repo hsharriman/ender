@@ -86,7 +86,7 @@ export const trianglePretestQuestions: Question[] = [
       "ASA (Angle-Side-Angle)",
       "SSA (Side-Side-Angle)",
       "AAS (Angle-Angle-Side)",
-      "HL (Hypotenuse-Leg)",
+      "RHL (Right-Hypotenuse-Leg)",
       "AAA (Angle-Angle-Angle)",
     ],
     type: QuestionType.Pretest,
