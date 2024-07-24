@@ -5,17 +5,20 @@ interface SavePageProps {
   answers: { [proofName: string]: { [question: string]: string } };
 }
 
-interface SavePageStates {
+interface SavePageState {
   answersSaved: boolean;
   logsSaved: boolean;
+  id: string;
 }
 
-export class SavePage extends React.Component<SavePageProps, SavePageStates> {
+export class SavePage extends React.Component<SavePageProps, SavePageState> {
   constructor(props: SavePageProps) {
     super(props);
+    const id = localStorage.getItem("id") || "";
     this.state = {
       answersSaved: false,
       logsSaved: false,
+      id: JSON.parse(id),
     };
   }
 
@@ -37,7 +40,7 @@ export class SavePage extends React.Component<SavePageProps, SavePageStates> {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.setAttribute("href", url);
-    a.setAttribute("download", `answers-${new Date().valueOf()}.csv`);
+    a.setAttribute("download", `answers-${this.state.id}.csv`);
     a.click();
 
     this.setState({ answersSaved: true });
@@ -59,7 +62,7 @@ export class SavePage extends React.Component<SavePageProps, SavePageStates> {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.setAttribute("href", url);
-    a.setAttribute("download", `eventLogs-${new Date().valueOf()}.csv`);
+    a.setAttribute("download", `eventLogs-${this.state.id}.csv`);
     a.click();
 
     this.setState({ logsSaved: true });
@@ -68,6 +71,7 @@ export class SavePage extends React.Component<SavePageProps, SavePageStates> {
   clearStorage = () => {
     localStorage.removeItem("answers");
     sessionStorage.removeItem("eventLogs");
+    localStorage.removeItem("id");
   };
 
   render() {
