@@ -1,5 +1,6 @@
 import React from "react";
 import ender from "./assets/ender.png";
+import { StartPage } from "./components/StartPage";
 import { BackgroundQuestions } from "./components/BackgroundQuestions";
 import {
   InteractiveAppPage,
@@ -9,7 +10,7 @@ import {
   PretestAppPage,
   PretestAppPageProps,
 } from "./components/PretestAppPage";
-import SavePage from "./components/SavePage";
+import { SavePage } from "./components/SavePage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage, SusProofType } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
@@ -230,7 +231,9 @@ export class App extends React.Component<AppProps, AppState> {
     const page = this.state.activePage; // For current page of proof
     const currMeta = this.meta[page];
     let pageContent = <></>;
-    if (currMeta.type === PageType.Background) {
+    if (currMeta.type === PageType.ParticipantID) {
+      pageContent = <StartPage onNext={() => this.onNext(1)} />;
+    } else if (currMeta.type === PageType.Background) {
       pageContent = (
         <BackgroundQuestions
           updateAnswers={this.updateAnswers("Background Questions")}
