@@ -28,8 +28,7 @@ export class StartPage extends React.Component<StartPageProps, StartPageState> {
   render() {
     return (
       <div className="flex items-center justify-center flex-col pt-40 w-screen font-notoSans text-slate-800 text-xl">
-        <span>Enter Participant ID</span>
-        <br />
+        <span className="pb-3">Enter Participant ID:</span>
         <div className="text-base">
           <input
             type="text"
@@ -43,12 +42,12 @@ export class StartPage extends React.Component<StartPageProps, StartPageState> {
         <br />
         <button
           onClick={this.handleContinue}
-          className="bg-green-500 hover:bg-green-700 text-4xl text-white font-bold py-3 px-5 rounded-lg flex items-center justify-center"
+          className="bg-green-500 hover:bg-green-700 text-2xl text-white font-bold py-2 pl-2 pr-3 rounded-lg flex items-center justify-center"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mr-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-7 mr-2">
             <polygon
               strokeWidth={2}
-              points="10,5 34,20 10,35"
+              points="10,8 26,18 10,28"
               className="fill-current text-white"
             />
           </svg>
