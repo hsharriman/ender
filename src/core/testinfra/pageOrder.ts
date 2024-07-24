@@ -42,6 +42,7 @@ export enum PageType {
   Save = "Save",
   IntroSlidePhase1 = "IntroSlidePhase1",
   IntroSlidePhase2 = "IntroSlidePhase2",
+  ParticipantID = "ParticipantID",
 }
 
 export type Page = {
@@ -88,7 +89,8 @@ export const pageOrder = () => {
   // const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]), false);
   const challenge: Page[] = [];
 
-  const pages = background()
+  const pages = participantID()
+    .concat(background())
     .concat(pretest)
     .concat(tutorial)
     .concat(instruction1())
@@ -101,6 +103,9 @@ export const pageOrder = () => {
   return pages;
 };
 
+const participantID = (): Page[] => {
+  return [{ type: PageType.ParticipantID }];
+};
 const background = (): Page[] => {
   return [{ type: PageType.IntroSlideTest }, { type: PageType.Background }];
 };
