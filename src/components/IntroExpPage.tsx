@@ -12,29 +12,31 @@ export class IntroExperimentPage extends React.Component<InstructionPageProps> {
   };
 
   render() {
+    const pCls = "max-w-[900px] text-left pb-4";
     return (
       <div className="flex items-center justify-center flex-col pt-40 w-screen font-notoSans text-slate-800 text-xl">
-        <span>Thanks for participating in our study today!</span>
-        <p className="max-w-[900px] text-center">
-          <br />
-          While we expect you to have learned about triangle congruence proofs
-          when you took geometry, this activity is{" "}
-          <span className="bold">not a test of your proof-solving ability</span>
+        <span className="text-2xl pb-4">
+          Thanks for participating in our study today!
+        </span>
+        <div className={pCls}>
+          <span className="font-bold">
+            This activity is not a test of your proof-solving ability
+          </span>
           , so please do not be nervous! By using this software, you are helping
           our research team to find out if interactivity helps or hurts your
           understanding of geometric proofs.
-        </p>
+        </div>
         <br />
-        <p className="max-w-[900px] text-center">
+        <div className={pCls}>
           You will have 50 minutes to work. Do not worry if you run out of time.
           Just try your best! A researcher will interview you on your experience
           for at most 10 minutes afterwards.
-        </p>
-        <p className="max-w-[900px] text-center">
+        </div>
+        <div className={pCls}>
           You can help the researchers out by holding the mouse while you work
           through the problems so we can tell which parts of the website you
           clicked or hovered on.
-        </p>
+        </div>
         <br />
         <button
           onClick={this.handleContinue}
