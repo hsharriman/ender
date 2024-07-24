@@ -12,6 +12,7 @@ export interface QuestionProps {
   scaffolding: { [key: string]: boolean };
   updateScaffolding: (questionType: string) => void;
   scaffoldReason: string;
+  submitEnabled: boolean;
 }
 
 export interface QuestionState {
@@ -155,9 +156,10 @@ export class YesNoQuestion extends React.Component<
             {answers.map((answer, index) => (
               <button
                 key={index}
-                className={`px-2.5 mr-6 bg-gray-500 hover:bg-violet-500 rounded-md text-slate-100 h-8`}
+                className={`px-2.5 mr-6 bg-gray-500 hover:bg-violet-500 rounded-md text-slate-100 h-8 disabled:bg-gray-300`}
                 onClick={() => this.handleButtonClick(answer)}
                 id={"answer-button-" + index}
+                disabled={!this.props.submitEnabled}
               >
                 {answer}
               </button>

@@ -22,7 +22,7 @@ export const incompleteProof2a: Question[] = [
       `${strs.angle}PQR${strs.congruent}${strs.angle}MNR by Alternate Angles`,
       `QR${strs.congruent}RN by Corresponding Segments`, // TODO display segment
       `${strs.triangle}QRP${strs.congruent}${strs.triangle}MRN by Angle-Side-Angle (ASA)`,
-      `${strs.triangle}QRP${strs.congruent}${strs.triangle}MRN by Hypotenuse-Leg (HL) Congruence`,
+      `${strs.triangle}QRP${strs.congruent}${strs.triangle}MRN by Right-Hypotenuse-Leg (RHL) Congruence`,
     ],
     type: QuestionType.Single,
   },
@@ -36,7 +36,7 @@ export const incompleteProof2: Question[] = [
       `QR${strs.congruent}RN by Corresponding Segments`, // TODO display segment
       `${strs.angle}RQP${strs.congruent}${strs.angle}RNM by Alternate Angles`,
       `${strs.angle}QRP${strs.congruent}${strs.angle}MRN by Vertical Angles`,
-      `${strs.triangle}QRP${strs.congruent}${strs.triangle}MRN by Hypotenuse-Leg (HL) Congruence`, // TODO display segment
+      `${strs.triangle}QRP${strs.congruent}${strs.triangle}MRN by Right-Hypotenuse-Leg (RHL) Congruence`, // TODO display segment
     ],
     type: QuestionType.Single,
   },

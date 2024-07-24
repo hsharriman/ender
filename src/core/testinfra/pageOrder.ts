@@ -31,6 +31,7 @@ import {
 } from "./setupLayout";
 
 export enum PageType {
+  IntroSlideTest = "IntroSlideTest",
   Background = "Background",
   Pretest = "Pretest",
   Tutorial = "Tutorial",
@@ -106,7 +107,7 @@ const participantID = (): Page[] => {
   return [{ type: PageType.ParticipantID }];
 };
 const background = (): Page[] => {
-  return [{ type: PageType.Background }];
+  return [{ type: PageType.IntroSlideTest }, { type: PageType.Background }];
 };
 const instruction1 = (): Page[] => {
   return [{ type: PageType.IntroSlidePhase1 }];

@@ -1,7 +1,7 @@
 import React from "react";
 import { logEvent } from "../core/utils";
 
-interface InstructionPageProps {
+export interface InstructionPageProps {
   onNext: (direction: number) => void;
 }
 
@@ -21,13 +21,14 @@ export class InstructionPage extends React.Component<InstructionPageProps> {
         <p className="max-w-[900px] text-center">
           <br />
           Now, we will begin the experiment. Remember that this is not a test on
-          your abilities to do geometric proofs, we are testing how well our
-          tool works.
+          your abilities to do geometric proofs; you are helping us test how
+          well our tool works.
         </p>
         <br />
         <p className="max-w-[900px] text-center">
           So, please read the proofs and questions carefully and answer to the
-          best of your abilities.
+          best of your ability. Let the researcher know if you have any
+          questions.
         </p>
         <p className="max-w-[900px] text-center">
           And remember to hold the mouse while you're working through the pages.

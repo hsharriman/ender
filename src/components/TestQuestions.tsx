@@ -11,6 +11,7 @@ interface QuestionsProps {
   proofType: string;
   questions: Question[];
   questionIdx: number;
+  submitEnabled: boolean;
   onNext: (direction: number) => void;
   onAnswerUpdate: (question: string, answer: string, version: string) => void;
   scaffolding: { [key: string]: boolean };
@@ -90,6 +91,7 @@ export class TestQuestions extends React.Component<QuestionsProps> {
               scaffolding={this.props.scaffolding}
               updateScaffolding={this.props.updateScaffolding}
               scaffoldReason={currentQuestion.reason || ""}
+              submitEnabled={this.props.submitEnabled}
             />
           )}
           {dropdownAnswerType && (
@@ -106,6 +108,7 @@ export class TestQuestions extends React.Component<QuestionsProps> {
               hasTextBox={
                 currentQuestion.answerType === AnswerType.DropdownTextbox
               }
+              submitEnabled={this.props.submitEnabled}
             />
           )}
         </div>

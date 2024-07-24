@@ -118,8 +118,8 @@ export const checkingProof2: Question[] = [
 export const checkingProof3: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.HL, 6),
-    reason: Reasons.HL.title,
+    prompt: miniQuestion(Reasons.RHL, 6),
+    reason: Reasons.RHL.title,
     type: QuestionType.Minifigures,
     id: id(1),
   },
