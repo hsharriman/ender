@@ -149,7 +149,9 @@ export class DropdownQuestion extends React.Component<
               <button
                 className="inline-flex w-[80px] justify-center rounded-md items-center bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-400 sm:ml-3 disabled:bg-purple-300 disabled:cursor-not-allowed"
                 onClick={this.handleSubmit}
-                disabled={this.state.selectedOption === ""}
+                disabled={
+                  this.state.selectedOption === "" || !this.props.submitEnabled
+                }
               >
                 Submit
               </button>

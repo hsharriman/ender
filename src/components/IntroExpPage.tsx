@@ -1,11 +1,8 @@
 import React from "react";
+import { InstructionPageProps } from "./InstructionPage";
 import { logEvent } from "../core/utils";
 
-export interface InstructionPageProps {
-  onNext: (direction: number) => void;
-}
-
-export class InstructionPage extends React.Component<InstructionPageProps> {
+export class IntroExperimentPage extends React.Component<InstructionPageProps> {
   handleContinue = () => {
     logEvent("i", {
       c: "",
@@ -17,21 +14,26 @@ export class InstructionPage extends React.Component<InstructionPageProps> {
   render() {
     return (
       <div className="flex items-center justify-center flex-col pt-40 w-screen font-notoSans text-slate-800 text-xl">
-        <span>Congratulations, you've finished the tutorial! :)</span>
+        <span>Thanks for participating in our study today!</span>
         <p className="max-w-[900px] text-center">
           <br />
-          Now, we will begin the experiment. Remember that this is not a test on
-          your abilities to do geometric proofs; you are helping us test how
-          well our tool works.
+          While we expect you to have learned about triangle congruence proofs
+          when you took geometry, this activity is{" "}
+          <span className="bold">not a test of your proof-solving ability</span>
+          , so please do not be nervous! By using this software, you are helping
+          our research team to find out if interactivity helps or hurts your
+          understanding of geometric proofs.
         </p>
         <br />
         <p className="max-w-[900px] text-center">
-          So, please read the proofs and questions carefully and answer to the
-          best of your ability. Let the researcher know if you have any
-          questions.
+          You will have 50 minutes to work. Do not worry if you run out of time.
+          Just try your best! A researcher will interview you on your experience
+          for at most 10 minutes afterwards.
         </p>
         <p className="max-w-[900px] text-center">
-          And remember to hold the mouse while you're working through the pages.
+          You can help the researchers out by holding the mouse while you work
+          through the problems so we can tell which parts of the website you
+          clicked or hovered on.
         </p>
         <br />
         <button

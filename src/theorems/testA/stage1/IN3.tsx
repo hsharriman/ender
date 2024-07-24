@@ -201,7 +201,7 @@ const s6SASProps: SASProps = {
   triangles: ["KLM", "MNK"],
 };
 const step6: StepMeta = makeStepMeta({
-  reason: Reasons.HL,
+  reason: Reasons.RHL,
   dependsOn: [2, 4, 5],
   additions: (props: StepFocusProps) => {
     SAS.additions(props, s6SASProps);

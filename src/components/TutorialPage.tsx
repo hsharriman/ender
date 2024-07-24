@@ -12,6 +12,7 @@ export interface TutorialPageProps {
   proof: InteractiveAppPageProps;
   headerFn: (
     meta: StaticAppPageProps | InteractiveAppPageProps,
+    enabled: boolean,
     onSubmit: () => boolean
   ) => JSX.Element;
   onStepsComplete: () => void;
@@ -20,6 +21,7 @@ export interface TutorialPageState {
   currStep: number;
   displayedStep: number;
   showContinue: boolean;
+  submitEnabled: boolean;
 }
 export class TutorialPage extends React.Component<
   TutorialPageProps,
@@ -32,6 +34,7 @@ export class TutorialPage extends React.Component<
       currStep: 0,
       displayedStep: 1, // shows step number to user, doesn't incl popups
       showContinue: false,
+      submitEnabled: false,
     };
   }
 
@@ -136,12 +139,17 @@ export class TutorialPage extends React.Component<
 
   render() {
     const step = this.props.steps[this.state.currStep];
+    const submitEnabled = step.type === TutorialStepType.HideContinue;
     const numSteps = this.props.steps.filter(
       (s) => s.type !== TutorialStepType.Popup
     ).length;
     return (
       <div className="w-full h-full flex flex-col justify-start">
-        {this.props.headerFn(this.props.proof, this.onQuestionSubmit)}
+        {this.props.headerFn(
+          this.props.proof,
+          submitEnabled,
+          this.onQuestionSubmit
+        )}
         <div className="w-full h-full flex justify-start">
           {step && step.type === TutorialStepType.Popup && this.popup(step)}
           {step && step.type !== TutorialStepType.Popup && (

@@ -24,6 +24,7 @@ import { logEvent } from "./core/utils";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
 import { InstructionPage } from "./components/InstructionPage";
 import { RestPage } from "./components/RestPage";
+import { IntroExperimentPage } from "./components/IntroExpPage";
 
 interface AppProps {}
 interface AppState {
@@ -133,6 +134,7 @@ export class App extends React.Component<AppProps, AppState> {
     (proofType: string) =>
     (
       meta: StaticAppPageProps | InteractiveAppPageProps | PretestAppPageProps,
+      answersEnabled: boolean,
       incrementTutorial?: () => boolean
     ) => {
       return (
@@ -165,6 +167,7 @@ export class App extends React.Component<AppProps, AppState> {
                 updateScaffolding={this.updateScaffolding}
                 setActiveQuestionIndex={this.setActiveQuestionIndex}
                 incrementTutorial={incrementTutorial}
+                submitEnabled={answersEnabled}
               />
             </div>
             <button
@@ -237,6 +240,8 @@ export class App extends React.Component<AppProps, AppState> {
           onSubmitFn={() => this.onNext(1)}
         />
       );
+    } else if (currMeta.type === PageType.IntroSlideTest) {
+      pageContent = <IntroExperimentPage onNext={() => this.onNext(1)} />;
     } else if (currMeta.type === PageType.Tutorial && currMeta.meta) {
       pageContent = (
         <TutorialPage
@@ -306,9 +311,11 @@ export class App extends React.Component<AppProps, AppState> {
     if (currMeta.meta) {
       if (isQuestionHeader) {
         header = this.renderQuestionHeader(currMeta.meta.layout)(
-          currMeta.meta.props
+          currMeta.meta.props,
+          true // always allow questions to be submitted
         );
       } else if (currMeta.type === PageType.Tutorial) {
+        // tutorial defines its own header
         header = <></>;
       }
     }

@@ -14,7 +14,7 @@ const hintBtn = (
       viewBox="0 0 16 16"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle cx="8" cy="8" r="8" fill="#3B82F6"></circle>
+      <circle cx="8" cy="8" r="8" fill="#3B82F6" strokeWidth={0}></circle>
       <text
         x={4}
         y={12}

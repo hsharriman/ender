@@ -219,16 +219,19 @@ interface ProofRowProps {
 }
 export class ProofRow extends React.Component<ProofRowProps> {
   private idPrefix = "prooftext-";
-  private clr = (prefix: string) => {
+  private textClr = () => {
     let css = this.props.isActive
-      ? `${prefix}-slate-900`
+      ? `text-slate-800 font-[500] `
       : this.props.depends
-      ? `${prefix}-slate-800`
-      : `${prefix}-slate-400`;
-    if (prefix === "text" && this.props.isActive) {
-      css = css + "font-[500]";
-    }
+      ? `text-slate-600 `
+      : `text-slate-400 `;
     return css;
+  };
+
+  private borderClr = () => {
+    return this.props.isActive || this.props.depends
+      ? "border-slate-800"
+      : "border-slate-400";
   };
 
   render() {
@@ -246,9 +249,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
             onClick={this.props.onClick}
           >
             <div
-              className={`${this.clr("text")} ${this.clr(
-                "border"
-              )} py-4  grid grid-rows-1 grid-cols-2`}
+              className={`${this.textClr()} ${this.borderClr()} py-4  grid grid-rows-1 grid-cols-2`}
             >
               <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
                 <div className="text-slate-400 font-bold">
@@ -266,9 +267,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
               className="border-gray-300 border-b-2 w-full h-16 ml-2 text-lg focus:outline-none"
             >
               <div
-                className={`${this.clr("text")} ${this.clr(
-                  "border"
-                )} py-4  grid grid-rows-1 grid-cols-2`}
+                className={`${this.textClr()} ${this.borderClr()} py-4  grid grid-rows-1 grid-cols-2`}
               >
                 <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
                   <div
