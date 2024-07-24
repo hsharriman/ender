@@ -8,7 +8,6 @@ import {
   StepUnfocusProps,
 } from "../core/types/stepTypes";
 import { Reason, SVGModes } from "../core/types/types";
-import { Definition } from "./definitions";
 import { Reasons } from "./reasons";
 
 export const GIVEN_ID = "given";
@@ -29,7 +28,7 @@ export const linked = (
   clr?: string
 ) => <LinkedText val={val} obj={obj} linkedObjs={objs} clr={clr} />;
 
-export const tooltip = (obj: JSX.Element, definition: Definition) => (
+export const tooltip = (obj: JSX.Element, definition: Reason) => (
   <DefinitionTooltip obj={obj} definition={definition} />
 );
 

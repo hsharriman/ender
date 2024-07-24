@@ -2,7 +2,9 @@ import React from "react";
 import { DiagramContent } from "../core/diagramContent";
 import { StaticProofTextItem } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
+import { logEvent } from "../core/utils";
 import { Question } from "../questions/funcTypeQuestions";
+import { Definition, definitionArr } from "../theorems/definitions";
 import { GIVEN_ID } from "../theorems/utils";
 import { StaticDiagram } from "./StaticDiagram";
 
@@ -20,6 +22,7 @@ export interface StaticAppPageProps {
 interface StaticAppPageState {
   page: number;
   activeReason: number;
+  activeDef: number;
 }
 
 export class StaticAppPage extends React.Component<
@@ -32,6 +35,7 @@ export class StaticAppPage extends React.Component<
     this.state = {
       page: this.props.pageNum,
       activeReason: -1,
+      activeDef: -1,
     };
   }
 
@@ -68,10 +72,14 @@ export class StaticAppPage extends React.Component<
   };
 
   showReason = (i: number) => () => {
-    if (this.state.activeReason !== i) {
-      this.setState({ activeReason: i });
-    } else if (this.state.activeReason === i) {
+    if (this.state.activeReason === i) {
       this.clearReason();
+    } else {
+      this.setState({ activeReason: i });
+      logEvent("c", {
+        c: "sr",
+        v: this.props.reasons[this.state.activeReason].title,
+      });
     }
   };
 
@@ -79,21 +87,67 @@ export class StaticAppPage extends React.Component<
     this.setState({ activeReason: -1 });
   };
 
+  showDef = (i: number) => () => {
+    if (this.state.activeDef === i) {
+      this.clearDef();
+    } else {
+      this.setState({ activeDef: i });
+      logEvent("c", {
+        c: "sd",
+        v: definitionArr[this.state.activeDef].title,
+      });
+    }
+  };
+
+  clearDef = () => {
+    this.setState({ activeDef: -1 });
+  };
+
+  renderAllDefinitions = (numGivens: number) => {
+    return (
+      <div>
+        <div className="flex flex-row align-bottom pb-2 leading-9">
+          <div className="font-bold text-sm text-slate-500 pr-2 self-end leading-9">
+            Symbols and keywords:
+          </div>
+          {definitionArr.map((item, i) => (
+            <span>
+              <span
+                onClick={this.showDef(i)}
+                className="text-lg text-blue-500 underline cursor-pointer self-end"
+              >
+                {item.symbol}
+              </span>
+              {i < definitionArr.length - 1 && <span className="pr-1">, </span>}
+            </span>
+          ))}
+        </div>
+        <div>
+          {this.state.activeDef !== -1 &&
+            this.renderDefinition(definitionArr[this.state.activeDef])}
+        </div>
+      </div>
+    );
+  };
+
+  renderDefinition = (item: Definition) => {
+    return (
+      <div className="pb-2">
+        <div className="font-bold">{item.title}</div>
+        <div>{item.body}</div>
+      </div>
+    );
+  };
+
   renderReason = (item: Reason) => {
     return (
       <>
-        <div className="font-bold text-base text-slate-500 pb-2 flex justify-between">
-          Reasons Applied:
-          <button
-            className="bold text-black w-4 h-4 rounded-md text-base mr-3"
-            onClick={this.clearReason}
-          >
-            X
-          </button>
-        </div>
         <div className="flex flex-col justify-start pb-2">
-          <div className="font-semibold text-lg">{item.title}</div>
-          <div className="text-lg">{item.body}</div>
+          <div className="font-bold text-base text-slate-500 py-2 flex justify-between border-t-2 border-slate-300">
+            Reason Applied:
+          </div>
+          <div className="font-semibold text-base">{item.title}</div>
+          <div className="text-base">{item.body}</div>
         </div>
       </>
     );
@@ -135,6 +189,8 @@ export class StaticAppPage extends React.Component<
         </div>
         <div className="min-w-[400px] max-w-[500px]">
           <div className="flex flex-col justify-start">
+            <div className="font-bold text-lg text-slate-800">Definitions:</div>
+            {this.renderAllDefinitions(numGivens)}
             {this.state.activeReason !== -1 &&
               this.renderReason(
                 this.props.reasons[this.state.activeReason - numGivens]
