@@ -26,6 +26,8 @@ export class InstructionPage extends React.Component<InstructionPageProps> {
         </p>
         <br />
         <p className="max-w-[900px] text-center">
+          From now on you will see proofs in two different layouts: static and
+          interactive. Some of the proofs are correct and some have mistakes.
           So, please read the proofs and questions carefully and answer to the
           best of your ability. Let the researcher know if you have any
           questions.

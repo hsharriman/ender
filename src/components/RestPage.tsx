@@ -97,6 +97,14 @@ export class RestPage extends React.Component<RestPageProps, RestPageStates> {
           Or you can continue with the experiment.
         </p>
         <br />
+
+        <p className="max-w-[900px] text-center">
+          In the next section, you will be asked to check if there are any
+          mistakes in a proof. Again, some of the proofs will have a static
+          layout and others will be interactive.
+        </p>
+        <br />
+
         <div className="text-3xl font-bold">
           Time Left: {this.state.formattedTime}
         </div>
