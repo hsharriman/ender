@@ -1,16 +1,19 @@
 import React from "react";
 import ender from "./assets/ender.png";
-import { StartPage } from "./components/StartPage";
 import { BackgroundQuestions } from "./components/BackgroundQuestions";
+import { InstructionPage } from "./components/InstructionPage";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
 } from "./components/InteractiveAppPage";
+import { IntroExperimentPage } from "./components/IntroExpPage";
 import {
   PretestAppPage,
   PretestAppPageProps,
 } from "./components/PretestAppPage";
+import { RestPage } from "./components/RestPage";
 import { SavePage } from "./components/SavePage";
+import { StartPage } from "./components/StartPage";
 import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
 import { SusPage, SusProofType } from "./components/SusPage";
 import { TestQuestions } from "./components/TestQuestions";
@@ -23,9 +26,6 @@ import {
 } from "./core/testinfra/setupLayout";
 import { logEvent } from "./core/utils";
 import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
-import { InstructionPage } from "./components/InstructionPage";
-import { RestPage } from "./components/RestPage";
-import { IntroExperimentPage } from "./components/IntroExpPage";
 
 interface AppProps {}
 interface AppState {
@@ -145,14 +145,14 @@ export class App extends React.Component<AppProps, AppState> {
         >
           <div className="flex items-center">
             <button
-              className="p-3 underline underline-offset-2 z-30 text-sm"
+              className="py-3 px-1 underline underline-offset-2 z-30 text-xs text-slate-300"
               id="prev-arrow"
               style={{
                 display: this.state.activePage >= 0 ? "block" : "none",
               }}
               onClick={() => this.onNext(-1)}
             >
-              {"Previous"}
+              {"Back"}
             </button>
             <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
               this.numPages
@@ -171,24 +171,28 @@ export class App extends React.Component<AppProps, AppState> {
                 submitEnabled={answersEnabled}
               />
             </div>
-            <button
-              className="absolute right-20 p-3 underline underline-offset-2 z-30 text-sm"
-              id="pause"
-              onClick={this.handlePause}
-            >
-              Pause
-            </button>
-            <button
-              className="p-3 underline underline-offset-2 z-30 text-sm"
-              id="next-arrow"
-              style={{
-                display:
-                  this.state.activePage < this.numPages - 1 ? "block" : "none",
-              }}
-              onClick={() => this.onNext(1)}
-            >
-              {"Next"}
-            </button>
+            <div className="flex flex-row gap-2 absolute right-3">
+              <button
+                className="py-1 underline underline-offset-2 z-30 text-xs text-slate-300"
+                id="pause"
+                onClick={this.handlePause}
+              >
+                Pause
+              </button>
+              <button
+                className="py-1 px-1 underline underline-offset-2 z-30 text-xs text-slate-300"
+                id="next-arrow"
+                style={{
+                  display:
+                    this.state.activePage < this.numPages - 1
+                      ? "block"
+                      : "none",
+                }}
+                onClick={() => this.onNext(1)}
+              >
+                {"Skip"}
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -196,36 +200,40 @@ export class App extends React.Component<AppProps, AppState> {
 
   renderShortHeader = () => {
     return (
-      <div className="sticky top-0 left-0 bg-gray-50 p-6 z-30" id="header">
-        <button
-          className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
-          id="prev-arrow"
-          style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
-          onClick={() => this.onNext(-1)}
-        >
-          {"Previous"}
-        </button>
-        <div className="absolute top-0 p-3 left-24 z-30">{`${
-          this.state.activePage + 1
-        } / ${this.numPages}`}</div>
-        <button
-          className="absolute top-0 right-10 p-3 underline underline-offset-2 z-30 text-sm"
-          id="pause"
-          onClick={this.handlePause}
-        >
-          Pause
-        </button>
-        <button
-          className="absolute top-0 right-0 p-3 underline underline-offset-2 z-30 text-sm"
-          id="next-arrow"
-          style={{
-            display:
-              this.state.activePage < this.numPages - 1 ? "block" : "none",
-          }}
-          onClick={() => this.onNext(1)}
-        >
-          {"Next"}
-        </button>
+      <div className="sticky top-0 left-0 bg-gray-50 z-30" id="header">
+        <div className="flex items-center">
+          <button
+            className="p-3 pl-5 underline underline-offset-2 z-30 text-sm text-slate-300"
+            id="prev-arrow"
+            style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
+            onClick={() => this.onNext(-1)}
+          >
+            {"Back"}
+          </button>
+          <div className="p-3 left-24 z-30">{`${this.state.activePage + 1} / ${
+            this.numPages
+          }`}</div>
+          <div className="absolute top-0 right-2 flex flex-row">
+            <button
+              className="p-3 underline underline-offset-2 z-30 text-sm text-slate-300"
+              id="pause"
+              onClick={this.handlePause}
+            >
+              Pause
+            </button>
+            <button
+              className="p-3 underline underline-offset-2 z-30 text-sm text-slate-300"
+              id="next-arrow"
+              style={{
+                display:
+                  this.state.activePage < this.numPages - 1 ? "block" : "none",
+              }}
+              onClick={() => this.onNext(1)}
+            >
+              {"Skip"}
+            </button>
+          </div>
+        </div>
       </div>
     );
   };
