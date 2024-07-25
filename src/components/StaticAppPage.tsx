@@ -76,12 +76,6 @@ export class StaticAppPage extends React.Component<
       this.clearReason();
     } else {
       this.setState({ activeReason: i });
-      console.log(
-        this.props.texts[i].reason,
-        i,
-        this.props.reasons,
-        this.props.reasons[this.state.activeReason]
-      );
       logEvent("c", {
         c: "sr",
         v: this.props.texts[i].reason || "",
