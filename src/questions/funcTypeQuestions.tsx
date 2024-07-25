@@ -44,13 +44,13 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
   );
 };
 
-const reliesQuestion = (r: Reason, step: number, step2?: number) => {
-  const steps = step2
-    ? `between steps ${step} and ${step2}`
+const reliesQuestion = (r: Reason, step: number, steps?: [number, number]) => {
+  const s = steps
+    ? `(step ${step}) between steps ${steps[0]} and ${steps[1]}`
     : `at step ${step}`;
   return (
     <span className="text-base">
-      Is there enough information to apply {r.title} {steps}?
+      Is there enough information to apply {r.title} {s}?
     </span>
   );
 };
@@ -148,14 +148,14 @@ export const completeProof1: Question[] = [
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: reliesQuestion(Reasons.VerticalAngles, 1, 2),
+    prompt: reliesQuestion(Reasons.VerticalAngles, 4, [1, 2]),
     reason: Reasons.VerticalAngles.title,
     type: QuestionType.ReliesOn,
     id: id(2),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: reliesQuestion(Reasons.SAS, 3, 4),
+    prompt: reliesQuestion(Reasons.SAS, 5, [3, 4]),
     reason: Reasons.SAS.title,
     type: QuestionType.ReliesOn,
     id: id(3),
@@ -203,14 +203,14 @@ export const incompleteProof2: Question[] = [
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: reliesQuestion(Reasons.ASA, 3, 4),
+    prompt: reliesQuestion(Reasons.ASA, 5, [3, 4]),
     reason: Reasons.ASA.title,
     type: QuestionType.ReliesOn,
     id: id(2),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: reliesQuestion(Reasons.ConverseMidpoint, 5, 6),
+    prompt: reliesQuestion(Reasons.ConverseMidpoint, 7, [5, 6]),
     reason: Reasons.ConverseMidpoint.title,
     type: QuestionType.ReliesOn,
     id: id(3),
@@ -269,7 +269,7 @@ export const tutorial1Questions: Question[] = [
     answerType: AnswerType.YesNo,
   },
   {
-    prompt: reliesQuestion(Reasons.SAS, 2, 3),
+    prompt: reliesQuestion(Reasons.SAS, 4, [2, 3]),
     type: QuestionType.TutorialInstructions,
     id: id(2),
     answerType: AnswerType.YesNo,

@@ -69,7 +69,7 @@ export const tutorial1Steps: TutorialStep[] = [
     ),
     type: TutorialStepType.Default,
     listenerId: ["segment.CD-hover"],
-    exercise: <span>Click on segment DC on the diagram</span>,
+    exercise: <span>Click on segment CD on the diagram</span>,
   },
   {
     elemId: "reveal-btn-container",
@@ -92,7 +92,9 @@ export const tutorial1Steps: TutorialStep[] = [
       </span>
     ),
     exercise: (
-      <span>Notice how the diagram changes as you add steps to the proof.</span>
+      <span>
+        Click on different rows of the proof and notice how the diagram changes.
+      </span>
     ),
     type: TutorialStepType.Default,
     listenerId: ["reveal-step-btn"].concat(allProofRowListenerIds),
@@ -133,7 +135,8 @@ export const tutorial1Steps: TutorialStep[] = [
     exercise: (
       <span>
         Use the {"\u2193"} key or click to the row applying SAS Triangle
-        Congruence
+        Congruence. If it is already selected, you may have to click off and
+        back onto it again.
       </span>
     ),
     listenerId: ["reveal-step-btn", "s4-tutorial"],
@@ -182,7 +185,11 @@ export const tutorial3Steps: TutorialStep[] = [
       </span>
     ),
     exercise: (
-      <span>Use the arrow keys or click to the last row of the proof.</span>
+      <span>
+        Use the arrow keys or click to the last row of the proof. If the last
+        row is already selected, you may have to click off and back onto it
+        again.
+      </span>
     ),
     listenerId: ["reveal-step-btn", "s4-tutorial"],
   },
