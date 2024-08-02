@@ -66,7 +66,7 @@ const givens: StepMeta = makeStepMeta({
       <span>
         {EqualSegments.text(ctx, ["AB", "AD"])}
         {comma}
-        {EqualSegments.text(ctx, ["BC", "DC"])}
+        {EqualAngles.text(ctx, ["BAC", "DAC"])}
       </span>
     );
   },
@@ -75,7 +75,7 @@ const givens: StepMeta = makeStepMeta({
       <span>
         {EqualSegments.staticText(["AB", "AD"])}
         {comma}
-        {EqualSegments.staticText(["BC", "DC"])}
+        {EqualAngles.staticText(["BAC", "DAC"])}
       </span>
     );
   },
