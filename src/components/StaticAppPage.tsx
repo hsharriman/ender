@@ -1,5 +1,6 @@
 import React from "react";
 import { DiagramContent } from "../core/diagramContent";
+import { AspectRatio } from "../core/svg/svgTypes";
 import { StaticProofTextItem } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
 import { logEvent } from "../core/utils";
@@ -158,7 +159,7 @@ export class StaticAppPage extends React.Component<
       (item) => item.reason === "Given"
     ).length;
     return (
-      <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-12">
+      <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-4">
         <div className="w-[900px] h-full flex flex-col ml-12">
           <div className="flex flex-row">
             <div className="flex flex-col mx-4 text-lg">
@@ -171,12 +172,22 @@ export class StaticAppPage extends React.Component<
                 <div>{this.props.provesText}</div>
               </div>
             </div>
-            <StaticDiagram
-              svgIdSuffix={`static-${GIVEN_ID}`}
-              ctx={this.props.ctx}
-              width="400px"
-              height="275px"
-            />
+            <div
+              className={
+                this.props.ctx.aspect === AspectRatio.Square ? "ml-16" : ""
+              }
+            >
+              <StaticDiagram
+                svgIdSuffix={`static-${GIVEN_ID}`}
+                ctx={this.props.ctx}
+                width={
+                  this.props.ctx.aspect === AspectRatio.Landscape
+                    ? "400px"
+                    : "250px"
+                }
+                height="auto"
+              />
+            </div>
           </div>
           <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-normal font-semibold text-slate-500 ml-2 mb-2 w-10/12">
             <div className="flex flex-row justify-start gap-4 align-baseline">

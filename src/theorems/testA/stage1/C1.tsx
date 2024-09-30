@@ -3,6 +3,7 @@ import { Point } from "../../../core/geometry/Point";
 import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, segmentStr } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
 import { EqualAngles } from "../../../core/templates/EqualAngles";
 import { EqualSegments } from "../../../core/templates/EqualSegments";
@@ -22,11 +23,11 @@ import { linked, makeStepMeta } from "../../utils";
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [1, 4],
-      [7, 0],
-      [0, 1],
-      [8, 3],
-      [4, 2],
+      [5, 9], // A
+      [10, 2], // B
+      [1, 3], // C
+      [14, 8], // D
+      [7.5, 5.5], // M
     ],
   ];
   let ctx = new Content();
@@ -59,6 +60,8 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
   ctx.push(new Segment({ p1: A, p2: B, hoverable: false }));
   ctx.push(new Segment({ p1: C, p2: D, hoverable: false }));
+
+  ctx.setAspect(AspectRatio.Landscape);
   return ctx;
 };
 
@@ -317,4 +320,5 @@ export const T1_S1_C1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7],
+  title: "Prove Segments Parallel",
 };

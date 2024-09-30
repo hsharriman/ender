@@ -13,3 +13,9 @@ export interface BaseSVGState {
   css: string;
   isPinned?: boolean;
 }
+
+export enum AspectRatio {
+  Portrait = "portrait",
+  Landscape = "landscape",
+  Square = "square",
+}

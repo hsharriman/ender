@@ -9,13 +9,25 @@ import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../core/templates/EqualSegments";
 import { ParallelLines } from "../../core/templates/ParallelLines";
 import { RightAngle } from "../../core/templates/RightAngle";
-import { fisherYates } from "../../core/testinfra/setupLayout";
 import { SVGModes, Vector } from "../../core/types/types";
 import {
   anglePretestQuestions,
   segmentPretestQuestions,
   trianglePretestQuestions,
 } from "../../questions/pretestQuestions";
+
+// TODO for some reason the bundling order doesn't work if this method isn't defined within this file
+/* Helper methods related to randomizing the proof order */
+const fisherYates = (arr: any[]) => {
+  // shuffle the array with Fisher-Yates algorithm
+  const arrCopy = arr.slice();
+  for (let i = arrCopy.length - 1; i >= 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arrCopy[i], arrCopy[j]] = [arrCopy[j], arrCopy[i]];
+  }
+  // return the shuffled array
+  return arrCopy;
+};
 
 const defaultProps = (ctx: Content) => {
   return { ctx: ctx, frame: "given", mode: SVGModes.Focused };

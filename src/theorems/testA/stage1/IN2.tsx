@@ -2,6 +2,7 @@ import { Content } from "../../../core/diagramContent";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../../core/templates/EqualSegments";
 import { EqualTriangles } from "../../../core/templates/EqualTriangles";
@@ -21,10 +22,10 @@ import { makeStepMeta } from "../../utils";
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [1, 4],
-      [5, 4],
-      [3, 0],
-      [3, 4],
+      [2, 9], // J
+      [9, 9], // L
+      [5.5, 1], // K
+      [5.5, 9], // M
     ],
   ];
   let ctx = new Content();
@@ -51,6 +52,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
   ctx.push(new Triangle({ pts: [J, M, K], hoverable, label: "JMK" }, ctx));
   ctx.push(new Triangle({ pts: [L, M, K], hoverable, label: "LMK" }, ctx));
+
+  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -218,4 +221,5 @@ export const T1_S1_IN2: LayoutProps = {
   miniContent: miniContent(),
   givens,
   proves,
+  title: "(M) Triangle Congruence #2",
 };

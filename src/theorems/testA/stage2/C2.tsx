@@ -2,6 +2,7 @@ import { Content } from "../../../core/diagramContent";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import {
   EqualAngles,
   EqualAngleStep,
@@ -28,12 +29,12 @@ import { makeStepMeta } from "../../utils";
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [0, 4], // F
-      [1, 0], // A
-      [2.5, 3], // B
-      [4, 0], // C
-      [2.5, 0], // D
-      [5, 4], // G
+      [1, 9], // F
+      [2, 1], // A
+      [5.5, 6], // B
+      [9, 1], // C
+      [5.5, 1], // D
+      [10, 9], // G
     ],
   ];
   let ctx = new Content();
@@ -67,6 +68,7 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     new Triangle({ pts: [B, C, G], hoverable, label: "BCG" }, ctx),
   ].map((t) => ctx.push(t));
 
+  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -299,4 +301,5 @@ export const T1_S2_C2: LayoutProps = {
     step9,
     step10,
   ],
+  title: "Prove ∠AFB ≅ ∠CGB",
 };

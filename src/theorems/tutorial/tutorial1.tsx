@@ -2,6 +2,7 @@ import { Content } from "../../core/diagramContent";
 import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
+import { AspectRatio } from "../../core/svg/svgTypes";
 import { EqualAngles } from "../../core/templates/EqualAngles";
 import {
   EqualSegmentStep,
@@ -26,10 +27,10 @@ import { makeStepMeta } from "../utils";
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [2, 4], //A
-      [0, 1], //B
-      [2, 0], //C
-      [4, 1], //D
+      [5.5, 9], //A
+      [2, 3], //B
+      [5.5, 1], //C
+      [9, 3], //D
     ],
   ];
   let ctx = new Content();
@@ -57,6 +58,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   ctx.push(new Triangle({ pts: [A, B, C], hoverable, label: "ABC" }, ctx));
   ctx.push(new Triangle({ pts: [A, C, D], hoverable, label: "ACD" }, ctx));
 
+  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -186,6 +188,7 @@ export const TutorialProof1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4],
+  title: "Prove Triangles Congruent",
 };
 
 export const TutorialProof2: LayoutProps = {
@@ -196,4 +199,5 @@ export const TutorialProof2: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4t2],
+  title: "(M) Prove Triangles Congruent",
 };

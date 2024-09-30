@@ -1,5 +1,6 @@
 import React from "react";
 import { DiagramContent } from "../core/diagramContent";
+import { AspectRatio } from "../core/svg/svgTypes";
 import { ProofTextItem } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
 import { logEvent } from "../core/utils";
@@ -80,12 +81,16 @@ export class InteractiveAppPage extends React.Component<
           </div>
           <div
             id="canvas-container"
-            className="flex flex-col ml-4 sticky h-min left-[780px] max-w-[1020px] min-w-[720px]"
+            className="grid grid-rows-2 ml-4 sticky left-[780px] max-w-[1020px] min-w-[720px]"
           >
             <div className="pt-4">
               <Diagram
-                width="650px"
-                height="300px"
+                height="auto"
+                width={
+                  this.props.ctx.aspect === AspectRatio.Landscape
+                    ? "600px"
+                    : "400px"
+                }
                 svgIdSuffix={`construction`}
                 activeFrame={this.state.activeFrame}
                 ctx={this.props.ctx}
@@ -94,7 +99,7 @@ export class InteractiveAppPage extends React.Component<
               />
             </div>
 
-            <div className="flex flex-row max-w-[1000px] min-w-[700px] h-44 mt-12">
+            <div className="flex flex-row max-w-[1000px] min-w-[700px] h-44">
               {this.props.miniCtx.frames.find(
                 (s) => s === this.state.activeFrame
               ) && (
@@ -104,7 +109,11 @@ export class InteractiveAppPage extends React.Component<
                   onMouseLeave={this.onMouseLeave}
                 >
                   <Diagram
-                    width="250px"
+                    width={
+                      this.props.ctx.aspect === AspectRatio.Landscape
+                        ? "200px"
+                        : "150px"
+                    }
                     height="100%"
                     svgIdSuffix={`mini`}
                     activeFrame={this.state.activeFrame}

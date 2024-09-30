@@ -4,6 +4,7 @@ import { SVGGeoAngle } from "../core/svg/SVGGeoAngle";
 import { SVGGeoPoint } from "../core/svg/SVGGeoPoint";
 import { SVGGeoSegment } from "../core/svg/SVGGeoSegment";
 import { SVGGeoTriangle } from "../core/svg/SVGGeoTriangle";
+import { AspectRatio } from "../core/svg/svgTypes";
 import { SVGModes } from "../core/types/types";
 
 export interface DiagramProps {
@@ -108,11 +109,22 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
   };
 
   render() {
+    const aspect =
+      this.props.ctx.aspect === AspectRatio.Square
+        ? "0 0 350 350"
+        : this.props.ctx.aspect === AspectRatio.Landscape
+        ? "0 0 475 300"
+        : "0 0 300 500";
     return (
-      <div style={{ width: this.props.width, height: this.props.height }}>
+      <div
+        style={{
+          width: this.props.width,
+          height: this.props.height,
+        }}
+      >
         <svg
           id={this.svgId}
-          viewBox="0 0 500 350"
+          viewBox={aspect}
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid meet"
         >

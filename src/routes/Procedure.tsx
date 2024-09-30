@@ -1,34 +1,28 @@
 import React from "react";
-import ender from "./assets/ender.png";
-import { BackgroundQuestions } from "./components/BackgroundQuestions";
-import { InstructionPage } from "./components/InstructionPage";
+import { NavLink } from "react-router-dom";
+import { BackgroundQuestions } from "../components/BackgroundQuestions";
+import { InstructionPage } from "../components/InstructionPage";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
-} from "./components/InteractiveAppPage";
-import { IntroExperimentPage } from "./components/IntroExpPage";
+} from "../components/InteractiveAppPage";
+import { IntroExperimentPage } from "../components/IntroExpPage";
 import {
   PretestAppPage,
   PretestAppPageProps,
-} from "./components/PretestAppPage";
-import { RestPage } from "./components/RestPage";
-import { SavePage } from "./components/SavePage";
-import { StartPage } from "./components/StartPage";
-import { StaticAppPage, StaticAppPageProps } from "./components/StaticAppPage";
-import { SusPage, SusProofType } from "./components/SusPage";
-import { TestQuestions } from "./components/TestQuestions";
-import { TutorialPage } from "./components/TutorialPage";
-import { Page, PageType, pageOrder } from "./core/testinfra/pageOrder";
-import {
-  fisherYates,
-  getHeaderType,
-  interactiveLayout,
-} from "./core/testinfra/setupLayout";
-import { logEvent } from "./core/utils";
-import { T1_S1_C1 } from "./theorems/testA/stage1/C1";
+} from "../components/PretestAppPage";
+import { RestPage } from "../components/RestPage";
+import { SavePage } from "../components/SavePage";
+import { StartPage } from "../components/StartPage";
+import { StaticAppPage, StaticAppPageProps } from "../components/StaticAppPage";
+import { SusPage, SusProofType } from "../components/SusPage";
+import { TestQuestions } from "../components/TestQuestions";
+import { TutorialPage } from "../components/TutorialPage";
+import { Page, PageType, pageOrder } from "../core/testinfra/pageOrder";
+import { getHeaderType } from "../core/testinfra/setupLayout";
+import { logEvent } from "../core/utils";
 
-interface AppProps {}
-interface AppState {
+interface ProcedureState {
   activePage: number;
   activeTest: number;
   isPaused: boolean;
@@ -38,22 +32,20 @@ interface AppState {
       [question: string]: string;
     };
   };
-  page: string;
   scaffolding: {
     [questionType: string]: boolean;
   };
 }
-export class App extends React.Component<AppProps, AppState> {
+export class Procedure extends React.Component<{}, ProcedureState> {
   private meta: Page[] = [];
-  private numPages: number;
-  constructor(props: AppProps) {
+  private numPages: number = 0;
+  constructor(props: any) {
     super(props);
     this.state = {
       activePage: 0,
       activeTest: 0,
       isPaused: false,
       answers: {},
-      page: "home",
       scaffolding: {
         Minifigures: false,
         ReliesOn: false,
@@ -66,9 +58,7 @@ export class App extends React.Component<AppProps, AppState> {
     this.numPages = this.meta.length;
   }
 
-  componentDidMount() {
-    window.document.title = "Ender";
-  }
+  componentDidMount() {}
 
   handlePause = () => {
     this.setState({ isPaused: true });
@@ -86,19 +76,11 @@ export class App extends React.Component<AppProps, AppState> {
     });
   };
 
-  onClickTest = (test: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
-    this.setState({ page: test });
-  };
-
   onNext = (direction: number) => {
-    if (this.state.activePage + direction < 0) {
-      this.setState({ activeTest: 0, activeQuestionIdx: 0, page: "home" });
-    } else {
-      this.setState({
-        activePage: this.state.activePage + direction,
-        activeQuestionIdx: 0,
-      });
-    }
+    this.setState({
+      activePage: this.state.activePage + direction,
+      activeQuestionIdx: 0,
+    });
   };
 
   setActiveQuestionIndex = (newIndex: number) => {
@@ -131,6 +113,60 @@ export class App extends React.Component<AppProps, AppState> {
       localStorage.setItem("answers", JSON.stringify(updatedAnswers));
     };
 
+  renderShortHeader = () => {
+    return (
+      <div className="sticky top-0 left-0 bg-gray-50 z-30" id="header">
+        <div className="flex items-center">
+          {this.renderBackBtn()}
+          <div className="p-3 left-24 z-30">{`${this.state.activePage + 1} / ${
+            this.numPages
+          }`}</div>
+          <div className="absolute top-0 right-2 flex flex-row">
+            <button
+              className="p-3 underline underline-offset-2 z-30 text-sm text-slate-300"
+              id="pause"
+              onClick={this.handlePause}
+            >
+              Pause
+            </button>
+            <button
+              className="p-3 underline underline-offset-2 z-30 text-sm text-slate-300"
+              id="next-arrow"
+              style={{
+                display:
+                  this.state.activePage < this.numPages - 1 ? "block" : "none",
+              }}
+              onClick={() => this.onNext(1)}
+            >
+              {"Skip"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  renderBackBtn = () => {
+    const css =
+      "py-3 pl-3 pr-1 underline underline-offset-2 z-30 text-sm text-slate-300";
+    return this.state.activePage === 0 ? (
+      <NavLink to="/" className={css}>
+        Home
+      </NavLink>
+    ) : (
+      <button
+        className={css}
+        id="prev-arrow"
+        style={{
+          display: this.state.activePage >= 0 ? "block" : "none",
+        }}
+        onClick={() => this.onNext(-1)}
+      >
+        {"Back"}
+      </button>
+    );
+  };
+
   renderQuestionHeader =
     (proofType: string) =>
     (
@@ -144,19 +180,10 @@ export class App extends React.Component<AppProps, AppState> {
           id="header"
         >
           <div className="flex items-center">
-            <button
-              className="py-3 px-1 underline underline-offset-2 z-30 text-xs text-slate-300"
-              id="prev-arrow"
-              style={{
-                display: this.state.activePage >= 0 ? "block" : "none",
-              }}
-              onClick={() => this.onNext(-1)}
-            >
-              {"Back"}
-            </button>
-            <div className="p-3 z-30">{`${this.state.activePage + 1} / ${
-              this.numPages
-            }`}</div>
+            {this.renderBackBtn()}
+            <div className="p-3 z-30">
+              {`${this.state.activePage + 1} / ${this.numPages}`}
+            </div>
             <div className="ml-10 flex-1">
               <TestQuestions
                 questions={meta.questions}
@@ -198,47 +225,7 @@ export class App extends React.Component<AppProps, AppState> {
       );
     };
 
-  renderShortHeader = () => {
-    return (
-      <div className="sticky top-0 left-0 bg-gray-50 z-30" id="header">
-        <div className="flex items-center">
-          <button
-            className="p-3 pl-5 underline underline-offset-2 z-30 text-sm text-slate-300"
-            id="prev-arrow"
-            style={{ display: this.state.activePage >= 0 ? "block" : "none" }}
-            onClick={() => this.onNext(-1)}
-          >
-            {"Back"}
-          </button>
-          <div className="p-3 left-24 z-30">{`${this.state.activePage + 1} / ${
-            this.numPages
-          }`}</div>
-          <div className="absolute top-0 right-2 flex flex-row">
-            <button
-              className="p-3 underline underline-offset-2 z-30 text-sm text-slate-300"
-              id="pause"
-              onClick={this.handlePause}
-            >
-              Pause
-            </button>
-            <button
-              className="p-3 underline underline-offset-2 z-30 text-sm text-slate-300"
-              id="next-arrow"
-              style={{
-                display:
-                  this.state.activePage < this.numPages - 1 ? "block" : "none",
-              }}
-              onClick={() => this.onNext(1)}
-            >
-              {"Skip"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  renderExperimentPages = () => {
+  render() {
     const page = this.state.activePage; // For current page of proof
     const currMeta = this.meta[page];
     let pageContent = <></>;
@@ -272,7 +259,7 @@ export class App extends React.Component<AppProps, AppState> {
         <PretestAppPage
           name={props.name}
           ctx={props.ctx}
-          questions={fisherYates(props.questions)}
+          questions={props.questions}
         />
       );
     } else if (currMeta.type === PageType.Static && currMeta.meta) {
@@ -356,73 +343,5 @@ export class App extends React.Component<AppProps, AppState> {
         <div className="w-full h-full flex justify-start">{pageContent}</div>
       </>
     );
-  };
-
-  render() {
-    if (this.state.page === "demo") {
-      const layout = interactiveLayout(T1_S1_C1).meta;
-      if (layout) {
-        return (
-          <>
-            <div
-              className="sticky top-0 left-0 bg-gray-50 p-6 z-30"
-              id="header"
-            >
-              <button
-                className="absolute top-0 left-0 p-3 underline underline-offset-2 z-30 text-sm"
-                id="prev-arrow"
-                style={{
-                  display: this.state.activePage >= 0 ? "block" : "none",
-                }}
-                onClick={() => this.onNext(-1)}
-              >
-                {"Home"}
-              </button>
-            </div>
-            <div className="w-full h-full flex justify-start">
-              <InteractiveAppPage
-                {...{
-                  ...(layout.props as InteractiveAppPageProps),
-                  pageNum: this.state.activePage,
-                }}
-                key={"interactive-pg" + this.state.activePage}
-              />
-            </div>
-          </>
-        );
-      }
-    } else if (this.state.page === "procedure") {
-      return this.renderExperimentPages();
-    } else if (this.state.page === "home") {
-      return (
-        <div>
-          <div className="absolute top-0 left-0 my-3 mx-5 w-auto h-auto flex flex-row gap-3">
-            <img src={ender} className="w-12 h-auto" />
-            <div className="text-base self-center text-violet-500 font-bold">
-              Ender
-            </div>
-          </div>
-          <div className="flex w-screen h-screen justify-center items-center">
-            <div className="flex flex-row w-[1100px] h-32 justify-center">
-              <button
-                className="py-4 px-8 m-4 text-3xl bg-violet-300 rounded-md text-white"
-                onClick={this.onClickTest("demo")}
-              >
-                Demo
-              </button>
-              <button
-                className="py-4 px-8 m-4 text-3xl bg-violet-500 rounded-md text-white"
-                onClick={this.onClickTest("procedure")}
-              >
-                Procedure
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return <></>;
   }
 }
-
-export default App;

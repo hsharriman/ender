@@ -2,6 +2,7 @@ import { Content } from "../../../core/diagramContent";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
 import { EqualAngles } from "../../../core/templates/EqualAngles";
 import { EqualSegments } from "../../../core/templates/EqualSegments";
@@ -20,10 +21,10 @@ import { makeStepMeta } from "../../utils";
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [1, 0],
-      [5, 0],
-      [3, 3],
-      [7, 3],
+      [1, 2], // A
+      [10, 2], // D
+      [5, 9], // B
+      [14, 9], // C
     ],
   ];
   let ctx = new Content();
@@ -52,6 +53,8 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     new Triangle({ pts: [A, B, D], hoverable, label: "ABD" }, ctx),
     new Triangle({ pts: [B, C, D], hoverable, label: "CDB" }, ctx),
   ].map((t) => ctx.push(t));
+
+  ctx.setAspect(AspectRatio.Landscape);
   return ctx;
 };
 
@@ -233,4 +236,5 @@ export const T1_S1_IN1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5],
+  title: "(M) CPCTC #1",
 };

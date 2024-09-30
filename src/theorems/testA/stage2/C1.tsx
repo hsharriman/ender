@@ -5,6 +5,7 @@ import { Point } from "../../../core/geometry/Point";
 import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, triangleStr } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { EqualAngles } from "../../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../../core/templates/EqualSegments";
@@ -25,11 +26,11 @@ import { linked, makeStepMeta } from "../../utils";
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [1, 0],
-      [1, 3],
-      [6, 0],
-      [6, 3],
-      [3.5, 0],
+      [2, 2],
+      [2, 9],
+      [14, 2],
+      [14, 9],
+      [8, 2],
     ],
   ];
   let ctx = new Content();
@@ -63,6 +64,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   // for mini figures
   ctx.push(new Angle({ start: E, center: F, end: G, hoverable }));
   ctx.push(new Angle({ start: F, center: G, end: H, hoverable }));
+
+  ctx.setAspect(AspectRatio.Landscape);
   return ctx;
 };
 
@@ -382,4 +385,5 @@ export const T1_S2_C1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step22, step3, step4, step5, step6, step7],
+  title: "Prove FGJ is isosceles",
 };

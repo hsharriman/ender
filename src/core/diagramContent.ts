@@ -3,6 +3,7 @@ import { Point } from "./geometry/Point";
 import { Quadrilateral } from "./geometry/Quadrilateral";
 import { Segment } from "./geometry/Segment";
 import { Triangle } from "./geometry/Triangle";
+import { AspectRatio } from "./svg/svgTypes";
 import { Obj } from "./types/types";
 import { getId } from "./utils";
 
@@ -14,6 +15,7 @@ export interface DiagramContent {
   rectangles: Quadrilateral[];
   frames: string[];
   deps: Map<string, Set<string>>;
+  aspect: AspectRatio;
 }
 
 export type SupportedObjects =
@@ -32,6 +34,7 @@ export class Content {
       rectangles: [],
       frames: [],
       deps: new Map(),
+      aspect: AspectRatio.Square,
     };
   }
   getId = getId;
@@ -49,6 +52,10 @@ export class Content {
   addFrame = (name: string) => {
     this.ctx.frames.push(name);
     return name;
+  };
+
+  setAspect = (aspect: AspectRatio) => {
+    this.ctx.aspect = aspect;
   };
 
   getCtx = () => this.ctx;

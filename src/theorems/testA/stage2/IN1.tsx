@@ -2,6 +2,7 @@ import { Content } from "../../../core/diagramContent";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { ASA, ASAProps } from "../../../core/templates/ASA";
 import {
   EqualAngleStep,
@@ -28,13 +29,13 @@ import { makeStepMeta } from "../../utils";
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [0, 0], // L
-      [2, 0], //S
-      [4, 0], // U
-      [2, 1.08], //R
-      [0.75, 1.5], //N
-      [3.25, 1.5], //Q
-      [2, 4], //P
+      [2, 1], // L
+      [6, 1], //S
+      [10, 1], // U
+      [6, 2.85], //R
+      [3.5, 4], //N
+      [8.5, 4], //Q
+      [6, 9], //P
     ],
   ];
   let ctx = new Content();
@@ -43,7 +44,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     [-15, -15],
     [-5, -18],
     [0, -17],
-    [8, 5],
+    [6, 12],
     [-16, 0],
     [5, 5],
     [8, -10],
@@ -70,6 +71,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   // for ASA at the end
   // ctx.push(new Angle({ start: L, center: N, end: U, hoverable }));
   // ctx.push(new Angle({ start: U, center: Q, end: N, hoverable }));
+
+  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -295,4 +298,5 @@ export const T1_S2_IN1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8, step9],
+  title: "(M) Prove LNU ≅ UQL",
 };
