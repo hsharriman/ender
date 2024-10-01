@@ -8,15 +8,15 @@ import { Procedure } from "./routes/Procedure";
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/ender",
     element: <Home />,
   },
   {
-    path: "/examples",
+    path: "/ender/examples",
     element: <Examples />,
   },
   {
-    path: "/procedure",
+    path: "/ender/procedure",
     element: <Procedure />,
   },
 ]);

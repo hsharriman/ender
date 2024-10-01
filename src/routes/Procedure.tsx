@@ -148,7 +148,7 @@ export class Procedure extends React.Component<{}, ProcedureState> {
     const css =
       "py-3 pl-3 pr-1 underline underline-offset-2 z-30 text-sm text-slate-300";
     return this.state.activePage === 0 ? (
-      <NavLink to="/" className={css}>
+      <NavLink to="/ender" className={css}>
         Home
       </NavLink>
     ) : (

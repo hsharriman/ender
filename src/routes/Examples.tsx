@@ -175,7 +175,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
           className="sticky top-0 left-0 p-3 h-10 z-30 flex bg-gradient-to-r from-violet-500 to-transparent"
           id="header"
         >
-          <NavLink to={"/"} className="px-3 text-sm h-8">
+          <NavLink to={"/ender"} className="px-3 text-sm h-8">
             <img src={ender} className="h-12 w-auto shadow-sm" />
           </NavLink>
           <div className="text-white italic tracking-widest">Ender</div>
