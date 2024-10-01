@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
 
-export class App extends React.Component {
+export class Home extends React.Component {
   render() {
     return (
       <div>
@@ -33,5 +33,3 @@ export class App extends React.Component {
     );
   }
 }
-
-export default App;

@@ -58,8 +58,6 @@ export class Procedure extends React.Component<{}, ProcedureState> {
     this.numPages = this.meta.length;
   }
 
-  componentDidMount() {}
-
   handlePause = () => {
     this.setState({ isPaused: true });
     logEvent("pa", {

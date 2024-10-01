@@ -59,13 +59,14 @@ export class InteractiveAppPage extends React.Component<
   };
 
   render() {
+    const rowsCompact = this.props.ctx.frames.length > 10;
     return (
       <>
         {this.props.ctx.deps && (
           <ReliesOn
             reliesOn={this.props.ctx.deps}
             activeFrame={this.state.activeFrame}
-            rowHeight={64}
+            rowHeight={rowsCompact ? 46 : 64}
           />
         )}
         <div className="top-0 left-0 max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-12 pl-6">
@@ -76,6 +77,7 @@ export class InteractiveAppPage extends React.Component<
                 active={this.state.activeFrame}
                 onClick={this.handleClick}
                 isTutorial={this.props.isTutorial}
+                isCompact={rowsCompact}
               />
             </div>
           </div>
@@ -131,9 +133,6 @@ export class InteractiveAppPage extends React.Component<
               </div>
             </div>
           </div>
-          {/* <div className="w-[400px] h-fit col-start-3 mt-12 p-8 rounded-lg border-dotted border-4 border-violet-300">
-            <TestQuestions questions={this.props.questions} />
-          </div> */}
         </div>
       </>
     );
