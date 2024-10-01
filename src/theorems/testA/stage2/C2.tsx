@@ -301,5 +301,5 @@ export const T1_S2_C2: LayoutProps = {
     step9,
     step10,
   ],
-  title: "Prove ∠AFB ≅ ∠CGB",
+  title: "Prove Angles Congruent #2",
 };

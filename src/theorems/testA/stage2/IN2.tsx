@@ -295,5 +295,5 @@ export const T1_S2_IN2: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8],
-  title: "(M) Prove WX || YZ",
+  title: "Prove Segments Parallel #2 [M]",
 };

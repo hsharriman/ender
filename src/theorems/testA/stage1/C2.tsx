@@ -328,5 +328,5 @@ export const T1_S1_C2: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8],
-  title: "Prove D is the midpoint of AC",
+  title: "Prove Midpoint #1",
 };

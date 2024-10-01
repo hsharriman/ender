@@ -298,5 +298,5 @@ export const T1_S2_IN1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8, step9],
-  title: "(M) Prove LNU ≅ UQL",
+  title: "Triangle Congruence #3 [M]",
 };

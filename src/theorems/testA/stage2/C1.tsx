@@ -385,5 +385,5 @@ export const T1_S2_C1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step22, step3, step4, step5, step6, step7],
-  title: "Prove FGJ is isosceles",
+  title: "Prove Isosceles",
 };

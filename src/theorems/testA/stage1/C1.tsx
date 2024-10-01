@@ -320,5 +320,5 @@ export const T1_S1_C1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7],
-  title: "Prove Segments Parallel",
+  title: "Prove Segments Parallel #1",
 };

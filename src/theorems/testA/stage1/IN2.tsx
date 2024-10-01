@@ -221,5 +221,5 @@ export const T1_S1_IN2: LayoutProps = {
   miniContent: miniContent(),
   givens,
   proves,
-  title: "(M) Triangle Congruence #2",
+  title: "Prove Triangles Congruent #2[M]",
 };

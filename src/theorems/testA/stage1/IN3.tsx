@@ -260,5 +260,5 @@ export const T1_S1_IN3: LayoutProps = {
   steps: [step1, step2, step3, step4, step5, step6],
   givens,
   proves,
-  title: "(M) Prove that KLMN is a rectangle",
+  title: "Prove Rectangle[M]",
 };

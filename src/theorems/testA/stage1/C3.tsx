@@ -269,5 +269,5 @@ export const T1_S1_C3: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step22, step3, step4, step5, step6],
-  title: "Prove QN = NR",
+  title: "Prove Midpoint #2",
 };

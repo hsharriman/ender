@@ -33,12 +33,12 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
     // add other proofs to examples
     super(props);
     this.proofs = [
+      T1_S1_C1,
       TutorialProof1,
       TutorialProof2,
-      T1_S1_C1,
       T1_S1_C2,
-      T1_S1_C3,
       T1_S1_IN1,
+      T1_S1_C3,
       T1_S1_IN2,
       T1_S1_IN3,
       T1_S2_C1,
@@ -58,7 +58,6 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
   };
 
   renderSwitch = () => {
-    const r = 10;
     const styling = this.state.isInteractive
       ? "bg-violet-500 border-violet-500 border-2 text-white"
       : "border-slate-500 border-2 fill-none";
@@ -101,9 +100,6 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
     const layout = this.state.isInteractive
       ? interactiveLayout(proof).meta
       : staticLayout(proof).meta;
-    const toggleLayoutStr = this.state.isInteractive
-      ? "Toggle static"
-      : "Toggle interactive";
     if (layout) {
       return (
         <>
@@ -139,24 +135,33 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
       const diagramCtx = layout.props as StaticAppPageProps;
       return (
         <button
-          className="m-4 w-72 h-72 border-2 border-slate-300 shadow-md rounded-md justify-center items-center flex flex-col"
+          className="m-4 w-72 h-72 border-2 bg-slate-50 shadow-md rounded-md flex flex-col"
           onClick={this.onClickTile(idx)}
         >
-          {proof.title}
-          {/* <StaticDiagram
+          <div className="w-full flex justify-between border-b-2 border-slate-500 border-dotted bg-slate-50 font-mono text-xs py-1 px-2">
+            {proof.title.replace("[M]", "")}
+            {proof.title.includes("[M]") && (
+              <div className="font-mono text-orange-500 font-bold text-xs">
+                {"[M]"}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-center items-center w-full h-full flex-col">
+            {/* <StaticDiagram
             svgIdSuffix={proof.name}
             width="260px"
             height="auto"
             ctx={diagramCtx.ctx}
           /> */}
-          <Diagram
-            width="260px"
-            height="auto"
-            svgIdSuffix={proof.name}
-            activeFrame={"given"}
-            ctx={diagramCtx.ctx}
-            miniScale={false}
-          />
+            <Diagram
+              width="260px"
+              height="auto"
+              svgIdSuffix={proof.name}
+              activeFrame={"given"}
+              ctx={diagramCtx.ctx}
+              miniScale={false}
+            />
+          </div>
         </button>
       );
     }
@@ -176,8 +181,16 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
           <div className="text-white italic tracking-widest">Ender</div>
         </div>
         <div className="w-screen h-full bg-white p-8">
-          <div className="font-notoSans font-medium text-slate-700 text-3xl border-b-2 border-slate-300 mb-4 pb-4">
+          <div className="font-notoSans font-medium text-slate-700 text-3xl border-b-2 border-slate-300 mb-2 pb-4 flex flex-row justify-start gap-4">
             Triangle Congruence Proof Examples
+            <div>
+              <span className="font-mono text-sm text-orange-500 font-bold">
+                {"[M]"}
+              </span>
+              <span className="text-sm italic">
+                {" indicates the proof has an intentional mistake"}
+              </span>
+            </div>
           </div>
           <div className="flex flex-row flex-wrap">
             {this.proofs.map((proof, idx) =>

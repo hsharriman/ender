@@ -236,5 +236,5 @@ export const T1_S1_IN1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5],
-  title: "(M) CPCTC #1",
+  title: "Prove Angles Congruent #1[M]",
 };

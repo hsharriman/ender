@@ -188,7 +188,7 @@ export const TutorialProof1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4],
-  title: "Prove Triangles Congruent",
+  title: "Prove Triangles Congruent #1a",
 };
 
 export const TutorialProof2: LayoutProps = {
@@ -199,5 +199,5 @@ export const TutorialProof2: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4t2],
-  title: "(M) Prove Triangles Congruent",
+  title: "Prove Triangles Congruent #1b [M]",
 };
