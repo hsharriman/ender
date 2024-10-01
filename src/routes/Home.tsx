@@ -15,14 +15,14 @@ export class Home extends React.Component {
         <div className="flex w-screen h-screen justify-center items-center">
           <div className="flex flex-row w-[1100px] h-32 justify-center">
             <NavLink
-              to="/examples"
+              to="/ender/examples"
               className="py-4 px-8 m-4 text-3xl bg-violet-300 rounded-md text-white flex items-center"
             >
               Examples
             </NavLink>
 
             <NavLink
-              to="/procedure"
+              to="/ender/procedure"
               className="py-4 px-8 m-4 text-3xl bg-violet-500 rounded-md text-white flex items-center"
             >
               Procedure
