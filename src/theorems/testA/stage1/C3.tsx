@@ -3,6 +3,7 @@ import { Angle } from "../../../core/geometry/Angle";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { ASA, ASAProps } from "../../../core/templates/ASA";
 import { EqualAngles } from "../../../core/templates/EqualAngles";
 import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
@@ -22,11 +23,11 @@ import { makeStepMeta } from "../../utils";
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [0, 4.5], //Q
-      [3, 2], //R
-      [6, 2], //M
-      [6, -0.5], //N
-      [0, 2], //P
+      [2, 10], //Q
+      [8, 5.5], //R
+      [14, 5.5], //M
+      [14, 1], //N
+      [2, 5.5], //P
     ],
   ];
   let ctx = new Content();
@@ -58,6 +59,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   // for given step:
   ctx.push(new Angle({ start: Q, center: P, end: R, hoverable }));
   ctx.push(new Angle({ start: R, center: M, end: N, hoverable }));
+
+  ctx.setAspect(AspectRatio.Landscape);
   return ctx;
 };
 
@@ -266,4 +269,5 @@ export const T1_S1_C3: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step22, step3, step4, step5, step6],
+  title: "Prove Midpoint #2",
 };

@@ -6,6 +6,7 @@ export interface ProofRowsProps {
   active: string;
   items: ProofTextItem[];
   onClick: (n: string) => void; // callback that returns new selected idx when clicked
+  isCompact: boolean;
   reliesOn?: Map<string, Set<string>>;
   isTutorial?: boolean;
 }
@@ -145,7 +146,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         revealed={this.state.revealed < i + 1}
         item={item}
         i={i}
-        isPremise={false}
+        isCompact={this.props.isCompact}
       />
     );
   };
@@ -214,7 +215,7 @@ interface ProofRowProps {
   item: ProofTextItem;
   i: number;
   depends: boolean;
-  isPremise: boolean;
+  isCompact: boolean;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 export class ProofRow extends React.Component<ProofRowProps> {
@@ -236,20 +237,23 @@ export class ProofRow extends React.Component<ProofRowProps> {
 
   render() {
     // if the active row is given or prove, focus all the proof rows
+    const h = this.props.isCompact ? "h-12" : "h-16";
+    const fontSize = this.props.isCompact ? "text-md" : "text-lg";
+    const padding = this.props.isCompact ? "py-2" : "py-4";
     return (
       <div
-        className={`flex flex-row justify-start h-16`}
+        className={`flex flex-row justify-start ${h}`}
         key={this.props.item.k}
         id={this.props.isTutorial ? `${this.props.item.k}-tutorial` : ""}
       >
         {this.props.revealed ? (
           <button
             id={`${this.idPrefix}${this.props.item.k}`}
-            className="border-gray-300 border-b-2 w-full h-16 ml-6 text-lg focus:outline-none"
+            className={`border-gray-300 border-b-2 w-full ${h} ml-6 ${fontSize} focus:outline-none`}
             onClick={this.props.onClick}
           >
             <div
-              className={`${this.textClr()} ${this.borderClr()} py-4  grid grid-rows-1 grid-cols-2`}
+              className={`${this.textClr()} ${this.borderClr()} ${padding}  grid grid-rows-1 grid-cols-2`}
             >
               <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
                 <div className="text-slate-400 font-bold">
@@ -259,15 +263,15 @@ export class ProofRow extends React.Component<ProofRowProps> {
             </div>
           </button>
         ) : (
-          <div className="flex flex-row justify-start h-16 w-full">
-            {highlightBar(this.props.isActive, "h-16")}
+          <div className={`flex flex-row justify-start ${h} w-full`}>
+            {highlightBar(this.props.isActive, h)}
             <button
               id={`${this.idPrefix}${this.props.item.k}`}
               onClick={this.props.onClick}
-              className="border-gray-300 border-b-2 w-full h-16 ml-2 text-lg focus:outline-none"
+              className={`border-gray-300 border-b-2 w-full ${h} ml-2 ${fontSize} focus:outline-none`}
             >
               <div
-                className={`${this.textClr()} ${this.borderClr()} py-4  grid grid-rows-1 grid-cols-2`}
+                className={`${this.textClr()} ${this.borderClr()} ${padding}  grid grid-rows-1 grid-cols-2`}
               >
                 <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
                   <div

@@ -1,10 +1,11 @@
 import React from "react";
 import { DiagramContent } from "../core/diagramContent";
-import { SVGModes } from "../core/types/types";
-import { GIVEN_ID } from "../theorems/utils";
 import { SVGGeoAngle } from "../core/svg/SVGGeoAngle";
 import { SVGGeoPoint } from "../core/svg/SVGGeoPoint";
 import { SVGGeoSegment } from "../core/svg/SVGGeoSegment";
+import { AspectRatio } from "../core/svg/svgTypes";
+import { SVGModes } from "../core/types/types";
+import { GIVEN_ID } from "../theorems/utils";
 
 export interface DiagramProps {
   svgIdSuffix: string;
@@ -22,13 +23,17 @@ export class StaticDiagram extends React.Component<DiagramProps, {}> {
   }
 
   render() {
+    const aspect =
+      this.props.ctx.aspect === AspectRatio.Square
+        ? "0 0 350 350"
+        : this.props.ctx.aspect === AspectRatio.Landscape
+        ? "0 0 475 300"
+        : "0 0 300 500";
     return (
-      <div>
+      <div style={{ width: this.props.width, height: this.props.height }}>
         <svg
           id={this.svgId}
-          viewBox="0 0 500 300"
-          width={this.props.width}
-          height={this.props.height}
+          viewBox={aspect}
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid meet"
         >

@@ -4,6 +4,7 @@ import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
 import { EqualSegments } from "../../../core/templates/EqualSegments";
 import { EqualTriangles } from "../../../core/templates/EqualTriangles";
@@ -22,10 +23,10 @@ import { linked, makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const pts: Vector[] = [
-    [1, 0], // L BL
-    [1, 3], // M TL
-    [6, 0], // K BR
-    [6, 3], // N TR
+    [2, 2], // L BL
+    [2, 9], // M TL
+    [14, 2], // K BR
+    [14, 9], // N TR
   ];
   let ctx = new Content();
   const labels = ["L", "M", "K", "N"];
@@ -53,6 +54,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   // for mini figures
   ctx.push(new Angle({ start: L, center: M, end: N, hoverable }));
   ctx.push(new Angle({ start: L, center: K, end: N, hoverable }));
+
+  ctx.setAspect(AspectRatio.Landscape);
   return ctx;
 };
 
@@ -257,4 +260,5 @@ export const T1_S1_IN3: LayoutProps = {
   steps: [step1, step2, step3, step4, step5, step6],
   givens,
   proves,
+  title: "Prove Rectangle[M]",
 };

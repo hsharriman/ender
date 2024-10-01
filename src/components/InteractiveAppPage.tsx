@@ -1,5 +1,6 @@
 import React from "react";
 import { DiagramContent } from "../core/diagramContent";
+import { AspectRatio } from "../core/svg/svgTypes";
 import { ProofTextItem } from "../core/types/stepTypes";
 import { Reason } from "../core/types/types";
 import { logEvent } from "../core/utils";
@@ -58,13 +59,14 @@ export class InteractiveAppPage extends React.Component<
   };
 
   render() {
+    const rowsCompact = this.props.ctx.frames.length > 10;
     return (
       <>
         {this.props.ctx.deps && (
           <ReliesOn
             reliesOn={this.props.ctx.deps}
             activeFrame={this.state.activeFrame}
-            rowHeight={64}
+            rowHeight={rowsCompact ? 46 : 64}
           />
         )}
         <div className="top-0 left-0 max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-12 pl-6">
@@ -75,17 +77,22 @@ export class InteractiveAppPage extends React.Component<
                 active={this.state.activeFrame}
                 onClick={this.handleClick}
                 isTutorial={this.props.isTutorial}
+                isCompact={rowsCompact}
               />
             </div>
           </div>
           <div
             id="canvas-container"
-            className="flex flex-col ml-4 sticky h-min left-[780px] max-w-[1020px] min-w-[720px]"
+            className="grid grid-rows-2 ml-4 sticky left-[780px] max-w-[1020px] min-w-[720px]"
           >
             <div className="pt-4">
               <Diagram
-                width="650px"
-                height="300px"
+                height="auto"
+                width={
+                  this.props.ctx.aspect === AspectRatio.Landscape
+                    ? "600px"
+                    : "400px"
+                }
                 svgIdSuffix={`construction`}
                 activeFrame={this.state.activeFrame}
                 ctx={this.props.ctx}
@@ -94,7 +101,7 @@ export class InteractiveAppPage extends React.Component<
               />
             </div>
 
-            <div className="flex flex-row max-w-[1000px] min-w-[700px] h-44 mt-12">
+            <div className="flex flex-row max-w-[1000px] min-w-[700px] h-44">
               {this.props.miniCtx.frames.find(
                 (s) => s === this.state.activeFrame
               ) && (
@@ -104,7 +111,11 @@ export class InteractiveAppPage extends React.Component<
                   onMouseLeave={this.onMouseLeave}
                 >
                   <Diagram
-                    width="250px"
+                    width={
+                      this.props.ctx.aspect === AspectRatio.Landscape
+                        ? "200px"
+                        : "150px"
+                    }
                     height="100%"
                     svgIdSuffix={`mini`}
                     activeFrame={this.state.activeFrame}
@@ -122,9 +133,6 @@ export class InteractiveAppPage extends React.Component<
               </div>
             </div>
           </div>
-          {/* <div className="w-[400px] h-fit col-start-3 mt-12 p-8 rounded-lg border-dotted border-4 border-violet-300">
-            <TestQuestions questions={this.props.questions} />
-          </div> */}
         </div>
       </>
     );

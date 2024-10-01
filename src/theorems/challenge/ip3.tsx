@@ -246,4 +246,5 @@ export const T1_CH1_IN1: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8],
+  title: "Challenge 1",
 };

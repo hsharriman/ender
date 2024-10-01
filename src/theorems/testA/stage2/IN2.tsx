@@ -3,6 +3,7 @@ import { Point } from "../../../core/geometry/Point";
 import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { segmentStr } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
 import { EqualAngles } from "../../../core/templates/EqualAngles";
 import { EqualSegmentStep } from "../../../core/templates/EqualSegments";
@@ -23,11 +24,11 @@ import { linked, makeStepMeta } from "../../utils";
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [0, 4], // W
-      [4, 4], // X
-      [0, 0], // Y
-      [4, 0], // Z
-      [2, 2], // M
+      [2, 9], // W
+      [9, 9], // X
+      [2, 1], // Y
+      [9, 1], // Z
+      [5.5, 5], // M
     ],
   ];
   let ctx = new Content();
@@ -60,6 +61,8 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
   ctx.push(new Segment({ p1: W, p2: Z, hoverable: false }));
   ctx.push(new Segment({ p1: Y, p2: X, hoverable: false }));
+
+  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -292,4 +295,5 @@ export const T1_S2_IN2: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8],
+  title: "Prove Segments Parallel #2 [M]",
 };

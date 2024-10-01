@@ -3,6 +3,7 @@ import { Angle } from "../../../core/geometry/Angle";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
+import { AspectRatio } from "../../../core/svg/svgTypes";
 import { ASA, ASAProps } from "../../../core/templates/ASA";
 import { BaseAngle } from "../../../core/templates/BaseAngle";
 import { EqualAngles } from "../../../core/templates/EqualAngles";
@@ -27,10 +28,10 @@ import { linked, makeStepMeta, tooltip } from "../../utils";
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
     [
-      [1, 0],
-      [3, 4],
-      [5, 0],
-      [3, 0],
+      [2, 1], // A
+      [5.5, 8], // B
+      [9, 1], // C
+      [5.5, 1], // D
     ],
   ];
   let ctx = new Content();
@@ -60,6 +61,8 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
   // for given step:
   ctx.push(new Angle({ start: A, center: B, end: C, hoverable }));
+
+  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -325,4 +328,5 @@ export const T1_S1_C2: LayoutProps = {
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8],
+  title: "Prove Midpoint #1",
 };

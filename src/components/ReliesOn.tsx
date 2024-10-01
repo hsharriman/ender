@@ -83,6 +83,8 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
 
   renderArrow = (d: Dims, lastBottom: number) => {
     // TODO make less absolutely calculated by pixel values + assumed row height
+    const quarterRow = this.props.rowHeight / 4;
+    const halfRow = this.props.rowHeight / 2;
     return (
       <div
         className="absolute w-8"
@@ -95,7 +97,9 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
       >
         <svg width="100%" height="100%">
           <polyline
-            points={`16,18 1,32 16,46`}
+            points={`${quarterRow},${quarterRow} 1,${halfRow} ${quarterRow},${
+              3 * quarterRow
+            }`}
             stroke={this.DEFAULT_CLR}
             fill="none"
             strokeWidth="3px"

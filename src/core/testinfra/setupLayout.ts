@@ -144,8 +144,6 @@ export const randomizeLayout = (
       ? staticLayout(proofMetas[i], shuffleQuestions)
       : interactiveLayout(proofMetas[i], shuffleQuestions)
   );
-  // return proofMetas.map((p) => interactiveLayout(p));
-  // return proofMetas.map((p) => staticLayout(p));
 };
 
 export const getHeaderType = (pageType: PageType) => {
