@@ -4,7 +4,7 @@ import { vops } from "../vectorOps";
 import { pops } from "./pathBuilderUtils";
 import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "./svgUtils";
 
-const ARC_RADIUS = 0.45;
+const SINGLE_ARC_RADIUS = 0.55;
 const MINI_ARC_R = 0.5;
 const SINGLE_MINI_ARC_RADIUS = 0.8;
 const MINI_ARC_PADDING = 0.3;
@@ -91,7 +91,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
     // scale start and end by radius per tick
-    let arcR = num === 1 ? ARC_RADIUS : 0.35;
+    let arcR = num === 1 ? SINGLE_ARC_RADIUS : 0.35;
     arcR = this.props.miniScale ? MINI_ARC_R : arcR;
     let arcPad =
       this.props.miniScale || num === 1 ? MINI_ARC_PADDING : ARC_PADDING;

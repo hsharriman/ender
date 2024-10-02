@@ -14,6 +14,7 @@ export interface DiagramProps {
   width: string;
   height: string;
   miniScale: boolean;
+  isStatic?: boolean;
   isTutorial?: boolean;
 }
 
@@ -56,11 +57,15 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   renderSegments = (frame: string) => {
     return this.props.ctx.segments.flatMap((seg, i) => {
+      const mode = this.props.isStatic
+        ? SVGModes.Default
+        : seg.getMode(frame) ?? SVGModes.Hidden;
+      const hoverable = this.props.isStatic ? false : seg.hoverable;
       return (
         <SVGGeoSegment
           geoId={seg.id}
-          mode={seg.getMode(frame) ?? SVGModes.Hidden}
-          hoverable={seg.hoverable}
+          mode={mode}
+          hoverable={hoverable}
           {...{
             miniScale: this.props.miniScale,
             s: seg.labeled(),
@@ -74,11 +79,15 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   renderAngles = (frame: string) => {
     return this.props.ctx.angles.flatMap((ang, i) => {
+      const mode = this.props.isStatic
+        ? SVGModes.Default
+        : ang.getMode(frame) ?? SVGModes.Hidden;
+      const hoverable = this.props.isStatic ? false : ang.hoverable;
       return (
         <SVGGeoAngle
-          mode={ang.getMode(frame) ?? SVGModes.Hidden}
+          mode={mode}
           geoId={ang.id}
-          hoverable={ang.hoverable}
+          hoverable={hoverable}
           {...{
             a: ang.labeled(),
             miniScale: this.props.miniScale,
@@ -92,17 +101,21 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   renderTriangles = (frame: string) => {
     return this.props.ctx.triangles.flatMap((tri, i) => {
+      const mode = this.props.isStatic
+        ? SVGModes.Default
+        : tri.getMode(frame) ?? SVGModes.Hidden;
+      const hoverable = this.props.isStatic ? false : !this.props.miniScale;
       return (
         <SVGGeoTriangle
           geoId={tri.id}
-          hoverable={!this.props.miniScale}
+          hoverable={hoverable}
           {...{
             miniScale: this.props.miniScale,
             t: tri,
           }}
           key={`${tri.id}-${i}`}
           backgroundColor={tri.backgroundColor}
-          mode={tri.getMode(frame) ?? SVGModes.Hidden}
+          mode={mode}
         />
       );
     });

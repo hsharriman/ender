@@ -81,7 +81,7 @@ export class SavePage extends React.Component<SavePageProps, SavePageState> {
     return (
       <div className="flex items-center justify-center left-0 pt-10 flex-col w-screen h-full font-notoSans text-slate-800">
         <div className="text-center mb-4 text-2xl">
-          <p>Please don't close the browser.</p>
+          <p>Please do not close the browser.</p>
           <br />
           <p>
             Please tell the researchers that you are done. And click on both the

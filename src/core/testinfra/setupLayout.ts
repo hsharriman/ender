@@ -28,7 +28,7 @@ export const staticLayout = (
 
   ctx.addFrame(GIVEN_ID);
   proofMeta.givens.diagram(ctx, GIVEN_ID);
-  proofMeta.steps.forEach((step) => {
+  proofMeta.steps.forEach((step, i) => {
     texts.push({
       stmt: step.staticText(),
       reason: step.reason.title,
@@ -36,6 +36,8 @@ export const staticLayout = (
     if (step.reason.body !== "" && step.reason.title !== Reasons.Given.title) {
       reasons.push(step.reason);
     }
+    const s = ctx.addFrame(`s${i + 1}`);
+    step.diagram(ctx, s);
   });
   return {
     type: PageType.Static,

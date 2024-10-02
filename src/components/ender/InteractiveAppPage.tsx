@@ -59,7 +59,7 @@ export class InteractiveAppPage extends React.Component<
   };
 
   render() {
-    const rowsCompact = this.props.ctx.frames.length > 10;
+    const rowsCompact = this.props.ctx.frames.length > 9;
     return (
       <>
         {this.props.ctx.deps && (

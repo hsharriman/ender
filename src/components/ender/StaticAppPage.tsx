@@ -6,7 +6,6 @@ import { logEvent } from "../../core/testinfra/testUtils";
 import { StaticProofTextItem } from "../../core/types/stepTypes";
 import { Reason } from "../../core/types/types";
 import { Definition, definitionArr } from "../../theorems/definitions";
-import { GIVEN_ID } from "../../theorems/utils";
 import { StaticDiagram } from "./StaticDiagram";
 
 export interface StaticAppPageProps {
@@ -104,7 +103,7 @@ export class StaticAppPage extends React.Component<
     this.setState({ activeDef: -1 });
   };
 
-  renderAllDefinitions = (numGivens: number) => {
+  renderAllDefinitions = () => {
     return (
       <div>
         <div className="flex flex-row align-bottom pb-2 leading-9">
@@ -178,7 +177,7 @@ export class StaticAppPage extends React.Component<
               }
             >
               <StaticDiagram
-                svgIdSuffix={`static-${GIVEN_ID}`}
+                svgIdSuffix={"static"}
                 ctx={this.props.ctx}
                 width={
                   this.props.ctx.aspect === AspectRatio.Landscape
@@ -201,7 +200,7 @@ export class StaticAppPage extends React.Component<
         <div className="min-w-[400px] max-w-[500px]">
           <div className="flex flex-col justify-start">
             <div className="font-bold text-lg text-slate-800">Definitions:</div>
-            {this.renderAllDefinitions(numGivens)}
+            {this.renderAllDefinitions()}
             {this.state.activeReason !== -1 &&
               this.renderReason(
                 this.props.reasons[this.state.activeReason - numGivens]

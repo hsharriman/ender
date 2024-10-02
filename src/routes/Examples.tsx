@@ -1,7 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
-import { Diagram } from "../components/ender/Diagram";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
@@ -10,6 +9,7 @@ import {
   StaticAppPage,
   StaticAppPageProps,
 } from "../components/ender/StaticAppPage";
+import { StaticDiagram } from "../components/ender/StaticDiagram";
 import { interactiveLayout, staticLayout } from "../core/testinfra/setupLayout";
 import { LayoutProps } from "../core/types/types";
 import { T1_S1_C1 } from "../theorems/testA/stage1/C1";
@@ -150,20 +150,20 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
             )}
           </div>
           <div className="flex justify-center items-center w-full h-full flex-col">
-            {/* <StaticDiagram
-            svgIdSuffix={proof.name}
-            width="260px"
-            height="auto"
-            ctx={diagramCtx.ctx}
-          /> */}
-            <Diagram
+            <StaticDiagram
+              svgIdSuffix={proof.name}
+              width="260px"
+              height="auto"
+              ctx={diagramCtx.ctx}
+            />
+            {/* <Diagram
               width="260px"
               height="auto"
               svgIdSuffix={proof.name}
               activeFrame={"given"}
               ctx={diagramCtx.ctx}
               miniScale={false}
-            />
+            /> */}
           </div>
         </button>
       );

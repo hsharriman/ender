@@ -17,14 +17,14 @@ import {
   TutorialProof1,
   TutorialProof2,
 } from "../../theorems/tutorial/tutorial1";
-import { ProofMeta } from "../types/types";
+import { LayoutProps, ProofMeta } from "../types/types";
 import { triangleTextPreQuestions } from "./questions/pretestQuestions";
 import { tutorial1Steps, tutorial3Steps } from "./questions/tutorialContent";
 import {
   fisherYates,
   interactiveLayout,
   pretestLayout,
-  randomizeLayout,
+  staticLayout,
 } from "./setupLayout";
 
 export enum PageType {
@@ -34,20 +34,29 @@ export enum PageType {
   Tutorial = "Tutorial",
   Static = "static",
   Interactive = "interactive",
-  StaticSUS = "StaticSUS",
-  IntSUS = "IntSUS",
+  SUS = "SUS",
   Save = "Save",
   IntroSlidePhase1 = "IntroSlidePhase1",
   IntroSlidePhase2 = "IntroSlidePhase2",
   ParticipantID = "ParticipantID",
 }
 
+export type TestType = PageType.Interactive | PageType.Static;
+
 export type Page = {
   type: PageType;
   meta?: ProofMeta;
 };
 
-export const pageOrder = () => {
+export const proofOrder = (proofs: LayoutProps[], type: TestType) => {
+  return fisherYates(proofs).map((proof) => {
+    return type === PageType.Interactive
+      ? interactiveLayout(proof, true)
+      : staticLayout(proof, true);
+  });
+};
+
+export const pageOrder = (testType: TestType) => {
   let pretest = [pretestLayout(P1), pretestLayout(P2)]; // segment and angle questions
   let tpre = trianglePretestProofs.map((p) => pretestLayout(p));
   // add extra 1-off questions to the first triangle pretest page
@@ -64,27 +73,21 @@ export const pageOrder = () => {
   }
 
   pretest = pretest.concat(tpre);
-  const tutorial = [
-    interactiveLayout(TutorialProof1, false, tutorial1Steps),
-    interactiveLayout(TutorialProof2, false, tutorial3Steps),
-  ];
-  const stage1 = randomizeLayout(
-    fisherYates([
-      T1_S1_C1,
-      T1_S1_C2,
-      T1_S1_C3,
-      T1_S1_IN1,
-      T1_S1_IN2,
-      T1_S1_IN3,
-    ]),
-    true
+  const tutorial =
+    testType === PageType.Interactive
+      ? [
+          interactiveLayout(TutorialProof1, false, tutorial1Steps),
+          interactiveLayout(TutorialProof2, false, tutorial3Steps),
+        ]
+      : [];
+  const stage1 = proofOrder(
+    [T1_S1_C1, T1_S1_C2, T1_S1_C3, T1_S1_IN1, T1_S1_IN2, T1_S1_IN3],
+    testType
   );
-  const stage2 = randomizeLayout(
+  const stage2 = proofOrder(
     fisherYates([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
-    false
+    testType
   );
-  // const challenge = randomizeLayout(fisherYates([T1_CH1_IN1]), false);
-  const challenge: Page[] = [];
 
   const pages = participantID()
     .concat(background())
@@ -94,7 +97,6 @@ export const pageOrder = () => {
     .concat(stage1)
     .concat(instruction2())
     .concat(stage2)
-    .concat(challenge)
     .concat(sus());
 
   return pages;
@@ -113,9 +115,5 @@ const instruction2 = (): Page[] => {
   return [{ type: PageType.IntroSlidePhase2 }];
 };
 const sus = (): Page[] => {
-  return [
-    { type: PageType.StaticSUS },
-    { type: PageType.IntSUS },
-    { type: PageType.Save },
-  ];
+  return [{ type: PageType.SUS }, { type: PageType.Save }];
 };

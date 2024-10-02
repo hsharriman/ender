@@ -84,31 +84,23 @@ export class RestPage extends React.Component<RestPageProps, RestPageStates> {
 
     return (
       <div className="flex items-center justify-center flex-col pt-40 w-screen font-notoSans text-slate-800 text-xl">
-        <span>
-          Congratulations, you're more than halfway through the experiment! :)
-        </span>
-        <p className="max-w-[900px] text-center">
-          <br />
-          Now, you can choose to relax for 3 minutes, get some water, go to the
-          bathroom, or walk around.
-        </p>
-        <br />
-        <p className="max-w-[900px] text-center">
-          Or you can continue with the experiment.
-        </p>
-        <br />
-
-        <p className="max-w-[900px] text-center">
-          In the next section, you will be asked to check if there are any
-          mistakes in a proof. Again, some of the proofs will have a static
-          layout and others will be interactive.
-        </p>
-        <br />
-
-        <div className="text-3xl font-bold">
+        <div className="max-w-[900px] text-start flex flex-col gap-4">
+          <div>
+            Congratulations, you're more than halfway through the experiment! :)
+          </div>
+          <div>
+            Now, you may take a break for 3 minutes. Feel free to get some
+            water, go to the bathroom, or walk around. Or you can continue with
+            the experiment.
+          </div>
+          <div>
+            In the next section, you will be asked to check the correctness of a
+            series of proofs.
+          </div>
+        </div>
+        <div className="text-3xl font-bold text-center pt-8 pb-4">
           Time Left: {this.state.formattedTime}
         </div>
-        <br />
         <button onClick={this.handleContinue} className={buttonClasses}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mr-2">
             <polygon

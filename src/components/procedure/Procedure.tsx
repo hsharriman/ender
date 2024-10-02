@@ -1,29 +1,32 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
+  Page,
+  PageType,
+  TestType,
+  pageOrder,
+} from "../../core/testinfra/pageOrder";
+import { getHeaderType } from "../../core/testinfra/setupLayout";
+import { logEvent } from "../../core/testinfra/testUtils";
+import {
   InteractiveAppPage,
   InteractiveAppPageProps,
-} from "../components/ender/InteractiveAppPage";
-import {
-  StaticAppPage,
-  StaticAppPageProps,
-} from "../components/ender/StaticAppPage";
-import { BackgroundQuestions } from "../components/procedure/pages/BackgroundQuestions";
-import { InstructionPage } from "../components/procedure/pages/InstructionPage";
-import { IntroExperimentPage } from "../components/procedure/pages/IntroExpPage";
-import {
-  PretestAppPage,
-  PretestAppPageProps,
-} from "../components/procedure/pages/PretestAppPage";
-import { RestPage } from "../components/procedure/pages/RestPage";
-import { SavePage } from "../components/procedure/pages/SavePage";
-import { StartPage } from "../components/procedure/pages/StartPage";
-import { SusPage, SusProofType } from "../components/procedure/pages/SusPage";
-import { TutorialPage } from "../components/procedure/pages/TutorialPage";
-import { TestQuestions } from "../components/procedure/questions/TestQuestions";
-import { Page, PageType, pageOrder } from "../core/testinfra/pageOrder";
-import { getHeaderType } from "../core/testinfra/setupLayout";
-import { logEvent } from "../core/testinfra/testUtils";
+} from "../ender/InteractiveAppPage";
+import { StaticAppPage, StaticAppPageProps } from "../ender/StaticAppPage";
+import { BackgroundQuestions } from "./pages/BackgroundQuestions";
+import { InstructionPage } from "./pages/InstructionPage";
+import { IntroExperimentPage } from "./pages/IntroExpPage";
+import { PretestAppPage, PretestAppPageProps } from "./pages/PretestAppPage";
+import { RestPage } from "./pages/RestPage";
+import { SavePage } from "./pages/SavePage";
+import { StartPage } from "./pages/StartPage";
+import { SusPage } from "./pages/SusPage";
+import { TutorialPage } from "./pages/TutorialPage";
+import { TestQuestions } from "./questions/TestQuestions";
+
+export interface ProcedureProps {
+  type: TestType;
+}
 
 interface ProcedureState {
   activePage: number;
@@ -40,7 +43,9 @@ interface ProcedureState {
     [questionType: string]: boolean;
   };
 }
-export class Procedure extends React.Component<{}, ProcedureState> {
+
+// Procedure for Interactive Layout
+export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
   private meta: Page[] = [];
   private numPages: number = 0;
   constructor(props: any) {
@@ -59,7 +64,7 @@ export class Procedure extends React.Component<{}, ProcedureState> {
       version: PageType.Interactive,
       activeQuestionIdx: 0,
     };
-    this.meta = pageOrder();
+    this.meta = pageOrder(this.props.type);
     this.numPages = this.meta.length;
   }
 
@@ -285,21 +290,11 @@ export class Procedure extends React.Component<{}, ProcedureState> {
           key={"interactive-pg" + this.state.activePage}
         />
       );
-    } else if (currMeta.type === PageType.StaticSUS) {
+    } else if (currMeta.type === PageType.SUS) {
       pageContent = (
         <SusPage
           key={this.state.activePage}
-          type={SusProofType.Static}
-          updateAnswers={this.updateAnswers("Static SUS")}
-          onSubmit={() => this.onNext(1)}
-        />
-      );
-    } else if (currMeta.type === PageType.IntSUS) {
-      pageContent = (
-        <SusPage
-          key={this.state.activePage}
-          type={SusProofType.Interactive}
-          updateAnswers={this.updateAnswers("Interactive SUS")}
+          updateAnswers={this.updateAnswers("SUS")}
           onSubmit={() => this.onNext(1)}
         />
       );
