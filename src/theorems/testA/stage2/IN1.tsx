@@ -1,28 +1,25 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { ASA, ASAProps } from "../../../core/templates/ASA";
-import {
-  EqualAngleStep,
-  EqualAngles,
-} from "../../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
+import { ASA, ASAProps } from "../../../core/reasons/ASA";
+import { EqualAngleStep, EqualAngles } from "../../../core/reasons/EqualAngles";
+import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import {
   EqualSegmentStep,
   EqualSegments,
-} from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { Perpendicular } from "../../../core/templates/Perpendicular";
-import { Reflexive, ReflexiveStep } from "../../../core/templates/Reflexive";
+} from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { Perpendicular } from "../../../core/reasons/Perpendicular";
+import { Reflexive, ReflexiveStep } from "../../../core/reasons/Reflexive";
+import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
-import { exploratoryQuestion } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 

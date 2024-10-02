@@ -1,8 +1,3 @@
-import { triangleTextPreQuestions } from "../../questions/pretestQuestions";
-import {
-  tutorial1Steps,
-  tutorial3Steps,
-} from "../../questions/tutorialContent";
 import {
   P1,
   P2,
@@ -23,6 +18,8 @@ import {
   TutorialProof2,
 } from "../../theorems/tutorial/tutorial1";
 import { ProofMeta } from "../types/types";
+import { triangleTextPreQuestions } from "./questions/pretestQuestions";
+import { tutorial1Steps, tutorial3Steps } from "./questions/tutorialContent";
 import {
   fisherYates,
   interactiveLayout,

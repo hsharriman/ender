@@ -1,12 +1,15 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
-import { Diagram } from "../components/Diagram";
+import { Diagram } from "../components/ender/Diagram";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
-} from "../components/InteractiveAppPage";
-import { StaticAppPage, StaticAppPageProps } from "../components/StaticAppPage";
+} from "../components/ender/InteractiveAppPage";
+import {
+  StaticAppPage,
+  StaticAppPageProps,
+} from "../components/ender/StaticAppPage";
 import { interactiveLayout, staticLayout } from "../core/testinfra/setupLayout";
 import { LayoutProps } from "../core/types/types";
 import { T1_S1_C1 } from "../theorems/testA/stage1/C1";

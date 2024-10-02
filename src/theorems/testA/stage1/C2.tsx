@@ -1,26 +1,26 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Angle } from "../../../core/geometry/Angle";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { ASA, ASAProps } from "../../../core/templates/ASA";
-import { BaseAngle } from "../../../core/templates/BaseAngle";
-import { EqualAngles } from "../../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { Midpoint } from "../../../core/templates/Midpoint";
-import { Perpendicular } from "../../../core/templates/Perpendicular";
-import { Reflexive } from "../../../core/templates/Reflexive";
-import { RightAngle } from "../../../core/templates/RightAngle";
+import { ASA, ASAProps } from "../../../core/reasons/ASA";
+import { BaseAngle } from "../../../core/reasons/BaseAngle";
+import { EqualAngles } from "../../../core/reasons/EqualAngles";
+import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
+import { EqualSegments } from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { Midpoint } from "../../../core/reasons/Midpoint";
+import { Perpendicular } from "../../../core/reasons/Perpendicular";
+import { Reflexive } from "../../../core/reasons/Reflexive";
+import { RightAngle } from "../../../core/reasons/RightAngle";
+import { completeProof2 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
-import { completeProof2 } from "../../../questions/funcTypeQuestions";
 import { definitions } from "../../definitions";
 import { Reasons } from "../../reasons";
 import { linked, makeStepMeta, tooltip } from "../../utils";

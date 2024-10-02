@@ -1,23 +1,23 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { segmentStr } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
-import { EqualAngles } from "../../../core/templates/EqualAngles";
-import { EqualSegmentStep } from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { Midpoint } from "../../../core/templates/Midpoint";
-import { ParallelLines } from "../../../core/templates/ParallelLines";
-import { SAS, SASProps } from "../../../core/templates/SAS";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
+import { EqualAngles } from "../../../core/reasons/EqualAngles";
+import { EqualSegmentStep } from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { Midpoint } from "../../../core/reasons/Midpoint";
+import { ParallelLines } from "../../../core/reasons/ParallelLines";
+import { SAS, SASProps } from "../../../core/reasons/SAS";
+import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
-import { exploratoryQuestion } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
 import { linked, makeStepMeta } from "../../utils";
 

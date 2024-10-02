@@ -1,23 +1,23 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Angle } from "../../../core/geometry/Angle";
 import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { Reflexive } from "../../../core/templates/Reflexive";
-import { RightAngle } from "../../../core/templates/RightAngle";
-import { SAS, SASProps } from "../../../core/templates/SAS";
+import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
+import { EqualSegments } from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { Reflexive } from "../../../core/reasons/Reflexive";
+import { RightAngle } from "../../../core/reasons/RightAngle";
+import { SAS, SASProps } from "../../../core/reasons/SAS";
+import { checkingProof3 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
-import { checkingProof3 } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
 import { linked, makeStepMeta } from "../../utils";
 

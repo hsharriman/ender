@@ -1,22 +1,22 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, segmentStr } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
-import { EqualAngles } from "../../../core/templates/EqualAngles";
-import { EqualSegments } from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { ParallelLines } from "../../../core/templates/ParallelLines";
-import { SAS, SASProps } from "../../../core/templates/SAS";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
+import { EqualAngles } from "../../../core/reasons/EqualAngles";
+import { EqualSegments } from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { ParallelLines } from "../../../core/reasons/ParallelLines";
+import { SAS, SASProps } from "../../../core/reasons/SAS";
+import { completeProof1 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
-import { completeProof1 } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
 import { linked, makeStepMeta } from "../../utils";
 

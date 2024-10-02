@@ -1,22 +1,22 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Angle } from "../../../core/geometry/Angle";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { ASA, ASAProps } from "../../../core/templates/ASA";
-import { EqualAngles } from "../../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { Midpoint } from "../../../core/templates/Midpoint";
+import { ASA, ASAProps } from "../../../core/reasons/ASA";
+import { EqualAngles } from "../../../core/reasons/EqualAngles";
+import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
+import { EqualSegments } from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { Midpoint } from "../../../core/reasons/Midpoint";
+import { incompleteProof2 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
-import { incompleteProof2 } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 

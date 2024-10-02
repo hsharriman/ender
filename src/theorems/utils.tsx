@@ -1,5 +1,5 @@
-import { DefinitionTooltip } from "../components/DefinitionTooltip";
-import { LinkedText } from "../components/LinkedText";
+import { DefinitionTooltip } from "../components/ender/DefinitionTooltip";
+import { LinkedText } from "../components/ender/LinkedText";
 import { Content } from "../core/diagramContent";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
 import {

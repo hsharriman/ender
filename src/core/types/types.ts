@@ -1,8 +1,8 @@
-import { InteractiveAppPageProps } from "../../components/InteractiveAppPage";
-import { PretestAppPageProps } from "../../components/PretestAppPage";
-import { StaticAppPageProps } from "../../components/StaticAppPage";
-import { Question } from "../../questions/funcTypeQuestions";
+import { InteractiveAppPageProps } from "../../components/ender/InteractiveAppPage";
+import { StaticAppPageProps } from "../../components/ender/StaticAppPage";
+import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Content } from "../diagramContent";
+import { Question } from "../testinfra/questions/funcTypeQuestions";
 import { StepMeta } from "./stepTypes";
 
 // -------- GEOMETRY TYPES --------

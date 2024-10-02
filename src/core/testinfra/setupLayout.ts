@@ -1,4 +1,4 @@
-import { PretestAppPageProps } from "../../components/PretestAppPage";
+import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
 import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";

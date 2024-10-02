@@ -1,20 +1,20 @@
-import { PretestAppPageProps } from "../../components/PretestAppPage";
+import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Content } from "../../core/diagramContent";
 import { Angle } from "../../core/geometry/Angle";
 import { Point } from "../../core/geometry/Point";
 import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { ParallelLines } from "../../core/templates/ParallelLines";
-import { RightAngle } from "../../core/templates/RightAngle";
-import { SVGModes, Vector } from "../../core/types/types";
+import { EqualAngles } from "../../core/reasons/EqualAngles";
+import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
+import { EqualSegments } from "../../core/reasons/EqualSegments";
+import { ParallelLines } from "../../core/reasons/ParallelLines";
+import { RightAngle } from "../../core/reasons/RightAngle";
 import {
   anglePretestQuestions,
   segmentPretestQuestions,
   trianglePretestQuestions,
-} from "../../questions/pretestQuestions";
+} from "../../core/testinfra/questions/pretestQuestions";
+import { SVGModes, Vector } from "../../core/types/types";
 
 // TODO for some reason the bundling order doesn't work if this method isn't defined within this file
 /* Helper methods related to randomizing the proof order */

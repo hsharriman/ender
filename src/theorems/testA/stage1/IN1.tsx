@@ -1,20 +1,20 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
-import { EqualAngles } from "../../../core/templates/EqualAngles";
-import { EqualSegments } from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { SAS } from "../../../core/templates/SAS";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
+import { EqualAngles } from "../../../core/reasons/EqualAngles";
+import { EqualSegments } from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { SAS } from "../../../core/reasons/SAS";
+import { checkingProof1 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
-import { checkingProof1 } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 

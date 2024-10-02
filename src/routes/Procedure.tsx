@@ -1,32 +1,36 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { BackgroundQuestions } from "../components/BackgroundQuestions";
-import { InstructionPage } from "../components/InstructionPage";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
-} from "../components/InteractiveAppPage";
-import { IntroExperimentPage } from "../components/IntroExpPage";
+} from "../components/ender/InteractiveAppPage";
+import {
+  StaticAppPage,
+  StaticAppPageProps,
+} from "../components/ender/StaticAppPage";
+import { BackgroundQuestions } from "../components/procedure/pages/BackgroundQuestions";
+import { InstructionPage } from "../components/procedure/pages/InstructionPage";
+import { IntroExperimentPage } from "../components/procedure/pages/IntroExpPage";
 import {
   PretestAppPage,
   PretestAppPageProps,
-} from "../components/PretestAppPage";
-import { RestPage } from "../components/RestPage";
-import { SavePage } from "../components/SavePage";
-import { StartPage } from "../components/StartPage";
-import { StaticAppPage, StaticAppPageProps } from "../components/StaticAppPage";
-import { SusPage, SusProofType } from "../components/SusPage";
-import { TestQuestions } from "../components/TestQuestions";
-import { TutorialPage } from "../components/TutorialPage";
+} from "../components/procedure/pages/PretestAppPage";
+import { RestPage } from "../components/procedure/pages/RestPage";
+import { SavePage } from "../components/procedure/pages/SavePage";
+import { StartPage } from "../components/procedure/pages/StartPage";
+import { SusPage, SusProofType } from "../components/procedure/pages/SusPage";
+import { TutorialPage } from "../components/procedure/pages/TutorialPage";
+import { TestQuestions } from "../components/procedure/questions/TestQuestions";
 import { Page, PageType, pageOrder } from "../core/testinfra/pageOrder";
 import { getHeaderType } from "../core/testinfra/setupLayout";
-import { logEvent } from "../core/utils";
+import { logEvent } from "../core/testinfra/testUtils";
 
 interface ProcedureState {
   activePage: number;
   activeTest: number;
   isPaused: boolean;
   activeQuestionIdx: number;
+  version: PageType;
   answers: {
     [proofName: string]: {
       [question: string]: string;
@@ -52,6 +56,7 @@ export class Procedure extends React.Component<{}, ProcedureState> {
         DiagramState: false,
         TutorialInstructions: true,
       },
+      version: PageType.Interactive,
       activeQuestionIdx: 0,
     };
     this.meta = pageOrder();

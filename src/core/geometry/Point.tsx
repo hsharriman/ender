@@ -1,4 +1,4 @@
-import { ModeCSS } from "../svg/SVGStyles";
+import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LPoint, Obj, Vector } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 

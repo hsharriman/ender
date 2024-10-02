@@ -1,4 +1,4 @@
-import { ModeCSS } from "../svg/SVGStyles";
+import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LAngle, Obj, TickType } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";

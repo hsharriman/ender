@@ -1,26 +1,26 @@
 import { Content } from "../../core/diagramContent";
+import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
-import { AspectRatio } from "../../core/svg/svgTypes";
-import { EqualAngles } from "../../core/templates/EqualAngles";
+import { EqualAngles } from "../../core/reasons/EqualAngles";
 import {
   EqualSegmentStep,
   EqualSegments,
-} from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Reflexive, ReflexiveStep } from "../../core/templates/Reflexive";
-import { SAS, SASProps } from "../../core/templates/SAS";
+} from "../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../core/reasons/EqualTriangles";
+import { Reflexive, ReflexiveStep } from "../../core/reasons/Reflexive";
+import { SAS, SASProps } from "../../core/reasons/SAS";
+import {
+  tutorial1Questions,
+  tutorial2Questions,
+} from "../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import {
-  tutorial1Questions,
-  tutorial2Questions,
-} from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
