@@ -1,4 +1,3 @@
-import { Content } from "../diagramContent";
 import { StepFocusProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
@@ -11,7 +10,6 @@ export class VerticalAngles {
   static additions = (
     props: StepFocusProps,
     labels: VerticalAnglesProps,
-    a2Mode?: SVGModes,
     sMode?: SVGModes,
     numTicks = 1
   ) => {
@@ -22,14 +20,14 @@ export class VerticalAngles {
     props.ctx
       .getAngle(labels.angs[1])
       .addTick(props.frame, Obj.EqualAngleTick, numTicks)
-      .mode(props.frame, a2Mode || props.mode);
+      .mode(props.frame, props.mode2 || props.mode);
 
     // lines that intersect
     props.ctx.getSegment(labels.segs[0]).mode(props.frame, sMode || props.mode);
     props.ctx.getSegment(labels.segs[1]).mode(props.frame, sMode || props.mode);
   };
 
-  static text = (ctx: Content, labels: [string, string]) => {
-    return EqualAngles.text(ctx, labels);
+  static text = (labels: [string, string]) => {
+    return EqualAngles.text(labels);
   };
 }

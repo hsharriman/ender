@@ -35,11 +35,12 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
 
   renderPoints = () => {
     return this.props.ctx.points.flatMap((p, i) => {
+      const hoverable = this.props.isStatic ? false : !this.props.miniScale;
       return !this.props.miniScale ? (
         <SVGGeoPoint
           geoId={p.id}
           mode={this.props.miniScale ? SVGModes.Hidden : SVGModes.Default}
-          hoverable={!this.props.miniScale}
+          hoverable={hoverable}
           key={`${p.id}-${i}`}
           {...{
             p: p.labeled(),
@@ -104,7 +105,7 @@ export class Diagram extends React.Component<DiagramProps, DiagramState> {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : tri.getMode(frame) ?? SVGModes.Hidden;
-      const hoverable = this.props.isStatic ? false : !this.props.miniScale;
+      const hoverable = this.props.isStatic ? false : tri.hoverable;
       return (
         <SVGGeoTriangle
           geoId={tri.id}

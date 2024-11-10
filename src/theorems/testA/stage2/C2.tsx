@@ -11,15 +11,14 @@ import {
 } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
-import { Reflexive, ReflexiveStep } from "../../../core/reasons/Reflexive";
-import { SAS } from "../../../core/reasons/SAS";
+import { ReflexiveStep } from "../../../core/reasons/Reflexive";
 import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
@@ -70,16 +69,16 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (ctx: Content) => {
+  text: (isActive: boolean) => {
     return (
       <span>
-        {Perpendicular.text(ctx, "AC", ["AD", "CD"], "BD")}
+        {Perpendicular.text("AC", "BD")(isActive)}
         {comma}
-        {EqualSegments.text(ctx, ["AD", "DC"])}
+        {EqualSegments.text(["AD", "DC"])(isActive)}
         {comma}
-        {EqualAngles.text(ctx, ["FAB", "GCB"])}
+        {EqualAngles.text(["FAB", "GCB"])(isActive)}
         {comma}
-        {EqualSegments.text(ctx, ["AF", "CG"])}
+        {EqualSegments.text(["AF", "CG"])(isActive)}
       </span>
     );
   },
@@ -114,7 +113,7 @@ const proves: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["AFB", "CGB"]),
-  text: (ctx: Content) => EqualAngles.text(ctx, ["AFB", "CGB"]),
+  text: EqualAngles.text(["AFB", "CGB"]),
   staticText: () => EqualAngles.staticText(["AFB", "CGB"]),
 });
 
@@ -123,7 +122,7 @@ const step1: StepMeta = makeStepMeta({
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  text: (ctx: Content) => Perpendicular.text(ctx, "AC", ["AD", "CD"], "BD"),
+  text: Perpendicular.text("AC", "BD"),
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "BD", ["AD", "CD"]),
   staticText: () => Perpendicular.staticText("AC", "BD"),
@@ -143,7 +142,7 @@ const step6: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
-  text: (ctx: Content) => EqualRightAngles.text(ctx, ["ADB", "BDC"]),
+  text: EqualRightAngles.text(["ADB", "BDC"]),
   staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
 });
 
@@ -162,7 +161,7 @@ const step7: StepMeta = makeStepMeta({
     props.ctx.getSegment("AB").mode(props.frame, props.mode);
     props.ctx.getSegment("CB").mode(props.frame, props.mode);
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, ["ABD", "BCD"]),
+  text: EqualTriangles.text(["ABD", "BCD"]),
   staticText: () => EqualTriangles.staticText(["ABD", "BCD"]),
 });
 
@@ -187,7 +186,7 @@ const step9: StepMeta = makeStepMeta({
     props.ctx.getSegment("FB").mode(props.frame, props.mode);
     props.ctx.getSegment("GB").mode(props.frame, props.mode);
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, ["ABF", "BCG"]),
+  text: EqualTriangles.text(["ABF", "BCG"]),
   staticText: () => EqualTriangles.staticText(["ABF", "BCG"]),
 });
 
@@ -199,90 +198,9 @@ const step10: StepMeta = EqualAngleStep(
   [9]
 );
 
-const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  const defaultStepProps: StepFocusProps = {
-    ctx,
-    frame: "",
-    mode: SVGModes.Purple,
-  };
-
-  const reflex = ctx.addFrame("s5");
-  Reflexive.additions({ ...defaultStepProps, frame: reflex }, "BD", 3);
-
-  const perpLines = ctx.addFrame("s6");
-  Perpendicular.additions(
-    { ...defaultStepProps, frame: perpLines, mode: SVGModes.Focused },
-    "BD",
-    ["AD", "CD"]
-  );
-  EqualRightAngles.additions(
-    { ...defaultStepProps, frame: perpLines },
-    ["ADB", "BDC"],
-    SVGModes.Blue
-  );
-
-  const s7SAS = ctx.addFrame("s7");
-  SAS.additions(
-    { ...defaultStepProps, frame: s7SAS },
-    {
-      seg1s: { s: ["AD", "DC"], ticks: 1 },
-      seg2s: { s: ["BD", "BD"], ticks: 3 },
-      angles: { a: ["ADB", "BDC"], type: Obj.RightTick },
-      triangles: ["ADB", "BCD"],
-    },
-    SVGModes.Blue
-  );
-  ctx.getSegment("AB").mode(s7SAS, SVGModes.Purple); // TODO why doesn't this show as part of triangle?
-
-  const s8corresponding = ctx.addFrame("s8");
-  const s8Props = { ctx, frame: s8corresponding, mode: SVGModes.Focused };
-  EqualSegments.additions(s8Props, ["AD", "DC"], 1);
-  EqualSegments.additions(s8Props, ["BD", "BD"], 3);
-  EqualSegments.additions(
-    { ...defaultStepProps, frame: s8corresponding },
-    ["AB", "CB"],
-    4,
-    SVGModes.Blue
-  );
-  EqualRightAngles.additions(s8Props, ["ADB", "CDB"]);
-  EqualAngles.additions(s8Props, ["BAD", "BCD"], 2);
-  EqualAngles.additions(s8Props, ["ABD", "CBD"], 1);
-
-  const s9SAS = ctx.addFrame("s9");
-  SAS.additions(
-    { ...defaultStepProps, frame: s9SAS },
-    {
-      seg1s: { s: ["AB", "CB"], ticks: 4 },
-      seg2s: { s: ["FA", "GC"], ticks: 2 },
-      angles: { a: ["FAB", "GCB"], type: Obj.EqualAngleTick },
-      triangles: ["FAB", "GCB"],
-    },
-    SVGModes.Blue
-  );
-
-  const s10 = ctx.addFrame("s10");
-  const s10Props = { ctx, frame: s10, mode: SVGModes.Focused };
-  EqualSegments.additions(s10Props, ["AB", "CB"], 4);
-  EqualSegments.additions(s10Props, ["FA", "GC"], 2);
-  EqualSegments.additions(s10Props, ["FB", "GB"], 1);
-  EqualAngles.additions(s10Props, ["FAB", "GCB"], 1);
-  EqualAngles.additions(s10Props, ["FBA", "GBC"], 3);
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: s10 },
-    ["AFB", "CGB"],
-    2,
-    SVGModes.Blue
-  );
-
-  return ctx;
-};
-
 export const T1_S2_C2: LayoutProps = {
   name: "T1_S2_C2",
   questions: exploratoryQuestion(5, 10),
-  miniContent: miniContent(),
   baseContent,
   givens,
   proves,

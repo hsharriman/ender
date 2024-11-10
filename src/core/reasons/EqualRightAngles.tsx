@@ -1,28 +1,26 @@
-import { Content } from "../diagramContent";
+import { BGColors, chipText } from "../../theorems/utils";
 import { StepFocusProps } from "../types/stepTypes";
-import { SVGModes } from "../types/types";
+import { Obj } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 import { RightAngle } from "./RightAngle";
 
 export class EqualRightAngles {
   private static equalNinety = " = 90° = ";
-  static additions = (
-    props: StepFocusProps,
-    [a1, a2]: [string, string],
-    a2Mode?: SVGModes
-  ) => {
+  static additions = (props: StepFocusProps, [a1, a2]: [string, string]) => {
     RightAngle.additions({ ...props }, a1);
-    RightAngle.additions({ ...props, mode: a2Mode || props.mode }, a2);
+    RightAngle.additions({ ...props, mode: props.mode2 || props.mode }, a2);
   };
-  static text = (ctx: Content, [a1, a2]: [string, string]) => {
-    return (
-      <span>
-        {BaseAngle.text(ctx, a1)}
-        {this.equalNinety}
-        {BaseAngle.text(ctx, a2)}
-      </span>
-    );
-  };
+  static text =
+    ([a1, a2]: [string, string]) =>
+    (isActive: boolean) => {
+      return (
+        <span>
+          {chipText(Obj.Angle, a1, BGColors.Blue, isActive)}
+          {this.equalNinety}
+          {chipText(Obj.Angle, a2, BGColors.Purple, isActive)}
+        </span>
+      );
+    };
   static staticText = (a: [string, string]) => {
     return (
       <span>

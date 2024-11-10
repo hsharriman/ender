@@ -7,7 +7,7 @@ import {
   TickedAngles,
   TickedSegments,
 } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
+import { Obj } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
@@ -30,26 +30,17 @@ export class ASA {
     );
   };
 
-  static additions = (
-    props: StepFocusProps,
-    labels: ASAProps,
-    t2Mode?: SVGModes
-  ) => {
+  static additions = (props: StepFocusProps, labels: ASAProps) => {
     props.ctx.getTriangle(labels.triangles[0]).mode(props.frame, props.mode);
     props.ctx
       .getTriangle(labels.triangles[1])
-      .mode(props.frame, t2Mode || props.mode);
-    EqualSegments.additions(
-      props,
-      labels.segs.s,
-      labels.segs.ticks || 1,
-      t2Mode
-    );
+      .mode(props.frame, props.mode2 || props.mode);
+    EqualSegments.additions(props, labels.segs.s, labels.segs.ticks || 1);
     [labels.a1s, labels.a2s].forEach((a, i) => {
       if (a.type === Obj.RightTick) {
-        EqualRightAngles.additions(props, a.a, t2Mode);
+        EqualRightAngles.additions(props, a.a);
       } else {
-        EqualAngles.additions(props, a.a, a.ticks || 1, t2Mode);
+        EqualAngles.additions(props, a.a, a.ticks || 1);
       }
     });
   };

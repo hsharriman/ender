@@ -12,7 +12,7 @@ import {
 } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
-import { Reflexive, ReflexiveStep } from "../../../core/reasons/Reflexive";
+import { ReflexiveStep } from "../../../core/reasons/Reflexive";
 import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
@@ -74,14 +74,14 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (ctx: Content) => {
+  text: (isActive: boolean) => {
     return (
       <span>
-        {Perpendicular.text(ctx, "LU", ["LS", "SU"], "PS")}
+        {Perpendicular.text("LU", "PS")(isActive)}
         {comma}
-        {EqualSegments.text(ctx, ["LN", "QU"])}
+        {EqualSegments.text(["LN", "QU"])(isActive)}
         {comma}
-        {EqualAngles.text(ctx, ["LPS", "UPS"])}
+        {EqualAngles.text(["LPS", "UPS"])(isActive)}
       </span>
     );
   },
@@ -117,7 +117,7 @@ const proves: StepMeta = makeStepMeta({
     props.ctx.getTriangle("LNU").mode(props.frame, props.mode);
     props.ctx.getTriangle("UQL").mode(props.frame, props.mode);
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, ["LNU", "UQL"]),
+  text: EqualTriangles.text(["LNU", "UQL"]),
   staticText: () => EqualTriangles.staticText(["LNU", "UQL"]),
 });
 
@@ -128,7 +128,7 @@ const step1: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "PS", ["LS", "SU"]),
-  text: (ctx: Content) => Perpendicular.text(ctx, "LU", ["LS", "SU"], "PS"),
+  text: Perpendicular.text("LU", "PS"),
   staticText: () => Perpendicular.staticText("PS", "LU"),
 });
 
@@ -145,7 +145,7 @@ const step4: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["PSL", "PSU"]),
-  text: (ctx: Content) => EqualRightAngles.text(ctx, ["PSL", "PSU"]),
+  text: EqualRightAngles.text(["PSL", "PSU"]),
   staticText: () => EqualRightAngles.staticText(["PSL", "PSU"]),
 });
 
@@ -166,7 +166,7 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     ASA.additions(props, step6ASAProps);
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, step6ASAProps.triangles),
+  text: EqualTriangles.text(step6ASAProps.triangles),
   staticText: () => EqualTriangles.staticText(step6ASAProps.triangles),
 });
 
@@ -180,7 +180,7 @@ const step7: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["SLP", "SUP"], 2);
   },
-  text: (ctx: Content) => EqualAngles.text(ctx, ["SLP", "SUP"]),
+  text: EqualAngles.text(["SLP", "SUP"]),
   staticText: () => EqualAngles.staticText(["SLP", "SUP"]),
 });
 
@@ -195,7 +195,7 @@ const step8: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["LNU", "UQL"], 3);
   },
-  text: (ctx: Content) => EqualAngles.text(ctx, ["LNU", "UQL"]),
+  text: EqualAngles.text(["LNU", "UQL"]),
   staticText: () => EqualAngles.staticText(["LNU", "UQL"]),
 });
 
@@ -215,83 +215,14 @@ const step9: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     ASA.additions(props, step9ASAProps);
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, step9ASAProps.triangles),
+  text: EqualTriangles.text(step9ASAProps.triangles),
   staticText: () => EqualTriangles.staticText(step9ASAProps.triangles),
 });
-
-export const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  const defaultStepProps: StepFocusProps = {
-    ctx,
-    frame: "",
-    mode: SVGModes.Purple,
-  };
-
-  const congadj = ctx.addFrame("s4");
-  Perpendicular.additions(
-    { ctx, mode: SVGModes.Focused, frame: congadj },
-    "PS",
-    ["LS", "SU"]
-  );
-  EqualRightAngles.additions(
-    { ...defaultStepProps, frame: congadj },
-    ["PSL", "PSU"],
-    SVGModes.Blue
-  );
-
-  const reflex = ctx.addFrame("s5");
-  Reflexive.additions({ ...defaultStepProps, frame: reflex }, "PS", 2);
-
-  const asa = ctx.addFrame("s6");
-  ASA.additions(
-    { ...defaultStepProps, frame: asa },
-    step6ASAProps,
-    SVGModes.Blue
-  );
-
-  const corang1 = ctx.addFrame("s7");
-  const s7Props = { ctx, frame: corang1, mode: SVGModes.Focused };
-  EqualRightAngles.additions(s7Props, ["PSL", "PSU"]);
-  EqualAngles.additions(s7Props, ["LPS", "UPS"], 1);
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: corang1 },
-    ["SLP", "SUP"],
-    2,
-    SVGModes.Blue
-  );
-  EqualSegments.additions(s7Props, ["PS", "PS"], 2);
-  EqualSegments.additions(s7Props, ["LS", "SU"], 1);
-  EqualSegments.additions(s7Props, ["PL", "PU"], 3);
-
-  const corang2 = ctx.addFrame("s8");
-  const s8Props = { ctx, frame: corang2, mode: SVGModes.Focused };
-  EqualAngles.additions(s8Props, ["ULN", "LUQ"], 2);
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: corang2 },
-    ["UQL", "LNU"],
-    3,
-    SVGModes.Blue
-  );
-  EqualAngles.additions(s8Props, ["QLU", "LUN"], 1);
-  EqualSegments.additions(s8Props, ["LU", "LU"], 3);
-  EqualSegments.additions(s8Props, ["LN", "QU"], 1);
-  EqualSegments.additions(s8Props, ["LQ", "NU"], 2);
-
-  const asa2 = ctx.addFrame("s9");
-  ASA.additions(
-    { ...defaultStepProps, frame: asa2 },
-    step9ASAProps,
-    SVGModes.Blue
-  );
-  return ctx;
-};
 
 export const T1_S2_IN1: LayoutProps = {
   name: "T1_S2_IN1",
   questions: exploratoryQuestion(4, 9),
   baseContent,
-  miniContent: miniContent(),
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8, step9],

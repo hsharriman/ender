@@ -14,7 +14,7 @@ export const Reasons = {
     body: "If two lines intersect each other, then the angles that are opposite from each other are congruent.",
   },
   ConverseAltInteriorAngs: {
-    title: "Converse of Alternate Interior Angles",
+    title: "Alternate Interior Angles (Converse)",
     body: "If a transversal (a line that crosses two or more lines) forms opposite interior angles that are congruent, then the two lines it intersects with are parallel to each other.",
   },
   AlternateInteriorAngles: {
@@ -38,7 +38,7 @@ export const Reasons = {
     body: "The point that is halfway between two endpoints of a segment.",
   },
   ConverseMidpoint: {
-    title: "Converse of Def. Midpoint",
+    title: "Def. Midpoint (Converse)",
     body: "If two subsections of a line are congruent, then the point dividing those subsections is the midpoint.",
   },
   CongAdjAngles: {

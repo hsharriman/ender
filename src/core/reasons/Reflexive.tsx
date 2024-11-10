@@ -1,7 +1,11 @@
 import { definitions } from "../../theorems/definitions";
 import { Reasons } from "../../theorems/reasons";
-import { linked, makeStepMeta, tooltip } from "../../theorems/utils";
-import { Content } from "../diagramContent";
+import {
+  BGColors,
+  chipText,
+  makeStepMeta,
+  tooltip,
+} from "../../theorems/utils";
 import { resizedStrs } from "../geometryText";
 import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
@@ -14,14 +18,12 @@ export class Reflexive {
       .addTick(props.frame, Obj.EqualLengthTick, num)
       .mode(props.frame, props.mode);
   };
-  static text = (ctx: Content, s: string) => {
-    const seg = ctx.getSegment(s);
-    const MKLinked = linked(s, seg);
+  static text = (s: string) => (isActive: boolean) => {
     return (
       <span>
-        {MKLinked}
+        {chipText(Obj.Segment, s, BGColors.Blue, isActive)}
         {tooltip(resizedStrs.congruent, definitions.CongruentLines)}
-        {MKLinked}
+        {chipText(Obj.Segment, s, BGColors.Blue, isActive)}
       </span>
     );
   };
@@ -35,11 +37,14 @@ export const ReflexiveStep = (seg: string, num: number, step: StepMeta) =>
     reason: Reasons.Reflexive,
     unfocused: (props: StepUnfocusProps) => {
       step.unfocused(props);
-      step.additions({ ...props, mode: SVGModes.Unfocused });
+      step.additions({
+        ...props,
+        mode: SVGModes.Unfocused,
+      });
     },
     additions: (props: StepFocusProps) => {
       Reflexive.additions(props, seg, num);
     },
-    text: (ctx: Content) => Reflexive.text(ctx, seg),
+    text: Reflexive.text(seg),
     staticText: () => Reflexive.staticText(seg),
   });

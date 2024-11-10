@@ -1,18 +1,10 @@
-import { linked } from "../../theorems/utils";
-import { Content } from "../diagramContent";
-import { BaseGeometryObject } from "../geometry/BaseGeometryObject";
+import { BGColors, chipText } from "../../theorems/utils";
 import { angleStr } from "../geometryText";
+import { Obj } from "../types/types";
 
 export class BaseAngle {
-  static text = (ctx: Content, a: string) => {
-    const ang = ctx.getAngle(a);
-    // add segments to highlight on hover list.
-    // If angle is named XYZ, segments will be XY and YZ.
-    let deps: BaseGeometryObject[] = [
-      ctx.getSegment(a.substring(0, 2)),
-      ctx.getSegment(a.substring(1, 3)),
-    ];
-    return linked(a, ang, deps);
+  static text = (a: string, clr: BGColors) => (isActive: boolean) => {
+    return chipText(Obj.Angle, a, clr, isActive);
   };
   static staticText = (a: string) => {
     return angleStr(a);

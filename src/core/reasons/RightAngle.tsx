@@ -1,5 +1,4 @@
-import { makeStepMeta } from "../../theorems/utils";
-import { Content } from "../diagramContent";
+import { BGColors, makeStepMeta } from "../../theorems/utils";
 import { angleStr } from "../geometryText";
 import { StepFocusProps, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, Reason } from "../types/types";
@@ -13,10 +12,10 @@ export class RightAngle {
       .addTick(props.frame, Obj.RightTick)
       .mode(props.frame, props.mode);
   };
-  static text = (ctx: Content, a: string) => {
+  static text = (a: string) => (isActive: boolean) => {
     return (
       <span>
-        {BaseAngle.text(ctx, a)}
+        {BaseAngle.text(a, BGColors.Blue)(isActive)}
         {this.rightText}
       </span>
     );
@@ -42,7 +41,7 @@ export const RightAngleStep = (
     dependsOn,
     unfocused,
     additions: (props: StepFocusProps) => RightAngle.additions(props, a),
-    text: (ctx: Content) => RightAngle.text(ctx, a),
+    text: RightAngle.text(a),
     staticText: () => RightAngle.staticText(a),
   });
 };

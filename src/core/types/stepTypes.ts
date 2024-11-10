@@ -8,10 +8,11 @@ export interface StepUnfocusProps {
 }
 export interface StepFocusProps extends StepUnfocusProps {
   mode: SVGModes;
+  mode2?: SVGModes;
 }
 export interface ProofTextItem {
   k: string;
-  v: JSX.Element;
+  v: (isActive: boolean) => JSX.Element;
   reason?: string;
   dependsOn?: Set<string>;
   alwaysActive?: boolean;
@@ -35,7 +36,7 @@ export interface TickedAngles {
 export interface SetupStepMeta {
   unfocused: (props: StepUnfocusProps) => void;
   diagram: (ctx: Content, frame: string) => void;
-  text: (ctx: Content) => JSX.Element;
+  text: (isActive: boolean) => JSX.Element;
   staticText: () => JSX.Element;
   additions: (props: StepFocusProps) => void;
 }

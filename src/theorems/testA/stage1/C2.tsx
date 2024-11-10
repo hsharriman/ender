@@ -23,7 +23,7 @@ import {
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { definitions } from "../../definitions";
 import { Reasons } from "../../reasons";
-import { linked, makeStepMeta, tooltip } from "../../utils";
+import { BGColors, chipText, makeStepMeta, tooltip } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -67,16 +67,14 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (ctx: Content) => {
-    const BD = ctx.getSegment("BD");
-
+  text: (isActive: boolean) => {
     return (
       <span>
-        {RightAngle.text(ctx, "ADB")}
+        {RightAngle.text("ADB")(isActive)}
         {comma}
-        {linked("BD", BD)}
+        {segmentStr("BD")}
         {tooltip(<span> bisects </span>, definitions.Bisector)}
-        {BaseAngle.text(ctx, "ABC")}
+        {BaseAngle.text("ABC", BGColors.Blue)(isActive)}
       </span>
     );
   },
@@ -109,9 +107,7 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "D", ["AD", "CD"]);
   },
-  text: (ctx: Content) => {
-    return Midpoint.text(ctx, "AC", ["AD", "CD"], "D");
-  },
+  text: Midpoint.text("AC", "D"),
   staticText: () => Midpoint.staticText("D", "AC"),
 });
 
@@ -123,7 +119,7 @@ const step1: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     RightAngle.additions(props, "ADB");
   },
-  text: (ctx: Content) => RightAngle.text(ctx, "ADB"),
+  text: RightAngle.text("ADB"),
   staticText: () => RightAngle.staticText("ADB"),
 });
 
@@ -136,16 +132,12 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["ABD", "CBD"]);
   },
-  text: (ctx: Content) => {
-    const BD = ctx.getSegment("BD");
-    const ABD = ctx.getAngle("ABD");
-    const DBC = ctx.getAngle("CBD");
-
+  text: (isActive: boolean) => {
     return (
       <span>
-        {linked("BD", BD)}
+        {chipText(Obj.Segment, "BD", BGColors.Blue, isActive)}
         {tooltip(<span> bisects </span>, definitions.Bisector)}
-        {linked("ABC", ABD, [DBC, ctx.getSegment("AB"), ctx.getSegment("BC")])}
+        {chipText(Obj.Angle, "ABC", BGColors.Purple, isActive)}
       </span>
     );
   },
@@ -165,7 +157,7 @@ const step3: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "BD", ["AD", "DC"]),
-  text: (ctx: Content) => Perpendicular.text(ctx, "AC", ["AD", "DC"], "BD"),
+  text: Perpendicular.text("AC", "BD"),
   staticText: () => Perpendicular.staticText("BD", "AC"),
 });
 
@@ -178,7 +170,7 @@ const step4: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
-  text: (ctx: Content) => EqualRightAngles.text(ctx, ["ADB", "BDC"]),
+  text: EqualRightAngles.text(["ADB", "BDC"]),
   staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
 });
 
@@ -189,7 +181,7 @@ const step5: StepMeta = makeStepMeta({
     step4.unfocused(props);
   },
   additions: (props: StepFocusProps) => Reflexive.additions(props, "BD"),
-  text: (ctx: Content) => Reflexive.text(ctx, "BD"),
+  text: Reflexive.text("BD"),
   staticText: () => Reflexive.staticText("BD"),
 });
 
@@ -205,7 +197,7 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     ASA.additions(props, step5ASAProps);
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, ["ABD", "CBD"]),
+  text: EqualTriangles.text(["ABD", "CBD"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
 });
 
@@ -213,11 +205,15 @@ const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: [6],
   unfocused: (props: StepUnfocusProps) => {
-    step6.additions({ ...props, mode: SVGModes.Unfocused });
+    step6.additions({
+      ...props,
+      mode: SVGModes.Unfocused,
+      mode2: SVGModes.Unfocused,
+    });
   },
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AD", "DC"], 2),
-  text: (ctx: Content) => EqualSegments.text(ctx, ["AD", "DC"]),
+  text: EqualSegments.text(["AD", "DC"]),
   staticText: () => EqualSegments.staticText(["AD", "DC"]),
 });
 
@@ -228,7 +224,7 @@ const step8: StepMeta = makeStepMeta({
     step7.unfocused(props);
   },
   additions: (props: StepFocusProps) => step7.additions(props),
-  text: (ctx: Content) => Midpoint.text(ctx, "AC", ["AD", "DC"], "D"),
+  text: Midpoint.text("AC", "D"),
   staticText: () => Midpoint.staticText("D", "AC"),
 });
 
@@ -238,7 +234,14 @@ export const miniContent = () => {
   const defaultStepProps: StepFocusProps = {
     ctx,
     frame: "",
-    mode: SVGModes.Purple,
+    mode: SVGModes.Blue,
+    mode2: SVGModes.Purple,
+  };
+
+  const focusProps: StepFocusProps = {
+    ctx,
+    frame: "",
+    mode: SVGModes.Focused,
   };
 
   // STEP 2 - PERPENDICULAR LINES
@@ -252,11 +255,10 @@ export const miniContent = () => {
   BD.mode(step3, SVGModes.Focused);
   AD.mode(step3, SVGModes.Focused);
   CD.mode(step3, SVGModes.Focused);
-  EqualRightAngles.additions(
-    { ...defaultStepProps, frame: step3 },
-    ["ADB", "BDC"],
-    SVGModes.Blue
-  );
+  EqualRightAngles.additions({ ...defaultStepProps, frame: step3 }, [
+    "ADB",
+    "BDC",
+  ]);
 
   // STEP 3 - REFLEXIVE PROPERTY
   const step4 = ctx.addFrame("s5");
@@ -271,44 +273,22 @@ export const miniContent = () => {
       a2s: { a: ["ABD", "CBD"], type: Obj.EqualAngleTick },
       segs: { s: ["BD", "BD"] },
       triangles: ["ABD", "CBD"],
-    },
-    SVGModes.Blue
+    }
   );
 
   // STEP 5 - CORRESPONDING SEGMENTS
   const step6 = ctx.addFrame("s7");
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
-    ["ABD", "CBD"]
-  );
-  Reflexive.additions(
-    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
-    "BD"
-  );
-  EqualRightAngles.additions(
-    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
-    ["ADB", "BDC"]
-  );
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
-    ["ABD", "CBD"]
-  );
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
-    ["BAD", "BCD"],
-    2
-  );
+  EqualAngles.additions({ ...focusProps, frame: step6 }, ["ABD", "CBD"]);
+  Reflexive.additions({ ...focusProps, frame: step6 }, "BD");
+  EqualRightAngles.additions({ ...focusProps, frame: step6 }, ["ADB", "BDC"]);
+  EqualAngles.additions({ ...focusProps, frame: step6 }, ["ABD", "CBD"]);
+  EqualAngles.additions({ ...focusProps, frame: step6 }, ["BAD", "BCD"], 2);
   EqualSegments.additions(
     { ...defaultStepProps, frame: step6 },
     ["AD", "DC"],
-    2,
-    SVGModes.Blue
+    2
   );
-  EqualSegments.additions(
-    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
-    ["AB", "CB"],
-    3
-  );
+  EqualSegments.additions({ ...focusProps, frame: step6 }, ["AB", "CB"], 3);
 
   // STEP 6 - MIDPOINT
   const step7 = ctx.addFrame("s8");
@@ -324,7 +304,6 @@ export const T1_S1_C2: LayoutProps = {
   name: "T1_S1_C2",
   questions: completeProof2,
   baseContent,
-  miniContent: miniContent(),
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8],

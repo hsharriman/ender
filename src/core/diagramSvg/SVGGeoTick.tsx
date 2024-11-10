@@ -12,7 +12,7 @@ const ARC_PADDING = 0.2;
 const PARALLEL_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.6 : 0.35);
 const RIGHT_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.5 : 0.3);
 const EQ_LEN_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.3 : 0.2);
-const TICK_SPACING = (miniScale: boolean) => (miniScale ? 0.3 : 0.15);
+const TICK_SPACING = (miniScale: boolean) => (miniScale ? 0.3 : 0.25);
 
 export type SVGTickProps = {
   parent: LSegment | LAngle;

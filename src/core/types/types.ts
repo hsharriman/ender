@@ -67,7 +67,7 @@ export interface StaticLayoutProps {
 }
 
 export interface InteractiveLayoutProps extends StaticLayoutProps {
-  miniContent: Content;
+  // miniContent: Content;
 }
 
 export type LayoutProps = InteractiveLayoutProps & StaticLayoutProps;

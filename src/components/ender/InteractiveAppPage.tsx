@@ -66,7 +66,7 @@ export class InteractiveAppPage extends React.Component<
           <ReliesOn
             reliesOn={this.props.ctx.deps}
             activeFrame={this.state.activeFrame}
-            rowHeight={rowsCompact ? 46 : 64}
+            rowHeight={rowsCompact ? 46 : 46}
           />
         )}
         <div className="top-0 left-0 max-w-[1800px] min-w-[1500px] h-full font-notoSans text-slate-800 grid grid-rows-1 grid-cols-12 pl-6">
@@ -102,28 +102,6 @@ export class InteractiveAppPage extends React.Component<
             </div>
 
             <div className="flex flex-row max-w-[1000px] min-w-[700px] h-44">
-              {this.props.miniCtx.frames.find(
-                (s) => s === this.state.activeFrame
-              ) && (
-                <div
-                  className="col-span-3"
-                  onMouseEnter={this.onMouseEnter}
-                  onMouseLeave={this.onMouseLeave}
-                >
-                  <Diagram
-                    width={
-                      this.props.ctx.aspect === AspectRatio.Landscape
-                        ? "200px"
-                        : "150px"
-                    }
-                    height="100%"
-                    svgIdSuffix={`mini`}
-                    activeFrame={this.state.activeFrame}
-                    ctx={this.props.miniCtx}
-                    miniScale={true}
-                  />
-                </div>
-              )}
               <div className="col-span-5 pl-2 max-w-[500px] min-w-[460px]">
                 <ReasonText
                   activeFrame={this.state.activeFrame}

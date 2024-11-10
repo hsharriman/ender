@@ -4,7 +4,6 @@ import { Angle } from "../../../core/geometry/Angle";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
-import { ASA, ASAProps } from "../../../core/reasons/ASA";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
@@ -16,7 +15,7 @@ import {
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
@@ -66,14 +65,14 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   // TODO: looks like equalrightangles doesn't have tickless text?
-  text: (ctx: Content) => {
-    const PeqM = EqualRightAngles.text(ctx, ["QPR", "RMN"]);
+  text: (isActive: boolean) => {
+    const PeqM = EqualRightAngles.text(["QPR", "RMN"])(isActive);
 
     return (
       <span>
         {PeqM}
         {comma}
-        {Midpoint.text(ctx, "PM", ["PR", "MR"], "R")}
+        {Midpoint.text("PM", "R")(isActive)}
       </span>
     );
   },
@@ -103,9 +102,7 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["QR", "NR"]);
   },
-  text: (ctx: Content) => {
-    return Midpoint.text(ctx, "QN", ["QR", "NR"], "R");
-  },
+  text: Midpoint.text("QN", "R"),
   staticText: () => Midpoint.staticText("R", "QN"),
 });
 
@@ -117,9 +114,7 @@ const step1: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["QPR", "RMN"]);
   },
-  text: (ctx: Content) => {
-    return EqualRightAngles.text(ctx, ["QPR", "RMN"]);
-  },
+  text: EqualRightAngles.text(["QPR", "RMN"]),
   staticText: () => EqualRightAngles.staticText(["QPR", "RMN"]),
 });
 
@@ -132,9 +127,7 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["PR", "RM"]);
   },
-  text: (ctx: Content) => {
-    return Midpoint.text(ctx, "PM", ["PR", "RM"], "R");
-  },
+  text: Midpoint.text("PM", "R"),
   staticText: () => Midpoint.staticText("R", "PM"),
 });
 
@@ -148,9 +141,7 @@ const step22: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["PR", "RM"]);
   },
-  text: (ctx: Content) => {
-    return EqualSegments.text(ctx, ["PR", "RM"]);
-  },
+  text: EqualSegments.text(["PR", "RM"]),
   staticText: () => EqualSegments.staticText(["PR", "RM"]),
 });
 
@@ -160,7 +151,7 @@ const step3: StepMeta = makeStepMeta({
     step22.additions({ ...props, mode: SVGModes.Unfocused });
     step22.unfocused(props);
   },
-  text: (ctx: Content) => EqualAngles.text(ctx, ["QRP", "MRN"]),
+  text: EqualAngles.text(["QRP", "MRN"]),
   staticText: () => EqualAngles.staticText(["QRP", "MRN"]),
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["QRP", "MRN"]),
@@ -169,7 +160,7 @@ const step3: StepMeta = makeStepMeta({
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
   dependsOn: [1, 3, 4],
-  text: (ctx: Content) => EqualTriangles.text(ctx, ["QPR", "RMN"]),
+  text: EqualTriangles.text(["QPR", "RMN"]),
   staticText: () => EqualTriangles.staticText(["QPR", "RMN"]),
 
   additions: (props: StepFocusProps) => {
@@ -189,9 +180,7 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["QR", "RN"], 2);
   },
-  text: (ctx: Content) => {
-    return EqualSegments.text(ctx, ["QR", "RN"]);
-  },
+  text: EqualSegments.text(["QR", "RN"]),
   staticText: () => EqualSegments.staticText(["QR", "RN"]),
 });
 
@@ -205,66 +194,13 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["QR", "NR"], 2);
   },
-  text: (ctx: Content) => Midpoint.text(ctx, "QN", ["QR", "NR"], "R"),
+  text: Midpoint.text("QN", "R"),
   staticText: () => Midpoint.staticText("R", "QN"),
 });
-
-const miniContent = () => {
-  let ctx = baseContent(false, false);
-  const defaultProps = { ctx, frame: "", mode: SVGModes.Purple };
-
-  // VERTICAL ANGLES
-  const step3 = ctx.addFrame("s4");
-  ctx.getSegment("QR").mode(step3, SVGModes.Focused);
-  ctx.getSegment("RN").mode(step3, SVGModes.Focused);
-  ctx.getSegment("PR").mode(step3, SVGModes.Focused);
-  ctx.getSegment("RM").mode(step3, SVGModes.Focused);
-  EqualAngles.additions(
-    { ...defaultProps, frame: step3 },
-    ["QRP", "MRN"],
-    1,
-    SVGModes.Blue
-  );
-  // ASA
-  const step4 = ctx.addFrame("s5");
-  const asaProps: ASAProps = {
-    a1s: { a: ["QRP", "MRN"], type: Obj.EqualAngleTick },
-    a2s: { a: ["QPR", "NMR"], type: Obj.RightTick },
-    segs: { s: ["PR", "RM"] },
-    triangles: ["QPR", "RMN"],
-  };
-  ASA.additions({ ...defaultProps, frame: step4 }, asaProps, SVGModes.Blue);
-  // CORRESPONDING SEGMENTS
-  const step5 = ctx.addFrame("s6");
-  const s5props = { ctx, mode: SVGModes.Focused, frame: step5 };
-  EqualSegments.additions(
-    { ...defaultProps, frame: step5 },
-    ["QR", "RN"],
-    2,
-    SVGModes.Blue
-  );
-  EqualSegments.additions(s5props, ["PR", "RM"], 1);
-  EqualSegments.additions(s5props, ["QP", "MN"], 3);
-  EqualAngles.additions(s5props, ["QRP", "MRN"], 1);
-  EqualRightAngles.additions(s5props, ["QPR", "NMR"]);
-  EqualAngles.additions(s5props, ["PQR", "MNR"], 2);
-
-  // MIDPOINT
-  const step6 = ctx.addFrame("s7");
-  Midpoint.additions(
-    { ...defaultProps, frame: step6 },
-    "R",
-    ["QR", "NR"],
-    2,
-    SVGModes.Blue
-  );
-  return ctx;
-};
 
 export const T1_S1_C3: LayoutProps = {
   name: "T1_S1_C3",
   questions: incompleteProof2,
-  miniContent: miniContent(),
   baseContent,
   givens,
   proves,

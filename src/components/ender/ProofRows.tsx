@@ -121,9 +121,9 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           onClick={this.onClick}
           className="py-2 border-b-2 border-gray-300 text-md w-full h-12 ml-2 focus:outline-none"
         >
-          <div className="flex flex-row justify-start gap-8 align-baseline ml-2 border-slate-800">
+          <div className="flex flex-row justify-start gap-8 align-baseline items-baseline ml-2 border-slate-800">
             <div className="font-semibold ">{`${premise}:`} </div>
-            {item.v}
+            {item.v(this.props.active === item.k)}
           </div>
         </button>
       </div>
@@ -134,9 +134,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     const activeItem = this.props.items[this.state.idx];
     const isActive = activeItem && item.k === activeItem.k;
     // if the active row is given or prove, focus all the proof rows
-    const depends =
-      (activeItem && activeItem.dependsOn?.has(item.k)) ||
-      new Set(["given", "prove"]).has(activeItem.k);
+    const depends = (activeItem && activeItem.dependsOn?.has(item.k)) || false;
     return (
       <ProofRow
         isActive={isActive}
@@ -146,6 +144,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         revealed={this.state.revealed < i + 1}
         item={item}
         i={i}
+        activeIdx={this.state.idx}
         isCompact={this.props.isCompact}
       />
     );
@@ -216,15 +215,16 @@ interface ProofRowProps {
   i: number;
   depends: boolean;
   isCompact: boolean;
+  activeIdx: number;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 export class ProofRow extends React.Component<ProofRowProps> {
   private idPrefix = "prooftext-";
   private textClr = () => {
     let css = this.props.isActive
-      ? `text-slate-800 font-[500] `
+      ? `text-slate-900 font-semibold stroke-slate-900 `
       : this.props.depends
-      ? `text-slate-600 `
+      ? `text-slate-800 `
       : `text-slate-400 `;
     return css;
   };
@@ -235,11 +235,35 @@ export class ProofRow extends React.Component<ProofRowProps> {
       : "border-slate-400";
   };
 
+  private bgClr = () => {
+    return this.props.isActive
+      ? "bg-blue-200"
+      : this.props.depends
+      ? "bg-blue-100"
+      : "bg-transparent";
+  };
+
   render() {
     // if the active row is given or prove, focus all the proof rows
-    const h = this.props.isCompact ? "h-12" : "h-16";
+    const h = this.props.isCompact ? "h-12" : "h-12";
     const fontSize = this.props.isCompact ? "text-md" : "text-lg";
-    const padding = this.props.isCompact ? "py-2" : "py-4";
+    const padding = this.props.isCompact ? "py-2" : "py-2";
+    const num = (
+      <div
+        className={`${
+          this.props.isActive
+            ? "bg-black text-white"
+            : this.props.i > this.props.activeIdx - 2
+            ? "bg-white border-2 border-slate-500 text-slate-500"
+            : this.props.depends
+            ? "bg-slate-500 text-white"
+            : "bg-slate-200 text-black"
+        } font-bold w-8 h-8 rounded-2xl flex justify-center items-center flex-row`}
+      >
+        {this.props.i + 1}
+      </div>
+    );
+    const btnStyle = ` border-l-4 border-l-gray-800 ml-6 border-gray-300 border-r-2 border-r-gray-300 border-b-2 w-full ${h} ${fontSize} focus:outline-none`;
     return (
       <div
         className={`flex flex-row justify-start ${h}`}
@@ -249,42 +273,38 @@ export class ProofRow extends React.Component<ProofRowProps> {
         {this.props.revealed ? (
           <button
             id={`${this.idPrefix}${this.props.item.k}`}
-            className={`border-gray-300 border-b-2 w-full ${h} ml-6 ${fontSize} focus:outline-none`}
+            className={btnStyle}
             onClick={this.props.onClick}
           >
             <div
               className={`${this.textClr()} ${this.borderClr()} ${padding}  grid grid-rows-1 grid-cols-2`}
             >
-              <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-                <div className="text-slate-400 font-bold">
-                  {this.props.i + 1}
-                </div>
+              <div className="flex flex-row justify-start gap-8 -ml-4 align-baseline">
+                {num}
+                <div></div>
               </div>
             </div>
           </button>
         ) : (
           <div className={`flex flex-row justify-start ${h} w-full`}>
-            {highlightBar(this.props.isActive, h)}
             <button
               id={`${this.idPrefix}${this.props.item.k}`}
               onClick={this.props.onClick}
-              className={`border-gray-300 border-b-2 w-full ${h} ml-2 ${fontSize} focus:outline-none`}
+              className={this.bgClr() + btnStyle}
             >
               <div
-                className={`${this.textClr()} ${this.borderClr()} ${padding}  grid grid-rows-1 grid-cols-2`}
+                className={`${this.textClr()} ${this.borderClr()} grid grid-rows-1 grid-cols-2  h-full`}
               >
-                <div className="flex flex-row justify-start gap-8 ml-2 align-baseline">
-                  <div
-                    className={`${
-                      this.props.isActive ? "text-violet-500" : "text-slate-400"
-                    } font-bold`}
-                  >
-                    {this.props.i + 1}
+                <div
+                  className={`flex flex-row justify-start gap-8 -ml-4 items-center align-baseline ${padding}`}
+                >
+                  {num}
+                  <div className="shrink">
+                    {this.props.item.v(this.props.isActive)}
                   </div>
-                  <div>{this.props.item.v}</div>
                 </div>
                 <div
-                  className={`flex flex-row justify-start align-baseline`}
+                  className={`flex flex-row justify-start align-baseline items-center ${padding} shrink`}
                   id={`reason-${this.props.i + 1}`}
                 >
                   {this.props.item.reason}

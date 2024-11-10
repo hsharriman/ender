@@ -1,5 +1,6 @@
 import { DefinitionTooltip } from "../components/ender/DefinitionTooltip";
 import { LinkedText } from "../components/ender/LinkedText";
+import { TextChip } from "../components/ender/TextChip";
 import { Content } from "../core/diagramContent";
 import { BaseGeometryObject } from "../core/geometry/BaseGeometryObject";
 import {
@@ -7,7 +8,7 @@ import {
   StepMeta,
   StepUnfocusProps,
 } from "../core/types/stepTypes";
-import { Reason, SVGModes } from "../core/types/types";
+import { Obj, Reason, SVGModes } from "../core/types/types";
 import { Reasons } from "./reasons";
 
 export const GIVEN_ID = "given";
@@ -20,6 +21,11 @@ export const colors = {
   lightpurple: "rgb(196, 181, 253)",
 };
 
+export enum BGColors {
+  Purple = "bg-fuchsia-500",
+  Blue = "bg-blue-700",
+}
+
 // TODO move linked and reasonFn to different place, or move all this type info to a diff place
 export const linked = (
   val: string,
@@ -27,6 +33,15 @@ export const linked = (
   objs?: BaseGeometryObject[],
   clr?: string
 ) => <LinkedText val={val} obj={obj} linkedObjs={objs} clr={clr} />;
+
+export const chipText = (
+  obj: Obj,
+  s: string,
+  clr: BGColors,
+  isActive: boolean
+) => {
+  return <TextChip val={s} obj={obj} clr={clr} isActive={isActive} />;
+};
 
 export const tooltip = (obj: JSX.Element, definition: Reason) => (
   <DefinitionTooltip obj={obj} definition={definition} />
@@ -40,11 +55,18 @@ export const getReasonFn =
 export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   const defaultStaticText = () => <></>;
   const defaultAdditions = (props: StepFocusProps) => {};
-  const defaultText = (ctx: Content) => <></>;
+  const defaultText: (isActive: boolean) => JSX.Element = (
+    isActive: boolean
+  ) => <></>;
   const defaultUnfocused = (props: StepUnfocusProps) => {};
   const diagram = (ctx: Content, frame: string) => {
     const unfocusedProps = { ctx, frame };
-    const additionProps = { ctx, frame, mode: SVGModes.Focused };
+    const additionProps = {
+      ctx,
+      frame,
+      mode: SVGModes.Blue,
+      mode2: SVGModes.Purple,
+    };
     meta.unfocused
       ? meta.unfocused(unfocusedProps)
       : defaultUnfocused(unfocusedProps);

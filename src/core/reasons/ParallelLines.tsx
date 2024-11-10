@@ -1,16 +1,14 @@
 import { definitions } from "../../theorems/definitions";
-import { linked, tooltip } from "../../theorems/utils";
-import { Content } from "../diagramContent";
+import { BGColors, chipText, tooltip } from "../../theorems/utils";
 import { resizedStrs, segmentStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
+import { Obj } from "../types/types";
 
 export class ParallelLines {
   static additions = (
     props: StepFocusProps,
     [s1, s2]: [string, string],
-    numTicks = 1,
-    s2Mode?: SVGModes
+    numTicks = 1
   ) => {
     props.ctx
       .getSegment(s1)
@@ -19,20 +17,19 @@ export class ParallelLines {
     props.ctx
       .getSegment(s2)
       .addTick(props.frame, Obj.ParallelTick, numTicks)
-      .mode(props.frame, s2Mode || props.mode);
+      .mode(props.frame, props.mode2 || props.mode);
   };
-
-  static text = (ctx: Content, [s1, s2]: [string, string]) => {
-    const s1s = ctx.getSegment(s1);
-    const s2s = ctx.getSegment(s2);
-    return (
-      <span>
-        {linked(s1, s1s)}
-        {tooltip(resizedStrs.parallel, definitions.Parallel)}
-        {linked(s2, s2s)}
-      </span>
-    );
-  };
+  static text =
+    ([s1, s2]: [string, string]) =>
+    (isActive: boolean) => {
+      return (
+        <span>
+          {chipText(Obj.Segment, s1, BGColors.Blue, isActive)}
+          {tooltip(resizedStrs.parallel, definitions.Parallel)}
+          {chipText(Obj.Segment, s2, BGColors.Purple, isActive)}
+        </span>
+      );
+    };
   static staticText = (s: [string, string]) => {
     return (
       <span>

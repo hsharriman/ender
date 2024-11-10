@@ -1,17 +1,13 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Angle } from "../../../core/geometry/Angle";
-import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
 import { Point } from "../../../core/geometry/Point";
-import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, triangleStr } from "../../../core/geometryText";
-import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
-import { RightAngle } from "../../../core/reasons/RightAngle";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
@@ -21,7 +17,7 @@ import {
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
-import { linked, makeStepMeta } from "../../utils";
+import { BGColors, chipText, makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -70,23 +66,13 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (ctx: Content) => {
-    const EF = ctx.getSegment("EF");
-    const FG = ctx.getSegment("FG");
-    const GH = ctx.getSegment("GH");
-    const EJ = ctx.getSegment("EJ");
-    const HJ = ctx.getSegment("HJ");
-
+  text: (isActive: boolean) => {
     return (
       <span>
-        {linked(
-          "EFGH",
-          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
-          [EF, FG, GH, EJ, HJ]
-        )}
+        {chipText(Obj.Quadrilateral, "EFGH", BGColors.Blue, isActive)}
         {" is a rectangle"}
         {comma}
-        {Midpoint.text(ctx, "EH", ["EJ", "HJ"], "J")}
+        {Midpoint.text("EH", "J")(isActive)}
       </span>
     );
   },
@@ -127,10 +113,10 @@ const proves: StepMeta = makeStepMeta({
     props.ctx.getSegment("GJ").mode(props.frame, props.mode);
     props.ctx.getSegment("FJ").mode(props.frame, props.mode);
   },
-  text: (ctx: Content) => {
+  text: (isActive: boolean) => {
     return (
       <span>
-        {linked("FGJ", ctx.getTriangle("FGJ"))}
+        {chipText(Obj.Triangle, "FGJ", BGColors.Blue, isActive)}
         {" is isosceles"}
       </span>
     );
@@ -157,20 +143,10 @@ const step1: StepMeta = makeStepMeta({
     props.ctx.getSegment("EJ").mode(props.frame, props.mode);
     props.ctx.getSegment("JH").mode(props.frame, props.mode);
   },
-  text: (ctx: Content) => {
+  text: (isActive: boolean) => {
     return (
       <span>
-        {linked(
-          "EFGH",
-          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }), // TODO? hoverable?
-          [
-            ctx.getSegment("EF"),
-            ctx.getSegment("FG"),
-            ctx.getSegment("GH"),
-            ctx.getSegment("EJ"),
-            ctx.getSegment("JH"),
-          ]
-        )}
+        {chipText(Obj.Quadrilateral, "EFGH", BGColors.Blue, isActive)}
         {" is a rectangle"}
       </span>
     );
@@ -187,7 +163,7 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "J", ["EJ", "JH"]);
   },
-  text: (ctx: Content) => Midpoint.text(ctx, "EH", ["EJ", "JH"], "J"),
+  text: Midpoint.text("EH", "J"),
   staticText: () => Midpoint.staticText("J", "EH"),
 });
 
@@ -201,7 +177,7 @@ const step22: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["EJ", "JH"]);
   },
-  text: (ctx: Content) => EqualSegments.text(ctx, ["EJ", "JH"]),
+  text: EqualSegments.text(["EJ", "JH"]),
   staticText: () => EqualSegments.staticText(["EJ", "JH"]),
 });
 
@@ -215,7 +191,7 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["FEJ", "JHG"]);
   },
-  text: (ctx: Content) => EqualRightAngles.text(ctx, ["FEJ", "JHG"]),
+  text: EqualRightAngles.text(["FEJ", "JHG"]),
   staticText: () => EqualRightAngles.staticText(["FEJ", "JHG"]),
 });
 
@@ -229,7 +205,7 @@ const step4: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["FE", "GH"], 2);
   },
-  text: (ctx: Content) => EqualSegments.text(ctx, ["FE", "GH"]),
+  text: EqualSegments.text(["FE", "GH"]),
   staticText: () => EqualSegments.staticText(["FE", "GH"]),
 });
 
@@ -248,7 +224,7 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     SAS.additions(props, step5SASProps);
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, step5SASProps.triangles),
+  text: EqualTriangles.text(step5SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step5SASProps.triangles),
 });
 
@@ -262,7 +238,7 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
-  text: (ctx: Content) => EqualSegments.text(ctx, ["FJ", "GJ"]),
+  text: EqualSegments.text(["FJ", "GJ"]),
   staticText: () => EqualSegments.staticText(["FJ", "GJ"]),
 });
 
@@ -277,10 +253,10 @@ const step7: StepMeta = makeStepMeta({
     props.ctx.getSegment("FG").mode(props.frame, props.mode);
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
-  text: (ctx: Content) => {
+  text: (isActive: boolean) => {
     return (
       <span>
-        {linked("FGJ", ctx.getTriangle("FGJ"))}
+        {chipText(Obj.Triangle, "FGJ", BGColors.Blue, isActive)}
         {" is isosceles "}
       </span>
     );
@@ -288,100 +264,11 @@ const step7: StepMeta = makeStepMeta({
   staticText: () => proves.staticText(),
 });
 
-export const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  const defaultStepProps: StepFocusProps = {
-    ctx,
-    frame: "",
-    mode: SVGModes.Purple,
-  };
-
-  const step2 = ctx.addFrame("s3");
-  Midpoint.additions(
-    { ...defaultStepProps, frame: step2 },
-    "J",
-    ["EJ", "JH"],
-    1,
-    SVGModes.Blue
-  );
-
-  const step3 = ctx.addFrame("s4");
-  const rectangleSegs = ["EF", "FG", "GH", "EJ", "JH"];
-  rectangleSegs.map((s) => ctx.getSegment(s).mode(step3, SVGModes.Focused));
-  const rectangleAngles = ["EFG", "FGH"];
-  rectangleAngles.map((a) =>
-    RightAngle.additions(
-      { ...defaultStepProps, frame: step3, mode: SVGModes.Focused },
-      a
-    )
-  );
-  EqualRightAngles.additions(
-    { ...defaultStepProps, frame: step3 },
-    ["FEJ", "JHG"],
-    SVGModes.Blue
-  );
-
-  const step4 = ctx.addFrame("s5");
-  const EH = ctx.push(
-    new Segment({
-      p1: ctx.getPoint("E"),
-      p2: ctx.getPoint("H"),
-      hoverable: false,
-    })
-  );
-  EqualSegments.additions(
-    { ...defaultStepProps, frame: step4 },
-    ["FE", "GH"],
-    2,
-    SVGModes.Blue
-  );
-  EqualSegments.additions(
-    { ...defaultStepProps, frame: step4, mode: SVGModes.Focused },
-    ["FG", "EH"]
-  );
-
-  const step5 = ctx.addFrame("s6");
-  SAS.additions(
-    { ...defaultStepProps, frame: step5 },
-    {
-      seg1s: { s: ["EJ", "HJ"], ticks: 1 },
-      seg2s: { s: ["FE", "GH"], ticks: 2 },
-      angles: { a: ["FEJ", "JHG"], type: Obj.RightTick },
-      triangles: ["FEJ", "JHG"],
-    },
-    SVGModes.Blue
-  );
-
-  const step6 = ctx.addFrame("s7");
-  const s6Opts = { ...defaultStepProps, frame: step6, mode: SVGModes.Focused };
-  EqualSegments.additions(s6Opts, ["EJ", "JH"], 1);
-  EqualSegments.additions(s6Opts, ["FE", "GH"], 2);
-  EqualSegments.additions(
-    { ...defaultStepProps, frame: step6 },
-    ["FJ", "GJ"],
-    3
-  );
-  EqualRightAngles.additions(s6Opts, ["FEJ", "JHG"]);
-  EqualAngles.additions(s6Opts, ["EFJ", "JGH"], 2);
-  EqualAngles.additions(s6Opts, ["FJE", "GJH"], 1);
-
-  const step7 = ctx.addFrame("s8");
-  ctx.getSegment("FG").mode(step7, SVGModes.Purple);
-  EqualSegments.additions(
-    { ...defaultStepProps, frame: step7 },
-    ["FJ", "GJ"],
-    1
-  );
-  return ctx;
-};
-
 export const T1_S2_C1: LayoutProps = {
   name: "T1_S2_C1",
   // TODO: Replace questions
   questions: exploratoryQuestion(3, 8),
   baseContent,
-  miniContent: miniContent(),
   givens,
   proves,
   steps: [step1, step2, step22, step3, step4, step5, step6, step7],

@@ -1,7 +1,7 @@
 export const ModeCSS = {
   HIDDEN: "opacity-0",
   FOCUSED: "stroke-black stroke-2 fill-none opacity-1",
-  ACTIVE: "stroke-violet-500 stroke-[4px]",
+  ACTIVE: "stroke-violet-500 stroke-[4px] drop-shadow-[0_0_5px_#8b5cf6]",
   DEFAULT: "stroke-black stroke-2 fill-none opacity-1",
   UNFOCUSED: "opacity-70 stroke-black stroke-1 fill-none",
   PURPLE: "stroke-fuchsia-500 stroke-[5px] fill-none opacity-1",

@@ -63,7 +63,7 @@ export const interactiveLayout = (
   shuffleQuestions: boolean = true,
   tutorial?: TutorialStep[]
 ): Page => {
-  const ctx = proofMeta.baseContent(true, true);
+  const ctx = proofMeta.baseContent(true, false);
   const linkedTexts: ProofTextItem[] = [];
   const reasonMap = new Map<string, Reason>();
 
@@ -78,12 +78,12 @@ export const interactiveLayout = (
   // add given and prove to linkedTexts
   linkedTexts.push({
     k: GIVEN_ID,
-    v: proofMeta.givens.text(ctx),
+    v: proofMeta.givens.text,
     alwaysActive: true,
   });
   linkedTexts.push({
     k: PROVE_ID,
-    v: proofMeta.proves.text(ctx),
+    v: proofMeta.proves.text,
     alwaysActive: true,
   });
 
@@ -100,7 +100,7 @@ export const interactiveLayout = (
     linkedTexts.push({
       ...textMeta,
       k: s,
-      v: step.text(ctx),
+      v: step.text,
       reason: step.reason.title,
     });
   });
@@ -110,7 +110,6 @@ export const interactiveLayout = (
       layout: "interactive",
       props: {
         ctx: ctx.getCtx(),
-        miniCtx: proofMeta.miniContent.getCtx(),
         reasonMap: reasonMap,
         linkedTexts: linkedTexts,
         pageNum: -1,

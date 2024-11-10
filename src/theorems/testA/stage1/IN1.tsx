@@ -3,11 +3,9 @@ import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
-import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
-import { SAS } from "../../../core/reasons/SAS";
 import { checkingProof1 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
@@ -59,10 +57,10 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (ctx: Content) => {
-    const ADeqBC = EqualSegments.text(ctx, ["AD", "BC"]);
-    const ABeqDC = EqualSegments.text(ctx, ["AB", "DC"]);
-    const ABDeqCDB = EqualAngles.text(ctx, ["ABD", "CDB"]);
+  text: (isActive: boolean) => {
+    const ADeqBC = EqualSegments.text(["AD", "BC"])(isActive);
+    const ABeqDC = EqualSegments.text(["AB", "DC"])(isActive);
+    const ABDeqCDB = EqualAngles.text(["ABD", "CDB"])(isActive);
 
     return (
       <span>
@@ -102,9 +100,7 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["BAD", "DCB"]);
   },
-  text: (ctx: Content) => {
-    return EqualAngles.text(ctx, ["BAD", "DCB"]);
-  },
+  text: EqualAngles.text(["BAD", "DCB"]),
   staticText: () => EqualAngles.staticText(["BAD", "DCB"]),
 });
 
@@ -116,9 +112,7 @@ const step1: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["AD", "BC"]);
   },
-  text: (ctx: Content) => {
-    return EqualSegments.text(ctx, ["AD", "BC"]);
-  },
+  text: EqualSegments.text(["AD", "BC"]),
   staticText: () => EqualSegments.staticText(["AD", "BC"]),
 });
 
@@ -132,9 +126,7 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["AB", "DC"], 2);
   },
-  text: (ctx: Content) => {
-    return EqualSegments.text(ctx, ["AB", "DC"]);
-  },
+  text: EqualSegments.text(["AB", "DC"]),
   staticText: () => EqualSegments.staticText(["AB", "DC"]),
 });
 
@@ -149,9 +141,7 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["ABD", "CDB"]);
   },
-  text: (ctx: Content) => {
-    return EqualAngles.text(ctx, ["ABD", "CDB"]);
-  },
+  text: EqualAngles.text(["ABD", "CDB"]),
   staticText: () => EqualAngles.staticText(["ABD", "CDB"]),
 });
 
@@ -164,7 +154,7 @@ const step4: StepMeta = makeStepMeta({
     step2.additions(props);
     step3.additions(props);
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, ["ABD", "CDB"]),
+  text: EqualTriangles.text(["ABD", "CDB"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CDB"]),
 });
 
@@ -177,61 +167,13 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions(props, ["BAD", "DCB"], 2);
   },
-  text: (ctx: Content) => {
-    return EqualAngles.text(ctx, ["BAD", "DCB"]);
-  },
+  text: EqualAngles.text(["BAD", "DCB"]),
   staticText: () => EqualAngles.staticText(["BAD", "DCB"]),
 });
-
-const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  const defaultStepProps: StepFocusProps = {
-    ctx,
-    frame: "",
-    mode: SVGModes.Purple,
-  };
-  // STEP 3 - SAS TRIANGLE CONGRUENCE
-  const step4 = ctx.addFrame("s4");
-  SAS.additions(
-    { ...defaultStepProps, frame: step4 },
-    {
-      seg1s: { s: ["BD", "BD"], ticks: 1 },
-      seg2s: { s: ["AB", "DC"], ticks: 2 },
-      angles: { a: ["ABD", "CDB"] },
-      triangles: ["ABD", "CDB"],
-    },
-    SVGModes.Blue
-  );
-
-  // STEP 4 - CORRESPONDING ANGLES
-  const step5 = ctx.addFrame("s5");
-  CongruentTriangles.additions(
-    { ...defaultStepProps, frame: step5, mode: SVGModes.Focused },
-    {
-      s1s: ["AD", "BC"],
-      s2s: ["AB", "DC"],
-      s3s: ["BD", "BD"],
-      a1s: ["ABD", "CDB"],
-      a2s: ["BAD", "DCB"],
-      a3s: ["ADB", "CBD"],
-    }
-  );
-  // step 4 ticks
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: step5 },
-    ["BAD", "DCB"],
-    2,
-    SVGModes.Blue
-  );
-
-  return ctx;
-};
 
 export const T1_S1_IN1: LayoutProps = {
   name: "T1_S1_IN1",
   questions: checkingProof1,
-  miniContent: miniContent(),
   baseContent,
   givens,
   proves,

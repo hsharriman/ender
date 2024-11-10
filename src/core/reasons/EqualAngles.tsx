@@ -1,17 +1,19 @@
 import { definitions } from "../../theorems/definitions";
-import { makeStepMeta, tooltip } from "../../theorems/utils";
-import { Content } from "../diagramContent";
+import {
+  BGColors,
+  chipText,
+  makeStepMeta,
+  tooltip,
+} from "../../theorems/utils";
 import { angleStr, resizedStrs } from "../geometryText";
 import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, Reason, SVGModes } from "../types/types";
-import { BaseAngle } from "./BaseAngle";
 
 export class EqualAngles {
   static additions = (
     props: StepFocusProps,
     [a1, a2]: [string, string],
-    numTicks = 1,
-    a2Mode?: SVGModes
+    numTicks = 1
   ) => {
     const a1a = props.ctx.getAngle(a1);
     const a2a = props.ctx.getAngle(a2);
@@ -20,17 +22,19 @@ export class EqualAngles {
       .mode(props.frame, props.mode);
     a2a
       .addTick(props.frame, Obj.EqualAngleTick, numTicks)
-      .mode(props.frame, a2Mode || props.mode);
+      .mode(props.frame, props.mode2 || props.mode);
   };
-  static text = (ctx: Content, [a1, a2]: [string, string]) => {
-    return (
-      <span>
-        {BaseAngle.text(ctx, a1)}
-        {tooltip(resizedStrs.congruent, definitions.CongruentAngles)}
-        {BaseAngle.text(ctx, a2)}
-      </span>
-    );
-  };
+  static text =
+    ([a1, a2]: [string, string]) =>
+    (isActive: boolean) => {
+      return (
+        <span>
+          {chipText(Obj.Angle, a1, BGColors.Blue, isActive)}
+          {tooltip(resizedStrs.congruent, definitions.CongruentAngles)}
+          {chipText(Obj.Angle, a2, BGColors.Purple, isActive)}
+        </span>
+      );
+    };
   static staticText = (a: [string, string]) => {
     return (
       <span>
@@ -54,11 +58,14 @@ export const EqualAngleStep = (
     dependsOn,
     unfocused: (props: StepUnfocusProps) => {
       step.unfocused(props);
-      step.additions({ ...props, mode: SVGModes.Unfocused });
+      step.additions({
+        ...props,
+        mode: SVGModes.Unfocused,
+      });
     },
     additions: (props: StepFocusProps) =>
       EqualAngles.additions(props, [a1, a2], num),
-    text: (ctx: Content) => EqualAngles.text(ctx, [a1, a2]),
+    text: EqualAngles.text([a1, a2]),
     staticText: () => EqualAngles.staticText([a1, a2]),
   });
 };

@@ -15,9 +15,11 @@ interface Dims {
 
 export interface ReliesOnState {}
 export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
-  private DEFAULT_CLR = "#D8B1FF";
+  private DEFAULT_CLR = "stroke-violet-200";
   private SVGWIDTH = 30;
-  private left = 10;
+  private left = 5;
+  private STROKE_WIDTH = "4px";
+  private LEFTPAD = 7;
 
   getRowCoords = (frameKey: string): Dims | undefined => {
     // TODO make work for any row type
@@ -25,7 +27,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     if (rowEle) {
       const rowRect = rowEle.getBoundingClientRect();
       return {
-        l: rowRect.right + window.scrollX, // right side of row
+        l: rowRect.right + this.LEFTPAD + window.scrollX, // right side of row
         t: rowRect.top + window.scrollY, // top of row,
         b: rowRect.bottom + window.scrollY,
         key: frameKey,
@@ -68,14 +70,14 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
         }}
       >
         <svg width="100%" height="100%">
-          <circle r="5px" cx="5px" cy="50%" fill={this.DEFAULT_CLR} />
+          <circle r="5px" cx="5px" cy="50%" className={"fill-violet-200"} />
           <polyline
             points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH},${
               this.props.rowHeight / 2
             }`}
-            stroke={this.DEFAULT_CLR}
+            className={this.DEFAULT_CLR}
             fill="none"
-            strokeWidth="3px"
+            strokeWidth={this.STROKE_WIDTH}
           />
         </svg>
       </div>
@@ -101,25 +103,26 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
             points={`${quarterRow},${quarterRow} 1,${halfRow} ${quarterRow},${
               3 * quarterRow
             }`}
-            stroke={this.DEFAULT_CLR}
+            className={this.DEFAULT_CLR}
             fill="none"
-            strokeWidth="3px"
+            strokeWidth={this.STROKE_WIDTH}
           />
           <line
             x1="0%"
             y1="50%"
             x2={`${this.SVGWIDTH}px`}
             y2="50%"
-            stroke={this.DEFAULT_CLR}
-            strokeWidth="3px"
+            className={this.DEFAULT_CLR}
+            fill="none"
+            strokeWidth={this.STROKE_WIDTH}
           />
           <polyline
             points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH},${
               this.props.rowHeight / 2
             }`}
-            stroke={this.DEFAULT_CLR}
+            className={this.DEFAULT_CLR}
             fill="none"
-            strokeWidth="3px"
+            strokeWidth={this.STROKE_WIDTH}
           />
         </svg>
       </div>
@@ -134,9 +137,9 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
       <div
         className="absolute w-8"
         style={{
-          top: `${Math.min(arrow, end)}px`,
+          top: `${Math.min(arrow, end) - 2}px`, // -2px to compensate for lines not perfectly overlapping
           left: `${dims[0].l - this.left}px`,
-          height: `${divHeight}px`,
+          height: `${divHeight + 4}px`, // +4px to compensate for svg lines not perfectly overlapping
         }}
       >
         <svg width="100%" height="100%">
@@ -144,10 +147,10 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
             x1={`${this.SVGWIDTH}px`}
             x2={`${this.SVGWIDTH}px`}
             y1={0}
-            y2={`${divHeight}px`}
-            stroke={this.DEFAULT_CLR}
+            y2={`${divHeight + 4}px`}
+            className={this.DEFAULT_CLR}
             fill="none"
-            strokeWidth="3px"
+            strokeWidth={this.STROKE_WIDTH}
           />
         </svg>
       </div>
@@ -176,7 +179,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
           {this.renderFullConnector(dims)}
           {svgs}
           <div
-            className="text-purple-400 font-notoSans w-6 text-base absolute text-nowrap flex align-middle"
+            className="text-violet-400 font-semibold font-notoSans w-6 text-base absolute text-nowrap flex align-middle"
             style={{
               height: `${height}px`,
               top: `${dims[0].t}px`,

@@ -1,8 +1,7 @@
-import { linked } from "../../theorems/utils";
-import { Content } from "../diagramContent";
+import { BGColors, chipText } from "../../theorems/utils";
 import { segmentStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
-import { SVGModes } from "../types/types";
+import { Obj, SVGModes } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
 
 export class Midpoint {
@@ -11,25 +10,17 @@ export class Midpoint {
     pt: string,
     segs: [string, string],
     num?: number,
-    s2Mode?: SVGModes,
     ptMode?: SVGModes
   ) => {
     props.ctx.getPoint(pt).mode(props.frame, ptMode || props.mode);
-    EqualSegments.additions(props, segs, num, s2Mode || props.mode);
+    EqualSegments.additions(props, segs, num);
   };
-  static text = (
-    ctx: Content,
-    label: string,
-    segs: [string, string],
-    pt: string
-  ) => {
-    const s1 = ctx.getSegment(segs[0]);
-    const s2 = ctx.getSegment(segs[1]);
+  static text = (label: string, pt: string) => (isActive: boolean) => {
     return (
       <span>
-        {linked(pt, ctx.getPoint(pt))}
+        {chipText(Obj.Point, pt, BGColors.Blue, isActive)}
         {" is the midpoint of "}
-        {linked(label, s1, [s2])}
+        {chipText(Obj.Point, label, BGColors.Purple, isActive)}
       </span>
     );
   };
