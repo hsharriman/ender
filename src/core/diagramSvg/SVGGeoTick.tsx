@@ -4,14 +4,14 @@ import { vops } from "../vectorOps";
 import { pops } from "./pathBuilderUtils";
 import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "./svgUtils";
 
-const SINGLE_ARC_RADIUS = 0.55;
+const SINGLE_ARC_RADIUS = 0.65;
 const MINI_ARC_R = 0.5;
 const SINGLE_MINI_ARC_RADIUS = 0.8;
 const MINI_ARC_PADDING = 0.3;
 const ARC_PADDING = 0.2;
-const PARALLEL_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.6 : 0.35);
-const RIGHT_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.5 : 0.3);
-const EQ_LEN_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.3 : 0.2);
+const PARALLEL_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.6 : 0.45);
+const RIGHT_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.5 : 0.4);
+const EQ_LEN_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.3 : 0.3);
 const TICK_SPACING = (miniScale: boolean) => (miniScale ? 0.3 : 0.25);
 
 export type SVGTickProps = {
@@ -191,6 +191,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
         id={this.props.geoId}
         key={this.props.geoId}
         className={this.props.css + " fill-none"}
+        strokeLinecap="round"
       />
     ) : (
       <></>

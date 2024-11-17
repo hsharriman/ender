@@ -11,7 +11,7 @@ export const Reasons = {
   },
   VerticalAngles: {
     title: "Vertical Angles Theorem",
-    body: "If two lines intersect each other, then the angles that are opposite from each other are congruent.",
+    body: "If two lines intersect then the angles that are opposite from each other are congruent.",
   },
   ConverseAltInteriorAngs: {
     title: "Alternate Interior Angles (Converse)",

@@ -4,20 +4,22 @@ import { Point } from "../../../core/geometry/Point";
 import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, segmentStr } from "../../../core/geometryText";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
+import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import { completeProof1 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
-import { BGColors, chipText, makeStepMeta } from "../../utils";
+import { makeStepMeta } from "../../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -65,19 +67,8 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: () => {
-    return (
-      <span>
-        {segmentStr("AB")}
-        {" and "}
-        {segmentStr("CD")}
-        {" intersect at point M"}
-        {comma}
-        {EqualSegments.staticText(["AM", "BM"])}
-        {comma}
-        {EqualSegments.staticText(["CM", "DM"])}
-      </span>
-    );
+  text: (isActive: boolean) => {
+    return givens.staticText();
   },
   staticText: () => {
     return (
@@ -95,58 +86,35 @@ const givens: StepMeta = makeStepMeta({
   },
 
   additions: (props: StepFocusProps) => {
-    props.ctx.getTriangle("ACM").mode(props.frame, SVGModes.Default);
-    props.ctx.getTriangle("BDM").mode(props.frame, SVGModes.Default);
-  },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({
-      ctx,
-      frame,
-      mode: SVGModes.Default,
-      mode2: SVGModes.Default,
-    });
+    props.ctx.getTriangle("ACM").mode(props.frame, props.mode);
+    props.ctx.getTriangle("BDM").mode(props.frame, props.mode);
   },
 });
 
 const proves: StepMeta = makeStepMeta({
   unfocused: (props: StepUnfocusProps) => {
-    givens.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-      mode2: SVGModes.Unfocused,
-    });
+    givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
     ParallelLines.additions(props, ["AC", "BD"]);
   },
-  text: ParallelLines.text(["AC", "BD"]),
+  text: (isActive: boolean) => proves.staticText(),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
 });
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
-    givens.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-      mode2: SVGModes.Unfocused,
-    });
+    givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Segment, "AB", BGColors.Blue, isActive)}
-        {" and "}
-        {chipText(Obj.Segment, "CD", BGColors.Purple, isActive)}
-        {" intersect at M"}
-      </span>
-    );
+    return step1.staticText();
   },
   additions: (props: StepFocusProps) => {
-    props.ctx.getSegment("AM").mode(props.frame, SVGModes.Blue);
-    props.ctx.getSegment("BM").mode(props.frame, SVGModes.Blue);
-    props.ctx.getSegment("CM").mode(props.frame, SVGModes.Purple);
-    props.ctx.getSegment("DM").mode(props.frame, SVGModes.Purple);
+    props.ctx.getSegment("AM").mode(props.frame, props.mode);
+    props.ctx.getSegment("BM").mode(props.frame, props.mode);
+    props.ctx.getSegment("CM").mode(props.frame, props.mode);
+    props.ctx.getSegment("DM").mode(props.frame, props.mode);
   },
   staticText: () => {
     return (
@@ -163,11 +131,8 @@ const step1: StepMeta = makeStepMeta({
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
   unfocused: (props: StepUnfocusProps) => {
-    givens.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-      mode2: SVGModes.Unfocused,
-    });
+    step1.unfocused(props);
+    step1.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AM", "BM"]),
@@ -182,7 +147,6 @@ const step3: StepMeta = makeStepMeta({
     step2.additions({
       ...props,
       mode: SVGModes.Unfocused,
-      mode2: SVGModes.Unfocused,
     });
   },
   additions: (props: StepFocusProps) =>
@@ -199,13 +163,22 @@ const step4: StepMeta = makeStepMeta({
     step3.additions({
       ...props,
       mode: SVGModes.Unfocused,
-      mode2: SVGModes.Unfocused,
     });
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CMA", "DMB"]),
   text: EqualAngles.text(["CMA", "DMB"]),
   staticText: () => EqualAngles.staticText(["CMA", "DMB"]),
+  highlight: (ctx: Content, frame: string) =>
+    VerticalAngles.highlight(
+      ctx,
+      frame,
+      {
+        angs: ["CMA", "DMB"],
+        segs: ["AM", "BM"],
+      },
+      ["CM", "DM"]
+    ),
 });
 
 const step4SASProps: SASProps = {
@@ -220,6 +193,8 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
   text: EqualTriangles.text(step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
+  highlight: (ctx: Content, frame: string) =>
+    SAS.highlight(ctx, frame, step4SASProps),
 });
 
 const step6: StepMeta = makeStepMeta({
@@ -236,6 +211,15 @@ const step6: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["CAM", "DBM"], 2),
   text: EqualAngles.text(["CAM", "DBM"]),
   staticText: () => EqualAngles.staticText(["CAM", "DBM"]),
+  highlight: (ctx: Content, frame: string) =>
+    CongruentTriangles.highlight(ctx, frame, {
+      s1s: ["AM", "BM"],
+      s2s: ["CM", "DM"],
+      s3s: ["AC", "BD"],
+      a1s: ["CMA", "DMB"],
+      a2s: ["CAM", "DBM"],
+      a3s: ["ACM", "BDM"],
+    }),
 });
 
 const step7: StepMeta = makeStepMeta({
@@ -250,11 +234,15 @@ const step7: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) => {
     ParallelLines.additions(props, ["AC", "BD"]);
-    props.ctx.getSegment("AM").mode(props.frame, SVGModes.Focused);
-    props.ctx.getSegment("BM").mode(props.frame, SVGModes.Focused);
   },
   text: ParallelLines.text(["AC", "BD"]),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
+  highlight: (ctx: Content, frame: string) => {
+    ParallelLines.highlight(ctx, frame, ["AC", "BD"]);
+    EqualAngles.highlight(ctx, frame, ["CAM", "DBM"], 2);
+    ctx.getSegment("AM").highlight(frame);
+    ctx.getSegment("BM").highlight(frame);
+  },
 });
 
 export const T1_S1_C1: LayoutProps = {

@@ -53,6 +53,7 @@ export enum SVGModes {
   ActiveTriangleBlue = "activetriangleblue",
   ActiveTrianglePurple = "activetrianglepurple",
   UnfocusedTriangle = "unfocusedtriangle",
+  Highlight = "highlight",
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------

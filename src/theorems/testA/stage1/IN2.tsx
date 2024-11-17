@@ -3,6 +3,7 @@ import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
@@ -72,9 +73,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("JMK").mode(props.frame, props.mode);
     props.ctx.getTriangle("LMK").mode(props.frame, props.mode);
   },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
+
   staticText: () => {
     return (
       <span>
@@ -132,6 +131,10 @@ const step3: StepMeta = makeStepMeta({
   },
   text: EqualRightAngles.text(["JMK", "LMK"]),
   staticText: () => EqualRightAngles.staticText(["JMK", "LMK"]),
+  highlight: (ctx: Content, frame: string) => {
+    Perpendicular.highlight(ctx, frame, "MK", ["JM", "ML"]);
+    EqualRightAngles.highlight(ctx, frame, ["JMK", "LMK"]);
+  },
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -145,6 +148,8 @@ const step4: StepMeta = makeStepMeta({
   },
   text: Reflexive.text("MK"),
   staticText: () => Reflexive.staticText("MK"),
+  highlight: (ctx: Content, frame: string) =>
+    Reflexive.highlight(ctx, frame, "MK", 2),
 });
 
 const step5Labels: SASProps = {
@@ -154,13 +159,18 @@ const step5Labels: SASProps = {
   triangles: ["JMK", "LMK"],
 };
 const step5: StepMeta = makeStepMeta({
-  reason: Reasons.SAS,
+  reason: Reasons.AAS,
   dependsOn: [2, 3, 4],
   additions: (props: StepFocusProps) => {
     SAS.additions(props, step5Labels);
   },
   text: EqualTriangles.text(["JMK", "LMK"]),
   staticText: () => EqualTriangles.staticText(["JMK", "LMK"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualSegments.highlight(ctx, frame, ["JK", "LK"]);
+    EqualRightAngles.highlight(ctx, frame, ["JMK", "LMK"]);
+    EqualAngles.highlight(ctx, frame, ["KJM", "KLM"]);
+  },
 });
 
 export const T1_S1_IN2: LayoutProps = {

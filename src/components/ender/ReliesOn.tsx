@@ -15,7 +15,7 @@ interface Dims {
 
 export interface ReliesOnState {}
 export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
-  private DEFAULT_CLR = "stroke-violet-200";
+  private DEFAULT_CLR = "stroke-slate-500";
   private SVGWIDTH = 30;
   private left = 5;
   private STROKE_WIDTH = "4px";
@@ -70,7 +70,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
         }}
       >
         <svg width="100%" height="100%">
-          <circle r="5px" cx="5px" cy="50%" className={"fill-violet-200"} />
+          <circle r="5px" cx="5px" cy="50%" className={"fill-slate-500"} />
           <polyline
             points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH},${
               this.props.rowHeight / 2
@@ -179,7 +179,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
           {this.renderFullConnector(dims)}
           {svgs}
           <div
-            className="text-violet-400 font-semibold font-notoSans w-6 text-base absolute text-nowrap flex align-middle"
+            className="text-slate-500 font-semibold font-notoSans w-6 text-base absolute text-nowrap flex align-middle"
             style={{
               height: `${height}px`,
               top: `${dims[0].t}px`,

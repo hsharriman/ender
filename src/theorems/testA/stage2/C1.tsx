@@ -17,7 +17,7 @@ import {
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
-import { BGColors, chipText, makeStepMeta } from "../../utils";
+import { makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -67,14 +67,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Quadrilateral, "EFGH", BGColors.Blue, isActive)}
-        {" is a rectangle"}
-        {comma}
-        {Midpoint.text("EH", "J")(isActive)}
-      </span>
-    );
+    return givens.staticText();
   },
 
   additions: (props: StepFocusProps) => {
@@ -86,9 +79,6 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getSegment("GJ").mode(props.frame, props.mode);
   },
 
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
   staticText: () => {
     return (
       <span>
@@ -108,18 +98,12 @@ const proves: StepMeta = makeStepMeta({
     props.ctx.getSegment("HJ").mode(props.frame, SVGModes.Unfocused);
   },
   additions: (props: StepFocusProps) => {
-    // TODO why is this unfocused?
     props.ctx.getSegment("FG").mode(props.frame, props.mode);
     props.ctx.getSegment("GJ").mode(props.frame, props.mode);
     props.ctx.getSegment("FJ").mode(props.frame, props.mode);
   },
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Triangle, "FGJ", BGColors.Blue, isActive)}
-        {" is isosceles"}
-      </span>
-    );
+    return proves.staticText();
   },
   staticText: () => {
     return (
@@ -144,12 +128,7 @@ const step1: StepMeta = makeStepMeta({
     props.ctx.getSegment("JH").mode(props.frame, props.mode);
   },
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Quadrilateral, "EFGH", BGColors.Blue, isActive)}
-        {" is a rectangle"}
-      </span>
-    );
+    return step1.staticText();
   },
   staticText: () => <span>EFGH is a rectangle</span>,
 });
@@ -163,7 +142,7 @@ const step2: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "J", ["EJ", "JH"]);
   },
-  text: Midpoint.text("EH", "J"),
+  text: Midpoint.text("J", "EH"),
   staticText: () => Midpoint.staticText("J", "EH"),
 });
 
@@ -179,6 +158,8 @@ const step22: StepMeta = makeStepMeta({
   },
   text: EqualSegments.text(["EJ", "JH"]),
   staticText: () => EqualSegments.staticText(["EJ", "JH"]),
+  highlight: (ctx: Content, frame: string) =>
+    Midpoint.highlight(ctx, frame, "J", ["EJ", "JH"]),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -193,6 +174,14 @@ const step3: StepMeta = makeStepMeta({
   },
   text: EqualRightAngles.text(["FEJ", "JHG"]),
   staticText: () => EqualRightAngles.staticText(["FEJ", "JHG"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualRightAngles.highlight(ctx, frame, ["FEJ", "JHG"]);
+    EqualRightAngles.highlight(ctx, frame, ["EFG", "HGF"]);
+    ctx.getSegment("EJ").highlight(frame);
+    ctx.getSegment("JH").highlight(frame);
+    ctx.getSegment("FG").highlight(frame);
+    EqualSegments.highlight(ctx, frame, ["FE", "GH"], 2);
+  },
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -207,6 +196,14 @@ const step4: StepMeta = makeStepMeta({
   },
   text: EqualSegments.text(["FE", "GH"]),
   staticText: () => EqualSegments.staticText(["FE", "GH"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualRightAngles.highlight(ctx, frame, ["FEJ", "JHG"]);
+    EqualRightAngles.highlight(ctx, frame, ["EFG", "HGF"]);
+    ctx.getSegment("EJ").highlight(frame);
+    ctx.getSegment("JH").highlight(frame);
+    ctx.getSegment("FG").highlight(frame);
+    EqualSegments.highlight(ctx, frame, ["FE", "GH"], 2);
+  },
 });
 
 const step5SASProps: SASProps = {
@@ -226,6 +223,8 @@ const step5: StepMeta = makeStepMeta({
   },
   text: EqualTriangles.text(step5SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step5SASProps.triangles),
+  highlight: (ctx: Content, frame: string) =>
+    SAS.highlight(ctx, frame, step5SASProps),
 });
 
 const step6: StepMeta = makeStepMeta({
@@ -240,6 +239,10 @@ const step6: StepMeta = makeStepMeta({
   },
   text: EqualSegments.text(["FJ", "GJ"]),
   staticText: () => EqualSegments.staticText(["FJ", "GJ"]),
+  highlight: (ctx: Content, frame: string) => {
+    SAS.highlight(ctx, frame, step5SASProps);
+    EqualSegments.highlight(ctx, frame, ["FJ", "GJ"], 3);
+  },
 });
 
 const step7: StepMeta = makeStepMeta({
@@ -254,14 +257,13 @@ const step7: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Triangle, "FGJ", BGColors.Blue, isActive)}
-        {" is isosceles "}
-      </span>
-    );
+    return step7.staticText();
   },
   staticText: () => proves.staticText(),
+  highlight: (ctx: Content, frame: string) => {
+    EqualSegments.highlight(ctx, frame, ["FJ", "GJ"], 3);
+    ctx.getSegment("FG").highlight(frame);
+  },
 });
 
 export const T1_S2_C1: LayoutProps = {

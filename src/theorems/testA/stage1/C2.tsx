@@ -6,6 +6,7 @@ import { Triangle } from "../../../core/geometry/Triangle";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
 import { BaseAngle } from "../../../core/reasons/BaseAngle";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
@@ -21,9 +22,8 @@ import {
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
-import { definitions } from "../../definitions";
 import { Reasons } from "../../reasons";
-import { BGColors, chipText, makeStepMeta, tooltip } from "../../utils";
+import { BGColors, makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -73,7 +73,7 @@ const givens: StepMeta = makeStepMeta({
         {RightAngle.text("ADB")(isActive)}
         {comma}
         {segmentStr("BD")}
-        {tooltip(<span> bisects </span>, definitions.Bisector)}
+        <span className="font-notoSans">&nbsp;bisects&nbsp;</span>
         {BaseAngle.text("ABC", BGColors.Blue)(isActive)}
       </span>
     );
@@ -84,9 +84,6 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("CBD").mode(props.frame, props.mode);
   },
 
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
   staticText: () => {
     return (
       <span>
@@ -133,13 +130,7 @@ const step2: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["ABD", "CBD"]);
   },
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Segment, "BD", BGColors.Blue, isActive)}
-        {tooltip(<span> bisects </span>, definitions.Bisector)}
-        {chipText(Obj.Angle, "ABC", BGColors.Purple, isActive)}
-      </span>
-    );
+    return step2.staticText();
   },
   staticText: () => (
     <span>
@@ -159,6 +150,8 @@ const step3: StepMeta = makeStepMeta({
     Perpendicular.additions(props, "BD", ["AD", "DC"]),
   text: Perpendicular.text("AC", "BD"),
   staticText: () => Perpendicular.staticText("BD", "AC"),
+  highlight: (ctx: Content, frame: string) =>
+    Perpendicular.highlight(ctx, frame, "BD", ["AD", "DC"]),
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -172,6 +165,10 @@ const step4: StepMeta = makeStepMeta({
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
   text: EqualRightAngles.text(["ADB", "BDC"]),
   staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
+  highlight: (ctx: Content, frame: string) => {
+    Perpendicular.highlight(ctx, frame, "BD", ["AD", "DC"]);
+    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
+  },
 });
 
 const step5: StepMeta = makeStepMeta({
@@ -183,6 +180,8 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => Reflexive.additions(props, "BD"),
   text: Reflexive.text("BD"),
   staticText: () => Reflexive.staticText("BD"),
+  highlight: (ctx: Content, frame: string) =>
+    Reflexive.highlight(ctx, frame, "BD"),
 });
 
 const step5ASAProps: ASAProps = {
@@ -199,6 +198,8 @@ const step6: StepMeta = makeStepMeta({
   },
   text: EqualTriangles.text(["ABD", "CBD"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
+  highlight: (ctx: Content, frame: string) =>
+    ASA.highlight(ctx, frame, step5ASAProps),
 });
 
 const step7: StepMeta = makeStepMeta({
@@ -208,13 +209,23 @@ const step7: StepMeta = makeStepMeta({
     step6.additions({
       ...props,
       mode: SVGModes.Unfocused,
-      mode2: SVGModes.Unfocused,
     });
   },
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AD", "DC"], 2),
   text: EqualSegments.text(["AD", "DC"]),
   staticText: () => EqualSegments.staticText(["AD", "DC"]),
+  highlight: (ctx: Content, frame: string) => {
+    CongruentTriangles.highlight(ctx, frame, {
+      s1s: ["BD", "BD"],
+      s2s: ["AD", "DC"],
+      s3s: ["AB", "CB"],
+      a1s: ["ADB", "BDC"],
+      a2s: ["ABD", "CBD"],
+      a3s: ["BAD", "BCD"],
+    });
+    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
+  },
 });
 
 const step8: StepMeta = makeStepMeta({
@@ -226,6 +237,8 @@ const step8: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => step7.additions(props),
   text: Midpoint.text("AC", "D"),
   staticText: () => Midpoint.staticText("D", "AC"),
+  highlight: (ctx: Content, frame: string) =>
+    Midpoint.highlight(ctx, frame, "D", ["AD", "DC"], 2),
 });
 
 export const miniContent = () => {
@@ -235,7 +248,6 @@ export const miniContent = () => {
     ctx,
     frame: "",
     mode: SVGModes.Blue,
-    mode2: SVGModes.Purple,
   };
 
   const focusProps: StepFocusProps = {

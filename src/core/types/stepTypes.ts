@@ -8,7 +8,6 @@ export interface StepUnfocusProps {
 }
 export interface StepFocusProps extends StepUnfocusProps {
   mode: SVGModes;
-  mode2?: SVGModes;
 }
 export interface ProofTextItem {
   k: string;
@@ -39,6 +38,7 @@ export interface SetupStepMeta {
   text: (isActive: boolean) => JSX.Element;
   staticText: () => JSX.Element;
   additions: (props: StepFocusProps) => void;
+  highlight?: (ctx: Content, frame: string) => void;
 }
 export interface StepMeta extends SetupStepMeta {
   reason: Reason;

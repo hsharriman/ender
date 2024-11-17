@@ -18,7 +18,7 @@ import {
 } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
-import { BGColors, chipText, makeStepMeta } from "../../utils";
+import { makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const pts: Vector[] = [
@@ -60,25 +60,14 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Quadrilateral, "KLMN", BGColors.Blue, isActive)}
-        {" is a quadrilateral"}
-        {comma}
-        {EqualSegments.text(["LM", "NK"])(isActive)}
-        {comma}
-        {RightAngle.text("KLM")(isActive)}
-      </span>
-    );
+    return givens.staticText();
   },
 
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("LMK").mode(props.frame, props.mode);
     props.ctx.getTriangle("KMN").mode(props.frame, props.mode);
   },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
+
   staticText: () => {
     return (
       <span>
@@ -111,12 +100,7 @@ const step1: StepMeta = makeStepMeta({
     );
   },
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Quadrilateral, "KLMN", BGColors.Blue, isActive)}
-        {" is a quadrilateral"}
-      </span>
-    );
+    return step1.staticText();
   },
   staticText: () => <span>{"KLMN is a quadrilateral"}</span>,
 });
@@ -161,6 +145,12 @@ const step4: StepMeta = makeStepMeta({
   staticText: () => {
     return EqualRightAngles.staticText(["KLM", "MNK"]);
   },
+  highlight: (ctx: Content, frame: string) => {
+    ctx.getSegment("LM").highlight(frame);
+    ctx.getSegment("NK").highlight(frame);
+    ctx.getSegment("LK").highlight(frame);
+    ctx.getSegment("MN").highlight(frame);
+  },
 });
 
 const step5: StepMeta = makeStepMeta({
@@ -174,6 +164,8 @@ const step5: StepMeta = makeStepMeta({
   },
   text: Reflexive.text("MK"),
   staticText: () => Reflexive.staticText("MK"),
+  highlight: (ctx: Content, frame: string) =>
+    Reflexive.highlight(ctx, frame, "MK", 2),
 });
 
 const s6SASProps: SASProps = {
@@ -190,6 +182,11 @@ const step6: StepMeta = makeStepMeta({
   },
   text: EqualTriangles.text(s6SASProps.triangles),
   staticText: () => EqualTriangles.staticText(s6SASProps.triangles),
+  highlight: (ctx: Content, frame: string) => {
+    EqualSegments.highlight(ctx, frame, ["LM", "NK"]);
+    EqualRightAngles.highlight(ctx, frame, ["KLM", "MNK"]);
+    EqualSegments.highlight(ctx, frame, ["MK", "MK"], 2);
+  },
 });
 
 export const T1_S1_IN3: LayoutProps = {

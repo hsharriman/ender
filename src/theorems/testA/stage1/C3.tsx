@@ -4,18 +4,21 @@ import { Angle } from "../../../core/geometry/Angle";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { ASA } from "../../../core/reasons/ASA";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
+import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import { incompleteProof2 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
@@ -81,9 +84,6 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("MRN").mode(props.frame, props.mode);
   },
 
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
   staticText: () => {
     return (
       <span>
@@ -143,6 +143,8 @@ const step22: StepMeta = makeStepMeta({
   },
   text: EqualSegments.text(["PR", "RM"]),
   staticText: () => EqualSegments.staticText(["PR", "RM"]),
+  highlight: (ctx: Content, frame: string) =>
+    Midpoint.highlight(ctx, frame, "R", ["PR", "RM"]),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -155,6 +157,16 @@ const step3: StepMeta = makeStepMeta({
   staticText: () => EqualAngles.staticText(["QRP", "MRN"]),
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["QRP", "MRN"]),
+  highlight: (ctx: Content, frame: string) =>
+    VerticalAngles.highlight(
+      ctx,
+      frame,
+      {
+        angs: ["QRP", "MRN"],
+        segs: ["QR", "RN"],
+      },
+      ["PR", "RM"]
+    ),
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -169,6 +181,13 @@ const step4: StepMeta = makeStepMeta({
     step2.additions(props);
     step3.additions(props);
   },
+  highlight: (ctx: Content, frame: string) =>
+    ASA.highlight(ctx, frame, {
+      a1s: { a: ["QRP", "MRN"], type: Obj.EqualAngleTick },
+      a2s: { a: ["QPR", "RMN"], type: Obj.RightTick },
+      segs: { s: ["PR", "RM"], ticks: 1 },
+      triangles: ["QPR", "RMN"],
+    }),
 });
 
 const step5: StepMeta = makeStepMeta({
@@ -182,6 +201,17 @@ const step5: StepMeta = makeStepMeta({
   },
   text: EqualSegments.text(["QR", "RN"]),
   staticText: () => EqualSegments.staticText(["QR", "RN"]),
+  highlight: (ctx: Content, frame: string) => {
+    CongruentTriangles.highlight(ctx, frame, {
+      s1s: ["PR", "RM"],
+      s2s: ["QR", "RN"],
+      s3s: ["PQ", "MN"],
+      a1s: ["QRP", "MRN"],
+      a2s: ["QPR", "RMN"],
+      a3s: ["PQR", "RNM"],
+    });
+    EqualRightAngles.highlight(ctx, frame, ["QPR", "RMN"]);
+  },
 });
 
 const step6: StepMeta = makeStepMeta({
@@ -196,6 +226,8 @@ const step6: StepMeta = makeStepMeta({
   },
   text: Midpoint.text("QN", "R"),
   staticText: () => Midpoint.staticText("R", "QN"),
+  highlight: (ctx: Content, frame: string) =>
+    Midpoint.highlight(ctx, frame, "R", ["QR", "NR"], 2),
 });
 
 export const T1_S1_C3: LayoutProps = {

@@ -1,5 +1,4 @@
-import { definitions } from "../../theorems/definitions";
-import { BGColors, chipText, tooltip } from "../../theorems/utils";
+import { Content } from "../diagramContent";
 import { resizedStrs, segmentStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
 import { Obj } from "../types/types";
@@ -17,19 +16,14 @@ export class ParallelLines {
     props.ctx
       .getSegment(s2)
       .addTick(props.frame, Obj.ParallelTick, numTicks)
-      .mode(props.frame, props.mode2 || props.mode);
+      .mode(props.frame, props.mode);
   };
   static text =
     ([s1, s2]: [string, string]) =>
     (isActive: boolean) => {
-      return (
-        <span>
-          {chipText(Obj.Segment, s1, BGColors.Blue, isActive)}
-          {tooltip(resizedStrs.parallel, definitions.Parallel)}
-          {chipText(Obj.Segment, s2, BGColors.Purple, isActive)}
-        </span>
-      );
+      return this.staticText([s1, s2]);
     };
+
   static staticText = (s: [string, string]) => {
     return (
       <span>
@@ -38,5 +32,13 @@ export class ParallelLines {
         {segmentStr(s[1])}
       </span>
     );
+  };
+  static highlight = (
+    ctx: Content,
+    frame: string,
+    [s1, s2]: [string, string]
+  ) => {
+    ctx.getSegment(s1).addTick(frame, Obj.ParallelTick).highlight(frame);
+    ctx.getSegment(s2).addTick(frame, Obj.ParallelTick).highlight(frame);
   };
 }

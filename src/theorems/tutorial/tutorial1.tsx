@@ -11,6 +11,7 @@ import {
 import { EqualTriangles } from "../../core/reasons/EqualTriangles";
 import { Reflexive, ReflexiveStep } from "../../core/reasons/Reflexive";
 import { SAS, SASProps } from "../../core/reasons/SAS";
+import { SSS } from "../../core/reasons/SSS";
 import {
   tutorial1Questions,
   tutorial2Questions,
@@ -63,15 +64,6 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (isActive: boolean) => {
-    return (
-      <span>
-        {EqualSegments.text(["AB", "AD"])(isActive)}
-        {comma}
-        {EqualAngles.text(["BAC", "DAC"])(isActive)}
-      </span>
-    );
-  },
   staticText: () => {
     return (
       <span>
@@ -81,13 +73,10 @@ const givens: StepMeta = makeStepMeta({
       </span>
     );
   },
-
+  text: (isActive: boolean) => givens.staticText(),
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("ABC").mode(props.frame, props.mode);
     props.ctx.getTriangle("ADC").mode(props.frame, props.mode);
-  },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
 });
 
@@ -95,8 +84,8 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     givens.additions(props);
   },
-  text: EqualTriangles.text(["ABC", "ADC"]),
   staticText: () => EqualTriangles.staticText(["ABC", "ADC"]),
+  text: (isActive: boolean) => proves.staticText(),
 });
 
 const step1: StepMeta = EqualSegmentStep(["AB", "AD"], Reasons.Given, givens);
@@ -113,7 +102,11 @@ const step2: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["BAC", "DAC"]),
 });
 
-const step3: StepMeta = ReflexiveStep("AC", 2, step2);
+const step3: StepMeta = makeStepMeta({
+  ...ReflexiveStep("AC", 2, step2),
+  highlight: (ctx: Content, frame: string) =>
+    Reflexive.highlight(ctx, frame, "AC", 2),
+});
 
 const step4SASProps: SASProps = {
   seg1s: { s: ["AB", "AD"], ticks: 1 },
@@ -127,27 +120,25 @@ const step4: StepMeta = makeStepMeta({
   text: EqualTriangles.text(step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step4SASProps.triangles),
   additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
+  highlight: (ctx: Content, frame: string) => {
+    SAS.highlight(ctx, frame, step4SASProps);
+  },
 });
 
-const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  // STEP 3 - REFLEXIVE PROPERTY
-  const s3 = ctx.addFrame("s3");
-  Reflexive.additions({ ctx, frame: s3, mode: SVGModes.Purple }, "AC");
-
-  // STEP 4 - SAS
-  const s4 = ctx.addFrame("s4");
-  SAS.additions({ ctx, frame: s4, mode: SVGModes.Purple }, step4SASProps);
-
-  return ctx;
-};
-
 // TUTORIAL 2
-const step4t2 = {
+const step4t2 = makeStepMeta({
   ...step4,
+  additions: (props: StepFocusProps) => {
+    SAS.additions(props, step4SASProps);
+  },
+  highlight: (ctx: Content, frame: string) =>
+    SSS.highlight(ctx, frame, {
+      s1s: ["AB", "AD"],
+      s2s: ["AC", "AC"],
+      s3s: ["BC", "CD"],
+    }),
   reason: Reasons.SSS,
-};
+});
 
 export const TutorialProof1: LayoutProps = {
   name: "TutorialProof1",

@@ -10,15 +10,16 @@ import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
+import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
   StepMeta,
   StepUnfocusProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
-import { BGColors, chipText, makeStepMeta } from "../../utils";
+import { makeStepMeta } from "../../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -67,13 +68,7 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
-    return (
-      <span>
-        {Midpoint.text("WZ", "M")(isActive)}
-        {" and "}
-        {chipText(Obj.Segment, "XY", BGColors.Purple, isActive)}
-      </span>
-    );
+    return givens.staticText();
   },
   staticText: () => {
     return (
@@ -88,9 +83,6 @@ const givens: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("MYZ").mode(props.frame, props.mode);
     props.ctx.getTriangle("MWX").mode(props.frame, props.mode);
-  },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
 });
 
@@ -110,7 +102,7 @@ const step1: StepMeta = makeStepMeta({
   unfocused: (props: StepUnfocusProps) => {
     givens.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  text: Midpoint.text("WZ", "M"),
+  text: Midpoint.text("M", "WZ"),
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "M", ["WM", "MZ"]);
   },
@@ -123,27 +115,24 @@ const step2: StepMeta = makeStepMeta({
     step1.unfocused(props);
     step1.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  text: Midpoint.text("XY", "M"),
+  text: Midpoint.text("M", "XY"),
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "M", ["YM", "XM"], 2);
   },
   staticText: () => Midpoint.staticText("M", "XY"),
 });
 
-const step3: StepMeta = EqualSegmentStep(
-  ["WM", "MZ"],
-  Reasons.Midpoint,
-  step2,
-  1,
-  [1]
-);
-const step4: StepMeta = EqualSegmentStep(
-  ["XM", "YM"],
-  Reasons.Midpoint,
-  step3,
-  2,
-  [2]
-);
+const step3: StepMeta = makeStepMeta({
+  ...EqualSegmentStep(["WM", "MZ"], Reasons.Midpoint, step2, 1, [1]),
+  highlight: (ctx: Content, frame: string) =>
+    Midpoint.highlight(ctx, frame, "M", ["WM", "MZ"]),
+});
+
+const step4: StepMeta = makeStepMeta({
+  ...EqualSegmentStep(["XM", "YM"], Reasons.Midpoint, step3, 2, [2]),
+  highlight: (ctx: Content, frame: string) =>
+    Midpoint.highlight(ctx, frame, "M", ["YM", "XM"], 2),
+});
 
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.VerticalAngles,
@@ -156,6 +145,13 @@ const step5: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["YMZ", "WMX"]),
   text: EqualAngles.text(["YMZ", "WMX"]),
   staticText: () => EqualAngles.staticText(["YMZ", "WMX"]),
+  highlight: (ctx: Content, frame: string) =>
+    VerticalAngles.highlight(
+      ctx,
+      frame,
+      { angs: ["YMZ", "WMX"], segs: ["WM", "MZ"] },
+      ["XM", "YM"]
+    ),
 });
 
 const step6SASProps: SASProps = {
@@ -170,6 +166,8 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => SAS.additions(props, step6SASProps),
   text: EqualTriangles.text(step6SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step6SASProps.triangles),
+  highlight: (ctx: Content, frame: string) =>
+    SAS.highlight(ctx, frame, step6SASProps),
 });
 
 const step7: StepMeta = makeStepMeta({
@@ -182,6 +180,13 @@ const step7: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["MYZ", "MWX"], 2),
   text: EqualAngles.text(["MYZ", "MWX"]),
   staticText: () => EqualAngles.staticText(["MYZ", "MWX"]),
+  highlight: (ctx: Content, frame: string) => {
+    ctx.getSegment("WZ").highlight(frame);
+    ctx.getSegment("YX").highlight(frame);
+    ctx.getSegment("WX").highlight(frame);
+    ctx.getSegment("YZ").highlight(frame);
+    EqualAngles.highlight(ctx, frame, ["MYZ", "MXW"], 2);
+  },
 });
 
 const step8: StepMeta = makeStepMeta({
@@ -195,6 +200,10 @@ const step8: StepMeta = makeStepMeta({
     ParallelLines.additions(props, ["WX", "YZ"]),
   text: ParallelLines.text(["WX", "YZ"]),
   staticText: () => ParallelLines.staticText(["WX", "YZ"]),
+  highlight: (ctx: Content, frame: string) => {
+    ParallelLines.highlight(ctx, frame, ["WX", "YZ"]);
+    ctx.getSegment("YX").highlight(frame);
+  },
 });
 
 export const T1_S2_IN2: LayoutProps = {

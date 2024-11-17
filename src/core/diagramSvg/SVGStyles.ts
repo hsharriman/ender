@@ -3,9 +3,9 @@ export const ModeCSS = {
   FOCUSED: "stroke-black stroke-2 fill-none opacity-1",
   ACTIVE: "stroke-violet-500 stroke-[4px] drop-shadow-[0_0_5px_#8b5cf6]",
   DEFAULT: "stroke-black stroke-2 fill-none opacity-1",
-  UNFOCUSED: "opacity-70 stroke-black stroke-1 fill-none",
-  PURPLE: "stroke-fuchsia-500 stroke-[5px] fill-none opacity-1",
-  BLUE: "stroke-blue-700 stroke-[5px] fill-none opacity-1",
+  UNFOCUSED: "opacity-50 stroke-black stroke-1 fill-none",
+  PURPLE: "stroke-purple-700 stroke-[5px] fill-none opacity-1",
+  BLUE: "stroke-purple-400 stroke-[5px] fill-none opacity-1",
   ACTIVETEXT: "fill-violet-500 stroke-violet-500 stroke-[1px]",
   DIAGRAMTEXTGLOW:
     "fill-violet-600 stroke-violet-600 stroke-[1px] drop-shadow-[0_0_5px_#8b5cf6]",
@@ -15,4 +15,6 @@ export const ModeCSS = {
   ACTIVETRIPURPLE: "stroke-black stroke-2 opacity-1 fill-triangle",
   ACTIVETRIBLUE: "stroke-black stroke-2 opacity-1 fill-triangle",
   UNFOCUSEDTRI: "opacity-70 stroke-black stroke-1 half-opacity fill-triangle",
+  HIGHLIGHT: "stroke-violet-300 stroke-[10px]",
+  HIGHLIGHTTICK: "stroke-violet-300 stroke-[5px]",
 };

@@ -93,9 +93,6 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("UPS").mode(props.frame, props.mode);
   },
 
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
   staticText: () => {
     return (
       <span>
@@ -147,6 +144,10 @@ const step4: StepMeta = makeStepMeta({
     EqualRightAngles.additions(props, ["PSL", "PSU"]),
   text: EqualRightAngles.text(["PSL", "PSU"]),
   staticText: () => EqualRightAngles.staticText(["PSL", "PSU"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualRightAngles.highlight(ctx, frame, ["PSL", "PSU"]);
+    Perpendicular.highlight(ctx, frame, "PS", ["LS", "SU"]);
+  },
 });
 
 const step5: StepMeta = ReflexiveStep("PS", 2, step4);
@@ -168,6 +169,8 @@ const step6: StepMeta = makeStepMeta({
   },
   text: EqualTriangles.text(step6ASAProps.triangles),
   staticText: () => EqualTriangles.staticText(step6ASAProps.triangles),
+  highlight: (ctx: Content, frame: string) =>
+    ASA.highlight(ctx, frame, step6ASAProps),
 });
 
 const step7: StepMeta = makeStepMeta({
@@ -182,8 +185,18 @@ const step7: StepMeta = makeStepMeta({
   },
   text: EqualAngles.text(["SLP", "SUP"]),
   staticText: () => EqualAngles.staticText(["SLP", "SUP"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualTriangles.highlight(ctx, frame, ["LSP", "USP"]);
+    EqualAngles.highlight(ctx, frame, ["SLP", "SUP"], 2);
+  },
 });
 
+const step9ASAProps: ASAProps = {
+  a1s: { a: ["ULN", "LUQ"], type: Obj.EqualAngleTick, ticks: 2 },
+  a2s: { a: ["LNU", "UQL"], type: Obj.EqualAngleTick, ticks: 3 },
+  segs: { s: ["LN", "QU"] },
+  triangles: ["LNU", "UQL"],
+};
 // INCORRECT VERSION -- Correct would be reflexive LU
 const step8: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
@@ -197,15 +210,13 @@ const step8: StepMeta = makeStepMeta({
   },
   text: EqualAngles.text(["LNU", "UQL"]),
   staticText: () => EqualAngles.staticText(["LNU", "UQL"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualAngles.highlight(ctx, frame, ["LNU", "UQL"], 3);
+    EqualTriangles.highlight(ctx, frame, ["LNU", "UQL"]);
+  },
 });
 
 // INCORRECT VERSION -- Correct would be SAS
-const step9ASAProps: ASAProps = {
-  a1s: { a: ["ULN", "LUQ"], type: Obj.EqualAngleTick, ticks: 2 },
-  a2s: { a: ["LNU", "UQL"], type: Obj.EqualAngleTick, ticks: 3 },
-  segs: { s: ["LN", "QU"] },
-  triangles: ["LNU", "UQL"],
-};
 const step9: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
   dependsOn: [2, 7, 8],
@@ -217,6 +228,8 @@ const step9: StepMeta = makeStepMeta({
   },
   text: EqualTriangles.text(step9ASAProps.triangles),
   staticText: () => EqualTriangles.staticText(step9ASAProps.triangles),
+  highlight: (ctx: Content, frame: string) =>
+    ASA.highlight(ctx, frame, step9ASAProps),
 });
 
 export const T1_S2_IN1: LayoutProps = {

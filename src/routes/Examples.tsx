@@ -105,9 +105,9 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
       : staticLayout(proof).meta;
     if (layout) {
       return (
-        <>
+        <div className="h-full">
           {this.renderHeader(proof.title)}
-          <div className="w-full h-full flex justify-start">
+          <div className="w-full flex justify-start">
             {this.state.isInteractive ? (
               <InteractiveAppPage
                 {...{
@@ -126,7 +126,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
               />
             )}
           </div>
-        </>
+        </div>
       );
     }
     return <></>;

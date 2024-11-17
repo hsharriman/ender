@@ -4,6 +4,7 @@ export type BaseSVGProps = {
   geoId: string;
   mode: SVGModes;
   hoverable?: boolean;
+  highlight: boolean;
   style?: React.CSSProperties;
   miniScale: boolean;
 };

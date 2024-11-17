@@ -1,4 +1,4 @@
-import { BGColors, chipText } from "../../theorems/utils";
+import { Content } from "../diagramContent";
 import { StepFocusProps } from "../types/stepTypes";
 import { Obj } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
@@ -8,18 +8,12 @@ export class EqualRightAngles {
   private static equalNinety = " = 90° = ";
   static additions = (props: StepFocusProps, [a1, a2]: [string, string]) => {
     RightAngle.additions({ ...props }, a1);
-    RightAngle.additions({ ...props, mode: props.mode2 || props.mode }, a2);
+    RightAngle.additions({ ...props, mode: props.mode }, a2);
   };
   static text =
     ([a1, a2]: [string, string]) =>
     (isActive: boolean) => {
-      return (
-        <span>
-          {chipText(Obj.Angle, a1, BGColors.Blue, isActive)}
-          {this.equalNinety}
-          {chipText(Obj.Angle, a2, BGColors.Purple, isActive)}
-        </span>
-      );
+      return this.staticText([a1, a2]);
     };
   static staticText = (a: [string, string]) => {
     return (
@@ -29,5 +23,13 @@ export class EqualRightAngles {
         {BaseAngle.staticText(a[1])}
       </span>
     );
+  };
+  static highlight = (
+    ctx: Content,
+    frame: string,
+    [a1, a2]: [string, string]
+  ) => {
+    ctx.getAngle(a1).addTick(frame, Obj.RightTick).highlight(frame);
+    ctx.getAngle(a2).addTick(frame, Obj.RightTick).highlight(frame);
   };
 }

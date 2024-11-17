@@ -1,12 +1,6 @@
-import { definitions } from "../../theorems/definitions";
 import { Reasons } from "../../theorems/reasons";
-import {
-  BGColors,
-  chipText,
-  makeStepMeta,
-  tooltip,
-} from "../../theorems/utils";
-import { resizedStrs } from "../geometryText";
+import { makeStepMeta } from "../../theorems/utils";
+import { Content } from "../diagramContent";
 import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
@@ -19,16 +13,13 @@ export class Reflexive {
       .mode(props.frame, props.mode);
   };
   static text = (s: string) => (isActive: boolean) => {
-    return (
-      <span>
-        {chipText(Obj.Segment, s, BGColors.Blue, isActive)}
-        {tooltip(resizedStrs.congruent, definitions.CongruentLines)}
-        {chipText(Obj.Segment, s, BGColors.Blue, isActive)}
-      </span>
-    );
+    return this.staticText(s);
   };
   static staticText = (s: string) => {
     return EqualSegments.staticText([s, s]);
+  };
+  static highlight = (ctx: Content, frame: string, s: string, num = 1) => {
+    return EqualSegments.highlight(ctx, frame, [s, s], num);
   };
 }
 
@@ -47,4 +38,7 @@ export const ReflexiveStep = (seg: string, num: number, step: StepMeta) =>
     },
     text: Reflexive.text(seg),
     staticText: () => Reflexive.staticText(seg),
+    highlight: (ctx: Content, frame: string) => {
+      Reflexive.highlight(ctx, frame, seg, num);
+    },
   });

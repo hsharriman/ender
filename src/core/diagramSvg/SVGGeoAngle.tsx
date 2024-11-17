@@ -116,15 +116,17 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
         <SVGGeoTick
           parent={this.props.a}
           tick={this.props.tick}
+          geoId={`${this.props.geoId}-tick${
+            this.props.highlight ? "-highlight" : ""
+          }`}
           css={
-            this.state.isActive || this.state.isPinned
+            this.props.highlight
+              ? ModeCSS.HIGHLIGHT
+              : this.state.isActive || this.state.isPinned
               ? this.state.css
               : updateStyle(this.props.mode)
           }
           miniScale={this.props.miniScale}
-          geoId={`${this.props.geoId}-tick${
-            this.props.miniScale ? "-mini" : ""
-          }`}
         />
         {/* {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel

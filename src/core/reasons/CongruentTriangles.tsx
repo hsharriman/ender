@@ -1,3 +1,4 @@
+import { Content } from "../diagramContent";
 import { StepFocusProps } from "../types/stepTypes";
 import { EqualAngles } from "./EqualAngles";
 import { EqualSegments } from "./EqualSegments";
@@ -22,5 +23,30 @@ export class CongruentTriangles {
     EqualAngles.additions(props, labels.a1s, 1);
     EqualAngles.additions(props, labels.a2s, 2);
     EqualAngles.additions(props, labels.a3s, 3);
+  };
+
+  static highlight = (
+    ctx: Content,
+    frame: string,
+    labels: CongruentTrianglesProps
+  ) => {
+    EqualSegments.highlight(ctx, frame, labels.s1s, 1);
+    EqualSegments.highlight(ctx, frame, labels.s2s, 2);
+    EqualSegments.highlight(ctx, frame, labels.s3s, 3);
+    EqualAngles.highlight(ctx, frame, labels.a1s, 1);
+    EqualAngles.highlight(ctx, frame, labels.a2s, 2);
+    EqualAngles.highlight(ctx, frame, labels.a3s, 3);
+  };
+  static highlightRightTriangle = (
+    ctx: Content,
+    frame: string,
+    labels: CongruentTrianglesProps
+  ) => {
+    EqualSegments.highlight(ctx, frame, labels.s1s, 1);
+    EqualSegments.highlight(ctx, frame, labels.s2s, 2);
+    EqualSegments.highlight(ctx, frame, labels.s3s, 3);
+    EqualAngles.highlight(ctx, frame, labels.a1s, 1);
+    EqualAngles.highlight(ctx, frame, labels.a2s, 2);
+    EqualAngles.highlight(ctx, frame, labels.a3s, 3);
   };
 }

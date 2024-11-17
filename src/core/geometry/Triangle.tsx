@@ -116,4 +116,9 @@ export class Triangle extends BaseGeometryObject {
     this.a.map((ang) => ang.mode(frameKey, mode));
     return this;
   };
+
+  override highlight = (frameKey: string) => {
+    this.s.map((seg) => seg.highlight(frameKey));
+    return this;
+  };
 }

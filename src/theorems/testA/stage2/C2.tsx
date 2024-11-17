@@ -102,9 +102,6 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("BCD").mode(props.frame, props.mode);
     props.ctx.getTriangle("BCG").mode(props.frame, props.mode);
   },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
 });
 
 const proves: StepMeta = makeStepMeta({
@@ -144,6 +141,10 @@ const step6: StepMeta = makeStepMeta({
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
   text: EqualRightAngles.text(["ADB", "BDC"]),
   staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
+  highlight: (ctx: Content, frame: string) => {
+    Perpendicular.highlight(ctx, frame, "BD", ["AD", "CD"]);
+    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
+  },
 });
 
 const step7: StepMeta = makeStepMeta({
@@ -163,15 +164,24 @@ const step7: StepMeta = makeStepMeta({
   },
   text: EqualTriangles.text(["ABD", "BCD"]),
   staticText: () => EqualTriangles.staticText(["ABD", "BCD"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
+    EqualSegments.highlight(ctx, frame, ["AD", "DC"]);
+    EqualSegments.highlight(ctx, frame, ["BD", "BD"], 3);
+  },
 });
 
-const step8: StepMeta = EqualSegmentStep(
-  ["AB", "BC"],
-  Reasons.CPCTC,
-  step7,
-  4,
-  [7]
-);
+const step8: StepMeta = makeStepMeta({
+  ...EqualSegmentStep(["AB", "BC"], Reasons.CPCTC, step7, 4, [7]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
+    EqualAngles.highlight(ctx, frame, ["DAB", "DCB"], 2);
+    EqualAngles.highlight(ctx, frame, ["ABD", "CBD"]);
+    EqualSegments.highlight(ctx, frame, ["AD", "DC"]);
+    EqualSegments.highlight(ctx, frame, ["BD", "BD"], 3);
+    EqualSegments.highlight(ctx, frame, ["BC", "AB"], 4);
+  },
+});
 const step9: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: [3, 4, 8],
@@ -188,15 +198,24 @@ const step9: StepMeta = makeStepMeta({
   },
   text: EqualTriangles.text(["ABF", "BCG"]),
   staticText: () => EqualTriangles.staticText(["ABF", "BCG"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualAngles.highlight(ctx, frame, ["FAB", "BCG"]);
+    EqualSegments.highlight(ctx, frame, ["FA", "GC"], 2);
+    EqualSegments.highlight(ctx, frame, ["AB", "BC"], 4);
+  },
 });
 
-const step10: StepMeta = EqualAngleStep(
-  ["AFB", "CGB"],
-  Reasons.CPCTC,
-  step9,
-  2,
-  [9]
-);
+const step10: StepMeta = makeStepMeta({
+  ...EqualAngleStep(["AFB", "CGB"], Reasons.CPCTC, step9, 2, [9]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualAngles.highlight(ctx, frame, ["FAB", "BCG"]);
+    EqualSegments.highlight(ctx, frame, ["FA", "GC"], 2);
+    EqualSegments.highlight(ctx, frame, ["AB", "BC"], 4);
+    EqualSegments.highlight(ctx, frame, ["FB", "GB"], 5);
+    EqualAngles.highlight(ctx, frame, ["AFB", "CGB"], 2);
+    EqualAngles.highlight(ctx, frame, ["FBA", "GBC"], 3);
+  },
+});
 
 export const T1_S2_C2: LayoutProps = {
   name: "T1_S2_C2",

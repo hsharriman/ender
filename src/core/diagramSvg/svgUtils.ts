@@ -59,6 +59,8 @@ export const updateStyle = (mode: SVGModes) => {
       return ModeCSS.ACTIVETRIPURPLE;
     case SVGModes.UnfocusedTriangle:
       return ModeCSS.UNFOCUSEDTRI;
+    case SVGModes.Highlight:
+      return ModeCSS.HIGHLIGHT;
     case SVGModes.Hidden:
     default:
       return ModeCSS.HIDDEN;

@@ -64,6 +64,7 @@ export const interactiveLayout = (
   tutorial?: TutorialStep[]
 ): Page => {
   const ctx = proofMeta.baseContent(true, false);
+  const highlightCtx = proofMeta.baseContent(true, false);
   const linkedTexts: ProofTextItem[] = [];
   const reasonMap = new Map<string, Reason>();
 
@@ -96,6 +97,13 @@ export const interactiveLayout = (
       ctx.reliesOn(s, depIds);
       textMeta = { dependsOn: new Set(depIds) };
     }
+    // setup highlighting for interactive diagrams
+    if (step.highlight) {
+      highlightCtx.addFrame(`s${i + 1}`);
+      step.highlight(highlightCtx, s);
+      console.log(highlightCtx, "setup");
+    }
+
     reasonMap.set(s, step.reason);
     linkedTexts.push({
       ...textMeta,
@@ -117,6 +125,7 @@ export const interactiveLayout = (
           ? fisherYates(proofMeta.questions)
           : proofMeta.questions,
         name: proofMeta.name,
+        highlightCtx: highlightCtx.getCtx(),
       },
       tutorial,
     },

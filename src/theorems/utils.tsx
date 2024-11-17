@@ -22,8 +22,8 @@ export const colors = {
 };
 
 export enum BGColors {
-  Purple = "bg-fuchsia-500",
-  Blue = "bg-blue-700",
+  Purple = "bg-violet-700",
+  Blue = "bg-violet-400",
 }
 
 // TODO move linked and reasonFn to different place, or move all this type info to a diff place
@@ -64,8 +64,8 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
     const additionProps = {
       ctx,
       frame,
-      mode: SVGModes.Blue,
-      mode2: SVGModes.Purple,
+      mode: SVGModes.Focused,
+      // mode2: SVGModes.Purple,
     };
     meta.unfocused
       ? meta.unfocused(unfocusedProps)
@@ -83,6 +83,7 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
     text: meta.text || defaultText,
     staticText: meta.staticText || defaultStaticText,
     additions: meta.additions || defaultAdditions,
+    highlight: meta.highlight,
   };
 };
 

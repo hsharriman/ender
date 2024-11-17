@@ -2,7 +2,6 @@ import React from "react";
 import { addTutorialActive, logEvent } from "../testinfra/testUtils";
 import { LSegment, Obj, SVGModes, TickType, Vector } from "../types/types";
 import { vops } from "../vectorOps";
-import { HoverTextLabel } from "./HoverTextLabel";
 import { SVGGeoTick } from "./SVGGeoTick";
 import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
@@ -97,28 +96,34 @@ export class SVGGeoSegment extends React.Component<
           x2={end[0]}
           y1={start[1]}
           y2={end[1]}
-          key={this.props.geoId}
-          id={this.props.geoId}
+          key={`${this.props.geoId}${this.props.highlight ? "-highlight" : ""}`}
+          id={`${this.props.geoId}${this.props.highlight ? "-highlight" : ""}`}
           className={
-            this.state.isActive || this.state.isPinned
+            this.props.highlight
+              ? ModeCSS.HIGHLIGHT
+              : this.state.isActive || this.state.isPinned
               ? this.state.css
               : updateStyle(this.props.mode)
           }
+          // strokeLinecap={this.props.highlight ? "round" : "butt"}
+          strokeLinecap="round"
         />
         <SVGGeoTick
           parent={this.props.s}
           tick={this.props.tick}
           css={
-            this.state.isActive || this.state.isPinned
+            this.props.highlight
+              ? ModeCSS.HIGHLIGHTTICK
+              : this.state.isActive || this.state.isPinned
               ? this.state.css
               : updateStyle(this.props.mode)
           }
           miniScale={this.props.miniScale}
           geoId={`${this.props.geoId}-tick${
-            this.props.miniScale ? "-mini" : ""
+            this.props.highlight ? "-highlight" : ""
           }`}
         />
-        {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
+        {/* {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel
             pt={vops.add(midpt, norm)}
             rot={angleDeg}
@@ -126,8 +131,8 @@ export class SVGGeoSegment extends React.Component<
             isHovered={this.state.isActive}
             isPinned={Boolean(this.state.isPinned)}
           />
-        )}
-        {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
+        )} */}
+        {/* {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <line
             x1={start[0]}
             x2={end[0]}
@@ -145,7 +150,7 @@ export class SVGGeoSegment extends React.Component<
               cursor: "pointer",
             }}
           />
-        )}
+        )} */}
       </>
     );
   }

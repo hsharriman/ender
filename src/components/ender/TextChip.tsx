@@ -13,7 +13,7 @@ export const TextChip = (props: TextChipProps) => {
       case Obj.Segment:
         return (
           <span
-            className={`border-t-2 border-solid ${
+            className={`mt-1 border-t-2 border-solid ${
               props.isActive ? "border-white" : "border-slate-800"
             } leading-tight`}
           >{`${props.val}`}</span>
@@ -38,7 +38,7 @@ export const TextChip = (props: TextChipProps) => {
   };
   const style = props.isActive
     ? props.clr +
-      " inline-flex text-white py-1 px-2 rounded-md text-sm font-notoSerif"
+      " inline-flex text-white px-2 rounded-md text-lg font-notoSerif"
     : "inline-flex opacity-inherit font-notoSerif";
   return (
     <div id={`${props.obj}-text-${props.val}`} className={style}>

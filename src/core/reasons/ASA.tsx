@@ -1,7 +1,4 @@
-import { definitions } from "../../theorems/definitions";
-import { linked, tooltip } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { resizedStrs } from "../geometryText";
 import {
   StepFocusProps,
   TickedAngles,
@@ -11,6 +8,7 @@ import { Obj } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
+import { EqualTriangles } from "./EqualTriangles";
 
 export interface ASAProps {
   a1s: TickedAngles;
@@ -20,27 +18,28 @@ export interface ASAProps {
 }
 export class ASA {
   static text = (ctx: Content, triangles: [string, string]) => {
-    const [t1, t2] = triangles;
-    return (
-      <span>
-        {linked(t1, ctx.getTriangle(t1))}
-        {tooltip(resizedStrs.congruent, definitions.CongruentTriangles)}
-        {linked(t2, ctx.getTriangle(t2))}
-      </span>
-    );
+    return EqualTriangles.staticText(triangles);
   };
 
   static additions = (props: StepFocusProps, labels: ASAProps) => {
     props.ctx.getTriangle(labels.triangles[0]).mode(props.frame, props.mode);
-    props.ctx
-      .getTriangle(labels.triangles[1])
-      .mode(props.frame, props.mode2 || props.mode);
+    props.ctx.getTriangle(labels.triangles[1]).mode(props.frame, props.mode);
     EqualSegments.additions(props, labels.segs.s, labels.segs.ticks || 1);
     [labels.a1s, labels.a2s].forEach((a, i) => {
       if (a.type === Obj.RightTick) {
         EqualRightAngles.additions(props, a.a);
       } else {
         EqualAngles.additions(props, a.a, a.ticks || 1);
+      }
+    });
+  };
+  static highlight = (ctx: Content, frame: string, labels: ASAProps) => {
+    EqualSegments.highlight(ctx, frame, labels.segs.s, labels.segs.ticks || 1);
+    [labels.a1s, labels.a2s].forEach((a, i) => {
+      if (a.type === Obj.RightTick) {
+        EqualRightAngles.highlight(ctx, frame, a.a);
+      } else {
+        EqualAngles.highlight(ctx, frame, a.a, a.ticks || 1);
       }
     });
   };

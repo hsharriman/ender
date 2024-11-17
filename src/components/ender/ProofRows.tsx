@@ -237,15 +237,15 @@ export class ProofRow extends React.Component<ProofRowProps> {
 
   private bgClr = () => {
     return this.props.isActive
-      ? "bg-blue-200"
-      : this.props.depends
       ? "bg-blue-100"
+      : this.props.depends
+      ? "bg-blue-50"
       : "bg-transparent";
   };
 
   render() {
     // if the active row is given or prove, focus all the proof rows
-    const h = this.props.isCompact ? "h-12" : "h-12";
+    const h = this.props.isCompact ? "h-12" : "h-16";
     const fontSize = this.props.isCompact ? "text-md" : "text-lg";
     const padding = this.props.isCompact ? "py-2" : "py-2";
     const num = (
@@ -263,7 +263,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
         {this.props.i + 1}
       </div>
     );
-    const btnStyle = ` border-l-4 border-l-gray-800 ml-6 border-gray-300 border-r-2 border-r-gray-300 border-b-2 w-full ${h} ${fontSize} focus:outline-none`;
+    const btnStyle = ` border-l-4 border-l-gray-800 ml-6 border-gray-300 border-b-2 w-full ${h} ${fontSize} focus:outline-none`;
     return (
       <div
         className={`flex flex-row justify-start ${h}`}
@@ -304,10 +304,18 @@ export class ProofRow extends React.Component<ProofRowProps> {
                   </div>
                 </div>
                 <div
-                  className={`flex flex-row justify-start align-baseline items-center ${padding} shrink`}
+                  className={`-ml-2 flex flex-row justify-start align-baseline items-center ${padding} shrink`}
                   id={`reason-${this.props.i + 1}`}
                 >
-                  {this.props.item.reason}
+                  <div
+                    className={`px-2 rounded-md py-1 ${
+                      this.props.isActive && this.props.item.reason !== "Given"
+                        ? "bg-violet-300"
+                        : ""
+                    }`}
+                  >
+                    {this.props.item.reason}
+                  </div>
                 </div>
               </div>
             </button>

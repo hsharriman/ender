@@ -3,9 +3,11 @@ import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { SAS } from "../../../core/reasons/SAS";
 import { checkingProof1 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
@@ -77,9 +79,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("ABD").mode(props.frame, props.mode);
     props.ctx.getTriangle("CDB").mode(props.frame, props.mode);
   },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
+
   staticText: () => {
     return (
       <span>
@@ -156,6 +156,13 @@ const step4: StepMeta = makeStepMeta({
   },
   text: EqualTriangles.text(["ABD", "CDB"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CDB"]),
+  highlight: (ctx: Content, frame: string) =>
+    SAS.highlight(ctx, frame, {
+      seg1s: { s: ["AD", "BC"] },
+      seg2s: { s: ["AB", "DC"], ticks: 2 },
+      angles: { a: ["BAD", "BCD"] },
+      triangles: ["ABD", "CDB"],
+    }),
 });
 
 const step5: StepMeta = makeStepMeta({
@@ -169,6 +176,15 @@ const step5: StepMeta = makeStepMeta({
   },
   text: EqualAngles.text(["BAD", "DCB"]),
   staticText: () => EqualAngles.staticText(["BAD", "DCB"]),
+  highlight: (ctx: Content, frame: string) =>
+    CongruentTriangles.highlight(ctx, frame, {
+      s1s: ["AD", "BC"],
+      s2s: ["AB", "DC"],
+      s3s: ["BD", "BD"],
+      a1s: ["ABD", "CDB"],
+      a2s: ["BAD", "DCB"],
+      a3s: ["ADB", "CBD"],
+    }),
 });
 
 export const T1_S1_IN1: LayoutProps = {

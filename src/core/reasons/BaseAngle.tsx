@@ -1,10 +1,10 @@
-import { BGColors, chipText } from "../../theorems/utils";
+import { BGColors } from "../../theorems/utils";
 import { angleStr } from "../geometryText";
-import { Obj } from "../types/types";
 
 export class BaseAngle {
   static text = (a: string, clr: BGColors) => (isActive: boolean) => {
-    return chipText(Obj.Angle, a, clr, isActive);
+    // return chipText(Obj.Angle, a, clr, isActive);
+    return angleStr(a);
   };
   static staticText = (a: string) => {
     return angleStr(a);
