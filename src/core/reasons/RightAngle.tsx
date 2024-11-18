@@ -33,7 +33,7 @@ export class RightAngle {
 export const RightAngleStep = (
   a: string,
   reason: Reason,
-  dependsOn?: number[],
+  dependsOn?: string[],
   unfocused?: (props: StepUnfocusProps) => void
 ) => {
   return makeStepMeta({

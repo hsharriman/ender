@@ -56,7 +56,7 @@ export const EqualAngleStep = (
   reason: Reason,
   step: StepMeta,
   num?: number,
-  dependsOn?: number[]
+  dependsOn?: string[]
 ) => {
   return makeStepMeta({
     reason,

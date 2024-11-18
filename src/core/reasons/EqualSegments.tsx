@@ -62,7 +62,7 @@ export const EqualSegmentStep = (
   reason: Reason,
   step: StepMeta,
   num?: number,
-  dependsOn?: number[]
+  dependsOn?: string[]
 ) =>
   makeStepMeta({
     reason,

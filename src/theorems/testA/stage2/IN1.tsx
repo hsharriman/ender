@@ -135,7 +135,7 @@ const step3: StepMeta = EqualAngleStep(["LPS", "UPS"], Reasons.Given, step2);
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
-  dependsOn: [1],
+  dependsOn: ["1"],
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);
     step3.additions({ ...props, mode: SVGModes.Unfocused });
@@ -160,7 +160,7 @@ const step6ASAProps: ASAProps = {
 };
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
-  dependsOn: [3, 4, 5],
+  dependsOn: ["3", "4", "5"],
   unfocused: (props: StepUnfocusProps) => {
     step5.unfocused(props);
   },
@@ -175,7 +175,7 @@ const step6: StepMeta = makeStepMeta({
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [6],
+  dependsOn: ["6"],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });
     step6.unfocused(props);
@@ -200,7 +200,7 @@ const step9ASAProps: ASAProps = {
 // INCORRECT VERSION -- Correct would be reflexive LU
 const step8: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [9],
+  dependsOn: ["6?"],
   unfocused: (props: StepUnfocusProps) => {
     step7.additions({ ...props, mode: SVGModes.Unfocused });
     step7.unfocused(props);
@@ -219,7 +219,7 @@ const step8: StepMeta = makeStepMeta({
 // INCORRECT VERSION -- Correct would be SAS
 const step9: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
-  dependsOn: [2, 7, 8],
+  dependsOn: ["2", "7", "8?"],
   unfocused: (props: StepUnfocusProps) => {
     step8.unfocused(props);
   },

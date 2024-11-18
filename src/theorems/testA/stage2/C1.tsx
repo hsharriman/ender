@@ -148,7 +148,7 @@ const step2: StepMeta = makeStepMeta({
 
 const step22: StepMeta = makeStepMeta({
   reason: Reasons.Midpoint,
-  dependsOn: [2],
+  dependsOn: ["2"],
   unfocused: (props: StepUnfocusProps) => {
     step2.unfocused(props);
     step2.additions({ ...props, mode: SVGModes.Unfocused });
@@ -164,7 +164,7 @@ const step22: StepMeta = makeStepMeta({
 
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.Rectangle,
-  dependsOn: [1],
+  dependsOn: ["1"],
   unfocused: (props: StepUnfocusProps) => {
     step22.additions({ ...props, mode: SVGModes.Unfocused });
     step22.unfocused(props);
@@ -186,7 +186,7 @@ const step3: StepMeta = makeStepMeta({
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.Rectangle,
-  dependsOn: [1],
+  dependsOn: ["1"],
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);
     step3.additions({ ...props, mode: SVGModes.Unfocused });
@@ -214,7 +214,7 @@ const step5SASProps: SASProps = {
 };
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [3, 4, 5],
+  dependsOn: ["3", "4", "5"],
   unfocused: (props: StepUnfocusProps) => {
     props.ctx.getSegment("FG").mode(props.frame, SVGModes.Unfocused);
   },
@@ -229,7 +229,7 @@ const step5: StepMeta = makeStepMeta({
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [6],
+  dependsOn: ["6"],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });
     step5.unfocused(props);
@@ -247,7 +247,7 @@ const step6: StepMeta = makeStepMeta({
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.Isosceles,
-  dependsOn: [7],
+  dependsOn: ["7"],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });
     step6.unfocused(props);

@@ -147,7 +147,7 @@ const step3: StepMeta = makeStepMeta({
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [1, 2, 3],
+  dependsOn: ["1", "2", "3?"],
   additions: (props: StepFocusProps) => {
     givens.additions(props);
     step1.additions(props);
@@ -167,7 +167,7 @@ const step4: StepMeta = makeStepMeta({
 
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [4],
+  dependsOn: ["4"],
   unfocused: (props: StepUnfocusProps) => {
     step4.additions({ ...props, mode: SVGModes.Unfocused });
   },

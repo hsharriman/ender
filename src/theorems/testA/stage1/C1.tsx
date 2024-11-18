@@ -157,7 +157,7 @@ const step3: StepMeta = makeStepMeta({
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.VerticalAngles,
-  dependsOn: [1],
+  dependsOn: ["1"],
   unfocused: (props: StepUnfocusProps) => {
     step3.unfocused(props);
     step3.additions({
@@ -189,7 +189,7 @@ const step4SASProps: SASProps = {
 };
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [2, 3, 4],
+  dependsOn: ["2", "3", "4"],
   additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
   text: EqualTriangles.text(step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
@@ -199,7 +199,7 @@ const step5: StepMeta = makeStepMeta({
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [5],
+  dependsOn: ["5"],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({
       ...props,
@@ -224,7 +224,7 @@ const step6: StepMeta = makeStepMeta({
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.ConverseAltInteriorAngs,
-  dependsOn: [6],
+  dependsOn: ["6"],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({
       ...props,

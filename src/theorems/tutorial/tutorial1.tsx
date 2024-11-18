@@ -116,7 +116,7 @@ const step4SASProps: SASProps = {
 };
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [1, 2, 3],
+  dependsOn: ["1", "2", "3"],
   text: EqualTriangles.text(step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step4SASProps.triangles),
   additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
@@ -128,6 +128,7 @@ const step4: StepMeta = makeStepMeta({
 // TUTORIAL 2
 const step4t2 = makeStepMeta({
   ...step4,
+  dependsOn: ["1", "2", "3?"],
   additions: (props: StepFocusProps) => {
     SAS.additions(props, step4SASProps);
   },

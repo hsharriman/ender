@@ -121,7 +121,7 @@ const step2: StepMeta = makeStepMeta({
 
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
-  dependsOn: [1],
+  dependsOn: ["1"],
   unfocused: (props: StepUnfocusProps) => {
     step2.unfocused(props);
     step2.additions({ ...props, mode: SVGModes.Unfocused });
@@ -160,7 +160,7 @@ const step5Labels: SASProps = {
 };
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.AAS,
-  dependsOn: [2, 3, 4],
+  dependsOn: ["2", "3", "4?"],
   additions: (props: StepFocusProps) => {
     SAS.additions(props, step5Labels);
   },

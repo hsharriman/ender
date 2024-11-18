@@ -141,7 +141,7 @@ const step2: StepMeta = makeStepMeta({
 
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.PerpendicularLines,
-  dependsOn: [1],
+  dependsOn: ["1"],
   unfocused: (props: StepUnfocusProps) => {
     step2.additions({ ...props, mode: SVGModes.Unfocused });
     step2.unfocused(props);
@@ -156,7 +156,7 @@ const step3: StepMeta = makeStepMeta({
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
-  dependsOn: [3],
+  dependsOn: ["3"],
   unfocused: (props: StepUnfocusProps) => {
     step3.additions({ ...props, mode: SVGModes.Unfocused });
     step3.unfocused(props);
@@ -192,7 +192,7 @@ const step5ASAProps: ASAProps = {
 };
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
-  dependsOn: [2, 4, 5],
+  dependsOn: ["2", "4", "5"],
   additions: (props: StepFocusProps) => {
     ASA.additions(props, step5ASAProps);
   },
@@ -204,7 +204,7 @@ const step6: StepMeta = makeStepMeta({
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [6],
+  dependsOn: ["6"],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({
       ...props,
@@ -230,7 +230,7 @@ const step7: StepMeta = makeStepMeta({
 
 const step8: StepMeta = makeStepMeta({
   reason: Reasons.ConverseMidpoint,
-  dependsOn: [7],
+  dependsOn: ["7"],
   unfocused: (props: StepUnfocusProps) => {
     step7.unfocused(props);
   },

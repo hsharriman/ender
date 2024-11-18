@@ -42,5 +42,5 @@ export interface SetupStepMeta {
 }
 export interface StepMeta extends SetupStepMeta {
   reason: Reason;
-  dependsOn?: number[];
+  dependsOn?: string[];
 }

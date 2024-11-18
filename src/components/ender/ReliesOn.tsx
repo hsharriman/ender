@@ -16,7 +16,7 @@ interface Dims {
 export interface ReliesOnState {}
 export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
   private DEFAULT_CLR = "stroke-slate-500";
-  private SVGWIDTH = 30;
+  private SVGWIDTH = 60;
   private left = 5;
   private STROKE_WIDTH = "4px";
   private LEFTPAD = 7;
@@ -43,7 +43,10 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
       let endCoords = [];
       const deps = Array.from(dependsOn);
       for (let i = 0; i < deps.length; i++) {
-        let coords = this.getRowCoords(deps[i]);
+        let dep = deps[i];
+        let coords = this.getRowCoords(
+          dep.endsWith("?") ? dep.replace("?", "") : dep
+        );
         if (coords) {
           endCoords.push(coords);
         }
@@ -58,11 +61,44 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     return [];
   };
 
-  renderDepEdge = (d: Dims, highest: boolean, lastBottom: number) => {
+  renderQuestionEdge = (d: Dims) => {
     const divHeight = Math.round(d.b - d.t);
     return (
       <div
-        className="absolute w-8"
+        className="absolute w-16"
+        style={{
+          top: `${d.t}px`,
+          left: `${d.l - this.left}px`,
+          height: `${divHeight}px`,
+        }}
+      >
+        <svg width="100%" height="100%">
+          <text
+            x={this.SVGWIDTH - 4}
+            y={5 + this.props.rowHeight / 2}
+            className={"fill-slate-500 text-md font-bold"}
+          >
+            ?
+          </text>
+          <polyline
+            points={`${this.SVGWIDTH - 5},${this.props.rowHeight / 2} ${
+              this.SVGWIDTH / 2
+            },${this.props.rowHeight / 2}`}
+            className={this.DEFAULT_CLR}
+            fill="none"
+            strokeWidth={this.STROKE_WIDTH}
+            strokeDasharray={"5,5"}
+          />
+        </svg>
+      </div>
+    );
+  };
+
+  renderDepEdge = (d: Dims) => {
+    const divHeight = Math.round(d.b - d.t);
+    return (
+      <div
+        className="absolute w-16"
         style={{
           top: `${d.t}px`,
           left: `${d.l - this.left}px`,
@@ -72,7 +108,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
         <svg width="100%" height="100%">
           <circle r="5px" cx="5px" cy="50%" className={"fill-slate-500"} />
           <polyline
-            points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH},${
+            points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH / 2},${
               this.props.rowHeight / 2
             }`}
             className={this.DEFAULT_CLR}
@@ -84,13 +120,13 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     );
   };
 
-  renderArrow = (d: Dims, lastBottom: number) => {
+  renderArrow = (d: Dims) => {
     // TODO make less absolutely calculated by pixel values + assumed row height
     const quarterRow = this.props.rowHeight / 4;
     const halfRow = this.props.rowHeight / 2;
     return (
       <div
-        className="absolute w-8"
+        className="absolute w-16"
         id="relies-on-arrow"
         style={{
           top: `${d.t}px`,
@@ -110,14 +146,14 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
           <line
             x1="0%"
             y1="50%"
-            x2={`${this.SVGWIDTH}px`}
+            x2={`${this.SVGWIDTH / 2}px`}
             y2="50%"
             className={this.DEFAULT_CLR}
             fill="none"
             strokeWidth={this.STROKE_WIDTH}
           />
           <polyline
-            points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH},${
+            points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH / 2},${
               this.props.rowHeight / 2
             }`}
             className={this.DEFAULT_CLR}
@@ -135,7 +171,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     let divHeight = Math.abs(arrow - end);
     return (
       <div
-        className="absolute w-8"
+        className="absolute w-16"
         style={{
           top: `${Math.min(arrow, end) - 2}px`, // -2px to compensate for lines not perfectly overlapping
           left: `${dims[0].l - this.left}px`,
@@ -144,8 +180,8 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
       >
         <svg width="100%" height="100%">
           <line
-            x1={`${this.SVGWIDTH}px`}
-            x2={`${this.SVGWIDTH}px`}
+            x1={`${this.SVGWIDTH / 2}px`}
+            x2={`${this.SVGWIDTH / 2}px`}
             y1={0}
             y2={`${divHeight + 4}px`}
             className={this.DEFAULT_CLR}
@@ -168,9 +204,14 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
       let lastBottom = dims[0].b;
       const svgs = dims.map((d, i) => {
         if (i === dims.length - 1) {
-          return this.renderArrow(d, lastBottom);
+          return this.renderArrow(d);
         }
-        const svg = this.renderDepEdge(d, i === 0, lastBottom);
+        if (Array.from(dependsOn)[i].endsWith("?")) {
+          const svg = this.renderQuestionEdge(d);
+          lastBottom = d.b;
+          return svg;
+        }
+        const svg = this.renderDepEdge(d);
         lastBottom = d.b;
         return svg;
       });
@@ -186,12 +227,12 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
               left: `${dims[0].l - this.left + 32}px`,
             }}
           >
-            <span
+            {/* <span
               className="flex justify-center"
               style={{ textOrientation: "mixed", writingMode: "vertical-rl" }}
             >
               relies on
-            </span>
+            </span> */}
           </div>
         </div>
       );

@@ -1,4 +1,4 @@
-import { segmentQuestion, triangleStr } from "../../geometryText";
+import { segmentQuestion } from "../../geometryText";
 import { TutorialStep, TutorialStepType } from "../../types/types";
 
 const bold = (text: string) => <span className="font-bold">{text}</span>;
@@ -47,35 +47,35 @@ export const tutorial1Steps: TutorialStep[] = [
     listenerId: [], // TODO use this to check if specific actions have been taken?
     type: TutorialStepType.Popup,
   },
-  {
-    elemId: "triangle-text-ADC",
-    text: (
-      <span>
-        You can {bold("hover over text in the proof")} to highlight it in the
-        construction.
-      </span>
-    ),
-    type: TutorialStepType.Default,
-    exercise: <span>Hover over {triangleStr("ADC")}</span>,
-    listenerId: ["triangle-text-ADC"],
-  },
-  {
-    elemId: "point.D",
-    text: (
-      <span>
-        You can also {bold("click on objects in the construction")} to highlight
-        where they appear in the proof.
-      </span>
-    ),
-    type: TutorialStepType.Default,
-    listenerId: ["segment.CD-hover"],
-    exercise: <span>Click on segment CD on the diagram</span>,
-  },
+  // {
+  //   elemId: "triangle-text-ADC",
+  //   text: (
+  //     <span>
+  //       You can {bold("hover over text in the proof")} to highlight it in the
+  //       construction.
+  //     </span>
+  //   ),
+  //   type: TutorialStepType.Default,
+  //   exercise: <span>Hover over {triangleStr("ADC")}</span>,
+  //   listenerId: ["triangle-text-ADC"],
+  // },
+  // {
+  //   elemId: "point.D",
+  //   text: (
+  //     <span>
+  //       You can also {bold("click on objects in the construction")} to highlight
+  //       where they appear in the proof.
+  //     </span>
+  //   ),
+  //   type: TutorialStepType.Default,
+  //   listenerId: ["segment.CD-hover"],
+  //   exercise: <span>Click on segment CD on the diagram</span>,
+  // },
   {
     elemId: "reveal-btn-container",
     text: (
       <span>
-        You can {bold("click this button")}, use the {bold("\u2193 key")}, or{" "}
+        {bold("Click this button")}, use the {bold("\u2193 key")}, or{" "}
         {bold("click on a row ")} to reveal more of the proof.
       </span>
     ),
@@ -98,6 +98,18 @@ export const tutorial1Steps: TutorialStep[] = [
     ),
     type: TutorialStepType.Default,
     listenerId: ["reveal-step-btn"].concat(allProofRowListenerIds),
+  },
+  {
+    elemId: "point.D",
+    text: (
+      <span>
+        The {bold("construction")} shows the {bold("current state")} of the
+        proof by adding or removing {bold("tick marks")} between steps.
+      </span>
+    ),
+    type: TutorialStepType.Default,
+    listenerId: ["reveal-step-btn"].concat(allProofRowListenerIds),
+    exercise: <span>Reveal a new row of the proof</span>,
   },
   {
     elemId: "answer-button-1",

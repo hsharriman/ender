@@ -133,7 +133,7 @@ const step2: StepMeta = makeStepMeta({
 
 const step22: StepMeta = makeStepMeta({
   reason: Reasons.Midpoint,
-  dependsOn: [2],
+  dependsOn: ["2"],
   unfocused: (props: StepUnfocusProps) => {
     step2.unfocused(props);
     step2.additions({ ...props, mode: SVGModes.Unfocused });
@@ -171,7 +171,7 @@ const step3: StepMeta = makeStepMeta({
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
-  dependsOn: [1, 3, 4],
+  dependsOn: ["1", "3", "4"],
   text: EqualTriangles.text(["QPR", "RMN"]),
   staticText: () => EqualTriangles.staticText(["QPR", "RMN"]),
 
@@ -192,7 +192,7 @@ const step4: StepMeta = makeStepMeta({
 
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [5],
+  dependsOn: ["5"],
   unfocused: (props: StepUnfocusProps) => {
     step4.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -216,7 +216,7 @@ const step5: StepMeta = makeStepMeta({
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.ConverseMidpoint,
-  dependsOn: [6],
+  dependsOn: ["6"],
   unfocused: (props: StepUnfocusProps) => {
     step5.unfocused(props);
     step5.additions({ ...props, mode: SVGModes.Unfocused });

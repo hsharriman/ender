@@ -132,7 +132,7 @@ const step5: StepMeta = ReflexiveStep("BD", 3, step4);
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
-  dependsOn: [1],
+  dependsOn: ["1"],
   unfocused: (props: StepUnfocusProps) => {
     step5.additions({ ...props, mode: SVGModes.Unfocused });
     step5.unfocused(props);
@@ -149,7 +149,7 @@ const step6: StepMeta = makeStepMeta({
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [2, 5, 6],
+  dependsOn: ["2", "5", "6"],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });
     step6.unfocused(props);
@@ -172,7 +172,7 @@ const step7: StepMeta = makeStepMeta({
 });
 
 const step8: StepMeta = makeStepMeta({
-  ...EqualSegmentStep(["AB", "BC"], Reasons.CPCTC, step7, 4, [7]),
+  ...EqualSegmentStep(["AB", "BC"], Reasons.CPCTC, step7, 4, ["7"]),
   highlight: (ctx: Content, frame: string) => {
     EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
     EqualAngles.highlight(ctx, frame, ["DAB", "DCB"], 2);
@@ -184,7 +184,7 @@ const step8: StepMeta = makeStepMeta({
 });
 const step9: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [3, 4, 8],
+  dependsOn: ["3", "4", "8"],
   unfocused: (props: StepUnfocusProps) => {
     step8.additions({ ...props, mode: SVGModes.Unfocused });
     step8.unfocused(props);
@@ -206,7 +206,7 @@ const step9: StepMeta = makeStepMeta({
 });
 
 const step10: StepMeta = makeStepMeta({
-  ...EqualAngleStep(["AFB", "CGB"], Reasons.CPCTC, step9, 2, [9]),
+  ...EqualAngleStep(["AFB", "CGB"], Reasons.CPCTC, step9, 2, ["9"]),
   highlight: (ctx: Content, frame: string) => {
     EqualAngles.highlight(ctx, frame, ["FAB", "BCG"]);
     EqualSegments.highlight(ctx, frame, ["FA", "GC"], 2);

@@ -123,20 +123,20 @@ const step2: StepMeta = makeStepMeta({
 });
 
 const step3: StepMeta = makeStepMeta({
-  ...EqualSegmentStep(["WM", "MZ"], Reasons.Midpoint, step2, 1, [1]),
+  ...EqualSegmentStep(["WM", "MZ"], Reasons.Midpoint, step2, 1, ["1"]),
   highlight: (ctx: Content, frame: string) =>
     Midpoint.highlight(ctx, frame, "M", ["WM", "MZ"]),
 });
 
 const step4: StepMeta = makeStepMeta({
-  ...EqualSegmentStep(["XM", "YM"], Reasons.Midpoint, step3, 2, [2]),
+  ...EqualSegmentStep(["XM", "YM"], Reasons.Midpoint, step3, 2, ["2"]),
   highlight: (ctx: Content, frame: string) =>
     Midpoint.highlight(ctx, frame, "M", ["YM", "XM"], 2),
 });
 
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.VerticalAngles,
-  dependsOn: [1, 2],
+  dependsOn: ["1", "2"],
   unfocused: (props: StepUnfocusProps) => {
     step4.unfocused(props);
     step4.additions({ ...props, mode: SVGModes.Unfocused });
@@ -162,7 +162,7 @@ const step6SASProps: SASProps = {
 };
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [3, 4, 5],
+  dependsOn: ["3", "4", "5"],
   additions: (props: StepFocusProps) => SAS.additions(props, step6SASProps),
   text: EqualTriangles.text(step6SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step6SASProps.triangles),
@@ -172,7 +172,7 @@ const step6: StepMeta = makeStepMeta({
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [6],
+  dependsOn: ["6"],
   unfocused: (props: StepUnfocusProps) => {
     step6.additions({ ...props, mode: SVGModes.Unfocused });
   },
@@ -191,7 +191,7 @@ const step7: StepMeta = makeStepMeta({
 
 const step8: StepMeta = makeStepMeta({
   reason: Reasons.ConverseAltInteriorAngs,
-  dependsOn: [7],
+  dependsOn: ["7"],
   unfocused: (props: StepUnfocusProps) => {
     step7.additions({ ...props, mode: SVGModes.Unfocused });
     step7.unfocused(props);

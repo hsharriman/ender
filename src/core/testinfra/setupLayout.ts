@@ -101,7 +101,6 @@ export const interactiveLayout = (
     if (step.highlight) {
       highlightCtx.addFrame(`s${i + 1}`);
       step.highlight(highlightCtx, s);
-      console.log(highlightCtx, "setup");
     }
 
     reasonMap.set(s, step.reason);

@@ -154,7 +154,7 @@ const step5: StepMeta = ReflexiveStep("CE", 1, step4);
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
-  dependsOn: [1],
+  dependsOn: ["1"],
   unfocused: (props: StepUnfocusProps) => {
     step5.unfocused(props);
     step5.additions({ ...props, mode: SVGModes.Unfocused });
@@ -173,7 +173,7 @@ const s7SASProps: SASProps = {
 };
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [1, 2, 4],
+  dependsOn: ["1", "2", "4"],
   unfocused: (props: StepUnfocusProps) => {
     step6.unfocused(props);
   },
