@@ -11,11 +11,7 @@ import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../../core/types/stepTypes";
+import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
@@ -92,15 +88,14 @@ const givens: StepMeta = makeStepMeta({
 });
 
 const proves: StepMeta = makeStepMeta({
-  unfocused: (props: StepUnfocusProps) => {
-    props.ctx.getSegment("EF").mode(props.frame, SVGModes.Unfocused);
-    props.ctx.getSegment("GH").mode(props.frame, SVGModes.Unfocused);
-    props.ctx.getSegment("EJ").mode(props.frame, SVGModes.Unfocused);
-    props.ctx.getSegment("HJ").mode(props.frame, SVGModes.Unfocused);
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
-    props.ctx.getSegment("FG").mode(props.frame, props.mode);
-    EqualSegments.additions(props, ["FJ", "GJ"], 1);
+    props.ctx.getSegment("FG").mode(props.frame, SVGModes.Derived);
+    EqualSegments.additions(
+      { ...props, mode: SVGModes.Derived },
+      ["FJ", "GJ"],
+      1
+    );
   },
   text: (isActive: boolean) => {
     return proves.staticText();
@@ -117,9 +112,7 @@ const proves: StepMeta = makeStepMeta({
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
     props.ctx.getSegment("EF").mode(props.frame, props.mode);
     props.ctx.getSegment("FG").mode(props.frame, props.mode);
@@ -135,10 +128,7 @@ const step1: StepMeta = makeStepMeta({
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step1,
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "J", ["EJ", "JH"]);
   },
@@ -149,10 +139,7 @@ const step2: StepMeta = makeStepMeta({
 const step22: StepMeta = makeStepMeta({
   reason: Reasons.Midpoint,
   dependsOn: ["2"],
-  unfocused: (props: StepUnfocusProps) => {
-    step2.unfocused(props);
-    step2.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step2,
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["EJ", "JH"]);
   },
@@ -165,10 +152,7 @@ const step22: StepMeta = makeStepMeta({
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.Rectangle,
   dependsOn: ["1"],
-  unfocused: (props: StepUnfocusProps) => {
-    step22.additions({ ...props, mode: SVGModes.Unfocused });
-    step22.unfocused(props);
-  },
+  prevStep: step22,
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["FEJ", "JHG"]);
   },
@@ -179,10 +163,7 @@ const step3: StepMeta = makeStepMeta({
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.Rectangle,
   dependsOn: ["1"],
-  unfocused: (props: StepUnfocusProps) => {
-    step3.unfocused(props);
-    step3.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step3,
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["FE", "GH"], 2);
   },
@@ -199,10 +180,7 @@ const step5SASProps: SASProps = {
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: ["3", "4", "5"],
-  unfocused: (props: StepUnfocusProps) => {
-    step4.unfocused(props);
-    step4.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step4,
   additions: (props: StepFocusProps) => {
     CongruentTriangles.congruentLabel(
       props.ctx,
@@ -221,10 +199,7 @@ const step5: StepMeta = makeStepMeta({
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["6"],
-  unfocused: (props: StepUnfocusProps) => {
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
-    step5.unfocused(props);
-  },
+  prevStep: step5,
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },
@@ -244,10 +219,7 @@ const step6: StepMeta = makeStepMeta({
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.Isosceles,
   dependsOn: ["7"],
-  unfocused: (props: StepUnfocusProps) => {
-    step6.additions({ ...props, mode: SVGModes.Unfocused });
-    step6.unfocused(props);
-  },
+  prevStep: step6,
   additions: (props: StepFocusProps) => {
     props.ctx.getSegment("FG").mode(props.frame, props.mode);
     EqualSegments.additions(props, ["FJ", "GJ"], 3);

@@ -60,9 +60,6 @@ export class Diagram extends React.Component<DiagramProps> {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : seg.getMode(frame) ?? SVGModes.Hidden;
-      if (seg.getMode(frame) === SVGModes.Derived) {
-        console.log("Derived segment", frame, seg.id);
-      }
       const hoverable = this.props.isStatic ? false : seg.hoverable;
       return (
         <SVGGeoSegment

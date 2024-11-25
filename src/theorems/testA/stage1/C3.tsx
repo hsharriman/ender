@@ -13,11 +13,7 @@ import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import { incompleteProof2 } from "../../../core/testinfra/questions/funcTypeQuestions";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../../core/types/stepTypes";
+import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
@@ -75,7 +71,7 @@ const givens: StepMeta = makeStepMeta({
       <span>
         {PeqM}
         {comma}
-        {Midpoint.text("PM", "R")(isActive)}
+        {Midpoint.text("R", "PM")(isActive)}
       </span>
     );
   },
@@ -96,21 +92,17 @@ const givens: StepMeta = makeStepMeta({
 });
 
 const proves: StepMeta = makeStepMeta({
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "R", ["QR", "NR"]);
+    Midpoint.additions({ ...props, mode: SVGModes.Derived }, "R", ["QR", "NR"]);
   },
-  text: Midpoint.text("QN", "R"),
+  text: Midpoint.text("R", "QN"),
   staticText: () => Midpoint.staticText("R", "QN"),
 });
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["QPR", "RMN"]);
   },
@@ -120,24 +112,18 @@ const step1: StepMeta = makeStepMeta({
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step1,
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["PR", "RM"]);
   },
-  text: Midpoint.text("PM", "R"),
+  text: Midpoint.text("R", "PM"),
   staticText: () => Midpoint.staticText("R", "PM"),
 });
 
 const step22: StepMeta = makeStepMeta({
   reason: Reasons.Midpoint,
   dependsOn: ["2"],
-  unfocused: (props: StepUnfocusProps) => {
-    step2.unfocused(props);
-    step2.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step2,
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["PR", "RM"]);
   },
@@ -149,10 +135,7 @@ const step22: StepMeta = makeStepMeta({
 
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.VerticalAngles,
-  unfocused: (props: StepUnfocusProps) => {
-    step22.additions({ ...props, mode: SVGModes.Unfocused });
-    step22.unfocused(props);
-  },
+  prevStep: step22,
   text: EqualAngles.text(["QRP", "MRN"]),
   staticText: () => EqualAngles.staticText(["QRP", "MRN"]),
   additions: (props: StepFocusProps) =>
@@ -172,6 +155,7 @@ const step3: StepMeta = makeStepMeta({
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
   dependsOn: ["1", "3", "4"],
+  prevStep: step3,
   text: EqualTriangles.text(["QPR", "RMN"]),
   staticText: () => EqualTriangles.staticText(["QPR", "RMN"]),
   additions: (props: StepFocusProps) => {
@@ -182,7 +166,6 @@ const step4: StepMeta = makeStepMeta({
       props.mode
     );
   },
-  unfocused: (props: StepUnfocusProps) => step3.unfocused(props),
   highlight: (ctx: Content, frame: string) => {
     ASA.highlight(ctx, frame, {
       a1s: { a: ["QRP", "MRN"], type: Obj.EqualAngleTick },
@@ -196,10 +179,7 @@ const step4: StepMeta = makeStepMeta({
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["5"],
-  unfocused: (props: StepUnfocusProps) => {
-    step4.unfocused(props);
-    step4.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step4,
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["QR", "RN"], 2);
   },
@@ -218,14 +198,11 @@ const step5: StepMeta = makeStepMeta({
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.ConverseMidpoint,
   dependsOn: ["6"],
-  unfocused: (props: StepUnfocusProps) => {
-    step5.unfocused(props);
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step5,
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "R", ["QR", "NR"], 2);
   },
-  text: Midpoint.text("QN", "R"),
+  text: Midpoint.text("R", "QN"),
   staticText: () => Midpoint.staticText("R", "QN"),
   highlight: (ctx: Content, frame: string) =>
     EqualSegments.highlight(ctx, frame, ["QR", "NR"], SVGModes.ReliesOn, 2),

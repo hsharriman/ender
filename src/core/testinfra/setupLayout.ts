@@ -90,11 +90,13 @@ export const interactiveLayout = (
     alwaysActive: true,
   });
 
+  let prevStep = proofMeta.givens;
   proofMeta.steps.forEach((step, i) => {
     let textMeta = {};
     const s = ctx.addFrame(`s${i + 1}`);
     additionCtx.addFrame(`s${i + 1}`);
     step.unfocused({ ctx, frame: s });
+
     step.additions({ ctx: additionCtx, frame: s, mode: SVGModes.Derived });
 
     if (step.dependsOn) {
@@ -115,8 +117,9 @@ export const interactiveLayout = (
       v: step.text,
       reason: step.reason.title,
     });
+    step = { ...step, prevStep: prevStep };
+    prevStep = step;
   });
-  console.log(additionCtx.getCtx());
   return {
     type: tutorial ? PageType.Tutorial : PageType.Interactive,
     meta: {

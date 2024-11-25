@@ -16,11 +16,7 @@ import { Reflexive } from "../../core/reasons/Reflexive";
 import { RightAngle } from "../../core/reasons/RightAngle";
 import { SAS, SASProps } from "../../core/reasons/SAS";
 import { placeholder } from "../../core/testinfra/questions/funcTypeQuestions";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../core/types/stepTypes";
+import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
@@ -79,7 +75,7 @@ const givens: StepMeta = makeStepMeta({
       <span>
         {RightAngle.text("AEB")(isActive)}
         {comma}
-        {Midpoint.text("AC", "E")(isActive)}
+        {Midpoint.text("E", "AC")(isActive)}
         {comma}
         {EqualSegments.text(["DE", "EG"])(isActive)}
       </span>
@@ -111,11 +107,9 @@ const givens: StepMeta = makeStepMeta({
 });
 
 const proves: StepMeta = makeStepMeta({
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
-    EqualAngles.additions(props, ["DCE", "GCE"]);
+    EqualAngles.additions({ ...props, mode: SVGModes.Derived }, ["DCE", "GCE"]);
   },
   text: EqualAngles.text(["DCE", "GCE"]),
   staticText: () => EqualAngles.staticText(["DCE", "GCE"]),
@@ -123,9 +117,7 @@ const proves: StepMeta = makeStepMeta({
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
     RightAngle.additions(props, "AEB");
   },
@@ -135,14 +127,11 @@ const step1: StepMeta = makeStepMeta({
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step1,
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "E", ["AE", "EC"]);
   },
-  text: Midpoint.text("AC", "E"),
+  text: Midpoint.text("E", "AC"),
   staticText: () => Midpoint.staticText("AC", "E"),
 });
 
@@ -150,13 +139,7 @@ const step3: StepMeta = EqualSegmentStep(["DE", "EG"], Reasons.Given, step2, 2);
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.Reflexive,
-  unfocused: (props: StepUnfocusProps) => {
-    step3.unfocused(props);
-    step3.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-    });
-  },
+  prevStep: step3,
   additions: (props: StepFocusProps) => {
     Reflexive.additions(props, "BE", 3);
   },
@@ -166,13 +149,7 @@ const step4: StepMeta = makeStepMeta({
 
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.Reflexive,
-  unfocused: (props: StepUnfocusProps) => {
-    step4.unfocused(props);
-    step4.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-    });
-  },
+  prevStep: step4,
   additions: (props: StepFocusProps) => {
     Reflexive.additions(props, "CE", 1);
   },
@@ -183,10 +160,7 @@ const step5: StepMeta = makeStepMeta({
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
   dependsOn: ["1"],
-  unfocused: (props: StepUnfocusProps) => {
-    step5.unfocused(props);
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step5,
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["AEB", "CEB"]),
   text: EqualRightAngles.text(["AEB", "CEB"]),
@@ -202,9 +176,7 @@ const s7SASProps: SASProps = {
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: ["1", "2", "4"],
-  unfocused: (props: StepUnfocusProps) => {
-    step6.unfocused(props);
-  },
+  prevStep: step6,
   additions: (props: StepFocusProps) => SAS.additions(props, s7SASProps),
   text: EqualTriangles.text(s7SASProps.triangles),
   staticText: () => EqualTriangles.staticText(s7SASProps.triangles),
@@ -212,10 +184,7 @@ const step7: StepMeta = makeStepMeta({
 
 const step8: StepMeta = makeStepMeta({
   reason: Reasons.Empty,
-  unfocused: (props: StepUnfocusProps) => {
-    step7.unfocused(props);
-    step7.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step7,
   text: () => (
     <span style={{ color: "black", fontStyle: "italic" }}>
       Which step can be applied here?

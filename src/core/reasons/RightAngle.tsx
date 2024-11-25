@@ -1,6 +1,6 @@
 import { BGColors, makeStepMeta } from "../../theorems/utils";
 import { angleStr } from "../geometryText";
-import { StepFocusProps, StepUnfocusProps } from "../types/stepTypes";
+import { StepFocusProps, StepMeta } from "../types/stepTypes";
 import { Obj, Reason } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 
@@ -33,13 +33,13 @@ export class RightAngle {
 export const RightAngleStep = (
   a: string,
   reason: Reason,
-  dependsOn?: string[],
-  unfocused?: (props: StepUnfocusProps) => void
+  step: StepMeta,
+  dependsOn?: string[]
 ) => {
   return makeStepMeta({
     reason,
     dependsOn,
-    unfocused,
+    prevStep: step,
     additions: (props: StepFocusProps) => RightAngle.additions(props, a),
     text: RightAngle.text(a),
     staticText: () => RightAngle.staticText(a),

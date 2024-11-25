@@ -110,7 +110,6 @@ export class InteractiveAppPage extends React.Component<
               <ReasonText
                 activeFrame={this.state.activeFrame}
                 textFn={getReasonFn(this.props.reasonMap)}
-                displayHeader={true}
               />
             </div>
           </div>

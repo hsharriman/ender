@@ -13,12 +13,8 @@ import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
+import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
@@ -88,11 +84,9 @@ const givens: StepMeta = makeStepMeta({
 });
 
 const proves: StepMeta = makeStepMeta({
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
-    ParallelLines.additions(props, ["WX", "YZ"]);
+    ParallelLines.additions({ ...props, mode: SVGModes.Derived }, ["WX", "YZ"]);
   },
   text: ParallelLines.text(["WX", "YZ"]),
   staticText: () => ParallelLines.staticText(["WX", "YZ"]),
@@ -100,9 +94,7 @@ const proves: StepMeta = makeStepMeta({
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   text: Midpoint.text("M", "WZ"),
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "M", ["WM", "MZ"]);
@@ -112,10 +104,7 @@ const step1: StepMeta = makeStepMeta({
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step1,
   text: Midpoint.text("M", "XY"),
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "M", ["YM", "XM"], 2);
@@ -138,10 +127,7 @@ const step4: StepMeta = makeStepMeta({
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.VerticalAngles,
   dependsOn: ["1", "2"],
-  unfocused: (props: StepUnfocusProps) => {
-    step4.unfocused(props);
-    step4.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step4,
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["YMZ", "WMX"]),
   text: EqualAngles.text(["YMZ", "WMX"]),
@@ -164,10 +150,7 @@ const step6SASProps: SASProps = {
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: ["3", "4", "5"],
-  unfocused: (props: StepUnfocusProps) => {
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
-    step5.unfocused(props);
-  },
+  prevStep: step5,
   additions: (props: StepFocusProps) => {
     CongruentTriangles.congruentLabel(
       props.ctx,
@@ -186,10 +169,7 @@ const step6: StepMeta = makeStepMeta({
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["6"],
-  unfocused: (props: StepUnfocusProps) => {
-    step6.unfocused(props);
-    step6.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step6,
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["MYZ", "MWX"], 2),
   text: EqualAngles.text(["MYZ", "MWX"]),
@@ -207,18 +187,22 @@ const step7: StepMeta = makeStepMeta({
 
 const step8: StepMeta = makeStepMeta({
   reason: Reasons.ConverseAltInteriorAngs,
-  dependsOn: ["7"],
-  unfocused: (props: StepUnfocusProps) => {
-    step7.additions({ ...props, mode: SVGModes.Unfocused });
-    step7.unfocused(props);
-  },
+  dependsOn: ["7?"],
+  prevStep: step7,
   additions: (props: StepFocusProps) =>
     ParallelLines.additions(props, ["WX", "YZ"]),
   text: ParallelLines.text(["WX", "YZ"]),
   staticText: () => ParallelLines.staticText(["WX", "YZ"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualAngles.highlight(ctx, frame, ["MYZ", "MXW"], SVGModes.ReliesOn, 2);
     ctx.getSegment("YX").mode(frame, SVGModes.ReliesOn);
+    ctx
+      .getAngle("MYZ")
+      .addTick(frame, Obj.EqualAngleTick, 2)
+      .mode(frame, SVGModes.ReliesOn);
+    ctx
+      .getAngle("MXW")
+      .addTick(frame, Obj.EqualAngleTick, 2)
+      .mode(frame, SVGModes.Inconsistent);
   },
 });
 

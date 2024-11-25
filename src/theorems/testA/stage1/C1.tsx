@@ -12,11 +12,7 @@ import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import { completeProof1 } from "../../../core/testinfra/questions/funcTypeQuestions";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../../core/types/stepTypes";
+import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
@@ -92,11 +88,9 @@ const givens: StepMeta = makeStepMeta({
 });
 
 const proves: StepMeta = makeStepMeta({
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
-    ParallelLines.additions(props, ["AC", "BD"]);
+    ParallelLines.additions({ ...props, mode: SVGModes.Derived }, ["AC", "BD"]);
   },
   text: (isActive: boolean) => proves.staticText(),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
@@ -104,9 +98,7 @@ const proves: StepMeta = makeStepMeta({
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   text: (isActive: boolean) => {
     return step1.staticText();
   },
@@ -130,10 +122,7 @@ const step1: StepMeta = makeStepMeta({
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step1,
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AM", "BM"]),
   text: EqualSegments.text(["AM", "BM"]),
@@ -142,13 +131,7 @@ const step2: StepMeta = makeStepMeta({
 
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step2.unfocused(props);
-    step2.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-    });
-  },
+  prevStep: step2,
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["CM", "DM"], 2),
   text: EqualSegments.text(["CM", "DM"]),
@@ -158,13 +141,7 @@ const step3: StepMeta = makeStepMeta({
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.VerticalAngles,
   dependsOn: ["1"],
-  unfocused: (props: StepUnfocusProps) => {
-    step3.unfocused(props);
-    step3.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-    });
-  },
+  prevStep: step3,
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CMA", "DMB"]),
   text: EqualAngles.text(["CMA", "DMB"]),
@@ -190,9 +167,7 @@ const step4SASProps: SASProps = {
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: ["2", "3", "4"],
-  unfocused: (props: StepUnfocusProps) => {
-    step3.unfocused(props);
-  },
+  prevStep: step4,
   additions: (props: StepFocusProps) =>
     CongruentTriangles.congruentLabel(
       props.ctx,
@@ -210,13 +185,7 @@ const step5: StepMeta = makeStepMeta({
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["5"],
-  unfocused: (props: StepUnfocusProps) => {
-    step5.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-    });
-    step5.unfocused(props);
-  },
+  prevStep: step5,
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CAM", "DBM"], 2),
   text: EqualAngles.text(["CAM", "DBM"]),
@@ -234,13 +203,7 @@ const step6: StepMeta = makeStepMeta({
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.ConverseAltInteriorAngs,
   dependsOn: ["6"],
-  unfocused: (props: StepUnfocusProps) => {
-    step6.additions({
-      ...props,
-      mode: SVGModes.Unfocused,
-    });
-    step6.unfocused(props);
-  },
+  prevStep: step6,
   additions: (props: StepFocusProps) => {
     ParallelLines.additions(props, ["AC", "BD"]);
   },

@@ -6,7 +6,9 @@ export interface StepUnfocusProps {
   ctx: Content;
   frame: string;
 }
-export interface StepFocusProps extends StepUnfocusProps {
+export interface StepFocusProps {
+  ctx: Content;
+  frame: string;
   mode: SVGModes;
 }
 export interface ProofTextItem {
@@ -33,6 +35,7 @@ export interface TickedAngles {
 }
 
 export interface SetupStepMeta {
+  prevStep?: StepMeta;
   unfocused: (props: StepUnfocusProps) => void;
   diagram: (ctx: Content, frame: string) => void;
   text: (isActive: boolean) => JSX.Element;

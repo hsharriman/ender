@@ -118,7 +118,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         {highlightBar(this.props.active === item.k, "h-12")}
         <button
           id={`${this.idPrefix}${item.k}`}
-          onClick={this.onClick}
+          // onClick={this.onClick}
           className="py-2 border-b-2 border-gray-300 text-md w-full h-12 ml-2 focus:outline-none"
         >
           <div className="flex flex-row justify-start gap-8 align-baseline items-baseline ml-2 border-slate-800">
@@ -178,10 +178,10 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
               {this.state.revealed < this.props.items.length - 2 && (
                 <button
                   onClick={this.onReveal}
-                  className="text-violet-500 animate-smallBounce"
+                  className="text-blue-500 animate-smallBounce"
                 >
                   <div
-                    className="animate-bounce bg-violet-500 p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center"
+                    className="animate-bounce bg-blue-500 p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center"
                     id="reveal-step-btn"
                   >
                     <svg
@@ -330,8 +330,9 @@ const highlightBar = (active: boolean, h: string) => {
   return (
     <div
       id="active-bar"
-      className={`w-4 ${h} transition-all ease-in-out duration-300`}
-      style={active ? { borderLeft: "10px double #9A76FF" } : {}}
+      className={`w-4 ${h} transition-all ease-in-out duration-300 ${
+        active ? "border-l-[10px] border-double border-blue-500" : ""
+      }`}
     ></div>
   );
 };

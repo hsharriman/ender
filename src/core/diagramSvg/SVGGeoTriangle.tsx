@@ -109,7 +109,6 @@ export class SVGGeoTriangle extends React.Component<
       vops.add(vops.smul(A, a / (a + b + c)), vops.smul(B, b / (a + b + c))),
       vops.smul(C, c / (a + b + c))
     );
-    console.log(A, B, C, a, b, c, incenterCoord);
     return coordsToSvg(incenterCoord, this.props.miniScale);
   };
 

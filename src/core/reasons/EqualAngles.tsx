@@ -1,7 +1,7 @@
 import { makeStepMeta } from "../../theorems/utils";
 import { Content } from "../diagramContent";
 import { angleStr, resizedStrs } from "../geometryText";
-import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
+import { StepFocusProps, StepMeta } from "../types/stepTypes";
 import { Obj, Reason, SVGModes } from "../types/types";
 
 export class EqualAngles {
@@ -62,13 +62,7 @@ export const EqualAngleStep = (
   return makeStepMeta({
     reason,
     dependsOn,
-    unfocused: (props: StepUnfocusProps) => {
-      step.unfocused(props);
-      step.additions({
-        ...props,
-        mode: SVGModes.Unfocused,
-      });
-    },
+    prevStep: step,
     additions: (props: StepFocusProps) =>
       EqualAngles.additions(props, [a1, a2], num),
     text: EqualAngles.text([a1, a2]),

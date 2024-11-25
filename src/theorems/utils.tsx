@@ -58,18 +58,27 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   const defaultText: (isActive: boolean) => JSX.Element = (
     isActive: boolean
   ) => <></>;
-  const defaultUnfocused = (props: StepUnfocusProps) => {};
-  const diagram = (ctx: Content, frame: string) => {
-    const unfocusedProps = { ctx, frame };
+  const defaultUnfocused = (props: StepUnfocusProps) => {
+    if (meta.prevStep) {
+      meta.prevStep.additions({
+        ctx: props.ctx,
+        frame: props.frame,
+        mode: SVGModes.Unfocused,
+      });
+      meta.prevStep.unfocused(props);
+    }
+  };
+  const diagram = (ctx: Content, frame: string, prevStep?: StepMeta) => {
     const additionProps = {
       ctx,
       frame,
       mode: SVGModes.Focused,
-      // mode2: SVGModes.Purple,
     };
-    meta.unfocused
-      ? meta.unfocused(unfocusedProps)
-      : defaultUnfocused(unfocusedProps);
+    if (meta.prevStep) {
+      meta.unfocused
+        ? meta.unfocused({ ctx, frame })
+        : defaultUnfocused({ ctx, frame });
+    }
     meta.additions
       ? meta.additions(additionProps)
       : defaultAdditions(additionProps);
