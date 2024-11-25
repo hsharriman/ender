@@ -17,6 +17,7 @@ export enum AnswerType {
   YesNo = "YesNo",
   Dropdown = "Dropdown",
   DropdownTextbox = "DropdownTextbox",
+  Continue = "Continue",
 }
 
 export enum QuestionType {
@@ -26,6 +27,7 @@ export enum QuestionType {
   Correctness = "Correctness",
   TutorialInstructions = "TutorialInstructions",
   Pretest = "Pretest",
+  Continue = "Continue",
 }
 
 const diagramStateQuestion = (x: string, y: string, type: Obj) => {
@@ -79,6 +81,17 @@ export const scaffolding = {
 
 export const checkingProof1: Question[] = [
   {
+    answerType: AnswerType.Continue,
+    prompt: (
+      <span className="text-base">
+        Take a look through the proof. When you're ready to proceed to the
+        questions, click continue.
+      </span>
+    ),
+    type: QuestionType.Continue,
+    id: id(0),
+  },
+  {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.SAS, 4),
     reason: Reasons.SAS.title,
@@ -101,6 +114,17 @@ export const checkingProof1: Question[] = [
 
 export const checkingProof2: Question[] = [
   {
+    answerType: AnswerType.Continue,
+    prompt: (
+      <span className="text-base">
+        Take a look through the proof. When you're ready to proceed to the
+        questions, click continue.
+      </span>
+    ),
+    type: QuestionType.Continue,
+    id: id(0),
+  },
+  {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.CongAdjAngles, 3),
     reason: Reasons.CongAdjAngles.title,
@@ -116,6 +140,17 @@ export const checkingProof2: Question[] = [
 ];
 
 export const checkingProof3: Question[] = [
+  {
+    answerType: AnswerType.Continue,
+    prompt: (
+      <span className="text-base">
+        Take a look through the proof. When you're ready to proceed to the
+        questions, click continue.
+      </span>
+    ),
+    type: QuestionType.Continue,
+    id: id(0),
+  },
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.RHL, 6),
@@ -140,6 +175,17 @@ export const checkingProof3: Question[] = [
 
 export const completeProof1: Question[] = [
   {
+    answerType: AnswerType.Continue,
+    prompt: (
+      <span className="text-base">
+        Take a look through the proof. When you're ready to proceed to the
+        questions, click continue.
+      </span>
+    ),
+    type: QuestionType.Continue,
+    id: id(0),
+  },
+  {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.ConverseAltInteriorAngs, 7),
     reason: Reasons.ConverseAltInteriorAngs.title,
@@ -163,6 +209,17 @@ export const completeProof1: Question[] = [
 ];
 
 export const completeProof2: Question[] = [
+  {
+    answerType: AnswerType.Continue,
+    prompt: (
+      <span className="text-base">
+        Take a look through the proof. When you're ready to proceed to the
+        questions, click continue.
+      </span>
+    ),
+    type: QuestionType.Continue,
+    id: id(0),
+  },
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.PerpendicularLines, 3),
@@ -194,6 +251,17 @@ export const completeProof2: Question[] = [
 ];
 
 export const incompleteProof2: Question[] = [
+  {
+    answerType: AnswerType.Continue,
+    prompt: (
+      <span className="text-base">
+        Take a look through the proof. When you're ready to proceed to the
+        questions, click continue.
+      </span>
+    ),
+    type: QuestionType.Continue,
+    id: id(0),
+  },
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.VerticalAngles, 4),

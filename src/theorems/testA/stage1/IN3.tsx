@@ -4,12 +4,13 @@ import { Angle } from "../../../core/geometry/Angle";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Reflexive } from "../../../core/reasons/Reflexive";
 import { RightAngle } from "../../../core/reasons/RightAngle";
-import { SAS, SASProps } from "../../../core/reasons/SAS";
+import { SASProps } from "../../../core/reasons/SAS";
 import { checkingProof3 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
@@ -146,10 +147,10 @@ const step4: StepMeta = makeStepMeta({
     return EqualRightAngles.staticText(["KLM", "MNK"]);
   },
   highlight: (ctx: Content, frame: string) => {
-    ctx.getSegment("LM").highlight(frame);
-    ctx.getSegment("NK").highlight(frame);
-    ctx.getSegment("LK").highlight(frame);
-    ctx.getSegment("MN").highlight(frame);
+    ctx.getSegment("LM").mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment("NK").mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment("LK").mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment("MN").mode(frame, SVGModes.ReliesOn);
   },
 });
 
@@ -164,8 +165,6 @@ const step5: StepMeta = makeStepMeta({
   },
   text: Reflexive.text("MK"),
   staticText: () => Reflexive.staticText("MK"),
-  highlight: (ctx: Content, frame: string) =>
-    Reflexive.highlight(ctx, frame, "MK", 2),
 });
 
 const s6SASProps: SASProps = {
@@ -177,15 +176,24 @@ const s6SASProps: SASProps = {
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.RHL,
   dependsOn: ["2", "4", "5"],
-  additions: (props: StepFocusProps) => {
-    SAS.additions(props, s6SASProps);
+  unfocused: (props: StepUnfocusProps) => {
+    step5.unfocused(props);
+    step5.additions({ ...props, mode: SVGModes.Unfocused });
   },
   text: EqualTriangles.text(s6SASProps.triangles),
+  additions: (props: StepFocusProps) => {
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["KLM", "MNK"],
+      props.mode
+    );
+  },
   staticText: () => EqualTriangles.staticText(s6SASProps.triangles),
   highlight: (ctx: Content, frame: string) => {
-    EqualSegments.highlight(ctx, frame, ["LM", "NK"]);
-    EqualRightAngles.highlight(ctx, frame, ["KLM", "MNK"]);
-    EqualSegments.highlight(ctx, frame, ["MK", "MK"], 2);
+    EqualSegments.highlight(ctx, frame, ["LM", "NK"], SVGModes.ReliesOn);
+    EqualRightAngles.highlight(ctx, frame, ["KLM", "MNK"], SVGModes.ReliesOn);
+    EqualSegments.highlight(ctx, frame, ["MK", "MK"], SVGModes.ReliesOn, 2);
   },
 });
 

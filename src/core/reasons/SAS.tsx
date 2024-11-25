@@ -4,7 +4,7 @@ import {
   TickedAngles,
   TickedSegments,
 } from "../types/stepTypes";
-import { Obj } from "../types/types";
+import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
@@ -31,13 +31,18 @@ export class SAS {
       EqualAngles.additions(props, labels.angles.a, labels.angles.ticks || 1);
     }
   };
-  static highlight = (ctx: Content, frame: string, labels: SASProps) => {
-    EqualSegments.highlight(ctx, frame, labels.seg1s.s);
-    EqualSegments.highlight(ctx, frame, labels.seg2s.s, 2);
+  static highlight = (
+    ctx: Content,
+    frame: string,
+    labels: SASProps,
+    mode: SVGModes = SVGModes.ReliesOn
+  ) => {
+    EqualSegments.highlight(ctx, frame, labels.seg1s.s, mode);
+    EqualSegments.highlight(ctx, frame, labels.seg2s.s, mode, 2);
     if (labels.angles.type === Obj.RightTick) {
-      EqualRightAngles.highlight(ctx, frame, labels.angles.a);
+      EqualRightAngles.highlight(ctx, frame, labels.angles.a, mode);
     } else {
-      EqualAngles.highlight(ctx, frame, labels.angles.a);
+      EqualAngles.highlight(ctx, frame, labels.angles.a, mode);
     }
   };
 }

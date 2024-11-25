@@ -74,20 +74,19 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
       >
         <svg width="100%" height="100%">
           <text
-            x={this.SVGWIDTH - 4}
+            x={this.SVGWIDTH - 7}
             y={5 + this.props.rowHeight / 2}
-            className={"fill-slate-500 text-md font-bold"}
+            className={"fill-red-500 text-xl font-bold"}
           >
             ?
           </text>
           <polyline
-            points={`${this.SVGWIDTH - 5},${this.props.rowHeight / 2} ${
+            points={`${this.SVGWIDTH - 8},${this.props.rowHeight / 2} ${
               this.SVGWIDTH / 2
             },${this.props.rowHeight / 2}`}
-            className={this.DEFAULT_CLR}
+            className={"stroke-red-500"}
             fill="none"
             strokeWidth={this.STROKE_WIDTH}
-            strokeDasharray={"5,5"}
           />
         </svg>
       </div>

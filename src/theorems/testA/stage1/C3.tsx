@@ -144,7 +144,7 @@ const step22: StepMeta = makeStepMeta({
   text: EqualSegments.text(["PR", "RM"]),
   staticText: () => EqualSegments.staticText(["PR", "RM"]),
   highlight: (ctx: Content, frame: string) =>
-    Midpoint.highlight(ctx, frame, "R", ["PR", "RM"]),
+    ctx.getPoint("R").mode(frame, SVGModes.ReliesOnPoint),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -174,26 +174,30 @@ const step4: StepMeta = makeStepMeta({
   dependsOn: ["1", "3", "4"],
   text: EqualTriangles.text(["QPR", "RMN"]),
   staticText: () => EqualTriangles.staticText(["QPR", "RMN"]),
-
   additions: (props: StepFocusProps) => {
-    givens.additions(props);
-    step1.additions(props);
-    step2.additions(props);
-    step3.additions(props);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["QPR", "RMN"],
+      props.mode
+    );
   },
-  highlight: (ctx: Content, frame: string) =>
+  unfocused: (props: StepUnfocusProps) => step3.unfocused(props),
+  highlight: (ctx: Content, frame: string) => {
     ASA.highlight(ctx, frame, {
       a1s: { a: ["QRP", "MRN"], type: Obj.EqualAngleTick },
       a2s: { a: ["QPR", "RMN"], type: Obj.RightTick },
       segs: { s: ["PR", "RM"], ticks: 1 },
       triangles: ["QPR", "RMN"],
-    }),
+    });
+  },
 });
 
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["5"],
   unfocused: (props: StepUnfocusProps) => {
+    step4.unfocused(props);
     step4.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
@@ -202,15 +206,12 @@ const step5: StepMeta = makeStepMeta({
   text: EqualSegments.text(["QR", "RN"]),
   staticText: () => EqualSegments.staticText(["QR", "RN"]),
   highlight: (ctx: Content, frame: string) => {
-    CongruentTriangles.highlight(ctx, frame, {
-      s1s: ["PR", "RM"],
-      s2s: ["QR", "RN"],
-      s3s: ["PQ", "MN"],
-      a1s: ["QRP", "MRN"],
-      a2s: ["QPR", "RMN"],
-      a3s: ["PQR", "RNM"],
-    });
-    EqualRightAngles.highlight(ctx, frame, ["QPR", "RMN"]);
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["QPR", "RMN"],
+      SVGModes.ReliesOn
+    );
   },
 });
 
@@ -227,7 +228,7 @@ const step6: StepMeta = makeStepMeta({
   text: Midpoint.text("QN", "R"),
   staticText: () => Midpoint.staticText("R", "QN"),
   highlight: (ctx: Content, frame: string) =>
-    Midpoint.highlight(ctx, frame, "R", ["QR", "NR"], 2),
+    EqualSegments.highlight(ctx, frame, ["QR", "NR"], SVGModes.ReliesOn, 2),
 });
 
 export const T1_S1_C3: LayoutProps = {

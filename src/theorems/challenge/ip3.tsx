@@ -12,7 +12,7 @@ import {
 } from "../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../core/reasons/Midpoint";
-import { ReflexiveStep } from "../../core/reasons/Reflexive";
+import { Reflexive } from "../../core/reasons/Reflexive";
 import { RightAngle } from "../../core/reasons/RightAngle";
 import { SAS, SASProps } from "../../core/reasons/SAS";
 import { placeholder } from "../../core/testinfra/questions/funcTypeQuestions";
@@ -148,9 +148,37 @@ const step2: StepMeta = makeStepMeta({
 
 const step3: StepMeta = EqualSegmentStep(["DE", "EG"], Reasons.Given, step2, 2);
 
-const step4: StepMeta = ReflexiveStep("BE", 3, step3);
+const step4: StepMeta = makeStepMeta({
+  reason: Reasons.Reflexive,
+  unfocused: (props: StepUnfocusProps) => {
+    step3.unfocused(props);
+    step3.additions({
+      ...props,
+      mode: SVGModes.Unfocused,
+    });
+  },
+  additions: (props: StepFocusProps) => {
+    Reflexive.additions(props, "BE", 3);
+  },
+  text: Reflexive.text("BE"),
+  staticText: () => Reflexive.staticText("BE"),
+});
 
-const step5: StepMeta = ReflexiveStep("CE", 1, step4);
+const step5: StepMeta = makeStepMeta({
+  reason: Reasons.Reflexive,
+  unfocused: (props: StepUnfocusProps) => {
+    step4.unfocused(props);
+    step4.additions({
+      ...props,
+      mode: SVGModes.Unfocused,
+    });
+  },
+  additions: (props: StepFocusProps) => {
+    Reflexive.additions(props, "CE", 1);
+  },
+  text: Reflexive.text("CE"),
+  staticText: () => Reflexive.staticText("CE"),
+});
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,

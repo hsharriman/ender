@@ -1,7 +1,7 @@
 import { Content } from "../diagramContent";
 import { resizedStrs, segmentStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
-import { Obj } from "../types/types";
+import { Obj, SVGModes } from "../types/types";
 
 export class ParallelLines {
   static additions = (
@@ -36,9 +36,10 @@ export class ParallelLines {
   static highlight = (
     ctx: Content,
     frame: string,
-    [s1, s2]: [string, string]
+    [s1, s2]: [string, string],
+    mode: SVGModes
   ) => {
-    ctx.getSegment(s1).addTick(frame, Obj.ParallelTick).highlight(frame);
-    ctx.getSegment(s2).addTick(frame, Obj.ParallelTick).highlight(frame);
+    ctx.getSegment(s1).addTick(frame, Obj.ParallelTick).mode(frame, mode);
+    ctx.getSegment(s2).addTick(frame, Obj.ParallelTick).mode(frame, mode);
   };
 }

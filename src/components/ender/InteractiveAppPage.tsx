@@ -1,5 +1,6 @@
 import React from "react";
 import { DiagramContent } from "../../core/diagramContent";
+import { Legend } from "../../core/diagramSvg/Legend";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { Question } from "../../core/testinfra/questions/funcTypeQuestions";
 import { logEvent } from "../../core/testinfra/testUtils";
@@ -21,6 +22,7 @@ export interface InteractiveAppPageProps {
   questions: Question[];
   isTutorial?: boolean;
   highlightCtx: DiagramContent;
+  additionCtx: DiagramContent;
 }
 
 interface InteractiveAppPageState {
@@ -84,26 +86,27 @@ export class InteractiveAppPage extends React.Component<
           </div>
           <div
             id="canvas-container"
-            className="col-start-7 col-span-5 grid grid-rows-2 mx-8 max-w-[1020px] min-w-[720px]"
+            className="col-start-7 col-span-5 flex flex-row flex-wrap items-start content-start mx-8 w-[700px]"
           >
-            <div className="pt-4">
-              <Diagram
-                height="auto"
-                width={
-                  this.props.ctx.aspect === AspectRatio.Landscape
-                    ? "600px"
-                    : "400px"
-                }
-                svgIdSuffix={`construction`}
-                activeFrame={this.state.activeFrame}
-                ctx={this.props.ctx}
-                miniScale={false}
-                isTutorial={this.props.isTutorial}
-                highlightCtx={this.props.highlightCtx}
-              />
+            <Diagram
+              height="auto"
+              width={
+                this.props.ctx.aspect === AspectRatio.Landscape
+                  ? "700px"
+                  : "500px"
+              }
+              svgIdSuffix={`construction`}
+              activeFrame={this.state.activeFrame}
+              ctx={this.props.ctx}
+              miniScale={false}
+              isTutorial={this.props.isTutorial}
+              highlightCtx={this.props.highlightCtx}
+              additionCtx={this.props.additionCtx}
+            />
+            <div className="w-[700px] mt-2">
+              <Legend />
             </div>
-
-            <div className="mx-4 max-w-[1000px] min-w-[650px] h-44">
+            <div className="mt-4 mr-4 w-[700px] h-8">
               <ReasonText
                 activeFrame={this.state.activeFrame}
                 textFn={getReasonFn(this.props.reasonMap)}

@@ -1,6 +1,7 @@
 import { Content } from "../diagramContent";
 import { resizedStrs, segmentStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
+import { SVGModes } from "../types/types";
 
 export class Perpendicular {
   static additions = (
@@ -28,10 +29,11 @@ export class Perpendicular {
     ctx: Content,
     frame: string,
     s: string,
-    [s1, s2]: [string, string]
+    [s1, s2]: [string, string],
+    mode: SVGModes
   ) => {
-    ctx.getSegment(s).highlight(frame);
-    ctx.getSegment(s1).highlight(frame);
-    ctx.getSegment(s2).highlight(frame);
+    ctx.getSegment(s).mode(frame, mode);
+    ctx.getSegment(s1).mode(frame, mode);
+    ctx.getSegment(s2).mode(frame, mode);
   };
 }

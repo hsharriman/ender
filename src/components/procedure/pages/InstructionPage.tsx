@@ -24,14 +24,11 @@ export class InstructionPage extends React.Component<InstructionPageProps> {
             helping us test how well our tool works.
           </div>
           <div>
-            From now on you will answer questions about a series of proofs. Some
-            of the proofs are correct and some have mistakes. So, please read
-            the proofs and questions carefully and answer to the best of your
-            ability. Let the researcher know if you have any questions.
-          </div>
-          <div>
-            Please remember to hold the mouse while you're working through the
-            pages.
+            From now on you will continue using the think aloud method as you
+            answer questions about a series of proofs. Some of the proofs are
+            correct and some have mistakes. We recommend that you read through
+            the proof before trying to answer the questions. Let the researcher
+            know if you have any questions.
           </div>
         </div>
         <button

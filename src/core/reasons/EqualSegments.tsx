@@ -44,16 +44,17 @@ export class EqualSegments {
     ctx: Content,
     frame: string,
     [s1, s2]: [string, string],
+    mode: SVGModes,
     num: number = 1
   ) => {
     ctx
       .getSegment(s1)
       .addTick(frame, Obj.EqualLengthTick, num)
-      .highlight(frame);
+      .mode(frame, mode);
     ctx
       .getSegment(s2)
       .addTick(frame, Obj.EqualLengthTick, num)
-      .highlight(frame);
+      .mode(frame, mode);
   };
 }
 

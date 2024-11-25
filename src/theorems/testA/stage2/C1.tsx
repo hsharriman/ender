@@ -4,6 +4,7 @@ import { Angle } from "../../../core/geometry/Angle";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, triangleStr } from "../../../core/geometryText";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
@@ -99,8 +100,7 @@ const proves: StepMeta = makeStepMeta({
   },
   additions: (props: StepFocusProps) => {
     props.ctx.getSegment("FG").mode(props.frame, props.mode);
-    props.ctx.getSegment("GJ").mode(props.frame, props.mode);
-    props.ctx.getSegment("FJ").mode(props.frame, props.mode);
+    EqualSegments.additions(props, ["FJ", "GJ"], 1);
   },
   text: (isActive: boolean) => {
     return proves.staticText();
@@ -159,7 +159,7 @@ const step22: StepMeta = makeStepMeta({
   text: EqualSegments.text(["EJ", "JH"]),
   staticText: () => EqualSegments.staticText(["EJ", "JH"]),
   highlight: (ctx: Content, frame: string) =>
-    Midpoint.highlight(ctx, frame, "J", ["EJ", "JH"]),
+    EqualSegments.highlight(ctx, frame, ["EJ", "JH"], SVGModes.ReliesOn),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -174,14 +174,6 @@ const step3: StepMeta = makeStepMeta({
   },
   text: EqualRightAngles.text(["FEJ", "JHG"]),
   staticText: () => EqualRightAngles.staticText(["FEJ", "JHG"]),
-  highlight: (ctx: Content, frame: string) => {
-    EqualRightAngles.highlight(ctx, frame, ["FEJ", "JHG"]);
-    EqualRightAngles.highlight(ctx, frame, ["EFG", "HGF"]);
-    ctx.getSegment("EJ").highlight(frame);
-    ctx.getSegment("JH").highlight(frame);
-    ctx.getSegment("FG").highlight(frame);
-    EqualSegments.highlight(ctx, frame, ["FE", "GH"], 2);
-  },
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -196,14 +188,6 @@ const step4: StepMeta = makeStepMeta({
   },
   text: EqualSegments.text(["FE", "GH"]),
   staticText: () => EqualSegments.staticText(["FE", "GH"]),
-  highlight: (ctx: Content, frame: string) => {
-    EqualRightAngles.highlight(ctx, frame, ["FEJ", "JHG"]);
-    EqualRightAngles.highlight(ctx, frame, ["EFG", "HGF"]);
-    ctx.getSegment("EJ").highlight(frame);
-    ctx.getSegment("JH").highlight(frame);
-    ctx.getSegment("FG").highlight(frame);
-    EqualSegments.highlight(ctx, frame, ["FE", "GH"], 2);
-  },
 });
 
 const step5SASProps: SASProps = {
@@ -216,15 +200,22 @@ const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: ["3", "4", "5"],
   unfocused: (props: StepUnfocusProps) => {
-    props.ctx.getSegment("FG").mode(props.frame, SVGModes.Unfocused);
+    step4.unfocused(props);
+    step4.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
-    SAS.additions(props, step5SASProps);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["FEJ", "JHG"],
+      props.mode
+    );
   },
   text: EqualTriangles.text(step5SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step5SASProps.triangles),
-  highlight: (ctx: Content, frame: string) =>
-    SAS.highlight(ctx, frame, step5SASProps),
+  highlight: (ctx: Content, frame: string) => {
+    SAS.highlight(ctx, frame, step5SASProps);
+  },
 });
 
 const step6: StepMeta = makeStepMeta({
@@ -240,8 +231,13 @@ const step6: StepMeta = makeStepMeta({
   text: EqualSegments.text(["FJ", "GJ"]),
   staticText: () => EqualSegments.staticText(["FJ", "GJ"]),
   highlight: (ctx: Content, frame: string) => {
-    SAS.highlight(ctx, frame, step5SASProps);
-    EqualSegments.highlight(ctx, frame, ["FJ", "GJ"], 3);
+    SAS.highlight(ctx, frame, step5SASProps); // TODO should be CongruentTriangles
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["FEJ", "JHG"],
+      SVGModes.ReliesOn
+    );
   },
 });
 
@@ -260,15 +256,10 @@ const step7: StepMeta = makeStepMeta({
     return step7.staticText();
   },
   staticText: () => proves.staticText(),
-  highlight: (ctx: Content, frame: string) => {
-    EqualSegments.highlight(ctx, frame, ["FJ", "GJ"], 3);
-    ctx.getSegment("FG").highlight(frame);
-  },
 });
 
 export const T1_S2_C1: LayoutProps = {
   name: "T1_S2_C1",
-  // TODO: Replace questions
   questions: exploratoryQuestion(3, 8),
   baseContent,
   givens,

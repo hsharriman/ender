@@ -5,11 +5,9 @@ import {
 } from "../../theorems/pretest/pretestDiagrams";
 import { T1_S1_C1 } from "../../theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "../../theorems/testA/stage1/C2";
-import { T1_S1_C3 } from "../../theorems/testA/stage1/C3";
 import { T1_S1_IN1 } from "../../theorems/testA/stage1/IN1";
 import { T1_S1_IN2 } from "../../theorems/testA/stage1/IN2";
 import { T1_S1_IN3 } from "../../theorems/testA/stage1/IN3";
-import { T1_S2_C1 } from "../../theorems/testA/stage2/C1";
 import { T1_S2_C2 } from "../../theorems/testA/stage2/C2";
 import { T1_S2_IN1 } from "../../theorems/testA/stage2/IN1";
 import { T1_S2_IN2 } from "../../theorems/testA/stage2/IN2";
@@ -19,7 +17,6 @@ import {
 } from "../../theorems/tutorial/tutorial1";
 import { LayoutProps, ProofMeta } from "../types/types";
 import { triangleTextPreQuestions } from "./questions/pretestQuestions";
-import { tutorial1Steps, tutorial3Steps } from "./questions/tutorialContent";
 import {
   fisherYates,
   interactiveLayout,
@@ -73,19 +70,20 @@ export const pageOrder = (testType: TestType) => {
   }
 
   pretest = pretest.concat(tpre);
-  const tutorial =
+  const tutorial = [
     testType === PageType.Interactive
-      ? [
-          interactiveLayout(TutorialProof1, false, tutorial1Steps),
-          interactiveLayout(TutorialProof2, false, tutorial3Steps),
-        ]
-      : [];
+      ? interactiveLayout(TutorialProof1, false)
+      : staticLayout(TutorialProof1, false),
+    testType === PageType.Interactive
+      ? interactiveLayout(TutorialProof2, false)
+      : staticLayout(TutorialProof2, false),
+  ];
   const stage1 = proofOrder(
-    [T1_S1_C1, T1_S1_C2, T1_S1_C3, T1_S1_IN1, T1_S1_IN2, T1_S1_IN3],
+    [T1_S1_C1, T1_S1_C2, T1_S1_IN1, T1_S1_IN2, T1_S1_IN3],
     testType
   );
   const stage2 = proofOrder(
-    fisherYates([T1_S2_C1, T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
+    fisherYates([T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
     testType
   );
 

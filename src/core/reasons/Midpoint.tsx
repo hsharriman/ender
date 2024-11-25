@@ -32,9 +32,11 @@ export class Midpoint {
     frame: string,
     pt: string,
     segs: [string, string],
+    ptMode: SVGModes,
+    mode: SVGModes,
     num?: number
   ) => {
-    ctx.getPoint(pt).highlight(frame);
-    EqualSegments.highlight(ctx, frame, segs, num);
+    ctx.getPoint(pt).mode(frame, ptMode);
+    EqualSegments.highlight(ctx, frame, segs, mode, num);
   };
 }

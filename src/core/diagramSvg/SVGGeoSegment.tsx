@@ -96,12 +96,10 @@ export class SVGGeoSegment extends React.Component<
           x2={end[0]}
           y1={start[1]}
           y2={end[1]}
-          key={`${this.props.geoId}${this.props.highlight ? "-highlight" : ""}`}
-          id={`${this.props.geoId}${this.props.highlight ? "-highlight" : ""}`}
+          key={this.props.geoId}
+          id={this.props.geoId}
           className={
-            this.props.highlight
-              ? ModeCSS.HIGHLIGHT
-              : this.state.isActive || this.state.isPinned
+            this.state.isActive || this.state.isPinned
               ? this.state.css
               : updateStyle(this.props.mode)
           }
@@ -112,16 +110,13 @@ export class SVGGeoSegment extends React.Component<
           parent={this.props.s}
           tick={this.props.tick}
           css={
-            this.props.highlight
-              ? ModeCSS.HIGHLIGHTTICK
-              : this.state.isActive || this.state.isPinned
+            this.state.isActive || this.state.isPinned
               ? this.state.css
               : updateStyle(this.props.mode)
           }
+          isHighlight={this.props.isHighlight}
           miniScale={this.props.miniScale}
-          geoId={`${this.props.geoId}-tick${
-            this.props.highlight ? "-highlight" : ""
-          }`}
+          geoId={this.props.geoId}
         />
         {/* {this.props.hoverable && this.props.mode !== SVGModes.Hidden && (
           <HoverTextLabel

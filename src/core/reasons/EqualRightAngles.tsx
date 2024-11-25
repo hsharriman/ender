@@ -1,6 +1,6 @@
 import { Content } from "../diagramContent";
 import { StepFocusProps } from "../types/stepTypes";
-import { Obj } from "../types/types";
+import { Obj, SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 import { RightAngle } from "./RightAngle";
 
@@ -27,9 +27,10 @@ export class EqualRightAngles {
   static highlight = (
     ctx: Content,
     frame: string,
-    [a1, a2]: [string, string]
+    [a1, a2]: [string, string],
+    mode: SVGModes
   ) => {
-    ctx.getAngle(a1).addTick(frame, Obj.RightTick).highlight(frame);
-    ctx.getAngle(a2).addTick(frame, Obj.RightTick).highlight(frame);
+    ctx.getAngle(a1).addTick(frame, Obj.RightTick).mode(frame, mode);
+    ctx.getAngle(a2).addTick(frame, Obj.RightTick).mode(frame, mode);
   };
 }

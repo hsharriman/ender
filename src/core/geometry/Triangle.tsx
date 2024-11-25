@@ -18,6 +18,7 @@ export class Triangle extends BaseGeometryObject {
   readonly p: [Point, Point, Point];
   readonly id: string;
   readonly backgroundColor: string;
+  readonly congruent: Set<string> = new Set();
 
   constructor(props: TriangleProps, ctx: Content) {
     super(Obj.Triangle, props);
@@ -110,15 +111,20 @@ export class Triangle extends BaseGeometryObject {
   };
 
   override mode = (frameKey: string, mode: SVGModes) => {
-    this.modes.set(frameKey, mode);
+    // this.modes.set(frameKey, mode);
     // cascading update the segments and angles
     this.s.map((seg) => seg.mode(frameKey, mode));
     this.a.map((ang) => ang.mode(frameKey, mode));
     return this;
   };
 
-  override highlight = (frameKey: string) => {
-    this.s.map((seg) => seg.highlight(frameKey));
+  labelMode = (frameKey: string, mode: SVGModes) => {
+    this.modes.set(frameKey, mode);
+    return this;
+  };
+
+  setCongruent = (frame: string) => {
+    this.congruent.add(frame);
     return this;
   };
 }

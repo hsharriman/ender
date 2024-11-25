@@ -3,6 +3,7 @@ import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles, EqualAngleStep } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import {
@@ -11,7 +12,7 @@ import {
 } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
-import { ReflexiveStep } from "../../../core/reasons/Reflexive";
+import { Reflexive } from "../../../core/reasons/Reflexive";
 import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
@@ -128,7 +129,21 @@ const step1: StepMeta = makeStepMeta({
 const step2: StepMeta = EqualSegmentStep(["AD", "DC"], Reasons.Given, step1);
 const step3: StepMeta = EqualAngleStep(["FAB", "GCB"], Reasons.Given, step2);
 const step4: StepMeta = EqualSegmentStep(["AF", "CG"], Reasons.Given, step3, 2);
-const step5: StepMeta = ReflexiveStep("BD", 3, step4);
+const step5: StepMeta = makeStepMeta({
+  reason: Reasons.Reflexive,
+  unfocused: (props: StepUnfocusProps) => {
+    step4.unfocused(props);
+    step4.additions({
+      ...props,
+      mode: SVGModes.Unfocused,
+    });
+  },
+  additions: (props: StepFocusProps) => {
+    Reflexive.additions(props, "BD", 3);
+  },
+  text: Reflexive.text("BD"),
+  staticText: () => Reflexive.staticText("BD"),
+});
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
@@ -142,8 +157,7 @@ const step6: StepMeta = makeStepMeta({
   text: EqualRightAngles.text(["ADB", "BDC"]),
   staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
   highlight: (ctx: Content, frame: string) => {
-    Perpendicular.highlight(ctx, frame, "BD", ["AD", "CD"]);
-    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
+    Perpendicular.highlight(ctx, frame, "BD", ["AD", "CD"], SVGModes.ReliesOn);
   },
 });
 
@@ -155,31 +169,31 @@ const step7: StepMeta = makeStepMeta({
     step6.unfocused(props);
   },
   additions: (props: StepFocusProps) => {
-    step2.additions(props);
-    step5.additions(props);
-    step6.additions(props);
-
-    props.ctx.getSegment("AB").mode(props.frame, props.mode);
-    props.ctx.getSegment("CB").mode(props.frame, props.mode);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["ADB", "BDC"],
+      props.mode
+    );
   },
   text: EqualTriangles.text(["ABD", "BCD"]),
   staticText: () => EqualTriangles.staticText(["ABD", "BCD"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
-    EqualSegments.highlight(ctx, frame, ["AD", "DC"]);
-    EqualSegments.highlight(ctx, frame, ["BD", "BD"], 3);
+    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"], SVGModes.ReliesOn);
+    EqualSegments.highlight(ctx, frame, ["AD", "DC"], SVGModes.ReliesOn);
+    EqualSegments.highlight(ctx, frame, ["BD", "BD"], SVGModes.ReliesOn, 3);
   },
 });
 
 const step8: StepMeta = makeStepMeta({
   ...EqualSegmentStep(["AB", "BC"], Reasons.CPCTC, step7, 4, ["7"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
-    EqualAngles.highlight(ctx, frame, ["DAB", "DCB"], 2);
-    EqualAngles.highlight(ctx, frame, ["ABD", "CBD"]);
-    EqualSegments.highlight(ctx, frame, ["AD", "DC"]);
-    EqualSegments.highlight(ctx, frame, ["BD", "BD"], 3);
-    EqualSegments.highlight(ctx, frame, ["BC", "AB"], 4);
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["ADB", "BDC"],
+      SVGModes.ReliesOn
+    );
   },
 });
 const step9: StepMeta = makeStepMeta({
@@ -190,30 +204,31 @@ const step9: StepMeta = makeStepMeta({
     step8.unfocused(props);
   },
   additions: (props: StepFocusProps) => {
-    step3.additions(props);
-    step4.additions(props);
-    step8.additions(props);
-    props.ctx.getSegment("FB").mode(props.frame, props.mode);
-    props.ctx.getSegment("GB").mode(props.frame, props.mode);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["FAB", "BCG"],
+      props.mode
+    );
   },
   text: EqualTriangles.text(["ABF", "BCG"]),
   staticText: () => EqualTriangles.staticText(["ABF", "BCG"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualAngles.highlight(ctx, frame, ["FAB", "BCG"]);
-    EqualSegments.highlight(ctx, frame, ["FA", "GC"], 2);
-    EqualSegments.highlight(ctx, frame, ["AB", "BC"], 4);
+    EqualAngles.highlight(ctx, frame, ["FAB", "BCG"], SVGModes.ReliesOn);
+    EqualSegments.highlight(ctx, frame, ["FA", "GC"], SVGModes.ReliesOn, 2);
+    EqualSegments.highlight(ctx, frame, ["AB", "BC"], SVGModes.ReliesOn, 4);
   },
 });
 
 const step10: StepMeta = makeStepMeta({
   ...EqualAngleStep(["AFB", "CGB"], Reasons.CPCTC, step9, 2, ["9"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualAngles.highlight(ctx, frame, ["FAB", "BCG"]);
-    EqualSegments.highlight(ctx, frame, ["FA", "GC"], 2);
-    EqualSegments.highlight(ctx, frame, ["AB", "BC"], 4);
-    EqualSegments.highlight(ctx, frame, ["FB", "GB"], 5);
-    EqualAngles.highlight(ctx, frame, ["AFB", "CGB"], 2);
-    EqualAngles.highlight(ctx, frame, ["FBA", "GBC"], 3);
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["FAB", "BCG"],
+      SVGModes.ReliesOn
+    );
   },
 });
 

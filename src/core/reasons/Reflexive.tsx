@@ -1,7 +1,5 @@
-import { Reasons } from "../../theorems/reasons";
-import { makeStepMeta } from "../../theorems/utils";
 import { Content } from "../diagramContent";
-import { StepFocusProps, StepMeta, StepUnfocusProps } from "../types/stepTypes";
+import { StepFocusProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
 
@@ -18,27 +16,13 @@ export class Reflexive {
   static staticText = (s: string) => {
     return EqualSegments.staticText([s, s]);
   };
-  static highlight = (ctx: Content, frame: string, s: string, num = 1) => {
-    return EqualSegments.highlight(ctx, frame, [s, s], num);
+  static highlight = (
+    ctx: Content,
+    frame: string,
+    s: string,
+    mode: SVGModes,
+    num = 1
+  ) => {
+    return EqualSegments.highlight(ctx, frame, [s, s], mode, num);
   };
 }
-
-export const ReflexiveStep = (seg: string, num: number, step: StepMeta) =>
-  makeStepMeta({
-    reason: Reasons.Reflexive,
-    unfocused: (props: StepUnfocusProps) => {
-      step.unfocused(props);
-      step.additions({
-        ...props,
-        mode: SVGModes.Unfocused,
-      });
-    },
-    additions: (props: StepFocusProps) => {
-      Reflexive.additions(props, seg, num);
-    },
-    text: Reflexive.text(seg),
-    staticText: () => Reflexive.staticText(seg),
-    highlight: (ctx: Content, frame: string) => {
-      Reflexive.highlight(ctx, frame, seg, num);
-    },
-  });

@@ -4,6 +4,7 @@ import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngleStep, EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import {
@@ -12,7 +13,7 @@ import {
 } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
-import { ReflexiveStep } from "../../../core/reasons/Reflexive";
+import { Reflexive } from "../../../core/reasons/Reflexive";
 import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
@@ -145,12 +146,25 @@ const step4: StepMeta = makeStepMeta({
   text: EqualRightAngles.text(["PSL", "PSU"]),
   staticText: () => EqualRightAngles.staticText(["PSL", "PSU"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualRightAngles.highlight(ctx, frame, ["PSL", "PSU"]);
-    Perpendicular.highlight(ctx, frame, "PS", ["LS", "SU"]);
+    Perpendicular.highlight(ctx, frame, "PS", ["LS", "SU"], SVGModes.ReliesOn);
   },
 });
 
-const step5: StepMeta = ReflexiveStep("PS", 2, step4);
+const step5: StepMeta = makeStepMeta({
+  reason: Reasons.Reflexive,
+  unfocused: (props: StepUnfocusProps) => {
+    step4.unfocused(props);
+    step4.additions({
+      ...props,
+      mode: SVGModes.Unfocused,
+    });
+  },
+  additions: (props: StepFocusProps) => {
+    Reflexive.additions(props, "PS", 2);
+  },
+  text: Reflexive.text("PS"),
+  staticText: () => Reflexive.staticText("PS"),
+});
 
 const step6ASAProps: ASAProps = {
   a1s: { a: ["PSL", "PSU"], type: Obj.RightTick },
@@ -165,19 +179,25 @@ const step6: StepMeta = makeStepMeta({
     step5.unfocused(props);
   },
   additions: (props: StepFocusProps) => {
-    ASA.additions(props, step6ASAProps);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["LSP", "USP"],
+      props.mode
+    );
   },
   text: EqualTriangles.text(step6ASAProps.triangles),
   staticText: () => EqualTriangles.staticText(step6ASAProps.triangles),
-  highlight: (ctx: Content, frame: string) =>
-    ASA.highlight(ctx, frame, step6ASAProps),
+  highlight: (ctx: Content, frame: string) => {
+    ASA.highlight(ctx, frame, step6ASAProps);
+  },
 });
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["6"],
   unfocused: (props: StepUnfocusProps) => {
-    step6.additions({ ...props, mode: SVGModes.Unfocused });
+    // step6.additions({ ...props, mode: SVGModes.Unfocused });
     step6.unfocused(props);
   },
   additions: (props: StepFocusProps) => {
@@ -186,8 +206,12 @@ const step7: StepMeta = makeStepMeta({
   text: EqualAngles.text(["SLP", "SUP"]),
   staticText: () => EqualAngles.staticText(["SLP", "SUP"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualTriangles.highlight(ctx, frame, ["LSP", "USP"]);
-    EqualAngles.highlight(ctx, frame, ["SLP", "SUP"], 2);
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["LSP", "USP"],
+      SVGModes.ReliesOn
+    );
   },
 });
 
@@ -211,25 +235,35 @@ const step8: StepMeta = makeStepMeta({
   text: EqualAngles.text(["LNU", "UQL"]),
   staticText: () => EqualAngles.staticText(["LNU", "UQL"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualAngles.highlight(ctx, frame, ["LNU", "UQL"], 3);
-    EqualTriangles.highlight(ctx, frame, ["LNU", "UQL"]);
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["LNU", "UQL"],
+      SVGModes.Inconsistent
+    );
   },
 });
 
 // INCORRECT VERSION -- Correct would be SAS
 const step9: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
-  dependsOn: ["2", "7", "8?"],
+  dependsOn: ["2", "7", "8"],
   unfocused: (props: StepUnfocusProps) => {
     step8.unfocused(props);
   },
   additions: (props: StepFocusProps) => {
-    ASA.additions(props, step9ASAProps);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["LNU", "UQL"],
+      props.mode
+    );
   },
   text: EqualTriangles.text(step9ASAProps.triangles),
   staticText: () => EqualTriangles.staticText(step9ASAProps.triangles),
-  highlight: (ctx: Content, frame: string) =>
-    ASA.highlight(ctx, frame, step9ASAProps),
+  highlight: (ctx: Content, frame: string) => {
+    ASA.highlight(ctx, frame, step9ASAProps);
+  },
 });
 
 export const T1_S2_IN1: LayoutProps = {

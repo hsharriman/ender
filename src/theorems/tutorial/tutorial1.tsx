@@ -3,13 +3,14 @@ import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
+import { CongruentTriangles } from "../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import {
   EqualSegmentStep,
   EqualSegments,
 } from "../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../core/reasons/EqualTriangles";
-import { Reflexive, ReflexiveStep } from "../../core/reasons/Reflexive";
+import { Reflexive } from "../../core/reasons/Reflexive";
 import { SAS, SASProps } from "../../core/reasons/SAS";
 import { SSS } from "../../core/reasons/SSS";
 import {
@@ -102,10 +103,20 @@ const step2: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["BAC", "DAC"]),
 });
 
-const step3: StepMeta = makeStepMeta({
-  ...ReflexiveStep("AC", 2, step2),
-  highlight: (ctx: Content, frame: string) =>
-    Reflexive.highlight(ctx, frame, "AC", 2),
+const step3 = makeStepMeta({
+  reason: Reasons.Reflexive,
+  unfocused: (props: StepUnfocusProps) => {
+    step2.unfocused(props);
+    step2.additions({
+      ...props,
+      mode: SVGModes.Unfocused,
+    });
+  },
+  additions: (props: StepFocusProps) => {
+    Reflexive.additions(props, "AC", 2);
+  },
+  text: Reflexive.text("AC"),
+  staticText: () => Reflexive.staticText("AC"),
 });
 
 const step4SASProps: SASProps = {
@@ -119,7 +130,14 @@ const step4: StepMeta = makeStepMeta({
   dependsOn: ["1", "2", "3"],
   text: EqualTriangles.text(step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step4SASProps.triangles),
-  additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
+  unfocused: (props: StepUnfocusProps) => step3.unfocused(props),
+  additions: (props: StepFocusProps) =>
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["ABC", "ADC"],
+      props.mode
+    ),
   highlight: (ctx: Content, frame: string) => {
     SAS.highlight(ctx, frame, step4SASProps);
   },
@@ -129,15 +147,18 @@ const step4: StepMeta = makeStepMeta({
 const step4t2 = makeStepMeta({
   ...step4,
   dependsOn: ["1", "2", "3?"],
-  additions: (props: StepFocusProps) => {
-    SAS.additions(props, step4SASProps);
+  unfocused: (props: StepUnfocusProps) => {
+    step4.unfocused(props);
+    step4.additions({ ...props, mode: SVGModes.Unfocused });
   },
-  highlight: (ctx: Content, frame: string) =>
+  highlight: (ctx: Content, frame: string) => {
     SSS.highlight(ctx, frame, {
       s1s: ["AB", "AD"],
       s2s: ["AC", "AC"],
       s3s: ["BC", "CD"],
-    }),
+    });
+    EqualSegments.highlight(ctx, frame, ["BC", "CD"], SVGModes.Inconsistent, 3);
+  },
   reason: Reasons.SSS,
 });
 

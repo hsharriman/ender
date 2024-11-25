@@ -1,5 +1,6 @@
 import { Content } from "../diagramContent";
 import { StepFocusProps } from "../types/stepTypes";
+import { SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualSegments } from "./EqualSegments";
 
@@ -25,28 +26,13 @@ export class CongruentTriangles {
     EqualAngles.additions(props, labels.a3s, 3);
   };
 
-  static highlight = (
+  static congruentLabel = (
     ctx: Content,
     frame: string,
-    labels: CongruentTrianglesProps
+    labels: [string, string],
+    mode: SVGModes
   ) => {
-    EqualSegments.highlight(ctx, frame, labels.s1s, 1);
-    EqualSegments.highlight(ctx, frame, labels.s2s, 2);
-    EqualSegments.highlight(ctx, frame, labels.s3s, 3);
-    EqualAngles.highlight(ctx, frame, labels.a1s, 1);
-    EqualAngles.highlight(ctx, frame, labels.a2s, 2);
-    EqualAngles.highlight(ctx, frame, labels.a3s, 3);
-  };
-  static highlightRightTriangle = (
-    ctx: Content,
-    frame: string,
-    labels: CongruentTrianglesProps
-  ) => {
-    EqualSegments.highlight(ctx, frame, labels.s1s, 1);
-    EqualSegments.highlight(ctx, frame, labels.s2s, 2);
-    EqualSegments.highlight(ctx, frame, labels.s3s, 3);
-    EqualAngles.highlight(ctx, frame, labels.a1s, 1);
-    EqualAngles.highlight(ctx, frame, labels.a2s, 2);
-    EqualAngles.highlight(ctx, frame, labels.a3s, 3);
+    ctx.getTriangle(labels[0]).setCongruent(frame).labelMode(frame, mode);
+    ctx.getTriangle(labels[1]).setCongruent(frame).labelMode(frame, mode);
   };
 }

@@ -35,7 +35,23 @@ export const arcSweepsCCW = (
   return cross > 0 ? 0 : 1;
 };
 
-export const updateStyle = (mode: SVGModes) => {
+// TODO combine SVGModes and ModeCSS
+export const updateStyle = (mode: SVGModes, text?: boolean) => {
+  if (text) {
+    switch (mode) {
+      case SVGModes.Unfocused:
+        return ModeCSS.UNFOCUSEDFILL;
+      case SVGModes.Derived:
+        return ModeCSS.DERIVEDFILL;
+      case SVGModes.ReliesOn:
+        return ModeCSS.RELIESFILL;
+      case SVGModes.Inconsistent:
+        return ModeCSS.INCONSISTENTFILL;
+      case SVGModes.Hidden:
+      default:
+        return ModeCSS.HIDDEN;
+    }
+  }
   switch (mode) {
     case SVGModes.Active:
       return ModeCSS.ACTIVE;
@@ -45,22 +61,18 @@ export const updateStyle = (mode: SVGModes) => {
       return ModeCSS.FOCUSED;
     case SVGModes.Unfocused:
       return ModeCSS.UNFOCUSED;
-    case SVGModes.Purple:
-      return ModeCSS.PURPLE;
-    case SVGModes.Blue:
-      return ModeCSS.BLUE;
     case SVGModes.Pinned:
       return ModeCSS.PINNED;
     case SVGModes.ActiveText:
       return ModeCSS.ACTIVETEXT;
-    case SVGModes.ActiveTriangleBlue:
-      return ModeCSS.ACTIVETRIBLUE;
-    case SVGModes.ActiveTrianglePurple:
-      return ModeCSS.ACTIVETRIPURPLE;
-    case SVGModes.UnfocusedTriangle:
-      return ModeCSS.UNFOCUSEDTRI;
-    case SVGModes.Highlight:
-      return ModeCSS.HIGHLIGHT;
+    case SVGModes.ReliesOn:
+      return ModeCSS.RELIES;
+    case SVGModes.Derived:
+      return ModeCSS.DERIVED;
+    case SVGModes.Inconsistent:
+      return ModeCSS.INCONSISTENT;
+    case SVGModes.ReliesOnPoint:
+      return ModeCSS.RELIESFILL;
     case SVGModes.Hidden:
     default:
       return ModeCSS.HIDDEN;

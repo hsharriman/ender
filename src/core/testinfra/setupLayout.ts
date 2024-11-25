@@ -2,7 +2,7 @@ import { PretestAppPageProps } from "../../components/procedure/pages/PretestApp
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
 import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";
-import { LayoutProps, Reason, TutorialStep } from "../types/types";
+import { LayoutProps, Reason, SVGModes, TutorialStep } from "../types/types";
 import { Page, PageType } from "./pageOrder";
 
 /* Helper methods related to randomizing the proof order */
@@ -65,6 +65,8 @@ export const interactiveLayout = (
 ): Page => {
   const ctx = proofMeta.baseContent(true, false);
   const highlightCtx = proofMeta.baseContent(true, false);
+  const additionCtx = proofMeta.baseContent(true, false);
+
   const linkedTexts: ProofTextItem[] = [];
   const reasonMap = new Map<string, Reason>();
 
@@ -91,7 +93,10 @@ export const interactiveLayout = (
   proofMeta.steps.forEach((step, i) => {
     let textMeta = {};
     const s = ctx.addFrame(`s${i + 1}`);
-    step.diagram(ctx, s);
+    additionCtx.addFrame(`s${i + 1}`);
+    step.unfocused({ ctx, frame: s });
+    step.additions({ ctx: additionCtx, frame: s, mode: SVGModes.Derived });
+
     if (step.dependsOn) {
       const depIds = step.dependsOn.map((i) => `s${i}`);
       ctx.reliesOn(s, depIds);
@@ -111,6 +116,7 @@ export const interactiveLayout = (
       reason: step.reason.title,
     });
   });
+  console.log(additionCtx.getCtx());
   return {
     type: tutorial ? PageType.Tutorial : PageType.Interactive,
     meta: {
@@ -125,6 +131,7 @@ export const interactiveLayout = (
           : proofMeta.questions,
         name: proofMeta.name,
         highlightCtx: highlightCtx.getCtx(),
+        additionCtx: additionCtx.getCtx(),
       },
       tutorial,
     },

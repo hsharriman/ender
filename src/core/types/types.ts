@@ -46,14 +46,13 @@ export enum SVGModes {
   DiagramHover = "diagramhover",
   Unfocused = "unfocused",
   Default = "default",
-  Purple = "purple",
-  Blue = "blue",
   Pinned = "pinned",
   ActiveText = "activetext",
-  ActiveTriangleBlue = "activetriangleblue",
-  ActiveTrianglePurple = "activetrianglepurple",
-  UnfocusedTriangle = "unfocusedtriangle",
-  Highlight = "highlight",
+  ReliesOn = "relieson",
+  ReliesOnPoint = "reliesonpoint",
+  ReliesMissing = "reliesmissing",
+  Derived = "derived",
+  Inconsistent = "inconsistent",
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------
@@ -99,3 +98,11 @@ export interface ProofMeta {
   tutorial?: TutorialStep[];
 }
 type LayoutOptions = "static" | "interactive";
+
+// for determining what type of styling to apply to an object
+export enum HighlightType {
+  Relies = "relies",
+  ReliesUnmet = "reliesunmet",
+  Highlight = "highlight",
+  HighlightUnmet = "highlightunmet",
+}

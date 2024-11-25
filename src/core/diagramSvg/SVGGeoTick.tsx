@@ -19,6 +19,7 @@ export type SVGTickProps = {
   tick?: { type: TickType; num: number };
   css: string;
   miniScale: boolean;
+  isHighlight: boolean;
   geoId: string;
 };
 
@@ -191,7 +192,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
         id={this.props.geoId}
         key={this.props.geoId}
         className={this.props.css + " fill-none"}
-        strokeLinecap="round"
+        strokeLinecap={"butt"}
       />
     ) : (
       <></>

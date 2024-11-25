@@ -44,10 +44,11 @@ export class EqualAngles {
     ctx: Content,
     frame: string,
     [a1, a2]: [string, string],
+    mode: SVGModes,
     num: number = 1
   ) => {
-    ctx.getAngle(a1).addTick(frame, Obj.EqualAngleTick, num).highlight(frame);
-    ctx.getAngle(a2).addTick(frame, Obj.EqualAngleTick, num).highlight(frame);
+    ctx.getAngle(a1).addTick(frame, Obj.EqualAngleTick, num).mode(frame, mode);
+    ctx.getAngle(a2).addTick(frame, Obj.EqualAngleTick, num).mode(frame, mode);
   };
 }
 

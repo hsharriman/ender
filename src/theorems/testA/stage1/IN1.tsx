@@ -148,27 +148,36 @@ const step3: StepMeta = makeStepMeta({
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: ["1", "2", "3?"],
-  additions: (props: StepFocusProps) => {
-    givens.additions(props);
-    step1.additions(props);
-    step2.additions(props);
-    step3.additions(props);
+  unfocused: (props: StepUnfocusProps) => {
+    step3.unfocused(props);
+    step3.additions({ ...props, mode: SVGModes.Unfocused });
   },
   text: EqualTriangles.text(["ABD", "CDB"]),
+  additions: (props: StepFocusProps) => {
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["ADB", "CBD"],
+      props.mode
+    );
+  },
   staticText: () => EqualTriangles.staticText(["ABD", "CDB"]),
-  highlight: (ctx: Content, frame: string) =>
+  highlight: (ctx: Content, frame: string) => {
     SAS.highlight(ctx, frame, {
       seg1s: { s: ["AD", "BC"] },
       seg2s: { s: ["AB", "DC"], ticks: 2 },
       angles: { a: ["BAD", "BCD"] },
       triangles: ["ABD", "CDB"],
-    }),
+    });
+    EqualAngles.highlight(ctx, frame, ["BAD", "BCD"], SVGModes.Inconsistent, 2);
+  },
 });
 
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["4"],
   unfocused: (props: StepUnfocusProps) => {
+    step4.unfocused(props);
     step4.additions({ ...props, mode: SVGModes.Unfocused });
   },
   additions: (props: StepFocusProps) => {
@@ -176,15 +185,14 @@ const step5: StepMeta = makeStepMeta({
   },
   text: EqualAngles.text(["BAD", "DCB"]),
   staticText: () => EqualAngles.staticText(["BAD", "DCB"]),
-  highlight: (ctx: Content, frame: string) =>
-    CongruentTriangles.highlight(ctx, frame, {
-      s1s: ["AD", "BC"],
-      s2s: ["AB", "DC"],
-      s3s: ["BD", "BD"],
-      a1s: ["ABD", "CDB"],
-      a2s: ["BAD", "DCB"],
-      a3s: ["ADB", "CBD"],
-    }),
+  highlight: (ctx: Content, frame: string) => {
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["ADB", "CBD"],
+      SVGModes.ReliesOn
+    );
+  },
 });
 
 export const T1_S1_IN1: LayoutProps = {

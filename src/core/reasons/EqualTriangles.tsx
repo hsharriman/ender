@@ -1,7 +1,5 @@
-import { Content } from "../diagramContent";
 import { resizedStrs, triangleStr } from "../geometryText";
-import { StepFocusProps, StepUnfocusProps } from "../types/stepTypes";
-import { SVGModes } from "../types/types";
+import { StepFocusProps } from "../types/stepTypes";
 
 export class EqualTriangles {
   static text =
@@ -26,18 +24,5 @@ export class EqualTriangles {
   static additions = (props: StepFocusProps, [t1, t2]: [string, string]) => {
     props.ctx.getTriangle(t1).mode(props.frame, props.mode);
     props.ctx.getTriangle(t2).mode(props.frame, props.mode);
-  };
-
-  static unfocused = (props: StepUnfocusProps, [t1, t2]: [string, string]) => {
-    props.ctx.getTriangle(t1).mode(props.frame, SVGModes.UnfocusedTriangle);
-    props.ctx.getTriangle(t2).mode(props.frame, SVGModes.UnfocusedTriangle);
-  };
-  static highlight = (
-    ctx: Content,
-    frame: string,
-    [t1, t2]: [string, string]
-  ) => {
-    ctx.getTriangle(t1).highlight(frame);
-    ctx.getTriangle(t2).highlight(frame);
   };
 }

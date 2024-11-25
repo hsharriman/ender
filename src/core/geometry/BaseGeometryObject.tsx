@@ -12,7 +12,6 @@ export class BaseGeometryObject {
   public names: string[] = [];
   public label: string = "";
   protected modes: Map<string, SVGModes>;
-  protected highlightSet: Set<string> = new Set<string>();
   public activeIdx: number;
   readonly hoverable: boolean;
   getId = getId;
@@ -29,13 +28,6 @@ export class BaseGeometryObject {
     this.modes.set(frameKey, mode);
     return this;
   };
-
-  highlight = (frameKey: string) => {
-    this.highlightSet.add(frameKey);
-    return this;
-  };
-
-  getHighlight = (frameKey: string) => this.highlightSet.has(frameKey);
 
   onClickText = (isActive: boolean) => {
     // TODO implementation

@@ -37,12 +37,11 @@ export class VerticalAngles {
     labels: VerticalAnglesProps,
     s2s?: [string, string]
   ) => {
-    EqualAngles.highlight(ctx, frame, labels.angs);
-    ctx.getSegment(labels.segs[0]).highlight(frame);
-    ctx.getSegment(labels.segs[1]).highlight(frame);
+    ctx.getSegment(labels.segs[0]).mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment(labels.segs[1]).mode(frame, SVGModes.ReliesOn);
     if (s2s) {
-      ctx.getSegment(s2s[0]).highlight(frame);
-      ctx.getSegment(s2s[1]).highlight(frame);
+      ctx.getSegment(s2s[0]).mode(frame, SVGModes.ReliesOn);
+      ctx.getSegment(s2s[1]).mode(frame, SVGModes.ReliesOn);
     }
   };
 }

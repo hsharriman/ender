@@ -16,6 +16,7 @@ export interface DiagramProps {
   miniScale: boolean;
   isStatic?: boolean;
   isTutorial?: boolean;
+  additionCtx?: DiagramContent;
   highlightCtx?: DiagramContent;
 }
 
@@ -27,16 +28,18 @@ export class Diagram extends React.Component<DiagramProps> {
     this.svgId = `svg-object-${props.svgIdSuffix}`;
   }
 
-  renderPoints = (ctx: DiagramContent, frame: string, highlight: boolean) => {
+  renderPoints = (ctx: DiagramContent, frame: string, layer: number) => {
     return ctx.points.flatMap((p, i) => {
       const hoverable = this.props.isStatic ? false : p.hoverable;
+      const mode = this.props.isStatic
+        ? SVGModes.Default
+        : p.getMode(frame) ?? SVGModes.Hidden;
       return !this.props.miniScale ? (
         <SVGGeoPoint
-          geoId={p.id}
-          mode={this.props.miniScale ? SVGModes.Hidden : SVGModes.Default}
+          geoId={`${p.id}.${layer}`}
+          mode={mode}
           hoverable={hoverable}
-          highlight={highlight && p.getHighlight(frame)}
-          key={`${p.id}-${i}`}
+          key={`${p.id}-${i}.${layer}`}
           {...{
             p: p.labeled(),
             offset: p.offset,
@@ -44,6 +47,7 @@ export class Diagram extends React.Component<DiagramProps> {
             miniScale: this.props.miniScale,
             showPoint: p.showPoint,
           }}
+          isHighlight={layer === 1}
         />
       ) : (
         <></>
@@ -51,30 +55,33 @@ export class Diagram extends React.Component<DiagramProps> {
     });
   };
 
-  renderSegments = (ctx: DiagramContent, frame: string, highlight: boolean) => {
+  renderSegments = (ctx: DiagramContent, frame: string, layer: number) => {
     return ctx.segments.flatMap((seg, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : seg.getMode(frame) ?? SVGModes.Hidden;
+      if (seg.getMode(frame) === SVGModes.Derived) {
+        console.log("Derived segment", frame, seg.id);
+      }
       const hoverable = this.props.isStatic ? false : seg.hoverable;
       return (
         <SVGGeoSegment
-          geoId={seg.id}
+          geoId={`${seg.id}.${layer}`}
           mode={mode}
           hoverable={hoverable}
-          highlight={highlight && seg.getHighlight(frame)}
           {...{
             miniScale: this.props.miniScale,
             s: seg.labeled(),
             tick: seg.getTick(frame),
           }}
-          key={`${seg.id}-${i}`}
+          key={`${seg.id}-${i}.${layer}`}
+          isHighlight={layer === 1}
         />
       );
     });
   };
 
-  renderAngles = (ctx: DiagramContent, frame: string, highlight: boolean) => {
+  renderAngles = (ctx: DiagramContent, frame: string, layer: number) => {
     return ctx.angles.flatMap((ang, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
@@ -83,25 +90,21 @@ export class Diagram extends React.Component<DiagramProps> {
       return (
         <SVGGeoAngle
           mode={mode}
-          geoId={ang.id}
+          geoId={`${ang.id}.${layer}`}
           hoverable={hoverable}
-          highlight={highlight && ang.getHighlight(frame)}
           {...{
             a: ang.labeled(),
             miniScale: this.props.miniScale,
             tick: ang.getTick(frame),
           }}
-          key={`${ang.id}-${i}`}
+          key={`${ang.id}-${i}.${layer}`}
+          isHighlight={layer === 1}
         />
       );
     });
   };
 
-  renderTriangles = (
-    ctx: DiagramContent,
-    frame: string,
-    highlight: boolean
-  ) => {
+  renderTriangles = (ctx: DiagramContent, frame: string, layer: number) => {
     return ctx.triangles.flatMap((tri, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
@@ -109,28 +112,29 @@ export class Diagram extends React.Component<DiagramProps> {
       const hoverable = this.props.isStatic ? false : tri.hoverable;
       return (
         <SVGGeoTriangle
-          geoId={tri.id}
+          geoId={`${tri.id}.${layer}`}
           hoverable={hoverable}
-          highlight={highlight && tri.getHighlight(frame)}
           {...{
             miniScale: this.props.miniScale,
             t: tri,
           }}
-          key={`${tri.id}-${i}`}
+          key={`${tri.id}-${i}.${layer}`}
           backgroundColor={tri.backgroundColor}
           mode={mode}
+          congruent={!this.props.isStatic && tri.congruent.has(frame)}
+          isHighlight={layer === 1}
         />
       );
     });
   };
 
-  renderObjectsFromCtx = (ctx: DiagramContent, highlight: boolean) => {
+  renderObjectsFromCtx = (ctx: DiagramContent, layer: number) => {
     return (
       <>
-        {this.renderSegments(ctx, this.props.activeFrame, highlight)}
-        {this.renderTriangles(ctx, this.props.activeFrame, highlight)}
-        {this.renderPoints(ctx, this.props.activeFrame, highlight)}
-        {this.renderAngles(ctx, this.props.activeFrame, highlight)}
+        {this.renderSegments(ctx, this.props.activeFrame, layer)}
+        {this.renderTriangles(ctx, this.props.activeFrame, layer)}
+        {this.renderPoints(ctx, this.props.activeFrame, layer)}
+        {this.renderAngles(ctx, this.props.activeFrame, layer)}
       </>
     );
   };
@@ -155,12 +159,14 @@ export class Diagram extends React.Component<DiagramProps> {
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid meet"
         >
+          {this.renderObjectsFromCtx(this.props.ctx, 0)}
+          {this.props.additionCtx &&
+            this.renderObjectsFromCtx(this.props.additionCtx, 2)}
           {this.props.highlightCtx &&
             this.props.highlightCtx.frames.filter(
               (f) => f === this.props.activeFrame
             ).length > 0 &&
-            this.renderObjectsFromCtx(this.props.highlightCtx, true)}
-          {this.renderObjectsFromCtx(this.props.ctx, false)}
+            this.renderObjectsFromCtx(this.props.highlightCtx, 1)}
         </svg>
       </div>
     );

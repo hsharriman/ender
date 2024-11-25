@@ -190,11 +190,21 @@ const step4SASProps: SASProps = {
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
   dependsOn: ["2", "3", "4"],
-  additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
+  unfocused: (props: StepUnfocusProps) => {
+    step3.unfocused(props);
+  },
+  additions: (props: StepFocusProps) =>
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["ACM", "BDM"],
+      props.mode
+    ), // TODO make this insert congruent tri vis
   text: EqualTriangles.text(step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
-  highlight: (ctx: Content, frame: string) =>
-    SAS.highlight(ctx, frame, step4SASProps),
+  highlight: (ctx: Content, frame: string) => {
+    SAS.highlight(ctx, frame, step4SASProps);
+  },
 });
 
 const step6: StepMeta = makeStepMeta({
@@ -205,21 +215,20 @@ const step6: StepMeta = makeStepMeta({
       ...props,
       mode: SVGModes.Unfocused,
     });
-    EqualTriangles.unfocused(props, ["ACM", "BDM"]);
+    step5.unfocused(props);
   },
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CAM", "DBM"], 2),
   text: EqualAngles.text(["CAM", "DBM"]),
   staticText: () => EqualAngles.staticText(["CAM", "DBM"]),
-  highlight: (ctx: Content, frame: string) =>
-    CongruentTriangles.highlight(ctx, frame, {
-      s1s: ["AM", "BM"],
-      s2s: ["CM", "DM"],
-      s3s: ["AC", "BD"],
-      a1s: ["CMA", "DMB"],
-      a2s: ["CAM", "DBM"],
-      a3s: ["ACM", "BDM"],
-    }),
+  highlight: (ctx: Content, frame: string) => {
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["ACM", "BDM"],
+      SVGModes.ReliesOn
+    );
+  },
 });
 
 const step7: StepMeta = makeStepMeta({
@@ -238,10 +247,9 @@ const step7: StepMeta = makeStepMeta({
   text: ParallelLines.text(["AC", "BD"]),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
   highlight: (ctx: Content, frame: string) => {
-    ParallelLines.highlight(ctx, frame, ["AC", "BD"]);
-    EqualAngles.highlight(ctx, frame, ["CAM", "DBM"], 2);
-    ctx.getSegment("AM").highlight(frame);
-    ctx.getSegment("BM").highlight(frame);
+    EqualAngles.highlight(ctx, frame, ["CAM", "DBM"], SVGModes.ReliesOn, 2);
+    ctx.getSegment("AM").mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment("BM").mode(frame, SVGModes.ReliesOn);
   },
 });
 

@@ -3,13 +3,14 @@ import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
-import { SAS, SASProps } from "../../../core/reasons/SAS";
+import { SASProps } from "../../../core/reasons/SAS";
 import { checkingProof2 } from "../../../core/testinfra/questions/funcTypeQuestions";
 import {
   StepFocusProps,
@@ -132,8 +133,7 @@ const step3: StepMeta = makeStepMeta({
   text: EqualRightAngles.text(["JMK", "LMK"]),
   staticText: () => EqualRightAngles.staticText(["JMK", "LMK"]),
   highlight: (ctx: Content, frame: string) => {
-    Perpendicular.highlight(ctx, frame, "MK", ["JM", "ML"]);
-    EqualRightAngles.highlight(ctx, frame, ["JMK", "LMK"]);
+    Perpendicular.highlight(ctx, frame, "MK", ["JM", "ML"], SVGModes.ReliesOn);
   },
 });
 
@@ -148,8 +148,6 @@ const step4: StepMeta = makeStepMeta({
   },
   text: Reflexive.text("MK"),
   staticText: () => Reflexive.staticText("MK"),
-  highlight: (ctx: Content, frame: string) =>
-    Reflexive.highlight(ctx, frame, "MK", 2),
 });
 
 const step5Labels: SASProps = {
@@ -161,15 +159,24 @@ const step5Labels: SASProps = {
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.AAS,
   dependsOn: ["2", "3", "4?"],
+  unfocused: (props: StepUnfocusProps) => {
+    step4.unfocused(props);
+    step4.additions({ ...props, mode: SVGModes.Unfocused });
+  },
   additions: (props: StepFocusProps) => {
-    SAS.additions(props, step5Labels);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["KJM", "KLM"],
+      props.mode
+    );
   },
   text: EqualTriangles.text(["JMK", "LMK"]),
   staticText: () => EqualTriangles.staticText(["JMK", "LMK"]),
   highlight: (ctx: Content, frame: string) => {
-    EqualSegments.highlight(ctx, frame, ["JK", "LK"]);
-    EqualRightAngles.highlight(ctx, frame, ["JMK", "LMK"]);
-    EqualAngles.highlight(ctx, frame, ["KJM", "KLM"]);
+    EqualSegments.highlight(ctx, frame, ["JK", "LK"], SVGModes.ReliesOn);
+    EqualRightAngles.highlight(ctx, frame, ["JMK", "LMK"], SVGModes.ReliesOn);
+    EqualAngles.highlight(ctx, frame, ["KJM", "KLM"], SVGModes.Inconsistent);
   },
 });
 

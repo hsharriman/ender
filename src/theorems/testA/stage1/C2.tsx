@@ -150,8 +150,6 @@ const step3: StepMeta = makeStepMeta({
     Perpendicular.additions(props, "BD", ["AD", "DC"]),
   text: Perpendicular.text("AC", "BD"),
   staticText: () => Perpendicular.staticText("BD", "AC"),
-  highlight: (ctx: Content, frame: string) =>
-    Perpendicular.highlight(ctx, frame, "BD", ["AD", "DC"]),
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -166,8 +164,7 @@ const step4: StepMeta = makeStepMeta({
   text: EqualRightAngles.text(["ADB", "BDC"]),
   staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
   highlight: (ctx: Content, frame: string) => {
-    Perpendicular.highlight(ctx, frame, "BD", ["AD", "DC"]);
-    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
+    Perpendicular.highlight(ctx, frame, "BD", ["AD", "DC"], SVGModes.ReliesOn);
   },
 });
 
@@ -180,8 +177,6 @@ const step5: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => Reflexive.additions(props, "BD"),
   text: Reflexive.text("BD"),
   staticText: () => Reflexive.staticText("BD"),
-  highlight: (ctx: Content, frame: string) =>
-    Reflexive.highlight(ctx, frame, "BD"),
 });
 
 const step5ASAProps: ASAProps = {
@@ -193,19 +188,27 @@ const step5ASAProps: ASAProps = {
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
   dependsOn: ["2", "4", "5"],
+  unfocused: (props: StepUnfocusProps) => step5.unfocused(props),
   additions: (props: StepFocusProps) => {
-    ASA.additions(props, step5ASAProps);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["ADB", "BDC"],
+      props.mode
+    );
   },
   text: EqualTriangles.text(["ABD", "CBD"]),
   staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
-  highlight: (ctx: Content, frame: string) =>
-    ASA.highlight(ctx, frame, step5ASAProps),
+  highlight: (ctx: Content, frame: string) => {
+    ASA.highlight(ctx, frame, step5ASAProps, SVGModes.ReliesOn);
+  },
 });
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["6"],
   unfocused: (props: StepUnfocusProps) => {
+    step6.unfocused(props);
     step6.additions({
       ...props,
       mode: SVGModes.Unfocused,
@@ -216,15 +219,12 @@ const step7: StepMeta = makeStepMeta({
   text: EqualSegments.text(["AD", "DC"]),
   staticText: () => EqualSegments.staticText(["AD", "DC"]),
   highlight: (ctx: Content, frame: string) => {
-    CongruentTriangles.highlight(ctx, frame, {
-      s1s: ["BD", "BD"],
-      s2s: ["AD", "DC"],
-      s3s: ["AB", "CB"],
-      a1s: ["ADB", "BDC"],
-      a2s: ["ABD", "CBD"],
-      a3s: ["BAD", "BCD"],
-    });
-    EqualRightAngles.highlight(ctx, frame, ["ADB", "BDC"]);
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["ADB", "BDC"],
+      SVGModes.ReliesOn
+    );
   },
 });
 
@@ -238,79 +238,8 @@ const step8: StepMeta = makeStepMeta({
   text: Midpoint.text("AC", "D"),
   staticText: () => Midpoint.staticText("D", "AC"),
   highlight: (ctx: Content, frame: string) =>
-    Midpoint.highlight(ctx, frame, "D", ["AD", "DC"], 2),
+    EqualSegments.highlight(ctx, frame, ["AD", "DC"], SVGModes.ReliesOn, 2),
 });
-
-export const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  const defaultStepProps: StepFocusProps = {
-    ctx,
-    frame: "",
-    mode: SVGModes.Blue,
-  };
-
-  const focusProps: StepFocusProps = {
-    ctx,
-    frame: "",
-    mode: SVGModes.Focused,
-  };
-
-  // STEP 2 - PERPENDICULAR LINES
-  const step2 = ctx.addFrame("s3");
-  const BD = ctx.getSegment("BD").mode(step2, SVGModes.Focused);
-  const AD = ctx.getSegment("AD").mode(step2, SVGModes.Focused);
-  const CD = ctx.getSegment("CD").mode(step2, SVGModes.Focused);
-  RightAngle.additions({ ...defaultStepProps, frame: step2 }, "ADB");
-
-  const step3 = ctx.addFrame("s4");
-  BD.mode(step3, SVGModes.Focused);
-  AD.mode(step3, SVGModes.Focused);
-  CD.mode(step3, SVGModes.Focused);
-  EqualRightAngles.additions({ ...defaultStepProps, frame: step3 }, [
-    "ADB",
-    "BDC",
-  ]);
-
-  // STEP 3 - REFLEXIVE PROPERTY
-  const step4 = ctx.addFrame("s5");
-  Reflexive.additions({ ...defaultStepProps, frame: step4 }, "BD");
-
-  // STEP 4 - ASA CONGRUENCE
-  const step5 = ctx.addFrame("s6");
-  ASA.additions(
-    { ...defaultStepProps, frame: step5 },
-    {
-      a1s: { a: ["ADB", "BDC"], type: Obj.RightTick },
-      a2s: { a: ["ABD", "CBD"], type: Obj.EqualAngleTick },
-      segs: { s: ["BD", "BD"] },
-      triangles: ["ABD", "CBD"],
-    }
-  );
-
-  // STEP 5 - CORRESPONDING SEGMENTS
-  const step6 = ctx.addFrame("s7");
-  EqualAngles.additions({ ...focusProps, frame: step6 }, ["ABD", "CBD"]);
-  Reflexive.additions({ ...focusProps, frame: step6 }, "BD");
-  EqualRightAngles.additions({ ...focusProps, frame: step6 }, ["ADB", "BDC"]);
-  EqualAngles.additions({ ...focusProps, frame: step6 }, ["ABD", "CBD"]);
-  EqualAngles.additions({ ...focusProps, frame: step6 }, ["BAD", "BCD"], 2);
-  EqualSegments.additions(
-    { ...defaultStepProps, frame: step6 },
-    ["AD", "DC"],
-    2
-  );
-  EqualSegments.additions({ ...focusProps, frame: step6 }, ["AB", "CB"], 3);
-
-  // STEP 6 - MIDPOINT
-  const step7 = ctx.addFrame("s8");
-  AD.mode(step7, SVGModes.Purple);
-  CD.mode(step7, SVGModes.Blue);
-  AD.addTick(step7, Obj.EqualLengthTick, 2).mode(step7, SVGModes.Purple);
-  CD.addTick(step7, Obj.EqualLengthTick, 2).mode(step7, SVGModes.Blue);
-
-  return ctx;
-};
 
 export const T1_S1_C2: LayoutProps = {
   name: "T1_S1_C2",

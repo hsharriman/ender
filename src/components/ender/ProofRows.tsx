@@ -239,7 +239,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
     return this.props.isActive
       ? "bg-blue-100"
       : this.props.depends
-      ? "bg-blue-50"
+      ? "bg-slate-50"
       : "bg-transparent";
   };
 
@@ -252,11 +252,11 @@ export class ProofRow extends React.Component<ProofRowProps> {
       <div
         className={`${
           this.props.isActive
-            ? "bg-black text-white"
+            ? "bg-blue-700 text-white"
             : this.props.i > this.props.activeIdx - 2
             ? "bg-white border-2 border-slate-500 text-slate-500"
             : this.props.depends
-            ? "bg-slate-500 text-white"
+            ? "bg-slate-400 text-black"
             : "bg-slate-200 text-black"
         } font-bold w-8 h-8 rounded-2xl flex justify-center items-center flex-row`}
       >
@@ -310,7 +310,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
                   <div
                     className={`px-2 rounded-md py-1 ${
                       this.props.isActive && this.props.item.reason !== "Given"
-                        ? "bg-violet-300"
+                        ? "border-black border-2"
                         : ""
                     }`}
                   >

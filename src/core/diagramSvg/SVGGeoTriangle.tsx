@@ -2,7 +2,7 @@ import React from "react";
 import { Triangle } from "../geometry/Triangle";
 import { strs } from "../geometryText";
 import { logEvent } from "../testinfra/testUtils";
-import { Obj } from "../types/types";
+import { Obj, Vector } from "../types/types";
 import { permutator } from "../utils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
@@ -14,6 +14,7 @@ import { coordsToSvg, updateStyle } from "./svgUtils";
 export type SVGTriangleProps = {
   t: Triangle;
   backgroundColor: string;
+  congruent: boolean;
 } & BaseSVGProps;
 
 export class SVGGeoTriangle extends React.Component<
@@ -94,14 +95,48 @@ export class SVGGeoTriangle extends React.Component<
     return dStr;
   };
 
+  triangleInCenter = () => {
+    const segLength = (p1: Vector, p2: Vector) => vops.mag(vops.sub(p1, p2));
+    const [A, B, C] = [
+      this.props.t.p[0].pt,
+      this.props.t.p[1].pt,
+      this.props.t.p[2].pt,
+    ];
+    const a = segLength(B, C);
+    const b = segLength(C, A);
+    const c = segLength(A, B);
+    const incenterCoord: Vector = vops.add(
+      vops.add(vops.smul(A, a / (a + b + c)), vops.smul(B, b / (a + b + c))),
+      vops.smul(C, c / (a + b + c))
+    );
+    console.log(A, B, C, a, b, c, incenterCoord);
+    return coordsToSvg(incenterCoord, this.props.miniScale);
+  };
+
   render() {
     // calculate center of triangle
     const [p1, p2, p3] = this.props.t.p;
     // centroid is at 1/3(u+v+w)
     const center = vops.smul(vops.add(vops.add(p1.pt, p2.pt), p3.pt), 1 / 3);
     const triStyle = updateStyle(this.props.mode);
+    const triIncenter = this.triangleInCenter();
     return (
       <>
+        {this.props.congruent && (
+          <text
+            x={triIncenter[0]}
+            y={triIncenter[1] + 10}
+            className={
+              "text-4xl leading-[16px] " + updateStyle(this.props.mode, true)
+            }
+            id={this.props.geoId + "-conglabel"}
+            key={this.props.geoId + "-conglabel"}
+            fill="black"
+            textAnchor="middle"
+          >
+            {strs.congruent}
+          </text>
+        )}
         {this.props.backgroundColor && triStyle.includes("fill-triangle") && (
           <path
             d={this.triangleBbox()}
