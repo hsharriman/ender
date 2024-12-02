@@ -62,7 +62,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
 
   renderSwitch = () => {
     const styling = this.state.isInteractive
-      ? "bg-violet-500 border-violet-500 border-2 text-white"
+      ? "bg-blue-500 border-blue-500 border-2 text-white"
       : "border-slate-500 border-2 fill-none";
     return (
       <button
@@ -72,7 +72,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
         }
         onClick={this.onLayoutToggle}
       >
-        Use Interactive Layout
+        Toggle Interactive Layout
       </button>
     );
   };
@@ -175,7 +175,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
     return (
       <>
         <div
-          className="sticky top-0 left-0 p-3 h-10 z-30 flex bg-gradient-to-r from-violet-500 to-transparent"
+          className="sticky top-0 left-0 p-3 h-10 z-30 flex bg-gradient-to-r from-violet-500 via-30% via-blue-500"
           id="header"
         >
           <NavLink to={"/ender"} className="px-3 text-sm h-8">

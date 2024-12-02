@@ -1,5 +1,5 @@
 import { angleStr, segmentQuestion } from "../../geometryText";
-import { AnswerType, Question, QuestionType } from "./funcTypeQuestions";
+import { AnswerType, Question, QuestionType } from "./testQuestions";
 
 const id = (n: number) => `qID-${n}`;
 const prefix = "According to the tick marks in the picture, ";

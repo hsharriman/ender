@@ -11,7 +11,10 @@ import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
-import { completeProof1 } from "../../../core/testinfra/questions/funcTypeQuestions";
+import {
+  S1C1questions,
+  testQuestionOrder,
+} from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
@@ -218,7 +221,7 @@ const step7: StepMeta = makeStepMeta({
 
 export const T1_S1_C1: LayoutProps = {
   name: "T1_S1_C1",
-  questions: completeProof1,
+  questions: testQuestionOrder(4, 7, S1C1questions),
   baseContent,
   givens,
   proves,

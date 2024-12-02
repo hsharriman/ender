@@ -95,15 +95,6 @@ export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
     this.setState({ activeQuestionIdx: newIndex });
   };
 
-  updateScaffolding = (questionType: string) => {
-    this.setState((prevState) => ({
-      scaffolding: {
-        ...prevState.scaffolding,
-        [questionType]: true,
-      },
-    }));
-  };
-
   updateAnswers =
     (proofName: string) =>
     (question: string, answer: string, version?: string) => {
@@ -199,8 +190,6 @@ export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
                 proofType={proofType}
                 questionIdx={this.state.activeQuestionIdx}
                 onAnswerUpdate={this.updateAnswers(meta.name)}
-                scaffolding={this.state.scaffolding}
-                updateScaffolding={this.updateScaffolding}
                 setActiveQuestionIndex={this.setActiveQuestionIndex}
                 incrementTutorial={incrementTutorial}
                 submitEnabled={answersEnabled}

@@ -2,10 +2,9 @@ import React from "react";
 import {
   AnswerType,
   Question,
-  QuestionType,
-} from "../../../core/testinfra/questions/funcTypeQuestions";
+} from "../../../core/testinfra/questions/testQuestions";
+import { ButtonQuestion } from "./ButtonQuestion";
 import { DropdownQuestion } from "./DropdownQuestion";
-import { YesNoQuestion } from "./YesNoQuestion";
 
 interface QuestionsProps {
   proofType: string;
@@ -14,39 +13,32 @@ interface QuestionsProps {
   submitEnabled: boolean;
   onNext: (direction: number) => void;
   onAnswerUpdate: (question: string, answer: string, version: string) => void;
-  scaffolding: { [key: string]: boolean };
-  updateScaffolding: (questionType: string) => void;
   setActiveQuestionIndex: (index: number) => void;
   incrementTutorial?: () => boolean;
 }
 
 export class TestQuestions extends React.Component<QuestionsProps> {
-  isFirstOfType = (question: Question) => {
-    const questionType = question.type.toString();
-    if (!this.props.scaffolding[questionType]) {
-      this.props.updateScaffolding(questionType);
-      return true;
-    }
-    return false;
-  };
-
+  FIRST_CORRECT_Q_ID = "11";
+  NUM_CORRECT_FOLLOWUPS = 2;
   handleSubmit = (answer: any) => {
     const question = this.props.questions[this.props.questionIdx];
-    // console.log(
-    //   `Answer for question ${this.props.questionIdx + 1}, id: ${question.id}:`,
-    //   answer,
-    //   this.props.proofType
-    // );
 
     this.props.onAnswerUpdate(question.id, answer, this.props.proofType);
-    if (
-      question.type === QuestionType.Correctness &&
-      this.props.questionIdx === 0 &&
-      question.answerType === AnswerType.YesNo &&
-      answer === "No"
-    ) {
-      // skip subsequent questions if the first answer selected was No in phase 2 questions
-      this.props.onNext(1);
+    if (question.id.endsWith(this.FIRST_CORRECT_Q_ID) && answer === "No") {
+      // special case for "Does this proof have a mistake?"
+      // skip next 2 questions if the first answer selected was No
+      if (
+        this.props.questionIdx + this.NUM_CORRECT_FOLLOWUPS <
+        this.props.questions.length - 1
+      ) {
+        // skip to the next question in the sequence
+        this.props.setActiveQuestionIndex(
+          this.props.questionIdx + this.NUM_CORRECT_FOLLOWUPS + 1
+        );
+      } else {
+        // move to the next proof
+        this.props.onNext(1);
+      }
     } else if (this.props.questionIdx < this.props.questions.length - 1) {
       // move to the next question
       this.props.setActiveQuestionIndex(this.props.questionIdx + 1);
@@ -76,35 +68,29 @@ export class TestQuestions extends React.Component<QuestionsProps> {
       currentQuestion.answerType === AnswerType.DropdownTextbox;
     return (
       <>
-        <div className="flex">
-          <span className="pr-6 self-center">
-            Q{this.props.questionIdx + 1}:
-          </span>
-          {currentQuestion.answerType === AnswerType.YesNo && (
-            <YesNoQuestion
+        <div className="flex items-center">
+          <span className="pr-6">Q{this.props.questionIdx + 1}:</span>
+          <div className="font-bold pr-10">{currentQuestion.prompt}</div>
+          {(currentQuestion.answerType === AnswerType.YesNo ||
+            currentQuestion.answerType === AnswerType.Continue) && (
+            <ButtonQuestion
               proofType={this.props.proofType}
-              questionNum={(this.props.questionIdx + 1).toString()}
-              question={currentQuestion.prompt}
-              answers={["Yes", "No"]}
+              answers={
+                currentQuestion.answerType === AnswerType.YesNo
+                  ? ["Yes", "No"]
+                  : ["Continue"]
+              }
               onSubmit={this.handleSubmit}
               type={currentQuestion.type}
-              scaffolding={this.props.scaffolding}
-              updateScaffolding={this.props.updateScaffolding}
-              scaffoldReason={currentQuestion.reason || ""}
               submitEnabled={this.props.submitEnabled}
             />
           )}
           {dropdownAnswerType && (
             <DropdownQuestion
               proofType={this.props.proofType}
-              question={currentQuestion.prompt}
-              questionNum={(this.props.questionIdx + 1).toString()}
               answers={answers || []}
               onSubmit={this.handleSubmit}
               type={currentQuestion.type}
-              scaffolding={this.props.scaffolding}
-              updateScaffolding={this.props.updateScaffolding}
-              scaffoldReason=""
               hasTextBox={
                 currentQuestion.answerType === AnswerType.DropdownTextbox
               }

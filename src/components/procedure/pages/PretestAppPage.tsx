@@ -1,6 +1,6 @@
 import React from "react";
 import { DiagramContent } from "../../../core/diagramContent";
-import { Question } from "../../../core/testinfra/questions/funcTypeQuestions";
+import { Question } from "../../../core/testinfra/questions/testQuestions";
 import { StaticDiagram } from "../../ender/StaticDiagram";
 
 export interface PretestAppPageProps {

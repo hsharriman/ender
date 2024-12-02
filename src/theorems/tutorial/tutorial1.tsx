@@ -13,7 +13,7 @@ import { SSS } from "../../core/reasons/SSS";
 import {
   tutorial1Questions,
   tutorial2Questions,
-} from "../../core/testinfra/questions/funcTypeQuestions";
+} from "../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";

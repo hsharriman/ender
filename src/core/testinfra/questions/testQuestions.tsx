@@ -2,6 +2,7 @@ import { Reasons } from "../../../theorems/reasons";
 import { possibleStepAnswers } from "../../../theorems/utils";
 import { segmentQuestion, strs } from "../../geometryText";
 import { Obj, Reason } from "../../types/types";
+import { fisherYates } from "../randomize";
 
 export interface Question {
   answerType: AnswerType;
@@ -30,6 +31,7 @@ export enum QuestionType {
   Continue = "Continue",
 }
 
+// students should be similarly good at this question in both conditions
 const diagramStateQuestion = (x: string, y: string, type: Obj) => {
   const strType = (s: string, type: Obj) => {
     if (type === Obj.Angle) {
@@ -39,13 +41,14 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
   };
   return (
     <span className="text-base">
-      By the end of the proof, is there enough information to conclude that{" "}
+      By the end of the proof, do we know enough to conclude that{" "}
       {strType(x, type)} <span className="italic">must</span> be congruent to{" "}
       {strType(y, type)}?
     </span>
   );
 };
 
+// students should be better at this question in interactive
 const reliesQuestion = (r: Reason, step: number, steps?: [number, number]) => {
   const s = steps
     ? `(step ${step}) between steps ${steps[0]} and ${steps[1]}`
@@ -57,6 +60,7 @@ const reliesQuestion = (r: Reason, step: number, steps?: [number, number]) => {
   );
 };
 
+// can be wrapped into if proof is right or wrong
 const miniQuestion = (r: Reason, step: number) => {
   return (
     <span className="text-base">
@@ -79,25 +83,28 @@ export const scaffolding = {
     "(Hint: Click the last row of the proof. Do the objects have the same number of ticks?)",
 };
 
-export const checkingProof1: Question[] = [
+export const continueQuestion: Question[] = [
   {
     answerType: AnswerType.Continue,
     prompt: (
       <span className="text-base">
         Take a look through the proof. When you're ready to proceed to the
-        questions, click continue.
+        questions, press "1" to continue.
       </span>
     ),
     type: QuestionType.Continue,
     id: id(0),
   },
-  {
-    answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.SAS, 4),
-    reason: Reasons.SAS.title,
-    type: QuestionType.Minifigures,
-    id: id(1),
-  },
+];
+
+export const IN1questions: Question[] = [
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: miniQuestion(Reasons.SAS, 4),
+  //   reason: Reasons.SAS.title,
+  //   type: QuestionType.Minifigures,
+  //   id: id(1),
+  // },
   {
     answerType: AnswerType.YesNo,
     prompt: diagramStateQuestion("BA", "CB", Obj.Segment),
@@ -112,25 +119,14 @@ export const checkingProof1: Question[] = [
   },
 ];
 
-export const checkingProof2: Question[] = [
-  {
-    answerType: AnswerType.Continue,
-    prompt: (
-      <span className="text-base">
-        Take a look through the proof. When you're ready to proceed to the
-        questions, click continue.
-      </span>
-    ),
-    type: QuestionType.Continue,
-    id: id(0),
-  },
-  {
-    answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.CongAdjAngles, 3),
-    reason: Reasons.CongAdjAngles.title,
-    type: QuestionType.Minifigures,
-    id: id(1),
-  },
+export const IN2questions: Question[] = [
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: miniQuestion(Reasons.CongAdjAngles, 3),
+  //   reason: Reasons.CongAdjAngles.title,
+  //   type: QuestionType.Minifigures,
+  //   id: id(1),
+  // },
   {
     answerType: AnswerType.YesNo,
     prompt: diagramStateQuestion("KL", "KM", Obj.Segment),
@@ -139,25 +135,14 @@ export const checkingProof2: Question[] = [
   },
 ];
 
-export const checkingProof3: Question[] = [
-  {
-    answerType: AnswerType.Continue,
-    prompt: (
-      <span className="text-base">
-        Take a look through the proof. When you're ready to proceed to the
-        questions, click continue.
-      </span>
-    ),
-    type: QuestionType.Continue,
-    id: id(0),
-  },
-  {
-    answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.RHL, 6),
-    reason: Reasons.RHL.title,
-    type: QuestionType.Minifigures,
-    id: id(1),
-  },
+export const IN3questions: Question[] = [
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: miniQuestion(Reasons.RHL, 6),
+  //   reason: Reasons.RHL.title,
+  //   type: QuestionType.Minifigures,
+  //   id: id(1),
+  // },
   {
     answerType: AnswerType.YesNo,
     prompt: miniQuestion(Reasons.Quadrilateral, 4),
@@ -173,25 +158,14 @@ export const checkingProof3: Question[] = [
   },
 ];
 
-export const completeProof1: Question[] = [
-  {
-    answerType: AnswerType.Continue,
-    prompt: (
-      <span className="text-base">
-        Take a look through the proof. When you're ready to proceed to the
-        questions, click continue.
-      </span>
-    ),
-    type: QuestionType.Continue,
-    id: id(0),
-  },
-  {
-    answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.ConverseAltInteriorAngs, 7),
-    reason: Reasons.ConverseAltInteriorAngs.title,
-    type: QuestionType.Minifigures,
-    id: id(1),
-  },
+export const S1C1questions: Question[] = [
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: miniQuestion(Reasons.ConverseAltInteriorAngs, 7),
+  //   reason: Reasons.ConverseAltInteriorAngs.title,
+  //   type: QuestionType.Minifigures,
+  //   id: id(1),
+  // },
   {
     answerType: AnswerType.YesNo,
     prompt: reliesQuestion(Reasons.VerticalAngles, 4, [1, 2]),
@@ -208,32 +182,21 @@ export const completeProof1: Question[] = [
   },
 ];
 
-export const completeProof2: Question[] = [
-  {
-    answerType: AnswerType.Continue,
-    prompt: (
-      <span className="text-base">
-        Take a look through the proof. When you're ready to proceed to the
-        questions, click continue.
-      </span>
-    ),
-    type: QuestionType.Continue,
-    id: id(0),
-  },
-  {
-    answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.PerpendicularLines, 3),
-    reason: Reasons.PerpendicularLines.title,
-    type: QuestionType.Minifigures,
-    id: id(1),
-  },
-  {
-    answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.ConverseMidpoint, 8),
-    reason: Reasons.ConverseMidpoint.title,
-    type: QuestionType.Minifigures,
-    id: id(2),
-  },
+export const S1C2questions: Question[] = [
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: miniQuestion(Reasons.PerpendicularLines, 3),
+  //   reason: Reasons.PerpendicularLines.title,
+  //   type: QuestionType.Minifigures,
+  //   id: id(1),
+  // },
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: miniQuestion(Reasons.ConverseMidpoint, 8),
+  //   reason: Reasons.ConverseMidpoint.title,
+  //   type: QuestionType.Minifigures,
+  //   id: id(2),
+  // },
   {
     answerType: AnswerType.YesNo,
     prompt: reliesQuestion(Reasons.CongAdjAngles, 4),
@@ -250,25 +213,14 @@ export const completeProof2: Question[] = [
   },
 ];
 
-export const incompleteProof2: Question[] = [
-  {
-    answerType: AnswerType.Continue,
-    prompt: (
-      <span className="text-base">
-        Take a look through the proof. When you're ready to proceed to the
-        questions, click continue.
-      </span>
-    ),
-    type: QuestionType.Continue,
-    id: id(0),
-  },
-  {
-    answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.VerticalAngles, 4),
-    reason: Reasons.VerticalAngles.title,
-    type: QuestionType.Minifigures,
-    id: id(1),
-  },
+export const S1C3questions: Question[] = [
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: miniQuestion(Reasons.VerticalAngles, 4),
+  //   reason: Reasons.VerticalAngles.title,
+  //   type: QuestionType.Minifigures,
+  //   id: id(1),
+  // },
   {
     answerType: AnswerType.YesNo,
     prompt: reliesQuestion(Reasons.ASA, 5, [3, 4]),
@@ -300,33 +252,34 @@ export const placeholder: Question[] = [
   },
 ];
 
-export const exploratoryQuestion = (start: number, end: number): Question[] => [
-  {
-    prompt: "Is there a mistake in this proof?",
-    answerType: AnswerType.YesNo,
-    type: QuestionType.Correctness,
-    id: id(1),
-  },
-  {
-    prompt: "What is the first step that is wrong?",
-    answerType: AnswerType.Dropdown,
-    type: QuestionType.Correctness,
-    id: id(2),
-    answers: possibleStepAnswers(start, end), // dynamically fill in based on the proof.
-  },
-  {
-    prompt: "Which of the following options best describes why it is wrong?",
-    answers: [
-      "The step says the wrong things are congruent to each other (ex: incorrectly says PA is congruent to AC)",
-      "The step uses the wrong theorem or definition (ex: incorrectly uses ASA triangle congruence)",
-      "There is not enough information to apply the theorem or definition",
-      "Other (write a 1 sentence explanation)",
-    ],
-    type: QuestionType.Correctness,
-    id: id(3),
-    answerType: AnswerType.DropdownTextbox,
-  },
-];
+export const exploratoryQuestion = (start: number, end: number): Question[] =>
+  continueQuestion.concat([
+    {
+      prompt: "Is there a mistake in this proof?",
+      answerType: AnswerType.YesNo,
+      type: QuestionType.Correctness,
+      id: id(11),
+    },
+    {
+      prompt: "What is the first step that is wrong?",
+      answerType: AnswerType.Dropdown,
+      type: QuestionType.Correctness,
+      id: id(12),
+      answers: possibleStepAnswers(start, end), // dynamically fill in based on the proof.
+    },
+    {
+      prompt: "Which of the following options best describes why it is wrong?",
+      answers: [
+        "The step says the wrong things are congruent to each other (ex: incorrectly says PA is congruent to AC)",
+        "The step uses the wrong theorem or definition (ex: incorrectly uses ASA triangle congruence)",
+        "There is not enough information to apply the theorem or definition",
+        "Other (write a 1 sentence explanation)",
+      ],
+      type: QuestionType.Correctness,
+      id: id(13),
+      answerType: AnswerType.DropdownTextbox,
+    },
+  ]);
 
 export const tutorial1Questions: Question[] = [
   {
@@ -353,11 +306,18 @@ export const tutorial2Questions: Question[] = [
   },
 ];
 
-export const allFuncQuestions = [
-  checkingProof1,
-  checkingProof2,
-  checkingProof3,
-  completeProof1,
-  completeProof2,
-  incompleteProof2,
+export const testQuestionOrder = (
+  start: number,
+  end: number,
+  shuffleQs: Question[]
+) => {
+  return exploratoryQuestion(start, end).concat(fisherYates(shuffleQs));
+};
+export const allTestQuestions = [
+  IN1questions,
+  IN2questions,
+  IN3questions,
+  S1C1questions,
+  S1C2questions,
+  S1C3questions,
 ];

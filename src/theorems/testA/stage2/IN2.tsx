@@ -12,7 +12,7 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
-import { exploratoryQuestion } from "../../../core/testinfra/questions/funcTypeQuestions";
+import { exploratoryQuestion } from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
@@ -47,6 +47,7 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         showLabel: labeledPoints,
         offset: offsets[i],
         hoverable,
+        showPoint: true,
       })
     )
   );

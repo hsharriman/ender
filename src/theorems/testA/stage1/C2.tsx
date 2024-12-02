@@ -15,7 +15,10 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
 import { RightAngle } from "../../../core/reasons/RightAngle";
-import { completeProof2 } from "../../../core/testinfra/questions/funcTypeQuestions";
+import {
+  S1C2questions,
+  testQuestionOrder,
+} from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
@@ -48,6 +51,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         showLabel: labeledPoints,
         offset: offsets[i],
         hoverable,
+        showPoint: true,
       })
     )
   );
@@ -96,7 +100,12 @@ const givens: StepMeta = makeStepMeta({
 const proves: StepMeta = makeStepMeta({
   prevStep: givens,
   additions: (props: StepFocusProps) => {
-    Midpoint.additions({ ...props, mode: SVGModes.Derived }, "D", ["AD", "CD"]);
+    Midpoint.additions(
+      { ...props, mode: SVGModes.Derived },
+      "D",
+      ["AD", "CD"],
+      1
+    );
   },
   text: Midpoint.text("D", "AC"),
   staticText: () => Midpoint.staticText("D", "AC"),
@@ -207,16 +216,20 @@ const step8: StepMeta = makeStepMeta({
   reason: Reasons.ConverseMidpoint,
   dependsOn: ["7"],
   prevStep: step7,
-  additions: (props: StepFocusProps) => step7.additions(props),
+  additions: (props: StepFocusProps) => {
+    props.ctx.getPoint("D").mode(props.frame, SVGModes.Derived);
+  },
   text: Midpoint.text("D", "AC"),
   staticText: () => Midpoint.staticText("D", "AC"),
-  highlight: (ctx: Content, frame: string) =>
-    EqualSegments.highlight(ctx, frame, ["AD", "DC"], SVGModes.ReliesOn, 2),
+  highlight: (ctx: Content, frame: string) => {
+    EqualSegments.highlight(ctx, frame, ["AD", "DC"], SVGModes.ReliesOn, 2);
+    ctx.getPoint("D").mode(frame, SVGModes.Derived);
+  },
 });
 
 export const T1_S1_C2: LayoutProps = {
   name: "T1_S1_C2",
-  questions: completeProof2,
+  questions: testQuestionOrder(3, 8, S1C2questions),
   baseContent,
   givens,
   proves,

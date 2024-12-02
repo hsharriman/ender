@@ -2,7 +2,7 @@ import { InteractiveAppPageProps } from "../../components/ender/InteractiveAppPa
 import { StaticAppPageProps } from "../../components/ender/StaticAppPage";
 import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Content } from "../diagramContent";
-import { Question } from "../testinfra/questions/funcTypeQuestions";
+import { Question } from "../testinfra/questions/testQuestions";
 import { StepMeta } from "./stepTypes";
 
 // -------- GEOMETRY TYPES --------

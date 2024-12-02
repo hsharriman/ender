@@ -74,11 +74,9 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
       frame,
       mode: SVGModes.Focused,
     };
-    if (meta.prevStep) {
-      meta.unfocused
-        ? meta.unfocused({ ctx, frame })
-        : defaultUnfocused({ ctx, frame });
-    }
+    meta.unfocused
+      ? meta.unfocused({ ctx, frame })
+      : defaultUnfocused({ ctx, frame });
     meta.additions
       ? meta.additions(additionProps)
       : defaultAdditions(additionProps);

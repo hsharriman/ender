@@ -4,18 +4,7 @@ import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
 import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";
 import { LayoutProps, Reason, SVGModes, TutorialStep } from "../types/types";
 import { Page, PageType } from "./pageOrder";
-
-/* Helper methods related to randomizing the proof order */
-export const fisherYates = (arr: any[]) => {
-  // shuffle the array with Fisher-Yates algorithm
-  const arrCopy = arr.slice();
-  for (let i = arrCopy.length - 1; i >= 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arrCopy[i], arrCopy[j]] = [arrCopy[j], arrCopy[i]];
-  }
-  // return the shuffled array
-  return arrCopy;
-};
+import { fisherYates } from "./randomize";
 
 export const staticLayout = (
   proofMeta: LayoutProps,
@@ -50,9 +39,7 @@ export const staticLayout = (
         pageNum: -1,
         givenText: proofMeta.givens.staticText(),
         provesText: proofMeta.proves.staticText(),
-        questions: shuffleQuestions
-          ? fisherYates(proofMeta.questions)
-          : proofMeta.questions,
+        questions: proofMeta.questions,
         name: proofMeta.name,
       },
     },
@@ -129,9 +116,7 @@ export const interactiveLayout = (
         reasonMap: reasonMap,
         linkedTexts: linkedTexts,
         pageNum: -1,
-        questions: shuffleQuestions
-          ? fisherYates(proofMeta.questions)
-          : proofMeta.questions,
+        questions: proofMeta.questions,
         name: proofMeta.name,
         highlightCtx: highlightCtx.getCtx(),
         additionCtx: additionCtx.getCtx(),

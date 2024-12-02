@@ -2,7 +2,7 @@ import React from "react";
 import { DiagramContent } from "../../core/diagramContent";
 import { Legend } from "../../core/diagramSvg/Legend";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
-import { Question } from "../../core/testinfra/questions/funcTypeQuestions";
+import { Question } from "../../core/testinfra/questions/testQuestions";
 import { logEvent } from "../../core/testinfra/testUtils";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { Reason } from "../../core/types/types";

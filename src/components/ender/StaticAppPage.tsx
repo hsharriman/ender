@@ -1,7 +1,7 @@
 import React from "react";
 import { DiagramContent } from "../../core/diagramContent";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
-import { Question } from "../../core/testinfra/questions/funcTypeQuestions";
+import { Question } from "../../core/testinfra/questions/testQuestions";
 import { logEvent } from "../../core/testinfra/testUtils";
 import { StaticProofTextItem } from "../../core/types/stepTypes";
 import { Reason } from "../../core/types/types";
@@ -42,8 +42,8 @@ export class StaticAppPage extends React.Component<
   renderRow = (item: StaticProofTextItem, i: number) => {
     const textColor = "text-slate-800";
     const strokeColor = "border-slate-800";
-    const reasonStyle =
-      item.reason === "Given" ? "" : "text-blue-600 underline";
+    const reasonStyle = "";
+    // item.reason === "Given" ? "" : "text-blue-600 underline";
     return (
       <div className="flex flex-row justify-start h-12" key={`static-row-${i}`}>
         <div
@@ -143,9 +143,9 @@ export class StaticAppPage extends React.Component<
     return (
       <>
         <div className="flex flex-col justify-start pb-2">
-          <div className="font-bold text-base text-slate-500 py-2 flex justify-between border-t-2 border-slate-300">
+          {/* <div className="font-bold text-base text-slate-500 py-2 flex justify-between">
             Reason Applied:
-          </div>
+          </div> */}
           <div className="font-semibold text-base">{item.title}</div>
           <div className="text-base">{item.body}</div>
         </div>
@@ -198,13 +198,19 @@ export class StaticAppPage extends React.Component<
           {this.props.texts.map((item, i) => this.renderRow(item, i))}
         </div>
         <div className="min-w-[400px] max-w-[500px]">
+          <div className="font-bold text-base text-slate-500 py-2 flex justify-between">
+            Reasons Applied:
+          </div>
+          {this.props.reasons
+            .filter((elem, index, self) => index === self.indexOf(elem))
+            .map((item, i) => this.renderReason(item))}
           <div className="flex flex-col justify-start">
-            <div className="font-bold text-lg text-slate-800">Definitions:</div>
-            {this.renderAllDefinitions()}
-            {this.state.activeReason !== -1 &&
+            {/* <div className="font-bold text-lg text-slate-800">Definitions:</div> */}
+            {/* {this.renderAllDefinitions()} */}
+            {/* {this.state.activeReason !== -1 &&
               this.renderReason(
                 this.props.reasons[this.state.activeReason - numGivens]
-              )}
+              )} */}
           </div>
         </div>
       </div>

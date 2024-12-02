@@ -73,16 +73,17 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
       this.props.miniScale,
       this.props.offset
     );
+    console.log(this.props.mode, updateStyle(this.props.mode, true));
     return (
       <>
         {this.props.showPoint && (
           <circle
             cx={point[0]}
             cy={point[1]}
-            r={3}
+            r={5}
             id={this.props.geoId + "-circle"}
             key={this.props.geoId + "-circle"}
-            className="fill-black"
+            className={updateStyle(this.props.mode, true)}
           />
         )}
         <text

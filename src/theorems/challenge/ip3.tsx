@@ -15,7 +15,7 @@ import { Midpoint } from "../../core/reasons/Midpoint";
 import { Reflexive } from "../../core/reasons/Reflexive";
 import { RightAngle } from "../../core/reasons/RightAngle";
 import { SAS, SASProps } from "../../core/reasons/SAS";
-import { placeholder } from "../../core/testinfra/questions/funcTypeQuestions";
+import { placeholder } from "../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
@@ -52,6 +52,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         showLabel: labeledPoints,
         offset: offsets[i],
         hoverable,
+        showPoint: true,
       })
     )
   );

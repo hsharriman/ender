@@ -118,7 +118,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         {highlightBar(this.props.active === item.k, "h-12")}
         <button
           id={`${this.idPrefix}${item.k}`}
-          // onClick={this.onClick}
+          onClick={this.onClick}
           className="py-2 border-b-2 border-gray-300 text-md w-full h-12 ml-2 focus:outline-none"
         >
           <div className="flex flex-row justify-start gap-8 align-baseline items-baseline ml-2 border-slate-800">
@@ -279,7 +279,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
             <div
               className={`${this.textClr()} ${this.borderClr()} ${padding}  grid grid-rows-1 grid-cols-2`}
             >
-              <div className="flex flex-row justify-start gap-8 -ml-4 align-baseline">
+              <div className="flex flex-row justify-start gap-8 -ml-[18px] align-baseline">
                 {num}
                 <div></div>
               </div>
@@ -296,7 +296,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
                 className={`${this.textClr()} ${this.borderClr()} grid grid-rows-1 grid-cols-2  h-full`}
               >
                 <div
-                  className={`flex flex-row justify-start gap-8 -ml-4 items-center align-baseline ${padding}`}
+                  className={`flex flex-row justify-start gap-8 -ml-[18px] items-center align-baseline ${padding}`}
                 >
                   {num}
                   <div className="shrink">
@@ -304,7 +304,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
                   </div>
                 </div>
                 <div
-                  className={`-ml-2 flex flex-row justify-start align-baseline items-center ${padding} shrink`}
+                  className={`-ml-[9px] flex flex-row justify-start align-baseline items-center ${padding} shrink`}
                   id={`reason-${this.props.i + 1}`}
                 >
                   <div

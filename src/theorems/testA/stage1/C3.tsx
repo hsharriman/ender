@@ -12,7 +12,10 @@ import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
-import { incompleteProof2 } from "../../../core/testinfra/questions/funcTypeQuestions";
+import {
+  S1C3questions,
+  testQuestionOrder,
+} from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
@@ -47,6 +50,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         showLabel: labeledPoints,
         offset: offsets[i],
         hoverable,
+        showPoint: true,
       })
     )
   );
@@ -204,13 +208,14 @@ const step6: StepMeta = makeStepMeta({
   },
   text: Midpoint.text("R", "QN"),
   staticText: () => Midpoint.staticText("R", "QN"),
-  highlight: (ctx: Content, frame: string) =>
-    EqualSegments.highlight(ctx, frame, ["QR", "NR"], SVGModes.ReliesOn, 2),
+  highlight: (ctx: Content, frame: string) => {
+    EqualSegments.highlight(ctx, frame, ["QR", "NR"], SVGModes.ReliesOn, 2);
+  },
 });
 
 export const T1_S1_C3: LayoutProps = {
   name: "T1_S1_C3",
-  questions: incompleteProof2,
+  questions: testQuestionOrder(3, 7, S1C3questions),
   baseContent,
   givens,
   proves,
