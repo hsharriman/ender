@@ -6,6 +6,7 @@ import { Obj, Vector } from "../types/types";
 import { permutator } from "../utils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
+import { getPatternId } from "./LinePattern";
 import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
@@ -13,8 +14,8 @@ import { coordsToSvg, updateStyle } from "./svgUtils";
 
 export type SVGTriangleProps = {
   t: Triangle;
-  backgroundColor: string;
   congruent: boolean;
+  rotate: boolean;
 } & BaseSVGProps;
 
 export class SVGGeoTriangle extends React.Component<
@@ -117,35 +118,30 @@ export class SVGGeoTriangle extends React.Component<
     const [p1, p2, p3] = this.props.t.p;
     // centroid is at 1/3(u+v+w)
     const center = vops.smul(vops.add(vops.add(p1.pt, p2.pt), p3.pt), 1 / 3);
-    const triStyle = updateStyle(this.props.mode);
+    const triStyle = updateStyle(this.props.mode, true);
     const triIncenter = this.triangleInCenter();
     return (
       <>
         {this.props.congruent && (
-          <text
-            x={triIncenter[0]}
-            y={triIncenter[1] + 10}
-            className={
-              "text-4xl leading-[16px] " + updateStyle(this.props.mode, true)
-            }
-            id={this.props.geoId + "-conglabel"}
-            key={this.props.geoId + "-conglabel"}
-            fill="black"
-            textAnchor="middle"
-          >
-            {strs.congruent}
-          </text>
-        )}
-        {this.props.backgroundColor && triStyle.includes("fill-triangle") && (
-          <path
-            d={this.triangleBbox()}
-            id={this.props.geoId + "-bg"}
-            key={this.props.geoId + "-bg"}
-            style={{
-              opacity: triStyle.includes("half-opacity") ? 0.2 : 0.5,
-              fill: this.props.backgroundColor,
-            }}
-          />
+          <>
+            <text
+              x={triIncenter[0]}
+              y={triIncenter[1] + 10}
+              className={"text-4xl leading-[16px] " + triStyle}
+              id={this.props.geoId + "-conglabel"}
+              key={this.props.geoId + "-conglabel"}
+              fill="black"
+              textAnchor="middle"
+            >
+              {strs.congruent}
+            </text>
+            <path
+              d={this.triangleBbox()}
+              id={this.props.geoId + "-bg"}
+              key={this.props.geoId + "-bg"}
+              fill={`url(#${getPatternId(this.props.mode, this.props.rotate)})`}
+            />
+          </>
         )}
         {this.props.hoverable && (
           <HoverTextLabel

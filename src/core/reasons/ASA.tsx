@@ -22,8 +22,9 @@ export class ASA {
   };
 
   static additions = (props: StepFocusProps, labels: ASAProps) => {
-    props.ctx.getTriangle(labels.triangles[0]).mode(props.frame, props.mode);
-    props.ctx.getTriangle(labels.triangles[1]).mode(props.frame, props.mode);
+    EqualTriangles.additions(props, labels.triangles);
+    // props.ctx.getTriangle(labels.triangles[0]).mode(props.frame, props.mode);
+    // props.ctx.getTriangle(labels.triangles[1]).mode(props.frame, props.mode);
     EqualSegments.additions(props, labels.segs.s, labels.segs.ticks || 1);
     [labels.a1s, labels.a2s].forEach((a, i) => {
       if (a.type === Obj.RightTick) {

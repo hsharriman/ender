@@ -9,7 +9,7 @@ import { Segment } from "./Segment";
 export type TriangleProps = {
   pts: [Point, Point, Point];
   label: string;
-  backgroundColor?: string;
+  rotatePattern?: boolean;
   // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
 export class Triangle extends BaseGeometryObject {
@@ -17,7 +17,7 @@ export class Triangle extends BaseGeometryObject {
   readonly a: [Angle, Angle, Angle];
   readonly p: [Point, Point, Point];
   readonly id: string;
-  readonly backgroundColor: string;
+  readonly rotatePattern: boolean;
   readonly congruent: Set<string> = new Set();
 
   constructor(props: TriangleProps, ctx: Content) {
@@ -29,8 +29,8 @@ export class Triangle extends BaseGeometryObject {
     this.a = this.buildAngles(props.pts, ctx);
     this.names = permutator(props.pts.map((pt) => pt.label));
     this.label = props.label;
+    this.rotatePattern = props.rotatePattern || false;
     this.id = this.getId(Obj.Triangle, this.label);
-    this.backgroundColor = props.backgroundColor ?? "";
   }
 
   private buildSegments = (

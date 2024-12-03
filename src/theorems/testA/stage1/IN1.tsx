@@ -50,7 +50,10 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
   [
     new Triangle({ pts: [A, B, D], hoverable, label: "ABD" }, ctx),
-    new Triangle({ pts: [B, C, D], hoverable, label: "CDB" }, ctx),
+    new Triangle(
+      { pts: [B, C, D], hoverable, label: "CDB", rotatePattern: true },
+      ctx
+    ),
   ].map((t) => ctx.push(t));
 
   ctx.setAspect(AspectRatio.Landscape);

@@ -51,7 +51,12 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   );
 
   ctx.push(new Triangle({ pts: [J, M, K], hoverable, label: "JMK" }, ctx));
-  ctx.push(new Triangle({ pts: [L, M, K], hoverable, label: "LMK" }, ctx));
+  ctx.push(
+    new Triangle(
+      { pts: [L, M, K], hoverable, label: "LMK", rotatePattern: true },
+      ctx
+    )
+  );
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;

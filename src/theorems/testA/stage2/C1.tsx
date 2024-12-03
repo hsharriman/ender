@@ -55,7 +55,12 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   // ctx.push(new Quadrilateral({ pts: [E, F, G, H], parentFrame }, ctx));
 
   ctx.push(new Triangle({ pts: [E, F, J], hoverable, label: "FEJ" }, ctx));
-  ctx.push(new Triangle({ pts: [J, G, H], hoverable, label: "JHG" }, ctx));
+  ctx.push(
+    new Triangle(
+      { pts: [J, G, H], hoverable, label: "JHG", rotatePattern: true },
+      ctx
+    )
+  );
   ctx.push(new Triangle({ pts: [F, G, J], hoverable, label: "FGJ" }, ctx));
 
   // for mini figures

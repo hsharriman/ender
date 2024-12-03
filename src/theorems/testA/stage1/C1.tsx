@@ -55,7 +55,10 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
   [
     new Triangle({ pts: [A, C, M], hoverable, label: "ACM" }, ctx),
-    new Triangle({ pts: [B, D, M], hoverable, label: "BDM" }, ctx),
+    new Triangle(
+      { pts: [B, D, M], hoverable, label: "BDM", rotatePattern: true },
+      ctx
+    ),
   ].map((t) => ctx.push(t));
 
   ctx.push(new Segment({ p1: A, p2: B, hoverable: false }));

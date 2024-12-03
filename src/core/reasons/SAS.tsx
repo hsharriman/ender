@@ -8,6 +8,7 @@ import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";
+import { EqualTriangles } from "./EqualTriangles";
 
 export interface SASProps {
   seg1s: TickedSegments;
@@ -17,12 +18,7 @@ export interface SASProps {
 }
 export class SAS {
   static additions = (props: StepFocusProps, labels: SASProps) => {
-    const t1 = props.ctx
-      .getTriangle(labels.triangles[0])
-      .mode(props.frame, props.mode);
-    const t2 = props.ctx
-      .getTriangle(labels.triangles[1])
-      .mode(props.frame, props.mode);
+    EqualTriangles.additions(props, labels.triangles);
     EqualSegments.additions(props, labels.seg1s.s, labels.seg1s.ticks);
     EqualSegments.additions(props, labels.seg2s.s, labels.seg2s.ticks);
     if (labels.angles.type === Obj.RightTick) {

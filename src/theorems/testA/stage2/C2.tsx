@@ -59,9 +59,15 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
   [
     new Triangle({ pts: [A, B, F], hoverable, label: "ABF" }, ctx),
-    new Triangle({ pts: [A, B, D], hoverable, label: "ABD" }, ctx),
+    new Triangle(
+      { pts: [A, B, D], hoverable, label: "ABD", rotatePattern: true },
+      ctx
+    ),
     new Triangle({ pts: [B, C, D], hoverable, label: "BCD" }, ctx),
-    new Triangle({ pts: [B, C, G], hoverable, label: "BCG" }, ctx),
+    new Triangle(
+      { pts: [B, C, G], hoverable, label: "BCG", rotatePattern: true },
+      ctx
+    ),
   ].map((t) => ctx.push(t));
 
   ctx.setAspect(AspectRatio.Square);

@@ -1,5 +1,6 @@
 import React from "react";
 import { DiagramContent } from "../../core/diagramContent";
+import { LinePatternDefs } from "../../core/diagramSvg/LinePattern";
 import { SVGGeoAngle } from "../../core/diagramSvg/SVGGeoAngle";
 import { SVGGeoPoint } from "../../core/diagramSvg/SVGGeoPoint";
 import { SVGGeoSegment } from "../../core/diagramSvg/SVGGeoSegment";
@@ -118,8 +119,8 @@ export class Diagram extends React.Component<DiagramProps> {
             t: tri,
           }}
           key={`${tri.id}-${i}.${layer}`}
-          backgroundColor={tri.backgroundColor}
           mode={mode}
+          rotate={tri.rotatePattern}
           congruent={!this.props.isStatic && tri.congruent.has(frame)}
           isHighlight={layer === 1}
         />
@@ -158,6 +159,7 @@ export class Diagram extends React.Component<DiagramProps> {
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid meet"
         >
+          {LinePatternDefs}
           {this.renderObjectsFromCtx(this.props.ctx, 0)}
           {this.props.additionCtx &&
             this.renderObjectsFromCtx(this.props.additionCtx, 2)}

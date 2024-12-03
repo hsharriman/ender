@@ -65,8 +65,18 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   );
 
   ctx.push(new Triangle({ pts: [L, P, S], hoverable, label: "LPS" }, ctx));
-  ctx.push(new Triangle({ pts: [U, P, S], hoverable, label: "UPS" }, ctx));
-  ctx.push(new Triangle({ pts: [L, N, U], hoverable, label: "LNU" }, ctx));
+  ctx.push(
+    new Triangle(
+      { pts: [U, P, S], hoverable, label: "UPS", rotatePattern: true },
+      ctx
+    )
+  );
+  ctx.push(
+    new Triangle(
+      { pts: [L, N, U], hoverable, label: "LNU", rotatePattern: true },
+      ctx
+    )
+  );
   ctx.push(new Triangle({ pts: [U, Q, L], hoverable, label: "UQL" }, ctx));
 
   // for ASA at the end
