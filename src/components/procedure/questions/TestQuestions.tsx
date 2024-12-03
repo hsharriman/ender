@@ -19,7 +19,7 @@ interface QuestionsProps {
 
 export class TestQuestions extends React.Component<QuestionsProps> {
   FIRST_CORRECT_Q_ID = "11";
-  NUM_CORRECT_FOLLOWUPS = 2;
+  NUM_CORRECT_FOLLOWUPS = 1;
   handleSubmit = (answer: any) => {
     const question = this.props.questions[this.props.questionIdx];
 

@@ -8,6 +8,7 @@ export interface DiagramProps {
   ctx: DiagramContent;
   width: string;
   height: string;
+  activeFrame?: string;
 }
 
 export class StaticDiagram extends React.Component<DiagramProps, {}> {
@@ -18,7 +19,7 @@ export class StaticDiagram extends React.Component<DiagramProps, {}> {
         ctx={this.props.ctx}
         width={this.props.width}
         height={this.props.height}
-        activeFrame={this.props.ctx.frames.at(-1) || GIVEN_ID}
+        activeFrame={this.props.activeFrame || GIVEN_ID}
         miniScale={false}
         isTutorial={false}
         isStatic={true}

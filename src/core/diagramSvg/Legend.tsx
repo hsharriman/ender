@@ -25,7 +25,7 @@ export const Legend = () => {
   return (
     <div className="mt-2 flex flex-row items-center">
       <div className="text-md font-semibold pb-1 pr-2">Legend:</div>
-      <div className="flex flex-row flex-wrap">
+      <div className="flex flex-row flex-wrap gap-4">
         {modes.map((m, i) => {
           return renderItem(m[1], m[0], i === modes.length - 1);
         })}

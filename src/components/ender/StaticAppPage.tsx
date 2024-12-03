@@ -185,6 +185,7 @@ export class StaticAppPage extends React.Component<
                     : "250px"
                 }
                 height="auto"
+                activeFrame={`s${numGivens}`}
               />
             </div>
           </div>

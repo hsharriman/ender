@@ -267,18 +267,6 @@ export const exploratoryQuestion = (start: number, end: number): Question[] =>
       id: id(12),
       answers: possibleStepAnswers(start, end), // dynamically fill in based on the proof.
     },
-    {
-      prompt: "Which of the following options best describes why it is wrong?",
-      answers: [
-        "The step says the wrong things are congruent to each other (ex: incorrectly says PA is congruent to AC)",
-        "The step uses the wrong theorem or definition (ex: incorrectly uses ASA triangle congruence)",
-        "There is not enough information to apply the theorem or definition",
-        "Other (write a 1 sentence explanation)",
-      ],
-      type: QuestionType.Correctness,
-      id: id(13),
-      answerType: AnswerType.DropdownTextbox,
-    },
   ]);
 
 export const tutorial1Questions: Question[] = [

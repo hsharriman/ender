@@ -12,6 +12,7 @@ import {
 import { StaticDiagram } from "../components/ender/StaticDiagram";
 import { interactiveLayout, staticLayout } from "../core/testinfra/setupLayout";
 import { LayoutProps } from "../core/types/types";
+import { Reasons } from "../theorems/reasons";
 import { T1_S1_C1 } from "../theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "../theorems/testA/stage1/C2";
 import { T1_S1_C3 } from "../theorems/testA/stage1/C3";
@@ -133,9 +134,10 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
   };
 
   renderExampleTile = (proof: LayoutProps, idx: number) => {
-    const layout = staticLayout(proof).meta;
-    if (layout) {
-      const diagramCtx = layout.props as StaticAppPageProps;
+    const layout = staticLayout(proof);
+    const givens = proof.steps.filter((s) => s.reason === Reasons.Given).length;
+    if (layout.meta) {
+      const diagramCtx = layout.meta.props as StaticAppPageProps;
       return (
         <button
           className="m-4 w-72 h-72 border-2 bg-slate-50 shadow-md rounded-md flex flex-col"
@@ -155,6 +157,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
               width="260px"
               height="auto"
               ctx={diagramCtx.ctx}
+              activeFrame={`s${givens}`}
             />
             {/* <Diagram
               width="260px"
