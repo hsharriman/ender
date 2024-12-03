@@ -13,7 +13,10 @@ import {
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
-import { exploratoryQuestion } from "../../../core/testinfra/questions/testQuestions";
+import {
+  S2C2Questions,
+  testQuestionOrder,
+} from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
@@ -211,7 +214,7 @@ const step10: StepMeta = makeStepMeta({
 
 export const T1_S2_C2: LayoutProps = {
   name: "T1_S2_C2",
-  questions: exploratoryQuestion(5, 10),
+  questions: testQuestionOrder(5, 10, S2C2Questions),
   baseContent,
   givens,
   proves,

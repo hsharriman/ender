@@ -80,7 +80,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
         <div className="grid grid-rows-[auto,1fr] gap-2 justify-center w-full min-w-[1300px]">
           <div>
             <h2 className="text-2xl font-bold mb-8 text-center mt-8">
-              Interface Usability Questions
+              Interface Usability Questions (~5 mins)
             </h2>
             <div className="flex flex-col justify-center w-[700px]">
               <div className="pb-4 text-lg">

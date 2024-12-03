@@ -32,6 +32,7 @@ export enum PageType {
   IntroSlidePhase1 = "IntroSlidePhase1",
   IntroSlidePhase2 = "IntroSlidePhase2",
   ParticipantID = "ParticipantID",
+  ThinkAloud = "ThinkAloud",
 }
 
 export type TestType = PageType.Interactive | PageType.Static;
@@ -106,7 +107,11 @@ const participantID = (): Page[] => {
   return [{ type: PageType.ParticipantID }];
 };
 const background = (): Page[] => {
-  return [{ type: PageType.IntroSlideTest }, { type: PageType.Background }];
+  return [
+    { type: PageType.IntroSlideTest },
+    { type: PageType.Background },
+    { type: PageType.ThinkAloud },
+  ];
 };
 const instruction1 = (): Page[] => {
   return [{ type: PageType.IntroSlidePhase1 }];

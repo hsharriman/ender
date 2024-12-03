@@ -14,7 +14,10 @@ import {
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
-import { exploratoryQuestion } from "../../../core/testinfra/questions/testQuestions";
+import {
+  S2IN1Questions,
+  testQuestionOrder,
+} from "../../../core/testinfra/questions/testQuestions";
 import {
   StepFocusProps,
   StepMeta,
@@ -254,7 +257,7 @@ const step9: StepMeta = makeStepMeta({
 
 export const T1_S2_IN1: LayoutProps = {
   name: "T1_S2_IN1",
-  questions: exploratoryQuestion(4, 9),
+  questions: testQuestionOrder(4, 9, S2IN1Questions),
   baseContent,
   givens,
   proves,

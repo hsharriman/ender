@@ -17,10 +17,10 @@ import { BackgroundQuestions } from "./pages/BackgroundQuestions";
 import { InstructionPage } from "./pages/InstructionPage";
 import { IntroExperimentPage } from "./pages/IntroExpPage";
 import { PretestAppPage, PretestAppPageProps } from "./pages/PretestAppPage";
-import { RestPage } from "./pages/RestPage";
 import { SavePage } from "./pages/SavePage";
 import { StartPage } from "./pages/StartPage";
 import { SusPage } from "./pages/SusPage";
+import { ThinkAloudPage } from "./pages/ThinkAloudPage";
 import { TutorialPage } from "./pages/TutorialPage";
 import { TestQuestions } from "./questions/TestQuestions";
 
@@ -248,8 +248,8 @@ export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
       );
     } else if (currMeta.type === PageType.IntroSlidePhase1) {
       pageContent = <InstructionPage onNext={() => this.onNext(1)} />;
-    } else if (currMeta.type === PageType.IntroSlidePhase2) {
-      pageContent = <RestPage onNext={() => this.onNext(1)} />;
+    } else if (currMeta.type === PageType.ThinkAloud) {
+      pageContent = <ThinkAloudPage onNext={() => this.onNext(1)} />;
     } else if (currMeta.type === PageType.Pretest && currMeta.meta) {
       const props = currMeta.meta.props as PretestAppPageProps;
       pageContent = (

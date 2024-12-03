@@ -1,4 +1,5 @@
 import React from "react";
+import { ContinueButton } from "./ContinueButton";
 
 interface StartPageProps {
   onNext: (direction: number) => void;
@@ -40,19 +41,7 @@ export class StartPage extends React.Component<StartPageProps, StartPageState> {
         </div>
         <br />
         <br />
-        <button
-          onClick={this.handleContinue}
-          className="bg-green-500 hover:bg-green-700 text-2xl text-white font-bold py-2 pl-2 pr-3 rounded-lg flex items-center justify-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-7 mr-2">
-            <polygon
-              strokeWidth={2}
-              points="10,8 26,18 10,28"
-              className="fill-current text-white"
-            />
-          </svg>
-          Continue
-        </button>
+        <ContinueButton onNext={this.props.onNext} />
       </div>
     );
   }

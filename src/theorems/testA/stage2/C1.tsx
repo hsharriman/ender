@@ -10,7 +10,10 @@ import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
-import { exploratoryQuestion } from "../../../core/testinfra/questions/testQuestions";
+import {
+  S2C1Questions,
+  testQuestionOrder,
+} from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
@@ -233,7 +236,7 @@ const step7: StepMeta = makeStepMeta({
 
 export const T1_S2_C1: LayoutProps = {
   name: "T1_S2_C1",
-  questions: exploratoryQuestion(3, 8),
+  questions: testQuestionOrder(3, 8, S2C1Questions),
   baseContent,
   givens,
   proves,

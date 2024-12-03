@@ -36,14 +36,16 @@ const diagramStateQuestion = (x: string, y: string, type: Obj) => {
   const strType = (s: string, type: Obj) => {
     if (type === Obj.Angle) {
       return strs.angle + s;
+    } else if (type === Obj.Triangle) {
+      return strs.triangle + s;
     }
     return segmentQuestion(s);
   };
   return (
     <span className="text-base">
-      By the end of the proof, do we know enough to conclude that{" "}
-      {strType(x, type)} <span className="italic">must</span> be congruent to{" "}
-      {strType(y, type)}?
+      By the end of the proof, has enough information been established to be
+      able to correctly conclude that {strType(x, type)}{" "}
+      <span className="italic">must</span> be congruent to {strType(y, type)}?
     </span>
   );
 };
@@ -129,6 +131,13 @@ export const IN2questions: Question[] = [
   // },
   {
     answerType: AnswerType.YesNo,
+    prompt: reliesQuestion(Reasons.Reflexive, 4, [1, 2]),
+    reason: Reasons.Reflexive.title,
+    type: QuestionType.ReliesOn,
+    id: id(1),
+  },
+  {
+    answerType: AnswerType.YesNo,
     prompt: diagramStateQuestion("KL", "KM", Obj.Segment),
     type: QuestionType.DiagramState,
     id: id(2),
@@ -143,13 +152,13 @@ export const IN3questions: Question[] = [
   //   type: QuestionType.Minifigures,
   //   id: id(1),
   // },
-  {
-    answerType: AnswerType.YesNo,
-    prompt: miniQuestion(Reasons.Quadrilateral, 4),
-    reason: Reasons.Quadrilateral.title,
-    type: QuestionType.Minifigures,
-    id: id(2),
-  },
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: miniQuestion(Reasons.Quadrilateral, 4),
+  //   reason: Reasons.Quadrilateral.title,
+  //   type: QuestionType.Minifigures,
+  //   id: id(2),
+  // },
   {
     answerType: AnswerType.YesNo,
     prompt: diagramStateQuestion("KN", "ML", Obj.Segment),
@@ -267,18 +276,90 @@ export const exploratoryQuestion = (start: number, end: number): Question[] =>
       id: id(12),
       answers: possibleStepAnswers(start, end), // dynamically fill in based on the proof.
     },
+    {
+      prompt:
+        "If you think the proof can be corrected without changing the givens, describe to the researcher the changes you would make (2 mins max).",
+      answerType: AnswerType.Continue,
+      type: QuestionType.Continue,
+      id: id(13),
+      answers: possibleStepAnswers(start, end), // dynamically fill in based on the proof.
+    },
   ]);
+
+export const S2C1Questions: Question[] = [
+  {
+    answerType: AnswerType.YesNo,
+    prompt: reliesQuestion(Reasons.Rectangle, 5, [1, 2]),
+    reason: Reasons.Rectangle.title,
+    type: QuestionType.ReliesOn,
+    id: id(1),
+  },
+  {
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("FJ", "GJ", Obj.Segment),
+    type: QuestionType.DiagramState,
+    id: id(2),
+  },
+];
+
+export const S2C2Questions: Question[] = [
+  {
+    answerType: AnswerType.YesNo,
+    prompt: reliesQuestion(Reasons.SAS, 9, [7, 8]),
+    reason: Reasons.SAS.title,
+    type: QuestionType.ReliesOn,
+    id: id(1),
+  },
+  {
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("BAF", "DCB", Obj.Angle),
+    type: QuestionType.DiagramState,
+    id: id(2),
+  },
+];
+
+export const S2IN1Questions: Question[] = [
+  // {
+  //   answerType: AnswerType.YesNo,
+  //   prompt: reliesQuestion(Reasons.CPCTC, 8),
+  //   reason: Reasons.CPCTC.title,
+  //   type: QuestionType.ReliesOn,
+  //   id: id(1),
+  // },
+  {
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("LNU", "UQL", Obj.Triangle),
+    type: QuestionType.DiagramState,
+    id: id(2),
+  },
+];
+
+export const S2IN2Questions: Question[] = [
+  {
+    answerType: AnswerType.YesNo,
+    prompt: reliesQuestion(Reasons.ConverseMidpoint, 8, [2, 3]),
+    reason: Reasons.ConverseMidpoint.title,
+    type: QuestionType.ReliesOn,
+    id: id(1),
+  },
+  {
+    answerType: AnswerType.YesNo,
+    prompt: diagramStateQuestion("MYZ", "MWX", Obj.Angle),
+    type: QuestionType.DiagramState,
+    id: id(2),
+  },
+];
 
 export const tutorial1Questions: Question[] = [
   {
-    prompt: diagramStateQuestion("AB", "AC", Obj.Segment),
-
+    prompt: reliesQuestion(Reasons.SAS, 4, [2, 3]),
     type: QuestionType.TutorialInstructions,
     id: id(1),
     answerType: AnswerType.YesNo,
   },
   {
-    prompt: reliesQuestion(Reasons.SAS, 4, [2, 3]),
+    prompt: diagramStateQuestion("AB", "AC", Obj.Segment),
+
     type: QuestionType.TutorialInstructions,
     id: id(2),
     answerType: AnswerType.YesNo,
