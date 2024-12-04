@@ -14,7 +14,9 @@ export class Midpoint {
     ptMode?: SVGModes
   ) => {
     props.ctx.getPoint(pt).mode(props.frame, ptMode || props.mode);
-    EqualSegments.additions(props, segs, num);
+    props.ctx.getSegment(segs[0]).mode(props.frame, props.mode);
+    props.ctx.getSegment(segs[1]).mode(props.frame, props.mode);
+    // EqualSegments.additions(props, segs, num);
   };
   static text = (label: string, pt: string) => (isActive: boolean) => {
     return this.staticText(label, pt);

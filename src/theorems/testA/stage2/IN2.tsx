@@ -87,6 +87,8 @@ const givens: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("MYZ").mode(props.frame, props.mode);
     props.ctx.getTriangle("MWX").mode(props.frame, props.mode);
+    Midpoint.additions(props, "M", ["WM", "MZ"]);
+    Midpoint.additions(props, "M", ["YM", "XM"], 2);
   },
 });
 
@@ -122,13 +124,13 @@ const step2: StepMeta = makeStepMeta({
 const step3: StepMeta = makeStepMeta({
   ...EqualSegmentStep(["WM", "MZ"], Reasons.Midpoint, step2, 1, ["1"]),
   highlight: (ctx: Content, frame: string) =>
-    ctx.getPoint("M").mode(frame, SVGModes.ReliesOnPoint),
+    ctx.getPoint("M").mode(frame, SVGModes.ReliesOn),
 });
 
 const step4: StepMeta = makeStepMeta({
   ...EqualSegmentStep(["XM", "YM"], Reasons.Midpoint, step3, 2, ["2"]),
   highlight: (ctx: Content, frame: string) =>
-    ctx.getPoint("M").mode(frame, SVGModes.ReliesOnPoint),
+    ctx.getPoint("M").mode(frame, SVGModes.ReliesOn),
 });
 
 const step5: StepMeta = makeStepMeta({

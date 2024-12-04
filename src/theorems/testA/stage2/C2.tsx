@@ -107,6 +107,10 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("ABD").mode(props.frame, props.mode);
     props.ctx.getTriangle("BCD").mode(props.frame, props.mode);
     props.ctx.getTriangle("BCG").mode(props.frame, props.mode);
+    Perpendicular.additions(props, "BD", ["AD", "CD"]);
+    EqualSegments.additions(props, ["AD", "DC"]);
+    EqualAngles.additions(props, ["FAB", "GCB"]);
+    EqualSegments.additions(props, ["AF", "CG"], 2);
   },
 });
 

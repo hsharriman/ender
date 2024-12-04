@@ -70,6 +70,8 @@ const givens: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("LMK").mode(props.frame, props.mode);
     props.ctx.getTriangle("KMN").mode(props.frame, props.mode);
+    EqualSegments.additions(props, ["LM", "NK"]);
+    RightAngle.additions(props, "KLM");
   },
 
   staticText: () => {

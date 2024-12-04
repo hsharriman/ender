@@ -105,6 +105,9 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("LNU").mode(props.frame, props.mode);
     props.ctx.getTriangle("UQL").mode(props.frame, props.mode);
     props.ctx.getTriangle("UPS").mode(props.frame, props.mode);
+    Perpendicular.additions(props, "PS", ["LS", "SU"]);
+    EqualSegments.additions(props, ["LN", "QU"]);
+    EqualAngles.additions(props, ["LPS", "UPS"]);
   },
 
   staticText: () => {

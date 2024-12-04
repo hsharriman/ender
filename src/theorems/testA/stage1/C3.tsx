@@ -35,7 +35,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const labels = ["Q", "R", "M", "N", "P"];
   const offsets: Vector[] = [
     [-18, -15],
-    [0, 5],
+    [0, 8],
     [5, -8],
     [5, 0],
     [-15, -8],
@@ -87,6 +87,8 @@ const givens: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("QRP").mode(props.frame, props.mode);
     props.ctx.getTriangle("MRN").mode(props.frame, props.mode);
+    EqualRightAngles.additions(props, ["QPR", "RMN"]);
+    Midpoint.additions(props, "R", ["PR", "RM"]);
   },
 
   staticText: () => {
@@ -134,12 +136,12 @@ const step22: StepMeta = makeStepMeta({
   dependsOn: ["2"],
   prevStep: step2,
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "R", ["PR", "RM"]);
+    EqualSegments.additions(props, ["PR", "RM"]);
   },
   text: EqualSegments.text(["PR", "RM"]),
   staticText: () => EqualSegments.staticText(["PR", "RM"]),
   highlight: (ctx: Content, frame: string) =>
-    ctx.getPoint("R").mode(frame, SVGModes.ReliesOnPoint),
+    ctx.getPoint("R").mode(frame, SVGModes.ReliesOn),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -208,13 +210,11 @@ const step6: StepMeta = makeStepMeta({
   reason: Reasons.ConverseMidpoint,
   dependsOn: ["6"],
   prevStep: step5,
-  additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "R", ["QR", "NR"], 2);
-  },
   text: Midpoint.text("R", "QN"),
   staticText: () => Midpoint.staticText("R", "QN"),
   highlight: (ctx: Content, frame: string) => {
     EqualSegments.highlight(ctx, frame, ["QR", "NR"], SVGModes.ReliesOn, 2);
+    ctx.getPoint("R").mode(frame, SVGModes.Derived);
   },
 });
 

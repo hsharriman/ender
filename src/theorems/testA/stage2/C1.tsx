@@ -83,6 +83,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("FGJ").mode(props.frame, props.mode);
     props.ctx.getSegment("FJ").mode(props.frame, props.mode);
     props.ctx.getSegment("GJ").mode(props.frame, props.mode);
+    Midpoint.additions(props, "J", ["EJ", "JH"]);
   },
 
   staticText: () => {
@@ -155,7 +156,7 @@ const step22: StepMeta = makeStepMeta({
   text: EqualSegments.text(["EJ", "JH"]),
   staticText: () => EqualSegments.staticText(["EJ", "JH"]),
   highlight: (ctx: Content, frame: string) =>
-    EqualSegments.highlight(ctx, frame, ["EJ", "JH"], SVGModes.ReliesOn),
+    ctx.getPoint("J").mode(frame, SVGModes.ReliesOn),
 });
 
 const step3: StepMeta = makeStepMeta({

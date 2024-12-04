@@ -76,6 +76,8 @@ const givens: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("JMK").mode(props.frame, props.mode);
     props.ctx.getTriangle("LMK").mode(props.frame, props.mode);
+    Perpendicular.additions(props, "MK", ["JM", "ML"]);
+    EqualSegments.additions(props, ["JK", "LK"]);
   },
 
   staticText: () => {
