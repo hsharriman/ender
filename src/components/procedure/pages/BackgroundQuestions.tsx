@@ -77,7 +77,6 @@ export class BackgroundQuestions extends React.Component<
       Object.keys(localAnswers).forEach((questionNum) => {
         this.props.updateAnswers(questionNum, localAnswers[questionNum]);
       });
-      // console.log("Survey results:", this.state.answers);
       logEvent("n", {
         c: "b",
         v: "",

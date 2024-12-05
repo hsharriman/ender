@@ -26,8 +26,6 @@ export const logEvent = (e: string, additionalInfo: LogEventInfo) => {
   logs.push(newEvent);
 
   sessionStorage.setItem("eventLogs", JSON.stringify(logs));
-
-  // console.log(newEvent);
 };
 
 export const addTutorialActive = (id: string) => {

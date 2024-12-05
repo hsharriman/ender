@@ -2,12 +2,17 @@ import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LPoint, Obj, Vector } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 
+export enum ShowPoint {
+  Always = "always",
+  Adaptive = "adaptive",
+  Hide = "hide",
+}
 export type PointProps = {
   pt: [number, number];
   label: string;
   showLabel?: boolean;
   offset: Vector;
-  showPoint?: boolean;
+  showPoint?: ShowPoint;
 } & BaseGeometryProps;
 
 export class Point extends BaseGeometryObject {
@@ -15,7 +20,7 @@ export class Point extends BaseGeometryObject {
   public readonly pt: Vector;
   public readonly id: string;
   private showLabel: boolean;
-  readonly showPoint: boolean;
+  readonly showPoint: ShowPoint;
   public offset: Vector = [3, 3]; // TODO better label placement
   constructor(props: PointProps) {
     super(Obj.Point, props);
@@ -26,7 +31,7 @@ export class Point extends BaseGeometryObject {
     this.offset = props.offset;
     this.id = this.getId(Obj.Point, this.label);
     this.id = props.parentFrame ? `${props.parentFrame}-${this.id}` : this.id;
-    this.showPoint = props.showPoint ?? false;
+    this.showPoint = props.showPoint ?? ShowPoint.Hide;
   }
 
   labeled = (): LPoint => {
