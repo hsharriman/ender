@@ -263,7 +263,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
         {this.props.i + 1}
       </div>
     );
-    const btnStyle = ` border-l-4 border-l-gray-800 ml-6 border-gray-300 border-b-2 w-full ${h} ${fontSize} focus:outline-none`;
+    const btnStyle = ` border-b-2 border-l-4 border-gray-300 border-l-slate-500 ml-6  w-full ${h} ${fontSize} focus:outline-none`;
     return (
       <div
         className={`flex flex-row justify-start ${h}`}

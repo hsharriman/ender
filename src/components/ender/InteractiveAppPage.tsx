@@ -10,7 +10,7 @@ import { getReasonFn } from "../../theorems/utils";
 import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
-import { ReliesOn } from "./ReliesOn";
+import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
 
 export interface InteractiveAppPageProps {
   name: string;
@@ -69,24 +69,15 @@ export class InteractiveAppPage extends React.Component<
           <ReliesOn
             reliesOn={this.props.ctx.deps}
             activeFrame={this.state.activeFrame}
-            rowHeight={rowsCompact ? 46 : 64}
+            rowHeight={
+              rowsCompact ? ReliesRowHeight.Compact : ReliesRowHeight.Normal
+            }
           />
         )}
         <div className="top-0 left-0 max-w-[1800px] min-w-[1500px] font-notoSans text-slate-800 grid grid-rows-1 grid-cols-12 pl-6">
-          <div id="proof-steps" className="col-start-1 col-span-4 w-[700px]">
-            <div className="pt-8">
-              <ProofRows
-                items={this.props.linkedTexts}
-                active={this.state.activeFrame}
-                onClick={this.handleClick}
-                isTutorial={this.props.isTutorial}
-                isCompact={rowsCompact}
-              />
-            </div>
-          </div>
           <div
             id="canvas-container"
-            className="col-start-7 col-span-5 flex flex-row flex-wrap items-start content-start mx-8 w-[700px]"
+            className="col-start-1 col-span-5 flex flex-row flex-wrap justify-center items-start content-start mx-8 w-[700px]"
           >
             <Diagram
               height="auto"
@@ -103,13 +94,24 @@ export class InteractiveAppPage extends React.Component<
               highlightCtx={this.props.highlightCtx}
               additionCtx={this.props.additionCtx}
             />
-            <div className="w-[700px] mt-2">
+            <div className="w-[650px] mt-2">
               <Legend />
             </div>
-            <div className="mt-4 mr-4 w-[700px] h-8">
+            <div className="mt-4 mr-4 w-[650px] h-8">
               <ReasonText
                 activeFrame={this.state.activeFrame}
                 textFn={getReasonFn(this.props.reasonMap)}
+              />
+            </div>
+          </div>
+          <div id="proof-steps" className="col-start-7 col-span-4 w-[700px]">
+            <div className="pt-8">
+              <ProofRows
+                items={this.props.linkedTexts}
+                active={this.state.activeFrame}
+                onClick={this.handleClick}
+                isTutorial={this.props.isTutorial}
+                isCompact={rowsCompact}
               />
             </div>
           </div>

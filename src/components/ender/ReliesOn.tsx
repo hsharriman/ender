@@ -1,25 +1,40 @@
 import React from "react";
+import { Vector } from "../../core/types/types";
+import { vops } from "../../core/vectorOps";
 
 export interface ReliesOnProps {
   reliesOn: Map<string, Set<string>>;
   activeFrame: string;
-  rowHeight: number;
+  rowHeight: ReliesRowHeight;
   // TODO indices of frames? or pixel locations would be nice...
 }
+export enum ReliesRowHeight {
+  Compact = 46,
+  Normal = 64,
+}
 interface Dims {
-  l: number;
+  r: number;
   t: number;
   b: number;
   key: string;
 }
 
-export interface ReliesOnState {}
-export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
+export class ReliesOn extends React.Component<ReliesOnProps> {
+  private SVGWIDTH: number;
+  private MIDX: number;
+  private MIDY: number;
   private DEFAULT_CLR = "stroke-black";
-  private SVGWIDTH = 60;
-  private left = 5;
   private STROKE_WIDTH = "4px";
   private LEFTPAD = 7;
+
+  constructor(props: ReliesOnProps) {
+    super(props);
+    this.MIDY = this.props.rowHeight / 2;
+    this.SVGWIDTH = this.isCompact() ? 80 : 80;
+    this.MIDX = (6 * this.SVGWIDTH) / 15;
+  }
+
+  isCompact = () => this.props.rowHeight === ReliesRowHeight.Compact;
 
   getRowCoords = (frameKey: string): Dims | undefined => {
     // TODO make work for any row type
@@ -27,12 +42,29 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
     if (rowEle) {
       const rowRect = rowEle.getBoundingClientRect();
       return {
-        l: rowRect.right + this.LEFTPAD + window.scrollX, // right side of row
+        r: rowRect.left + this.LEFTPAD + window.scrollX - this.SVGWIDTH, // left side of row
         t: rowRect.top + window.scrollY, // top of row,
         b: rowRect.bottom + window.scrollY,
         key: frameKey,
       };
     }
+  };
+
+  container = (d: Dims, innerContent: JSX.Element) => {
+    const divHeight = Math.round(d.b - d.t);
+    return (
+      <div
+        className="absolute w-16"
+        key={`relies-${d.t}`}
+        style={{
+          top: `${d.t}px`,
+          left: `${d.r}px`,
+          height: `${divHeight}px`,
+        }}
+      >
+        {innerContent}
+      </div>
+    );
   };
 
   vertDists = (): Dims[] => {
@@ -62,127 +94,104 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
   };
 
   renderQuestionEdge = (d: Dims) => {
-    const divHeight = Math.round(d.b - d.t);
-    return (
-      <div
-        className="absolute w-16"
-        style={{
-          top: `${d.t}px`,
-          left: `${d.l - this.left}px`,
-          height: `${divHeight}px`,
-        }}
-      >
-        <svg width="100%" height="100%">
-          <text
-            x={this.SVGWIDTH - 7}
-            y={5 + this.props.rowHeight / 2}
-            className={"fill-red-500 text-xl font-bold"}
-          >
-            ?
-          </text>
-          <polyline
-            points={`${this.SVGWIDTH - 8},${this.props.rowHeight / 2} ${
-              this.SVGWIDTH / 2
-            },${this.props.rowHeight / 2}`}
-            className={"stroke-red-500"}
-            fill="none"
-            strokeWidth={this.STROKE_WIDTH}
-          />
-        </svg>
-      </div>
+    return this.container(
+      d,
+      <svg width="100%" height="100%">
+        <text
+          x={0}
+          y={5 + this.MIDY}
+          className={"fill-red-500 text-xl font-bold"}
+        >
+          ?
+        </text>
+        <polyline
+          points={`11,${this.MIDY} ${this.MIDX},${this.MIDY}`}
+          className={"stroke-red-500"}
+          fill="none"
+          strokeWidth={this.STROKE_WIDTH}
+        />
+      </svg>
     );
   };
 
   renderDepEdge = (d: Dims) => {
-    const divHeight = Math.round(d.b - d.t);
-    return (
-      <div
-        className="absolute w-16"
-        style={{
-          top: `${d.t}px`,
-          left: `${d.l - this.left}px`,
-          height: `${divHeight}px`,
-        }}
-      >
-        <svg width="100%" height="100%">
-          <circle r="5px" cx="5px" cy="50%" className={"fill-black"} />
-          <polyline
-            points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH / 2},${
-              this.props.rowHeight / 2
-            }`}
-            className={this.DEFAULT_CLR}
-            fill="none"
-            strokeWidth={this.STROKE_WIDTH}
-          />
-        </svg>
-      </div>
+    return this.container(
+      d,
+      <svg width="100%" height="100%">
+        {/* <circle r="5px" cx="5px" cy="50%" className={"fill-black"} /> */}
+        <polyline
+          points={`${this.SVGWIDTH},${this.MIDY} ${this.MIDX},${this.MIDY}`}
+          className={this.DEFAULT_CLR}
+          fill="none"
+          strokeWidth={this.STROKE_WIDTH}
+        />
+      </svg>
     );
   };
 
+  chevron = (sideLength: number, corner: Vector) => {
+    const len: Vector = [sideLength, 0];
+    const points = [
+      vops.add(vops.rot(len, 135), corner),
+      corner,
+      vops.add(vops.rot(len, 225), corner),
+    ];
+    return points
+      .map((p) => `${p[0]},${p[1]}`)
+      .toString()
+      .replaceAll(",", " ");
+  };
+
   renderArrow = (d: Dims) => {
-    // TODO make less absolutely calculated by pixel values + assumed row height
-    const quarterRow = this.props.rowHeight / 4;
-    const halfRow = this.props.rowHeight / 2;
-    return (
-      <div
-        className="absolute w-16"
-        id="relies-on-arrow"
-        style={{
-          top: `${d.t}px`,
-          left: `${d.l - this.left}px`,
-          height: `${this.props.rowHeight}px`,
-        }}
-      >
-        <svg width="100%" height="100%">
-          <polyline
-            points={`${quarterRow},${quarterRow} 1,${halfRow} ${quarterRow},${
-              3 * quarterRow
-            }`}
-            className={this.DEFAULT_CLR}
-            fill="none"
-            strokeWidth={this.STROKE_WIDTH}
-          />
-          <line
-            x1="0%"
-            y1="50%"
-            x2={`${this.SVGWIDTH / 2}px`}
-            y2="50%"
-            className={this.DEFAULT_CLR}
-            fill="none"
-            strokeWidth={this.STROKE_WIDTH}
-          />
-          <polyline
-            points={`0,${this.props.rowHeight / 2} ${this.SVGWIDTH / 2},${
-              this.props.rowHeight / 2
-            }`}
-            className={this.DEFAULT_CLR}
-            fill="none"
-            strokeWidth={this.STROKE_WIDTH}
-          />
-        </svg>
-      </div>
+    const rightPad = 23;
+    const corner: Vector = [this.MIDX + rightPad, this.MIDY];
+    const pts = this.chevron(13, corner);
+    return this.container(
+      d,
+      <svg width="100%" height="100%">
+        <polyline
+          points={pts}
+          className={this.DEFAULT_CLR}
+          fill="none"
+          strokeWidth={this.STROKE_WIDTH}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <line
+          x1={`${corner[0]}px`}
+          y1={`${corner[1]}px`}
+          x2={`${this.MIDX}px`}
+          y2={`${corner[1]}px`}
+          className={this.DEFAULT_CLR}
+          fill="none"
+          strokeWidth={this.STROKE_WIDTH}
+        />
+      </svg>
     );
   };
 
   renderFullConnector = (dims: Dims[]) => {
-    let arrow = dims[0].t + this.props.rowHeight / 2;
-    let end = dims[dims.length - 1].b - this.props.rowHeight / 2;
+    let arrow = dims[0].t + this.MIDY;
+    let end = dims[dims.length - 1].b - this.MIDY;
     let divHeight = Math.abs(arrow - end);
     return (
       <div
         className="absolute w-16"
         style={{
           top: `${Math.min(arrow, end) - 2}px`, // -2px to compensate for lines not perfectly overlapping
-          left: `${dims[0].l - this.left}px`,
+          left: `${dims[0].r}px`,
           height: `${divHeight + 4}px`, // +4px to compensate for svg lines not perfectly overlapping
         }}
       >
         <svg width="100%" height="100%">
           <line
-            x1={`${this.SVGWIDTH / 2}px`}
-            x2={`${this.SVGWIDTH / 2}px`}
+            x1={`${this.MIDX}px`}
+            x2={`${this.MIDX}px`}
             y1={0}
-            y2={`${divHeight + 4}px`}
+            y2={`${
+              divHeight +
+              (this.props.rowHeight === ReliesRowHeight.Compact ? 2 : 4)
+            }px`}
             className={this.DEFAULT_CLR}
             fill="none"
             strokeWidth={this.STROKE_WIDTH}
@@ -223,7 +232,7 @@ export class ReliesOn extends React.Component<ReliesOnProps, ReliesOnState> {
             style={{
               height: `${height}px`,
               top: `${dims[0].t}px`,
-              left: `${dims[0].l - this.left + 32}px`,
+              left: `${dims[0].r - 32}px`,
             }}
           >
             {/* <span

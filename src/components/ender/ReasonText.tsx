@@ -39,7 +39,7 @@ export class ReasonText extends React.Component<ReasonTextProps> {
       <>
         <div className="flex flex-col justify-start">
           <div className="flex flex-row items-baseline pb-1">
-            <div className="font-bold text-base text-slate-500 mr-2">
+            <div className="font-bold text-lg text-slate-500 mr-2">
               Reason Applied:
             </div>
             <div
