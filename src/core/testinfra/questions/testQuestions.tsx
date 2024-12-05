@@ -2,7 +2,6 @@ import { Reasons } from "../../../theorems/reasons";
 import { possibleStepAnswers } from "../../../theorems/utils";
 import { segmentQuestion, strs } from "../../geometryText";
 import { Obj, Reason } from "../../types/types";
-import { fisherYates } from "../randomize";
 
 export interface Question {
   answerType: AnswerType;
@@ -375,13 +374,6 @@ export const tutorial2Questions: Question[] = [
   },
 ];
 
-export const testQuestionOrder = (
-  start: number,
-  end: number,
-  shuffleQs: Question[]
-) => {
-  return exploratoryQuestion(start, end).concat(fisherYates(shuffleQs));
-};
 export const allTestQuestions = [
   IN1questions,
   IN2questions,

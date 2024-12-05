@@ -12,7 +12,7 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import {
   S2C1Questions,
-  testQuestionOrder,
+  exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
@@ -242,7 +242,8 @@ const step7: StepMeta = makeStepMeta({
 
 export const T1_S2_C1: LayoutProps = {
   name: "T1_S2_C1",
-  questions: testQuestionOrder(3, 8, S2C1Questions),
+  questions: exploratoryQuestion(3, 8),
+  shuffleQuestions: S2C1Questions,
   baseContent,
   givens,
   proves,

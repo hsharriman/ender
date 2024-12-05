@@ -17,7 +17,7 @@ import { Reflexive } from "../../../core/reasons/Reflexive";
 import { RightAngle } from "../../../core/reasons/RightAngle";
 import {
   S1C2questions,
-  testQuestionOrder,
+  exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
@@ -248,7 +248,8 @@ const step8: StepMeta = makeStepMeta({
 
 export const T1_S1_C2: LayoutProps = {
   name: "T1_S1_C2",
-  questions: testQuestionOrder(3, 8, S1C2questions),
+  questions: exploratoryQuestion(3, 8),
+  shuffleQuestions: S1C2questions,
   baseContent,
   givens,
   proves,

@@ -1,14 +1,14 @@
 import React from "react";
 
-interface SubmitQuestionProps {
+interface SubmitButtonProps {
   // answerType: string;
   // inputAnswer: string[];
   onClick: () => void;
   disabled: boolean;
 }
 
-export class SubmitQuestion extends React.Component<SubmitQuestionProps> {
-  constructor(props: SubmitQuestionProps) {
+export class SubmitButton extends React.Component<SubmitButtonProps> {
+  constructor(props: SubmitButtonProps) {
     super(props);
   }
 
@@ -36,7 +36,7 @@ export class SubmitQuestion extends React.Component<SubmitQuestionProps> {
             ${
               this.props.disabled
                 ? "bg-slate-400 cursor-not-allowed"
-                : "bg-[#9459d4] hover:bg-[#7644ad] focus:bg-[#623691]"
+                : "bg-blue-500 hover:bg-blue-300 focus:bg-blue-600"
             }`}
         >
           Submit

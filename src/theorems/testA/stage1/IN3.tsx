@@ -12,7 +12,7 @@ import { Reflexive } from "../../../core/reasons/Reflexive";
 import { RightAngle } from "../../../core/reasons/RightAngle";
 import {
   IN3questions,
-  testQuestionOrder,
+  exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
@@ -193,7 +193,8 @@ const step6: StepMeta = makeStepMeta({
 
 export const T1_S1_IN3: LayoutProps = {
   name: "T1_S1_IN3",
-  questions: testQuestionOrder(4, 6, IN3questions),
+  questions: exploratoryQuestion(4, 6),
+  shuffleQuestions: IN3questions,
   baseContent,
   steps: [step1, step2, step3, step4, step5, step6],
   givens,

@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ProcedureHome } from "./components/procedure/ProcedureHome";
 import "./index.css";
 import { Examples } from "./routes/Examples";
 import { Home } from "./routes/Home";
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: "/ender/procedureB",
     element: <ProcedureB />,
+  },
+  {
+    path: "/ender/procedures",
+    element: <ProcedureHome />,
   },
 ]);
 

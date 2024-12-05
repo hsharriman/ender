@@ -63,6 +63,7 @@ export interface StaticLayoutProps {
   givens: StepMeta;
   proves: StepMeta;
   questions: Question[];
+  shuffleQuestions: Question[];
   title: string;
 }
 

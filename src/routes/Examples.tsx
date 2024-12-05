@@ -1,3 +1,4 @@
+import Rand from "rand-seed";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -102,8 +103,8 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
 
   renderProof = (proof: LayoutProps) => {
     const layout = this.state.isInteractive
-      ? interactiveLayout(proof).meta
-      : staticLayout(proof).meta;
+      ? interactiveLayout(proof, new Rand()).meta
+      : staticLayout(proof, new Rand()).meta;
     if (layout) {
       return (
         <div className="h-full">
@@ -134,7 +135,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
   };
 
   renderExampleTile = (proof: LayoutProps, idx: number) => {
-    const layout = staticLayout(proof);
+    const layout = staticLayout(proof, new Rand());
     const givens = proof.steps.filter((s) => s.reason === Reasons.Given).length;
     if (layout.meta) {
       const diagramCtx = layout.meta.props as StaticAppPageProps;

@@ -13,7 +13,7 @@ import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import {
   S1C1questions,
-  testQuestionOrder,
+  exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
@@ -226,7 +226,8 @@ const step7: StepMeta = makeStepMeta({
 
 export const T1_S1_C1: LayoutProps = {
   name: "T1_S1_C1",
-  questions: testQuestionOrder(4, 7, S1C1questions),
+  questions: exploratoryQuestion(4, 7),
+  shuffleQuestions: S1C1questions,
   baseContent,
   givens,
   proves,

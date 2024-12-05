@@ -167,6 +167,7 @@ export const TutorialProof1: LayoutProps = {
   name: "TutorialProof1",
   // TODO: Replace questions
   questions: tutorial1Questions,
+  shuffleQuestions: [],
   baseContent,
   givens,
   proves,
@@ -177,6 +178,7 @@ export const TutorialProof1: LayoutProps = {
 export const TutorialProof2: LayoutProps = {
   name: "TutorialProof2",
   questions: tutorial2Questions,
+  shuffleQuestions: [],
   baseContent,
   givens,
   proves,

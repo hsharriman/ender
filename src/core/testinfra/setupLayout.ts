@@ -1,3 +1,4 @@
+import Rand from "rand-seed";
 import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
@@ -8,6 +9,7 @@ import { fisherYates } from "./randomize";
 
 export const staticLayout = (
   proofMeta: LayoutProps,
+  rand: Rand,
   shuffleQuestions: boolean = true
 ): Page => {
   // reset stored variables
@@ -39,7 +41,9 @@ export const staticLayout = (
         pageNum: -1,
         givenText: proofMeta.givens.staticText(),
         provesText: proofMeta.proves.staticText(),
-        questions: proofMeta.questions,
+        questions: proofMeta.questions.concat(
+          fisherYates(proofMeta.shuffleQuestions, rand)
+        ),
         name: proofMeta.name,
       },
     },
@@ -47,6 +51,7 @@ export const staticLayout = (
 };
 export const interactiveLayout = (
   proofMeta: LayoutProps,
+  rand: Rand,
   shuffleQuestions: boolean = true,
   tutorial?: TutorialStep[]
 ): Page => {
@@ -116,7 +121,9 @@ export const interactiveLayout = (
         reasonMap: reasonMap,
         linkedTexts: linkedTexts,
         pageNum: -1,
-        questions: proofMeta.questions,
+        questions: proofMeta.questions.concat(
+          fisherYates(proofMeta.shuffleQuestions, rand)
+        ),
         name: proofMeta.name,
         highlightCtx: highlightCtx.getCtx(),
         additionCtx: additionCtx.getCtx(),
@@ -138,15 +145,16 @@ export const pretestLayout = (props: PretestAppPageProps): Page => {
 
 export const randomizeLayout = (
   proofMetas: LayoutProps[],
-  shuffleQuestions: boolean
+  shuffleQuestions: boolean,
+  rand: Rand
 ): Page[] => {
   let modes = proofMetas.map((p, i) => {
     return i % 2 === 0 ? "s" : "i";
   });
-  return fisherYates(modes).map((m, i) =>
+  return fisherYates(modes, rand).map((m, i) =>
     m === "s"
-      ? staticLayout(proofMetas[i], shuffleQuestions)
-      : interactiveLayout(proofMetas[i], shuffleQuestions)
+      ? staticLayout(proofMetas[i], rand, shuffleQuestions)
+      : interactiveLayout(proofMetas[i], rand, shuffleQuestions)
   );
 };
 
