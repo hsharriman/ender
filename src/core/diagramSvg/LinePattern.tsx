@@ -22,7 +22,7 @@ const patternEle = (rotate: number, c: PatternColors) => (
     patternUnits="userSpaceOnUse"
     width="10"
     height="10"
-    patternTransform={`scale(1) rotate(${rotate})`}
+    patternTransform={`scale(.5) rotate(${rotate})`}
   >
     <rect x="0" y="0" width="100%" height="100%" fill="none" />
     <path
@@ -30,8 +30,8 @@ const patternEle = (rotate: number, c: PatternColors) => (
       stroke-width="1"
       className={`${updateStyle(c.id)} ${
         c.id === SVGModes.Unfocused || c.id === SVGModes.ReliesOn
-          ? "opacity-10"
-          : "opacity-40"
+          ? "opacity-5"
+          : "opacity-30"
       }`}
       fill="none"
     />
