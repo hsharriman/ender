@@ -1,3 +1,4 @@
+import Rand from "rand-seed";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -48,6 +49,7 @@ interface ProcedureState {
 export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
   private meta: Page[] = [];
   private numPages: number = 0;
+  private randomSeed: Rand;
   constructor(props: any) {
     super(props);
     this.state = {
@@ -64,7 +66,8 @@ export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
       version: PageType.Interactive,
       activeQuestionIdx: 0,
     };
-    this.meta = pageOrder(this.props.type);
+    this.randomSeed = new Rand(JSON.parse(localStorage.getItem("id") || ""));
+    this.meta = pageOrder(this.props.type, this.randomSeed);
     this.numPages = this.meta.length;
   }
 

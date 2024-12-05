@@ -201,6 +201,7 @@ export const T1_CH1_IN1: LayoutProps = {
   name: "T1_CH1_IN1",
   // TODO: Replace questions
   questions: placeholder,
+  shuffleQuestions: [],
   baseContent,
   givens,
   proves,

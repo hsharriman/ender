@@ -14,7 +14,7 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import {
   S1C3questions,
-  testQuestionOrder,
+  exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
@@ -220,7 +220,8 @@ const step6: StepMeta = makeStepMeta({
 
 export const T1_S1_C3: LayoutProps = {
   name: "T1_S1_C3",
-  questions: testQuestionOrder(3, 7, S1C3questions),
+  questions: exploratoryQuestion(3, 7),
+  shuffleQuestions: S1C3questions,
   baseContent,
   givens,
   proves,

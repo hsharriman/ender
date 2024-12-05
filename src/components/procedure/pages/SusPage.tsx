@@ -1,6 +1,6 @@
 import React from "react";
 import { susQuestions } from "../../../core/testinfra/questions/susQuestions";
-import { SubmitQuestion } from "../questions/SubmitQuestion";
+import { SubmitButton } from "../questions/SubmitButton";
 import SusQuestion from "../questions/SusQuestion";
 
 interface susPageProps {
@@ -98,7 +98,7 @@ export class SusPage extends React.Component<susPageProps, susPageState> {
                   ))}
                 </div>
                 <div>
-                  <SubmitQuestion
+                  <SubmitButton
                     disabled={!this.state.completed}
                     onClick={this.handleSubmit}
                   />

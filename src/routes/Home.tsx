@@ -25,16 +25,10 @@ export class Home extends React.Component {
             </NavLink>
 
             <NavLink
-              to="/ender/procedureA"
+              to="/ender/procedures"
               className="py-4 px-8 m-4 text-3xl border-4 border-blue-500 rounded-lg text-blue-500 flex items-center"
             >
-              Procedure A
-            </NavLink>
-            <NavLink
-              to="/ender/procedureB"
-              className="py-4 px-8 m-4 text-3xl border-4 border-blue-300 rounded-lg text-blue-300 flex items-center"
-            >
-              Procedure B
+              Experiment Procedure
             </NavLink>
           </div>
         </div>

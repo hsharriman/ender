@@ -1,3 +1,4 @@
+import Rand from "rand-seed";
 import {
   P1,
   P2,
@@ -45,16 +46,17 @@ export type Page = {
 export const proofOrder = (
   proofs: LayoutProps[],
   type: TestType,
-  shuffleTestQuestions: boolean
+  shuffleTestQuestions: boolean,
+  rand: Rand
 ) => {
-  return fisherYates(proofs).map((proof) => {
+  return fisherYates(proofs, rand).map((proof) => {
     return type === PageType.Interactive
-      ? interactiveLayout(proof, shuffleTestQuestions)
-      : staticLayout(proof, shuffleTestQuestions);
+      ? interactiveLayout(proof, rand, shuffleTestQuestions)
+      : staticLayout(proof, rand, shuffleTestQuestions);
   });
 };
 
-export const pageOrder = (testType: TestType) => {
+export const pageOrder = (testType: TestType, rand: Rand) => {
   let pretest = [pretestLayout(P1), pretestLayout(P2)]; // segment and angle questions
   let tpre = trianglePretestProofs.map((p) => pretestLayout(p));
   // add extra 1-off questions to the first triangle pretest page
@@ -64,7 +66,7 @@ export const pageOrder = (testType: TestType) => {
       props: {
         ...tpre[0].meta.props,
         questions: tpre[0].meta.props.questions.concat(
-          fisherYates(triangleTextPreQuestions)
+          fisherYates(triangleTextPreQuestions, rand)
         ),
       },
     };
@@ -73,21 +75,23 @@ export const pageOrder = (testType: TestType) => {
   pretest = pretest.concat(tpre);
   const tutorial = [
     testType === PageType.Interactive
-      ? interactiveLayout(TutorialProof1, false)
-      : staticLayout(TutorialProof1, false),
+      ? interactiveLayout(TutorialProof1, rand, false)
+      : staticLayout(TutorialProof1, rand, false),
     testType === PageType.Interactive
-      ? interactiveLayout(TutorialProof2, false)
-      : staticLayout(TutorialProof2, false),
+      ? interactiveLayout(TutorialProof2, rand, false)
+      : staticLayout(TutorialProof2, rand, false),
   ];
   const stage1 = proofOrder(
     [T1_S1_C1, T1_S1_C2, T1_S1_IN1, T1_S1_IN2, T1_S1_IN3],
     testType,
-    true
+    true,
+    rand
   );
   const stage2 = proofOrder(
-    fisherYates([T1_S2_C2, T1_S2_IN1, T1_S2_IN2]),
+    fisherYates([T1_S2_C2, T1_S2_IN1, T1_S2_IN2], rand),
     testType,
-    false
+    false,
+    rand
   );
 
   const pages = participantID()
@@ -104,7 +108,8 @@ export const pageOrder = (testType: TestType) => {
 };
 
 const participantID = (): Page[] => {
-  return [{ type: PageType.ParticipantID }];
+  // return [{ type: PageType.ParticipantID }];
+  return [];
 };
 const background = (): Page[] => {
   return [

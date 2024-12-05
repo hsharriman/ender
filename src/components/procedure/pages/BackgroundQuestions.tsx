@@ -1,6 +1,6 @@
 import React from "react";
 import { logEvent } from "../../../core/testinfra/testUtils";
-import { SubmitQuestion } from "../questions/SubmitQuestion";
+import { SubmitButton } from "../questions/SubmitButton";
 
 interface BackgroundQuestionType {
   prompt: string;
@@ -122,7 +122,7 @@ export class BackgroundQuestions extends React.Component<
               ))}
             </div>
             <div className="mt-4">
-              <SubmitQuestion
+              <SubmitButton
                 disabled={!this.state.completed}
                 onClick={this.handleSubmit}
               />

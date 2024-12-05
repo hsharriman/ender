@@ -10,7 +10,7 @@ import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { SAS } from "../../../core/reasons/SAS";
 import {
   IN1questions,
-  testQuestionOrder,
+  exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
@@ -183,7 +183,8 @@ const step5: StepMeta = makeStepMeta({
 
 export const T1_S1_IN1: LayoutProps = {
   name: "T1_S1_IN1",
-  questions: testQuestionOrder(4, 5, IN1questions),
+  questions: exploratoryQuestion(4, 5),
+  shuffleQuestions: IN1questions,
   baseContent,
   givens,
   proves,

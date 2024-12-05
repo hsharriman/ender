@@ -14,7 +14,7 @@ import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import {
   S2IN2Questions,
-  testQuestionOrder,
+  exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
@@ -217,7 +217,8 @@ const step8: StepMeta = makeStepMeta({
 
 export const T1_S2_IN2: LayoutProps = {
   name: "T1_S2_IN2",
-  questions: testQuestionOrder(3, 8, S2IN2Questions),
+  questions: exploratoryQuestion(3, 8),
+  shuffleQuestions: S2IN2Questions,
   baseContent,
   givens,
   proves,
