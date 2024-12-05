@@ -1,7 +1,7 @@
 import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Content } from "../../core/diagramContent";
 import { Angle } from "../../core/geometry/Angle";
-import { Point } from "../../core/geometry/Point";
+import { Point, ShowPoint } from "../../core/geometry/Point";
 import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
@@ -59,7 +59,7 @@ export const segmentContent = () => {
         showLabel: true,
         offset: c[2],
         hoverable: false,
-        showPoint: true,
+        showPoint: ShowPoint.Always,
       })
     )
   );
@@ -112,7 +112,7 @@ export const angleContent = () => {
         showLabel: true,
         offset: c[2],
         hoverable: false,
-        showPoint: true,
+        showPoint: ShowPoint.Always,
       })
     )
   );

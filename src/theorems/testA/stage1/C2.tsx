@@ -1,7 +1,7 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Angle } from "../../../core/geometry/Angle";
-import { Point } from "../../../core/geometry/Point";
+import { Point, ShowPoint } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
@@ -51,7 +51,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         showLabel: labeledPoints,
         offset: offsets[i],
         hoverable,
-        showPoint: true,
+        showPoint: ShowPoint.Adaptive,
       })
     )
   );
@@ -145,10 +145,22 @@ const step2: StepMeta = makeStepMeta({
   ),
 });
 
+const step22: StepMeta = makeStepMeta({
+  reason: Reasons.Bisector,
+  prevStep: step2,
+  dependsOn: ["2"],
+  additions: (props: StepFocusProps) =>
+    EqualAngles.additions(props, ["ABD", "DBC"]),
+  text: EqualAngles.text(["ABD", "DBC"]),
+  staticText: () => EqualAngles.staticText(["ABD", "DBC"]),
+  highlight: (ctx: Content, frame: string) =>
+    ctx.getSegment("BD").mode(frame, SVGModes.ReliesOn),
+});
+
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.PerpendicularLines,
   dependsOn: ["1"],
-  prevStep: step2,
+  prevStep: step22,
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "BD", ["AD", "DC"]),
   text: Perpendicular.text("AC", "BD"),
@@ -157,7 +169,7 @@ const step3: StepMeta = makeStepMeta({
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
-  dependsOn: ["3"],
+  dependsOn: ["4"],
   prevStep: step3,
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
@@ -184,7 +196,7 @@ const step5ASAProps: ASAProps = {
 };
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.ASA,
-  dependsOn: ["2", "4", "5"],
+  dependsOn: ["3", "5", "6"],
   prevStep: step5,
   additions: (props: StepFocusProps) => {
     CongruentTriangles.congruentLabel(
@@ -203,7 +215,7 @@ const step6: StepMeta = makeStepMeta({
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: ["6"],
+  dependsOn: ["7"],
   prevStep: step6,
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AD", "DC"], 2),
@@ -221,7 +233,7 @@ const step7: StepMeta = makeStepMeta({
 
 const step8: StepMeta = makeStepMeta({
   reason: Reasons.ConverseMidpoint,
-  dependsOn: ["7"],
+  dependsOn: ["8"],
   prevStep: step7,
   additions: (props: StepFocusProps) => {
     props.ctx.getPoint("D").mode(props.frame, SVGModes.Derived);
@@ -240,6 +252,6 @@ export const T1_S1_C2: LayoutProps = {
   baseContent,
   givens,
   proves,
-  steps: [step1, step2, step3, step4, step5, step6, step7, step8],
+  steps: [step1, step2, step22, step3, step4, step5, step6, step7, step8],
   title: "Prove Midpoint #1",
 };

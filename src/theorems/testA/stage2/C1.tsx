@@ -1,7 +1,7 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Angle } from "../../../core/geometry/Angle";
-import { Point } from "../../../core/geometry/Point";
+import { Point, ShowPoint } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, triangleStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -48,7 +48,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         showLabel: labeledPoints,
         offset: offsets[i],
         hoverable,
-        showPoint: true,
+        showPoint: ShowPoint.Adaptive,
       })
     )
   );

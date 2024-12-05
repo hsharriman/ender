@@ -208,14 +208,14 @@ export const S1C2questions: Question[] = [
   // },
   {
     answerType: AnswerType.YesNo,
-    prompt: reliesQuestion(Reasons.CongAdjAngles, 4),
+    prompt: reliesQuestion(Reasons.CongAdjAngles, 5),
     reason: Reasons.CongAdjAngles.title,
     type: QuestionType.ReliesOn,
     id: id(3),
   },
   {
     answerType: AnswerType.YesNo,
-    prompt: reliesQuestion(Reasons.ASA, 6),
+    prompt: reliesQuestion(Reasons.ASA, 7),
     reason: Reasons.ASA.title,
     type: QuestionType.ReliesOn,
     id: id(4),
@@ -337,8 +337,8 @@ export const S2IN1Questions: Question[] = [
 export const S2IN2Questions: Question[] = [
   {
     answerType: AnswerType.YesNo,
-    prompt: reliesQuestion(Reasons.ConverseMidpoint, 8, [2, 3]),
-    reason: Reasons.ConverseMidpoint.title,
+    prompt: reliesQuestion(Reasons.ConverseAltInteriorAngs, 8, [2, 3]),
+    reason: Reasons.ConverseAltInteriorAngs.title,
     type: QuestionType.ReliesOn,
     id: id(1),
   },

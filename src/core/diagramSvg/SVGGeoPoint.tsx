@@ -1,4 +1,5 @@
 import React from "react";
+import { ShowPoint } from "../geometry/Point";
 import { logEvent } from "../testinfra/testUtils";
 import { LPoint, Obj, SVGModes, Vector } from "../types/types";
 import { ModeCSS } from "./SVGStyles";
@@ -10,7 +11,7 @@ export type SVGPointProps = {
   offset: Vector;
   label: string;
   showLabel?: boolean;
-  showPoint: boolean;
+  showPoint: ShowPoint;
 } & BaseSVGProps;
 
 export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
@@ -73,17 +74,20 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
       this.props.miniScale,
       this.props.offset
     );
-    console.log(this.props.mode, updateStyle(this.props.mode, true));
     return (
       <>
-        {this.props.showPoint && (
+        {this.props.showPoint !== ShowPoint.Hide && (
           <circle
             cx={point[0]}
             cy={point[1]}
-            r={5}
+            r={this.props.showPoint === ShowPoint.Adaptive ? 5 : 3}
             id={this.props.geoId + "-circle"}
             key={this.props.geoId + "-circle"}
-            className={updateStyle(this.props.mode, true)}
+            className={
+              this.props.showPoint === ShowPoint.Adaptive
+                ? updateStyle(this.props.mode, true)
+                : "fill-black opacity-1"
+            }
           />
         )}
         <text
