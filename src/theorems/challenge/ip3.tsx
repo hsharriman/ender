@@ -4,24 +4,20 @@ import { Point } from "../../core/geometry/Point";
 import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
+import { EqualAngles } from "../../core/reasons/EqualAngles";
+import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
 import {
   EqualSegmentStep,
   EqualSegments,
-} from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Midpoint } from "../../core/templates/Midpoint";
-import { Reflexive, ReflexiveStep } from "../../core/templates/Reflexive";
-import { RightAngle } from "../../core/templates/RightAngle";
-import { SAS, SASProps } from "../../core/templates/SAS";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../core/types/stepTypes";
+} from "../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../core/reasons/EqualTriangles";
+import { Midpoint } from "../../core/reasons/Midpoint";
+import { Reflexive } from "../../core/reasons/Reflexive";
+import { RightAngle } from "../../core/reasons/RightAngle";
+import { SAS, SASProps } from "../../core/reasons/SAS";
+import { placeholder } from "../../core/testinfra/questions/testQuestions";
+import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
-import { placeholder } from "../../questions/funcTypeQuestions";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -56,6 +52,7 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
         showLabel: labeledPoints,
         offset: offsets[i],
         hoverable,
+        showPoint: true,
       })
     )
   );
@@ -74,14 +71,14 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   // TODO: looks like equalrightangles doesn't have tickless text?
-  text: (ctx: Content) => {
+  text: (isActive: boolean) => {
     return (
       <span>
-        {RightAngle.text(ctx, "AEB")}
+        {RightAngle.text("AEB")(isActive)}
         {comma}
-        {Midpoint.text(ctx, "AC", ["AE", "EC"], "E")}
+        {Midpoint.text("E", "AC")(isActive)}
         {comma}
-        {EqualSegments.text(ctx, ["DE", "EG"])}
+        {EqualSegments.text(["DE", "EG"])(isActive)}
       </span>
     );
   },
@@ -111,63 +108,63 @@ const givens: StepMeta = makeStepMeta({
 });
 
 const proves: StepMeta = makeStepMeta({
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
-    EqualAngles.additions(props, ["DCE", "GCE"]);
+    EqualAngles.additions({ ...props, mode: SVGModes.Derived }, ["DCE", "GCE"]);
   },
-  text: (ctx: Content) => {
-    return EqualAngles.text(ctx, ["DCE", "GCE"]);
-  },
+  text: EqualAngles.text(["DCE", "GCE"]),
   staticText: () => EqualAngles.staticText(["DCE", "GCE"]),
 });
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
     RightAngle.additions(props, "AEB");
   },
-  text: (ctx: Content) => {
-    return RightAngle.text(ctx, "AEB");
-  },
+  text: RightAngle.text("AEB"),
   staticText: () => RightAngle.staticText("AEB"),
 });
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step1,
   additions: (props: StepFocusProps) => {
     Midpoint.additions(props, "E", ["AE", "EC"]);
   },
-  text: (ctx: Content) => {
-    return Midpoint.text(ctx, "AC", ["AE", "EC"], "E");
-  },
+  text: Midpoint.text("E", "AC"),
   staticText: () => Midpoint.staticText("AC", "E"),
 });
 
 const step3: StepMeta = EqualSegmentStep(["DE", "EG"], Reasons.Given, step2, 2);
 
-const step4: StepMeta = ReflexiveStep("BE", 3, step3);
+const step4: StepMeta = makeStepMeta({
+  reason: Reasons.Reflexive,
+  prevStep: step3,
+  additions: (props: StepFocusProps) => {
+    Reflexive.additions(props, "BE", 3);
+  },
+  text: Reflexive.text("BE"),
+  staticText: () => Reflexive.staticText("BE"),
+});
 
-const step5: StepMeta = ReflexiveStep("CE", 1, step4);
+const step5: StepMeta = makeStepMeta({
+  reason: Reasons.Reflexive,
+  prevStep: step4,
+  additions: (props: StepFocusProps) => {
+    Reflexive.additions(props, "CE", 1);
+  },
+  text: Reflexive.text("CE"),
+  staticText: () => Reflexive.staticText("CE"),
+});
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CongAdjAngles,
-  dependsOn: [1],
-  unfocused: (props: StepUnfocusProps) => {
-    step5.unfocused(props);
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  dependsOn: ["1"],
+  prevStep: step5,
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["AEB", "CEB"]),
-  text: (ctx: Content) => EqualRightAngles.text(ctx, ["AEB", "CEB"]),
+  text: EqualRightAngles.text(["AEB", "CEB"]),
   staticText: () => EqualRightAngles.staticText(["AEB", "CEB"]),
 });
 
@@ -179,22 +176,17 @@ const s7SASProps: SASProps = {
 };
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [1, 2, 4],
-  unfocused: (props: StepUnfocusProps) => {
-    step6.unfocused(props);
-  },
+  dependsOn: ["1", "2", "4"],
+  prevStep: step6,
   additions: (props: StepFocusProps) => SAS.additions(props, s7SASProps),
-  text: (ctx: Content) => EqualTriangles.text(ctx, s7SASProps.triangles),
+  text: EqualTriangles.text(s7SASProps.triangles),
   staticText: () => EqualTriangles.staticText(s7SASProps.triangles),
 });
 
 const step8: StepMeta = makeStepMeta({
   reason: Reasons.Empty,
-  unfocused: (props: StepUnfocusProps) => {
-    step7.unfocused(props);
-    step7.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  text: (ctx: Content) => (
+  prevStep: step7,
+  text: () => (
     <span style={{ color: "black", fontStyle: "italic" }}>
       Which step can be applied here?
     </span>
@@ -204,44 +196,11 @@ const step8: StepMeta = makeStepMeta({
   ),
 });
 
-const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  const s4 = ctx.addFrame("s4");
-  Reflexive.additions({ ctx, frame: s4, mode: SVGModes.Purple }, "BE", 1);
-  const s5 = ctx.addFrame("s5");
-  ctx.push(
-    new Segment({
-      p1: ctx.getPoint("C"),
-      p2: ctx.getPoint("A"),
-      hoverable: false,
-    })
-  );
-  Reflexive.additions({ ctx, frame: s5, mode: SVGModes.Purple }, "AC", 1);
-  const s6 = ctx.addFrame("s6");
-  ctx.getSegment("BE").mode(s6, SVGModes.Default);
-  ctx.getSegment("CE").mode(s6, SVGModes.Default);
-  ctx.getSegment("AE").mode(s6, SVGModes.Default);
-  EqualRightAngles.additions(
-    { ctx, frame: s6, mode: SVGModes.Purple },
-    ["AEB", "CEB"],
-    SVGModes.Blue
-  );
-  const s7 = ctx.addFrame("s7");
-  SAS.additions(
-    { ctx, frame: s7, mode: SVGModes.Purple },
-    { ...s7SASProps, seg2s: { ...s7SASProps.seg2s, ticks: 2 } },
-    SVGModes.Blue
-  );
-  return ctx;
-};
-
 // TODO rename depending on right/wrong?
 export const T1_CH1_IN1: LayoutProps = {
   name: "T1_CH1_IN1",
   // TODO: Replace questions
   questions: placeholder,
-  miniContent: miniContent(),
   baseContent,
   givens,
   proves,

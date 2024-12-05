@@ -1,24 +1,24 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Point } from "../../../core/geometry/Point";
 import { Segment } from "../../../core/geometry/Segment";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma, segmentStr } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { CongruentTriangles } from "../../../core/templates/CongruentTriangles";
-import { EqualAngles } from "../../../core/templates/EqualAngles";
-import { EqualSegments } from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { ParallelLines } from "../../../core/templates/ParallelLines";
-import { SAS, SASProps } from "../../../core/templates/SAS";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
+import { EqualAngles } from "../../../core/reasons/EqualAngles";
+import { EqualSegments } from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { ParallelLines } from "../../../core/reasons/ParallelLines";
+import { SAS, SASProps } from "../../../core/reasons/SAS";
+import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
 import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../../core/types/stepTypes";
+  S1C1questions,
+  testQuestionOrder,
+} from "../../../core/testinfra/questions/testQuestions";
+import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
-import { completeProof1 } from "../../../questions/funcTypeQuestions";
 import { Reasons } from "../../reasons";
-import { linked, makeStepMeta } from "../../utils";
+import { makeStepMeta } from "../../utils";
 
 const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -55,7 +55,10 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
   [
     new Triangle({ pts: [A, C, M], hoverable, label: "ACM" }, ctx),
-    new Triangle({ pts: [B, D, M], hoverable, label: "BDM" }, ctx),
+    new Triangle(
+      { pts: [B, D, M], hoverable, label: "BDM", rotatePattern: true },
+      ctx
+    ),
   ].map((t) => ctx.push(t));
 
   ctx.push(new Segment({ p1: A, p2: B, hoverable: false }));
@@ -66,25 +69,8 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (ctx: Content) => {
-    const AM = ctx.getSegment("AM");
-    const BM = ctx.getSegment("BM");
-    const CM = ctx.getSegment("CM");
-    const DM = ctx.getSegment("DM");
-
-    return (
-      <span>
-        {linked("AB", AM, [BM])}
-        {" and "}
-        {linked("CD", CM, [DM])}
-        {" intersect at "}
-        {linked("M", ctx.getPoint("M"))}
-        {comma}
-        {EqualSegments.text(ctx, ["AM", "BM"])}
-        {comma}
-        {EqualSegments.text(ctx, ["CM", "DM"])}
-      </span>
-    );
+  text: (isActive: boolean) => {
+    return givens.staticText();
   },
   staticText: () => {
     return (
@@ -104,42 +90,25 @@ const givens: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("ACM").mode(props.frame, props.mode);
     props.ctx.getTriangle("BDM").mode(props.frame, props.mode);
-  },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
+    EqualSegments.additions(props, ["AM", "BM"]);
+    EqualSegments.additions(props, ["CM", "DM"], 2);
   },
 });
 
 const proves: StepMeta = makeStepMeta({
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
-    ParallelLines.additions(props, ["AC", "BD"]);
+    ParallelLines.additions({ ...props, mode: SVGModes.Derived }, ["AC", "BD"]);
   },
-  text: (ctx: Content) => ParallelLines.text(ctx, ["AC", "BD"]),
+  text: (isActive: boolean) => proves.staticText(),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
 });
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  text: (ctx: Content) => {
-    const AM = ctx.getSegment("AM");
-    const BM = ctx.getSegment("BM");
-    const CM = ctx.getSegment("CM");
-    const DM = ctx.getSegment("DM");
-    return (
-      <span>
-        {linked("AB", AM, [BM])}
-        {" and "}
-        {linked("CD", CM, [DM])}
-        {" intersect at "}
-        {linked("M", ctx.getPoint("M"))}
-      </span>
-    );
+  prevStep: givens,
+  text: (isActive: boolean) => {
+    return step1.staticText();
   },
   additions: (props: StepFocusProps) => {
     props.ctx.getSegment("AM").mode(props.frame, props.mode);
@@ -161,38 +130,40 @@ const step1: StepMeta = makeStepMeta({
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step1,
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AM", "BM"]),
-  text: (ctx: Content) => EqualSegments.text(ctx, ["AM", "BM"]),
+  text: EqualSegments.text(["AM", "BM"]),
   staticText: () => EqualSegments.staticText(["AM", "BM"]),
 });
 
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step2.unfocused(props);
-    step2.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step2,
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["CM", "DM"], 2),
-  text: (ctx: Content) => EqualSegments.text(ctx, ["CM", "DM"]),
+  text: EqualSegments.text(["CM", "DM"]),
   staticText: () => EqualSegments.staticText(["CM", "DM"]),
 });
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.VerticalAngles,
-  dependsOn: [1],
-  unfocused: (props: StepUnfocusProps) => {
-    step3.unfocused(props);
-    step3.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  dependsOn: ["1"],
+  prevStep: step3,
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CMA", "DMB"]),
-  text: (ctx: Content) => EqualAngles.text(ctx, ["CMA", "DMB"]),
+  text: EqualAngles.text(["CMA", "DMB"]),
   staticText: () => EqualAngles.staticText(["CMA", "DMB"]),
+  highlight: (ctx: Content, frame: string) =>
+    VerticalAngles.highlight(
+      ctx,
+      frame,
+      {
+        angs: ["CMA", "DMB"],
+        segs: ["AM", "BM"],
+      },
+      ["CM", "DM"]
+    ),
 });
 
 const step4SASProps: SASProps = {
@@ -203,119 +174,59 @@ const step4SASProps: SASProps = {
 };
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [2, 3, 4],
+  dependsOn: ["2", "3", "4"],
+  prevStep: step4,
   additions: (props: StepFocusProps) =>
-    SAS.additions(
-      { ...props, mode: SVGModes.ActiveTriangleBlue },
-      step4SASProps
-    ),
-  text: (ctx: Content) => EqualTriangles.text(ctx, step4SASProps.triangles),
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["ACM", "BDM"],
+      props.mode
+    ), // TODO make this insert congruent tri vis
+  text: EqualTriangles.text(step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(["ACM", "BDM"]),
+  highlight: (ctx: Content, frame: string) => {
+    SAS.highlight(ctx, frame, step4SASProps);
+  },
 });
 
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
-  dependsOn: [5],
-  unfocused: (props: StepUnfocusProps) => {
-    step5.additions({ ...props, mode: SVGModes.Unfocused });
-    EqualTriangles.unfocused(props, ["ACM", "BDM"]);
-  },
+  dependsOn: ["5"],
+  prevStep: step5,
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["CAM", "DBM"], 2),
-  text: (ctx: Content) => EqualAngles.text(ctx, ["CAM", "DBM"]),
+  text: EqualAngles.text(["CAM", "DBM"]),
   staticText: () => EqualAngles.staticText(["CAM", "DBM"]),
+  highlight: (ctx: Content, frame: string) => {
+    CongruentTriangles.congruentLabel(
+      ctx,
+      frame,
+      ["ACM", "BDM"],
+      SVGModes.ReliesOn
+    );
+  },
 });
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.ConverseAltInteriorAngs,
-  dependsOn: [6],
-  unfocused: (props: StepUnfocusProps) => {
-    step6.additions({ ...props, mode: SVGModes.Unfocused });
-    step6.unfocused(props);
+  dependsOn: ["6"],
+  prevStep: step6,
+  additions: (props: StepFocusProps) => {
+    ParallelLines.additions(props, ["AC", "BD"]);
   },
-  additions: (props: StepFocusProps) =>
-    ParallelLines.additions(props, ["AC", "BD"]),
-  text: (ctx: Content) => ParallelLines.text(ctx, ["AC", "BD"]),
+  text: ParallelLines.text(["AC", "BD"]),
   staticText: () => ParallelLines.staticText(["AC", "BD"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualAngles.highlight(ctx, frame, ["CAM", "DBM"], SVGModes.ReliesOn, 2);
+    ctx.getSegment("AM").mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment("BM").mode(frame, SVGModes.ReliesOn);
+  },
 });
-
-const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  const defaultStepProps: StepFocusProps = {
-    ctx,
-    frame: "",
-    mode: SVGModes.Purple,
-  };
-
-  // STEP 4 - VERTICAL ANGLES
-  const step4 = ctx.addFrame("s4");
-  ctx.getTriangle("ACM").mode(step4, SVGModes.Focused);
-  ctx.getTriangle("BDM").mode(step4, SVGModes.Focused);
-  let AC = ctx.getSegment("AC").mode(step4, SVGModes.Hidden);
-  let BD = ctx.getSegment("BD").mode(step4, SVGModes.Hidden);
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: step4 },
-    ["CMA", "DMB"],
-    1,
-    SVGModes.Blue
-  );
-
-  // STEP 5 - SAS TRIANGLE CONGRUENCE
-  const step5 = ctx.addFrame("s5");
-  SAS.additions(
-    { ...defaultStepProps, frame: step5 },
-    {
-      seg1s: { s: ["AM", "BM"], ticks: 1 },
-      seg2s: { s: ["CM", "DM"], ticks: 2 },
-      angles: { a: ["CMA", "DMB"] },
-      triangles: ["ACM", "BDM"],
-    },
-    SVGModes.Blue
-  );
-
-  // STEP 6 - CORRESPONDING ANGLES
-  const step6 = ctx.addFrame("s6");
-  CongruentTriangles.additions(
-    { ...defaultStepProps, frame: step6, mode: SVGModes.Focused },
-    {
-      s1s: ["AM", "BM"],
-      s2s: ["CM", "DM"],
-      s3s: ["AC", "BD"],
-      a1s: ["CMA", "DMB"],
-      a2s: ["CAM", "DBM"],
-      a3s: ["ACM", "BDM"],
-    }
-  );
-  EqualAngles.additions(
-    { ...defaultStepProps, frame: step6 },
-    ["CAM", "DBM"],
-    2,
-    SVGModes.Blue
-  );
-
-  // STEP 7 - ALTERNATE ANGLES
-  const step7 = ctx.addFrame("s7");
-  ctx.getSegment("AM").mode(step7, SVGModes.Focused);
-  ctx.getSegment("BM").mode(step7, SVGModes.Focused);
-  EqualAngles.additions(
-    { ...defaultStepProps, mode: SVGModes.Focused, frame: step7 },
-    ["MAC", "MBD"]
-  );
-  ParallelLines.additions(
-    { ...defaultStepProps, frame: step7 },
-    ["AC", "BD"],
-    1,
-    SVGModes.Blue
-  );
-
-  return ctx;
-};
 
 export const T1_S1_C1: LayoutProps = {
   name: "T1_S1_C1",
-  questions: completeProof1,
-  miniContent: miniContent(),
+  questions: testQuestionOrder(4, 7, S1C1questions),
   baseContent,
   givens,
   proves,

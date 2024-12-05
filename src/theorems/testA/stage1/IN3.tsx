@@ -1,25 +1,23 @@
 import { Content } from "../../../core/diagramContent";
+import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { Angle } from "../../../core/geometry/Angle";
-import { BaseGeometryObject } from "../../../core/geometry/BaseGeometryObject";
 import { Point } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
-import { AspectRatio } from "../../../core/svg/svgTypes";
-import { EqualRightAngles } from "../../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../../core/templates/EqualTriangles";
-import { Reflexive } from "../../../core/templates/Reflexive";
-import { RightAngle } from "../../../core/templates/RightAngle";
-import { SAS, SASProps } from "../../../core/templates/SAS";
+import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
+import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
+import { EqualSegments } from "../../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
+import { Reflexive } from "../../../core/reasons/Reflexive";
+import { RightAngle } from "../../../core/reasons/RightAngle";
 import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
-import { checkingProof3 } from "../../../questions/funcTypeQuestions";
+  IN3questions,
+  testQuestionOrder,
+} from "../../../core/testinfra/questions/testQuestions";
+import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
+import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
-import { linked, makeStepMeta } from "../../utils";
+import { makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const pts: Vector[] = [
@@ -49,7 +47,12 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     );
   });
   ctx.push(new Triangle({ pts: [L, M, K], hoverable, label: "KLM" }, ctx));
-  ctx.push(new Triangle({ pts: [K, N, M], hoverable, label: "MNK" }, ctx));
+  ctx.push(
+    new Triangle(
+      { pts: [K, N, M], hoverable, label: "MNK", rotatePattern: true },
+      ctx
+    )
+  );
 
   // for mini figures
   ctx.push(new Angle({ start: L, center: M, end: N, hoverable }));
@@ -60,35 +63,17 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (ctx: Content) => {
-    const LK = ctx.getSegment("LK");
-    const LM = ctx.getSegment("LM");
-    const MN = ctx.getSegment("MN");
-    const NK = ctx.getSegment("NK");
-
-    return (
-      <span>
-        {linked(
-          "KLMN",
-          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
-          [LK, LM, MN, NK]
-        )}
-        {" is a quadrilateral"}
-        {comma}
-        {EqualSegments.text(ctx, ["LM", "NK"])}
-        {comma}
-        {RightAngle.text(ctx, "KLM")}
-      </span>
-    );
+  text: (isActive: boolean) => {
+    return givens.staticText();
   },
 
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("LMK").mode(props.frame, props.mode);
     props.ctx.getTriangle("KMN").mode(props.frame, props.mode);
+    EqualSegments.additions(props, ["LM", "NK"]);
+    RightAngle.additions(props, "KLM");
   },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
-  },
+
   staticText: () => {
     return (
       <span>
@@ -103,160 +88,113 @@ const givens: StepMeta = makeStepMeta({
 });
 
 const proves: StepMeta = makeStepMeta({
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
-    givens.additions(props);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["KLM", "MNK"],
+      SVGModes.Derived
+    );
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, ["KLM", "MNK"]),
+  text: EqualTriangles.text(["KLM", "MNK"]),
   staticText: () => EqualTriangles.staticText(["KLM", "MNK"]),
 });
 
 const step1: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    givens.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: givens,
   additions: (props: StepFocusProps) => {
     ["LK", "LM", "MN", "NK"].map((s) =>
       props.ctx.getSegment(s).mode(props.frame, props.mode)
     );
   },
-  text: (ctx: Content) => {
-    return (
-      <span>
-        {linked(
-          "KLMN",
-          new BaseGeometryObject(Obj.Quadrilateral, { hoverable: false }),
-          [
-            ctx.getSegment("LK"),
-            ctx.getSegment("LM"),
-            ctx.getSegment("MN"),
-            ctx.getSegment("NK"),
-          ]
-        )}
-        {" is a quadrilateral"}
-      </span>
-    );
+  text: (isActive: boolean) => {
+    return step1.staticText();
   },
   staticText: () => <span>{"KLMN is a quadrilateral"}</span>,
 });
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step1,
   additions: (props: StepFocusProps) => {
     EqualSegments.additions(props, ["LM", "NK"]);
   },
-  text: (ctx: Content) => EqualSegments.text(ctx, ["LM", "NK"]),
+  text: EqualSegments.text(["LM", "NK"]),
   staticText: () => EqualSegments.staticText(["LM", "NK"]),
 });
 
 const step3: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step2.additions({ ...props, mode: SVGModes.Unfocused });
-    step2.unfocused(props);
-  },
+  prevStep: step2,
   additions: (props: StepFocusProps) => {
     RightAngle.additions(props, "KLM");
   },
-  text: (ctx: Content) => RightAngle.text(ctx, "KLM"),
+  text: RightAngle.text("KLM"),
   staticText: () => RightAngle.staticText("KLM"),
 });
 
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.Quadrilateral,
-  dependsOn: [1, 3],
-  unfocused: (props: StepUnfocusProps) => {
-    step3.unfocused(props);
-    step3.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  dependsOn: ["1"],
+  prevStep: step3,
   additions: (props: StepFocusProps) => {
     EqualRightAngles.additions(props, ["KLM", "MNK"]);
   },
-  text: (ctx: Content) => {
-    return EqualRightAngles.text(ctx, ["KLM", "MNK"]);
-  },
+  text: EqualRightAngles.text(["KLM", "MNK"]),
   staticText: () => {
     return EqualRightAngles.staticText(["KLM", "MNK"]);
+  },
+  highlight: (ctx: Content, frame: string) => {
+    ctx.getSegment("LM").mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment("NK").mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment("LK").mode(frame, SVGModes.ReliesOn);
+    ctx.getSegment("MN").mode(frame, SVGModes.ReliesOn);
+    EqualRightAngles.highlight(
+      ctx,
+      frame,
+      ["KLM", "MNK"],
+      SVGModes.Inconsistent
+    );
   },
 });
 
 const step5: StepMeta = makeStepMeta({
   reason: Reasons.Reflexive,
-  unfocused: (props: StepUnfocusProps) => {
-    step4.unfocused(props);
-    step4.additions({ ...props, mode: SVGModes.Unfocused });
-  },
+  prevStep: step4,
   additions: (props: StepFocusProps) => {
     Reflexive.additions(props, "MK", 2);
   },
-  text: (ctx: Content) => Reflexive.text(ctx, "MK"),
+  text: Reflexive.text("MK"),
   staticText: () => Reflexive.staticText("MK"),
 });
 
-const s6SASProps: SASProps = {
-  seg1s: { s: ["LM", "KN"], ticks: 1 },
-  seg2s: { s: ["MK", "MK"], ticks: 2 },
-  angles: { a: ["KLM", "MNK"], type: Obj.RightTick },
-  triangles: ["KLM", "MNK"],
-};
 const step6: StepMeta = makeStepMeta({
   reason: Reasons.RHL,
-  dependsOn: [2, 4, 5],
+  dependsOn: ["2", "4", "5"],
+  prevStep: step5,
+  text: EqualTriangles.text(["KLM", "MNK"]),
   additions: (props: StepFocusProps) => {
-    SAS.additions(props, s6SASProps);
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["KLM", "MNK"],
+      props.mode
+    );
   },
-  text: (ctx: Content) => EqualTriangles.text(ctx, s6SASProps.triangles),
-  staticText: () => EqualTriangles.staticText(s6SASProps.triangles),
+  staticText: () => EqualTriangles.staticText(["KLM", "MNK"]),
+  highlight: (ctx: Content, frame: string) => {
+    EqualSegments.highlight(ctx, frame, ["LM", "NK"], SVGModes.ReliesOn);
+    EqualRightAngles.highlight(ctx, frame, ["KLM", "MNK"], SVGModes.ReliesOn);
+    EqualSegments.highlight(ctx, frame, ["MK", "MK"], SVGModes.ReliesOn, 2);
+  },
 });
-
-export const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  const defaultStepProps: StepFocusProps = {
-    ctx,
-    frame: "",
-    mode: SVGModes.Purple,
-  };
-
-  const step4 = ctx.addFrame("s4");
-  const rectangleSegs = ["LK", "LM", "MN", "NK"];
-  rectangleSegs.map((s) => ctx.getSegment(s).mode(step4, SVGModes.Purple));
-  // const rectangleAngles = ["LMN", "NKL"];
-  // rectangleAngles.map((a) =>
-  //   RightAngle.additions(
-  //     { ...defaultStepProps, frame: step4, mode: SVGModes.Focused },
-  //     a
-  //   )
-  // );
-  // EqualRightAngles.additions(
-  //   { ...defaultStepProps, frame: step4 },
-  //   ["KLM", "MNK"],
-  //   SVGModes.Blue
-  // );
-
-  const step6 = ctx.addFrame("s6");
-  SAS.additions(
-    { ...defaultStepProps, frame: step6 },
-    {
-      seg1s: { s: ["LM", "NK"], ticks: 1 },
-      seg2s: { s: ["MK", "MK"], ticks: 2 },
-      angles: { a: ["KLM", "MNK"], type: Obj.RightTick },
-      triangles: ["KLM", "MNK"],
-    },
-    SVGModes.Blue
-  );
-  return ctx;
-};
 
 export const T1_S1_IN3: LayoutProps = {
   name: "T1_S1_IN3",
-  questions: checkingProof3,
+  questions: testQuestionOrder(4, 6, IN3questions),
   baseContent,
-  miniContent: miniContent(),
   steps: [step1, step2, step3, step4, step5, step6],
   givens,
   proves,

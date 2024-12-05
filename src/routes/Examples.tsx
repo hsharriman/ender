@@ -1,14 +1,18 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
-import { Diagram } from "../components/Diagram";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
-} from "../components/InteractiveAppPage";
-import { StaticAppPage, StaticAppPageProps } from "../components/StaticAppPage";
+} from "../components/ender/InteractiveAppPage";
+import {
+  StaticAppPage,
+  StaticAppPageProps,
+} from "../components/ender/StaticAppPage";
+import { StaticDiagram } from "../components/ender/StaticDiagram";
 import { interactiveLayout, staticLayout } from "../core/testinfra/setupLayout";
 import { LayoutProps } from "../core/types/types";
+import { Reasons } from "../theorems/reasons";
 import { T1_S1_C1 } from "../theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "../theorems/testA/stage1/C2";
 import { T1_S1_C3 } from "../theorems/testA/stage1/C3";
@@ -59,7 +63,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
 
   renderSwitch = () => {
     const styling = this.state.isInteractive
-      ? "bg-violet-500 border-violet-500 border-2 text-white"
+      ? "bg-blue-500 border-blue-500 border-2 text-white"
       : "border-slate-500 border-2 fill-none";
     return (
       <button
@@ -69,7 +73,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
         }
         onClick={this.onLayoutToggle}
       >
-        Use Interactive Layout
+        Toggle Interactive Layout
       </button>
     );
   };
@@ -102,9 +106,9 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
       : staticLayout(proof).meta;
     if (layout) {
       return (
-        <>
+        <div className="h-full">
           {this.renderHeader(proof.title)}
-          <div className="w-full h-full flex justify-start">
+          <div className="w-full flex justify-start">
             {this.state.isInteractive ? (
               <InteractiveAppPage
                 {...{
@@ -123,16 +127,17 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
               />
             )}
           </div>
-        </>
+        </div>
       );
     }
     return <></>;
   };
 
   renderExampleTile = (proof: LayoutProps, idx: number) => {
-    const layout = staticLayout(proof).meta;
-    if (layout) {
-      const diagramCtx = layout.props as StaticAppPageProps;
+    const layout = staticLayout(proof);
+    const givens = proof.steps.filter((s) => s.reason === Reasons.Given).length;
+    if (layout.meta) {
+      const diagramCtx = layout.meta.props as StaticAppPageProps;
       return (
         <button
           className="m-4 w-72 h-72 border-2 bg-slate-50 shadow-md rounded-md flex flex-col"
@@ -147,20 +152,21 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
             )}
           </div>
           <div className="flex justify-center items-center w-full h-full flex-col">
-            {/* <StaticDiagram
-            svgIdSuffix={proof.name}
-            width="260px"
-            height="auto"
-            ctx={diagramCtx.ctx}
-          /> */}
-            <Diagram
+            <StaticDiagram
+              svgIdSuffix={proof.name}
+              width="260px"
+              height="auto"
+              ctx={diagramCtx.ctx}
+              activeFrame={`s${givens}`}
+            />
+            {/* <Diagram
               width="260px"
               height="auto"
               svgIdSuffix={proof.name}
               activeFrame={"given"}
               ctx={diagramCtx.ctx}
               miniScale={false}
-            />
+            /> */}
           </div>
         </button>
       );
@@ -172,7 +178,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
     return (
       <>
         <div
-          className="sticky top-0 left-0 p-3 h-10 z-30 flex bg-gradient-to-r from-violet-500 to-transparent"
+          className="sticky top-0 left-0 p-3 h-10 z-30 flex bg-gradient-to-r from-violet-500 via-30% via-blue-500"
           id="header"
         >
           <NavLink to={"/ender"} className="px-3 text-sm h-8">

@@ -1,8 +1,8 @@
-import { InteractiveAppPageProps } from "../../components/InteractiveAppPage";
-import { PretestAppPageProps } from "../../components/PretestAppPage";
-import { StaticAppPageProps } from "../../components/StaticAppPage";
-import { Question } from "../../questions/funcTypeQuestions";
+import { InteractiveAppPageProps } from "../../components/ender/InteractiveAppPage";
+import { StaticAppPageProps } from "../../components/ender/StaticAppPage";
+import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Content } from "../diagramContent";
+import { Question } from "../testinfra/questions/testQuestions";
 import { StepMeta } from "./stepTypes";
 
 // -------- GEOMETRY TYPES --------
@@ -46,13 +46,13 @@ export enum SVGModes {
   DiagramHover = "diagramhover",
   Unfocused = "unfocused",
   Default = "default",
-  Purple = "purple",
-  Blue = "blue",
   Pinned = "pinned",
   ActiveText = "activetext",
-  ActiveTriangleBlue = "activetriangleblue",
-  ActiveTrianglePurple = "activetrianglepurple",
-  UnfocusedTriangle = "unfocusedtriangle",
+  ReliesOn = "relieson",
+  ReliesOnPoint = "reliesonpoint",
+  ReliesMissing = "reliesmissing",
+  Derived = "derived",
+  Inconsistent = "inconsistent",
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------
@@ -67,7 +67,7 @@ export interface StaticLayoutProps {
 }
 
 export interface InteractiveLayoutProps extends StaticLayoutProps {
-  miniContent: Content;
+  // miniContent: Content;
 }
 
 export type LayoutProps = InteractiveLayoutProps & StaticLayoutProps;
@@ -98,3 +98,11 @@ export interface ProofMeta {
   tutorial?: TutorialStep[];
 }
 type LayoutOptions = "static" | "interactive";
+
+// for determining what type of styling to apply to an object
+export enum HighlightType {
+  Relies = "relies",
+  ReliesUnmet = "reliesunmet",
+  Highlight = "highlight",
+  HighlightUnmet = "highlightunmet",
+}

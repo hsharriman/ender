@@ -1,21 +1,10 @@
-import { PretestAppPageProps } from "../../components/PretestAppPage";
+import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
 import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";
-import { LayoutProps, Reason, TutorialStep } from "../types/types";
+import { LayoutProps, Reason, SVGModes, TutorialStep } from "../types/types";
 import { Page, PageType } from "./pageOrder";
-
-/* Helper methods related to randomizing the proof order */
-export const fisherYates = (arr: any[]) => {
-  // shuffle the array with Fisher-Yates algorithm
-  const arrCopy = arr.slice();
-  for (let i = arrCopy.length - 1; i >= 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arrCopy[i], arrCopy[j]] = [arrCopy[j], arrCopy[i]];
-  }
-  // return the shuffled array
-  return arrCopy;
-};
+import { fisherYates } from "./randomize";
 
 export const staticLayout = (
   proofMeta: LayoutProps,
@@ -28,7 +17,7 @@ export const staticLayout = (
 
   ctx.addFrame(GIVEN_ID);
   proofMeta.givens.diagram(ctx, GIVEN_ID);
-  proofMeta.steps.forEach((step) => {
+  proofMeta.steps.forEach((step, i) => {
     texts.push({
       stmt: step.staticText(),
       reason: step.reason.title,
@@ -36,6 +25,8 @@ export const staticLayout = (
     if (step.reason.body !== "" && step.reason.title !== Reasons.Given.title) {
       reasons.push(step.reason);
     }
+    const s = ctx.addFrame(`s${i + 1}`);
+    step.diagram(ctx, s);
   });
   return {
     type: PageType.Static,
@@ -48,9 +39,7 @@ export const staticLayout = (
         pageNum: -1,
         givenText: proofMeta.givens.staticText(),
         provesText: proofMeta.proves.staticText(),
-        questions: shuffleQuestions
-          ? fisherYates(proofMeta.questions)
-          : proofMeta.questions,
+        questions: proofMeta.questions,
         name: proofMeta.name,
       },
     },
@@ -61,7 +50,10 @@ export const interactiveLayout = (
   shuffleQuestions: boolean = true,
   tutorial?: TutorialStep[]
 ): Page => {
-  const ctx = proofMeta.baseContent(true, true);
+  const ctx = proofMeta.baseContent(true, false);
+  const highlightCtx = proofMeta.baseContent(true, false);
+  const additionCtx = proofMeta.baseContent(true, false);
+
   const linkedTexts: ProofTextItem[] = [];
   const reasonMap = new Map<string, Reason>();
 
@@ -76,31 +68,44 @@ export const interactiveLayout = (
   // add given and prove to linkedTexts
   linkedTexts.push({
     k: GIVEN_ID,
-    v: proofMeta.givens.text(ctx),
+    v: proofMeta.givens.text,
     alwaysActive: true,
   });
   linkedTexts.push({
     k: PROVE_ID,
-    v: proofMeta.proves.text(ctx),
+    v: proofMeta.proves.text,
     alwaysActive: true,
   });
 
+  let prevStep = proofMeta.givens;
   proofMeta.steps.forEach((step, i) => {
     let textMeta = {};
     const s = ctx.addFrame(`s${i + 1}`);
-    step.diagram(ctx, s);
+    additionCtx.addFrame(`s${i + 1}`);
+    step.unfocused({ ctx, frame: s });
+
+    step.additions({ ctx: additionCtx, frame: s, mode: SVGModes.Derived });
+
     if (step.dependsOn) {
       const depIds = step.dependsOn.map((i) => `s${i}`);
       ctx.reliesOn(s, depIds);
       textMeta = { dependsOn: new Set(depIds) };
     }
+    // setup highlighting for interactive diagrams
+    if (step.highlight) {
+      highlightCtx.addFrame(`s${i + 1}`);
+      step.highlight(highlightCtx, s);
+    }
+
     reasonMap.set(s, step.reason);
     linkedTexts.push({
       ...textMeta,
       k: s,
-      v: step.text(ctx),
+      v: step.text,
       reason: step.reason.title,
     });
+    step = { ...step, prevStep: prevStep };
+    prevStep = step;
   });
   return {
     type: tutorial ? PageType.Tutorial : PageType.Interactive,
@@ -108,14 +113,13 @@ export const interactiveLayout = (
       layout: "interactive",
       props: {
         ctx: ctx.getCtx(),
-        miniCtx: proofMeta.miniContent.getCtx(),
         reasonMap: reasonMap,
         linkedTexts: linkedTexts,
         pageNum: -1,
-        questions: shuffleQuestions
-          ? fisherYates(proofMeta.questions)
-          : proofMeta.questions,
+        questions: proofMeta.questions,
         name: proofMeta.name,
+        highlightCtx: highlightCtx.getCtx(),
+        additionCtx: additionCtx.getCtx(),
       },
       tutorial,
     },

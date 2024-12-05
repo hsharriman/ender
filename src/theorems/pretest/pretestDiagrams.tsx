@@ -1,20 +1,20 @@
-import { PretestAppPageProps } from "../../components/PretestAppPage";
+import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Content } from "../../core/diagramContent";
 import { Angle } from "../../core/geometry/Angle";
 import { Point } from "../../core/geometry/Point";
 import { Segment } from "../../core/geometry/Segment";
 import { Triangle } from "../../core/geometry/Triangle";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import { EqualRightAngles } from "../../core/templates/EqualRightAngles";
-import { EqualSegments } from "../../core/templates/EqualSegments";
-import { ParallelLines } from "../../core/templates/ParallelLines";
-import { RightAngle } from "../../core/templates/RightAngle";
-import { SVGModes, Vector } from "../../core/types/types";
+import { EqualAngles } from "../../core/reasons/EqualAngles";
+import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
+import { EqualSegments } from "../../core/reasons/EqualSegments";
+import { ParallelLines } from "../../core/reasons/ParallelLines";
+import { RightAngle } from "../../core/reasons/RightAngle";
 import {
   anglePretestQuestions,
   segmentPretestQuestions,
   trianglePretestQuestions,
-} from "../../questions/pretestQuestions";
+} from "../../core/testinfra/questions/pretestQuestions";
+import { SVGModes, Vector } from "../../core/types/types";
 
 // TODO for some reason the bundling order doesn't work if this method isn't defined within this file
 /* Helper methods related to randomizing the proof order */
@@ -37,17 +37,17 @@ const bleft: Vector = [-18, -18];
 const b: Vector = [0, -18];
 export const segmentContent = () => {
   const coords: [string, Vector, Vector][] = [
-    ["A", [0.5, 1], b],
-    ["B", [1, 2.5], b],
-    ["C", [1.5, 4], b],
-    ["D", [3.5, 2.5], b],
-    ["E", [6.5, 1.5], b],
-    ["F", [3, 4], bright],
-    ["G", [7.5, 4], bleft],
-    ["H", [5, 0], bright],
-    ["J", [8, 0], bleft],
-    ["M", [0, -1], b],
-    ["N", [3, -0], b],
+    ["A", [2.5, 6], b],
+    ["B", [3, 7.5], b],
+    ["C", [3.5, 9], b],
+    ["D", [5.5, 7.5], b],
+    ["E", [8.5, 6.5], b],
+    ["F", [5, 9], bright],
+    ["G", [9.5, 9], bleft],
+    ["H", [7, 5], bright],
+    ["J", [10, 5], bleft],
+    ["M", [2, 4], b],
+    ["N", [5, 5], b],
   ];
   let ctx = new Content();
   const [A, B, C, D, E, F, G, H, J, M, N] = coords.map((c) =>
@@ -86,21 +86,21 @@ const angbright: Vector = [5, -15];
 const angb: Vector = [0, -15];
 export const angleContent = () => {
   const coords: [string, Vector, Vector][] = [
-    ["A", [1, 4], [5, 5]],
-    ["B", [0, 3], angbleft],
-    ["C", [1.5, 3], angb],
-    ["D", [3, 3], angb],
-    ["E", [4.5, 3], angbright],
-    ["F", [5, 4], [5, 5]],
-    ["G", [7, 4], [5, 5]],
-    ["H", [8, 3], angbright],
-    ["J", [6.5, 3], angb],
-    ["K", [0.5, 1.5], [5, 5]],
-    ["L", [1, 0.5], bleft],
-    ["M", [2.5, 0.5], angb],
-    ["N", [5.5, 1.5], [0, 5]],
-    ["Q", [5.5, 0.5], angbleft],
-    ["P", [6.5, 0.5], angbright],
+    ["A", [2.5, 9], [5, 5]],
+    ["B", [1.5, 8], angbleft],
+    ["C", [3, 8], angb],
+    ["D", [5, 8], angb],
+    ["E", [6.5, 8], angbright],
+    ["F", [7, 9], [5, 5]],
+    ["G", [9, 9], [5, 5]],
+    ["H", [10, 8], angbright],
+    ["J", [8.5, 8], angb],
+    ["K", [2.5, 5.5], [5, 5]],
+    ["L", [3, 4.5], bleft],
+    ["M", [4.5, 4.5], angb],
+    ["N", [7.5, 5.5], [0, 5]],
+    ["Q", [7.5, 4.5], angbleft],
+    ["P", [8.5, 4.5], angbright],
   ];
   let ctx = new Content();
   const [A, B, C, D, E, F, G, H, J, K, L, M, N, Q, P] = coords.map((c) =>
@@ -146,12 +146,12 @@ export const angleContent = () => {
 
 const baseTriangles = () => {
   const coords: [string, Vector, Vector][] = [
-    ["A", [0, -0.5], b],
-    ["B", [2.5, 2.5], [0, 5]],
-    ["C", [4, -0.5], bleft],
-    ["D", [3.5, 1.5], b],
-    ["E", [6.5, 4.5], [0, 5]],
-    ["F", [7.5, 1.5], bleft],
+    ["A", [1.5, 3.5], b],
+    ["B", [4, 6.5], [0, 5]],
+    ["C", [5.5, 3.5], bleft],
+    ["D", [5.5, 6.5], b],
+    ["E", [8.5, 9.5], [0, 5]],
+    ["F", [9.5, 6.5], bleft],
   ];
   let ctx = new Content();
   const [A, B, C, D, E, F] = coords.map((c) =>
@@ -181,12 +181,12 @@ const baseTriangles = () => {
 
 export const hl = () => {
   const coords: [string, Vector, Vector][] = [
-    ["A", [1, -1], b],
-    ["B", [1, 1.5], [0, 5]],
-    ["C", [4, -1], bleft],
-    ["D", [4.5, 1.5], b],
-    ["E", [7.5, 4], [0, 5]],
-    ["F", [7.5, 1.5], bleft],
+    ["A", [2, 3.5], b],
+    ["B", [2, 6], [0, 5]],
+    ["C", [5, 3.5], bleft],
+    ["D", [5.5, 6], b],
+    ["E", [8.5, 8.5], [0, 5]],
+    ["F", [8.5, 6], bleft],
   ];
   let ctx = new Content();
   const [A, B, C, D, E, F] = coords.map((c) =>

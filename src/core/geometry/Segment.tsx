@@ -1,4 +1,4 @@
-import { ModeCSS } from "../svg/SVGStyles";
+import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LSegment, Obj, SVGModes, TickType } from "../types/types";
 import { permutator } from "../utils";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";

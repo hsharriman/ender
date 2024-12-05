@@ -4,7 +4,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import { Examples } from "./routes/Examples";
 import { Home } from "./routes/Home";
-import { Procedure } from "./routes/Procedure";
+import { ProcedureA } from "./routes/ProcedureA";
+import { ProcedureB } from "./routes/ProcedureB";
 
 const router = createBrowserRouter([
   {
@@ -16,8 +17,12 @@ const router = createBrowserRouter([
     element: <Examples />,
   },
   {
-    path: "/ender/procedure",
-    element: <Procedure />,
+    path: "/ender/procedureA",
+    element: <ProcedureA />,
+  },
+  {
+    path: "/ender/procedureB",
+    element: <ProcedureB />,
   },
 ]);
 

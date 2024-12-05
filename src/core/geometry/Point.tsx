@@ -1,16 +1,14 @@
-import { ModeCSS } from "../svg/SVGStyles";
+import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LPoint, Obj, Vector } from "../types/types";
-import { BaseGeometryObject } from "./BaseGeometryObject";
+import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 
 export type PointProps = {
   pt: [number, number];
   label: string;
   showLabel?: boolean;
   offset: Vector;
-  parentFrame?: string;
-  hoverable: boolean;
   showPoint?: boolean;
-};
+} & BaseGeometryProps;
 
 export class Point extends BaseGeometryObject {
   // 1 point and label
@@ -20,7 +18,7 @@ export class Point extends BaseGeometryObject {
   readonly showPoint: boolean;
   public offset: Vector = [3, 3]; // TODO better label placement
   constructor(props: PointProps) {
-    super(Obj.Point, { hoverable: props.hoverable });
+    super(Obj.Point, props);
     this.pt = props.pt;
     this.label = props.label;
     this.names = [this.label];

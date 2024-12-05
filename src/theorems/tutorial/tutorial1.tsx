@@ -1,26 +1,21 @@
 import { Content } from "../../core/diagramContent";
+import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { Point } from "../../core/geometry/Point";
 import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
-import { AspectRatio } from "../../core/svg/svgTypes";
-import { EqualAngles } from "../../core/templates/EqualAngles";
-import {
-  EqualSegmentStep,
-  EqualSegments,
-} from "../../core/templates/EqualSegments";
-import { EqualTriangles } from "../../core/templates/EqualTriangles";
-import { Reflexive, ReflexiveStep } from "../../core/templates/Reflexive";
-import { SAS, SASProps } from "../../core/templates/SAS";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
+import { CongruentTriangles } from "../../core/reasons/CongruentTriangles";
+import { EqualAngles } from "../../core/reasons/EqualAngles";
+import { EqualSegments } from "../../core/reasons/EqualSegments";
+import { EqualTriangles } from "../../core/reasons/EqualTriangles";
+import { Reflexive } from "../../core/reasons/Reflexive";
+import { SAS, SASProps } from "../../core/reasons/SAS";
+import { SSS } from "../../core/reasons/SSS";
 import {
   tutorial1Questions,
   tutorial2Questions,
-} from "../../questions/funcTypeQuestions";
+} from "../../core/testinfra/questions/testQuestions";
+import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
@@ -63,15 +58,6 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  text: (ctx: Content) => {
-    return (
-      <span>
-        {EqualSegments.text(ctx, ["AB", "AD"])}
-        {comma}
-        {EqualAngles.text(ctx, ["BAC", "DAC"])}
-      </span>
-    );
-  },
   staticText: () => {
     return (
       <span>
@@ -81,39 +67,56 @@ const givens: StepMeta = makeStepMeta({
       </span>
     );
   },
-
+  text: (isActive: boolean) => givens.staticText(),
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("ABC").mode(props.frame, props.mode);
     props.ctx.getTriangle("ADC").mode(props.frame, props.mode);
-  },
-  diagram: (ctx: Content, frame: string) => {
-    givens.additions({ ctx, frame, mode: SVGModes.Default });
+    EqualSegments.additions(props, ["AB", "AD"], 1);
+    EqualAngles.additions(props, ["BAC", "DAC"]);
   },
 });
 
 const proves: StepMeta = makeStepMeta({
-  additions: (props: StepFocusProps) => {
-    givens.additions(props);
-  },
-  text: (ctx: Content) => EqualTriangles.text(ctx, ["ABC", "ADC"]),
+  additions: (props: StepFocusProps) =>
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["ABC", "ADC"],
+      SVGModes.Derived
+    ),
+  prevStep: givens,
   staticText: () => EqualTriangles.staticText(["ABC", "ADC"]),
+  text: (isActive: boolean) => proves.staticText(),
 });
 
-const step1: StepMeta = EqualSegmentStep(["AB", "AD"], Reasons.Given, givens);
+const step1: StepMeta = makeStepMeta({
+  reason: Reasons.Given,
+  prevStep: givens,
+  additions: (props: StepFocusProps) => {
+    EqualSegments.additions(props, ["AB", "AD"], 1);
+  },
+  text: EqualSegments.text(["AB", "AD"]),
+  staticText: () => EqualSegments.staticText(["AB", "AD"]),
+});
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
-  unfocused: (props: StepUnfocusProps) => {
-    step1.unfocused(props);
-    step1.additions({ ...props, mode: SVGModes.Unfocused });
-  },
-  text: (ctx: Content) => EqualAngles.text(ctx, ["BAC", "DAC"]),
+  prevStep: step1,
+  text: EqualAngles.text(["BAC", "DAC"]),
   staticText: () => EqualAngles.staticText(["BAC", "DAC"]),
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["BAC", "DAC"]),
 });
 
-const step3: StepMeta = ReflexiveStep("AC", 2, step2);
+const step3 = makeStepMeta({
+  reason: Reasons.Reflexive,
+  prevStep: step2,
+  additions: (props: StepFocusProps) => {
+    Reflexive.additions(props, "AC", 2);
+  },
+  text: Reflexive.text("AC"),
+  staticText: () => Reflexive.staticText("AC"),
+});
 
 const step4SASProps: SASProps = {
   seg1s: { s: ["AB", "AD"], ticks: 1 },
@@ -123,67 +126,42 @@ const step4SASProps: SASProps = {
 };
 const step4: StepMeta = makeStepMeta({
   reason: Reasons.SAS,
-  dependsOn: [1, 2, 3],
-  text: (ctx: Content) => EqualTriangles.text(ctx, step4SASProps.triangles),
+  dependsOn: ["1", "2", "3"],
+  prevStep: step3,
+  text: EqualTriangles.text(step4SASProps.triangles),
   staticText: () => EqualTriangles.staticText(step4SASProps.triangles),
-  additions: (props: StepFocusProps) => SAS.additions(props, step4SASProps),
+  additions: (props: StepFocusProps) =>
+    CongruentTriangles.congruentLabel(
+      props.ctx,
+      props.frame,
+      ["ABC", "ADC"],
+      props.mode
+    ),
+  highlight: (ctx: Content, frame: string) => {
+    SAS.highlight(ctx, frame, step4SASProps);
+  },
 });
 
-const miniContent = () => {
-  let ctx = baseContent(false, false);
-
-  // STEP 3 - REFLEXIVE PROPERTY
-  const s3 = ctx.addFrame("s3");
-  Reflexive.additions({ ctx, frame: s3, mode: SVGModes.Purple }, "AC");
-
-  // STEP 4 - SAS
-  const s4 = ctx.addFrame("s4");
-  SAS.additions(
-    { ctx, frame: s4, mode: SVGModes.Purple },
-    step4SASProps,
-    SVGModes.Blue
-  );
-
-  return ctx;
-};
-
 // TUTORIAL 2
-const step4t2 = {
+const step4t2 = makeStepMeta({
   ...step4,
+  dependsOn: ["1", "2", "3?"],
+  prevStep: step3,
+  highlight: (ctx: Content, frame: string) => {
+    SSS.highlight(ctx, frame, {
+      s1s: ["AB", "AD"],
+      s2s: ["AC", "AC"],
+      s3s: ["BC", "CD"],
+    });
+    EqualSegments.highlight(ctx, frame, ["BC", "CD"], SVGModes.Inconsistent, 3);
+  },
   reason: Reasons.SSS,
-};
-
-const miniContent2 = () => {
-  let ctx = baseContent(false, false);
-
-  // STEP 3 - REFLEXIVE PROPERTY
-  const s3 = ctx.addFrame("s3");
-  Reflexive.additions({ ctx, frame: s3, mode: SVGModes.Purple }, "AC");
-
-  // STEP 4 - SSS
-  const s4 = ctx.addFrame("s4");
-  EqualSegments.additions(
-    { ctx, frame: s4, mode: SVGModes.Purple },
-    ["AB", "AD"],
-    1,
-    SVGModes.Blue
-  );
-  Reflexive.additions({ ctx, frame: s4, mode: SVGModes.Blue }, "AC", 2);
-  EqualSegments.additions(
-    { ctx, frame: s4, mode: SVGModes.Purple },
-    ["BC", "CD"],
-    3,
-    SVGModes.Blue
-  );
-
-  return ctx;
-};
+});
 
 export const TutorialProof1: LayoutProps = {
   name: "TutorialProof1",
   // TODO: Replace questions
   questions: tutorial1Questions,
-  miniContent: miniContent(),
   baseContent,
   givens,
   proves,
@@ -194,7 +172,6 @@ export const TutorialProof1: LayoutProps = {
 export const TutorialProof2: LayoutProps = {
   name: "TutorialProof2",
   questions: tutorial2Questions,
-  miniContent: miniContent2(),
   baseContent,
   givens,
   proves,

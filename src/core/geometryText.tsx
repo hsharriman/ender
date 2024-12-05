@@ -56,6 +56,7 @@ export const resizedStrs = {
               fontSize: "2rem",
               verticalAlign: "baseline",
               lineHeight: "24px",
+              flex: "inline",
             }
           : {}
       }

@@ -1,9 +1,9 @@
+import { AspectRatio } from "./diagramSvg/svgTypes";
 import { Angle } from "./geometry/Angle";
 import { Point } from "./geometry/Point";
 import { Quadrilateral } from "./geometry/Quadrilateral";
 import { Segment } from "./geometry/Segment";
 import { Triangle } from "./geometry/Triangle";
-import { AspectRatio } from "./svg/svgTypes";
 import { Obj } from "./types/types";
 import { getId } from "./utils";
 
