@@ -300,7 +300,9 @@ export class ProofRow extends React.Component<ProofRowProps> {
                 >
                   {num}
                   <div className="shrink">
-                    {this.props.item.v(this.props.isActive)}
+                    {this.props.item.v(
+                      this.props.isActive || this.props.depends
+                    )}
                   </div>
                 </div>
                 <div
@@ -330,8 +332,10 @@ const highlightBar = (active: boolean, h: string) => {
   return (
     <div
       id="active-bar"
-      className={`w-4 ${h} transition-all ease-in-out duration-300 ${
-        active ? "border-l-[10px] border-double border-blue-500" : ""
+      className={`w-[10px] ${h} transition-all ease-in-out duration-300 ${
+        active
+          ? "border-l-[10px] border-double border-blue-500"
+          : "border-l-[10px] border-double border-transparent"
       }`}
     ></div>
   );

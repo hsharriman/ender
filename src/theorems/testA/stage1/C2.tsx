@@ -18,7 +18,11 @@ import {
   S1C2questions,
   exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
-import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepProps,
+} from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
@@ -74,9 +78,9 @@ const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
     return (
       <span>
-        {RightAngle.staticText("ADB")}
+        {RightAngle.text("ADB")(true)}
         {comma}
-        {segmentStr("BD")}
+        {segmentStr("BD", true)}
         {" bisects "}
         {angleStr("ABC")}
       </span>
@@ -88,18 +92,6 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("CBD").mode(props.frame, props.mode);
     RightAngle.additions(props, "ADB");
     EqualAngles.additions(props, ["ABD", "CBD"]);
-  },
-
-  staticText: () => {
-    return (
-      <span>
-        {RightAngle.staticText("ADB")}
-        {comma}
-        {segmentStr("BD")}
-        {" bisects "}
-        {angleStr("ABC")}
-      </span>
-    );
   },
 });
 
@@ -113,8 +105,7 @@ const proves: StepMeta = makeStepMeta({
       1
     );
   },
-  text: Midpoint.text("D", "AC"),
-  staticText: () => Midpoint.staticText("D", "AC"),
+  text: (active: boolean) => Midpoint.text("D", "AC")(true),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -124,7 +115,6 @@ const step1: StepMeta = makeStepMeta({
     RightAngle.additions(props, "ADB");
   },
   text: RightAngle.text("ADB"),
-  staticText: () => RightAngle.staticText("ADB"),
 });
 
 const step2: StepMeta = makeStepMeta({
@@ -135,13 +125,12 @@ const step2: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["ABD", "CBD"]);
   },
   text: (isActive: boolean) => {
-    return step2.staticText();
+    return (
+      <span>
+        {segmentStr("BD", isActive)} bisects {angleStr("ABC")}
+      </span>
+    );
   },
-  staticText: () => (
-    <span>
-      {segmentStr("BD")} bisects {angleStr("ABC")}
-    </span>
-  ),
 });
 
 const step22: StepMeta = makeStepMeta({
@@ -151,9 +140,8 @@ const step22: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["ABD", "DBC"]),
   text: EqualAngles.text(["ABD", "DBC"]),
-  staticText: () => EqualAngles.staticText(["ABD", "DBC"]),
-  highlight: (ctx: Content, frame: string) =>
-    ctx.getSegment("BD").mode(frame, SVGModes.ReliesOn),
+  highlight: (props: StepProps) =>
+    props.ctx.getSegment("BD").mode(props.frame, SVGModes.ReliesOn),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -163,7 +151,6 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "BD", ["AD", "DC"]),
   text: Perpendicular.text("AC", "BD"),
-  staticText: () => Perpendicular.staticText("BD", "AC"),
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -173,9 +160,8 @@ const step4: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
   text: EqualRightAngles.text(["ADB", "BDC"]),
-  staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
-  highlight: (ctx: Content, frame: string) => {
-    Perpendicular.highlight(ctx, frame, "BD", ["AD", "DC"], SVGModes.ReliesOn);
+  highlight: (props: StepProps) => {
+    Perpendicular.highlight(props, "BD", ["AD", "DC"], SVGModes.ReliesOn);
   },
 });
 
@@ -184,7 +170,6 @@ const step5: StepMeta = makeStepMeta({
   prevStep: step4,
   additions: (props: StepFocusProps) => Reflexive.additions(props, "BD"),
   text: Reflexive.text("BD"),
-  staticText: () => Reflexive.staticText("BD"),
 });
 
 const step5ASAProps: ASAProps = {
@@ -198,17 +183,11 @@ const step6: StepMeta = makeStepMeta({
   dependsOn: ["3", "5", "6"],
   prevStep: step5,
   additions: (props: StepFocusProps) => {
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["ADB", "BDC"],
-      props.mode
-    );
+    CongruentTriangles.congruentLabel(props, ["ADB", "BDC"], props.mode);
   },
   text: EqualTriangles.text(["ABD", "CBD"]),
-  staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
-  highlight: (ctx: Content, frame: string) => {
-    ASA.highlight(ctx, frame, step5ASAProps, SVGModes.ReliesOn);
+  highlight: (props: StepProps) => {
+    ASA.highlight(props, step5ASAProps, SVGModes.ReliesOn);
   },
 });
 
@@ -219,14 +198,8 @@ const step7: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AD", "DC"], 2),
   text: EqualSegments.text(["AD", "DC"]),
-  staticText: () => EqualSegments.staticText(["AD", "DC"]),
-  highlight: (ctx: Content, frame: string) => {
-    CongruentTriangles.congruentLabel(
-      ctx,
-      frame,
-      ["ADB", "BDC"],
-      SVGModes.ReliesOn
-    );
+  highlight: (props: StepProps) => {
+    CongruentTriangles.congruentLabel(props, ["ADB", "BDC"], SVGModes.ReliesOn);
   },
 });
 
@@ -238,10 +211,9 @@ const step8: StepMeta = makeStepMeta({
     props.ctx.getPoint("D").mode(props.frame, SVGModes.Derived);
   },
   text: Midpoint.text("D", "AC"),
-  staticText: () => Midpoint.staticText("D", "AC"),
-  highlight: (ctx: Content, frame: string) => {
-    EqualSegments.highlight(ctx, frame, ["AD", "DC"], SVGModes.ReliesOn, 2);
-    ctx.getPoint("D").mode(frame, SVGModes.Derived);
+  highlight: (props: StepProps) => {
+    EqualSegments.highlight(props, ["AD", "DC"], SVGModes.ReliesOn, 2);
+    props.ctx.getPoint("D").mode(props.frame, SVGModes.Derived);
   },
 });
 

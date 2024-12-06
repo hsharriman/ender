@@ -14,7 +14,11 @@ import {
   tutorial1Questions,
   tutorial2Questions,
 } from "../../core/testinfra/questions/testQuestions";
-import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepProps,
+} from "../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
@@ -63,16 +67,15 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  staticText: () => {
+  text: (isActive: boolean) => {
     return (
       <span>
-        {EqualSegments.staticText(["AB", "AD"])}
+        {EqualSegments.text(["AB", "AD"])(true)}
         {comma}
-        {EqualAngles.staticText(["BAC", "DAC"])}
+        {EqualAngles.text(["BAC", "DAC"])(true)}
       </span>
     );
   },
-  text: (isActive: boolean) => givens.staticText(),
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("ABC").mode(props.frame, props.mode);
     props.ctx.getTriangle("ADC").mode(props.frame, props.mode);
@@ -83,15 +86,9 @@ const givens: StepMeta = makeStepMeta({
 
 const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["ABC", "ADC"],
-      SVGModes.Derived
-    ),
+    CongruentTriangles.congruentLabel(props, ["ABC", "ADC"], SVGModes.Derived),
   prevStep: givens,
-  staticText: () => EqualTriangles.staticText(["ABC", "ADC"]),
-  text: (isActive: boolean) => proves.staticText(),
+  text: (active: boolean) => EqualTriangles.text(["ABC", "ADC"])(true),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -101,14 +98,12 @@ const step1: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["AB", "AD"], 1);
   },
   text: EqualSegments.text(["AB", "AD"]),
-  staticText: () => EqualSegments.staticText(["AB", "AD"]),
 });
 
 const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
   prevStep: step1,
   text: EqualAngles.text(["BAC", "DAC"]),
-  staticText: () => EqualAngles.staticText(["BAC", "DAC"]),
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["BAC", "DAC"]),
 });
@@ -120,7 +115,6 @@ const step3 = makeStepMeta({
     Reflexive.additions(props, "AC", 2);
   },
   text: Reflexive.text("AC"),
-  staticText: () => Reflexive.staticText("AC"),
 });
 
 const step4SASProps: SASProps = {
@@ -134,16 +128,10 @@ const step4: StepMeta = makeStepMeta({
   dependsOn: ["1", "2", "3"],
   prevStep: step3,
   text: EqualTriangles.text(step4SASProps.triangles),
-  staticText: () => EqualTriangles.staticText(step4SASProps.triangles),
   additions: (props: StepFocusProps) =>
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["ABC", "ADC"],
-      props.mode
-    ),
-  highlight: (ctx: Content, frame: string) => {
-    SAS.highlight(ctx, frame, step4SASProps);
+    CongruentTriangles.congruentLabel(props, ["ABC", "ADC"], props.mode),
+  highlight: (props: StepProps) => {
+    SAS.highlight(props, step4SASProps);
   },
 });
 
@@ -152,13 +140,13 @@ const step4t2 = makeStepMeta({
   ...step4,
   dependsOn: ["1", "2", "3?"],
   prevStep: step3,
-  highlight: (ctx: Content, frame: string) => {
-    SSS.highlight(ctx, frame, {
+  highlight: (props: StepProps) => {
+    SSS.highlight(props, {
       s1s: ["AB", "AD"],
       s2s: ["AC", "AC"],
       s3s: ["BC", "CD"],
     });
-    EqualSegments.highlight(ctx, frame, ["BC", "CD"], SVGModes.Inconsistent, 3);
+    EqualSegments.highlight(props, ["BC", "CD"], SVGModes.Inconsistent, 3);
   },
   reason: Reasons.SSS,
 });

@@ -1,6 +1,7 @@
 import { Content } from "../diagramContent";
 import {
   StepFocusProps,
+  StepProps,
   TickedAngles,
   TickedSegments,
 } from "../types/stepTypes";
@@ -18,7 +19,7 @@ export interface ASAProps {
 }
 export class ASA {
   static text = (ctx: Content, triangles: [string, string]) => {
-    return EqualTriangles.staticText(triangles);
+    return EqualTriangles.text(triangles);
   };
 
   static additions = (props: StepFocusProps, labels: ASAProps) => {
@@ -35,23 +36,16 @@ export class ASA {
     });
   };
   static highlight = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     labels: ASAProps,
     mode: SVGModes = SVGModes.ReliesOn
   ) => {
-    EqualSegments.highlight(
-      ctx,
-      frame,
-      labels.segs.s,
-      mode,
-      labels.segs.ticks || 1
-    );
+    EqualSegments.highlight(props, labels.segs.s, mode, labels.segs.ticks || 1);
     [labels.a1s, labels.a2s].forEach((a, i) => {
       if (a.type === Obj.RightTick) {
-        EqualRightAngles.highlight(ctx, frame, a.a, mode);
+        EqualRightAngles.highlight(props, a.a, mode);
       } else {
-        EqualAngles.highlight(ctx, frame, a.a, mode, a.ticks || 1);
+        EqualAngles.highlight(props, a.a, mode, a.ticks || 1);
       }
     });
   };

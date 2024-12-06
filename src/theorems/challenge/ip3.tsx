@@ -94,17 +94,6 @@ const givens: StepMeta = makeStepMeta({
   diagram: (ctx: Content, frame: string) => {
     givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
-  staticText: () => {
-    return (
-      <span>
-        {RightAngle.staticText("AEB")}
-        {comma}
-        {Midpoint.staticText("AC", "E")}
-        {comma}
-        {EqualSegments.staticText(["DE", "EG"])}
-      </span>
-    );
-  },
 });
 
 const proves: StepMeta = makeStepMeta({
@@ -113,7 +102,6 @@ const proves: StepMeta = makeStepMeta({
     EqualAngles.additions({ ...props, mode: SVGModes.Derived }, ["DCE", "GCE"]);
   },
   text: EqualAngles.text(["DCE", "GCE"]),
-  staticText: () => EqualAngles.staticText(["DCE", "GCE"]),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -123,7 +111,6 @@ const step1: StepMeta = makeStepMeta({
     RightAngle.additions(props, "AEB");
   },
   text: RightAngle.text("AEB"),
-  staticText: () => RightAngle.staticText("AEB"),
 });
 
 const step2: StepMeta = makeStepMeta({
@@ -133,7 +120,6 @@ const step2: StepMeta = makeStepMeta({
     Midpoint.additions(props, "E", ["AE", "EC"]);
   },
   text: Midpoint.text("E", "AC"),
-  staticText: () => Midpoint.staticText("AC", "E"),
 });
 
 const step3: StepMeta = EqualSegmentStep(["DE", "EG"], Reasons.Given, step2, 2);
@@ -145,7 +131,6 @@ const step4: StepMeta = makeStepMeta({
     Reflexive.additions(props, "BE", 3);
   },
   text: Reflexive.text("BE"),
-  staticText: () => Reflexive.staticText("BE"),
 });
 
 const step5: StepMeta = makeStepMeta({
@@ -155,7 +140,6 @@ const step5: StepMeta = makeStepMeta({
     Reflexive.additions(props, "CE", 1);
   },
   text: Reflexive.text("CE"),
-  staticText: () => Reflexive.staticText("CE"),
 });
 
 const step6: StepMeta = makeStepMeta({
@@ -165,7 +149,6 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["AEB", "CEB"]),
   text: EqualRightAngles.text(["AEB", "CEB"]),
-  staticText: () => EqualRightAngles.staticText(["AEB", "CEB"]),
 });
 
 const s7SASProps: SASProps = {
@@ -180,7 +163,6 @@ const step7: StepMeta = makeStepMeta({
   prevStep: step6,
   additions: (props: StepFocusProps) => SAS.additions(props, s7SASProps),
   text: EqualTriangles.text(s7SASProps.triangles),
-  staticText: () => EqualTriangles.staticText(s7SASProps.triangles),
 });
 
 const step8: StepMeta = makeStepMeta({
@@ -190,9 +172,6 @@ const step8: StepMeta = makeStepMeta({
     <span style={{ color: "black", fontStyle: "italic" }}>
       Which step can be applied here?
     </span>
-  ),
-  staticText: () => (
-    <span style={{ fontStyle: "italic" }}>Which step can be applied here?</span>
   ),
 });
 

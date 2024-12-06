@@ -1,6 +1,5 @@
-import { Content } from "../diagramContent";
 import { resizedStrs, segmentStr } from "../geometryText";
-import { StepFocusProps } from "../types/stepTypes";
+import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 
 export class ParallelLines {
@@ -21,24 +20,20 @@ export class ParallelLines {
   static text =
     ([s1, s2]: [string, string]) =>
     (isActive: boolean) => {
-      return this.staticText([s1, s2]);
+      return (
+        <span>
+          {segmentStr(s1, isActive)}
+          {resizedStrs.parallel}
+          {segmentStr(s2, isActive)}
+        </span>
+      );
     };
-
-  static staticText = (s: [string, string]) => {
-    return (
-      <span>
-        {segmentStr(s[0])}
-        {resizedStrs.parallel}
-        {segmentStr(s[1])}
-      </span>
-    );
-  };
   static highlight = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     [s1, s2]: [string, string],
     mode: SVGModes
   ) => {
+    const { ctx, frame } = props;
     ctx.getSegment(s1).addTick(frame, Obj.ParallelTick).mode(frame, mode);
     ctx.getSegment(s2).addTick(frame, Obj.ParallelTick).mode(frame, mode);
   };

@@ -12,7 +12,11 @@ import {
   IN1questions,
   exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
-import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepProps,
+} from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
@@ -62,17 +66,13 @@ const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
-    const ADeqBC = EqualSegments.text(["AD", "BC"])(isActive);
-    const ABeqDC = EqualSegments.text(["AB", "DC"])(isActive);
-    const ABDeqCDB = EqualAngles.text(["ABD", "CDB"])(isActive);
-
     return (
       <span>
-        {ADeqBC}
+        {EqualSegments.text(["AD", "BC"])(true)}
         {comma}
-        {ABeqDC}
+        {EqualSegments.text(["AB", "DC"])(true)}
         {comma}
-        {ABDeqCDB}
+        {EqualAngles.text(["ABD", "CDB"])(true)}
       </span>
     );
   },
@@ -84,18 +84,6 @@ const givens: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["AB", "DC"], 2);
     EqualAngles.additions(props, ["ABD", "CDB"]);
   },
-
-  staticText: () => {
-    return (
-      <span>
-        {EqualSegments.staticText(["AD", "BC"])}
-        {comma}
-        {EqualSegments.staticText(["AB", "DC"])}
-        {comma}
-        {EqualAngles.staticText(["ABD", "CDB"])}
-      </span>
-    );
-  },
 });
 
 const proves: StepMeta = makeStepMeta({
@@ -103,8 +91,7 @@ const proves: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     EqualAngles.additions({ ...props, mode: SVGModes.Derived }, ["BAD", "DCB"]);
   },
-  text: EqualAngles.text(["BAD", "DCB"]),
-  staticText: () => EqualAngles.staticText(["BAD", "DCB"]),
+  text: (active: boolean) => EqualAngles.text(["BAD", "DCB"])(true),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -114,7 +101,6 @@ const step1: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["AD", "BC"]);
   },
   text: EqualSegments.text(["AD", "BC"]),
-  staticText: () => EqualSegments.staticText(["AD", "BC"]),
 });
 
 const step2: StepMeta = makeStepMeta({
@@ -124,7 +110,6 @@ const step2: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["AB", "DC"], 2);
   },
   text: EqualSegments.text(["AB", "DC"]),
-  staticText: () => EqualSegments.staticText(["AB", "DC"]),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -134,7 +119,6 @@ const step3: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["ABD", "CDB"]);
   },
   text: EqualAngles.text(["ABD", "CDB"]),
-  staticText: () => EqualAngles.staticText(["ABD", "CDB"]),
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -143,22 +127,16 @@ const step4: StepMeta = makeStepMeta({
   prevStep: step3,
   text: EqualTriangles.text(["ABD", "CDB"]),
   additions: (props: StepFocusProps) => {
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["ADB", "CBD"],
-      props.mode
-    );
+    CongruentTriangles.congruentLabel(props, ["ADB", "CBD"], props.mode);
   },
-  staticText: () => EqualTriangles.staticText(["ABD", "CDB"]),
-  highlight: (ctx: Content, frame: string) => {
-    SAS.highlight(ctx, frame, {
+  highlight: (props: StepProps) => {
+    SAS.highlight(props, {
       seg1s: { s: ["AD", "BC"] },
       seg2s: { s: ["AB", "DC"], ticks: 2 },
       angles: { a: ["BAD", "BCD"] },
       triangles: ["ABD", "CDB"],
     });
-    EqualAngles.highlight(ctx, frame, ["BAD", "BCD"], SVGModes.Inconsistent, 2);
+    EqualAngles.highlight(props, ["BAD", "BCD"], SVGModes.Inconsistent, 2);
   },
 });
 
@@ -170,14 +148,8 @@ const step5: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["BAD", "DCB"], 2);
   },
   text: EqualAngles.text(["BAD", "DCB"]),
-  staticText: () => EqualAngles.staticText(["BAD", "DCB"]),
-  highlight: (ctx: Content, frame: string) => {
-    CongruentTriangles.congruentLabel(
-      ctx,
-      frame,
-      ["ADB", "CBD"],
-      SVGModes.ReliesOn
-    );
+  highlight: (props: StepProps) => {
+    CongruentTriangles.congruentLabel(props, ["ADB", "CBD"], SVGModes.ReliesOn);
   },
 });
 

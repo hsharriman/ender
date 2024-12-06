@@ -14,7 +14,11 @@ import {
   IN3questions,
   exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
-import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepProps,
+} from "../../../core/types/stepTypes";
 import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
@@ -64,7 +68,15 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
 
 const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
-    return givens.staticText();
+    return (
+      <span>
+        {"KLMN is a quadrilateral"}
+        {comma}
+        {EqualSegments.text(["LM", "NK"])(true)}
+        {comma}
+        {RightAngle.text("KLM")(true)}
+      </span>
+    );
   },
 
   additions: (props: StepFocusProps) => {
@@ -73,32 +85,14 @@ const givens: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["LM", "NK"]);
     RightAngle.additions(props, "KLM");
   },
-
-  staticText: () => {
-    return (
-      <span>
-        {"KLMN is a quadrilateral"}
-        {comma}
-        {EqualSegments.staticText(["LM", "NK"])}
-        {comma}
-        {RightAngle.staticText("KLM")}
-      </span>
-    );
-  },
 });
 
 const proves: StepMeta = makeStepMeta({
   prevStep: givens,
   additions: (props: StepFocusProps) => {
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["KLM", "MNK"],
-      SVGModes.Derived
-    );
+    CongruentTriangles.congruentLabel(props, ["KLM", "MNK"], SVGModes.Derived);
   },
-  text: EqualTriangles.text(["KLM", "MNK"]),
-  staticText: () => EqualTriangles.staticText(["KLM", "MNK"]),
+  text: (active: boolean) => EqualTriangles.text(["KLM", "MNK"])(true),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -110,9 +104,8 @@ const step1: StepMeta = makeStepMeta({
     );
   },
   text: (isActive: boolean) => {
-    return step1.staticText();
+    return <span>{"KLMN is a quadrilateral"}</span>;
   },
-  staticText: () => <span>{"KLMN is a quadrilateral"}</span>,
 });
 
 const step2: StepMeta = makeStepMeta({
@@ -122,7 +115,6 @@ const step2: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["LM", "NK"]);
   },
   text: EqualSegments.text(["LM", "NK"]),
-  staticText: () => EqualSegments.staticText(["LM", "NK"]),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -132,7 +124,6 @@ const step3: StepMeta = makeStepMeta({
     RightAngle.additions(props, "KLM");
   },
   text: RightAngle.text("KLM"),
-  staticText: () => RightAngle.staticText("KLM"),
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -143,20 +134,13 @@ const step4: StepMeta = makeStepMeta({
     EqualRightAngles.additions(props, ["KLM", "MNK"]);
   },
   text: EqualRightAngles.text(["KLM", "MNK"]),
-  staticText: () => {
-    return EqualRightAngles.staticText(["KLM", "MNK"]);
-  },
-  highlight: (ctx: Content, frame: string) => {
+  highlight: (props: StepProps) => {
+    const { ctx, frame } = props;
     ctx.getSegment("LM").mode(frame, SVGModes.ReliesOn);
     ctx.getSegment("NK").mode(frame, SVGModes.ReliesOn);
     ctx.getSegment("LK").mode(frame, SVGModes.ReliesOn);
     ctx.getSegment("MN").mode(frame, SVGModes.ReliesOn);
-    EqualRightAngles.highlight(
-      ctx,
-      frame,
-      ["KLM", "MNK"],
-      SVGModes.Inconsistent
-    );
+    EqualRightAngles.highlight(props, ["KLM", "MNK"], SVGModes.Inconsistent);
   },
 });
 
@@ -167,7 +151,6 @@ const step5: StepMeta = makeStepMeta({
     Reflexive.additions(props, "MK", 2);
   },
   text: Reflexive.text("MK"),
-  staticText: () => Reflexive.staticText("MK"),
 });
 
 const step6: StepMeta = makeStepMeta({
@@ -176,18 +159,12 @@ const step6: StepMeta = makeStepMeta({
   prevStep: step5,
   text: EqualTriangles.text(["KLM", "MNK"]),
   additions: (props: StepFocusProps) => {
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["KLM", "MNK"],
-      props.mode
-    );
+    CongruentTriangles.congruentLabel(props, ["KLM", "MNK"], props.mode);
   },
-  staticText: () => EqualTriangles.staticText(["KLM", "MNK"]),
-  highlight: (ctx: Content, frame: string) => {
-    EqualSegments.highlight(ctx, frame, ["LM", "NK"], SVGModes.ReliesOn);
-    EqualRightAngles.highlight(ctx, frame, ["KLM", "MNK"], SVGModes.ReliesOn);
-    EqualSegments.highlight(ctx, frame, ["MK", "MK"], SVGModes.ReliesOn, 2);
+  highlight: (props: StepProps) => {
+    EqualSegments.highlight(props, ["LM", "NK"], SVGModes.ReliesOn);
+    EqualRightAngles.highlight(props, ["KLM", "MNK"], SVGModes.ReliesOn);
+    EqualSegments.highlight(props, ["MK", "MK"], SVGModes.ReliesOn, 2);
   },
 });
 

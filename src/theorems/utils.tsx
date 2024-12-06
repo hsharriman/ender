@@ -1,9 +1,5 @@
 import { Content } from "../core/diagramContent";
-import {
-  StepFocusProps,
-  StepMeta,
-  StepUnfocusProps,
-} from "../core/types/stepTypes";
+import { StepFocusProps, StepMeta, StepProps } from "../core/types/stepTypes";
 import { Reason, SVGModes } from "../core/types/types";
 import { Reasons } from "./reasons";
 
@@ -21,7 +17,7 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   const defaultText: (isActive: boolean) => JSX.Element = (
     isActive: boolean
   ) => <></>;
-  const defaultUnfocused = (props: StepUnfocusProps) => {
+  const defaultUnfocused = (props: StepProps) => {
     if (meta.prevStep) {
       meta.prevStep.additions({
         ctx: props.ctx,
@@ -51,7 +47,7 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
     unfocused: meta.unfocused || defaultUnfocused,
     diagram,
     text: meta.text || defaultText,
-    staticText: meta.staticText || defaultStaticText,
+    staticText: meta.text ? () => meta.text!(true) : defaultStaticText,
     additions: meta.additions || defaultAdditions,
     highlight: meta.highlight,
   };

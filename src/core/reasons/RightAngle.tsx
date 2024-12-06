@@ -1,5 +1,4 @@
 import { makeStepMeta } from "../../theorems/utils";
-import { angleStr } from "../geometryText";
 import { StepFocusProps, StepMeta } from "../types/stepTypes";
 import { Obj, Reason } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
@@ -15,15 +14,7 @@ export class RightAngle {
   static text = (a: string) => (isActive: boolean) => {
     return (
       <span>
-        {BaseAngle.text(a, "")(isActive)}
-        {this.rightText}
-      </span>
-    );
-  };
-  static staticText = (a: string) => {
-    return (
-      <span>
-        {angleStr(a)}
+        {BaseAngle.text(a)(isActive)}
         {this.rightText}
       </span>
     );
@@ -42,6 +33,6 @@ export const RightAngleStep = (
     prevStep: step,
     additions: (props: StepFocusProps) => RightAngle.additions(props, a),
     text: RightAngle.text(a),
-    staticText: () => RightAngle.staticText(a),
+    staticText: () => RightAngle.text(a)(true),
   });
 };

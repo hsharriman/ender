@@ -1,5 +1,4 @@
-import { Content } from "../diagramContent";
-import { StepFocusProps } from "../types/stepTypes";
+import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 import { RightAngle } from "./RightAngle";
@@ -13,23 +12,20 @@ export class EqualRightAngles {
   static text =
     ([a1, a2]: [string, string]) =>
     (isActive: boolean) => {
-      return this.staticText([a1, a2]);
+      return (
+        <span>
+          {BaseAngle.text(a1)(isActive)}
+          {this.equalNinety}
+          {BaseAngle.text(a2)(isActive)}
+        </span>
+      );
     };
-  static staticText = (a: [string, string]) => {
-    return (
-      <span>
-        {BaseAngle.staticText(a[0])}
-        {this.equalNinety}
-        {BaseAngle.staticText(a[1])}
-      </span>
-    );
-  };
   static highlight = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     [a1, a2]: [string, string],
     mode: SVGModes
   ) => {
+    const { ctx, frame } = props;
     ctx.getAngle(a1).addTick(frame, Obj.RightTick).mode(frame, mode);
     ctx.getAngle(a2).addTick(frame, Obj.RightTick).mode(frame, mode);
   };

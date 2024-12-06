@@ -99,7 +99,7 @@ export const interactiveLayout = (
     // setup highlighting for interactive diagrams
     if (step.highlight) {
       highlightCtx.addFrame(`s${i + 1}`);
-      step.highlight(highlightCtx, s);
+      step.highlight({ ctx: highlightCtx, frame: s });
     }
 
     reasonMap.set(s, step.reason);
