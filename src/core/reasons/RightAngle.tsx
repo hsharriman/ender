@@ -1,4 +1,4 @@
-import { BGColors, makeStepMeta } from "../../theorems/utils";
+import { makeStepMeta } from "../../theorems/utils";
 import { angleStr } from "../geometryText";
 import { StepFocusProps, StepMeta } from "../types/stepTypes";
 import { Obj, Reason } from "../types/types";
@@ -15,7 +15,7 @@ export class RightAngle {
   static text = (a: string) => (isActive: boolean) => {
     return (
       <span>
-        {BaseAngle.text(a, BGColors.Blue)(isActive)}
+        {BaseAngle.text(a, "")(isActive)}
         {this.rightText}
       </span>
     );

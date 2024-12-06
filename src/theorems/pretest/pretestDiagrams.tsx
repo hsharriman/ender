@@ -30,7 +30,7 @@ const fisherYates = (arr: any[]) => {
 };
 
 const defaultProps = (ctx: Content) => {
-  return { ctx: ctx, frame: "given", mode: SVGModes.Focused };
+  return { ctx: ctx, frame: "given", mode: SVGModes.Default };
 };
 const bright: Vector = [5, -18];
 const bleft: Vector = [-18, -18];

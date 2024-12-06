@@ -3,7 +3,6 @@ import { addTutorialActive, logEvent } from "../testinfra/testUtils";
 import { LSegment, Obj, SVGModes, TickType, Vector } from "../types/types";
 import { vops } from "../vectorOps";
 import { SVGGeoTick } from "./SVGGeoTick";
-import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
 
@@ -26,11 +25,12 @@ export class SVGGeoSegment extends React.Component<
     };
   }
 
+  // deprecated
   onHoverLabelClick = (isActive: boolean) => {
     this.setState({
       isActive,
       isPinned: isActive,
-      css: updateStyle(isActive ? SVGModes.Pinned : this.props.mode),
+      css: updateStyle(isActive ? SVGModes.Derived : this.props.mode),
     });
     // for tutorial
     addTutorialActive(this.props.geoId + "-hover");
@@ -42,7 +42,7 @@ export class SVGGeoSegment extends React.Component<
     );
     matches.forEach((ele) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
+        const cls = [""];
         if (isActive) {
           ele.classList.add(...cls);
         } else {
@@ -57,6 +57,7 @@ export class SVGGeoSegment extends React.Component<
     });
   };
 
+  // deprecated
   onHover = (isActive: boolean) => {
     if (
       this.props.hoverable &&
@@ -65,7 +66,7 @@ export class SVGGeoSegment extends React.Component<
     ) {
       this.setState({
         isActive,
-        css: updateStyle(isActive ? SVGModes.Active : this.props.mode),
+        css: updateStyle(isActive ? SVGModes.Derived : this.props.mode),
       });
 
       logEvent("h", {

@@ -1,4 +1,3 @@
-import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LAngle, Obj, TickType } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 import { Point } from "./Point";
@@ -38,10 +37,11 @@ export class Angle extends BaseGeometryObject {
     };
   };
 
+  // deprecated
   override onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMGLOW.split(" ");
+        const cls = [""];
 
         if (isActive) {
           ele.classList.add(...cls);

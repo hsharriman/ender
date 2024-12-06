@@ -3,7 +3,6 @@ import { logEvent } from "../testinfra/testUtils";
 import { LAngle, Obj, SVGModes, TickType } from "../types/types";
 import { vops } from "../vectorOps";
 import { SVGGeoTick } from "./SVGGeoTick";
-import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { arcSweepsCCW, coordsToSvg, updateStyle } from "./svgUtils";
@@ -30,7 +29,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
     ) {
       this.setState({
         isActive,
-        css: updateStyle(isActive ? SVGModes.Active : this.props.mode),
+        css: updateStyle(isActive ? SVGModes.Derived : this.props.mode),
       });
       logEvent("h", {
         c: "a",
@@ -38,11 +37,12 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
       });
     }
   };
+  // deprecated
   onHoverLabelClick = (isActive: boolean) => {
     this.setState({
       isActive,
       isPinned: isActive,
-      css: updateStyle(isActive ? SVGModes.Pinned : this.props.mode),
+      css: updateStyle(isActive ? SVGModes.Derived : this.props.mode),
     });
     const prefix = `#${Obj.Angle}-text-`;
     const ang = this.props.a.label;
@@ -52,7 +52,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
     );
     matches.forEach((ele) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
+        const cls = [""];
         if (isActive) {
           ele.classList.add(...cls);
         } else {

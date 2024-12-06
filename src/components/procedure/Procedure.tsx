@@ -19,7 +19,6 @@ import { InstructionPage } from "./pages/InstructionPage";
 import { IntroExperimentPage } from "./pages/IntroExpPage";
 import { PretestAppPage, PretestAppPageProps } from "./pages/PretestAppPage";
 import { SavePage } from "./pages/SavePage";
-import { StartPage } from "./pages/StartPage";
 import { SusPage } from "./pages/SusPage";
 import { ThinkAloudPage } from "./pages/ThinkAloudPage";
 import { TutorialPage } from "./pages/TutorialPage";
@@ -229,9 +228,7 @@ export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
     const page = this.state.activePage; // For current page of proof
     const currMeta = this.meta[page];
     let pageContent = <></>;
-    if (currMeta.type === PageType.ParticipantID) {
-      pageContent = <StartPage onNext={() => this.onNext(1)} />;
-    } else if (currMeta.type === PageType.Background) {
+    if (currMeta.type === PageType.Background) {
       pageContent = (
         <BackgroundQuestions
           updateAnswers={this.updateAnswers("Background Questions")}

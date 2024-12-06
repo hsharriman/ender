@@ -32,7 +32,6 @@ export enum PageType {
   Save = "Save",
   IntroSlidePhase1 = "IntroSlidePhase1",
   IntroSlidePhase2 = "IntroSlidePhase2",
-  ParticipantID = "ParticipantID",
   ThinkAloud = "ThinkAloud",
 }
 
@@ -94,23 +93,17 @@ export const pageOrder = (testType: TestType, rand: Rand) => {
     rand
   );
 
-  const pages = participantID()
-    .concat(background())
+  const pages = background()
     .concat(pretest)
     .concat(tutorial)
     .concat(instruction1())
     .concat(stage1)
-    // .concat(instruction2())
     .concat(stage2)
     .concat(sus());
 
   return pages;
 };
 
-const participantID = (): Page[] => {
-  // return [{ type: PageType.ParticipantID }];
-  return [];
-};
 const background = (): Page[] => {
   return [
     { type: PageType.IntroSlideTest },
@@ -121,9 +114,6 @@ const background = (): Page[] => {
 const instruction1 = (): Page[] => {
   return [{ type: PageType.IntroSlidePhase1 }];
 };
-// const instruction2 = (): Page[] => {
-//   return [{ type: PageType.IntroSlidePhase2 }];
-// };
 const sus = (): Page[] => {
   return [{ type: PageType.SUS }, { type: PageType.Save }];
 };

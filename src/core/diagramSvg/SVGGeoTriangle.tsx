@@ -7,7 +7,6 @@ import { permutator } from "../utils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
 import { getPatternId } from "./LinePattern";
-import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
@@ -57,6 +56,7 @@ export class SVGGeoTriangle extends React.Component<
     });
   };
 
+  // deprecated
   onHoverLabelClick = (isActive: boolean) => {
     this.setState({
       isActive,
@@ -71,7 +71,7 @@ export class SVGGeoTriangle extends React.Component<
     const matches = document.querySelectorAll(selectors);
     matches.forEach((ele) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
+        const cls = [""];
         if (isActive) {
           ele.classList.add(...cls);
         } else {

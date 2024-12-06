@@ -1,5 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { PageType } from "../../core/testinfra/pageOrder";
+import { Procedure } from "./Procedure";
 import { SubmitButton } from "./questions/SubmitButton";
 
 interface ProcedureHomeState {
@@ -64,3 +66,11 @@ export class ProcedureHome extends React.Component<{}, ProcedureHomeState> {
     );
   }
 }
+
+export const ProcedureB = () => {
+  return <Procedure type={PageType.Static} />;
+};
+
+export const ProcedureA = () => {
+  return <Procedure type={PageType.Interactive} />;
+};

@@ -5,7 +5,6 @@ import { Point, ShowPoint } from "../../../core/geometry/Point";
 import { Triangle } from "../../../core/geometry/Triangle";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
-import { BaseAngle } from "../../../core/reasons/BaseAngle";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
@@ -22,7 +21,7 @@ import {
 import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
 import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
-import { BGColors, makeStepMeta } from "../../utils";
+import { makeStepMeta } from "../../utils";
 
 export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
   const coords: Vector[][] = [
@@ -75,11 +74,11 @@ const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
     return (
       <span>
-        {RightAngle.text("ADB")(isActive)}
+        {RightAngle.staticText("ADB")}
         {comma}
         {segmentStr("BD")}
-        <span className="font-notoSans">&nbsp;bisects&nbsp;</span>
-        {BaseAngle.text("ABC", BGColors.Blue)(isActive)}
+        {" bisects "}
+        {angleStr("ABC")}
       </span>
     );
   },

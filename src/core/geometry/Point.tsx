@@ -1,4 +1,3 @@
-import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LPoint, Obj, Vector } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 
@@ -42,10 +41,11 @@ export class Point extends BaseGeometryObject {
     this.offset = offset;
   };
 
+  // deprecated
   onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMTEXTGLOW.split(" ");
+        const cls = [""];
         isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
       }
     };

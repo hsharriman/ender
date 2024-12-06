@@ -60,15 +60,6 @@ export class Content {
 
   getCtx = () => this.ctx;
 
-  print() {
-    console.log({
-      points: this.ctx.points,
-      segments: this.ctx.segments,
-      angles: this.ctx.angles,
-      triangles: this.ctx.triangles,
-    });
-  }
-
   push(e: Point): Point;
   push(e: Segment): Segment;
   push(e: Angle): Angle;
