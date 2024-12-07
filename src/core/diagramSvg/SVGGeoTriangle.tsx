@@ -45,13 +45,14 @@ export class SVGGeoTriangle extends React.Component<
     }
   };
 
+  // deprecated
   highlightElems = (isActive: boolean) => {
     const a = this.props.t.a;
     const s = this.props.t.s;
-    s.map((seg) => {
+    s.forEach((seg) => {
       seg.onClickText(isActive);
     });
-    a.map((ang) => {
+    a.forEach((ang) => {
       ang.onClickText(isActive);
     });
   };
@@ -62,7 +63,6 @@ export class SVGGeoTriangle extends React.Component<
       isActive,
       isPinned: isActive,
     });
-    // TODO find matches for all segments/angles and add to their class
     const prefix = `#${Obj.Triangle}-text-`;
     const tri = this.props.t.label;
     const selectors = permutator(tri.split(""))

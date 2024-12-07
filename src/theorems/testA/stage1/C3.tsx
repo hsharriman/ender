@@ -49,8 +49,8 @@ export const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [Q, P, R], label: "QPR" },
-    { pts: [R, M, N], label: "RMN", rotatePattern: true },
+    { pts: [Q, P, R] },
+    { pts: [R, M, N], rotatePattern: true },
   ]);
 
   // for given step:
@@ -64,7 +64,6 @@ export const baseContent = () => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  // TODO: looks like equalrightangles doesn't have tickless text?
   text: (isActive: boolean) => {
     return (
       <span>

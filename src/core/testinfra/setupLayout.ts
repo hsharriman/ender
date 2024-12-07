@@ -133,12 +133,21 @@ export const interactiveLayout = (
   };
 };
 
-export const pretestLayout = (props: PretestAppPageProps): Page => {
+export const pretestLayout = (
+  props: PretestAppPageProps,
+  rand: Rand,
+  shuffleQuestions: boolean
+): Page => {
   return {
     type: PageType.Pretest,
     meta: {
       layout: "static",
-      props: props,
+      props: {
+        ...props,
+        questions: shuffleQuestions
+          ? fisherYates(props.questions, rand)
+          : props.questions,
+      },
     },
   };
 };

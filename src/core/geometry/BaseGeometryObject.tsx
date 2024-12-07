@@ -4,7 +4,7 @@ import { getId } from "../utils";
 export interface BaseGeometryProps {
   activeIdx?: number; // follows the state of the app
   parentFrame?: string;
-  // hoverable: boolean;
+  // hoverable: boolean; // deprecated
 }
 
 export class BaseGeometryObject {
@@ -29,8 +29,9 @@ export class BaseGeometryObject {
     return this;
   };
 
+  // deprecated
   onClickText = (isActive: boolean) => {
-    // TODO implementation
+    // do nothing
   };
 
   matches = (name: string) => this.names.find((n) => n === name) !== undefined;

@@ -47,9 +47,9 @@ export const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [E, F, J], label: "FEJ" },
-    { pts: [J, G, H], label: "JHG", rotatePattern: true },
-    { pts: [F, G, J], label: "FGJ" },
+    { pts: [E, F, J] },
+    { pts: [J, G, H], rotatePattern: true },
+    { pts: [F, G, J] },
   ]);
 
   // for mini figures
@@ -188,7 +188,6 @@ const step6: StepMeta = makeStepMeta({
   },
   text: EqualSegments.text(["FJ", "GJ"]),
   highlight: (props: StepProps) => {
-    SAS.highlight(props, step5SASProps); // TODO should be CongruentTriangles
     CongruentTriangles.congruentLabel(props, ["FEJ", "JHG"], SVGModes.ReliesOn);
   },
 });
@@ -198,6 +197,7 @@ const step7: StepMeta = makeStepMeta({
   dependsOn: ["7"],
   prevStep: step6,
   additions: (props: StepFocusProps) => {
+    // TODO highlight FGJ, relies on FJ,GJ? and hide unfocused triangle congruence?
     props.ctx.getSegment("FG").mode(props.frame, props.mode);
     EqualSegments.additions(props, ["FJ", "GJ"], 3);
   },

@@ -47,7 +47,6 @@ export const strs = {
   perpendicular: "\u22A5",
 };
 
-// TODO check that these scale for windows and mac
 export const resizedStrs = {
   congruent: (
     <span

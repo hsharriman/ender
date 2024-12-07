@@ -8,7 +8,6 @@ import { Segment } from "./Segment";
 
 export type TriangleProps = {
   pts: [Point, Point, Point];
-  label: string;
   rotatePattern?: boolean;
   // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
@@ -28,7 +27,7 @@ export class Triangle extends BaseGeometryObject {
     this.p = props.pts;
     this.a = this.buildAngles(props.pts, ctx);
     this.names = permutator(props.pts.map((pt) => pt.label));
-    this.label = props.label;
+    this.label = `${props.pts[0].label}${props.pts[1].label}${props.pts[2].label}`;
     this.rotatePattern = props.rotatePattern || false;
     this.id = this.getId(Obj.Triangle, this.label);
   }
@@ -83,12 +82,13 @@ export class Triangle extends BaseGeometryObject {
     return [aa, ab, ac];
   };
 
+  // deprecated
   onClickText = (isActive: boolean) => {
     // for each segment use onClickText
-    this.s.map((seg) => {
+    this.s.forEach((seg) => {
       seg.onClickText(isActive);
     });
-    this.a.map((ang) => {
+    this.a.forEach((ang) => {
       ang.onClickText(isActive);
     });
   };

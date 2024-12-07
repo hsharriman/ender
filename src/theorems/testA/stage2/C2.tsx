@@ -36,10 +36,10 @@ const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [A, B, F], label: "ABF" },
-    { pts: [A, B, D], label: "ABD", rotatePattern: true },
-    { pts: [B, C, D], label: "BCD" },
-    { pts: [B, C, G], label: "BCG", rotatePattern: true },
+    { pts: [A, B, F] },
+    { pts: [A, B, D], rotatePattern: true },
+    { pts: [B, C, D] },
+    { pts: [B, C, G], rotatePattern: true },
   ]);
 
   ctx.setAspect(AspectRatio.Square);

@@ -29,8 +29,8 @@ const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [A, B, D], label: "ABD" },
-    { pts: [B, C, D], label: "CDB", rotatePattern: true },
+    { pts: [A, B, D] },
+    { pts: [B, C, D], rotatePattern: true },
   ]);
 
   ctx.setAspect(AspectRatio.Landscape);

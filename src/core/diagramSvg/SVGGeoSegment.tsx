@@ -38,7 +38,7 @@ export class SVGGeoSegment extends React.Component<
     const prefix = `#${Obj.Segment}-text-`;
     const seg = this.props.geoId.replace("segment.", "");
     const matches = document.querySelectorAll(
-      prefix + seg + ", " + prefix + seg.split("").reverse().join("") // TODO delete when all segments are alphabetical
+      prefix + seg + ", " + prefix + seg.split("").reverse().join("")
     );
     matches.forEach((ele) => {
       if (ele) {

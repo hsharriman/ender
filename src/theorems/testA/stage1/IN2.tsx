@@ -32,8 +32,8 @@ export const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [J, M, K], label: "JMK" },
-    { pts: [L, M, K], label: "LMK", rotatePattern: true },
+    { pts: [J, M, K] },
+    { pts: [L, M, K], rotatePattern: true },
   ]);
 
   ctx.setAspect(AspectRatio.Square);

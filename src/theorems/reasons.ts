@@ -67,7 +67,7 @@ export const Reasons = {
   },
   AAS: {
     title: "AAS Triangle Congruence",
-    body: "Angle-Angle-Side (AAS) Triangle Congruence. If a pair of triangles have two angles and one adjacent side that are congruent to each other, then the triangles are congruent.", // TODO
+    body: "Angle-Angle-Side (AAS) Triangle Congruence. If a pair of triangles have two angles and one adjacent side that are congruent to each other, then the triangles are congruent.",
   },
   Bisector: {
     title: "Def. Angle Bisector",

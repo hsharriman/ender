@@ -8,7 +8,6 @@ import { Segment } from "./Segment";
 
 export type QuadrilateralProps = {
   pts: [Point, Point, Point, Point];
-  // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
 export class Quadrilateral extends BaseGeometryObject {
   readonly s: [Segment, Segment, Segment, Segment];
@@ -85,12 +84,13 @@ export class Quadrilateral extends BaseGeometryObject {
     return [aa, ab, ac, ad];
   };
 
+  // deprecated
   onClickText = (isActive: boolean) => {
     // for each segment use onClickText
-    this.s.map((seg) => {
+    this.s.forEach((seg) => {
       seg.onClickText(isActive);
     });
-    this.a.map((ang) => {
+    this.a.forEach((ang) => {
       ang.onClickText(isActive);
     });
   };
@@ -98,9 +98,8 @@ export class Quadrilateral extends BaseGeometryObject {
   override mode = (frameKey: string, mode: SVGModes) => {
     this.modes.set(frameKey, mode);
     // cascading update the segments and angles
-    this.s.map((seg) => seg.mode(frameKey, mode));
-    this.a.map((ang) => ang.mode(frameKey, mode));
-    // TODO cascading update the segments and angles too
+    this.s.forEach((seg) => seg.mode(frameKey, mode));
+    this.a.forEach((ang) => ang.mode(frameKey, mode));
     return this;
   };
 }

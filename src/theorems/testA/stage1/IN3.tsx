@@ -29,8 +29,8 @@ export const baseContent = () => {
     { pt: [14, 9], label: "N", offset: [8, 0] },
   ]);
   ctx.addTriangles([
-    { pts: [L, M, K], label: "KLM" },
-    { pts: [K, N, M], label: "MNK", rotatePattern: true },
+    { pts: [L, M, K] },
+    { pts: [K, N, M], rotatePattern: true },
   ]);
 
   // for mini figures

@@ -34,7 +34,6 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     let unit = vops.unit(vops.sub(s.p2, s.p1));
     // flip the direction of chevron if unit vec is pointing downwards
     // (in quadrant 3 or 4, where y coord is negative)
-    // TODO special case where unit vec is horizontal and pointing left
     if (unit[1] < 0) {
       unit = vops.smul(unit, -1);
     }
@@ -48,7 +47,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
 
     const tickVectors = this.tickPlacement(unit, num, this.props.miniScale);
     let dStr = "";
-    tickVectors.map((shift, i) => {
+    tickVectors.forEach((shift, i) => {
       const polyPts = points.map((v) =>
         coordsToSvg(vops.add(v, shift), this.props.miniScale)
       );
@@ -78,7 +77,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     // add evenly spaced ticks based on numTicks
     let dStr = "";
     const tickVectors = this.tickPlacement(unit, num, this.props.miniScale);
-    tickVectors.map((shift) => {
+    tickVectors.forEach((shift) => {
       const st = coordsToSvg(vops.add(start, shift), this.props.miniScale);
       const en = coordsToSvg(vops.add(end, shift), this.props.miniScale);
       dStr = dStr + pops.moveTo(st) + pops.lineTo(en);
@@ -124,7 +123,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     const sUnit = vops.unit(vops.sub(a.start, a.center));
     const eUnit = vops.unit(vops.sub(a.end, a.center));
 
-    const scale = RIGHT_TICK_LEN(this.props.miniScale); // TODO
+    const scale = RIGHT_TICK_LEN(this.props.miniScale);
     const start = coordsToSvg(
       vops.add(a.center, vops.smul(sUnit, scale)),
       this.props.miniScale
@@ -140,7 +139,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
       vops.add(a.center, vops.smul(eUnit, scale)),
       this.props.miniScale
     );
-    return pops.moveTo(start) + pops.lineTo(mid) + pops.lineTo(end); // TODO
+    return pops.moveTo(start) + pops.lineTo(mid) + pops.lineTo(end);
   };
 
   // returns list of vectors for tick marks along direction represented by unit, centered at the origin

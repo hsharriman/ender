@@ -252,13 +252,7 @@ export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
       pageContent = <ThinkAloudPage onNext={() => this.onNext(1)} />;
     } else if (currMeta.type === PageType.Pretest && currMeta.meta) {
       const props = currMeta.meta.props as PretestAppPageProps;
-      pageContent = (
-        <PretestAppPage
-          name={props.name}
-          ctx={props.ctx}
-          questions={props.questions}
-        />
-      );
+      pageContent = <PretestAppPage {...props} />;
     } else if (currMeta.type === PageType.Static && currMeta.meta) {
       pageContent = (
         <StaticAppPage

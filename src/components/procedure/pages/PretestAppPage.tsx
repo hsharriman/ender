@@ -6,7 +6,7 @@ import { StaticDiagram } from "../../ender/StaticDiagram";
 export interface PretestAppPageProps {
   name: string;
   ctx: DiagramContent;
-  questions: Question[]; // TODO unused
+  questions: Question[];
 }
 export class PretestAppPage extends React.Component<PretestAppPageProps> {
   render() {

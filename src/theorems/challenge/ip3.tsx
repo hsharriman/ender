@@ -47,10 +47,10 @@ export const baseContent = () => {
   );
 
   ctx.addTriangles([
-    { pts: [A, B, E], label: "AEB" },
-    { pts: [B, E, C], label: "CEB" },
-    { pts: [D, E, C], label: "DEC" },
-    { pts: [G, E, C], label: "GEC" },
+    { pts: [A, B, E] },
+    { pts: [B, E, C] },
+    { pts: [D, E, C] },
+    { pts: [G, E, C] },
   ]);
 
   // for given step:
@@ -61,7 +61,6 @@ export const baseContent = () => {
 };
 
 const givens: StepMeta = makeStepMeta({
-  // TODO: looks like equalrightangles doesn't have tickless text?
   text: (isActive: boolean) => {
     return (
       <span>
@@ -166,10 +165,8 @@ const step8: StepMeta = makeStepMeta({
   ),
 });
 
-// TODO rename depending on right/wrong?
 export const T1_CH1_IN1: LayoutProps = {
   name: "T1_CH1_IN1",
-  // TODO: Replace questions
   questions: placeholder,
   shuffleQuestions: [],
   baseContent,

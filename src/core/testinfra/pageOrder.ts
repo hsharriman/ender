@@ -56,8 +56,10 @@ export const proofOrder = (
 };
 
 export const pageOrder = (testType: TestType, rand: Rand) => {
-  let pretest = [pretestLayout(P1), pretestLayout(P2)]; // segment and angle questions
-  let tpre = trianglePretestProofs.map((p) => pretestLayout(p));
+  let pretest = [pretestLayout(P1, rand, true), pretestLayout(P2, rand, true)]; // segment and angle questions
+  let tpre = fisherYates(trianglePretestProofs, rand).map((p) =>
+    pretestLayout(p, rand, false)
+  );
   // add extra 1-off questions to the first triangle pretest page
   if (tpre[0].meta) {
     tpre[0].meta = {

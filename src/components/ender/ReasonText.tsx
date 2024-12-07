@@ -8,10 +8,6 @@ export interface ReasonTextProps {
   textFn: (activeFrame: string) => Reason;
 }
 export class ReasonText extends React.Component<ReasonTextProps> {
-  constructor(props: ReasonTextProps) {
-    super(props);
-  }
-
   onMouseEnter = () => {
     logEvent("m", {
       c: "re",

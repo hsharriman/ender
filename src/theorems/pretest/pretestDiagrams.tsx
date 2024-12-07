@@ -13,19 +13,6 @@ import {
 } from "../../core/testinfra/questions/pretestQuestions";
 import { SVGModes, Vector } from "../../core/types/types";
 
-// TODO for some reason the bundling order doesn't work if this method isn't defined within this file
-/* Helper methods related to randomizing the proof order */
-const fisherYates = (arr: any[]) => {
-  // shuffle the array with Fisher-Yates algorithm
-  const arrCopy = arr.slice();
-  for (let i = arrCopy.length - 1; i >= 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arrCopy[i], arrCopy[j]] = [arrCopy[j], arrCopy[i]];
-  }
-  // return the shuffled array
-  return arrCopy;
-};
-
 const defaultProps = (ctx: Content) => {
   return { ctx: ctx, frame: "given", mode: SVGModes.Default };
 };
@@ -48,7 +35,6 @@ export const segmentContent = () => {
   ];
   let ctx = new Content();
   const [A, B, C, D, E, F, G, H, J, M, N] = coords.map((c) =>
-    // TODO option to make point labels invisible
     ctx.addPoint({
       pt: c[1],
       label: c[0],
@@ -97,7 +83,6 @@ export const angleContent = () => {
   ];
   let ctx = new Content();
   const [A, B, C, D, E, F, G, H, J, K, L, M, N, Q, P] = coords.map((c) =>
-    // TODO option to make point labels invisible
     ctx.addPoint({
       pt: c[1],
       label: c[0],
@@ -146,15 +131,14 @@ const baseTriangles = () => {
   ];
   let ctx = new Content();
   const [A, B, C, D, E, F] = coords.map((c) =>
-    // TODO option to make point labels invisible
     ctx.addPoint({
       pt: c[1],
       label: c[0],
       offset: c[2],
     })
   );
-  ctx.addTriangle({ pts: [A, B, C], label: "ABC" });
-  ctx.addTriangle({ pts: [D, E, F], label: "DEF" });
+  ctx.addTriangle({ pts: [A, B, C] });
+  ctx.addTriangle({ pts: [D, E, F] });
 
   ctx.addFrame("given");
   ctx.getTriangle("ABC").mode("given", SVGModes.Default);
@@ -173,17 +157,13 @@ export const hl = () => {
   ];
   let ctx = new Content();
   const [A, B, C, D, E, F] = coords.map((c) =>
-    // TODO option to make point labels invisible
     ctx.addPoint({
       pt: c[1],
       label: c[0],
       offset: c[2],
     })
   );
-  ctx.addTriangles([
-    { pts: [A, B, C], label: "ABC" },
-    { pts: [D, E, F], label: "DEF" },
-  ]);
+  ctx.addTriangles([{ pts: [A, B, C] }, { pts: [D, E, F] }]);
 
   ctx.addFrame("given");
   ctx.getTriangle("ABC").mode("given", SVGModes.Default);
@@ -228,22 +208,22 @@ export const asa = () => {
 
 export const P1: PretestAppPageProps = {
   name: "P1",
-  questions: fisherYates(segmentPretestQuestions),
+  questions: segmentPretestQuestions,
   ctx: segmentContent().getCtx(),
 };
 
 export const P2: PretestAppPageProps = {
   name: "P2",
-  questions: fisherYates(anglePretestQuestions),
+  questions: anglePretestQuestions,
   ctx: angleContent().getCtx(),
 };
 
-export const trianglePretestProofs = fisherYates(
-  [sas(), sss(), aas(), asa(), hl()].map((ctx, i) => {
+export const trianglePretestProofs = [sas(), sss(), aas(), asa(), hl()].map(
+  (ctx, i) => {
     return {
       name: `P${i + 3}`,
       ctx: ctx.getCtx(),
       questions: trianglePretestQuestions,
     };
-  })
+  }
 );

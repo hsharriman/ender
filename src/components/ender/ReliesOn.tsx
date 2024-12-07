@@ -6,7 +6,6 @@ export interface ReliesOnProps {
   reliesOn: Map<string, Set<string>>;
   activeFrame: string;
   rowHeight: ReliesRowHeight;
-  // TODO indices of frames? or pixel locations would be nice...
 }
 export enum ReliesRowHeight {
   Compact = 46,
@@ -37,7 +36,6 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
   isCompact = () => this.props.rowHeight === ReliesRowHeight.Compact;
 
   getRowCoords = (frameKey: string): Dims | undefined => {
-    // TODO make work for any row type
     const rowEle = document.getElementById(`prooftext-${frameKey}`);
     if (rowEle) {
       const rowRect = rowEle.getBoundingClientRect();
@@ -204,10 +202,8 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
   render() {
     const dependsOn = this.props.reliesOn.get(this.props.activeFrame);
     let innerContent = <></>;
-    // TODO height of text div should always match the top/bottom of the relies on arrow
     if (dependsOn) {
       const dims = this.vertDists();
-      const height = dims[dims.length - 1].b - dims[0].t;
 
       let lastBottom = dims[0].b;
       const svgs = dims.map((d, i) => {
@@ -227,21 +223,6 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
         <div>
           {this.renderFullConnector(dims)}
           {svgs}
-          <div
-            className="text-slate-500 font-semibold font-notoSans w-6 text-base absolute text-nowrap flex align-middle"
-            style={{
-              height: `${height}px`,
-              top: `${dims[0].t}px`,
-              left: `${dims[0].r - 32}px`,
-            }}
-          >
-            {/* <span
-              className="flex justify-center"
-              style={{ textOrientation: "mixed", writingMode: "vertical-rl" }}
-            >
-              relies on
-            </span> */}
-          </div>
         </div>
       );
     }

@@ -31,8 +31,8 @@ export const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [A, B, C], label: "ABC" },
-    { pts: [A, C, D], label: "ACD", rotatePattern: true },
+    { pts: [A, B, C] },
+    { pts: [A, C, D], rotatePattern: true },
   ]);
 
   ctx.setAspect(AspectRatio.Square);
@@ -126,7 +126,6 @@ const step4t2 = makeStepMeta({
 
 export const TutorialProof1: LayoutProps = {
   name: "TutorialProof1",
-  // TODO: Replace questions
   questions: tutorial1Questions,
   shuffleQuestions: [],
   baseContent,

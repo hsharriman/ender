@@ -40,7 +40,7 @@ export type TickType =
   | Obj.RightTick;
 
 export enum SVGModes {
-  Hidden = "opacity-0",
+  Hidden = "hidden",
   Unfocused = "unfocused",
   Default = "default",
   ReliesOn = "relieson",

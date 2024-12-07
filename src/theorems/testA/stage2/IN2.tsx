@@ -33,8 +33,8 @@ const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [M, Y, Z], label: "MYZ" },
-    { pts: [M, W, X], label: "MWX", rotatePattern: true },
+    { pts: [M, Y, Z] },
+    { pts: [M, W, X], rotatePattern: true },
   ]);
 
   ctx.addSegments([

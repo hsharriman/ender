@@ -32,8 +32,8 @@ const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [A, C, M], label: "ACM" },
-    { pts: [B, D, M], label: "BDM", rotatePattern: true },
+    { pts: [A, C, M] },
+    { pts: [B, D, M], rotatePattern: true },
   ]);
 
   ctx.addSegments([
@@ -143,7 +143,7 @@ const step5: StepMeta = makeStepMeta({
   dependsOn: ["2", "3", "4"],
   prevStep: step4,
   additions: (props: StepFocusProps) =>
-    CongruentTriangles.congruentLabel(props, ["ACM", "BDM"], props.mode), // TODO make this insert congruent tri vis
+    CongruentTriangles.congruentLabel(props, ["ACM", "BDM"], props.mode),
   text: EqualTriangles.text(step4SASProps.triangles),
   highlight: (props: StepProps) => {
     SAS.highlight(props, step4SASProps);

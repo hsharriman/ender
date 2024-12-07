@@ -21,31 +21,11 @@ import {
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, Obj, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
 export const baseContent = () => {
-  const coords: Vector[][] = [
-    [
-      [2, 1], // L
-      [6, 1], //S
-      [10, 1], // U
-      [6, 2.85], //R
-      [3.5, 4], //N
-      [8.5, 4], //Q
-      [6, 9], //P
-    ],
-  ];
-  const offsets: Vector[] = [
-    [-15, -15],
-    [-5, -18],
-    [0, -17],
-    [6, 12],
-    [-16, 0],
-    [5, 5],
-    [8, -10],
-  ];
   let ctx = new Content();
   const [L, S, U, R, N, Q, P] = ctx.addPoints([
     { pt: [2, 1], label: "L", offset: [-15, -15] },
@@ -58,10 +38,10 @@ export const baseContent = () => {
   ]);
 
   ctx.addTriangles([
-    { pts: [L, P, S], label: "LPS" },
-    { pts: [U, P, S], label: "UPS", rotatePattern: true },
-    { pts: [L, N, U], label: "LNU", rotatePattern: true },
-    { pts: [U, Q, L], label: "UQL" },
+    { pts: [L, P, S] },
+    { pts: [U, P, S], rotatePattern: true },
+    { pts: [L, N, U], rotatePattern: true },
+    { pts: [U, Q, L] },
   ]);
 
   ctx.setAspect(AspectRatio.Square);

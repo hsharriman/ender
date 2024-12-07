@@ -18,7 +18,7 @@ export class Point extends BaseGeometryObject {
   public readonly pt: Vector;
   public readonly id: string;
   readonly showPoint: ShowPoint;
-  public offset: Vector = [3, 3]; // TODO better label placement
+  public offset: Vector = [5, 5];
   constructor(props: PointProps) {
     super(Obj.Point, props);
     this.pt = props.pt;
