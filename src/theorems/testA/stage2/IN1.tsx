@@ -1,7 +1,5 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Point } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -27,7 +25,7 @@ import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
+export const baseContent = () => {
   const coords: Vector[][] = [
     [
       [2, 1], // L
@@ -39,8 +37,6 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
       [6, 9], //P
     ],
   ];
-  let ctx = new Content();
-  const labels = ["L", "S", "U", "R", "N", "Q", "P"];
   const offsets: Vector[] = [
     [-15, -15],
     [-5, -18],
@@ -50,38 +46,23 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     [5, 5],
     [8, -10],
   ];
-  const pts = coords[0];
-  const [L, S, U, R, N, Q, P] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-      })
-    )
-  );
+  let ctx = new Content();
+  const [L, S, U, R, N, Q, P] = ctx.addPoints([
+    { pt: [2, 1], label: "L", offset: [-15, -15] },
+    { pt: [6, 1], label: "S", offset: [-5, -18] },
+    { pt: [10, 1], label: "U", offset: [0, -17] },
+    { pt: [6, 2.85], label: "R", offset: [6, 12] },
+    { pt: [3.5, 4], label: "N", offset: [-16, 0] },
+    { pt: [8.5, 4], label: "Q", offset: [5, 5] },
+    { pt: [6, 9], label: "P", offset: [8, -10] },
+  ]);
 
-  ctx.push(new Triangle({ pts: [L, P, S], hoverable, label: "LPS" }, ctx));
-  ctx.push(
-    new Triangle(
-      { pts: [U, P, S], hoverable, label: "UPS", rotatePattern: true },
-      ctx
-    )
-  );
-  ctx.push(
-    new Triangle(
-      { pts: [L, N, U], hoverable, label: "LNU", rotatePattern: true },
-      ctx
-    )
-  );
-  ctx.push(new Triangle({ pts: [U, Q, L], hoverable, label: "UQL" }, ctx));
-
-  // for ASA at the end
-  // ctx.push(new Angle({ start: L, center: N, end: U, hoverable }));
-  // ctx.push(new Angle({ start: U, center: Q, end: N, hoverable }));
+  ctx.addTriangles([
+    { pts: [L, P, S], label: "LPS" },
+    { pts: [U, P, S], label: "UPS", rotatePattern: true },
+    { pts: [L, N, U], label: "LNU", rotatePattern: true },
+    { pts: [U, Q, L], label: "UQL" },
+  ]);
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;

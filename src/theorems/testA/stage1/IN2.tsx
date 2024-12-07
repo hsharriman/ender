@@ -1,7 +1,5 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Point } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
@@ -19,48 +17,24 @@ import {
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [2, 9], // J
-      [9, 9], // L
-      [5.5, 1], // K
-      [5.5, 9], // M
-    ],
-  ];
+export const baseContent = () => {
   let ctx = new Content();
-  const labels = ["J", "L", "K", "M"];
-  const offsets: Vector[] = [
-    [-15, -15],
-    [8, -15],
-    [-5, -17],
-    [-5, 6],
-  ];
-  const pts = coords[0];
-  const [J, L, K, M] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-      })
-    )
-  );
 
-  ctx.push(new Triangle({ pts: [J, M, K], hoverable, label: "JMK" }, ctx));
-  ctx.push(
-    new Triangle(
-      { pts: [L, M, K], hoverable, label: "LMK", rotatePattern: true },
-      ctx
-    )
-  );
+  const [J, L, K, M] = ctx.addPoints([
+    { pt: [2, 9], label: "J", offset: [-15, -15] },
+    { pt: [9, 9], label: "L", offset: [8, -15] },
+    { pt: [5.5, 1], label: "K", offset: [-5, -17] },
+    { pt: [5.5, 9], label: "M", offset: [-5, 6] },
+  ]);
+
+  ctx.addTriangles([
+    { pts: [J, M, K], label: "JMK" },
+    { pts: [L, M, K], label: "LMK", rotatePattern: true },
+  ]);
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;

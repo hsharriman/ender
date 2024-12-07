@@ -51,7 +51,7 @@ export enum SVGModes {
 // -------- TYPES RELATED TO PROOF SETUP --------
 export interface LayoutProps {
   name: string;
-  baseContent: (showPoints: boolean, hoverable: boolean) => Content;
+  baseContent: () => Content;
   steps: StepMeta[];
   givens: StepMeta;
   proves: StepMeta;

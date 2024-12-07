@@ -30,38 +30,26 @@ export class Quadrilateral extends BaseGeometryObject {
     ctx: Content,
     parentFrame?: string
   ): [Segment, Segment, Segment, Segment] => {
-    const sa = ctx.push(
-      new Segment({
-        p1: pts[0],
-        p2: pts[1],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const sb = ctx.push(
-      new Segment({
-        p1: pts[1],
-        p2: pts[2],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const sc = ctx.push(
-      new Segment({
-        p1: pts[2],
-        p2: pts[3],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const sd = ctx.push(
-      new Segment({
-        p1: pts[3],
-        p2: pts[0],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
+    const sa = ctx.addSegment({
+      p1: pts[0],
+      p2: pts[1],
+      parentFrame,
+    });
+    const sb = ctx.addSegment({
+      p1: pts[1],
+      p2: pts[2],
+      parentFrame,
+    });
+    const sc = ctx.addSegment({
+      p1: pts[2],
+      p2: pts[3],
+      parentFrame,
+    });
+    const sd = ctx.addSegment({
+      p1: pts[3],
+      p2: pts[0],
+      parentFrame,
+    });
     return [sa, sb, sc, sd];
   };
 
@@ -70,42 +58,30 @@ export class Quadrilateral extends BaseGeometryObject {
     ctx: Content,
     parentFrame?: string
   ): [Angle, Angle, Angle, Angle] => {
-    const aa = ctx.push(
-      new Angle({
-        start: pts[0],
-        center: pts[1],
-        end: pts[2],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const ab = ctx.push(
-      new Angle({
-        start: pts[1],
-        center: pts[2],
-        end: pts[3],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const ac = ctx.push(
-      new Angle({
-        start: pts[3],
-        center: pts[0],
-        end: pts[1],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const ad = ctx.push(
-      new Angle({
-        start: pts[2],
-        center: pts[3],
-        end: pts[0],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
+    const aa = ctx.addAngle({
+      start: pts[0],
+      center: pts[1],
+      end: pts[2],
+      parentFrame,
+    });
+    const ab = ctx.addAngle({
+      start: pts[1],
+      center: pts[2],
+      end: pts[3],
+      parentFrame,
+    });
+    const ac = ctx.addAngle({
+      start: pts[3],
+      center: pts[0],
+      end: pts[1],
+      parentFrame,
+    });
+    const ad = ctx.addAngle({
+      start: pts[2],
+      center: pts[3],
+      end: pts[0],
+      parentFrame,
+    });
     return [aa, ab, ac, ad];
   };
 

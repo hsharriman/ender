@@ -1,8 +1,5 @@
 import { Content } from "../../core/diagramContent";
-import { Angle } from "../../core/geometry/Angle";
-import { Point, ShowPoint } from "../../core/geometry/Point";
-import { Segment } from "../../core/geometry/Segment";
-import { Triangle } from "../../core/geometry/Triangle";
+import { ShowPoint } from "../../core/geometry/Point";
 import { comma } from "../../core/geometryText";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
@@ -21,16 +18,14 @@ import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [1.5, 1], //A
-      [3.5, 4.25], //B
-      [5.5, 1], //C
-      [3.5, 2.25], //D
-      [3.5, 1], //E
-      [3.5, -0.25], //G
-    ],
+export const baseContent = () => {
+  const pts: Vector[] = [
+    [1.5, 1], //A
+    [3.5, 4.25], //B
+    [5.5, 1], //C
+    [3.5, 2.25], //D
+    [3.5, 1], //E
+    [3.5, -0.25], //G
   ];
   let ctx = new Content();
   const labels = ["A", "B", "C", "D", "E", "G"];
@@ -42,30 +37,26 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     [-18, -18],
     [-20, -5],
   ];
-  const pts = coords[0];
   const [A, B, C, D, E, G] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-        showPoint: ShowPoint.Adaptive,
-      })
-    )
+    ctx.addPoint({
+      pt: c,
+      label: labels[i],
+      offset: offsets[i],
+      showPoint: ShowPoint.Adaptive,
+    })
   );
 
-  ctx.push(new Triangle({ pts: [A, B, E], hoverable, label: "AEB" }, ctx));
-  ctx.push(new Triangle({ pts: [B, E, C], hoverable, label: "CEB" }, ctx));
-  ctx.push(new Triangle({ pts: [D, E, C], hoverable, label: "DEC" }, ctx));
-  ctx.push(new Triangle({ pts: [G, E, C], hoverable, label: "GEC" }, ctx));
+  ctx.addTriangles([
+    { pts: [A, B, E], label: "AEB" },
+    { pts: [B, E, C], label: "CEB" },
+    { pts: [D, E, C], label: "DEC" },
+    { pts: [G, E, C], label: "GEC" },
+  ]);
 
   // for given step:
-  ctx.push(new Segment({ p1: B, p2: G, hoverable: false }));
-  ctx.push(new Angle({ start: A, center: B, end: G, hoverable }));
-  ctx.push(new Angle({ start: C, center: B, end: G, hoverable }));
+  ctx.addSegment({ p1: B, p2: G });
+  ctx.addAngle({ start: A, center: B, end: G });
+  ctx.addAngle({ start: C, center: B, end: G });
   return ctx;
 };
 

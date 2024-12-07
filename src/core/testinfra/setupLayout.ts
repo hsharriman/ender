@@ -13,7 +13,7 @@ export const staticLayout = (
   shuffleQuestions: boolean = true
 ): Page => {
   // reset stored variables
-  const ctx = proofMeta.baseContent(true, false);
+  const ctx = proofMeta.baseContent();
   const reasons: Reason[] = [];
   const texts: StaticProofTextItem[] = [];
 
@@ -55,9 +55,9 @@ export const interactiveLayout = (
   shuffleQuestions: boolean = true,
   tutorial?: TutorialStep[]
 ): Page => {
-  const ctx = proofMeta.baseContent(true, false);
-  const highlightCtx = proofMeta.baseContent(true, false);
-  const additionCtx = proofMeta.baseContent(true, false);
+  const ctx = proofMeta.baseContent();
+  const highlightCtx = proofMeta.baseContent();
+  const additionCtx = proofMeta.baseContent();
 
   const linkedTexts: ProofTextItem[] = [];
   const reasonMap = new Map<string, Reason>();

@@ -1,8 +1,6 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Angle } from "../../../core/geometry/Angle";
-import { Point, ShowPoint } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
+import { ShowPoint } from "../../../core/geometry/Point";
 import { comma, triangleStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
@@ -19,57 +17,46 @@ import {
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, Obj, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [2, 2],
-      [2, 9],
-      [14, 2],
-      [14, 9],
-      [8, 2],
-    ],
-  ];
+export const baseContent = () => {
   let ctx = new Content();
-  const labels = ["E", "F", "H", "G", "J"];
-  const offsets: Vector[] = [
-    [-15, -15],
-    [-10, 5],
-    [0, -17],
-    [8, 0],
-    [-5, -18],
-  ];
-  const pts = coords[0];
-  const [E, F, H, G, J] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-        showPoint: ShowPoint.Adaptive,
-      })
-    )
-  );
-  // ctx.push(new Quadrilateral({ pts: [E, F, G, H], parentFrame }, ctx));
+  const [E, F, H, G, J] = ctx.addPoints([
+    {
+      pt: [2, 2],
+      label: "E",
+      offset: [-15, -15],
+      showPoint: ShowPoint.Adaptive,
+    },
+    { pt: [2, 9], label: "F", offset: [-10, 5], showPoint: ShowPoint.Adaptive },
+    {
+      pt: [14, 2],
+      label: "H",
+      offset: [0, -17],
+      showPoint: ShowPoint.Adaptive,
+    },
+    { pt: [14, 9], label: "G", offset: [8, 0], showPoint: ShowPoint.Adaptive },
+    {
+      pt: [8, 2],
+      label: "J",
+      offset: [-5, -18],
+      showPoint: ShowPoint.Adaptive,
+    },
+  ]);
 
-  ctx.push(new Triangle({ pts: [E, F, J], hoverable, label: "FEJ" }, ctx));
-  ctx.push(
-    new Triangle(
-      { pts: [J, G, H], hoverable, label: "JHG", rotatePattern: true },
-      ctx
-    )
-  );
-  ctx.push(new Triangle({ pts: [F, G, J], hoverable, label: "FGJ" }, ctx));
+  ctx.addTriangles([
+    { pts: [E, F, J], label: "FEJ" },
+    { pts: [J, G, H], label: "JHG", rotatePattern: true },
+    { pts: [F, G, J], label: "FGJ" },
+  ]);
 
   // for mini figures
-  ctx.push(new Angle({ start: E, center: F, end: G, hoverable }));
-  ctx.push(new Angle({ start: F, center: G, end: H, hoverable }));
+  ctx.addAngles([
+    { start: E, center: F, end: G },
+    { start: F, center: G, end: H },
+  ]);
 
   ctx.setAspect(AspectRatio.Landscape);
   return ctx;

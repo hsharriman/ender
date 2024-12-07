@@ -1,8 +1,5 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Point, ShowPoint } from "../../../core/geometry/Point";
-import { Segment } from "../../../core/geometry/Segment";
-import { Triangle } from "../../../core/geometry/Triangle";
 import { segmentStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
@@ -21,54 +18,29 @@ import {
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, Obj, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [2, 9], // W
-      [9, 9], // X
-      [2, 1], // Y
-      [9, 1], // Z
-      [5.5, 5], // M
-    ],
-  ];
+const baseContent = () => {
   let ctx = new Content();
-  const labels = ["W", "X", "Y", "Z", "M"];
-  const offsets: Vector[] = [
-    [-15, 0],
-    [5, -3],
-    [-17, -17],
-    [3, -10],
-    [10, -5],
-  ];
-  const pts = coords[0];
-  const [W, X, Y, Z, M] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-        showPoint: ShowPoint.Adaptive,
-      })
-    )
-  );
+  const [W, X, Y, Z, M] = ctx.addPoints([
+    { pt: [2, 9], label: "W", offset: [-15, 0] },
+    { pt: [9, 9], label: "X", offset: [5, -3] },
+    { pt: [2, 1], label: "Y", offset: [-17, -17] },
+    { pt: [9, 1], label: "Z", offset: [3, -10] },
+    { pt: [5.5, 5], label: "M", offset: [10, -5] },
+  ]);
 
-  [
-    new Triangle({ pts: [M, Y, Z], hoverable, label: "MYZ" }, ctx),
-    new Triangle(
-      { pts: [M, W, X], hoverable, label: "MWX", rotatePattern: true },
-      ctx
-    ),
-  ].map((t) => ctx.push(t));
+  ctx.addTriangles([
+    { pts: [M, Y, Z], label: "MYZ" },
+    { pts: [M, W, X], label: "MWX", rotatePattern: true },
+  ]);
 
-  ctx.push(new Segment({ p1: W, p2: Z, hoverable: false }));
-  ctx.push(new Segment({ p1: Y, p2: X, hoverable: false }));
+  ctx.addSegments([
+    { p1: W, p2: Z },
+    { p1: Y, p2: X },
+  ]);
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;

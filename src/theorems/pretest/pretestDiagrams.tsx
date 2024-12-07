@@ -1,9 +1,6 @@
 import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Content } from "../../core/diagramContent";
-import { Angle } from "../../core/geometry/Angle";
-import { Point, ShowPoint } from "../../core/geometry/Point";
-import { Segment } from "../../core/geometry/Segment";
-import { Triangle } from "../../core/geometry/Triangle";
+import { ShowPoint } from "../../core/geometry/Point";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../core/reasons/EqualSegments";
@@ -52,16 +49,12 @@ export const segmentContent = () => {
   let ctx = new Content();
   const [A, B, C, D, E, F, G, H, J, M, N] = coords.map((c) =>
     // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c[1],
-        label: c[0],
-        showLabel: true,
-        offset: c[2],
-        hoverable: false,
-        showPoint: ShowPoint.Always,
-      })
-    )
+    ctx.addPoint({
+      pt: c[1],
+      label: c[0],
+      offset: c[2],
+      showPoint: ShowPoint.Always,
+    })
   );
   [
     [A, B],
@@ -71,7 +64,7 @@ export const segmentContent = () => {
     [H, J],
     [M, N],
   ].forEach((s) => {
-    ctx.push(new Segment({ p1: s[0], p2: s[1], hoverable: false }));
+    ctx.addSegment({ p1: s[0], p2: s[1] });
   });
 
   ctx.addFrame("given");
@@ -105,16 +98,12 @@ export const angleContent = () => {
   let ctx = new Content();
   const [A, B, C, D, E, F, G, H, J, K, L, M, N, Q, P] = coords.map((c) =>
     // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c[1],
-        label: c[0],
-        showLabel: true,
-        offset: c[2],
-        hoverable: false,
-        showPoint: ShowPoint.Always,
-      })
-    )
+    ctx.addPoint({
+      pt: c[1],
+      label: c[0],
+      offset: c[2],
+      showPoint: ShowPoint.Always,
+    })
   );
   [
     [A, B],
@@ -128,14 +117,16 @@ export const angleContent = () => {
     [N, Q],
     [Q, P],
   ].forEach((s) => {
-    const seg = ctx.push(new Segment({ p1: s[0], p2: s[1], hoverable: false }));
+    const seg = ctx.addSegment({ p1: s[0], p2: s[1] });
     seg.mode("given", SVGModes.Default);
   });
-  ctx.push(new Angle({ start: A, center: B, end: C, hoverable: false }));
-  ctx.push(new Angle({ start: D, center: E, end: F, hoverable: false }));
-  ctx.push(new Angle({ start: G, center: H, end: J, hoverable: false }));
-  ctx.push(new Angle({ start: K, center: L, end: M, hoverable: false }));
-  ctx.push(new Angle({ start: N, center: Q, end: P, hoverable: false }));
+  ctx.addAngles([
+    { start: A, center: B, end: C },
+    { start: D, center: E, end: F },
+    { start: G, center: H, end: J },
+    { start: K, center: L, end: M },
+    { start: N, center: Q, end: P },
+  ]);
 
   ctx.addFrame("given");
   EqualAngles.additions(defaultProps(ctx), ["ABC", "GHJ"]);
@@ -156,22 +147,14 @@ const baseTriangles = () => {
   let ctx = new Content();
   const [A, B, C, D, E, F] = coords.map((c) =>
     // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c[1],
-        label: c[0],
-        showLabel: true,
-        offset: c[2],
-        hoverable: false,
-      })
-    )
+    ctx.addPoint({
+      pt: c[1],
+      label: c[0],
+      offset: c[2],
+    })
   );
-  ctx.push(
-    new Triangle({ pts: [A, B, C], label: "ABC", hoverable: false }, ctx)
-  );
-  ctx.push(
-    new Triangle({ pts: [D, E, F], label: "DEF", hoverable: false }, ctx)
-  );
+  ctx.addTriangle({ pts: [A, B, C], label: "ABC" });
+  ctx.addTriangle({ pts: [D, E, F], label: "DEF" });
 
   ctx.addFrame("given");
   ctx.getTriangle("ABC").mode("given", SVGModes.Default);
@@ -191,22 +174,16 @@ export const hl = () => {
   let ctx = new Content();
   const [A, B, C, D, E, F] = coords.map((c) =>
     // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c[1],
-        label: c[0],
-        showLabel: true,
-        offset: c[2],
-        hoverable: false,
-      })
-    )
+    ctx.addPoint({
+      pt: c[1],
+      label: c[0],
+      offset: c[2],
+    })
   );
-  ctx.push(
-    new Triangle({ pts: [A, B, C], label: "ABC", hoverable: false }, ctx)
-  );
-  ctx.push(
-    new Triangle({ pts: [D, E, F], label: "DEF", hoverable: false }, ctx)
-  );
+  ctx.addTriangles([
+    { pts: [A, B, C], label: "ABC" },
+    { pts: [D, E, F], label: "DEF" },
+  ]);
 
   ctx.addFrame("given");
   ctx.getTriangle("ABC").mode("given", SVGModes.Default);

@@ -1,8 +1,5 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Angle } from "../../../core/geometry/Angle";
-import { Point } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
@@ -19,48 +16,28 @@ import {
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const pts: Vector[] = [
-    [2, 2], // L BL
-    [2, 9], // M TL
-    [14, 2], // K BR
-    [14, 9], // N TR
-  ];
+export const baseContent = () => {
   let ctx = new Content();
-  const labels = ["L", "M", "K", "N"];
-  const offsets: Vector[] = [
-    [-15, -15],
-    [-10, 5],
-    [0, -17],
-    [8, 0],
-  ];
-  const [L, M, K, N] = pts.map((c, i) => {
-    // TODO option to make point labels invisible
-    return ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-      })
-    );
-  });
-  ctx.push(new Triangle({ pts: [L, M, K], hoverable, label: "KLM" }, ctx));
-  ctx.push(
-    new Triangle(
-      { pts: [K, N, M], hoverable, label: "MNK", rotatePattern: true },
-      ctx
-    )
-  );
+  const [L, M, K, N] = ctx.addPoints([
+    { pt: [2, 2], label: "L", offset: [-15, -15] },
+    { pt: [2, 9], label: "M", offset: [-10, 5] },
+    { pt: [14, 2], label: "K", offset: [0, -17] },
+    { pt: [14, 9], label: "N", offset: [8, 0] },
+  ]);
+  ctx.addTriangles([
+    { pts: [L, M, K], label: "KLM" },
+    { pts: [K, N, M], label: "MNK", rotatePattern: true },
+  ]);
 
   // for mini figures
-  ctx.push(new Angle({ start: L, center: M, end: N, hoverable }));
-  ctx.push(new Angle({ start: L, center: K, end: N, hoverable }));
+  ctx.addAngles([
+    { start: L, center: M, end: N },
+    { start: L, center: K, end: N },
+  ]);
 
   ctx.setAspect(AspectRatio.Landscape);
   return ctx;

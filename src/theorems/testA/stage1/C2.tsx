@@ -1,8 +1,6 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Angle } from "../../../core/geometry/Angle";
-import { Point, ShowPoint } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
+import { ShowPoint } from "../../../core/geometry/Point";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -23,52 +21,33 @@ import {
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, Obj, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [2, 1], // A
-      [5.5, 8], // B
-      [9, 1], // C
-      [5.5, 1], // D
-    ],
-  ];
+export const baseContent = () => {
   let ctx = new Content();
-  const labels = ["A", "B", "C", "D"];
-  const offsets: Vector[] = [
-    [-15, -15],
-    [0, 5],
-    [0, -17],
-    [-5, -18],
-  ];
-  const pts = coords[0];
-  const [A, B, C, D] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-        showPoint: ShowPoint.Adaptive,
-      })
-    )
-  );
+  const [A, B, C, D] = ctx.addPoints([
+    {
+      pt: [2, 1],
+      label: "A",
+      offset: [-15, -15],
+      showPoint: ShowPoint.Adaptive,
+    },
+    { pt: [5.5, 8], label: "B", offset: [0, 5], showPoint: ShowPoint.Adaptive },
+    { pt: [9, 1], label: "C", offset: [0, -17], showPoint: ShowPoint.Adaptive },
+    {
+      pt: [5.5, 1],
+      label: "D",
+      offset: [-5, -18],
+      showPoint: ShowPoint.Adaptive,
+    },
+  ]);
 
-  ctx.push(new Triangle({ pts: [A, B, D], hoverable, label: "ABD" }, ctx));
-  ctx.push(
-    new Triangle(
-      { pts: [C, B, D], hoverable, label: "CBD", rotatePattern: true },
-      ctx
-    )
-  );
-
-  // for given step:
-  ctx.push(new Angle({ start: A, center: B, end: C, hoverable }));
+  ctx.addTriangles([
+    { pts: [A, B, D], label: "ABD" },
+    { pts: [C, B, D], label: "CBD", rotatePattern: true },
+  ]);
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;

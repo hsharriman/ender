@@ -92,7 +92,7 @@ export class DropdownQuestion extends React.Component<
         </label>
         <textarea
           id="input-group-search"
-          className="w-[300px] mx-4 p-2 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 bg-slate-100"
+          className="w-[300px] mx-4 p-2 text-sm text-gray-700 border border-gray-300 rounded-lg bg-slate-100"
           placeholder="(120 character limit)"
           maxLength={120}
           value={this.state.inputText}

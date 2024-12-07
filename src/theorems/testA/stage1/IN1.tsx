@@ -1,7 +1,5 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Point } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
@@ -17,48 +15,23 @@ import {
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [1, 2], // A
-      [10, 2], // D
-      [5, 9], // B
-      [14, 9], // C
-    ],
-  ];
+const baseContent = () => {
   let ctx = new Content();
-  const labels = ["A", "D", "B", "C"];
-  const offsets: Vector[] = [
-    [-15, -10],
-    [10, -10],
-    [-25, -10],
-    [3, -10],
-  ];
-  const pts = coords[0];
-  const [A, D, B, C] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-      })
-    )
-  );
+  const [A, B, D, C] = ctx.addPoints([
+    { pt: [1, 2], label: "A", offset: [-15, -10] },
+    { pt: [10, 2], label: "B", offset: [10, -10] },
+    { pt: [5, 9], label: "D", offset: [-25, -10] },
+    { pt: [14, 9], label: "C", offset: [3, -10] },
+  ]);
 
-  [
-    new Triangle({ pts: [A, B, D], hoverable, label: "ABD" }, ctx),
-    new Triangle(
-      { pts: [B, C, D], hoverable, label: "CDB", rotatePattern: true },
-      ctx
-    ),
-  ].map((t) => ctx.push(t));
+  ctx.addTriangles([
+    { pts: [A, B, D], label: "ABD" },
+    { pts: [B, C, D], label: "CDB", rotatePattern: true },
+  ]);
 
   ctx.setAspect(AspectRatio.Landscape);
   return ctx;

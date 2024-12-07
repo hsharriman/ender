@@ -1,7 +1,5 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Point } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles, EqualAngleStep } from "../../../core/reasons/EqualAngles";
@@ -22,57 +20,27 @@ import {
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [1, 9], // F
-      [2, 1], // A
-      [5.5, 6], // B
-      [9, 1], // C
-      [5.5, 1], // D
-      [10, 9], // G
-    ],
-  ];
+const baseContent = () => {
   let ctx = new Content();
-  const labels = ["F", "A", "B", "C", "D", "G"];
-  const offsets: Vector[] = [
-    [-12, 0],
-    [-10, -15],
-    [-3, 10],
-    [-3, -15],
-    [-5, -18],
-    [3, 0],
-  ];
-  const pts = coords[0];
-  const [F, A, B, C, D, G] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-      })
-    )
-  );
+  const [F, A, B, C, D, G] = ctx.addPoints([
+    { pt: [1, 9], label: "F", offset: [12, 0] },
+    { pt: [2, 1], label: "A", offset: [-10, -15] },
+    { pt: [5.5, 6], label: "B", offset: [-3, 10] },
+    { pt: [9, 1], label: "C", offset: [-3, -15] },
+    { pt: [5.5, 1], label: "D", offset: [-5, -18] },
+    { pt: [10, 9], label: "G", offset: [3, 0] },
+  ]);
 
-  [
-    new Triangle({ pts: [A, B, F], hoverable, label: "ABF" }, ctx),
-    new Triangle(
-      { pts: [A, B, D], hoverable, label: "ABD", rotatePattern: true },
-      ctx
-    ),
-    new Triangle({ pts: [B, C, D], hoverable, label: "BCD" }, ctx),
-    new Triangle(
-      { pts: [B, C, G], hoverable, label: "BCG", rotatePattern: true },
-      ctx
-    ),
-  ].map((t) => ctx.push(t));
+  ctx.addTriangles([
+    { pts: [A, B, F], label: "ABF" },
+    { pts: [A, B, D], label: "ABD", rotatePattern: true },
+    { pts: [B, C, D], label: "BCD" },
+    { pts: [B, C, G], label: "BCG", rotatePattern: true },
+  ]);
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;

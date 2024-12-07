@@ -1,9 +1,9 @@
 import { AspectRatio } from "./diagramSvg/svgTypes";
-import { Angle } from "./geometry/Angle";
-import { Point } from "./geometry/Point";
-import { Quadrilateral } from "./geometry/Quadrilateral";
-import { Segment } from "./geometry/Segment";
-import { Triangle } from "./geometry/Triangle";
+import { Angle, AngleProps } from "./geometry/Angle";
+import { Point, PointProps } from "./geometry/Point";
+import { Quadrilateral, QuadrilateralProps } from "./geometry/Quadrilateral";
+import { Segment, SegmentProps } from "./geometry/Segment";
+import { Triangle, TriangleProps } from "./geometry/Triangle";
 import { Obj } from "./types/types";
 import { getId } from "./utils";
 
@@ -60,35 +60,55 @@ export class Content {
 
   getCtx = () => this.ctx;
 
-  push(e: Point): Point;
-  push(e: Segment): Segment;
-  push(e: Angle): Angle;
-  push(e: Triangle): Triangle;
-  push(e: Quadrilateral): Quadrilateral;
-  push(e: Point | Segment | Angle | Triangle | Quadrilateral) {
-    switch (e.tag) {
-      case Obj.Point:
-        if (!this.getPoint(e.label)) this.ctx.points.push(e as Point);
-        return e;
-      case Obj.Segment:
-        if (!this.getSegment(e.label)) this.ctx.segments.push(e as Segment);
-        return e;
-      case Obj.Angle:
-        if (!this.getAngle(e.label)) this.ctx.angles.push(e as Angle);
-        return e;
-      case Obj.Triangle:
-        // add segments
-        if (!this.getTriangle(e.label)) this.ctx.triangles.push(e as Triangle);
-        return e;
-      // add angles
-      case Obj.Quadrilateral:
-        if (!this.getQuadrilateral(e.label))
-          this.ctx.rectangles.push(e as Quadrilateral);
-        return e;
-      default:
-        return;
-    }
-  }
+  addPoint = (props: PointProps) => {
+    const pt = new Point(props);
+    if (!this.getPoint(pt.label)) this.ctx.points.push(pt);
+    return pt;
+  };
+
+  addSegment = (props: SegmentProps) => {
+    let s = new Segment(props);
+    if (!this.getSegment(s.label)) this.ctx.segments.push(s);
+    return s;
+  };
+
+  addAngle = (props: AngleProps) => {
+    let a = new Angle(props);
+    if (!this.getAngle(a.label)) this.ctx.angles.push(a);
+    return a;
+  };
+
+  addTriangle = (props: TriangleProps) => {
+    let t = new Triangle(props, this);
+    if (!this.getTriangle(t.label)) this.ctx.triangles.push(t);
+    return t;
+  };
+
+  addQuadrilateral = (props: QuadrilateralProps) => {
+    const q = new Quadrilateral(props, this);
+    if (!this.getQuadrilateral(q.label)) this.ctx.rectangles.push(q);
+    return q;
+  };
+
+  addPoints = (propsArr: PointProps[]) => {
+    return propsArr.map((props) => this.addPoint(props));
+  };
+
+  addSegments = (propsArr: SegmentProps[]) => {
+    return propsArr.map((props) => this.addSegment(props));
+  };
+
+  addAngles = (propsArr: AngleProps[]) => {
+    return propsArr.map((props) => this.addAngle(props));
+  };
+
+  addTriangles = (propsArr: TriangleProps[]) => {
+    return propsArr.map((props) => this.addTriangle(props));
+  };
+
+  addQuadrilaterals = (propsArr: QuadrilateralProps[]) => {
+    return propsArr.map((props) => this.addQuadrilateral(props));
+  };
 
   getPoint = (label: string) =>
     this.ctx.points.filter((p) => p.matches(label))[0];

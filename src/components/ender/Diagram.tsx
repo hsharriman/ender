@@ -31,7 +31,6 @@ export class Diagram extends React.Component<DiagramProps> {
 
   renderPoints = (ctx: DiagramContent, frame: string, layer: number) => {
     return ctx.points.flatMap((p, i) => {
-      const hoverable = this.props.isStatic ? false : p.hoverable;
       let setMode = p.getMode(frame);
       setMode = setMode === SVGModes.Unfocused ? SVGModes.Hidden : setMode;
       const mode = this.props.isStatic
@@ -41,7 +40,7 @@ export class Diagram extends React.Component<DiagramProps> {
         <SVGGeoPoint
           geoId={`${p.id}.${layer}`}
           mode={mode}
-          hoverable={hoverable}
+          hoverable={false}
           key={`${p.id}-${i}.${layer}`}
           {...{
             p: p.labeled(),
@@ -63,12 +62,11 @@ export class Diagram extends React.Component<DiagramProps> {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : seg.getMode(frame) ?? SVGModes.Hidden;
-      const hoverable = this.props.isStatic ? false : seg.hoverable;
       return (
         <SVGGeoSegment
           geoId={`${seg.id}.${layer}`}
           mode={mode}
-          hoverable={hoverable}
+          hoverable={false}
           {...{
             miniScale: this.props.miniScale,
             s: seg.labeled(),
@@ -86,12 +84,11 @@ export class Diagram extends React.Component<DiagramProps> {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : ang.getMode(frame) ?? SVGModes.Hidden;
-      const hoverable = this.props.isStatic ? false : ang.hoverable;
       return (
         <SVGGeoAngle
           mode={mode}
           geoId={`${ang.id}.${layer}`}
-          hoverable={hoverable}
+          hoverable={false}
           {...{
             a: ang.labeled(),
             miniScale: this.props.miniScale,
@@ -109,11 +106,10 @@ export class Diagram extends React.Component<DiagramProps> {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : tri.getMode(frame) ?? SVGModes.Hidden;
-      const hoverable = this.props.isStatic ? false : tri.hoverable;
       return (
         <SVGGeoTriangle
           geoId={`${tri.id}.${layer}`}
-          hoverable={hoverable}
+          hoverable={false}
           {...{
             miniScale: this.props.miniScale,
             t: tri,

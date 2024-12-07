@@ -1,7 +1,5 @@
 import { Content } from "../../core/diagramContent";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
-import { Point } from "../../core/geometry/Point";
-import { Triangle } from "../../core/geometry/Triangle";
 import { comma } from "../../core/geometryText";
 import { CongruentTriangles } from "../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
@@ -19,48 +17,23 @@ import {
   StepMeta,
   StepProps,
 } from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
+import { LayoutProps, Obj, SVGModes } from "../../core/types/types";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [5.5, 9], //A
-      [2, 3], //B
-      [5.5, 1], //C
-      [9, 3], //D
-    ],
-  ];
+export const baseContent = () => {
   let ctx = new Content();
-  const labels = ["A", "B", "C", "D"];
-  const offsets: Vector[] = [
-    [0, 5],
-    [-8, -18],
-    [-8, -17],
-    [-5, -18],
-  ];
-  const pts = coords[0];
-  const [A, B, C, D] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-      })
-    )
-  );
+  const [A, B, C, D] = ctx.addPoints([
+    { pt: [5.5, 9], label: "A", offset: [0, 5] },
+    { pt: [2, 3], label: "B", offset: [-8, -18] },
+    { pt: [5.5, 1], label: "C", offset: [-8, -17] },
+    { pt: [9, 3], label: "D", offset: [-5, -18] },
+  ]);
 
-  ctx.push(new Triangle({ pts: [A, B, C], hoverable, label: "ABC" }, ctx));
-  ctx.push(
-    new Triangle(
-      { pts: [A, C, D], hoverable, label: "ACD", rotatePattern: true },
-      ctx
-    )
-  );
+  ctx.addTriangles([
+    { pts: [A, B, C], label: "ABC" },
+    { pts: [A, C, D], label: "ACD", rotatePattern: true },
+  ]);
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;
