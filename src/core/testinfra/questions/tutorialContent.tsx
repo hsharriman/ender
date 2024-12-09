@@ -6,34 +6,6 @@ const allProofRowListenerIds = Array.from(
   { length: 4 },
   (_, i) => `s${i + 1}-tutorial`
 );
-const hintBtn = (
-  <span className="inline-flex">
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="8" cy="8" r="8" fill="#3B82F6" strokeWidth={0}></circle>
-      <text
-        x={4}
-        y={12}
-        id={"tutorial-hint-button-inline"}
-        key={"tutorial-hint-button-inline"}
-        style={{
-          font: "12px sans-serif",
-          fontStyle: "black",
-          color: "white",
-          fill: "white",
-          strokeWidth: 0.5,
-          stroke: "white",
-        }}
-      >
-        ?
-      </text>
-    </svg>
-  </span>
-);
 export const tutorial1Steps: TutorialStep[] = [
   {
     elemId: "",
@@ -44,33 +16,9 @@ export const tutorial1Steps: TutorialStep[] = [
         use. Let's look through them together.
       </span>
     ),
-    listenerId: [], // TODO use this to check if specific actions have been taken?
+    listenerId: [],
     type: TutorialStepType.Popup,
   },
-  // {
-  //   elemId: "triangle-text-ADC",
-  //   text: (
-  //     <span>
-  //       You can {bold("hover over text in the proof")} to highlight it in the
-  //       construction.
-  //     </span>
-  //   ),
-  //   type: TutorialStepType.Default,
-  //   exercise: <span>Hover over {triangleStr("ADC")}</span>,
-  //   listenerId: ["triangle-text-ADC"],
-  // },
-  // {
-  //   elemId: "point.D",
-  //   text: (
-  //     <span>
-  //       You can also {bold("click on objects in the construction")} to highlight
-  //       where they appear in the proof.
-  //     </span>
-  //   ),
-  //   type: TutorialStepType.Default,
-  //   listenerId: ["segment.CD-hover"],
-  //   exercise: <span>Click on segment CD on the diagram</span>,
-  // },
   {
     elemId: "reveal-btn-container",
     text: (
@@ -115,8 +63,7 @@ export const tutorial1Steps: TutorialStep[] = [
     elemId: "answer-button-1",
     text: (
       <span>
-        Try to use the information in this proof to answer the question. If you
-        need help, {bold("click the ")} {hintBtn} {bold(" button for a hint")}.
+        Try to use the information in this proof to answer the question.
       </span>
     ),
     type: TutorialStepType.HideContinue,
@@ -163,12 +110,7 @@ export const tutorial1Steps: TutorialStep[] = [
         {bold("relies on information in steps 1, 2, and 3")}.
       </span>
     ),
-    exercise: (
-      <span>
-        Try answering the question using this information. If you need help,{" "}
-        {bold("click the")} {hintBtn} {bold("button for a hint")}.
-      </span>
-    ),
+    exercise: <span>Try answering the question using this information.</span>,
     paddingL: 30,
     listenerId: [],
   },

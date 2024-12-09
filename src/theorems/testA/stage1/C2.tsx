@@ -1,11 +1,8 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Angle } from "../../../core/geometry/Angle";
-import { Point, ShowPoint } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
+import { ShowPoint } from "../../../core/geometry/Point";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
-import { BaseAngle } from "../../../core/reasons/BaseAngle";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
@@ -19,53 +16,38 @@ import {
   S1C2questions,
   exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
-import { StepFocusProps, StepMeta } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import {
+  StepFocusProps,
+  StepMeta,
+  StepProps,
+} from "../../../core/types/stepTypes";
+import { LayoutProps, Obj, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
-import { BGColors, makeStepMeta } from "../../utils";
+import { makeStepMeta } from "../../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [2, 1], // A
-      [5.5, 8], // B
-      [9, 1], // C
-      [5.5, 1], // D
-    ],
-  ];
+export const baseContent = () => {
   let ctx = new Content();
-  const labels = ["A", "B", "C", "D"];
-  const offsets: Vector[] = [
-    [-15, -15],
-    [0, 5],
-    [0, -17],
-    [-5, -18],
-  ];
-  const pts = coords[0];
-  const [A, B, C, D] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-        showPoint: ShowPoint.Adaptive,
-      })
-    )
-  );
+  const [A, B, C, D] = ctx.addPoints([
+    {
+      pt: [2, 1],
+      label: "A",
+      offset: [-15, -15],
+      showPoint: ShowPoint.Adaptive,
+    },
+    { pt: [5.5, 8], label: "B", offset: [0, 5], showPoint: ShowPoint.Adaptive },
+    { pt: [9, 1], label: "C", offset: [0, -17], showPoint: ShowPoint.Adaptive },
+    {
+      pt: [5.5, 1],
+      label: "D",
+      offset: [-5, -18],
+      showPoint: ShowPoint.Adaptive,
+    },
+  ]);
 
-  ctx.push(new Triangle({ pts: [A, B, D], hoverable, label: "ABD" }, ctx));
-  ctx.push(
-    new Triangle(
-      { pts: [C, B, D], hoverable, label: "CBD", rotatePattern: true },
-      ctx
-    )
-  );
-
-  // for given step:
-  ctx.push(new Angle({ start: A, center: B, end: C, hoverable }));
+  ctx.addTriangles([
+    { pts: [A, B, D] },
+    { pts: [C, B, D], rotatePattern: true },
+  ]);
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;
@@ -75,11 +57,11 @@ const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
     return (
       <span>
-        {RightAngle.text("ADB")(isActive)}
+        {RightAngle.text("ADB")(true)}
         {comma}
-        {segmentStr("BD")}
-        <span className="font-notoSans">&nbsp;bisects&nbsp;</span>
-        {BaseAngle.text("ABC", BGColors.Blue)(isActive)}
+        {segmentStr("BD", true)}
+        {" bisects "}
+        {angleStr("ABC")}
       </span>
     );
   },
@@ -89,18 +71,6 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("CBD").mode(props.frame, props.mode);
     RightAngle.additions(props, "ADB");
     EqualAngles.additions(props, ["ABD", "CBD"]);
-  },
-
-  staticText: () => {
-    return (
-      <span>
-        {RightAngle.staticText("ADB")}
-        {comma}
-        {segmentStr("BD")}
-        {" bisects "}
-        {angleStr("ABC")}
-      </span>
-    );
   },
 });
 
@@ -114,8 +84,7 @@ const proves: StepMeta = makeStepMeta({
       1
     );
   },
-  text: Midpoint.text("D", "AC"),
-  staticText: () => Midpoint.staticText("D", "AC"),
+  text: (active: boolean) => Midpoint.text("D", "AC")(true),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -125,7 +94,6 @@ const step1: StepMeta = makeStepMeta({
     RightAngle.additions(props, "ADB");
   },
   text: RightAngle.text("ADB"),
-  staticText: () => RightAngle.staticText("ADB"),
 });
 
 const step2: StepMeta = makeStepMeta({
@@ -136,13 +104,12 @@ const step2: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["ABD", "CBD"]);
   },
   text: (isActive: boolean) => {
-    return step2.staticText();
+    return (
+      <span>
+        {segmentStr("BD", isActive)} bisects {angleStr("ABC")}
+      </span>
+    );
   },
-  staticText: () => (
-    <span>
-      {segmentStr("BD")} bisects {angleStr("ABC")}
-    </span>
-  ),
 });
 
 const step22: StepMeta = makeStepMeta({
@@ -152,9 +119,8 @@ const step22: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["ABD", "DBC"]),
   text: EqualAngles.text(["ABD", "DBC"]),
-  staticText: () => EqualAngles.staticText(["ABD", "DBC"]),
-  highlight: (ctx: Content, frame: string) =>
-    ctx.getSegment("BD").mode(frame, SVGModes.ReliesOn),
+  highlight: (props: StepProps) =>
+    props.ctx.getSegment("BD").mode(props.frame, SVGModes.ReliesOn),
 });
 
 const step3: StepMeta = makeStepMeta({
@@ -164,7 +130,6 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "BD", ["AD", "DC"]),
   text: Perpendicular.text("AC", "BD"),
-  staticText: () => Perpendicular.staticText("BD", "AC"),
 });
 
 const step4: StepMeta = makeStepMeta({
@@ -174,9 +139,8 @@ const step4: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["ADB", "BDC"]),
   text: EqualRightAngles.text(["ADB", "BDC"]),
-  staticText: () => EqualRightAngles.staticText(["ADB", "BDC"]),
-  highlight: (ctx: Content, frame: string) => {
-    Perpendicular.highlight(ctx, frame, "BD", ["AD", "DC"], SVGModes.ReliesOn);
+  highlight: (props: StepProps) => {
+    Perpendicular.highlight(props, "BD", ["AD", "DC"], SVGModes.ReliesOn);
   },
 });
 
@@ -185,7 +149,6 @@ const step5: StepMeta = makeStepMeta({
   prevStep: step4,
   additions: (props: StepFocusProps) => Reflexive.additions(props, "BD"),
   text: Reflexive.text("BD"),
-  staticText: () => Reflexive.staticText("BD"),
 });
 
 const step5ASAProps: ASAProps = {
@@ -199,17 +162,11 @@ const step6: StepMeta = makeStepMeta({
   dependsOn: ["3", "5", "6"],
   prevStep: step5,
   additions: (props: StepFocusProps) => {
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["ADB", "BDC"],
-      props.mode
-    );
+    CongruentTriangles.congruentLabel(props, ["ADB", "BDC"], props.mode);
   },
   text: EqualTriangles.text(["ABD", "CBD"]),
-  staticText: () => EqualTriangles.staticText(["ABD", "CBD"]),
-  highlight: (ctx: Content, frame: string) => {
-    ASA.highlight(ctx, frame, step5ASAProps, SVGModes.ReliesOn);
+  highlight: (props: StepProps) => {
+    ASA.highlight(props, step5ASAProps, SVGModes.ReliesOn);
   },
 });
 
@@ -220,14 +177,8 @@ const step7: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualSegments.additions(props, ["AD", "DC"], 2),
   text: EqualSegments.text(["AD", "DC"]),
-  staticText: () => EqualSegments.staticText(["AD", "DC"]),
-  highlight: (ctx: Content, frame: string) => {
-    CongruentTriangles.congruentLabel(
-      ctx,
-      frame,
-      ["ADB", "BDC"],
-      SVGModes.ReliesOn
-    );
+  highlight: (props: StepProps) => {
+    CongruentTriangles.congruentLabel(props, ["ADB", "BDC"], SVGModes.ReliesOn);
   },
 });
 
@@ -239,10 +190,9 @@ const step8: StepMeta = makeStepMeta({
     props.ctx.getPoint("D").mode(props.frame, SVGModes.Derived);
   },
   text: Midpoint.text("D", "AC"),
-  staticText: () => Midpoint.staticText("D", "AC"),
-  highlight: (ctx: Content, frame: string) => {
-    EqualSegments.highlight(ctx, frame, ["AD", "DC"], SVGModes.ReliesOn, 2);
-    ctx.getPoint("D").mode(frame, SVGModes.Derived);
+  highlight: (props: StepProps) => {
+    EqualSegments.highlight(props, ["AD", "DC"], SVGModes.ReliesOn, 2);
+    props.ctx.getPoint("D").mode(props.frame, SVGModes.Derived);
   },
 });
 

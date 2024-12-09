@@ -1,6 +1,6 @@
-import { Content } from "../diagramContent";
 import {
   StepFocusProps,
+  StepProps,
   TickedAngles,
   TickedSegments,
 } from "../types/stepTypes";
@@ -28,17 +28,16 @@ export class SAS {
     }
   };
   static highlight = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     labels: SASProps,
     mode: SVGModes = SVGModes.ReliesOn
   ) => {
-    EqualSegments.highlight(ctx, frame, labels.seg1s.s, mode);
-    EqualSegments.highlight(ctx, frame, labels.seg2s.s, mode, 2);
+    EqualSegments.highlight(props, labels.seg1s.s, mode);
+    EqualSegments.highlight(props, labels.seg2s.s, mode, 2);
     if (labels.angles.type === Obj.RightTick) {
-      EqualRightAngles.highlight(ctx, frame, labels.angles.a, mode);
+      EqualRightAngles.highlight(props, labels.angles.a, mode);
     } else {
-      EqualAngles.highlight(ctx, frame, labels.angles.a, mode);
+      EqualAngles.highlight(props, labels.angles.a, mode);
     }
   };
 }

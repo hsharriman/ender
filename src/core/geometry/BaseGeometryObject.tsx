@@ -4,7 +4,7 @@ import { getId } from "../utils";
 export interface BaseGeometryProps {
   activeIdx?: number; // follows the state of the app
   parentFrame?: string;
-  hoverable: boolean;
+  // hoverable: boolean; // deprecated
 }
 
 export class BaseGeometryObject {
@@ -13,13 +13,13 @@ export class BaseGeometryObject {
   public label: string = "";
   protected modes: Map<string, SVGModes>;
   public activeIdx: number;
-  readonly hoverable: boolean;
+  // readonly hoverable: boolean;
   getId = getId;
   constructor(tag: Obj, props: BaseGeometryProps) {
     this.tag = tag;
     this.modes = new Map<string, SVGModes>();
     this.activeIdx = props.activeIdx ? props.activeIdx : -1;
-    this.hoverable = props.hoverable;
+    // this.hoverable = props.hoverable;
   }
 
   getMode = (frameKey: string) => this.modes.get(frameKey);
@@ -29,8 +29,9 @@ export class BaseGeometryObject {
     return this;
   };
 
+  // deprecated
   onClickText = (isActive: boolean) => {
-    // TODO implementation
+    // do nothing
   };
 
   matches = (name: string) => this.names.find((n) => n === name) !== undefined;

@@ -1,5 +1,4 @@
-import { Content } from "../diagramContent";
-import { StepFocusProps } from "../types/stepTypes";
+import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualSegments } from "./EqualSegments";
@@ -27,11 +26,11 @@ export class CongruentTriangles {
   };
 
   static congruentLabel = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     labels: [string, string],
     mode: SVGModes
   ) => {
+    const { ctx, frame } = props;
     ctx.getTriangle(labels[0]).setCongruent(frame).labelMode(frame, mode);
     ctx.getTriangle(labels[1]).setCongruent(frame).labelMode(frame, mode);
   };

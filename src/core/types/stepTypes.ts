@@ -2,15 +2,15 @@ import { Content } from "../diagramContent";
 import { Reason, SVGModes, TickType } from "./types";
 
 // -------- TYPES RELATED TO RENDERING STEPS OF A PROOF --------
-export interface StepUnfocusProps {
+export interface StepProps {
   ctx: Content;
   frame: string;
 }
-export interface StepFocusProps {
-  ctx: Content;
-  frame: string;
+
+export interface StepFocusProps extends StepProps {
   mode: SVGModes;
 }
+
 export interface ProofTextItem {
   k: string;
   v: (isActive: boolean) => JSX.Element;
@@ -36,12 +36,12 @@ export interface TickedAngles {
 
 export interface SetupStepMeta {
   prevStep?: StepMeta;
-  unfocused: (props: StepUnfocusProps) => void;
+  unfocused: (props: StepProps) => void;
   diagram: (ctx: Content, frame: string) => void;
   text: (isActive: boolean) => JSX.Element;
   staticText: () => JSX.Element;
   additions: (props: StepFocusProps) => void;
-  highlight?: (ctx: Content, frame: string) => void;
+  highlight?: (props: StepProps) => void;
 }
 export interface StepMeta extends SetupStepMeta {
   reason: Reason;

@@ -32,7 +32,6 @@ export class RadioQuestion extends React.Component<
   handleSubmit = () => {
     const { selectedOption } = this.state;
     if (selectedOption.length === 0) {
-      // TODO: add alert for empty input
       return;
     }
     this.props.onSubmit(this.state.selectedOption);

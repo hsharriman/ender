@@ -7,7 +7,6 @@ import { permutator } from "../utils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
 import { getPatternId } from "./LinePattern";
-import { ModeCSS } from "./SVGStyles";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
@@ -46,23 +45,24 @@ export class SVGGeoTriangle extends React.Component<
     }
   };
 
+  // deprecated
   highlightElems = (isActive: boolean) => {
     const a = this.props.t.a;
     const s = this.props.t.s;
-    s.map((seg) => {
+    s.forEach((seg) => {
       seg.onClickText(isActive);
     });
-    a.map((ang) => {
+    a.forEach((ang) => {
       ang.onClickText(isActive);
     });
   };
 
+  // deprecated
   onHoverLabelClick = (isActive: boolean) => {
     this.setState({
       isActive,
       isPinned: isActive,
     });
-    // TODO find matches for all segments/angles and add to their class
     const prefix = `#${Obj.Triangle}-text-`;
     const tri = this.props.t.label;
     const selectors = permutator(tri.split(""))
@@ -71,7 +71,7 @@ export class SVGGeoTriangle extends React.Component<
     const matches = document.querySelectorAll(selectors);
     matches.forEach((ele) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
+        const cls = [""];
         if (isActive) {
           ele.classList.add(...cls);
         } else {

@@ -2,7 +2,6 @@ import React from "react";
 import { ShowPoint } from "../geometry/Point";
 import { logEvent } from "../testinfra/testUtils";
 import { LPoint, Obj, SVGModes, Vector } from "../types/types";
-import { ModeCSS } from "./SVGStyles";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
 
@@ -25,18 +24,19 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
     };
   }
 
+  // deprecated
   onTextClick = () => {
     const pin = !this.state.isPinned === true;
     this.setState({
       isPinned: pin,
-      css: pin ? updateStyle(SVGModes.ActiveText) : "",
+      css: pin ? updateStyle(SVGModes.Default) : "",
     });
     const matches = document.querySelectorAll(
       `#${Obj.Point}-text-${this.props.geoId.replace("point.", "")}`
     );
     matches.forEach((ele) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMCLICKTEXT.split(" ");
+        const cls = [""];
         if (pin) {
           ele.classList.add(...cls);
         } else {
@@ -50,6 +50,7 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
     });
   };
 
+  // deprecated
   onHover = (isActive: boolean) => {
     if (
       this.props.hoverable &&
@@ -58,7 +59,7 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
     ) {
       this.setState({
         isActive,
-        css: isActive ? updateStyle(SVGModes.ActiveText) : "",
+        css: isActive ? updateStyle(SVGModes.Default) : "",
       });
       logEvent("h", {
         c: "po",

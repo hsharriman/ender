@@ -37,7 +37,6 @@ export class MultiSelectQuestion extends React.Component<
   handleSubmit = () => {
     const { selectedOptions } = this.state;
     if (selectedOptions.length === 0) {
-      // TODO: add alert for empty input
       return;
     }
     this.props.onSubmit(this.state.selectedOptions.join(", "));

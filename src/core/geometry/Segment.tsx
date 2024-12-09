@@ -1,4 +1,3 @@
-import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LSegment, Obj, SVGModes, TickType } from "../types/types";
 import { permutator } from "../utils";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
@@ -27,7 +26,7 @@ export class Segment extends BaseGeometryObject {
     this.names = permutator([this.p1.label, this.p2.label]);
     this.ticks = new Map<string, { type: TickType; num: number }>();
   }
-  // deprecated?
+
   labeled = (): LSegment => {
     return {
       p1: this.p1.pt,
@@ -57,22 +56,12 @@ export class Segment extends BaseGeometryObject {
 
   getTick = (frame: string) => this.ticks.get(frame);
 
-  frameElements = (frame: string) => {
-    if (this.modes.has(frame)) {
-      return {
-        mode: this.modes.get(frame) ?? SVGModes.Hidden,
-        tick: this.ticks.get(frame),
-        s: this.labeled(),
-      };
-    }
-    return;
-  };
-
+  // deprecated
   // TODO used in linkedText, needs a better location? Could just put in linkedText if linkedText knows the id
   override onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMGLOW.split(" ");
+        const cls = [""];
 
         if (isActive) {
           ele.classList.add(...cls);

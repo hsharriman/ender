@@ -1,5 +1,4 @@
-import { Content } from "../diagramContent";
-import { StepFocusProps } from "../types/stepTypes";
+import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 
@@ -32,11 +31,11 @@ export class VerticalAngles {
     return EqualAngles.text(labels);
   };
   static highlight = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     labels: VerticalAnglesProps,
     s2s?: [string, string]
   ) => {
+    const { ctx, frame } = props;
     ctx.getSegment(labels.segs[0]).mode(frame, SVGModes.ReliesOn);
     ctx.getSegment(labels.segs[1]).mode(frame, SVGModes.ReliesOn);
     if (s2s) {
