@@ -65,7 +65,11 @@ export class Procedure extends React.Component<ProcedureProps, ProcedureState> {
       version: PageType.Interactive,
       activeQuestionIdx: 0,
     };
-    this.randomSeed = new Rand(JSON.parse(localStorage.getItem("id") || ""));
+    this.randomSeed = new Rand(
+      localStorage.getItem("id")
+        ? JSON.parse(localStorage.getItem("id") || "")
+        : ""
+    );
     this.meta = pageOrder(this.props.type, this.randomSeed);
     this.numPages = this.meta.length;
   }

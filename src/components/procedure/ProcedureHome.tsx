@@ -12,7 +12,9 @@ export class ProcedureHome extends React.Component<{}, ProcedureHomeState> {
   constructor(props: any) {
     super(props);
     this.state = {
-      id: JSON.parse(localStorage.getItem("id") || ""),
+      id: localStorage.getItem("id")
+        ? JSON.parse(localStorage.getItem("id") || "")
+        : "",
       showProcedures: false,
     };
   }
