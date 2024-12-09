@@ -1,5 +1,6 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
+import { ShowPoint } from "../../../core/geometry/Point";
 import { segmentStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualAngles } from "../../../core/reasons/EqualAngles";
@@ -29,7 +30,12 @@ const baseContent = () => {
     { pt: [9, 9], label: "X", offset: [5, -3] },
     { pt: [2, 1], label: "Y", offset: [-17, -17] },
     { pt: [9, 1], label: "Z", offset: [3, -10] },
-    { pt: [5.5, 5], label: "M", offset: [10, -5] },
+    {
+      pt: [5.5, 5],
+      label: "M",
+      offset: [10, -5],
+      showPoint: ShowPoint.Adaptive,
+    },
   ]);
 
   ctx.addTriangles([
