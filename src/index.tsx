@@ -1,12 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ProcedureHome } from "./components/procedure/ProcedureHome";
+import {
+  ProcedureA,
+  ProcedureB,
+  ProcedureHome,
+} from "./components/procedure/ProcedureHome";
 import "./index.css";
 import { Examples } from "./routes/Examples";
 import { Home } from "./routes/Home";
-import { ProcedureA } from "./routes/ProcedureA";
-import { ProcedureB } from "./routes/ProcedureB";
 
 const router = createBrowserRouter([
   {

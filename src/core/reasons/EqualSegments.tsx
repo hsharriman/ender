@@ -1,7 +1,6 @@
 import { makeStepMeta } from "../../theorems/utils";
-import { Content } from "../diagramContent";
 import { resizedStrs, segmentStr } from "../geometryText";
-import { StepFocusProps, StepMeta } from "../types/stepTypes";
+import { StepFocusProps, StepMeta, StepProps } from "../types/stepTypes";
 import { Obj, Reason, SVGModes } from "../types/types";
 
 export class EqualSegments {
@@ -23,30 +22,20 @@ export class EqualSegments {
     ([s1, s2]: [string, string]) =>
     (isActive: boolean) => {
       return (
-        // <span>
-        //   {chipText(Obj.Segment, s1, BGColors.Blue, isActive)}
-        //   {resizedStrs.congruent}
-        //   {chipText(Obj.Segment, s2, BGColors.Purple, isActive)}
-        // </span>
-        this.staticText([s1, s2])
+        <span>
+          {segmentStr(s1, isActive)}
+          {resizedStrs.congruent}
+          {segmentStr(s2, isActive)}
+        </span>
       );
     };
-  static staticText = (s: [string, string]) => {
-    return (
-      <span>
-        {segmentStr(s[0])}
-        {resizedStrs.congruent}
-        {segmentStr(s[1])}
-      </span>
-    );
-  };
   static highlight = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     [s1, s2]: [string, string],
     mode: SVGModes,
     num: number = 1
   ) => {
+    const { ctx, frame } = props;
     ctx
       .getSegment(s1)
       .addTick(frame, Obj.EqualLengthTick, num)
@@ -73,5 +62,5 @@ export const EqualSegmentStep = (
       EqualSegments.additions(props, s, num);
     },
     text: EqualSegments.text(s),
-    staticText: () => EqualSegments.staticText(s),
+    staticText: () => EqualSegments.text(s)(true),
   });

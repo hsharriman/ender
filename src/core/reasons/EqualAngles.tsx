@@ -1,7 +1,6 @@
 import { makeStepMeta } from "../../theorems/utils";
-import { Content } from "../diagramContent";
 import { angleStr, resizedStrs } from "../geometryText";
-import { StepFocusProps, StepMeta } from "../types/stepTypes";
+import { StepFocusProps, StepMeta, StepProps } from "../types/stepTypes";
 import { Obj, Reason, SVGModes } from "../types/types";
 
 export class EqualAngles {
@@ -22,31 +21,21 @@ export class EqualAngles {
   static text =
     ([a1, a2]: [string, string]) =>
     (isActive: boolean) => {
-      return this.staticText([a1, a2]);
-      // return (
-      //   <span>
-      //     {chipText(Obj.Angle, a1, BGColors.Blue, isActive)}
-      //     {resizedStrs.congruent}
-      //     {chipText(Obj.Angle, a2, BGColors.Purple, isActive)}
-      //   </span>
-      // );
+      return (
+        <span>
+          {angleStr(a1)}
+          {resizedStrs.congruent}
+          {angleStr(a2)}
+        </span>
+      );
     };
-  static staticText = (a: [string, string]) => {
-    return (
-      <span>
-        {angleStr(a[0])}
-        {resizedStrs.congruent}
-        {angleStr(a[1])}
-      </span>
-    );
-  };
   static highlight = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     [a1, a2]: [string, string],
     mode: SVGModes,
     num: number = 1
   ) => {
+    const { ctx, frame } = props;
     ctx.getAngle(a1).addTick(frame, Obj.EqualAngleTick, num).mode(frame, mode);
     ctx.getAngle(a2).addTick(frame, Obj.EqualAngleTick, num).mode(frame, mode);
   };
@@ -66,6 +55,6 @@ export const EqualAngleStep = (
     additions: (props: StepFocusProps) =>
       EqualAngles.additions(props, [a1, a2], num),
     text: EqualAngles.text([a1, a2]),
-    staticText: () => EqualAngles.staticText([a1, a2]),
+    staticText: () => EqualAngles.text([a1, a2])(true),
   });
 };

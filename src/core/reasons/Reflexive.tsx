@@ -1,5 +1,5 @@
-import { Content } from "../diagramContent";
-import { StepFocusProps } from "../types/stepTypes";
+import { resizedStrs, segmentStr } from "../geometryText";
+import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { Obj, SVGModes } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
 
@@ -11,18 +11,15 @@ export class Reflexive {
       .mode(props.frame, props.mode);
   };
   static text = (s: string) => (isActive: boolean) => {
-    return this.staticText(s);
+    return (
+      <span>
+        {segmentStr(s, isActive)}
+        {resizedStrs.congruent}
+        {segmentStr(s, isActive)}
+      </span>
+    );
   };
-  static staticText = (s: string) => {
-    return EqualSegments.staticText([s, s]);
-  };
-  static highlight = (
-    ctx: Content,
-    frame: string,
-    s: string,
-    mode: SVGModes,
-    num = 1
-  ) => {
-    return EqualSegments.highlight(ctx, frame, [s, s], mode, num);
+  static highlight = (props: StepProps, s: string, mode: SVGModes, num = 1) => {
+    return EqualSegments.highlight(props, [s, s], mode, num);
   };
 }

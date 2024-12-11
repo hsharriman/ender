@@ -24,7 +24,6 @@ export class TextQuestion extends React.Component<
   handleSubmit = () => {
     const { inputText } = this.state;
     if (inputText.length === 0) {
-      // TODO: add alert for empty input
       return;
     }
     this.props.onSubmit(this.state.inputText);

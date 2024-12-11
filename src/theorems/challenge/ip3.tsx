@@ -1,8 +1,5 @@
 import { Content } from "../../core/diagramContent";
-import { Angle } from "../../core/geometry/Angle";
-import { Point, ShowPoint } from "../../core/geometry/Point";
-import { Segment } from "../../core/geometry/Segment";
-import { Triangle } from "../../core/geometry/Triangle";
+import { ShowPoint } from "../../core/geometry/Point";
 import { comma } from "../../core/geometryText";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
@@ -21,16 +18,14 @@ import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [1.5, 1], //A
-      [3.5, 4.25], //B
-      [5.5, 1], //C
-      [3.5, 2.25], //D
-      [3.5, 1], //E
-      [3.5, -0.25], //G
-    ],
+export const baseContent = () => {
+  const pts: Vector[] = [
+    [1.5, 1], //A
+    [3.5, 4.25], //B
+    [5.5, 1], //C
+    [3.5, 2.25], //D
+    [3.5, 1], //E
+    [3.5, -0.25], //G
   ];
   let ctx = new Content();
   const labels = ["A", "B", "C", "D", "E", "G"];
@@ -42,35 +37,30 @@ export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
     [-18, -18],
     [-20, -5],
   ];
-  const pts = coords[0];
   const [A, B, C, D, E, G] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-        showPoint: ShowPoint.Adaptive,
-      })
-    )
+    ctx.addPoint({
+      pt: c,
+      label: labels[i],
+      offset: offsets[i],
+      showPoint: ShowPoint.Adaptive,
+    })
   );
 
-  ctx.push(new Triangle({ pts: [A, B, E], hoverable, label: "AEB" }, ctx));
-  ctx.push(new Triangle({ pts: [B, E, C], hoverable, label: "CEB" }, ctx));
-  ctx.push(new Triangle({ pts: [D, E, C], hoverable, label: "DEC" }, ctx));
-  ctx.push(new Triangle({ pts: [G, E, C], hoverable, label: "GEC" }, ctx));
+  ctx.addTriangles([
+    { pts: [A, B, E] },
+    { pts: [B, E, C] },
+    { pts: [D, E, C] },
+    { pts: [G, E, C] },
+  ]);
 
   // for given step:
-  ctx.push(new Segment({ p1: B, p2: G, hoverable: false }));
-  ctx.push(new Angle({ start: A, center: B, end: G, hoverable }));
-  ctx.push(new Angle({ start: C, center: B, end: G, hoverable }));
+  ctx.addSegment({ p1: B, p2: G });
+  ctx.addAngle({ start: A, center: B, end: G });
+  ctx.addAngle({ start: C, center: B, end: G });
   return ctx;
 };
 
 const givens: StepMeta = makeStepMeta({
-  // TODO: looks like equalrightangles doesn't have tickless text?
   text: (isActive: boolean) => {
     return (
       <span>
@@ -94,17 +84,6 @@ const givens: StepMeta = makeStepMeta({
   diagram: (ctx: Content, frame: string) => {
     givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
-  staticText: () => {
-    return (
-      <span>
-        {RightAngle.staticText("AEB")}
-        {comma}
-        {Midpoint.staticText("AC", "E")}
-        {comma}
-        {EqualSegments.staticText(["DE", "EG"])}
-      </span>
-    );
-  },
 });
 
 const proves: StepMeta = makeStepMeta({
@@ -113,7 +92,6 @@ const proves: StepMeta = makeStepMeta({
     EqualAngles.additions({ ...props, mode: SVGModes.Derived }, ["DCE", "GCE"]);
   },
   text: EqualAngles.text(["DCE", "GCE"]),
-  staticText: () => EqualAngles.staticText(["DCE", "GCE"]),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -123,7 +101,6 @@ const step1: StepMeta = makeStepMeta({
     RightAngle.additions(props, "AEB");
   },
   text: RightAngle.text("AEB"),
-  staticText: () => RightAngle.staticText("AEB"),
 });
 
 const step2: StepMeta = makeStepMeta({
@@ -133,7 +110,6 @@ const step2: StepMeta = makeStepMeta({
     Midpoint.additions(props, "E", ["AE", "EC"]);
   },
   text: Midpoint.text("E", "AC"),
-  staticText: () => Midpoint.staticText("AC", "E"),
 });
 
 const step3: StepMeta = EqualSegmentStep(["DE", "EG"], Reasons.Given, step2, 2);
@@ -145,7 +121,6 @@ const step4: StepMeta = makeStepMeta({
     Reflexive.additions(props, "BE", 3);
   },
   text: Reflexive.text("BE"),
-  staticText: () => Reflexive.staticText("BE"),
 });
 
 const step5: StepMeta = makeStepMeta({
@@ -155,7 +130,6 @@ const step5: StepMeta = makeStepMeta({
     Reflexive.additions(props, "CE", 1);
   },
   text: Reflexive.text("CE"),
-  staticText: () => Reflexive.staticText("CE"),
 });
 
 const step6: StepMeta = makeStepMeta({
@@ -165,7 +139,6 @@ const step6: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["AEB", "CEB"]),
   text: EqualRightAngles.text(["AEB", "CEB"]),
-  staticText: () => EqualRightAngles.staticText(["AEB", "CEB"]),
 });
 
 const s7SASProps: SASProps = {
@@ -180,7 +153,6 @@ const step7: StepMeta = makeStepMeta({
   prevStep: step6,
   additions: (props: StepFocusProps) => SAS.additions(props, s7SASProps),
   text: EqualTriangles.text(s7SASProps.triangles),
-  staticText: () => EqualTriangles.staticText(s7SASProps.triangles),
 });
 
 const step8: StepMeta = makeStepMeta({
@@ -191,15 +163,10 @@ const step8: StepMeta = makeStepMeta({
       Which step can be applied here?
     </span>
   ),
-  staticText: () => (
-    <span style={{ fontStyle: "italic" }}>Which step can be applied here?</span>
-  ),
 });
 
-// TODO rename depending on right/wrong?
 export const T1_CH1_IN1: LayoutProps = {
   name: "T1_CH1_IN1",
-  // TODO: Replace questions
   questions: placeholder,
   shuffleQuestions: [],
   baseContent,

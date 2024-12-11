@@ -8,10 +8,6 @@ interface SubmitButtonProps {
 }
 
 export class SubmitButton extends React.Component<SubmitButtonProps> {
-  constructor(props: SubmitButtonProps) {
-    super(props);
-  }
-
   componentDidMount() {
     document.addEventListener("keydown", this.handleKeyDown);
   }

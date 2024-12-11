@@ -10,10 +10,6 @@ interface susQuestionProps {
 }
 
 class SusQuestion extends React.Component<susQuestionProps> {
-  constructor(props: susQuestionProps) {
-    super(props);
-  }
-
   handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { questionNum, onAnswerChange } = this.props;
     onAnswerChange(questionNum, event.target.value);

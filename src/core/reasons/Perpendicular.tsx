@@ -1,6 +1,5 @@
-import { Content } from "../diagramContent";
 import { resizedStrs, segmentStr } from "../geometryText";
-import { StepFocusProps } from "../types/stepTypes";
+import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { SVGModes } from "../types/types";
 
 export class Perpendicular {
@@ -14,24 +13,21 @@ export class Perpendicular {
     props.ctx.getSegment(segs[1]).mode(props.frame, props.mode);
   };
   static text = (label: string, perp: string) => (isActive: boolean) => {
-    return this.staticText(label, perp);
-  };
-  static staticText = (s1: string, s2: string) => {
     return (
       <span>
-        {segmentStr(s1)}
+        {segmentStr(label, isActive)}
         {resizedStrs.perpendicular}
-        {segmentStr(s2)}
+        {segmentStr(perp, isActive)}
       </span>
     );
   };
   static highlight = (
-    ctx: Content,
-    frame: string,
+    props: StepProps,
     s: string,
     [s1, s2]: [string, string],
     mode: SVGModes
   ) => {
+    const { ctx, frame } = props;
     ctx.getSegment(s).mode(frame, mode);
     ctx.getSegment(s1).mode(frame, mode);
     ctx.getSegment(s2).mode(frame, mode);

@@ -13,7 +13,7 @@ export const staticLayout = (
   shuffleQuestions: boolean = true
 ): Page => {
   // reset stored variables
-  const ctx = proofMeta.baseContent(true, false);
+  const ctx = proofMeta.baseContent();
   const reasons: Reason[] = [];
   const texts: StaticProofTextItem[] = [];
 
@@ -55,9 +55,9 @@ export const interactiveLayout = (
   shuffleQuestions: boolean = true,
   tutorial?: TutorialStep[]
 ): Page => {
-  const ctx = proofMeta.baseContent(true, false);
-  const highlightCtx = proofMeta.baseContent(true, false);
-  const additionCtx = proofMeta.baseContent(true, false);
+  const ctx = proofMeta.baseContent();
+  const highlightCtx = proofMeta.baseContent();
+  const additionCtx = proofMeta.baseContent();
 
   const linkedTexts: ProofTextItem[] = [];
   const reasonMap = new Map<string, Reason>();
@@ -99,7 +99,7 @@ export const interactiveLayout = (
     // setup highlighting for interactive diagrams
     if (step.highlight) {
       highlightCtx.addFrame(`s${i + 1}`);
-      step.highlight(highlightCtx, s);
+      step.highlight({ ctx: highlightCtx, frame: s });
     }
 
     reasonMap.set(s, step.reason);
@@ -133,12 +133,21 @@ export const interactiveLayout = (
   };
 };
 
-export const pretestLayout = (props: PretestAppPageProps): Page => {
+export const pretestLayout = (
+  props: PretestAppPageProps,
+  rand: Rand,
+  shuffleQuestions: boolean
+): Page => {
   return {
     type: PageType.Pretest,
     meta: {
       layout: "static",
-      props: props,
+      props: {
+        ...props,
+        questions: shuffleQuestions
+          ? fisherYates(props.questions, rand)
+          : props.questions,
+      },
     },
   };
 };

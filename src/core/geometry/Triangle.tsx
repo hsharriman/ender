@@ -8,7 +8,6 @@ import { Segment } from "./Segment";
 
 export type TriangleProps = {
   pts: [Point, Point, Point];
-  label: string;
   rotatePattern?: boolean;
   // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
@@ -28,7 +27,7 @@ export class Triangle extends BaseGeometryObject {
     this.p = props.pts;
     this.a = this.buildAngles(props.pts, ctx);
     this.names = permutator(props.pts.map((pt) => pt.label));
-    this.label = props.label;
+    this.label = `${props.pts[0].label}${props.pts[1].label}${props.pts[2].label}`;
     this.rotatePattern = props.rotatePattern || false;
     this.id = this.getId(Obj.Triangle, this.label);
   }
@@ -38,30 +37,22 @@ export class Triangle extends BaseGeometryObject {
     ctx: Content,
     parentFrame?: string
   ): [Segment, Segment, Segment] => {
-    const sa = ctx.push(
-      new Segment({
-        p1: pts[0],
-        p2: pts[1],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const sb = ctx.push(
-      new Segment({
-        p1: pts[0],
-        p2: pts[2],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const sc = ctx.push(
-      new Segment({
-        p1: pts[1],
-        p2: pts[2],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
+    const sa = ctx.addSegment({
+      p1: pts[0],
+      p2: pts[1],
+      parentFrame,
+    });
+    const sb = ctx.addSegment({
+      p1: pts[0],
+      p2: pts[2],
+      parentFrame,
+    });
+    const sc = ctx.addSegment({
+      p1: pts[1],
+      p2: pts[2],
+      parentFrame,
+    });
+
     return [sa, sb, sc];
   };
 
@@ -70,42 +61,34 @@ export class Triangle extends BaseGeometryObject {
     ctx: Content,
     parentFrame?: string
   ): [Angle, Angle, Angle] => {
-    const aa = ctx.push(
-      new Angle({
-        start: pts[0],
-        center: pts[1],
-        end: pts[2],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const ab = ctx.push(
-      new Angle({
-        start: pts[1],
-        center: pts[0],
-        end: pts[2],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
-    const ac = ctx.push(
-      new Angle({
-        start: pts[0],
-        center: pts[2],
-        end: pts[1],
-        parentFrame,
-        hoverable: this.hoverable,
-      })
-    );
+    const aa = ctx.addAngle({
+      start: pts[0],
+      center: pts[1],
+      end: pts[2],
+      parentFrame,
+    });
+    const ab = ctx.addAngle({
+      start: pts[1],
+      center: pts[0],
+      end: pts[2],
+      parentFrame,
+    });
+    const ac = ctx.addAngle({
+      start: pts[0],
+      center: pts[2],
+      end: pts[1],
+      parentFrame,
+    });
     return [aa, ab, ac];
   };
 
+  // deprecated
   onClickText = (isActive: boolean) => {
     // for each segment use onClickText
-    this.s.map((seg) => {
+    this.s.forEach((seg) => {
       seg.onClickText(isActive);
     });
-    this.a.map((ang) => {
+    this.a.forEach((ang) => {
       ang.onClickText(isActive);
     });
   };

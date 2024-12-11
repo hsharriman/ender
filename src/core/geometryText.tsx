@@ -13,10 +13,11 @@ export const perpendicular = (
 );
 
 // for static text
-export const segmentStr = (s: string, clr?: string) => (
+export const segmentStr = (s: string, active: boolean) => (
   <span
-    className="font-notoSerif"
-    style={{ borderTop: `2px solid ${clr || "black"}` }}
+    className={`font-notoSerif border-t-2 ${
+      active ? "border-black" : "border-slate-400"
+    }`}
   >
     {s}
   </span>
@@ -46,7 +47,6 @@ export const strs = {
   perpendicular: "\u22A5",
 };
 
-// TODO check that these scale for windows and mac
 export const resizedStrs = {
   congruent: (
     <span

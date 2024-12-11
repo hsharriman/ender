@@ -32,7 +32,6 @@ export enum PageType {
   Save = "Save",
   IntroSlidePhase1 = "IntroSlidePhase1",
   IntroSlidePhase2 = "IntroSlidePhase2",
-  ParticipantID = "ParticipantID",
   ThinkAloud = "ThinkAloud",
 }
 
@@ -57,8 +56,10 @@ export const proofOrder = (
 };
 
 export const pageOrder = (testType: TestType, rand: Rand) => {
-  let pretest = [pretestLayout(P1), pretestLayout(P2)]; // segment and angle questions
-  let tpre = trianglePretestProofs.map((p) => pretestLayout(p));
+  let pretest = [pretestLayout(P1, rand, true), pretestLayout(P2, rand, true)]; // segment and angle questions
+  let tpre = fisherYates(trianglePretestProofs, rand).map((p) =>
+    pretestLayout(p, rand, false)
+  );
   // add extra 1-off questions to the first triangle pretest page
   if (tpre[0].meta) {
     tpre[0].meta = {
@@ -94,23 +95,17 @@ export const pageOrder = (testType: TestType, rand: Rand) => {
     rand
   );
 
-  const pages = participantID()
-    .concat(background())
+  const pages = background()
     .concat(pretest)
     .concat(tutorial)
     .concat(instruction1())
     .concat(stage1)
-    // .concat(instruction2())
     .concat(stage2)
     .concat(sus());
 
   return pages;
 };
 
-const participantID = (): Page[] => {
-  // return [{ type: PageType.ParticipantID }];
-  return [];
-};
 const background = (): Page[] => {
   return [
     { type: PageType.IntroSlideTest },
@@ -121,9 +116,6 @@ const background = (): Page[] => {
 const instruction1 = (): Page[] => {
   return [{ type: PageType.IntroSlidePhase1 }];
 };
-// const instruction2 = (): Page[] => {
-//   return [{ type: PageType.IntroSlidePhase2 }];
-// };
 const sus = (): Page[] => {
   return [{ type: PageType.SUS }, { type: PageType.Save }];
 };

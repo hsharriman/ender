@@ -1,7 +1,5 @@
 import { Content } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { Point } from "../../../core/geometry/Point";
-import { Triangle } from "../../../core/geometry/Triangle";
 import { comma } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -21,67 +19,30 @@ import {
 import {
   StepFocusProps,
   StepMeta,
-  StepUnfocusProps,
+  StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../../core/types/types";
+import { LayoutProps, Obj, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
-export const baseContent = (labeledPoints: boolean, hoverable: boolean) => {
-  const coords: Vector[][] = [
-    [
-      [2, 1], // L
-      [6, 1], //S
-      [10, 1], // U
-      [6, 2.85], //R
-      [3.5, 4], //N
-      [8.5, 4], //Q
-      [6, 9], //P
-    ],
-  ];
+export const baseContent = () => {
   let ctx = new Content();
-  const labels = ["L", "S", "U", "R", "N", "Q", "P"];
-  const offsets: Vector[] = [
-    [-15, -15],
-    [-5, -18],
-    [0, -17],
-    [6, 12],
-    [-16, 0],
-    [5, 5],
-    [8, -10],
-  ];
-  const pts = coords[0];
-  const [L, S, U, R, N, Q, P] = pts.map((c, i) =>
-    // TODO option to make point labels invisible
-    ctx.push(
-      new Point({
-        pt: c,
-        label: labels[i],
-        showLabel: labeledPoints,
-        offset: offsets[i],
-        hoverable,
-      })
-    )
-  );
+  const [L, S, U, R, N, Q, P] = ctx.addPoints([
+    { pt: [2, 1], label: "L", offset: [-15, -15] },
+    { pt: [6, 1], label: "S", offset: [-5, -18] },
+    { pt: [10, 1], label: "U", offset: [0, -17] },
+    { pt: [6, 2.85], label: "R", offset: [6, 12] },
+    { pt: [3.5, 4], label: "N", offset: [-16, 0] },
+    { pt: [8.5, 4], label: "Q", offset: [5, 5] },
+    { pt: [6, 9], label: "P", offset: [8, -10] },
+  ]);
 
-  ctx.push(new Triangle({ pts: [L, P, S], hoverable, label: "LPS" }, ctx));
-  ctx.push(
-    new Triangle(
-      { pts: [U, P, S], hoverable, label: "UPS", rotatePattern: true },
-      ctx
-    )
-  );
-  ctx.push(
-    new Triangle(
-      { pts: [L, N, U], hoverable, label: "LNU", rotatePattern: true },
-      ctx
-    )
-  );
-  ctx.push(new Triangle({ pts: [U, Q, L], hoverable, label: "UQL" }, ctx));
-
-  // for ASA at the end
-  // ctx.push(new Angle({ start: L, center: N, end: U, hoverable }));
-  // ctx.push(new Angle({ start: U, center: Q, end: N, hoverable }));
+  ctx.addTriangles([
+    { pts: [L, P, S] },
+    { pts: [U, P, S], rotatePattern: true },
+    { pts: [L, N, U], rotatePattern: true },
+    { pts: [U, Q, L] },
+  ]);
 
   ctx.setAspect(AspectRatio.Square);
   return ctx;
@@ -91,11 +52,11 @@ const givens: StepMeta = makeStepMeta({
   text: (isActive: boolean) => {
     return (
       <span>
-        {Perpendicular.text("LU", "PS")(isActive)}
+        {Perpendicular.text("LU", "PS")(true)}
         {comma}
-        {EqualSegments.text(["LN", "QU"])(isActive)}
+        {EqualSegments.text(["LN", "QU"])(true)}
         {comma}
-        {EqualAngles.text(["LPS", "UPS"])(isActive)}
+        {EqualAngles.text(["LPS", "UPS"])(true)}
       </span>
     );
   },
@@ -109,34 +70,16 @@ const givens: StepMeta = makeStepMeta({
     EqualSegments.additions(props, ["LN", "QU"]);
     EqualAngles.additions(props, ["LPS", "UPS"]);
   },
-
-  staticText: () => {
-    return (
-      <span>
-        {Perpendicular.staticText("PS", "LU")}
-        {comma}
-        {EqualSegments.staticText(["LN", "QU"])}
-        {comma}
-        {EqualAngles.staticText(["LPS", "UPS"])}
-      </span>
-    );
-  },
 });
 
 const proves: StepMeta = makeStepMeta({
   prevStep: givens,
   additions: (props: StepFocusProps) => {
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["LNU", "UQL"],
-      SVGModes.Derived
-    );
+    CongruentTriangles.congruentLabel(props, ["LNU", "UQL"], SVGModes.Derived);
     props.ctx.getTriangle("LNU").mode(props.frame, SVGModes.Derived);
     props.ctx.getTriangle("UQL").mode(props.frame, SVGModes.Derived);
   },
-  text: EqualTriangles.text(["LNU", "UQL"]),
-  staticText: () => EqualTriangles.staticText(["LNU", "UQL"]),
+  text: (active: boolean) => EqualTriangles.text(["LNU", "UQL"])(true),
 });
 
 const step1: StepMeta = makeStepMeta({
@@ -145,7 +88,6 @@ const step1: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     Perpendicular.additions(props, "PS", ["LS", "SU"]),
   text: Perpendicular.text("LU", "PS"),
-  staticText: () => Perpendicular.staticText("PS", "LU"),
 });
 
 const step2: StepMeta = EqualSegmentStep(["LN", "QU"], Reasons.Given, step1);
@@ -159,9 +101,8 @@ const step4: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualRightAngles.additions(props, ["PSL", "PSU"]),
   text: EqualRightAngles.text(["PSL", "PSU"]),
-  staticText: () => EqualRightAngles.staticText(["PSL", "PSU"]),
-  highlight: (ctx: Content, frame: string) => {
-    Perpendicular.highlight(ctx, frame, "PS", ["LS", "SU"], SVGModes.ReliesOn);
+  highlight: (props: StepProps) => {
+    Perpendicular.highlight(props, "PS", ["LS", "SU"], SVGModes.ReliesOn);
   },
 });
 
@@ -172,7 +113,6 @@ const step5: StepMeta = makeStepMeta({
     Reflexive.additions(props, "PS", 2);
   },
   text: Reflexive.text("PS"),
-  staticText: () => Reflexive.staticText("PS"),
 });
 
 const step6ASAProps: ASAProps = {
@@ -186,24 +126,18 @@ const step6: StepMeta = makeStepMeta({
   dependsOn: ["3", "4", "5"],
   prevStep: step5,
   additions: (props: StepFocusProps) => {
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["LSP", "USP"],
-      props.mode
-    );
+    CongruentTriangles.congruentLabel(props, ["LSP", "USP"], props.mode);
   },
   text: EqualTriangles.text(step6ASAProps.triangles),
-  staticText: () => EqualTriangles.staticText(step6ASAProps.triangles),
-  highlight: (ctx: Content, frame: string) => {
-    ASA.highlight(ctx, frame, step6ASAProps);
+  highlight: (props: StepProps) => {
+    ASA.highlight(props, step6ASAProps);
   },
 });
 
 const step7: StepMeta = makeStepMeta({
   reason: Reasons.CPCTC,
   dependsOn: ["6"],
-  unfocused: (props: StepUnfocusProps) => {
+  unfocused: (props: StepProps) => {
     // step6.additions({ ...props, mode: SVGModes.Unfocused });
     step6.unfocused(props);
   },
@@ -211,14 +145,8 @@ const step7: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["SLP", "SUP"], 2);
   },
   text: EqualAngles.text(["SLP", "SUP"]),
-  staticText: () => EqualAngles.staticText(["SLP", "SUP"]),
-  highlight: (ctx: Content, frame: string) => {
-    CongruentTriangles.congruentLabel(
-      ctx,
-      frame,
-      ["LSP", "USP"],
-      SVGModes.ReliesOn
-    );
+  highlight: (props: StepProps) => {
+    CongruentTriangles.congruentLabel(props, ["LSP", "USP"], SVGModes.ReliesOn);
   },
 });
 
@@ -237,11 +165,9 @@ const step8: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["LNU", "UQL"], 3);
   },
   text: EqualAngles.text(["LNU", "UQL"]),
-  staticText: () => EqualAngles.staticText(["LNU", "UQL"]),
-  highlight: (ctx: Content, frame: string) => {
+  highlight: (props: StepProps) => {
     CongruentTriangles.congruentLabel(
-      ctx,
-      frame,
+      props,
       ["LNU", "UQL"],
       SVGModes.Inconsistent
     );
@@ -254,17 +180,11 @@ const step9: StepMeta = makeStepMeta({
   dependsOn: ["2", "7", "8"],
   prevStep: step8,
   additions: (props: StepFocusProps) => {
-    CongruentTriangles.congruentLabel(
-      props.ctx,
-      props.frame,
-      ["LNU", "UQL"],
-      props.mode
-    );
+    CongruentTriangles.congruentLabel(props, ["LNU", "UQL"], props.mode);
   },
   text: EqualTriangles.text(step9ASAProps.triangles),
-  staticText: () => EqualTriangles.staticText(step9ASAProps.triangles),
-  highlight: (ctx: Content, frame: string) => {
-    ASA.highlight(ctx, frame, step9ASAProps);
+  highlight: (props: StepProps) => {
+    ASA.highlight(props, step9ASAProps);
   },
 });
 

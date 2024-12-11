@@ -16,17 +16,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": [
-    "src",
-    "ignore/Card.tsx",
-    "ignore/EuclideanBuilder.tsx",
-    "ignore/AngleBisector.tsx",
-    "ignore/ParallelProp.tsx",
-    "ignore/Euclidean.tsx",
-    "ignore/Label.tsx",
-    "ignore/ProofItem.tsx",
-    "ignore/checks.ts",
-    "ignore/SVGCurve.tsx",
-    "ignore/SVGBuilder.tsx"
-  ]
+  "include": ["src"]
 }

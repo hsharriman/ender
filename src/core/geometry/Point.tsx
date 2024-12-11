@@ -1,4 +1,3 @@
-import { ModeCSS } from "../diagramSvg/SVGStyles";
 import { LPoint, Obj, Vector } from "../types/types";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
 
@@ -8,9 +7,8 @@ export enum ShowPoint {
   Hide = "hide",
 }
 export type PointProps = {
-  pt: [number, number];
+  pt: Vector;
   label: string;
-  showLabel?: boolean;
   offset: Vector;
   showPoint?: ShowPoint;
 } & BaseGeometryProps;
@@ -19,15 +17,13 @@ export class Point extends BaseGeometryObject {
   // 1 point and label
   public readonly pt: Vector;
   public readonly id: string;
-  private showLabel: boolean;
   readonly showPoint: ShowPoint;
-  public offset: Vector = [3, 3]; // TODO better label placement
+  public offset: Vector = [5, 5];
   constructor(props: PointProps) {
     super(Obj.Point, props);
     this.pt = props.pt;
     this.label = props.label;
     this.names = [this.label];
-    this.showLabel = props.showLabel ?? true;
     this.offset = props.offset;
     this.id = this.getId(Obj.Point, this.label);
     this.id = props.parentFrame ? `${props.parentFrame}-${this.id}` : this.id;
@@ -42,10 +38,11 @@ export class Point extends BaseGeometryObject {
     this.offset = offset;
   };
 
+  // deprecated
   onClickText = (isActive: boolean) => {
     const setStyle = (ele: HTMLElement | null) => {
       if (ele) {
-        const cls = ModeCSS.DIAGRAMTEXTGLOW.split(" ");
+        const cls = [""];
         isActive ? ele.classList.add(...cls) : ele.classList.remove(...cls);
       }
     };

@@ -41,24 +41,17 @@ export type TickType =
 
 export enum SVGModes {
   Hidden = "hidden",
-  Focused = "focused",
-  Active = "active",
-  DiagramHover = "diagramhover",
   Unfocused = "unfocused",
   Default = "default",
-  Pinned = "pinned",
-  ActiveText = "activetext",
   ReliesOn = "relieson",
-  ReliesOnPoint = "reliesonpoint",
-  ReliesMissing = "reliesmissing",
   Derived = "derived",
   Inconsistent = "inconsistent",
 }
 
 // -------- TYPES RELATED TO PROOF SETUP --------
-export interface StaticLayoutProps {
+export interface LayoutProps {
   name: string;
-  baseContent: (showPoints: boolean, hoverable: boolean) => Content;
+  baseContent: () => Content;
   steps: StepMeta[];
   givens: StepMeta;
   proves: StepMeta;
@@ -66,13 +59,6 @@ export interface StaticLayoutProps {
   shuffleQuestions: Question[];
   title: string;
 }
-
-export interface InteractiveLayoutProps extends StaticLayoutProps {
-  // miniContent: Content;
-}
-
-export type LayoutProps = InteractiveLayoutProps & StaticLayoutProps;
-
 export interface Reason {
   title: string;
   body: string;
