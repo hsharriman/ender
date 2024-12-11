@@ -142,12 +142,18 @@ export class StaticAppPage extends React.Component<
   renderReason = (item: Reason) => {
     return (
       <>
-        <div className="flex flex-col justify-start pb-2">
-          {/* <div className="font-bold text-base text-slate-500 py-2 flex justify-between">
+        <div className="flex flex-row py-2 border-b-2 border-slate-300 justify-between max-w-[600px]">
+          <div className="flex flex-col justify-start max-w-[400px]">
+            {/* <div className="font-bold text-base text-slate-500 py-2 flex justify-between">
             Reason Applied:
           </div> */}
-          <div className="font-semibold text-base">{item.title}</div>
-          <div className="text-base">{item.body}</div>
+            <div className="font-semibold text-base">{item.title}</div>
+            <div className="text-base">{item.body}</div>
+          </div>
+          <img
+            src={process.env.PUBLIC_URL + `/reasons/${item.src}.png`}
+            className="h-16 w-auto self-center ml-2"
+          />
         </div>
       </>
     );
@@ -159,7 +165,7 @@ export class StaticAppPage extends React.Component<
     ).length;
     return (
       <div className="top-0 left-0 flex flex-row flex-nowrap max-w-[1800px] min-w-[1500px] mt-4">
-        <div className="w-[900px] h-full flex flex-col ml-12">
+        <div className="w-[900px] h-full flex flex-col ml-12 mb-4">
           <div className="flex flex-row">
             <div className="flex flex-col mx-4 text-lg">
               <div className="pb-2">
@@ -189,7 +195,7 @@ export class StaticAppPage extends React.Component<
               />
             </div>
           </div>
-          <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-normal font-semibold text-slate-500 ml-2 mb-2 w-10/12">
+          <div className="py-4 border-b-2 border-gray-300 grid grid-rows-1 grid-cols-2 text-normal font-semibold text-slate-500 ml-2 w-10/12">
             <div className="flex flex-row justify-start gap-4 align-baseline">
               <div className="opacity-0 pr-4">0</div>
               <div>Statement</div>

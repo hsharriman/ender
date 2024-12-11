@@ -62,6 +62,7 @@ export interface LayoutProps {
 export interface Reason {
   title: string;
   body: string;
+  src?: string;
 }
 
 export interface TutorialStep {
