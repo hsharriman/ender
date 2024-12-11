@@ -150,7 +150,7 @@ const step4: StepMeta = makeStepMeta({
 // TUTORIAL 2
 const step4t2 = makeStepMeta({
   ...step4,
-  dependsOn: ["1", "2", "3?"],
+  dependsOn: ["1", "2?", "3"],
   prevStep: step3,
   highlight: (ctx: Content, frame: string) => {
     SSS.highlight(ctx, frame, {
