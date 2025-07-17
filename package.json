@@ -4,13 +4,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@lezer/generator": "^1.8.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
     "@types/node": "^16.18.71",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "moo": "^0.5.2",
     "paper": "^0.12.17",
     "rand-seed": "^2.1.7",
     "react": "^18.2.0",
@@ -47,7 +48,9 @@
     ]
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "gh-pages": "^6.1.1",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.4.0"
   }
 }
