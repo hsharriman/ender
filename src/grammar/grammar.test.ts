@@ -39,7 +39,7 @@ stmt transversal(Segment s1, Segment s2, Segment s3)
 `;
 
 const proof = `
-title: Prove Triangles Congruent (correct)
+title: "Prove Triangles Congruent (correct)"
 premises:
 pt: A, B, C, D
 tri: t_ABC t_ADC

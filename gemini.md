@@ -89,3 +89,16 @@ Every reason must come from a valid, pre-defined list of reasons. Reasons have a
 
 On the RHS of the -> is the statement that is concluded based on the reason. This must be a valid conclusion drawn from the definition of the reason that advances the known state of the proof meaningfully towards the goal. The arguments within the statement are the geometric objects to which the statement applies. For instance “c(a_PSL,a_PSU)” means that angles PSL and PSU are established to be congruent.
 Each statement has 1 number assigned to it, indicated by brackets at the end of the line, i.e. “[08]”, “[87]”, “[105]”. Future steps in the proof use these step numbers to indicate dependencies to a reason.
+
+Points can be any 1 capitalized letter of the alphabet (i.e. "A" or "X"). repeats are disallowed within a proof.
+Segments can be any 2 capitalized letters of the alphabet, but must be made up of 2 defined points (i.e. "AX"). repeats are disallowed within a proof.
+Angles always start with the prefix “a\_” and should be followed by 3 capitalized letters.
+
+Triangles always start with the prefix “t\_” and should be followed by 3 capitalized letters.
+
+Statements take the form “<name>(<comma separated list of geometric args>) [<step number>]”. There can be any number of given statements. The first given statement should have a step number of 01.
+
+The goal of the proof is indicated with 1 line that begins with “->”. The goal of the proof must be a statement with no step number.
+
+Within steps:
+Proof steps take the form: <reason>(<comma separated list of dependencies>) -> <statement>(comma separated list of arguments>) <step number>

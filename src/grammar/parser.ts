@@ -78,12 +78,36 @@ const stmtKeywords: moo.Rules = {
 
 const proofKeywords: moo.Rules = {
   ...basicSymbols,
+  // Proof structure keywords
+  title: "title",
+  premises: "premises",
+  steps: "steps",
+  pt: "pt",
+  tri: "tri",
+  seg: "seg",
+  ang: "ang",
+  // Step numbers: [01], [12], etc.
   stepNumber: /\[0*(?:\d+)\]/,
-  triangle: /^t_(?:[A-Z]{3})$/,
-  angle: /^a_(?:[A-Z]{3})$/,
-  segment: /^(?:[A-Z]{2})$/,
-  point: /^(?:[A-Z]{1})$/,
+  // Geometric objects
+  point: /[A-Z]/,
+  segment: /[A-Z]{2}/,
+  angle: /a_[A-Z]{3}/,
+  triangle: /t_[A-Z]{3}/,
+  // Statement references: [01], [12], etc.
+  statementRef: /\[0*(?:\d+)\]/,
+  // Coordinates: (-1.5, 2.0) format
   coordinate: /^\(-?(?:\d+(?:\.\d+)?),\s*-?(?:\d+(?:\.\d+)?)\)$/,
+  // Colon for separating keys and values
+  colon: ":",
+  // Quoted string for title values
+  quoted_string: { match: /"[^"]*"/, value: (x) => x.slice(1, -1) },
+  // Comments: // followed by any characters until end of line
+  comment: /\/\/.*$/,
+  // Statement function names (e.g., c, sas, reflex) followed by( stmt_function: [object Object]    match: /A-Za-z_][A-Za-z0(?=\()/,
+  stmt_function: {
+    match: /[A-Za-z_][A-Za-z0-9_]*(?=\()/,
+    value: (x: string) => x,
+  },
 };
 
 const lexer = moo.compile({
@@ -108,7 +132,7 @@ const lexer = moo.compile({
 });
 
 // Export the lexer for testing
-export { lexer, reasonKeywords };
+export { lexer, proofKeywords, reasonKeywords };
 
 // Basic parser object for compatibility with existing tests
 export const parser = {
