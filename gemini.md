@@ -90,6 +90,8 @@ Every reason must come from a valid, pre-defined list of reasons. Reasons have a
 On the RHS of the -> is the statement that is concluded based on the reason. This must be a valid conclusion drawn from the definition of the reason that advances the known state of the proof meaningfully towards the goal. The arguments within the statement are the geometric objects to which the statement applies. For instance “c(a_PSL,a_PSU)” means that angles PSL and PSU are established to be congruent.
 Each statement has 1 number assigned to it, indicated by brackets at the end of the line, i.e. “[08]”, “[87]”, “[105]”. Future steps in the proof use these step numbers to indicate dependencies to a reason.
 
+## Parsing
+
 Points can be any 1 capitalized letter of the alphabet (i.e. "A" or "X"). repeats are disallowed within a proof.
 Segments can be any 2 capitalized letters of the alphabet, but must be made up of 2 defined points (i.e. "AX"). repeats are disallowed within a proof.
 Angles always start with the prefix “a\_” and should be followed by 3 capitalized letters.
@@ -102,3 +104,33 @@ The goal of the proof is indicated with 1 line that begins with “->”. The go
 
 Within steps:
 Proof steps take the form: <reason>(<comma separated list of dependencies>) -> <statement>(comma separated list of arguments>) <step number>
+
+## Lezer
+
+Use the parsed information from the definitions for statements/reasons and the proof to generate an AST of the file. Check the proof for syntax errors that don't fit the grammar.
+
+- Do not track comments
+- Check for repeated definitions of any points, segments, angles, triangles in the premises of the proof. Repeats are disallowed. Additionally:
+  - The 2 capital letters in a segment must map to points that have already been defined in the proof. Once defined, segments can be referred to by any permutation of the same 2 points, so both "AX" and "XA" should define the same segment.
+  - The 3 capital letters must map to points defined in the proof. Angles are defined by 2 endpoints and a corner. The corner point must be the 2nd letter, so “a_ABC” has a corner point of B. The order of endpoints does not matter, both “a_ABC” and “a_CBA” refer to the same angle.
+  - The 3 capital letters must map to points defined in the proof. Triangles are defined by 3 points. When a triangle is defined, it should also result in the creation of 3 segments and 3 angles if they were not already declared. For the triangle “t_ABC”, the segments should be “AB”, “BC”, “CA”, and the angles should be “a_BAC”, “a_ABC”, “a_ACB”. Once defined, triangles can be referred to by any permutation of the three points, so “t_ABC” is the same as “t_BAC” or “t_CBA”, and so on.
+
+Statements take the form “<name>(<comma separated list of geometric args>) [<step number>]”. There can be any number of given statements. The first given statement should have a step number of 01. The statement must be drawn from a pre-defined set of valid statements.
+
+The goal of the proof is indicated with 1 line that begins with “->”. The goal of the proof must be a statement with no step number, which is one statement from a pre-defined set of valid statements.
+
+Within steps:
+Create structures that read each step and store the step number, the reason, the dependencies, the statement, and the arguments to the statement.
+
+Every reason must come from a valid, pre-defined list of reasons. Reasons have a required number of arguments which must be satisfied by previous steps in the proof. These must be passed into the reason. So “asa([03], [04], [05])” requires 3 statements, which are being satisfied by statements 3, 4, and 5. The statements for 3, 4, and 5 should be checked to make sure that they match with the statements required in the reason's definition.
+
+On the RHS of the -> is the statement that is concluded based on the reason. This must be a valid conclusion drawn from the definition of the reason that advances the known state of the proof meaningfully towards the goal. The arguments within the statement are the geometric objects to which the statement applies. For instance “c(a_PSL,a_PSU)” means that angles PSL and PSU are established to be congruent.
+Each statement has 1 number assigned to it, indicated by brackets at the end of the line, i.e. “[08]”, “[87]”, “[105]”. Future steps in the proof use these step numbers to indicate dependencies to a reason.
+
+Here are some examples of valid steps:
+altintconv([07]) -> para(WX,YZ) [08]
+conadjangle([01]) -> c(a_PSL,a_PSU) [04]
+reflex() -> c(PS) [05]
+asa([03], [04], [05]) -> c(t_LSP,t_USP) [06]
+cpctc([06]) -> c(a_SLP,a_SUP) [07]
+asa([02], [07], [08]) -> c(t_LNU,t_UQL) [09]
