@@ -1,5 +1,4 @@
 -- EuclideanGeometry.lean
--- Basic definitions and rules for Euclidean geometry in Lean 4
 
 namespace EuclideanGeometry
 

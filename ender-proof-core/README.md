@@ -11,7 +11,7 @@ This module contains the core logic, grammar, and Lean code generation for the E
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v14+ recommended)
+- [Node.js](https://nodejs.org/) (v20+ recommended)
 - [TypeScript](https://www.typescriptlang.org/) (`npm install -g typescript` or use `npx`)
 - [Lean 4](https://leanprover.github.io/lean4/doc/quickstart.html) (CLI must be available as `lean` in your PATH)
 - (Optional) [ts-node](https://typestrong.org/ts-node/) for running TypeScript scripts directly
@@ -20,11 +20,27 @@ This module contains the core logic, grammar, and Lean code generation for the E
 
 - Add or edit grammar and parser code in `grammar/`
 - Add or edit Lean code and TypeScript scripts in `lean/`
-- Add new statement definitions to `grammar/stmts.txt`
-- Add new reason definitions to `grammar/reasons.txt`
-- Add new proof examples as `.txt` files in `grammar/` (e.g., `tutorialProof.txt`)
-- Update or add TypeScript utilities as needed
+- Add new statement definitions to `defs/stmts.txt`
+- Add new reason definitions to `defs/reasons.txt`
+- Add new proof examples as `.txt` files in `proofs/` (e.g., `tutorialProof.txt`)
 - If you add new scripts, update this README with usage instructions
+
+## Import Path Conventions
+
+All imports should use the new `geometry-proof-core/grammar` and `geometry-proof-core/lean` structure. Do **not** use `src/grammar` or the old `lean/` path.
+
+**Example (from a file in `lean/`):**
+
+```js
+const { ProofParser } = require("../grammar/lezerParser");
+const { emitLeanPremises } = require("./emitLeanPremises");
+```
+
+**Example (from a file in `grammar/`):**
+
+```js
+import { ProofParser } from "./lezerParser";
+```
 
 ## Running the proofToLeanPremises Script
 
@@ -35,10 +51,10 @@ This script parses a proof file (in Lezer grammar format), generates Lean4 code 
 From the root of the `geometry-proof-core` module:
 
 ```
-npx ts-node lean/proofToLeanPremises.ts grammar/tutorialProof.txt
+npx ts-node lean/proofToLeanPremises.ts proofs/tutorialProof.txt
 ```
 
-- Replace `grammar/tutorialProof.txt` with the path to your proof file.
+- Replace `proofs/tutorialProof.txt` with the path to your proof file.
 - The script will print the generated Lean code and the output from the Lean CLI (success/errors for the goal).
 
 ### Example Output
