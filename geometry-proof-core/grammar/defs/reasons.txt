@@ -1,0 +1,11 @@
+reason given()
+reason reflex() -> reflex, con_seg
+reason sss(con_seg, con_ang, con_seg) -> con_tri
+reason sss(con_seg, con_seg, con_seg) -> con_tri
+reason asa(con_ang, con_seg, con_ang) -> con_tri
+reason aas(con_ang, con_ang, con_seg) -> con_tri
+reason rhl(con_right, con_seg, con_seg) -> con_tri
+reason aaa(con_ang, con_ang, con_ang) -> sim_tri
+reason cpctc(con_tri) -> con_seg, con_ang
+reason vert_ang(intersect_seg) -> con_ang
+reason conv_alt_int(para, transversal) -> con_ang 

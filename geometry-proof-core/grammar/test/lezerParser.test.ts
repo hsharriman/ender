@@ -1,4 +1,4 @@
-import { ProofParser } from "./lezerParser";
+import { ProofParser } from "../lezerParser";
 
 describe("ProofParser", () => {
   let parser: ProofParser;

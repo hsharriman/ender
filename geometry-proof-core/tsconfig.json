@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "CommonJS",
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "esModuleInterop": true,
+    "strict": true
+  },
+  "include": ["grammar/**/*", "lean/**/*", "lean/proofToLeanPremises.ts"]
+}

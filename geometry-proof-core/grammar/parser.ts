@@ -100,7 +100,7 @@ const proofKeywords: moo.Rules = {
   // Colon for separating keys and values
   colon: ":",
   // Quoted string for title values
-  quoted_string: { match: /"[^"]*"/, value: (x) => x.slice(1, -1) },
+  quoted_string: { match: /"[^"]*"/, value: (x: string) => x.slice(1, -1) },
   // Comments: // followed by any characters until end of line
   comment: /\/\/.*$/,
   // Statement function names (e.g., c, sas, reflex) followed by( stmt_function: [object Object]    match: /A-Za-z_][A-Za-z0(?=\()/,

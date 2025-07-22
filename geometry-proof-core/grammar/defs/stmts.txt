@@ -1,0 +1,21 @@
+stmt reflex(Segment s)
+stmt right(Angle a) 
+
+// congruence
+stmt con_seg(Segment s1, Segment s2)
+stmt con_ang(Angle a1, Angle a2)
+stmt con_tri(Triangle t1, Triangle t2)
+stmt con_right(Angle a1, Angle a2)
+
+//similarity
+// ratio of s1:s2 is the same as ratio of s3:s4
+stmt sim_seg(Segment s1, Segment s2, Segment s3, Segment s4)
+stmt sim_tri(Triangle t1, Triangle t2)
+
+stmt para(Segment s1, Segment s2)
+stmt perp(Segment s1, Segment s2)
+stmt collinear(Point p1, Point p2, Point p3)
+stmt midpoint(Segment s, Point p)
+
+stmt intersect_seg(Segment s1, Segment s2, Point intersect)
+stmt transversal(Segment s1, Segment s2, Segment s3) 
