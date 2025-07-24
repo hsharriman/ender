@@ -57,18 +57,14 @@ function main() {
   const leanGoal = emitLeanGoal(parsed);
 
   // Compose full Lean file
-  const leanFile = `import EuclideanGeometry\n\nopen EuclideanGeometry\n\n${leanPremises}\n\n${leanGoal}`;
+  const leanFile = `import Geometry.EuclideanGeometry\n\nopen EuclideanGeometry\n\n${leanPremises}\n\n${leanGoal}`;
 
   // Write to a temp file
-  const tmpFile = path.join(os.tmpdir(), `tmp_proof_${Date.now()}.lean`);
+  const tmpFile = `lean/Geometry/Geometry/tmp_proof_${Date.now()}.lean`;
   fs.writeFileSync(tmpFile, leanFile);
 
-  const euclidSrc = path.join(__dirname, "EuclideanGeometry.lean");
-  const euclidDest = path.join(os.tmpdir(), "EuclideanGeometry.lean");
-  fs.copyFileSync(euclidSrc, euclidDest);
-
   // Run Lean on the file
-  const result = spawnSync("lean", [tmpFile], { encoding: "utf-8" });
+  const result = spawnSync("lean --run", [tmpFile], { encoding: "utf-8" });
 
   // Print Lean code and output
   console.log("--- Lean code ---\n");
@@ -78,7 +74,6 @@ function main() {
 
   // Clean up temp file
   fs.unlinkSync(tmpFile);
-  fs.unlinkSync(euclidDest);
 }
 
 if (require.main === module) {

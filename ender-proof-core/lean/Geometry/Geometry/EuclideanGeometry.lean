@@ -1,7 +1,4 @@
--- EuclideanGeometry.lean
-
 namespace EuclideanGeometry
-
 -- Define a type for points
 structure Point where
   label : String
@@ -28,16 +25,23 @@ structure Triangle where
   c : Point
   deriving Repr, DecidableEq
 
--- Congruence of segments
-def CongruentSegments (s1 s2 : Segment) : Prop :=
-  -- Placeholder: in a full system, this would relate to distances
-  s1 = s2
+-- Congruence of segments: an equivalence relation
+class SegmentCongruence where
+  congr : Segment → Segment → Prop
+  refl : ∀ s, congr s s
+  symm : ∀ s1 s2, congr s1 s2 → congr s2 s1
+  trans : ∀ s1 s2 s3, congr s1 s2 → congr s2 s3 → congr s1 s3
 
--- Congruence of angles
-def CongruentAngles (angle1 angle2 : Angle) : Prop :=
-  -- Placeholder: in a full system, this would relate to angle measures
-  angle1 = angle2
+def CongruentSegments (s1 s2 : Segment) : Prop := s1 = s2
 
+-- Congruence of angles: an equivalence relation
+class AngleCongruence where
+  congr : Angle → Angle → Prop
+  refl : ∀ a, congr a a
+  symm : ∀ a1 a2, congr a1 a2 → congr a2 a1
+  trans : ∀ a1 a2 a3, congr a1 a2 → congr a2 a3 → congr a1 a3
+
+def CongruentAngles (a1 a2 : Angle) : Prop := a1 = a2
 -- Congruence of triangles
 /--
   Two triangles T1 and T2 are congruent if there exists a permutation of the vertices of T2
