@@ -92,4 +92,4 @@ theorem goal : CongruentTriangles t_ABC t_ADC :=
 
 - To build TypeScript: `npx tsc`
 - To run scripts: `npx ts-node <script>`
-- (No automated tests yet; add your own in `lean/` or `grammar/` as needed)
+- Run unit tests with `npm test`

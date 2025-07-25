@@ -1,6 +1,5 @@
-const moo = require("moo");
-const { proofKeywords } = require("./parser");
-
+import moo from "moo";
+import { proofKeywords } from "../parser";
 describe("proofKeywords moo tokenizer", () => {
   const simpleProof = `
 title: "Simple Proof"
@@ -12,7 +11,7 @@ steps:
 // Another comment
 `;
 
-  function tokenize(input) {
+  const tokenize = (input: string) => {
     const lexer = moo.compile(proofKeywords);
     lexer.reset(input);
     const tokens = [];
@@ -23,7 +22,7 @@ steps:
       }
     }
     return tokens;
-  }
+  };
 
   test("tokenizes proof structure keywords", () => {
     const tokens = tokenize(simpleProof);

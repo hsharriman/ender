@@ -1,6 +1,6 @@
 reason given()
 reason reflex() -> reflex, con_seg
-reason sss(con_seg, con_ang, con_seg) -> con_tri
+reason sas(con_seg, con_ang, con_seg) -> con_tri
 reason sss(con_seg, con_seg, con_seg) -> con_tri
 reason asa(con_ang, con_seg, con_ang) -> con_tri
 reason aas(con_ang, con_ang, con_seg) -> con_tri

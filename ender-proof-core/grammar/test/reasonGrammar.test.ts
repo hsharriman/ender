@@ -1,8 +1,8 @@
-const moo = require("moo");
-const { reasonKeywords } = require("./parser");
+import moo from "moo";
+import { reasonKeywords } from "../parser";
 
 describe("reasonKeywords moo tokenizer", () => {
-  function tokenize(input) {
+  const tokenize = (input: string) => {
     const lexer = moo.compile(reasonKeywords);
     lexer.reset(input);
     const tokens = [];
@@ -17,7 +17,7 @@ describe("reasonKeywords moo tokenizer", () => {
       }
     }
     return tokens;
-  }
+  };
 
   test("debug: print tokens for reason given()", () => {
     const input = "reason given()";
@@ -29,11 +29,9 @@ describe("reasonKeywords moo tokenizer", () => {
       while ((token = lexer.next())) {
         tokens.push(token);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error:", error.message);
       console.log("Input:", input);
-      console.log("Error position:", lexer.index);
-      console.log("Character at error:", input[lexer.index]);
       console.log("Tokens so far:", tokens);
     }
     console.log("All tokens:", tokens);
