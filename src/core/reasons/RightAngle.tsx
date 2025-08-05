@@ -1,6 +1,6 @@
 import { makeStepMeta } from "../../theorems/utils";
+import { Obj, Reason } from "../types/layoutTypes";
 import { StepFocusProps, StepMeta } from "../types/stepTypes";
-import { Obj, Reason } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 
 export class RightAngle {

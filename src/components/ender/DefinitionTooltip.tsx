@@ -1,6 +1,6 @@
 import React from "react";
 import { logEvent } from "../../core/testinfra/testUtils";
-import { Reason } from "../../core/types/types";
+import { Reason } from "../../core/types/layoutTypes";
 
 interface TooltipProps {
   obj: JSX.Element;

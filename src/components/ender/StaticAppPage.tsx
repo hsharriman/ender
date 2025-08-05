@@ -3,8 +3,8 @@ import { DiagramContent } from "../../core/diagramContent";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { Question } from "../../core/testinfra/questions/testQuestions";
 import { logEvent } from "../../core/testinfra/testUtils";
+import { Reason } from "../../core/types/layoutTypes";
 import { StaticProofTextItem } from "../../core/types/stepTypes";
-import { Reason } from "../../core/types/types";
 import { Definition, definitionArr } from "../../theorems/definitions";
 import { StaticDiagram } from "./StaticDiagram";
 

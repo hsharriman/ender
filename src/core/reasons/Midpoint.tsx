@@ -1,6 +1,6 @@
 import { segmentStr } from "../geometryText";
+import { SVGModes } from "../types/layoutTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
-import { SVGModes } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
 
 // by Definition of midpoint, addition illustrates equal segments, relies on point on line

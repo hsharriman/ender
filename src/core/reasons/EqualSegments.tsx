@@ -1,7 +1,7 @@
 import { makeStepMeta } from "../../theorems/utils";
 import { resizedStrs, segmentStr } from "../geometryText";
+import { Obj, Reason, SVGModes } from "../types/layoutTypes";
 import { StepFocusProps, StepMeta, StepProps } from "../types/stepTypes";
-import { Obj, Reason, SVGModes } from "../types/types";
 
 export class EqualSegments {
   static additions = (

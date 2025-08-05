@@ -11,7 +11,7 @@ import {
   segmentPretestQuestions,
   trianglePretestQuestions,
 } from "../../core/testinfra/questions/pretestQuestions";
-import { SVGModes, Vector } from "../../core/types/types";
+import { SVGModes, Vector } from "../../core/types/layoutTypes";
 
 const defaultProps = (ctx: Content) => {
   return { ctx: ctx, frame: "given", mode: SVGModes.Default };

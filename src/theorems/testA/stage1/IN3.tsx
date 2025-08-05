@@ -11,12 +11,12 @@ import {
   IN3questions,
   exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
+import { LayoutProps, SVGModes } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 

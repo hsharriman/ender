@@ -1,5 +1,5 @@
+import { Obj, SVGModes } from "../types/layoutTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
 import { BaseAngle } from "./BaseAngle";
 import { RightAngle } from "./RightAngle";
 

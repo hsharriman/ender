@@ -1,6 +1,6 @@
-import { Content } from "../core/diagramContent";
+import { Content, SVGModes } from "geometry-object";
+import { Reason } from "../core/types/layoutTypes";
 import { StepFocusProps, StepMeta, StepProps } from "../core/types/stepTypes";
-import { Reason, SVGModes } from "../core/types/types";
 import { Reasons } from "./reasons";
 
 export const GIVEN_ID = "given";

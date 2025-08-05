@@ -1,6 +1,5 @@
 import React from "react";
-import { Vector } from "../../core/types/types";
-import { vops } from "../../core/vectorOps";
+import { Vector, vops } from "geometry-object";
 
 export interface ReliesOnProps {
   reliesOn: Map<string, Set<string>>;

@@ -16,12 +16,12 @@ import {
   S1C2questions,
   exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
+import { LayoutProps, Obj, SVGModes } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 

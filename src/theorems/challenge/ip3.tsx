@@ -13,8 +13,13 @@ import { Reflexive } from "../../core/reasons/Reflexive";
 import { RightAngle } from "../../core/reasons/RightAngle";
 import { SAS, SASProps } from "../../core/reasons/SAS";
 import { placeholder } from "../../core/testinfra/questions/testQuestions";
+import {
+  LayoutProps,
+  Obj,
+  SVGModes,
+  Vector,
+} from "../../core/types/layoutTypes";
 import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes, Vector } from "../../core/types/types";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
 

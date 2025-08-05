@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@types/moo": "^0.5.10",
+    "geometry-object": "file:../geometry-object",
     "moo": "^0.5.2"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
+import { SVGModes } from "../types/layoutTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
-import { SVGModes } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
 
 export interface SSSProps {

@@ -1,6 +1,10 @@
-import { Content } from "../../../core/diagramContent";
-import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
-import { ShowPoint } from "../../../core/geometry/Point";
+import {
+  AspectRatio,
+  Content,
+  Obj,
+  SVGModes,
+  ShowPoint,
+} from "geometry-object";
 import { comma, triangleStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
@@ -12,12 +16,12 @@ import {
   S2C1Questions,
   exploratoryQuestion,
 } from "../../../core/testinfra/questions/testQuestions";
+import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
   StepMeta,
   StepProps,
 } from "../../../core/types/stepTypes";
-import { LayoutProps, Obj, SVGModes } from "../../../core/types/types";
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 

@@ -1,12 +1,10 @@
+import { AspectRatio, DiagramContent, SVGModes } from "geometry-object";
 import React from "react";
-import { DiagramContent } from "../../core/diagramContent";
 import { LinePatternDefs } from "../../core/diagramSvg/LinePattern";
 import { SVGGeoAngle } from "../../core/diagramSvg/SVGGeoAngle";
 import { SVGGeoPoint } from "../../core/diagramSvg/SVGGeoPoint";
 import { SVGGeoSegment } from "../../core/diagramSvg/SVGGeoSegment";
 import { SVGGeoTriangle } from "../../core/diagramSvg/SVGGeoTriangle";
-import { AspectRatio } from "../../core/diagramSvg/svgTypes";
-import { SVGModes } from "../../core/types/types";
 
 export interface DiagramProps {
   svgIdSuffix: string;

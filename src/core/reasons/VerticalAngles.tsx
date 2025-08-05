@@ -1,5 +1,5 @@
+import { Obj, SVGModes } from "../types/layoutTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 
 export interface VerticalAnglesProps {

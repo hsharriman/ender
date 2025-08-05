@@ -16,7 +16,7 @@ import {
   TutorialProof1,
   TutorialProof2,
 } from "../../theorems/tutorial/tutorial1";
-import { LayoutProps, ProofMeta } from "../types/types";
+import { LayoutProps, ProofMeta } from "../types/layoutTypes";
 import { triangleTextPreQuestions } from "./questions/pretestQuestions";
 import { fisherYates } from "./randomize";
 import { interactiveLayout, pretestLayout, staticLayout } from "./setupLayout";

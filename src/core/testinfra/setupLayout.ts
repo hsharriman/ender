@@ -2,8 +2,13 @@ import Rand from "rand-seed";
 import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
+import {
+  LayoutProps,
+  Reason,
+  SVGModes,
+  TutorialStep,
+} from "../types/layoutTypes";
 import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";
-import { LayoutProps, Reason, SVGModes, TutorialStep } from "../types/types";
 import { Page, PageType } from "./pageOrder";
 import { fisherYates } from "./randomize";
 

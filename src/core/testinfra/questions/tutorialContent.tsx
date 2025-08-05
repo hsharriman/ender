@@ -1,5 +1,5 @@
 import { segmentQuestion } from "../../geometryText";
-import { TutorialStep, TutorialStepType } from "../../types/types";
+import { TutorialStep, TutorialStepType } from "../../types/layoutTypes";
 
 const bold = (text: string) => <span className="font-bold">{text}</span>;
 const allProofRowListenerIds = Array.from(

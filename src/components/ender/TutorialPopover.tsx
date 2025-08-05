@@ -1,6 +1,6 @@
 import React from "react";
 import { logEvent } from "../../core/testinfra/testUtils";
-import { TutorialStep, TutorialStepType } from "../../core/types/types";
+import { TutorialStep, TutorialStepType } from "../../core/types/layoutTypes";
 
 interface TutorialPopoverProps {
   step: TutorialStep;

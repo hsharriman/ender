@@ -1,6 +1,6 @@
 import { resizedStrs, segmentStr } from "../geometryText";
+import { SVGModes } from "../types/layoutTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
-import { SVGModes } from "../types/types";
 
 export class Perpendicular {
   static additions = (

@@ -1,7 +1,7 @@
 import React from "react";
 import { BaseGeometryObject } from "../../core/geometry/BaseGeometryObject";
 import { addTutorialActive, logEvent } from "../../core/testinfra/testUtils";
-import { Obj } from "../../core/types/types";
+import { Obj } from "../../core/types/layoutTypes";
 
 export interface LinkedTextProps {
   val: string;

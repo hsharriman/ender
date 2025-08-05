@@ -1,5 +1,5 @@
-import { Content } from "../diagramContent";
-import { Reason, SVGModes, TickType } from "./types";
+import { Content, SVGModes, TickType } from "geometry-object";
+import { Reason } from "./layoutTypes";
 
 // -------- TYPES RELATED TO RENDERING STEPS OF A PROOF --------
 export interface StepProps {

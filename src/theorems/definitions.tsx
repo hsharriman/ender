@@ -1,5 +1,5 @@
 import { resizedStrs } from "../core/geometryText";
-import { Reason } from "../core/types/types";
+import { Reason } from "../core/types/layoutTypes";
 
 export type Definition = {
   symbol: JSX.Element;

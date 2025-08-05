@@ -12,7 +12,7 @@ import {
 } from "../components/ender/StaticAppPage";
 import { StaticDiagram } from "../components/ender/StaticDiagram";
 import { interactiveLayout, staticLayout } from "../core/testinfra/setupLayout";
-import { LayoutProps } from "../core/types/types";
+import { LayoutProps } from "../core/types/layoutTypes";
 import { Reasons } from "../theorems/reasons";
 import { T1_S1_C1 } from "../theorems/testA/stage1/C1";
 import { T1_S1_C2 } from "../theorems/testA/stage1/C2";

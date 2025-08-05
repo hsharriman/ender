@@ -1,6 +1,6 @@
 import { resizedStrs, segmentStr } from "../geometryText";
+import { Obj, SVGModes } from "../types/layoutTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
 import { EqualSegments } from "./EqualSegments";
 
 export class Reflexive {

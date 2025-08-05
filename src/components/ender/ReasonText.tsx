@@ -1,6 +1,6 @@
 import React from "react";
 import { logEvent } from "../../core/testinfra/testUtils";
-import { Reason } from "../../core/types/types";
+import { Reason } from "../../core/types/layoutTypes";
 import { Reasons } from "../../theorems/reasons";
 
 export interface ReasonTextProps {

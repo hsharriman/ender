@@ -1,7 +1,7 @@
 import { Reasons } from "../../../theorems/reasons";
 import { possibleStepAnswers } from "../../../theorems/utils";
 import { segmentQuestion, strs } from "../../geometryText";
-import { Obj, Reason } from "../../types/types";
+import { Obj, Reason } from "../../types/layoutTypes";
 
 export interface Question {
   answerType: AnswerType;

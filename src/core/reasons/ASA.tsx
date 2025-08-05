@@ -1,11 +1,11 @@
 import { Content } from "../diagramContent";
+import { Obj, SVGModes } from "../types/layoutTypes";
 import {
   StepFocusProps,
   StepProps,
   TickedAngles,
   TickedSegments,
 } from "../types/stepTypes";
-import { Obj, SVGModes } from "../types/types";
 import { EqualAngles } from "./EqualAngles";
 import { EqualRightAngles } from "./EqualRightAngles";
 import { EqualSegments } from "./EqualSegments";

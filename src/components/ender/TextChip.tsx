@@ -1,4 +1,4 @@
-import { Obj } from "../../core/types/types";
+import { Obj } from "geometry-object";
 
 export interface TextChipProps {
   val: string;

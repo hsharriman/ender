@@ -1,5 +1,8 @@
 import React from "react";
-import { TutorialStep, TutorialStepType } from "../../../core/types/types";
+import {
+  TutorialStep,
+  TutorialStepType,
+} from "../../../core/types/layoutTypes";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
