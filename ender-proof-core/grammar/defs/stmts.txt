@@ -1,4 +1,3 @@
-stmt reflex(Segment s)
 stmt right(Angle a) 
 
 // congruence

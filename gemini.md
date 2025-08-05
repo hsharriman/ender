@@ -134,3 +134,13 @@ reflex() -> c(PS) [05]
 asa([03], [04], [05]) -> c(t_LSP,t_USP) [06]
 cpctc([06]) -> c(a_SLP,a_SUP) [07]
 asa([02], [07], [08]) -> c(t_LNU,t_UQL) [09]
+
+## Proof checking
+
+Use typescript to evaluate the correctness of a proof in the ender-proof-core package. Use arrow functions, modular and readable code. For each step in a proof:
+
+1. If a statement is given, it is assumed to be true
+2. Track the progress of the proof using a graph object
+3. For each step, the pattern is `reason(<deps>) -> stmt(<stmt_args>) [step_num]`. To check each step, first check if the number and type of stmt_args matches the expectations from the appropriate stmt. Next, check if the number of dependencies passed into the reason matches the number defined in reasons.txt. Then, for each of deps, reference the stmt used in the corresponding step_num. Make sure that the stmt matches with the one expected by the reason. Check if the stmt matches the one expected by the reason. If any of these checks fail, mark the step as incorrect and continue.
+4. Once the proof has been fully scanned: Check if the final stmt in the final step matches the goal of the proof. Check if any steps were marked incorrect. Check if there are any steps that do not contribute towards the goal of the proof (are unused/leaf nodes in the graph). Check if there are any cycles in the graph.
+5. pretty print these findings to the terminal.

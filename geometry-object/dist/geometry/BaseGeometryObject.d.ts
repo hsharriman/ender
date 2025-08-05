@@ -14,6 +14,7 @@ export declare class BaseGeometryObject {
     getMode: (frameKey: string) => SVGModes | undefined;
     mode: (frameKey: string, mode: SVGModes) => this;
     onClickText: (isActive: boolean) => void;
+    isEqualTo: (other: BaseGeometryObject) => boolean;
     matches: (name: string) => boolean;
 }
 //# sourceMappingURL=BaseGeometryObject.d.ts.map

@@ -327,6 +327,8 @@ export class ProofParser {
     // Common reason functions in geometry proofs
     const reasonFunctions = [
       "reflex",
+      "reflex_s",
+      "reflex_a",
       "sas",
       "sss",
       "asa",

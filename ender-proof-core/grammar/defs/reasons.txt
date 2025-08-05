@@ -1,8 +1,7 @@
 reason given()
-reason reflex() -> con_seg(s: Segment, s: Segment)
-  s == s
+reason reflex_s() -> reflex_s(s: Segment)
+reason reflex_a() -> reflex_a(a: Angle)
 reason sas(con_seg, con_ang, con_seg) -> con_tri(t1: Triangle, t2: Triangle)
-  t1.sas(t2)
 reason sss(con_seg, con_seg, con_seg) -> con_tri
 reason asa(con_ang, con_seg, con_ang) -> con_tri
 reason aas(con_ang, con_ang, con_seg) -> con_tri

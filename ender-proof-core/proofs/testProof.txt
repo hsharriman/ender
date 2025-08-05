@@ -1,0 +1,11 @@
+title: "Test Proof - Prove Triangles Congruent"
+premises:
+pt: A, B, C, D
+tri: t_ABC t_ADC
+c(AB,AD) [01]
+c(a_BAC,a_DAC) [02]
+-> c(t_ABC,t_ADC)
+
+steps:
+reflex_s() -> c(AC, AC) [03]
+sas([01], [02], [03]) -> c(t_ABC,t_ADC) [04] 

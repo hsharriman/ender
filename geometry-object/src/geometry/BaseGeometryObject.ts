@@ -34,5 +34,9 @@ export class BaseGeometryObject {
     // do nothing
   };
 
+  isEqualTo = (other: BaseGeometryObject) => {
+    return this.matches(other.label);
+  };
+
   matches = (name: string) => this.names.find((n) => n === name) !== undefined;
 }

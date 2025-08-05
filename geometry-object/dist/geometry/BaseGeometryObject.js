@@ -14,6 +14,9 @@ export class BaseGeometryObject {
         this.onClickText = (isActive) => {
             // do nothing
         };
+        this.isEqualTo = (other) => {
+            return this.matches(other.label);
+        };
         this.matches = (name) => this.names.find((n) => n === name) !== undefined;
         this.tag = tag;
         this.modes = new Map();
