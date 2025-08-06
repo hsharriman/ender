@@ -77,6 +77,18 @@ export class Content {
         this.addQuadrilaterals = (propsArr) => {
             return propsArr.map((props) => this.addQuadrilateral(props));
         };
+        this.addSegmentFromStr = (str) => {
+            const [a, b] = str.split("").map((c) => this.getPoint(c));
+            return this.addSegment({ p1: a, p2: b });
+        };
+        this.addTriangleFromStr = (str) => {
+            const [a, b, c] = str.split("").map((c) => this.getPoint(c));
+            return this.addTriangle({ pts: [a, b, c] });
+        };
+        this.addAngleFromStr = (str) => {
+            const [a, b, c] = str.split("").map((c) => this.getPoint(c));
+            return this.addAngle({ start: a, center: b, end: c });
+        };
         this.getPoint = (label) => this.ctx.points.filter((p) => p.matches(label))[0];
         this.getSegment = (label) => this.ctx.segments.filter((s) => s.matches(label))[0];
         this.getAngle = (label) => this.ctx.angles.filter((a) => a.matches(label))[0];

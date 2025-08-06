@@ -1,6 +1,13 @@
-import * as fs from "fs";
-import * as path from "path";
-import { ProofParser } from "./grammar/lezerParser";
+import { readFileSync } from "fs";
+import { Angle, Content, Point, Segment, Triangle } from "geometry-object";
+import { basename, dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { ProofParser } from "./grammar/lezerParser.js";
+import { reflex_a, reflex_s, sas } from "./grammar/reasons/reasonChecks.js";
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Types for the proof checker
 interface Statement {
@@ -55,17 +62,54 @@ interface ProofGraph {
   cycles: string[][];
 }
 
+// Function to get geometric object from string identifier
+const getGeometricObject = (
+  arg: string,
+  ctx: Content
+): Point | Segment | Angle | Triangle => {
+  if (arg.startsWith("a_")) {
+    // Angle format: a_ABC
+    const angle = ctx.getAngle(arg);
+    if (!angle) {
+      throw new Error(`Angle ${arg} not found in context`);
+    }
+    return angle;
+  } else if (arg.startsWith("t_")) {
+    // Triangle format: t_ABC
+    const triangle = ctx.getTriangle(arg);
+    if (!triangle) {
+      throw new Error(`Triangle ${arg} not found in context`);
+    }
+    return triangle;
+  } else if (arg.length === 2 && /^[A-Z]{2}$/.test(arg)) {
+    // Segment format: AB
+    const segment = ctx.getSegment(arg);
+    if (!segment) {
+      throw new Error(`Segment ${arg} not found in context`);
+    }
+    return segment;
+  } else if (arg.length === 1 && /^[A-Z]$/.test(arg)) {
+    // Point format: A
+    const point = ctx.getPoint(arg);
+    if (!point) {
+      throw new Error(`Point ${arg} not found in context`);
+    }
+    return point;
+  }
+  throw new Error(`Cannot parse geometric object from argument: ${arg}`);
+};
+
 // Load reason definitions from reasons.txt
 const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {
-  const reasonsPath = path.join(__dirname, "grammar", "defs", "reasons.txt");
-  const content = fs.readFileSync(reasonsPath, "utf-8");
+  const reasonsPath = join(__dirname, "grammar", "defs", "reasons.txt");
+  const content = readFileSync(reasonsPath, "utf-8");
   const reasons = new Map<string, ReasonDefinition>();
 
   const lines = content
     .split("\n")
-    .filter((line) => line.trim() && !line.startsWith("?"));
+    .filter((line: string) => line.trim() && !line.startsWith("?"));
 
-  lines.forEach((line) => {
+  lines.forEach((line: string) => {
     const trimmed = line.trim();
     if (trimmed.startsWith("reason ")) {
       const reasonPart = trimmed.substring(7);
@@ -104,15 +148,15 @@ const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {
 
 // Load statement definitions from stmts.txt
 const loadStatementDefinitions = (): Map<string, StatementDefinition> => {
-  const stmtsPath = path.join(__dirname, "grammar", "defs", "stmts.txt");
-  const content = fs.readFileSync(stmtsPath, "utf-8");
+  const stmtsPath = join(__dirname, "grammar", "defs", "stmts.txt");
+  const content = readFileSync(stmtsPath, "utf-8");
   const statements = new Map<string, StatementDefinition>();
 
   const lines = content
     .split("\n")
-    .filter((line) => line.trim() && !line.startsWith("//"));
+    .filter((line: string) => line.trim() && !line.startsWith("//"));
 
-  lines.forEach((line) => {
+  lines.forEach((line: string) => {
     const trimmed = line.trim();
     if (trimmed.startsWith("stmt ")) {
       const stmtPart = trimmed.substring(5);
@@ -126,8 +170,8 @@ const loadStatementDefinitions = (): Map<string, StatementDefinition> => {
         );
         const params = paramsPart
           .split(",")
-          .map((p) => p.trim())
-          .filter((p) => p);
+          .map((p: string) => p.trim())
+          .filter((p: string) => p);
 
         statements.set(stmtName, {
           name: stmtName,
@@ -148,7 +192,7 @@ const loadStatementDefinitions = (): Map<string, StatementDefinition> => {
 
 // Parse a proof file
 const parseProof = (filePath: string): Proof => {
-  const content = fs.readFileSync(filePath, "utf-8");
+  const content = readFileSync(filePath, "utf-8");
   const parser = new ProofParser();
   return parser.parse(content);
 };
@@ -238,11 +282,136 @@ const checkDependencyStatements = (
   return true;
 };
 
+// Check if reason is applied correctly using reason checker methods
+const checkReasonApplication = (
+  reason: Reason,
+  reasonDefs: Map<string, ReasonDefinition>,
+  proofGraph: ProofGraph,
+  proof: Proof,
+  ctx: Content
+): boolean => {
+  const definition = reasonDefs.get(reason.function);
+  if (!definition) {
+    return false;
+  }
+
+  try {
+    // Get the dependency steps and their arguments
+    const dependencyArgs: any[] = [];
+    for (let i = 0; i < reason.arguments.length; i++) {
+      const depRef = reason.arguments[i];
+      const stepNum = depRef.replace(/[\[\]]/g, "");
+      const dependencyStep = proofGraph.nodes.get(stepNum);
+
+      if (!dependencyStep) {
+        return false;
+      }
+
+      // Get the arguments from the dependency step
+      const depArgs =
+        dependencyStep.function === "c"
+          ? dependencyStep.arguments || []
+          : dependencyStep.conclusion?.arguments || [];
+
+      if (depArgs.length !== 2) {
+        return false;
+      }
+
+      // Create geometric objects from the arguments
+      const obj1 = getGeometricObject(depArgs[0], ctx);
+      const obj2 = getGeometricObject(depArgs[1], ctx);
+      dependencyArgs.push([obj1, obj2]);
+    }
+
+    // Call the appropriate reason checker method
+    switch (reason.function) {
+      case "reflex_s":
+        if (dependencyArgs.length === 0) {
+          // For reflex_s, we need to get the conclusion arguments
+          const conclusionStep = proof.steps.find(
+            (step) =>
+              step.type === "proof" && step.reason?.function === "reflex_s"
+          );
+          if (conclusionStep?.conclusion?.arguments?.length === 2) {
+            const arg1 = getGeometricObject(
+              conclusionStep.conclusion.arguments[0],
+              ctx
+            ) as Segment;
+            const arg2 = getGeometricObject(
+              conclusionStep.conclusion.arguments[1],
+              ctx
+            ) as Segment;
+            return reflex_s(arg1, arg2);
+          }
+        }
+        return false;
+
+      case "reflex_a":
+        if (dependencyArgs.length === 0) {
+          // For reflex_a, we need to get the conclusion arguments
+          const conclusionStep = proof.steps.find(
+            (step) =>
+              step.type === "proof" && step.reason?.function === "reflex_a"
+          );
+          if (conclusionStep?.conclusion?.arguments?.length === 2) {
+            const arg1 = getGeometricObject(
+              conclusionStep.conclusion.arguments[0],
+              ctx
+            ) as Angle;
+            const arg2 = getGeometricObject(
+              conclusionStep.conclusion.arguments[1],
+              ctx
+            ) as Angle;
+            return reflex_a(arg1, arg2);
+          }
+        }
+        return false;
+
+      case "sas":
+        if (dependencyArgs.length === 3) {
+          // For SAS, we need to get the conclusion arguments (triangles)
+          const conclusionStep = proof.steps.find(
+            (step) => step.type === "proof" && step.reason?.function === "sas"
+          );
+          if (conclusionStep?.conclusion?.arguments?.length === 2) {
+            const t1 = getGeometricObject(
+              conclusionStep.conclusion.arguments[0],
+              ctx
+            ) as Triangle;
+            const t2 = getGeometricObject(
+              conclusionStep.conclusion.arguments[1],
+              ctx
+            ) as Triangle;
+            return sas(
+              t1,
+              t2,
+              dependencyArgs[0],
+              dependencyArgs[2],
+              dependencyArgs[1]
+            );
+          }
+        }
+        return false;
+
+      default:
+        // For other reasons, we'll return true for now (syntax check passed)
+        return true;
+    }
+  } catch (error) {
+    console.error(
+      `Error checking reason application for ${reason.function}:`,
+      error
+    );
+    return false;
+  }
+};
+
 // Build proof graph and check each step
 const buildProofGraph = (
   proof: Proof,
   reasonDefs: Map<string, ReasonDefinition>,
-  stmtDefs: Map<string, StatementDefinition>
+  stmtDefs: Map<string, StatementDefinition>,
+  ctx: Content
 ): ProofGraph => {
   const graph: ProofGraph = {
     nodes: new Map(),
@@ -296,6 +465,17 @@ const buildProofGraph = (
       // Check conclusion statement
       if (isCorrect) {
         isCorrect = checkStatementArguments(step.conclusion, stmtDefs);
+      }
+
+      // Check if reason is applied correctly using reason checker methods
+      if (isCorrect) {
+        isCorrect = checkReasonApplication(
+          step.reason,
+          reasonDefs,
+          graph,
+          proof,
+          ctx
+        );
       }
 
       // Add edges from dependencies to this step
@@ -426,7 +606,7 @@ const checkGoalMatch = (proof: Proof, goal?: string): boolean => {
 
 // Main proof checker function
 const checkProof = (filePath: string): void => {
-  console.log(`\n🔍 Checking proof: ${path.basename(filePath)}\n`);
+  console.log(`\n🔍 Checking proof: ${basename(filePath)}\n`);
 
   try {
     // Load definitions
@@ -437,8 +617,35 @@ const checkProof = (filePath: string): void => {
     const proof = parseProof(filePath);
     const goal = extractGoal(proof);
 
+    // Create Content context and populate it with all geometric objects from premises
+    const ctx = new Content();
+
+    // Add all points from premises
+    proof.premises.points.forEach((pointLabel) => {
+      ctx.addPoint({ pt: [0, 0], label: pointLabel, offset: [0, 0] }); // TODO pt coords
+    });
+
+    // Add all triangles from premises (this will also create their segments and angles)
+    proof.premises.triangles.forEach((triangleLabel) => {
+      // Parse triangle label (e.g., "t_ABC")
+      const pointLabels = triangleLabel.substring(2); // Remove 't_' prefix
+      ctx.addTriangleFromStr(pointLabels);
+    });
+
+    // Add all segments from premises
+    proof.premises.segments.forEach((segmentLabel) => {
+      ctx.addSegmentFromStr(segmentLabel);
+    });
+
+    // Add all angles from premises
+    proof.premises.angles.forEach((angleLabel) => {
+      // Parse angle label (e.g., "a_BAC")
+      const pointLabels = angleLabel.substring(2); // Remove 'a_' prefix
+      ctx.addAngleFromStr(pointLabels);
+    });
+
     // Build proof graph
-    const graph = buildProofGraph(proof, reasonDefs, stmtDefs);
+    const graph = buildProofGraph(proof, reasonDefs, stmtDefs, ctx);
 
     // Detect cycles
     graph.cycles = detectCycles(graph);

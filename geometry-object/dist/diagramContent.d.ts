@@ -40,6 +40,9 @@ export declare class Content {
     addAngles: (propsArr: AngleProps[]) => Angle[];
     addTriangles: (propsArr: TriangleProps[]) => Triangle[];
     addQuadrilaterals: (propsArr: QuadrilateralProps[]) => Quadrilateral[];
+    addSegmentFromStr: (str: string) => Segment;
+    addTriangleFromStr: (str: string) => Triangle;
+    addAngleFromStr: (str: string) => Angle;
     getPoint: (label: string) => Point;
     getSegment: (label: string) => Segment;
     getAngle: (label: string) => Angle;
