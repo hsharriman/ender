@@ -282,8 +282,8 @@ const checkDependencyStatements = (
       return false;
     }
 
-    // Check if statement matches expected type
-    if (!stmt.includes(expectedType.replace("_", ""))) {
+    // Check if statement matches expected type exactly
+    if (stmt !== expectedType) {
       return false;
     }
   }
@@ -374,9 +374,10 @@ const checkReasonApplication = (
         };
         if (dependencyArgs.length === 3) {
           // For SAS, we need to get the conclusion arguments (triangles)
-          const s1 = getDepStmt(dependencyArgs[0], proof);
-          const a = getDepStmt(dependencyArgs[1], proof);
-          const s2 = getDepStmt(dependencyArgs[2], proof);
+          // Use the original step numbers from reason arguments, not the geometric objects
+          const s1 = getDepStmt(reason.arguments[0], proof);
+          const a = getDepStmt(reason.arguments[1], proof);
+          const s2 = getDepStmt(reason.arguments[2], proof);
           // TODO check that the conclusion step is either con_seg or con_ang
           if (
             currStep.statement?.arguments?.length === 2 &&
@@ -392,6 +393,7 @@ const checkReasonApplication = (
               currStep.statement.arguments[1],
               ctx
             ) as Triangle;
+
             return sas(
               t1,
               t2,
