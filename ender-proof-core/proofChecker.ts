@@ -70,6 +70,16 @@ interface ProofGraph {
   cycles: string[][];
 }
 
+// Helper function to strip geometric object prefixes
+const stripGeometricPrefix = (arg: string): string => {
+  if (arg.startsWith("a_")) {
+    return arg.substring(2); // Remove 'a_' prefix for angles
+  } else if (arg.startsWith("t_")) {
+    return arg.substring(2); // Remove 't_' prefix for triangles
+  }
+  return arg; // No prefix to strip
+};
+
 // Function to get geometric object from string identifier
 const getGeometricObject = (
   arg: string,
@@ -77,15 +87,16 @@ const getGeometricObject = (
 ): Point | Segment | Angle | Triangle => {
   if (arg.startsWith("a_")) {
     // Angle format: a_ABC - remove prefix and try to find angle
-    const angleLabel = arg.substring(2);
+    const angleLabel = stripGeometricPrefix(arg);
     const angle = ctx.getAngle(angleLabel);
     if (!angle) {
       throw new Error(`Angle ${arg} not found in context`);
     }
     return angle;
   } else if (arg.startsWith("t_")) {
-    // Triangle format: t_ABC
-    const triangle = ctx.getTriangle(arg);
+    // Triangle format: t_ABC - remove prefix and try to find triangle
+    const triangleLabel = stripGeometricPrefix(arg);
+    const triangle = ctx.getTriangle(triangleLabel);
     if (!triangle) {
       throw new Error(`Triangle ${arg} not found in context`);
     }
