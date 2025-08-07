@@ -1,13 +1,11 @@
 import { readFileSync } from "fs";
-import {
-  Angle,
-  DiagramContent,
-  Point,
-  Segment,
-  Triangle,
-} from "geometry-object";
 import { basename, dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { Angle } from "./geometry/Angle.js";
+import { DiagramContent } from "./geometry/DiagramContent.js";
+import { Point } from "./geometry/Point.js";
+import { Segment } from "./geometry/Segment.js";
+import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
 import {
   AnglePair,
@@ -37,11 +35,8 @@ interface Reason {
 interface ProofStep {
   type: "given" | "proof" | "goal";
   reason?: Reason;
-  conclusion?: Statement;
-  function?: string;
-  arguments?: string[];
-  stepNumber?: string;
   statement?: Statement;
+  stepNumber?: string;
 }
 
 interface Proof {
@@ -81,8 +76,9 @@ const getGeometricObject = (
   ctx: DiagramContent
 ): Point | Segment | Angle | Triangle => {
   if (arg.startsWith("a_")) {
-    // Angle format: a_ABC
-    const angle = ctx.getAngle(arg);
+    // Angle format: a_ABC - remove prefix and try to find angle
+    const angleLabel = arg.substring(2);
+    const angle = ctx.getAngle(angleLabel);
     if (!angle) {
       throw new Error(`Angle ${arg} not found in context`);
     }
@@ -213,10 +209,20 @@ const parseProof = (filePath: string): Proof => {
 
 // Extract goal from proof title or premises
 const extractGoal = (proof: Proof): string | undefined => {
+  // Look for goal in the premises section (steps with type "goal")
+  const goalStep = proof.steps.find((step) => step.type === "goal");
+  if (goalStep && goalStep.statement) {
+    return `${goalStep.statement.function}(${goalStep.statement.arguments.join(
+      ", "
+    )})`;
+  }
+
+  // Fallback: look for goal in title
   if (proof.title && proof.title.includes("->")) {
     const arrowIndex = proof.title.indexOf("->");
     return proof.title.substring(arrowIndex + 2).trim();
   }
+
   return undefined;
 };
 
@@ -271,7 +277,7 @@ const checkDependencyStatements = (
     }
 
     // Check if the dependency step's statement matches expected type
-    const stmt = dependencyStep.function || dependencyStep.conclusion?.function;
+    const stmt = dependencyStep.statement?.function;
     if (!stmt) {
       return false;
     }
@@ -313,10 +319,7 @@ const checkReasonApplication = (
       }
 
       // Get the arguments from the dependency step
-      const depArgs =
-        dependencyStep.function === "c"
-          ? dependencyStep.arguments || []
-          : dependencyStep.conclusion?.arguments || [];
+      const depArgs = dependencyStep.statement?.arguments || [];
 
       // if (depArgs.length !== 2) {
       //   return false;
@@ -332,10 +335,16 @@ const checkReasonApplication = (
     switch (reason.function) {
       case "reflex_s":
         if (dependencyArgs.length === 0) {
-          if (currStep.arguments?.length === 2) {
+          if (currStep.statement?.arguments?.length === 2) {
             return reflex_s(
-              getGeometricObject(currStep.arguments[0], ctx) as Segment,
-              getGeometricObject(currStep.arguments[1], ctx) as Segment
+              getGeometricObject(
+                currStep.statement.arguments[0],
+                ctx
+              ) as Segment,
+              getGeometricObject(
+                currStep.statement.arguments[1],
+                ctx
+              ) as Segment
             );
           }
         }
@@ -343,10 +352,10 @@ const checkReasonApplication = (
 
       case "reflex_a":
         if (dependencyArgs.length === 0) {
-          if (currStep.arguments?.length === 2) {
+          if (currStep.statement?.arguments?.length === 2) {
             return reflex_a(
-              getGeometricObject(currStep.arguments[0], ctx) as Angle,
-              getGeometricObject(currStep.arguments[1], ctx) as Angle
+              getGeometricObject(currStep.statement.arguments[0], ctx) as Angle,
+              getGeometricObject(currStep.statement.arguments[1], ctx) as Angle
             );
           }
         }
@@ -370,17 +379,17 @@ const checkReasonApplication = (
           const s2 = getDepStmt(dependencyArgs[2], proof);
           // TODO check that the conclusion step is either con_seg or con_ang
           if (
-            currStep.conclusion?.arguments?.length === 2 &&
+            currStep.statement?.arguments?.length === 2 &&
             s1.length === 2 &&
             a.length === 2 &&
             s2.length === 2
           ) {
             const t1 = getGeometricObject(
-              currStep.conclusion.arguments[0],
+              currStep.statement.arguments[0],
               ctx
             ) as Triangle;
             const t2 = getGeometricObject(
-              currStep.conclusion.arguments[1],
+              currStep.statement.arguments[1],
               ctx
             ) as Triangle;
             return sas(
@@ -426,9 +435,7 @@ const buildProofGraph = (
   proof.steps.forEach((step) => {
     if (step.type === "goal") return; // Skip goal steps
 
-    const stepNum =
-      step.stepNumber?.replace(/[\[\]]/g, "") ||
-      step.conclusion?.stepNumber?.replace(/[\[\]]/g, "");
+    const stepNum = step.stepNumber?.replace(/[\[\]]/g, "");
     if (stepNum) {
       graph.nodes.set(stepNum, step);
       graph.edges.set(stepNum, []);
@@ -439,9 +446,7 @@ const buildProofGraph = (
   proof.steps.forEach((step) => {
     if (step.type === "goal") return; // Skip goal steps
 
-    const stepNum =
-      step.stepNumber?.replace(/[\[\]]/g, "") ||
-      step.conclusion?.stepNumber?.replace(/[\[\]]/g, "");
+    const stepNum = step.stepNumber?.replace(/[\[\]]/g, "");
 
     if (!stepNum) return;
 
@@ -449,12 +454,12 @@ const buildProofGraph = (
 
     if (step.type === "given") {
       // Given statements are assumed to be true, but check format
-      if (step.function && step.arguments) {
+      if (step.statement?.function) {
         // For now, just check if the function exists in definitions
         // In a real implementation, you'd check the actual statement format
-        isCorrect = stmtDefs.has(step.function);
+        isCorrect = stmtDefs.has(step.statement.function);
       }
-    } else if (step.type === "proof" && step.reason && step.conclusion) {
+    } else if (step.type === "proof" && step.reason && step.statement) {
       // Check reason dependencies
       isCorrect = checkReasonDependencies(step.reason, reasonDefs);
 
@@ -463,9 +468,9 @@ const buildProofGraph = (
         isCorrect = checkDependencyStatements(step.reason, reasonDefs, graph);
       }
 
-      // Check conclusion statement
+      // Check statement
       if (isCorrect) {
-        isCorrect = checkStatementArguments(step.conclusion, stmtDefs);
+        isCorrect = checkStatementArguments(step.statement, stmtDefs);
       }
 
       // Check if reason is applied correctly using reason checker methods
@@ -581,22 +586,75 @@ const findUnusedSteps = (graph: ProofGraph, goalStep?: string): Set<string> => {
 };
 
 // Check if final statement matches the goal
-const checkGoalMatch = (proof: Proof, goal?: string): boolean => {
-  if (!goal) return true;
+const checkGoalMatch = (
+  proof: Proof,
+  goal?: string
+): { matches: boolean; details: string } => {
+  if (!goal) return { matches: true, details: "No goal specified" };
 
-  const lastStep = proof.steps[proof.steps.length - 1];
-  if (!lastStep) return false;
+  // Find the last proof step (not goal step)
+  const lastProofStep = proof.steps
+    .slice()
+    .reverse()
+    .find((step) => step.type === "proof");
 
-  const finalStatement =
-    lastStep.conclusion ||
-    (lastStep.function
-      ? { function: lastStep.function, arguments: lastStep.arguments || [] }
-      : null);
+  if (!lastProofStep) {
+    return { matches: false, details: "No proof steps found" };
+  }
 
-  if (!finalStatement) return false;
+  const finalStatement = lastProofStep.statement;
+  if (!finalStatement) {
+    return { matches: false, details: "Last proof step has no statement" };
+  }
 
-  // Simple string matching - could be made more sophisticated
-  return finalStatement.function.includes(goal.replace(/\s+/g, ""));
+  // Parse the goal to extract function and arguments
+  const goalMatch = goal.match(/^(\w+)\(([^)]*)\)$/);
+  if (!goalMatch) {
+    return { matches: false, details: `Invalid goal format: ${goal}` };
+  }
+
+  const [, expectedFunction, expectedArgsStr] = goalMatch;
+  const expectedArgs = expectedArgsStr.split(",").map((arg) => arg.trim());
+
+  // Check function match
+  if (finalStatement.function !== expectedFunction) {
+    return {
+      matches: false,
+      details: `Function mismatch: expected '${expectedFunction}', got '${finalStatement.function}'`,
+    };
+  }
+
+  // Check arguments match
+  if (
+    !finalStatement.arguments ||
+    finalStatement.arguments.length !== expectedArgs.length
+  ) {
+    return {
+      matches: false,
+      details: `Argument count mismatch: expected ${expectedArgs.length}, got ${
+        finalStatement.arguments?.length || 0
+      }`,
+    };
+  }
+
+  // Check each argument
+  for (let i = 0; i < expectedArgs.length; i++) {
+    if (finalStatement.arguments[i] !== expectedArgs[i]) {
+      return {
+        matches: false,
+        details: `Argument ${i + 1} mismatch: expected '${
+          expectedArgs[i]
+        }', got '${finalStatement.arguments[i]}'`,
+      };
+    }
+  }
+
+  return {
+    matches: true,
+    details: `Goal matched: ${
+      finalStatement.function
+    }(${finalStatement.arguments.join(", ")})`,
+  };
 };
 
 // Main proof checker function
@@ -639,6 +697,40 @@ const checkProof = (filePath: string): void => {
       ctx.addAngleFromStr(pointLabels);
     });
 
+    // Process given statements to create geometric objects
+    proof.steps.forEach((step) => {
+      if (
+        step.type === "given" &&
+        step.statement?.function &&
+        step.statement.arguments
+      ) {
+        if (
+          step.statement.function === "con_seg" &&
+          step.statement.arguments.length === 2
+        ) {
+          // Given congruent segments - ensure both segments exist
+          step.statement.arguments.forEach((arg: string) => {
+            if (!ctx.getSegment(arg)) {
+              ctx.addSegmentFromStr(arg);
+            }
+          });
+        } else if (
+          step.statement.function === "con_ang" &&
+          step.statement.arguments.length === 2
+        ) {
+          // Given congruent angles - ensure both angles exist
+          step.statement.arguments.forEach((arg: string) => {
+            if (arg.startsWith("a_")) {
+              const angleLabel = arg.substring(2);
+              if (!ctx.getAngle(angleLabel)) {
+                ctx.addAngleFromStr(angleLabel);
+              }
+            }
+          });
+        }
+      }
+    });
+
     // Build proof graph
     const graph = buildProofGraph(proof, reasonDefs, stmtDefs, ctx);
 
@@ -646,16 +738,17 @@ const checkProof = (filePath: string): void => {
     graph.cycles = detectCycles(graph);
 
     // Find unused steps
-    const lastStepNum =
-      proof.steps[proof.steps.length - 1]?.stepNumber?.replace(/[\[\]]/g, "") ||
-      proof.steps[proof.steps.length - 1]?.conclusion?.stepNumber?.replace(
-        /[\[\]]/g,
-        ""
-      );
+    // Find the last proof step (not goal step) to use as the goal step number
+    const lastProofStep = proof.steps
+      .slice()
+      .reverse()
+      .find((step) => step.type === "proof");
+    const lastStepNum = lastProofStep?.stepNumber?.replace(/[\[\]]/g, "");
+
     graph.unusedSteps = findUnusedSteps(graph, lastStepNum);
 
     // Check goal match
-    const goalMatches = checkGoalMatch(proof, goal);
+    const goalMatchResult = checkGoalMatch(proof, goal);
 
     // Pretty print results
     console.log("📋 Proof Analysis Results:");
@@ -664,11 +757,14 @@ const checkProof = (filePath: string): void => {
     console.log(`\n📝 Title: ${proof.title || "No title"}`);
     if (goal) {
       console.log(`🎯 Goal: ${goal}`);
-      console.log(`✅ Goal Match: ${goalMatches ? "YES" : "NO"}`);
+      console.log(`✅ Goal Match: ${goalMatchResult.matches ? "YES" : "NO"}`);
+      console.log(`📋 Goal Details: ${goalMatchResult.details}`);
     }
 
     console.log(`\n📊 Statistics:`);
-    console.log(`   • Total Steps: ${proof.steps.length}`);
+    console.log(
+      `   • Total Steps: ${proof.steps.filter((s) => s.type !== "goal").length}`
+    );
     console.log(
       `   • Given Statements: ${
         proof.steps.filter((s) => s.type === "given").length
@@ -712,7 +808,7 @@ const checkProof = (filePath: string): void => {
       graph.incorrectSteps.size > 0 ||
       graph.unusedSteps.size > 0 ||
       graph.cycles.length > 0 ||
-      !goalMatches;
+      !goalMatchResult.matches;
 
     if (!hasErrors) {
       console.log("✅ Proof is CORRECT!");
@@ -735,7 +831,7 @@ export {
 };
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   if (args.length === 0) {
     console.log("Usage: npm run check-proof <proof-file>");

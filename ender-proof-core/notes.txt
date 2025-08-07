@@ -19,10 +19,11 @@ what about when the comparisons aren't to create congruent/similar things (i.e. 
 or circumcenter/incenter/centroid relationships
 
 centroid: conclude point == centroid if segments w/in triangle all bisect opposite sides and P intersects w all 3
-  reason centroid(bisect, bisect, bisect) -> centroid(p: Point)
+  reason centroid(bisect, bisect, bisect) -> centroid(p: Point, t: Triangle, x: Point, y: Point, z: Point)
 centroid (converse): if point == centroid, all segments within triangle bisect
-  reason centroid_c(p_centroid) -> bisect(?????)
+  reason centroid_c(p_centroid) -> bisect
   // issue here is that there are 3 different segments that could be concluded to be bisecting
+  // in reasonDef, make it clear that based on the triangle, intersect pts, centroid pt, which lines are perp bisectors
 some construction steps might be necessary here (like stating that certain lines/points are collinear/intersecting, invisible (or hidden by default) for a proof)
 
 // reasons and conclusions can match or be different
@@ -33,7 +34,7 @@ perpendicular(con_adj_ang) -> perpendicular(s1: Segment, s2: Segment)
 reason supplementary() -> 
 
 1 req, many conclusions:
-cpctc
+reason cpctc(con_tri) -> con_seg, con_ang 
 
 many reqs, many conclusions:
 

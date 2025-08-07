@@ -250,7 +250,12 @@ export class ProofParser {
     if (hasStepNumber) {
       // Given statement
       const statement = this.parseStatement(tokens, i);
-      return { type: "given", ...statement };
+      return {
+        type: "given",
+        statement: statement,
+        stepNumber: statement.stepNumber,
+        endIndex: statement.endIndex,
+      };
     }
 
     return null;
@@ -271,7 +276,8 @@ export class ProofParser {
       return {
         type: "proof",
         reason: reason,
-        conclusion: conclusion,
+        statement: conclusion,
+        stepNumber: conclusion.stepNumber,
         endIndex: conclusion.endIndex,
       };
     }

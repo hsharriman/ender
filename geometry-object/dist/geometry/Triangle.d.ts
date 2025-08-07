@@ -1,26 +1,22 @@
-import { SVGModes } from "../types/types";
+import { TriangleProps } from "geometry-object/dist/types/geometryTypes";
+import { SVGModes } from "geometry-object/dist/types/types";
 import { Angle } from "./Angle";
-import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
-import DiagramContent from "./DiagramContent";
+import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
-export type TriangleProps = {
-    pts: [Point, Point, Point];
-    rotatePattern?: boolean;
-} & BaseGeometryProps;
 export declare class Triangle extends BaseGeometryObject {
-    readonly s: [Segment, Segment, Segment];
-    readonly a: [Angle, Angle, Angle];
-    readonly p: [Point, Point, Point];
-    readonly id: string;
-    readonly rotatePattern: boolean;
-    readonly congruent: Set<string>;
-    constructor(props: TriangleProps, ctx: DiagramContent);
-    private buildSegments;
-    private buildAngles;
-    onClickText: (isActive: boolean) => void;
-    mode: (frameKey: string, mode: SVGModes) => this;
-    labelMode: (frameKey: string, mode: SVGModes) => this;
-    setCongruent: (frame: string) => this;
+  readonly s: [Segment, Segment, Segment];
+  readonly a: [Angle, Angle, Angle];
+  readonly p: [Point, Point, Point];
+  readonly id: string;
+  readonly rotatePattern: boolean;
+  readonly congruent: Set<string>;
+  constructor(props: TriangleProps);
+  private buildSegments;
+  private buildAngles;
+  onClickText: (isActive: boolean) => void;
+  mode: (frameKey: string, mode: SVGModes) => this;
+  labelMode: (frameKey: string, mode: SVGModes) => this;
+  setCongruent: (frame: string) => this;
 }
 //# sourceMappingURL=Triangle.d.ts.map

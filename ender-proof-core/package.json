@@ -8,11 +8,11 @@
   "private": true,
   "scripts": {
     "test": "jest",
-    "check-proof": "tsx proofChecker.ts"
+    "check-proof": "tsx proofChecker.ts",
+    "debug-proof": "tsx debugProofChecker.ts"
   },
   "dependencies": {
     "@types/moo": "^0.5.10",
-    "geometry-object": "file:../geometry-object",
     "moo": "^0.5.2"
   },
   "devDependencies": {
