@@ -1,82 +1,101 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 import { Obj } from "../types/types";
 import { permutator } from "../utils";
 import { BaseGeometryObject } from "./BaseGeometryObject";
-export class Triangle extends BaseGeometryObject {
-    constructor(props, ctx) {
-        super(Obj.Triangle, props);
-        this.congruent = new Set();
-        this.buildSegments = (pts, ctx, parentFrame) => {
-            const sa = ctx.addSegment({
+var Triangle = /** @class */ (function (_super) {
+    __extends(Triangle, _super);
+    function Triangle(props, ctx) {
+        var _this = _super.call(this, Obj.Triangle, props) || this;
+        _this.congruent = new Set();
+        _this.buildSegments = function (pts, ctx, parentFrame) {
+            var sa = ctx.addSegment({
                 p1: pts[0],
                 p2: pts[1],
-                parentFrame,
+                parentFrame: parentFrame,
             });
-            const sb = ctx.addSegment({
+            var sb = ctx.addSegment({
                 p1: pts[0],
                 p2: pts[2],
-                parentFrame,
+                parentFrame: parentFrame,
             });
-            const sc = ctx.addSegment({
+            var sc = ctx.addSegment({
                 p1: pts[1],
                 p2: pts[2],
-                parentFrame,
+                parentFrame: parentFrame,
             });
             return [sa, sb, sc];
         };
-        this.buildAngles = (pts, ctx, parentFrame) => {
-            const aa = ctx.addAngle({
+        _this.buildAngles = function (pts, ctx, parentFrame) {
+            var aa = ctx.addAngle({
                 start: pts[0],
                 center: pts[1],
                 end: pts[2],
-                parentFrame,
+                parentFrame: parentFrame,
             });
-            const ab = ctx.addAngle({
+            var ab = ctx.addAngle({
                 start: pts[1],
                 center: pts[0],
                 end: pts[2],
-                parentFrame,
+                parentFrame: parentFrame,
             });
-            const ac = ctx.addAngle({
+            var ac = ctx.addAngle({
                 start: pts[0],
                 center: pts[2],
                 end: pts[1],
-                parentFrame,
+                parentFrame: parentFrame,
             });
             return [aa, ab, ac];
         };
         // deprecated
-        this.onClickText = (isActive) => {
+        _this.onClickText = function (isActive) {
             // for each segment use onClickText
-            this.s.forEach((seg) => {
+            _this.s.forEach(function (seg) {
                 seg.onClickText(isActive);
             });
-            this.a.forEach((ang) => {
+            _this.a.forEach(function (ang) {
                 ang.onClickText(isActive);
             });
         };
-        this.mode = (frameKey, mode) => {
+        _this.mode = function (frameKey, mode) {
             // this.modes.set(frameKey, mode);
             // cascading update the segments and angles
-            this.s.map((seg) => seg.mode(frameKey, mode));
-            this.a.map((ang) => ang.mode(frameKey, mode));
-            return this;
+            _this.s.map(function (seg) { return seg.mode(frameKey, mode); });
+            _this.a.map(function (ang) { return ang.mode(frameKey, mode); });
+            return _this;
         };
-        this.labelMode = (frameKey, mode) => {
-            this.modes.set(frameKey, mode);
-            return this;
+        _this.labelMode = function (frameKey, mode) {
+            _this.modes.set(frameKey, mode);
+            return _this;
         };
-        this.setCongruent = (frame) => {
-            this.congruent.add(frame);
-            return this;
+        _this.setCongruent = function (frame) {
+            _this.congruent.add(frame);
+            return _this;
         };
-        this.p = props.pts;
-        this.s = this.buildSegments(props.pts, ctx);
-        this.p = props.pts;
-        this.a = this.buildAngles(props.pts, ctx);
-        this.names = permutator(props.pts.map((pt) => pt.label));
-        this.label = `${props.pts[0].label}${props.pts[1].label}${props.pts[2].label}`;
-        this.rotatePattern = props.rotatePattern || false;
-        this.id = this.getId(Obj.Triangle, this.label);
+        _this.p = props.pts;
+        _this.s = _this.buildSegments(props.pts, ctx);
+        _this.p = props.pts;
+        _this.a = _this.buildAngles(props.pts, ctx);
+        _this.names = permutator(props.pts.map(function (pt) { return pt.label; }));
+        _this.label = "".concat(props.pts[0].label).concat(props.pts[1].label).concat(props.pts[2].label);
+        _this.rotatePattern = props.rotatePattern || false;
+        _this.id = _this.getId(Obj.Triangle, _this.label);
+        return _this;
     }
-}
+    return Triangle;
+}(BaseGeometryObject));
+export { Triangle };
 //# sourceMappingURL=Triangle.js.map

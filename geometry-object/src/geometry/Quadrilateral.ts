@@ -1,8 +1,8 @@
-import { Content } from "../diagramContent";
 import { Obj, SVGModes } from "../types/types";
 import { permutator } from "../utils";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
+import DiagramContent from "./DiagramContent";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
 
@@ -14,7 +14,7 @@ export class Quadrilateral extends BaseGeometryObject {
   readonly a: [Angle, Angle, Angle, Angle];
   readonly p: [Point, Point, Point, Point];
 
-  constructor(props: QuadrilateralProps, ctx: Content) {
+  constructor(props: QuadrilateralProps, ctx: DiagramContent) {
     super(Obj.Quadrilateral, props);
     this.p = props.pts;
 
@@ -26,7 +26,7 @@ export class Quadrilateral extends BaseGeometryObject {
 
   private buildSegments = (
     pts: Point[],
-    ctx: Content,
+    ctx: DiagramContent,
     parentFrame?: string
   ): [Segment, Segment, Segment, Segment] => {
     const sa = ctx.addSegment({
@@ -54,7 +54,7 @@ export class Quadrilateral extends BaseGeometryObject {
 
   private buildAngles = (
     pts: Point[],
-    ctx: Content,
+    ctx: DiagramContent,
     parentFrame?: string
   ): [Angle, Angle, Angle, Angle] => {
     const aa = ctx.addAngle({

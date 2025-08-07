@@ -1,43 +1,63 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 import { Obj } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
-export class Angle extends BaseGeometryObject {
-    constructor(props) {
-        super(Obj.Angle, props);
-        this.labeled = () => {
+var Angle = /** @class */ (function (_super) {
+    __extends(Angle, _super);
+    function Angle(props) {
+        var _this = _super.call(this, Obj.Angle, props) || this;
+        _this.labeled = function () {
             return {
-                start: this.start.pt,
-                center: this.center.pt,
-                end: this.end.pt,
-                label: this.label,
+                start: _this.start.pt,
+                center: _this.center.pt,
+                end: _this.end.pt,
+                label: _this.label,
             };
         };
         // deprecated - DOM manipulation removed for package independence
-        this.onClickText = (isActive) => {
+        _this.onClickText = function (isActive) {
             // DOM manipulation removed for package independence
         };
-        this.addTick = (frame, type, num = 1) => {
-            this.ticks.set(frame, { type, num });
-            return this;
+        _this.addTick = function (frame, type, num) {
+            if (num === void 0) { num = 1; }
+            _this.ticks.set(frame, { type: type, num: num });
+            return _this;
         };
-        this.inheritTick = (frame, prevFrame) => {
-            this.ticks.get(prevFrame) &&
-                this.ticks.set(frame, this.ticks.get(prevFrame));
+        _this.inheritTick = function (frame, prevFrame) {
+            _this.ticks.get(prevFrame) &&
+                _this.ticks.set(frame, _this.ticks.get(prevFrame));
         };
-        this.hideTick = (frame) => {
-            this.ticks.delete(frame);
-            return this;
+        _this.hideTick = function (frame) {
+            _this.ticks.delete(frame);
+            return _this;
         };
-        this.getTick = (frame) => this.ticks.get(frame);
-        this.start = props.start;
-        this.center = props.center;
-        this.end = props.end;
-        this.label = `${props.start.label}${props.center.label}${props.end.label}`;
-        this.names = [
-            `${this.start.label}${this.center.label}${this.end.label}`,
-            `${this.end.label}${this.center.label}${this.start.label}`,
+        _this.getTick = function (frame) { return _this.ticks.get(frame); };
+        _this.start = props.start;
+        _this.center = props.center;
+        _this.end = props.end;
+        _this.label = "".concat(props.start.label).concat(props.center.label).concat(props.end.label);
+        _this.names = [
+            "".concat(_this.start.label).concat(_this.center.label).concat(_this.end.label),
+            "".concat(_this.end.label).concat(_this.center.label).concat(_this.start.label),
         ];
-        this.id = this.getId(Obj.Angle, this.label);
-        this.ticks = new Map();
+        _this.id = _this.getId(Obj.Angle, _this.label);
+        _this.ticks = new Map();
+        return _this;
     }
-}
+    return Angle;
+}(BaseGeometryObject));
+export { Angle };
 //# sourceMappingURL=Angle.js.map

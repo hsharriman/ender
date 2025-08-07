@@ -1,35 +1,19 @@
-import { Angle, AngleProps } from "./geometry/Angle";
-import { Point, PointProps } from "./geometry/Point";
-import { Quadrilateral, QuadrilateralProps } from "./geometry/Quadrilateral";
-import { Segment, SegmentProps } from "./geometry/Segment";
-import { Triangle, TriangleProps } from "./geometry/Triangle";
-import { Obj } from "./types/types";
-export declare enum AspectRatio {
-    Square = "square",
-    Wide = "wide",
-    Tall = "tall",
-    Landscape = "landscape"
-}
-export interface DiagramContent {
-    points: Point[];
-    segments: Segment[];
-    angles: Angle[];
-    triangles: Triangle[];
-    rectangles: Quadrilateral[];
-    frames: string[];
-    deps: Map<string, Set<string>>;
-    aspect: AspectRatio;
-}
-export type SupportedObjects = Obj.Point | Obj.Segment | Obj.Angle | Obj.Triangle;
-export declare class Content {
+import { DiagramCtx } from "../types/geometryTypes";
+import { AspectRatio } from "../types/types";
+import { Angle, AngleProps } from "./Angle";
+import { Point, PointProps } from "./Point";
+import { Quadrilateral, QuadrilateralProps } from "./Quadrilateral";
+import { Segment, SegmentProps } from "./Segment";
+import { Triangle, TriangleProps } from "./Triangle";
+export default class DiagramContent {
     private ctx;
     constructor();
-    getId: (objectType: Obj, label: string, tickNumber?: number) => string;
+    getId: (objectType: import("../types/types").Obj, label: string, tickNumber?: number) => string;
     reliesOn: (id: string, deps: string[]) => void;
     getReliesOn: () => Map<string, Set<string>>;
     addFrame: (name: string) => string;
     setAspect: (aspect: AspectRatio) => void;
-    getCtx: () => DiagramContent;
+    getCtx: () => DiagramCtx;
     addPoint: (props: PointProps) => Point;
     addSegment: (props: SegmentProps) => Segment;
     addAngle: (props: AngleProps) => Angle;
@@ -49,4 +33,4 @@ export declare class Content {
     getTriangle: (label: string) => Triangle;
     getQuadrilateral: (label: string) => Quadrilateral;
 }
-//# sourceMappingURL=diagramContent.d.ts.map
+//# sourceMappingURL=DiagramContent.d.ts.map

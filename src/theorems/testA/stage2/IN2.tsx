@@ -1,4 +1,4 @@
-import { Content } from "../../../core/diagramContent";
+import { DiagramContent } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { ShowPoint } from "../../../core/geometry/Point";
 import { segmentStr } from "../../../core/geometryText";
@@ -24,7 +24,7 @@ import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
 const baseContent = () => {
-  let ctx = new Content();
+  let ctx = new DiagramContent();
   const [W, X, Y, Z, M] = ctx.addPoints([
     { pt: [2, 9], label: "W", offset: [-15, 0] },
     { pt: [9, 9], label: "X", offset: [5, -3] },

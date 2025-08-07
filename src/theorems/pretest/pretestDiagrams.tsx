@@ -1,5 +1,5 @@
 import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
-import { Content } from "../../core/diagramContent";
+import { DiagramContent } from "../../core/diagramContent";
 import { ShowPoint } from "../../core/geometry/Point";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
@@ -13,7 +13,7 @@ import {
 } from "../../core/testinfra/questions/pretestQuestions";
 import { SVGModes, Vector } from "../../core/types/layoutTypes";
 
-const defaultProps = (ctx: Content) => {
+const defaultProps = (ctx: DiagramContent) => {
   return { ctx: ctx, frame: "given", mode: SVGModes.Default };
 };
 const bright: Vector = [5, -18];
@@ -33,7 +33,7 @@ export const segmentContent = () => {
     ["M", [2, 4], b],
     ["N", [5, 5], b],
   ];
-  let ctx = new Content();
+  let ctx = new DiagramContent();
   const [A, B, C, D, E, F, G, H, J, M, N] = coords.map((c) =>
     ctx.addPoint({
       pt: c[1],
@@ -81,7 +81,7 @@ export const angleContent = () => {
     ["Q", [7.5, 4.5], angbleft],
     ["P", [8.5, 4.5], angbright],
   ];
-  let ctx = new Content();
+  let ctx = new DiagramContent();
   const [A, B, C, D, E, F, G, H, J, K, L, M, N, Q, P] = coords.map((c) =>
     ctx.addPoint({
       pt: c[1],
@@ -129,7 +129,7 @@ const baseTriangles = () => {
     ["E", [8.5, 9.5], [0, 5]],
     ["F", [9.5, 6.5], bleft],
   ];
-  let ctx = new Content();
+  let ctx = new DiagramContent();
   const [A, B, C, D, E, F] = coords.map((c) =>
     ctx.addPoint({
       pt: c[1],
@@ -155,7 +155,7 @@ export const hl = () => {
     ["E", [8.5, 8.5], [0, 5]],
     ["F", [8.5, 6], bleft],
   ];
-  let ctx = new Content();
+  let ctx = new DiagramContent();
   const [A, B, C, D, E, F] = coords.map((c) =>
     ctx.addPoint({
       pt: c[1],

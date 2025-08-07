@@ -4,8 +4,8 @@
 import { Angle, Point, Segment, Triangle } from "geometry-object";
 import { checks } from "./utils";
 
-type SegmentPair = [Segment, Segment];
-type AnglePair = [Angle, Angle];
+export type SegmentPair = [Segment, Segment];
+export type AnglePair = [Angle, Angle];
 
 export const reflex_s = (s1: Segment, s2: Segment) => {
   return checks.eqSeg(s1, s2);
@@ -45,8 +45,8 @@ export const sas = (
   t1: Triangle,
   t2: Triangle,
   s1s: SegmentPair,
-  s2s: SegmentPair,
-  as: AnglePair
+  as: AnglePair,
+  s2s: SegmentPair
 ): boolean => {
   // Check that s1s and s2s are not the same
   if (

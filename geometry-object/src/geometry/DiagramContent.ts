@@ -1,38 +1,14 @@
-// import { AspectRatio } from "./diagramSvg/svgTypes";
-import { Angle, AngleProps } from "./geometry/Angle";
-import { Point, PointProps } from "./geometry/Point";
-import { Quadrilateral, QuadrilateralProps } from "./geometry/Quadrilateral";
-import { Segment, SegmentProps } from "./geometry/Segment";
-import { Triangle, TriangleProps } from "./geometry/Triangle";
-import { Obj } from "./types/types";
-import { getId } from "./utils";
+import { DiagramCtx } from "../types/geometryTypes";
+import { AspectRatio } from "../types/types";
+import { getId } from "../utils";
+import { Angle, AngleProps } from "./Angle";
+import { Point, PointProps } from "./Point";
+import { Quadrilateral, QuadrilateralProps } from "./Quadrilateral";
+import { Segment, SegmentProps } from "./Segment";
+import { Triangle, TriangleProps } from "./Triangle";
 
-// Define AspectRatio locally since we removed diagramSvg
-export enum AspectRatio {
-  Square = "square",
-  Wide = "wide",
-  Tall = "tall",
-  Landscape = "landscape",
-}
-
-export interface DiagramContent {
-  points: Point[];
-  segments: Segment[]; // every segment tracks its own mode during build
-  angles: Angle[];
-  triangles: Triangle[];
-  rectangles: Quadrilateral[];
-  frames: string[];
-  deps: Map<string, Set<string>>;
-  aspect: AspectRatio;
-}
-
-export type SupportedObjects =
-  | Obj.Point
-  | Obj.Segment
-  | Obj.Angle
-  | Obj.Triangle;
-export class Content {
-  private ctx: DiagramContent;
+export default class DiagramContent {
+  private ctx: DiagramCtx;
   constructor() {
     this.ctx = {
       points: [],

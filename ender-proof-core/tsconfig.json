@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2021",
-    "module": "ESNext",
+    "target": "es5",
+    "module": "esnext",
     "moduleResolution": "node",
     "declaration": true,
     "outDir": "dist",
@@ -10,5 +10,5 @@
     "allowSyntheticDefaultImports": true,
     "strict": true
   },
-  "include": ["grammar/**/*", "lean/**/*", "proofChecker.ts"]
+  "include": ["grammar/**/*", "proofChecker.ts"]
 }

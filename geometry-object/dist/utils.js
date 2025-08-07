@@ -1,26 +1,27 @@
 import { Obj } from "./types/types";
-export const getId = (objectType, label, tickNumber) => {
+export var getId = function (objectType, label, tickNumber) {
     if (objectType === Obj.Angle || objectType === Obj.EqualAngleTick) {
-        const endPts = [label[0], label[2]].sort().toString().replaceAll(",", "");
-        label = `${label[1]}-${endPts}`;
+        var endPts = [label[0], label[2]].sort().toString().replaceAll(",", "");
+        label = "".concat(label[1], "-").concat(endPts);
     }
     else {
         label = Array.from(label).sort().toString().replaceAll(",", "");
     }
-    let id = `${objectType}.${label}`;
-    return tickNumber ? `${id}.${tickNumber}` : id;
+    var id = "".concat(objectType, ".").concat(label);
+    return tickNumber ? "".concat(id, ".").concat(tickNumber) : id;
 };
 // https://stackoverflow.com/questions/9960908/permutations-in-javascript
-export const permutator = (inputArr) => {
-    let result = [];
-    const permute = (arr, m = "") => {
+export var permutator = function (inputArr) {
+    var result = [];
+    var permute = function (arr, m) {
+        if (m === void 0) { m = ""; }
         if (arr.length === 0) {
             result.push(m);
         }
         else {
-            for (let i = 0; i < arr.length; i++) {
-                let curr = arr.slice(); // copy arr
-                let next = curr.splice(i, 1);
+            for (var i = 0; i < arr.length; i++) {
+                var curr = arr.slice(); // copy arr
+                var next = curr.splice(i, 1);
                 permute(curr.slice(), m + next);
             }
         }

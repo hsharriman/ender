@@ -1,4 +1,4 @@
-import { Content } from "../../core/diagramContent";
+import { DiagramContent } from "../../core/diagramContent";
 import { ShowPoint } from "../../core/geometry/Point";
 import { comma } from "../../core/geometryText";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
@@ -32,7 +32,7 @@ export const baseContent = () => {
     [3.5, 1], //E
     [3.5, -0.25], //G
   ];
-  let ctx = new Content();
+  let ctx = new DiagramContent();
   const labels = ["A", "B", "C", "D", "E", "G"];
   const offsets: Vector[] = [
     [-12, -15],
@@ -86,7 +86,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getSegment("BG").mode(props.frame, SVGModes.Unfocused); // TODO this segment causes visual problems
   },
 
-  diagram: (ctx: Content, frame: string) => {
+  diagram: (ctx: DiagramContent, frame: string) => {
     givens.additions({ ctx, frame, mode: SVGModes.Default });
   },
 });

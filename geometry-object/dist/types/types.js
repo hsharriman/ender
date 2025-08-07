@@ -31,4 +31,12 @@ export var HighlightType;
     HighlightType["Highlight"] = "highlight";
     HighlightType["HighlightUnmet"] = "highlightunmet";
 })(HighlightType || (HighlightType = {}));
+// Define AspectRatio locally since we removed diagramSvg
+export var AspectRatio;
+(function (AspectRatio) {
+    AspectRatio["Square"] = "square";
+    AspectRatio["Wide"] = "wide";
+    AspectRatio["Tall"] = "tall";
+    AspectRatio["Landscape"] = "landscape";
+})(AspectRatio || (AspectRatio = {}));
 //# sourceMappingURL=types.js.map

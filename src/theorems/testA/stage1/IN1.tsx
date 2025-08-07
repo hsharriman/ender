@@ -1,4 +1,4 @@
-import { Content } from "../../../core/diagramContent";
+import { DiagramContent } from "../../../core/diagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { comma } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -20,7 +20,7 @@ import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
 const baseContent = () => {
-  let ctx = new Content();
+  let ctx = new DiagramContent();
   const [A, B, D, C] = ctx.addPoints([
     { pt: [1, 2], label: "A", offset: [-15, -10] },
     { pt: [10, 2], label: "B", offset: [10, -10] },

@@ -1,8 +1,8 @@
-import { Content } from "../diagramContent";
 import { Obj, SVGModes } from "../types/types";
 import { permutator } from "../utils";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
+import DiagramContent from "./DiagramContent";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
 
@@ -19,7 +19,7 @@ export class Triangle extends BaseGeometryObject {
   readonly rotatePattern: boolean;
   readonly congruent: Set<string> = new Set();
 
-  constructor(props: TriangleProps, ctx: Content) {
+  constructor(props: TriangleProps, ctx: DiagramContent) {
     super(Obj.Triangle, props);
     this.p = props.pts;
 
@@ -34,7 +34,7 @@ export class Triangle extends BaseGeometryObject {
 
   private buildSegments = (
     pts: Point[],
-    ctx: Content,
+    ctx: DiagramContent,
     parentFrame?: string
   ): [Segment, Segment, Segment] => {
     const sa = ctx.addSegment({
@@ -58,7 +58,7 @@ export class Triangle extends BaseGeometryObject {
 
   private buildAngles = (
     pts: Point[],
-    ctx: Content,
+    ctx: DiagramContent,
     parentFrame?: string
   ): [Angle, Angle, Angle] => {
     const aa = ctx.addAngle({

@@ -1,31 +1,23 @@
-export interface BaseGeoObject {
-  label: string;
-  type: string;
-}
+import { Angle } from "../geometry/Angle";
+import { Point } from "../geometry/Point";
+import { Quadrilateral } from "../geometry/Quadrilateral";
+import { Segment } from "../geometry/Segment";
+import { Triangle } from "../geometry/Triangle";
+import { AspectRatio, Obj } from "./types";
 
-export interface ASTPoint extends BaseGeoObject {}
+export type SupportedObjects =
+  | Obj.Point
+  | Obj.Segment
+  | Obj.Angle
+  | Obj.Triangle;
 
-export interface ASTSegment extends BaseGeoObject {
-  p1: ASTPoint;
-  p2: ASTPoint;
-}
-
-export interface ASTAngle extends BaseGeoObject {
-  center: ASTPoint;
-  p1: ASTPoint;
-  p3: ASTPoint;
-  p1Center: ASTSegment;
-  p3Center: ASTSegment;
-}
-
-export interface ASTTriangle extends BaseGeoObject {
-  p1: ASTPoint;
-  p2: ASTPoint;
-  p3: ASTPoint;
-  p1p2: ASTSegment;
-  p2p3: ASTSegment;
-  p3p1: ASTSegment;
-  a1: ASTAngle;
-  a2: ASTAngle;
-  a3: ASTAngle;
+export interface DiagramCtx {
+  points: Point[];
+  segments: Segment[]; // every segment tracks its own mode during build
+  angles: Angle[];
+  triangles: Triangle[];
+  rectangles: Quadrilateral[];
+  frames: string[];
+  deps: Map<string, Set<string>>;
+  aspect: AspectRatio;
 }

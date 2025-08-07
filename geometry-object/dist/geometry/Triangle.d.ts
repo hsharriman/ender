@@ -1,7 +1,7 @@
-import { Content } from "../diagramContent";
 import { SVGModes } from "../types/types";
 import { Angle } from "./Angle";
 import { BaseGeometryObject, BaseGeometryProps } from "./BaseGeometryObject";
+import DiagramContent from "./DiagramContent";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
 export type TriangleProps = {
@@ -15,7 +15,7 @@ export declare class Triangle extends BaseGeometryObject {
     readonly id: string;
     readonly rotatePattern: boolean;
     readonly congruent: Set<string>;
-    constructor(props: TriangleProps, ctx: Content);
+    constructor(props: TriangleProps, ctx: DiagramContent);
     private buildSegments;
     private buildAngles;
     onClickText: (isActive: boolean) => void;

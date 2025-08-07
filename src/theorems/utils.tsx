@@ -1,4 +1,4 @@
-import { Content, SVGModes } from "geometry-object";
+import { DiagramContent, SVGModes } from "geometry-object";
 import { Reason } from "../core/types/layoutTypes";
 import { StepFocusProps, StepMeta, StepProps } from "../core/types/stepTypes";
 import { Reasons } from "./reasons";
@@ -27,7 +27,7 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
       meta.prevStep.unfocused(props);
     }
   };
-  const diagram = (ctx: Content, frame: string, prevStep?: StepMeta) => {
+  const diagram = (ctx: DiagramContent, frame: string, prevStep?: StepMeta) => {
     const additionProps = {
       ctx,
       frame,

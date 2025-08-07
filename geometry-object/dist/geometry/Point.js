@@ -1,3 +1,18 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 import { Obj } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 export var ShowPoint;
@@ -6,27 +21,32 @@ export var ShowPoint;
     ShowPoint["Adaptive"] = "adaptive";
     ShowPoint["Hide"] = "hide";
 })(ShowPoint || (ShowPoint = {}));
-export class Point extends BaseGeometryObject {
-    constructor(props) {
-        super(Obj.Point, props);
-        this.offset = [5, 5];
-        this.labeled = () => {
-            return { pt: this.pt, label: this.label };
+var Point = /** @class */ (function (_super) {
+    __extends(Point, _super);
+    function Point(props) {
+        var _a;
+        var _this = _super.call(this, Obj.Point, props) || this;
+        _this.offset = [5, 5];
+        _this.labeled = function () {
+            return { pt: _this.pt, label: _this.label };
         };
-        this.setOffset = (offset) => {
-            this.offset = offset;
+        _this.setOffset = function (offset) {
+            _this.offset = offset;
         };
         // deprecated - DOM manipulation removed for package independence
-        this.onClickText = (isActive) => {
+        _this.onClickText = function (isActive) {
             // DOM manipulation removed for package independence
         };
-        this.pt = props.pt;
-        this.label = props.label;
-        this.names = [this.label];
-        this.offset = props.offset;
-        this.id = this.getId(Obj.Point, this.label);
-        this.id = props.parentFrame ? `${props.parentFrame}-${this.id}` : this.id;
-        this.showPoint = props.showPoint ?? ShowPoint.Hide;
+        _this.pt = props.pt;
+        _this.label = props.label;
+        _this.names = [_this.label];
+        _this.offset = props.offset;
+        _this.id = _this.getId(Obj.Point, _this.label);
+        _this.id = props.parentFrame ? "".concat(props.parentFrame, "-").concat(_this.id) : _this.id;
+        _this.showPoint = (_a = props.showPoint) !== null && _a !== void 0 ? _a : ShowPoint.Hide;
+        return _this;
     }
-}
+    return Point;
+}(BaseGeometryObject));
+export { Point };
 //# sourceMappingURL=Point.js.map

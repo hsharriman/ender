@@ -1,9 +1,21 @@
 import { readFileSync } from "fs";
-import { Angle, Content, Point, Segment, Triangle } from "geometry-object";
+import {
+  Angle,
+  DiagramContent,
+  Point,
+  Segment,
+  Triangle,
+} from "geometry-object";
 import { basename, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { ProofParser } from "./grammar/lezerParser.js";
-import { reflex_a, reflex_s, sas } from "./grammar/reasons/reasonChecks.js";
+import {
+  AnglePair,
+  reflex_a,
+  reflex_s,
+  sas,
+  SegmentPair,
+} from "./grammar/reasons/reasonChecks.js";
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -21,6 +33,7 @@ interface Reason {
   arguments: string[];
 }
 
+// TODO rename/simplify proof step.
 interface ProofStep {
   type: "given" | "proof" | "goal";
   reason?: Reason;
@@ -65,7 +78,7 @@ interface ProofGraph {
 // Function to get geometric object from string identifier
 const getGeometricObject = (
   arg: string,
-  ctx: Content
+  ctx: DiagramContent
 ): Point | Segment | Angle | Triangle => {
   if (arg.startsWith("a_")) {
     // Angle format: a_ABC
@@ -100,6 +113,7 @@ const getGeometricObject = (
 };
 
 // Load reason definitions from reasons.txt
+// TODO use parser for this
 const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {
   const reasonsPath = join(__dirname, "grammar", "defs", "reasons.txt");
   const content = readFileSync(reasonsPath, "utf-8");
@@ -211,11 +225,6 @@ const checkStatementArguments = (
   stmt: Statement,
   stmtDefs: Map<string, StatementDefinition>
 ): boolean => {
-  // Handle special case for 'c' (congruent) function
-  if (stmt.function === "c") {
-    return stmt.arguments.length === 2; // congruent always takes 2 arguments
-  }
-
   const definition = stmtDefs.get(stmt.function);
   if (!definition) {
     return false;
@@ -234,6 +243,7 @@ const checkReasonDependencies = (
     return false;
   }
 
+  // TODO this should actually check prior steps to see if the reason functions match with the dependencies
   return reason.arguments.length === definition.dependencies.length;
 };
 
@@ -266,13 +276,6 @@ const checkDependencyStatements = (
       return false;
     }
 
-    // Handle special case for 'c' (congruent) function
-    if (stmt === "c") {
-      // 'c' can represent con_seg, con_ang, or con_tri depending on arguments
-      // For now, we'll be lenient and accept it
-      continue;
-    }
-
     // Check if statement matches expected type
     if (!stmt.includes(expectedType.replace("_", ""))) {
       return false;
@@ -284,12 +287,14 @@ const checkDependencyStatements = (
 
 // Check if reason is applied correctly using reason checker methods
 const checkReasonApplication = (
-  reason: Reason,
+  currStep: ProofStep,
+  // reason: Reason,
   reasonDefs: Map<string, ReasonDefinition>,
   proofGraph: ProofGraph,
   proof: Proof,
-  ctx: Content
+  ctx: DiagramContent
 ): boolean => {
+  const reason = currStep.reason!;
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
     return false;
@@ -313,9 +318,9 @@ const checkReasonApplication = (
           ? dependencyStep.arguments || []
           : dependencyStep.conclusion?.arguments || [];
 
-      if (depArgs.length !== 2) {
-        return false;
-      }
+      // if (depArgs.length !== 2) {
+      //   return false;
+      // }
 
       // Create geometric objects from the arguments
       const obj1 = getGeometricObject(depArgs[0], ctx);
@@ -327,67 +332,63 @@ const checkReasonApplication = (
     switch (reason.function) {
       case "reflex_s":
         if (dependencyArgs.length === 0) {
-          // For reflex_s, we need to get the conclusion arguments
-          const conclusionStep = proof.steps.find(
-            (step) =>
-              step.type === "proof" && step.reason?.function === "reflex_s"
-          );
-          if (conclusionStep?.conclusion?.arguments?.length === 2) {
-            const arg1 = getGeometricObject(
-              conclusionStep.conclusion.arguments[0],
-              ctx
-            ) as Segment;
-            const arg2 = getGeometricObject(
-              conclusionStep.conclusion.arguments[1],
-              ctx
-            ) as Segment;
-            return reflex_s(arg1, arg2);
+          if (currStep.arguments?.length === 2) {
+            return reflex_s(
+              getGeometricObject(currStep.arguments[0], ctx) as Segment,
+              getGeometricObject(currStep.arguments[1], ctx) as Segment
+            );
           }
         }
         return false;
 
       case "reflex_a":
         if (dependencyArgs.length === 0) {
-          // For reflex_a, we need to get the conclusion arguments
-          const conclusionStep = proof.steps.find(
-            (step) =>
-              step.type === "proof" && step.reason?.function === "reflex_a"
-          );
-          if (conclusionStep?.conclusion?.arguments?.length === 2) {
-            const arg1 = getGeometricObject(
-              conclusionStep.conclusion.arguments[0],
-              ctx
-            ) as Angle;
-            const arg2 = getGeometricObject(
-              conclusionStep.conclusion.arguments[1],
-              ctx
-            ) as Angle;
-            return reflex_a(arg1, arg2);
+          if (currStep.arguments?.length === 2) {
+            return reflex_a(
+              getGeometricObject(currStep.arguments[0], ctx) as Angle,
+              getGeometricObject(currStep.arguments[1], ctx) as Angle
+            );
           }
         }
         return false;
 
       case "sas":
+        const getDepStmt = (idx: string, proof: Proof) => {
+          const conclusionStep = proof.steps.find(
+            (step) => step.stepNumber === idx
+          );
+          if (!conclusionStep || !conclusionStep.statement) {
+            return [];
+          }
+          const stmt = conclusionStep.statement;
+          return stmt.arguments.map((arg) => getGeometricObject(arg, ctx));
+        };
         if (dependencyArgs.length === 3) {
           // For SAS, we need to get the conclusion arguments (triangles)
-          const conclusionStep = proof.steps.find(
-            (step) => step.type === "proof" && step.reason?.function === "sas"
-          );
-          if (conclusionStep?.conclusion?.arguments?.length === 2) {
+          const s1 = getDepStmt(dependencyArgs[0], proof);
+          const a = getDepStmt(dependencyArgs[1], proof);
+          const s2 = getDepStmt(dependencyArgs[2], proof);
+          // TODO check that the conclusion step is either con_seg or con_ang
+          if (
+            currStep.conclusion?.arguments?.length === 2 &&
+            s1.length === 2 &&
+            a.length === 2 &&
+            s2.length === 2
+          ) {
             const t1 = getGeometricObject(
-              conclusionStep.conclusion.arguments[0],
+              currStep.conclusion.arguments[0],
               ctx
             ) as Triangle;
             const t2 = getGeometricObject(
-              conclusionStep.conclusion.arguments[1],
+              currStep.conclusion.arguments[1],
               ctx
             ) as Triangle;
             return sas(
               t1,
               t2,
-              dependencyArgs[0],
-              dependencyArgs[2],
-              dependencyArgs[1]
+              dependencyArgs[0] as SegmentPair,
+              dependencyArgs[1] as AnglePair,
+              dependencyArgs[2] as SegmentPair
             );
           }
         }
@@ -411,7 +412,7 @@ const buildProofGraph = (
   proof: Proof,
   reasonDefs: Map<string, ReasonDefinition>,
   stmtDefs: Map<string, StatementDefinition>,
-  ctx: Content
+  ctx: DiagramContent
 ): ProofGraph => {
   const graph: ProofGraph = {
     nodes: new Map(),
@@ -451,7 +452,7 @@ const buildProofGraph = (
       if (step.function && step.arguments) {
         // For now, just check if the function exists in definitions
         // In a real implementation, you'd check the actual statement format
-        isCorrect = stmtDefs.has(step.function) || step.function === "c"; // 'c' is congruent
+        isCorrect = stmtDefs.has(step.function);
       }
     } else if (step.type === "proof" && step.reason && step.conclusion) {
       // Check reason dependencies
@@ -469,13 +470,7 @@ const buildProofGraph = (
 
       // Check if reason is applied correctly using reason checker methods
       if (isCorrect) {
-        isCorrect = checkReasonApplication(
-          step.reason,
-          reasonDefs,
-          graph,
-          proof,
-          ctx
-        );
+        isCorrect = checkReasonApplication(step, reasonDefs, graph, proof, ctx);
       }
 
       // Add edges from dependencies to this step
@@ -617,8 +612,8 @@ const checkProof = (filePath: string): void => {
     const proof = parseProof(filePath);
     const goal = extractGoal(proof);
 
-    // Create Content context and populate it with all geometric objects from premises
-    const ctx = new Content();
+    // Create DiagramContent context and populate it with all geometric objects from premises
+    const ctx = new DiagramContent();
 
     // Add all points from premises
     proof.premises.points.forEach((pointLabel) => {

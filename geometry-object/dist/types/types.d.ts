@@ -43,4 +43,10 @@ export declare enum HighlightType {
     Highlight = "highlight",
     HighlightUnmet = "highlightunmet"
 }
+export declare enum AspectRatio {
+    Square = "square",
+    Wide = "wide",
+    Tall = "tall",
+    Landscape = "landscape"
+}
 //# sourceMappingURL=types.d.ts.map

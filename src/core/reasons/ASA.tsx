@@ -1,4 +1,4 @@
-import { Content } from "../diagramContent";
+import { DiagramContent } from "../diagramContent";
 import { Obj, SVGModes } from "../types/layoutTypes";
 import {
   StepFocusProps,
@@ -18,7 +18,7 @@ export interface ASAProps {
   triangles: [string, string];
 }
 export class ASA {
-  static text = (ctx: Content, triangles: [string, string]) => {
+  static text = (ctx: DiagramContent, triangles: [string, string]) => {
     return EqualTriangles.text(triangles);
   };
 

@@ -1,4 +1,4 @@
-import { Content, Obj } from "geometry-object";
+import { DiagramContent } from "geometry-object";
 import { InteractiveAppPageProps } from "../../components/ender/InteractiveAppPage";
 import { StaticAppPageProps } from "../../components/ender/StaticAppPage";
 import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
@@ -8,7 +8,7 @@ import { StepMeta } from "./stepTypes";
 // -------- TYPES RELATED TO PROOF SETUP --------
 export interface LayoutProps {
   name: string;
-  baseContent: () => Content;
+  baseContent: () => DiagramContent;
   steps: StepMeta[];
   givens: StepMeta;
   proves: StepMeta;

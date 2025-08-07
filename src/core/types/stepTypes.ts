@@ -1,9 +1,9 @@
-import { Content, SVGModes, TickType } from "geometry-object";
+import { DiagramContent, SVGModes, TickType } from "geometry-object";
 import { Reason } from "./layoutTypes";
 
 // -------- TYPES RELATED TO RENDERING STEPS OF A PROOF --------
 export interface StepProps {
-  ctx: Content;
+  ctx: DiagramContent;
   frame: string;
 }
 
@@ -37,7 +37,7 @@ export interface TickedAngles {
 export interface SetupStepMeta {
   prevStep?: StepMeta;
   unfocused: (props: StepProps) => void;
-  diagram: (ctx: Content, frame: string) => void;
+  diagram: (ctx: DiagramContent, frame: string) => void;
   text: (isActive: boolean) => JSX.Element;
   staticText: () => JSX.Element;
   additions: (props: StepFocusProps) => void;

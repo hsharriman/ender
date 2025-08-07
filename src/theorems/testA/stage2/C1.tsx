@@ -1,6 +1,6 @@
 import {
   AspectRatio,
-  Content,
+  DiagramContent,
   Obj,
   SVGModes,
   ShowPoint,
@@ -26,7 +26,7 @@ import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
 export const baseContent = () => {
-  let ctx = new Content();
+  let ctx = new DiagramContent();
   const [E, F, H, G, J] = ctx.addPoints([
     {
       pt: [2, 2],
