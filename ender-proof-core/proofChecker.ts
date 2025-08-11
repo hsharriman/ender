@@ -1,4 +1,5 @@
 import { readFileSync } from "fs";
+import { Reason, Statement } from "geometry-object";
 import { basename, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { Angle } from "./geometry/Angle.js";
@@ -8,11 +9,10 @@ import { Segment } from "./geometry/Segment.js";
 import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
 import {
-  AnglePair,
   reflex_a,
   reflex_s,
   sas,
-  SegmentPair,
+  sss,
 } from "./grammar/reasons/reasonChecks.js";
 
 // Get __dirname equivalent for ES modules
@@ -20,16 +20,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Types for the proof checker
-interface Statement {
-  function: string;
-  arguments: string[];
-  stepNumber?: string;
-}
-
-interface Reason {
-  function: string;
-  arguments: string[];
-}
 
 // TODO rename/simplify proof step.
 interface ProofStep {
@@ -251,17 +241,26 @@ const checkStatementArguments = (
 };
 
 // Check if reason dependencies match the expected number
-const checkReasonDependencies = (
+const checkReasonStructure = (
   reason: Reason,
-  reasonDefs: Map<string, ReasonDefinition>
+  reasonDefs: Map<string, ReasonDefinition>,
+  proofGraph: ProofGraph
 ): boolean => {
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
     return false;
   }
 
-  // TODO this should actually check prior steps to see if the reason functions match with the dependencies
-  return reason.arguments.length === definition.dependencies.length;
+  reason.arguments.forEach((arg) => {
+    const stepNum = arg.replace(/[\[\]]/g, "");
+    const dependencyStep = proofGraph.nodes.get(stepNum);
+
+    if (dependencyStep?.statement?.function !== arg) {
+      return false;
+    }
+  });
+
+  return reason.function === definition.name;
 };
 
 // Check if dependency statements match expected types
@@ -377,42 +376,28 @@ const checkReasonApplication = (
           const conclusionStep = proof.steps.find(
             (step) => step.stepNumber === idx
           );
-          if (!conclusionStep || !conclusionStep.statement) {
-            return [];
-          }
-          const stmt = conclusionStep.statement;
-          return stmt.arguments.map((arg) => getGeometricObject(arg, ctx));
+          return conclusionStep?.statement;
         };
-        if (dependencyArgs.length === 3) {
-          // For SAS, we need to get the conclusion arguments (triangles)
-          // Use the original step numbers from reason arguments, not the geometric objects
-          const s1 = getDepStmt(reason.arguments[0], proof);
-          const a = getDepStmt(reason.arguments[1], proof);
-          const s2 = getDepStmt(reason.arguments[2], proof);
-          // TODO check that the conclusion step is either con_seg or con_ang
-          if (
-            currStep.statement?.arguments?.length === 2 &&
-            s1.length === 2 &&
-            a.length === 2 &&
-            s2.length === 2
-          ) {
-            const t1 = getGeometricObject(
-              currStep.statement.arguments[0],
-              ctx
-            ) as Triangle;
-            const t2 = getGeometricObject(
-              currStep.statement.arguments[1],
-              ctx
-            ) as Triangle;
+        const s1 = getDepStmt(reason.arguments[0], proof);
+        const a = getDepStmt(reason.arguments[1], proof);
+        const s2 = getDepStmt(reason.arguments[2], proof);
+        if (currStep.statement && s1 && a && s2) {
+          return sas(currStep.statement, s1, a, s2);
+        }
+        return false;
 
-            return sas(
-              t1,
-              t2,
-              dependencyArgs[0] as SegmentPair,
-              dependencyArgs[1] as AnglePair,
-              dependencyArgs[2] as SegmentPair
-            );
-          }
+      case "sss":
+        const getDepStmtSSS = (idx: string, proof: Proof) => {
+          const conclusionStep = proof.steps.find(
+            (step) => step.stepNumber === idx
+          );
+          return conclusionStep?.statement;
+        };
+        const s1_sss = getDepStmtSSS(reason.arguments[0], proof);
+        const s2_sss = getDepStmtSSS(reason.arguments[1], proof);
+        const s3_sss = getDepStmtSSS(reason.arguments[2], proof);
+        if (currStep.statement && s1_sss && s2_sss && s3_sss) {
+          return sss(currStep.statement, s1_sss, s2_sss, s3_sss);
         }
         return false;
 
@@ -474,7 +459,7 @@ const buildProofGraph = (
       }
     } else if (step.type === "proof" && step.reason && step.statement) {
       // Check reason dependencies
-      isCorrect = checkReasonDependencies(step.reason, reasonDefs);
+      isCorrect = checkReasonStructure(step.reason, reasonDefs, graph);
 
       // Check dependency statements
       if (isCorrect) {

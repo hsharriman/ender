@@ -7,8 +7,7 @@ for each reason there should be a way to generically describe the relationship b
 that can be checked for each reason
 incorrect steps are checked based on: 1. enough prior steps? 2. correct stmt type concluded?
 3. is relationship between stmt and requirements met?
-Defining relationships between stmts and requirements for a reason:
-would ideally be pretty generic... 
+
 
 1:1:
 Reflexive
@@ -39,3 +38,7 @@ reason cpctc(con_tri) -> con_seg, con_ang
 many reqs, many conclusions:
 
 
+TODO:
+- fix sas logic, probably should take in full statement for dependency instead of just the statement's args
+  - correctly test for "congruence"
+  - make sure: also correctly test that it is truly SAS and not just any 2 segments and 1 angle for each triangle.
