@@ -33,6 +33,10 @@ export class Angle extends BaseGeometryObject {
     };
   };
 
+  centerStr = () => {
+    return this.center.label;
+  };
+
   // deprecated - DOM manipulation removed for package independence
   override onClickText = (isActive: boolean) => {
     // DOM manipulation removed for package independence

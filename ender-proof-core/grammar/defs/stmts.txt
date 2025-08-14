@@ -16,5 +16,5 @@ stmt perp(Segment s1, Segment s2)
 stmt collinear(Point p1, Point p2, Point p3)
 stmt midpoint(Segment s, Point p)
 
-stmt intersect_seg(Segment s1, Segment s2, Point intersect)
+stmt intersect_seg(Segment s1, Segment s2, Point p)
 stmt transversal(Segment s1, Segment s2, Segment s3) 

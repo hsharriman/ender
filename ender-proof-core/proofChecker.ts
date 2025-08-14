@@ -242,25 +242,33 @@ const checkStatementArguments = (
 
 // Check if reason dependencies match the expected number
 const checkReasonStructure = (
-  reason: Reason,
+  step: ProofStep,
   reasonDefs: Map<string, ReasonDefinition>,
   proofGraph: ProofGraph
 ): boolean => {
-  const definition = reasonDefs.get(reason.function);
-  if (!definition) {
-    return false;
-  }
-
-  reason.arguments.forEach((arg) => {
-    const stepNum = arg.replace(/[\[\]]/g, "");
-    const dependencyStep = proofGraph.nodes.get(stepNum);
-
-    if (dependencyStep?.statement?.function !== arg) {
+  const reason = step.reason;
+  const stmt = step.statement;
+  if (reason && stmt) {
+    const definition = reasonDefs.get(reason?.function);
+    if (!definition) {
       return false;
     }
-  });
 
-  return reason.function === definition.name;
+    reason.arguments.forEach((arg) => {
+      const stepNum = arg.replace(/[\[\]]/g, "");
+      const dependencyStep = proofGraph.nodes.get(stepNum);
+
+      if (dependencyStep?.statement?.function !== arg) {
+        return false;
+      }
+    });
+
+    return (
+      reason.function === definition.name &&
+      stmt.function === definition.conclusion
+    );
+  }
+  return false;
 };
 
 // Check if dependency statements match expected types
@@ -382,7 +390,7 @@ const checkReasonApplication = (
         const a = getDepStmt(reason.arguments[1], proof);
         const s2 = getDepStmt(reason.arguments[2], proof);
         if (currStep.statement && s1 && a && s2) {
-          return sas(currStep.statement, s1, a, s2);
+          return sas(currStep.statement, s1, a, s2, ctx);
         }
         return false;
 
@@ -397,7 +405,7 @@ const checkReasonApplication = (
         const s2_sss = getDepStmtSSS(reason.arguments[1], proof);
         const s3_sss = getDepStmtSSS(reason.arguments[2], proof);
         if (currStep.statement && s1_sss && s2_sss && s3_sss) {
-          return sss(currStep.statement, s1_sss, s2_sss, s3_sss);
+          return sss(currStep.statement, s1_sss, s2_sss, s3_sss, ctx);
         }
         return false;
 
@@ -459,7 +467,7 @@ const buildProofGraph = (
       }
     } else if (step.type === "proof" && step.reason && step.statement) {
       // Check reason dependencies
-      isCorrect = checkReasonStructure(step.reason, reasonDefs, graph);
+      isCorrect = checkReasonStructure(step, reasonDefs, graph);
 
       // Check dependency statements
       if (isCorrect) {
@@ -470,6 +478,10 @@ const buildProofGraph = (
       if (isCorrect) {
         isCorrect = checkStatementArguments(step.statement, stmtDefs);
       }
+
+      // TODO check that the there are no repeating statements/no objects are declared congruent twice
+      // TODO This should be done at the proofChecker level
+      // TODO add a flag to the step if there was a mistake in it
 
       // Check if reason is applied correctly using reason checker methods
       if (isCorrect) {

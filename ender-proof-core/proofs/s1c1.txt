@@ -1,0 +1,14 @@
+title: "S1C1 - Prove Segments Parallel"
+premises:
+pt: A, B, C, D
+tri: t_ABD t_BCD
+seg_intersect(AB,CD,M) [01]
+con_seg(AM,BM) [02]
+con_seg(CM,DM) [03]
+-> para(AC,BD)
+
+steps:
+vert_ang([01]) -> con_ang(a_CMA, a_DMB) [04]
+sas([02], [03], [04]) -> con_tri(t_BAD,t_DCB) [05]
+cpctc([05]) -> con_ang(a_CAM,a_DBM) [06]
+altint_conv([06]) -> para(AC, BD) [07]

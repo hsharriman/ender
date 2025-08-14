@@ -1,3 +1,5 @@
+import { DiagramContent } from "geometry-object";
+import { commonPt } from "../grammar/reasons/utils";
 import { TriangleProps } from "../types/geometryTypes";
 import { Obj, SVGModes } from "../types/types";
 import { Angle } from "./Angle";
@@ -6,9 +8,10 @@ import { Point } from "./Point";
 import { Segment } from "./Segment";
 
 export class Triangle extends BaseGeometryObject {
-  readonly s: [Segment, Segment, Segment];
-  readonly a: [Angle, Angle, Angle];
-  readonly p: [Point, Point, Point];
+  s: [Segment, Segment, Segment];
+  a: [Angle, Angle, Angle];
+  private sorted: boolean;
+  p: [Point, Point, Point];
   readonly id: string;
   readonly rotatePattern: boolean;
   readonly congruent: Set<string> = new Set();
@@ -24,6 +27,7 @@ export class Triangle extends BaseGeometryObject {
     this.label = `${props.pts[0].label}${props.pts[1].label}${props.pts[2].label}`;
     this.rotatePattern = props.rotatePattern || false;
     this.id = this.getId(Obj.Triangle, this.label);
+    this.sorted = false;
   }
 
   private buildSegments = (
@@ -72,6 +76,40 @@ export class Triangle extends BaseGeometryObject {
       parentFrame,
     });
     return [aa, ab, ac];
+  };
+
+  orderTriangle = (p: [string, string, string], ctx: DiagramContent) => {
+    this.p = [ctx.getPoint(p[0]), ctx.getPoint(p[1]), ctx.getPoint(p[2])];
+    this.s = this.buildSegments(this.p);
+    this.a = this.buildAngles(this.p);
+    this.sorted = true;
+    return this;
+  };
+
+  getThirdPoint = (p1: string, p2: string) => {
+    const remaining = this.label.replace(p1, "").replace(p2, "");
+    if (remaining.length !== 1) {
+      console.error(
+        `incorrect arguments passed to getThirdPoint for triangle ${this.label}. Got: ${p1} ${p2}`
+      );
+    }
+    return remaining;
+  };
+
+  isSorted = () => this.sorted;
+
+  getSegmentIndex = (name: string) => {
+    return this.s.findIndex((seg) => seg.label === name);
+  };
+
+  getAngleIndex = (name: string) => {
+    return this.a.findIndex((ang) => ang.label === name);
+  };
+
+  getAngleByCenter = (center: string) => {
+    return this.a.find(
+      (ang) => ang.center.label.toLowerCase() === center.toLowerCase()
+    );
   };
 
   // deprecated

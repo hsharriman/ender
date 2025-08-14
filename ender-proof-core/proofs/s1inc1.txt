@@ -1,0 +1,12 @@
+title: "S1INC1 - Prove Angles Congruent #1"
+premises:
+pt: A, B, C, D
+tri: t_ABD t_BCD
+con_seg(AD,BC) [01]
+con_seg(AB,DC) [02]
+con_ang(a_ABD,a_CDB) [03]
+-> con_ang(t_BAD,t_DCB)
+
+steps:
+sas([01], [02], [03]) -> con_tri(t_ABD,t_CDB) [04]  // Missing dependency
+cpctc([04]) -> con_ang(a_BAD,a_DCB) [05]  // Based on invalid reason
