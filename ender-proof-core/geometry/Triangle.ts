@@ -1,5 +1,4 @@
 import { DiagramContent } from "geometry-object";
-import { commonPt } from "../grammar/reasons/utils";
 import { TriangleProps } from "../types/geometryTypes";
 import { Obj, SVGModes } from "../types/types";
 import { Angle } from "./Angle";
@@ -99,11 +98,11 @@ export class Triangle extends BaseGeometryObject {
   isSorted = () => this.sorted;
 
   getSegmentIndex = (name: string) => {
-    return this.s.findIndex((seg) => seg.label === name);
+    return this.s.findIndex((seg) => new Set(seg.names).has(name));
   };
 
   getAngleIndex = (name: string) => {
-    return this.a.findIndex((ang) => ang.label === name);
+    return this.a.findIndex((ang) => new Set(ang.names).has(name));
   };
 
   getAngleByCenter = (center: string) => {

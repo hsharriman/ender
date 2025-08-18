@@ -298,6 +298,89 @@ export const rhl = (
   return valid;
 };
 
+/**
+ * Checks if CPCTC can be applied.
+ *
+ * @param t_cong - Triangle congruence statement (con_tri)
+ * @param conclusion - The conclusion statement (either con_seg or con_ang)
+ * @param ctx - Diagram context
+ * @returns true if CPCTC can be applied to derive the conclusion, false otherwise
+ */
+export const cpctc = (
+  t_cong: Statement,
+  conclusion: Statement,
+  ctx: DiagramContent
+): boolean => {
+  // Extract triangle names (remove t_ prefix)
+  const [tri1, tri2] = stripTriPrefix(t_cong.arguments);
+
+  // Check if the conclusion is a segment or angle congruence
+  if (conclusion.function === "con_seg") {
+    // For segment congruence, check that both segments are parts of the congruent triangles
+    const [seg1, seg2, segValid] = checkTriangleAssign(
+      conclusion.arguments,
+      tri1,
+      tri2
+    );
+
+    const [t1, t2] = [ctx.getTriangle(tri1), ctx.getTriangle(tri2)];
+
+    // check that seg1 is the same index in tri1 as seg2 is in tri2
+    return segValid && t1.getSegmentIndex(seg1) === t2.getSegmentIndex(seg2);
+  } else if (conclusion.function === "con_ang") {
+    // For angle congruence, check that both angles are parts of the congruent triangles
+    const [ang1, ang2, angValid] = checkTriangleAssign(
+      conclusion.arguments,
+      tri1,
+      tri2
+    );
+
+    const [t1, t2] = [ctx.getTriangle(tri1), ctx.getTriangle(tri2)];
+    return angValid && t1.getAngleIndex(ang1) === t2.getAngleIndex(ang2);
+  }
+
+  return false;
+};
+
+export const intersect_seg = (
+  intersect_seg: Statement,
+  ctx: DiagramContent
+): boolean => {
+  const [s1, s2, pt] = intersect_seg.arguments;
+  //  check that s1 and s2 are not the same, and p is not in s1 or s2 labels
+
+  const valid =
+    s1.split("").every((pt) => !s2.includes(pt)) &&
+    !s1.includes(pt) &&
+    !s2.includes(pt);
+  // if valid, add new subsegments to context
+  if (valid) {
+    s1.split("").forEach((pt) => ctx.addSegmentFromStr(`${s1[0]}${pt}`));
+    s2.split("").forEach((pt) => ctx.addSegmentFromStr(`${s2[0]}${pt}`));
+  }
+
+  return valid;
+};
+
+export const vert_ang = (
+  intersect_seg: Statement,
+  conAng: Statement,
+  ctx: DiagramContent
+): boolean => {
+  const [s1, s2, pt] = intersect_seg.arguments;
+  // const [a1, a2, angValid] = checkTriangleAssign(
+  //   conAng.arguments,
+  //   tri1,
+  //   tri2
+  // );
+  //  check that s1 and s2 are not the same, and p is not in s1 or s2 labels
+  const valid =
+    s1.split("").every((pt) => !s2.includes(pt)) &&
+    !s1.includes(pt) &&
+    !s2.includes(pt);
+  return valid;
+};
+
 // ----- Helper functions -----
 
 // Helper function to check if a segment is in a triangle (all points of segment are in triangle)

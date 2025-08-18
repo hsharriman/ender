@@ -2,7 +2,7 @@ title: "S1C1 - Prove Segments Parallel"
 premises:
 pt: A, B, C, D
 tri: t_ABD t_BCD
-seg_intersect(AB,CD,M) [01]
+intersect_seg(AB,CD,M) [01]
 con_seg(AM,BM) [02]
 con_seg(CM,DM) [03]
 -> para(AC,BD)

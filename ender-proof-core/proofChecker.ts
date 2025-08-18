@@ -9,6 +9,7 @@ import { Segment } from "./geometry/Segment.js";
 import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
 import {
+  cpctc,
   reflex_a,
   reflex_s,
   sas,
@@ -263,9 +264,14 @@ const checkReasonStructure = (
       }
     });
 
+    // Handle multiple possible conclusions (separated by commas)
+    const possibleConclusions = definition.conclusion
+      .split(", ")
+      .map((c) => c.trim());
+
     return (
       reason.function === definition.name &&
-      stmt.function === definition.conclusion
+      possibleConclusions.includes(stmt.function)
     );
   }
   return false;
@@ -307,6 +313,11 @@ const checkDependencyStatements = (
   }
 
   return true;
+};
+
+const getDepStmt = (idx: string, proof: Proof) => {
+  const conclusionStep = proof.steps.find((step) => step.stepNumber === idx);
+  return conclusionStep?.statement;
 };
 
 // Check if reason is applied correctly using reason checker methods
@@ -380,12 +391,6 @@ const checkReasonApplication = (
         return false;
 
       case "sas":
-        const getDepStmt = (idx: string, proof: Proof) => {
-          const conclusionStep = proof.steps.find(
-            (step) => step.stepNumber === idx
-          );
-          return conclusionStep?.statement;
-        };
         const s1 = getDepStmt(reason.arguments[0], proof);
         const a = getDepStmt(reason.arguments[1], proof);
         const s2 = getDepStmt(reason.arguments[2], proof);
@@ -395,17 +400,18 @@ const checkReasonApplication = (
         return false;
 
       case "sss":
-        const getDepStmtSSS = (idx: string, proof: Proof) => {
-          const conclusionStep = proof.steps.find(
-            (step) => step.stepNumber === idx
-          );
-          return conclusionStep?.statement;
-        };
-        const s1_sss = getDepStmtSSS(reason.arguments[0], proof);
-        const s2_sss = getDepStmtSSS(reason.arguments[1], proof);
-        const s3_sss = getDepStmtSSS(reason.arguments[2], proof);
+        const s1_sss = getDepStmt(reason.arguments[0], proof);
+        const s2_sss = getDepStmt(reason.arguments[1], proof);
+        const s3_sss = getDepStmt(reason.arguments[2], proof);
         if (currStep.statement && s1_sss && s2_sss && s3_sss) {
           return sss(currStep.statement, s1_sss, s2_sss, s3_sss, ctx);
+        }
+        return false;
+
+      case "cpctc":
+        const t_cong = getDepStmt(reason.arguments[0], proof);
+        if (currStep.statement && t_cong) {
+          return cpctc(t_cong, currStep.statement, ctx);
         }
         return false;
 
