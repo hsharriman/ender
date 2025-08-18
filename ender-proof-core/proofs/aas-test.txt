@@ -1,0 +1,11 @@
+title: "AAS Test - Prove Triangles Congruent"
+premises:
+pt: A, B, C, D, E, F
+tri: t_ABC t_DEF
+con_ang(a_BAC,a_EDF) [01]
+con_ang(a_ACB,a_DFE) [02]
+con_seg(BC,EF) [03]
+-> con_tri(t_ABC,t_DEF)
+
+steps:
+aas([01], [02], [03]) -> con_tri(t_ABC,t_DEF) [04] 

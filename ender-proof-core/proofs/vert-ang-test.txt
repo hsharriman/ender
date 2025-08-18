@@ -1,0 +1,8 @@
+title: "Vertical Angles Test"
+premises:
+pt: A, B, C, D, M
+intersect_seg(AB,CD,M) [01]
+-> con_ang(a_AMC,a_BMD)
+
+steps:
+vert_ang([01]) -> con_ang(a_AMC,a_BMD) [02] 

@@ -9,11 +9,16 @@ import { Segment } from "./geometry/Segment.js";
 import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
 import {
+  aas,
+  asa,
   cpctc,
+  intersect_seg,
   reflex_a,
   reflex_s,
+  rhl,
   sas,
   sss,
+  vert_ang,
 } from "./grammar/reasons/reasonChecks.js";
 
 // Get __dirname equivalent for ES modules
@@ -415,6 +420,46 @@ const checkReasonApplication = (
         }
         return false;
 
+      case "aas":
+        const a1_aas = getDepStmt(reason.arguments[0], proof);
+        const a2_aas = getDepStmt(reason.arguments[1], proof);
+        const s_aas = getDepStmt(reason.arguments[2], proof);
+        if (currStep.statement && a1_aas && a2_aas && s_aas) {
+          return aas(currStep.statement, a1_aas, a2_aas, s_aas, ctx);
+        }
+        return false;
+
+      case "asa":
+        const a1_asa = getDepStmt(reason.arguments[0], proof);
+        const s_asa = getDepStmt(reason.arguments[1], proof);
+        const a2_asa = getDepStmt(reason.arguments[2], proof);
+        if (currStep.statement && a1_asa && s_asa && a2_asa) {
+          return asa(currStep.statement, a1_asa, s_asa, a2_asa, ctx);
+        }
+        return false;
+
+      case "rhl":
+        const right_rhl = getDepStmt(reason.arguments[0], proof);
+        const s1_rhl = getDepStmt(reason.arguments[1], proof);
+        const s2_rhl = getDepStmt(reason.arguments[2], proof);
+        if (currStep.statement && right_rhl && s1_rhl && s2_rhl) {
+          return rhl(currStep.statement, right_rhl, s1_rhl, s2_rhl, ctx);
+        }
+        return false;
+
+      case "intersect_seg":
+        if (currStep.statement) {
+          return intersect_seg(currStep.statement, ctx);
+        }
+        return false;
+
+      case "vert_ang":
+        const intersect_vert = getDepStmt(reason.arguments[0], proof);
+        if (currStep.statement && intersect_vert) {
+          return vert_ang(intersect_vert, currStep.statement, ctx);
+        }
+        return false;
+
       default:
         // For other reasons, we'll return true for now (syntax check passed)
         return true;
@@ -737,12 +782,24 @@ const checkProof = (filePath: string): void => {
           // Given congruent angles - ensure both angles exist
           step.statement.arguments.forEach((arg: string) => {
             if (arg.startsWith("a_")) {
-              const angleLabel = arg.substring(2);
-              if (!ctx.getAngle(angleLabel)) {
-                ctx.addAngleFromStr(angleLabel);
-              }
+              ctx.addAngleFromStr(arg.substring(2));
             }
           });
+        } else if (
+          step.statement.function === "intersect_seg" &&
+          step.statement.arguments.length === 3
+        ) {
+          // Given intersecting segments - ensure both segments exist
+          const [seg1, seg2, point] = step.statement.arguments;
+          ctx.addSegmentFromStr(seg1);
+          ctx.addSegmentFromStr(seg2);
+          // TODO add new subsegments to context
+          seg1
+            .split("")
+            .forEach((pt) => ctx.addSegmentFromStr(`${point}${pt}`));
+          seg2
+            .split("")
+            .forEach((pt) => ctx.addSegmentFromStr(`${point}${pt}`));
         }
       }
     });

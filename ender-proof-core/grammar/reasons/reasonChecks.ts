@@ -368,17 +368,21 @@ export const vert_ang = (
   ctx: DiagramContent
 ): boolean => {
   const [s1, s2, pt] = intersect_seg.arguments;
-  // const [a1, a2, angValid] = checkTriangleAssign(
-  //   conAng.arguments,
-  //   tri1,
-  //   tri2
-  // );
-  //  check that s1 and s2 are not the same, and p is not in s1 or s2 labels
-  const valid =
-    s1.split("").every((pt) => !s2.includes(pt)) &&
-    !s1.includes(pt) &&
-    !s2.includes(pt);
-  return valid;
+  const [a1, a2] = stripAngPrefix(conAng.arguments);
+
+  // Check that angles don't include segment names (vertical angles must be across from each other)
+  const [a1_set, a2_set] = [new Set(a1.split("")), new Set(a2.split(""))];
+  const anglesValid =
+    !s1.split("").every((p) => a1_set.has(p)) &&
+    !s2.split("").every((p) => a1_set.has(p)) &&
+    !s1.split("").every((p) => a2_set.has(p)) &&
+    !s2.split("").every((p) => a2_set.has(p));
+
+  if (anglesValid) {
+    ctx.addAngleFromStr(a1);
+    ctx.addAngleFromStr(a2);
+  }
+  return anglesValid;
 };
 
 // ----- Helper functions -----
