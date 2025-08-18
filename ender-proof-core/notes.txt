@@ -1,19 +1,4 @@
-need to know what triangles are captured
-for SAS, ASA, RHL, need a concept of rotation around a triangles
-for angles, often need concept of inner vs outer angle (always taking the smaller of the 2 angles)
-don't have way to describe circles, arcs, inscribed stuff
-don't have to describe things algebraically
-for each reason there should be a way to generically describe the relationship between requirements
-that can be checked for each reason
-incorrect steps are checked based on: 1. enough prior steps? 2. correct stmt type concluded?
-3. is relationship between stmt and requirements met?
 
-
-1:1:
-Reflexive
-
-many reqs, 1 conclusion:
-SAS/ASA (write methods for SAS/ASA/AAS and attach equivalence methods to each object type?)
 what about when the comparisons aren't to create congruent/similar things (i.e. some relationship between circle + line)
 or circumcenter/incenter/centroid relationships
 
@@ -39,6 +24,22 @@ many reqs, many conclusions:
 
 
 TODO:
-- fix sas logic, probably should take in full statement for dependency instead of just the statement's args
-  - correctly test for "congruence"
-  - make sure: also correctly test that it is truly SAS and not just any 2 segments and 1 angle for each triangle.
+- add error if a step cannot be parsed instead of throwing undefined
+- add checks that there are no duplicate steps
+- mark steps that are incorrect internally while checking
+- add more detailed error messages so it is clear why a step is failing, log these
+- handle line extensions
+- add checks for geometric reasons:
+  - converse alternate interior
+  - alternate interior
+  - perp lines
+  - midpoint
+  - converse midpoint
+  - congruent adjacent angles
+  - right angle
+  - rectangle
+  - isosceles
+  - parallelogram
+  - angle bisector
+  - segment bisector
+  - quadrilateral
