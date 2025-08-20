@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import moo from "moo";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { logError } from "../errors/errorConstants.js";
 
 // Lexer rules for statement definitions
 const stmtLexerRules: moo.Rules = {
@@ -129,7 +130,7 @@ export class StmtParser {
         console.log(`    ✅ Parsed:`, stmtDef);
         statements.set(stmtDef.name, stmtDef);
       } else {
-        console.log(`    ❌ Failed to parse`);
+        logError.parser.failedToParse();
       }
     });
 

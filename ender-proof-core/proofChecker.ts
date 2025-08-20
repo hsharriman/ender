@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 import { basename } from "path";
+import { createError, logError } from "./errors/errorConstants.js";
 import { Angle } from "./geometry/Angle.js";
 import { DiagramContent } from "./geometry/DiagramContent.js";
 import { Point } from "./geometry/Point.js";
@@ -82,7 +83,7 @@ const getGeometricObject = (
     const angleLabel = stripGeometricPrefix(arg);
     const angle = ctx.getAngle(angleLabel);
     if (!angle) {
-      throw new Error(`Angle ${arg} not found in context`);
+      throw createError.geometric.angleNotFound(arg);
     }
     return angle;
   } else if (arg.startsWith("t_")) {
@@ -90,25 +91,25 @@ const getGeometricObject = (
     const triangleLabel = stripGeometricPrefix(arg);
     const triangle = ctx.getTriangle(triangleLabel);
     if (!triangle) {
-      throw new Error(`Triangle ${arg} not found in context`);
+      throw createError.geometric.triangleNotFound(arg);
     }
     return triangle;
   } else if (arg.length === 2 && /^[A-Z]{2}$/.test(arg)) {
     // Segment format: AB
     const segment = ctx.getSegment(arg);
     if (!segment) {
-      throw new Error(`Segment ${arg} not found in context`);
+      throw createError.geometric.segmentNotFound(arg);
     }
     return segment;
   } else if (arg.length === 1 && /^[A-Z]$/.test(arg)) {
     // Point format: A
     const point = ctx.getPoint(arg);
     if (!point) {
-      throw new Error(`Point ${arg} not found in context`);
+      throw createError.geometric.pointNotFound(arg);
     }
     return point;
   }
-  throw new Error(`Cannot parse geometric object from argument: ${arg}`);
+  throw createError.geometric.cannotParseGeometricObject(arg);
 };
 
 // Parse a proof file
@@ -144,7 +145,7 @@ const checkStatementArguments = (
 ): boolean => {
   const definition = stmtDefs.get(stmt.function);
   if (!definition) {
-    console.log(`    ❌ No definition found for statement: ${stmt.function}`);
+    logError.parser.noDefinitionForStatement(stmt.function);
     return false;
   }
 
@@ -169,7 +170,7 @@ const checkReasonStructure = (
 
     const definition = reasonDefs.get(reason?.function);
     if (!definition) {
-      console.log(`    ❌ No definition found for reason: ${reason.function}`);
+      logError.parser.noDefinitionForReason(reason.function);
       return false;
     }
     console.log(`    ✅ Found definition:`, definition);
@@ -179,7 +180,7 @@ const checkReasonStructure = (
       const dependencyStep = proofGraph.nodes.get(stepNum);
 
       if (dependencyStep?.statement?.function !== arg) {
-        console.log(`    ❌ Dependency mismatch for ${arg}`);
+        logError.parser.dependencyMismatch(arg);
         return false;
       }
     });
@@ -202,7 +203,7 @@ const checkReasonStructure = (
 
     return nameMatch && conclusionMatch;
   }
-  console.log(`    ❌ Missing reason or statement`);
+  logError.parser.missingReasonOrStatement();
   return false;
 };
 
@@ -783,7 +784,7 @@ const checkProof = (filePath: string): void => {
       }`
     );
 
-    console.log(`\n❌ Incorrect Steps: ${graph.incorrectSteps.size}`);
+    logError.proofChecker.incorrectSteps(graph.incorrectSteps.size);
     if (graph.incorrectSteps.size > 0) {
       Array.from(graph.incorrectSteps)
         .sort()
@@ -820,10 +821,10 @@ const checkProof = (filePath: string): void => {
     if (!hasErrors) {
       console.log("✅ Proof is CORRECT!");
     } else {
-      console.log("❌ Proof has issues that need to be addressed.");
+      logError.proofChecker.proofHasIssues();
     }
   } catch (error) {
-    console.error("❌ Error checking proof:", error);
+    logError.proofChecker.errorCheckingProof(error);
   }
 };
 

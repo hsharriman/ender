@@ -1,3 +1,4 @@
+import { logError } from "../../errors/errorConstants.js";
 import { DiagramContent } from "../../geometry/DiagramContent";
 import { Triangle } from "../../geometry/Triangle";
 import { Stmt } from "../../types/types";
@@ -364,11 +365,7 @@ const sortPairToTri = (
     return [r, l];
   }
 
-  console.error(
-    "sortPairToTri: triangles do not contain all characters of both objects",
-    [l, r],
-    [tri1, tri2]
-  );
+  logError.geometric.trianglesDoNotContainObjects([l, r], [tri1, tri2]);
   return [l, r];
 };
 

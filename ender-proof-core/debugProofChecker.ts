@@ -1,9 +1,10 @@
 import { readFileSync } from "fs";
-import { basename, dirname, join } from "path";
+import { basename, dirname } from "path";
 import { fileURLToPath } from "url";
+import { logError } from "./errors/errorConstants.js";
 import { DiagramContent } from "./geometry/DiagramContent.js";
 import { ProofParser } from "./grammar/lezerParser.js";
-import { reflex_s, reflex_a, sas } from "./grammar/reasons/reasonChecks.js";
+import { reflex_a, reflex_s, sas } from "./grammar/reasons/reasonChecks.js";
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -30,7 +31,11 @@ const debugProofChecker = (filePath: string): void => {
     // Add all points from premises
     console.log("\n📍 Adding points...");
     proof.premises.points.forEach((pointLabel) => {
-      const point = ctx.addPoint({ pt: [0, 0], label: pointLabel, offset: [0, 0] });
+      const point = ctx.addPoint({
+        pt: [0, 0],
+        label: pointLabel,
+        offset: [0, 0],
+      });
       console.log(`Added point: ${pointLabel} -> ${point.label}`);
     });
 
@@ -40,8 +45,8 @@ const debugProofChecker = (filePath: string): void => {
       const pointLabels = triangleLabel.substring(2); // Remove 't_' prefix
       const triangle = ctx.addTriangleFromStr(pointLabels);
       console.log(`Added triangle: ${triangleLabel} -> ${triangle.label}`);
-      console.log(`  Segments: ${triangle.s.map(s => s.label).join(', ')}`);
-      console.log(`  Angles: ${triangle.a.map(a => a.label).join(', ')}`);
+      console.log(`  Segments: ${triangle.s.map((s) => s.label).join(", ")}`);
+      console.log(`  Angles: ${triangle.a.map((a) => a.label).join(", ")}`);
     });
 
     // Add all segments from premises
@@ -61,18 +66,18 @@ const debugProofChecker = (filePath: string): void => {
 
     // Test geometric object retrieval
     console.log("\n🔍 Testing geometric object retrieval...");
-    
+
     // Test getting a segment
     const testSegment = ctx.getSegment("AC");
     console.log("Segment AC:", testSegment ? testSegment.label : "Not found");
-    
+
     // Test getting an angle
     const testAngle = ctx.getAngle("a_BAC");
     console.log("Angle a_BAC:", testAngle ? testAngle.label : "Not found");
 
     // Test reason checking
     console.log("\n🧪 Testing reason checking...");
-    
+
     // Test reflex_s
     if (testSegment) {
       const reflexResult = reflex_s(testSegment, testSegment);
@@ -103,38 +108,68 @@ const debugProofChecker = (filePath: string): void => {
     console.log("  angle2:", angle2?.label);
     console.log("  segment3:", segment3?.label);
 
-    if (triangle1 && triangle2 && segment1 && segment2 && angle1 && angle2 && segment3) {
+    if (
+      triangle1 &&
+      triangle2 &&
+      segment1 &&
+      segment2 &&
+      angle1 &&
+      angle2 &&
+      segment3
+    ) {
       console.log("\n🔍 SAS Test Details:");
-      
+
       // Test individual checks
-      const segmentsCongruent = segment1.label === segment2.label || 
-        (segment1.p1.label === segment2.p1.label && segment1.p2.label === segment2.p2.label) ||
-        (segment1.p1.label === segment2.p2.label && segment1.p2.label === segment2.p1.label);
+      const segmentsCongruent =
+        segment1.label === segment2.label ||
+        (segment1.p1.label === segment2.p1.label &&
+          segment1.p2.label === segment2.p2.label) ||
+        (segment1.p1.label === segment2.p2.label &&
+          segment1.p2.label === segment2.p1.label);
       console.log("  segmentsCongruent (AB, AD):", segmentsCongruent);
-      
-      const anglesCongruent = angle1.label === angle2.label ||
-        (angle1.start.label === angle2.start.label && angle1.center.label === angle2.center.label && angle1.end.label === angle2.end.label) ||
-        (angle1.start.label === angle2.end.label && angle1.center.label === angle2.center.label && angle1.end.label === angle2.start.label);
+
+      const anglesCongruent =
+        angle1.label === angle2.label ||
+        (angle1.start.label === angle2.start.label &&
+          angle1.center.label === angle2.center.label &&
+          angle1.end.label === angle2.end.label) ||
+        (angle1.start.label === angle2.end.label &&
+          angle1.center.label === angle2.center.label &&
+          angle1.end.label === angle2.start.label);
       console.log("  anglesCongruent (BAC, DAC):", anglesCongruent);
-      
-      const segmentsInTriangles = triangle1.s.some(s => s.label === segment1.label || s.label === segment3.label) &&
-        triangle2.s.some(s => s.label === segment2.label || s.label === segment3.label);
+
+      const segmentsInTriangles =
+        triangle1.s.some(
+          (s) => s.label === segment1.label || s.label === segment3.label
+        ) &&
+        triangle2.s.some(
+          (s) => s.label === segment2.label || s.label === segment3.label
+        );
       console.log("  segmentsInTriangles:", segmentsInTriangles);
-      
-      const anglesInTriangles = triangle1.a.some(a => a.label === angle1.label) &&
-        triangle2.a.some(a => a.label === angle2.label);
+
+      const anglesInTriangles =
+        triangle1.a.some((a) => a.label === angle1.label) &&
+        triangle2.a.some((a) => a.label === angle2.label);
       console.log("  anglesInTriangles:", anglesInTriangles);
-      
-      const sasResult = sas(triangle1, triangle2, [segment1, segment2], [angle1, angle2], [segment3, segment3]);
-      console.log("sas(t_ABC, t_ADC, [AB, AD], [BAC, DAC], [AC, AC]):", sasResult);
+
+      const sasResult = sas(
+        triangle1,
+        triangle2,
+        [segment1, segment2],
+        [angle1, angle2],
+        [segment3, segment3]
+      );
+      console.log(
+        "sas(t_ABC, t_ADC, [AB, AD], [BAC, DAC], [AC, AC]):",
+        sasResult
+      );
     } else {
-      console.log("❌ Missing objects for SAS test");
+      logError.proofChecker.missingObjectsForSAS();
     }
 
     console.log("\n✅ Debug complete!");
-
   } catch (error) {
-    console.error("❌ Error debugging proof:", error);
+    logError.proofChecker.errorDebuggingProof(error);
   }
 };
 
@@ -151,4 +186,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   debugProofChecker(proofFile);
 }
 
-export { debugProofChecker }; 
+export { debugProofChecker };

@@ -1,3 +1,4 @@
+import { logError } from "../errors/errorConstants.js";
 import { TriangleProps } from "../types/geometryTypes";
 import { Obj, SVGModes } from "../types/types";
 import { Angle } from "./Angle";
@@ -88,9 +89,7 @@ export class Triangle extends BaseGeometryObject {
   getThirdPoint = (p1: string, p2: string) => {
     const remaining = this.label.replace(p1, "").replace(p2, "");
     if (remaining.length !== 1) {
-      console.error(
-        `incorrect arguments passed to getThirdPoint for triangle ${this.label}. Got: ${p1} ${p2}`
-      );
+      logError.geometric.incorrectGetThirdPointArgs(this.label, p1, p2);
     }
     return remaining;
   };

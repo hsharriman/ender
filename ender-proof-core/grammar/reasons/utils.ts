@@ -1,10 +1,12 @@
+import { logError } from "../../errors/errorConstants.js";
+
 export const commonPt = (seg1: string, seg2: string): string => {
   for (const char of seg1) {
     if (seg2.includes(char)) {
       return char;
     }
   }
-  console.error(`no common point found for ${seg1} and ${seg2}`);
+  logError.geometric.noCommonPoint(seg1, seg2);
   return "";
 };
 

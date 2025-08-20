@@ -7,6 +7,7 @@ const fs = require("fs");
 const { spawnSync } = require("child_process");
 const os = require("os");
 const path = require("path");
+const { logError } = require("../errors/errorConstants");
 
 /**
  * Emit Lean code for the goal statement, assuming all premises are defined.
@@ -36,14 +37,12 @@ function emitLeanGoal(parsed: any): string {
 function main() {
   const args = process.argv.slice(2);
   if (args.length < 1) {
-    console.error(
-      "Usage: ts-node lean/proofToLeanPremises.ts path/to/proof.txt"
-    );
+    logError.file.usageProofToLean();
     process.exit(1);
   }
   const proofPath = args[0];
   if (!fs.existsSync(proofPath)) {
-    console.error(`File not found: ${proofPath}`);
+    logError.file.fileNotFound(proofPath);
     process.exit(1);
   }
   const proofText = fs.readFileSync(proofPath, "utf-8");
