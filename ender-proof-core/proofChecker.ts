@@ -1,12 +1,12 @@
 import { readFileSync } from "fs";
-import { basename, dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { basename } from "path";
 import { Angle } from "./geometry/Angle.js";
 import { DiagramContent } from "./geometry/DiagramContent.js";
 import { Point } from "./geometry/Point.js";
 import { Segment } from "./geometry/Segment.js";
 import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
+import { loadReasonDefinitions } from "./grammar/reasonParser.js";
 import { reflex_a, vert_ang } from "./grammar/reasons/angleChecks.js";
 import { intersect_seg, reflex_s } from "./grammar/reasons/lineChecks.js";
 import {
@@ -17,11 +17,20 @@ import {
   sas,
   sss,
 } from "./grammar/reasons/triangleChecks.js";
+import { loadStatementDefinitions } from "./grammar/stmtParser.js";
 import { Reason, Stmt } from "./types/types.js";
 
-// Get __dirname equivalent for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Import types locally to avoid module resolution issues
+interface ReasonDefinition {
+  name: string;
+  dependencies: string[];
+  conclusion: string;
+}
+
+interface StatementDefinition {
+  name: string;
+  parameters: string[];
+}
 
 // Types for the proof checker
 
@@ -43,17 +52,6 @@ interface Proof {
   };
   steps: ProofStep[];
   goal?: string;
-}
-
-interface ReasonDefinition {
-  name: string;
-  dependencies: string[];
-  conclusion: string;
-}
-
-interface StatementDefinition {
-  name: string;
-  parameters: string[];
 }
 
 interface ProofGraph {
@@ -113,99 +111,6 @@ const getGeometricObject = (
   throw new Error(`Cannot parse geometric object from argument: ${arg}`);
 };
 
-// Load reason definitions from reasons.txt
-// TODO use parser for this
-const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {
-  const reasonsPath = join(__dirname, "grammar", "defs", "reasons.txt");
-  const content = readFileSync(reasonsPath, "utf-8");
-  const reasons = new Map<string, ReasonDefinition>();
-
-  const lines = content
-    .split("\n")
-    .filter((line: string) => line.trim() && !line.startsWith("?"));
-
-  lines.forEach((line: string) => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("reason ")) {
-      const reasonPart = trimmed.substring(7);
-      const arrowIndex = reasonPart.indexOf(" -> ");
-
-      if (arrowIndex !== -1) {
-        const beforeArrow = reasonPart.substring(0, arrowIndex);
-        const afterArrow = reasonPart.substring(arrowIndex + 4);
-
-        const reasonName = beforeArrow.split("(")[0];
-        const depPart = beforeArrow.substring(
-          beforeArrow.indexOf("(") + 1,
-          beforeArrow.lastIndexOf(")")
-        );
-        const dependencies = depPart.trim() ? depPart.split(", ") : [];
-
-        reasons.set(reasonName, {
-          name: reasonName,
-          dependencies,
-          conclusion: afterArrow,
-        });
-      } else {
-        // Handle cases like "reason given()"
-        const reasonName = reasonPart.split("(")[0];
-        reasons.set(reasonName, {
-          name: reasonName,
-          dependencies: [],
-          conclusion: "",
-        });
-      }
-    }
-  });
-
-  return reasons;
-};
-
-// Load statement definitions from stmts.txt
-const loadStatementDefinitions = (): Map<string, StatementDefinition> => {
-  // TODO use parser for this
-  const stmtsPath = join(__dirname, "grammar", "defs", "stmts.txt");
-  const content = readFileSync(stmtsPath, "utf-8");
-  const statements = new Map<string, StatementDefinition>();
-
-  const lines = content
-    .split("\n")
-    .filter((line: string) => line.trim() && !line.startsWith("//"));
-
-  lines.forEach((line: string) => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("stmt ")) {
-      const stmtPart = trimmed.substring(5);
-      const parenIndex = stmtPart.indexOf("(");
-
-      if (parenIndex !== -1) {
-        const stmtName = stmtPart.substring(0, parenIndex);
-        const paramsPart = stmtPart.substring(
-          parenIndex + 1,
-          stmtPart.lastIndexOf(")")
-        );
-        const params = paramsPart
-          .split(",")
-          .map((p: string) => p.trim())
-          .filter((p: string) => p);
-
-        statements.set(stmtName, {
-          name: stmtName,
-          parameters: params,
-        });
-      } else {
-        // Handle cases without parameters
-        statements.set(stmtPart, {
-          name: stmtPart,
-          parameters: [],
-        });
-      }
-    }
-  });
-
-  return statements;
-};
-
 // Parse a proof file
 const parseProof = (filePath: string): Proof => {
   const content = readFileSync(filePath, "utf-8");
@@ -239,8 +144,14 @@ const checkStatementArguments = (
 ): boolean => {
   const definition = stmtDefs.get(stmt.function);
   if (!definition) {
+    console.log(`    ❌ No definition found for statement: ${stmt.function}`);
     return false;
   }
+
+  console.log(`    Statement definition:`, definition);
+  console.log(
+    `    Expected ${definition.parameters.length} args, got ${stmt.arguments.length}`
+  );
 
   return stmt.arguments.length === definition.parameters.length;
 };
@@ -254,16 +165,21 @@ const checkReasonStructure = (
   const reason = step.reason;
   const stmt = step.statement;
   if (reason && stmt) {
+    console.log(`    Checking reason: ${reason.function}`);
+
     const definition = reasonDefs.get(reason?.function);
     if (!definition) {
+      console.log(`    ❌ No definition found for reason: ${reason.function}`);
       return false;
     }
+    console.log(`    ✅ Found definition:`, definition);
 
     reason.arguments.forEach((arg) => {
       const stepNum = arg.replace(/[\[\]]/g, "");
       const dependencyStep = proofGraph.nodes.get(stepNum);
 
       if (dependencyStep?.statement?.function !== arg) {
+        console.log(`    ❌ Dependency mismatch for ${arg}`);
         return false;
       }
     });
@@ -272,12 +188,21 @@ const checkReasonStructure = (
     const possibleConclusions = definition.conclusion
       .split(", ")
       .map((c) => c.trim());
-
-    return (
-      reason.function === definition.name &&
-      possibleConclusions.includes(stmt.function)
+    console.log(
+      `    Expected conclusions: [${possibleConclusions.join(", ")}]`
     );
+    console.log(`    Actual statement function: ${stmt.function}`);
+
+    const nameMatch = reason.function === definition.name;
+    const conclusionMatch = possibleConclusions.includes(stmt.function);
+
+    console.log(
+      `    Name match: ${nameMatch}, Conclusion match: ${conclusionMatch}`
+    );
+
+    return nameMatch && conclusionMatch;
   }
+  console.log(`    ❌ Missing reason or statement`);
   return false;
 };
 
@@ -516,17 +441,26 @@ const buildProofGraph = (
         isCorrect = stmtDefs.has(step.statement.function);
       }
     } else if (step.type === "proof" && step.reason && step.statement) {
+      console.log(`\n🔍 Checking step ${stepNum}:`, step);
+
       // Check reason dependencies
       isCorrect = checkReasonStructure(step, reasonDefs, graph);
+      console.log(`  Reason structure check: ${isCorrect}`);
 
       // Check dependency statements
       if (isCorrect) {
         isCorrect = checkDependencyStatements(step.reason, reasonDefs, graph);
+        console.log(`  Dependency statements check: ${isCorrect}`);
       }
 
       // Check statement
       if (isCorrect) {
+        console.log(
+          `  Checking statement: ${step.statement?.function} with args:`,
+          step.statement?.arguments
+        );
         isCorrect = checkStatementArguments(step.statement, stmtDefs);
+        console.log(`  Statement arguments check: ${isCorrect}`);
       }
 
       // TODO check that the there are no repeating statements/no objects are declared congruent twice
@@ -536,6 +470,7 @@ const buildProofGraph = (
       // Check if reason is applied correctly using reason checker methods
       if (isCorrect) {
         isCorrect = checkReasonApplication(step, reasonDefs, graph, proof, ctx);
+        console.log(`  Reason application check: ${isCorrect}`);
       }
 
       // Add edges from dependencies to this step

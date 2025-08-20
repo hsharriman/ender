@@ -1,6 +1,3 @@
-// sas.ts
-// Function to check if two triangles meet SAS (Side-Angle-Side) congruence requirements
-
 import { DiagramContent } from "../../geometry/DiagramContent";
 import { Point } from "../../geometry/Point";
 import { Segment } from "../../geometry/Segment";
