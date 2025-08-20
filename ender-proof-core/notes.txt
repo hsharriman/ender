@@ -10,17 +10,17 @@ centroid (converse): if point == centroid, all segments within triangle bisect
   // in reasonDef, make it clear that based on the triangle, intersect pts, centroid pt, which lines are perp bisectors
 some construction steps might be necessary here (like stating that certain lines/points are collinear/intersecting, invisible (or hidden by default) for a proof)
 
-// reasons and conclusions can match or be different
+// reasons and conclusions can match or be different: supported
 perpendicular(con_adj_ang) -> perpendicular(s1: Segment, s2: Segment)
 
 
 // reasons involving angles:
 reason supplementary() -> 
 
-1 req, many conclusions:
+1 req, many conclusions: supported
 reason cpctc(con_tri) -> con_seg, con_ang 
 
-many reqs, many conclusions:
+many reqs, many conclusions: supported
 
 
 TODO:
@@ -28,18 +28,17 @@ TODO:
 - add checks that there are no duplicate steps
 - mark steps that are incorrect internally while checking
 - add more detailed error messages so it is clear why a step is failing, log these
-- handle line extensions
+- handle line extensions/ indicating when a point is on a line
+- add checks to parser to make sure geometric objects are well-formed (AA segment should throw, ABA angle should throw)
 - add checks for geometric reasons:
-  - converse alternate interior
-  - alternate interior
-  - perp lines
-  - midpoint
+  - converse alternate interior (needs on_line)
+  - alternate interior (needs on_line)
+  - perp lines (should use on_line or specify a version where lines are perp but cross instead of intersect)
+  - midpoint / segment bisector
   - converse midpoint
   - congruent adjacent angles
-  - right angle
   - rectangle
-  - isosceles
   - parallelogram
   - angle bisector
-  - segment bisector
+  - perpendicular bisector
   - quadrilateral

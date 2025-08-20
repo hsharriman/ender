@@ -1,8 +1,8 @@
-import { DiagramContent } from "geometry-object";
 import { TriangleProps } from "../types/geometryTypes";
 import { Obj, SVGModes } from "../types/types";
 import { Angle } from "./Angle";
 import { BaseGeometryObject } from "./BaseGeometryObject";
+import { DiagramContent } from "./DiagramContent";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
 
@@ -138,5 +138,22 @@ export class Triangle extends BaseGeometryObject {
   setCongruent = (frame: string) => {
     this.congruent.add(frame);
     return this;
+  };
+
+  containsObjByStr = (obj: string) => {
+    if (obj.length === 2) {
+      return this.s.some((seg) => seg.names.has(obj));
+    } else if (obj.length === 3) {
+      return this.a.some((ang) => ang.names.has(obj));
+    }
+    return false;
+  };
+
+  contains = (obj: Segment | Angle) => {
+    if (obj.tag === Obj.Segment) {
+      return this.s.some((seg) => seg.equals(obj as Segment));
+    } else {
+      return this.a.some((ang) => ang.equals(obj as Angle));
+    }
   };
 }

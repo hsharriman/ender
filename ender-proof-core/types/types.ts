@@ -55,7 +55,7 @@ export enum AspectRatio {
   Tall = "tall",
   Landscape = "landscape",
 }
-export interface Statement {
+export interface Stmt {
   function: string;
   arguments: string[];
   stepNumber?: string;

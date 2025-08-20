@@ -2,6 +2,7 @@ import { AngleProps } from "../types/geometryTypes";
 import { LAngle, Obj, TickType } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
+import { Segment } from "./Segment";
 
 export class Angle extends BaseGeometryObject {
   // need 3 points and concavity/direction
@@ -16,10 +17,10 @@ export class Angle extends BaseGeometryObject {
     this.center = props.center;
     this.end = props.end;
     this.label = `${props.start.label}${props.center.label}${props.end.label}`;
-    this.names = [
+    this.names = new Set([
       `${this.start.label}${this.center.label}${this.end.label}`,
       `${this.end.label}${this.center.label}${this.start.label}`,
-    ];
+    ]);
     this.id = this.getId(Obj.Angle, this.label);
     this.ticks = new Map<string, { type: TickType; num: number }>();
   }
@@ -58,4 +59,24 @@ export class Angle extends BaseGeometryObject {
   };
 
   getTick = (frame: string) => this.ticks.get(frame);
+
+  equals = (other: Angle) => {
+    return this.names.has(other.label);
+  };
+
+  contains = (obj: Point | Segment) => {
+    if (obj.tag === Obj.Point) {
+      return this.label.includes(obj.label);
+    } else {
+      const segSet = new Set(obj.label.split(""));
+      return (
+        (segSet.has(this.start.label) || segSet.has(this.end.label)) &&
+        segSet.has(this.center.label)
+      );
+    }
+  };
+
+  centerEquals = (pt: Point) => {
+    return this.center.isEqualTo(pt);
+  };
 }

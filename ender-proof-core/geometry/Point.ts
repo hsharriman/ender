@@ -12,7 +12,7 @@ export class Point extends BaseGeometryObject {
     super(Obj.Point, props);
     this.pt = props.pt;
     this.label = props.label;
-    this.names = [this.label];
+    this.names = new Set([this.label]);
     this.offset = props.offset;
     this.id = this.getId(Obj.Point, this.label);
     this.id = props.parentFrame ? `${props.parentFrame}-${this.id}` : this.id;

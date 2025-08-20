@@ -51,4 +51,12 @@ export class Segment extends BaseGeometryObject {
   };
 
   getTick = (frame: string) => this.ticks.get(frame);
+
+  equals = (other: Segment) => {
+    return this.names.has(other.label);
+  };
+
+  contains = (pt: Point) => {
+    return this.label.includes(pt.label);
+  };
 }

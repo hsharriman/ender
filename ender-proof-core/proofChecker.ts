@@ -1,5 +1,4 @@
 import { readFileSync } from "fs";
-import { Reason, Statement } from "geometry-object";
 import { basename, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { Angle } from "./geometry/Angle.js";
@@ -8,18 +7,17 @@ import { Point } from "./geometry/Point.js";
 import { Segment } from "./geometry/Segment.js";
 import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
+import { reflex_a, vert_ang } from "./grammar/reasons/angleChecks.js";
+import { intersect_seg, reflex_s } from "./grammar/reasons/lineChecks.js";
 import {
   aas,
   asa,
   cpctc,
-  intersect_seg,
-  reflex_a,
-  reflex_s,
   rhl,
   sas,
   sss,
-  vert_ang,
-} from "./grammar/reasons/reasonChecks.js";
+} from "./grammar/reasons/triangleChecks.js";
+import { Reason, Stmt } from "./types/types.js";
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -31,7 +29,7 @@ const __dirname = dirname(__filename);
 interface ProofStep {
   type: "given" | "proof" | "goal";
   reason?: Reason;
-  statement?: Statement;
+  statement?: Stmt;
   stepNumber?: string;
 }
 
@@ -165,6 +163,7 @@ const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {
 
 // Load statement definitions from stmts.txt
 const loadStatementDefinitions = (): Map<string, StatementDefinition> => {
+  // TODO use parser for this
   const stmtsPath = join(__dirname, "grammar", "defs", "stmts.txt");
   const content = readFileSync(stmtsPath, "utf-8");
   const statements = new Map<string, StatementDefinition>();
@@ -235,7 +234,7 @@ const extractGoal = (proof: Proof): string | undefined => {
 
 // Check if statement arguments match the expected parameters
 const checkStatementArguments = (
-  stmt: Statement,
+  stmt: Stmt,
   stmtDefs: Map<string, StatementDefinition>
 ): boolean => {
   const definition = stmtDefs.get(stmt.function);

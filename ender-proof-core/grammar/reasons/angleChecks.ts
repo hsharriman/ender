@@ -1,0 +1,67 @@
+import { Angle } from "../../geometry/Angle";
+import { DiagramContent } from "../../geometry/DiagramContent";
+import { Point } from "../../geometry/Point";
+import { Segment } from "../../geometry/Segment";
+import { Stmt } from "../../types/types";
+import { stripAngPrefix } from "./utils";
+
+export const reflex_a = (a1: Angle, a2: Angle) => {
+  return a1.equals(a2);
+};
+
+export const right = (
+  perp: Stmt,
+  right: Stmt,
+  ctx: DiagramContent
+): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
+  const [s1, s2] = perp.arguments.map((arg) => tempCtx.addSegmentFromStr(arg));
+  const r = tempCtx.addAngleFromStr(right.arguments[0]);
+
+  let valid = false;
+  // angle includes one of the segments and a point from the other
+  if (r.contains(s1)) {
+    valid = r.contains(s2.p1) || r.contains(s2.p2);
+  } else if (r.contains(s2)) {
+    valid = r.contains(s1.p1) || r.contains(s1.p2);
+  }
+  if (valid) {
+    ctx.addAngle(r);
+  }
+  return valid;
+};
+
+export const vert_ang = (
+  intersect_seg: Stmt,
+  conAng: Stmt,
+  ctx: DiagramContent
+): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
+  const [s1, s2, pt]: [Segment, Segment, Point] = [
+    tempCtx.addSegmentFromStr(intersect_seg.arguments[0]),
+    tempCtx.addSegmentFromStr(intersect_seg.arguments[1]),
+    tempCtx.getPoint(intersect_seg.arguments[2]),
+  ];
+  const [a1, a2] = stripAngPrefix(conAng.arguments).map((arg) =>
+    tempCtx.addAngleFromStr(arg)
+  );
+
+  // Check that angles don't include segment names (vertical angles must be across from each other)
+  const anglesValid =
+    !a1.contains(s1) &&
+    !a1.contains(s2) &&
+    !a2.contains(s1) &&
+    !a2.contains(s2);
+
+  const centerValid = a1.centerEquals(pt) && a2.centerEquals(pt);
+
+  if (anglesValid && centerValid) {
+    ctx.addAngle(a1);
+    ctx.addAngle(a2);
+
+    // add intersecting lines if DNE yet
+    ctx.addSegmentFromStr(s1.label);
+    ctx.addSegmentFromStr(s2.label);
+  }
+  return anglesValid && centerValid;
+};

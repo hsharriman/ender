@@ -1,42 +1,7 @@
-// sas.ts
-// Function to check if two triangles meet SAS (Side-Angle-Side) congruence requirements
-
-import {
-  Angle,
-  DiagramContent,
-  Point,
-  Segment,
-  Statement,
-} from "geometry-object";
-import { angCenter, checks, commonPt } from "./utils";
-
-export type SegmentPair = [Segment, Segment];
-export type AnglePair = [Angle, Angle];
-
-export const reflex_s = (s1: Segment, s2: Segment) => {
-  return checks.eqSeg(s1, s2);
-};
-
-export const reflex_a = (a1: Angle, a2: Angle) => {
-  return checks.eqAng(a1, a2);
-};
-
-export const verticalAngles = (
-  s1: Segment,
-  s2: Segment,
-  intersect: Point,
-  a1: Angle,
-  a2: Angle
-) => {
-  // knowing that s1 and s2 intersect at intersect, check that a1 and a2 are vertical angles
-  // check whether each param is defined
-  // check that a1/a2 are 2 different angles
-  // check that a1/a2 are on opposite sides of the line s1 and s2
-};
-
-export const sameSide = (s1: Segment, s2: Segment) => {
-  return s1.p1.label === s2.p1.label && s1.p2.label === s2.p2.label;
-};
+import { DiagramContent } from "../../geometry/DiagramContent";
+import { Triangle } from "../../geometry/Triangle";
+import { Stmt } from "../../types/types";
+import { angCenter, commonPt, stripAngPrefix, stripTriPrefix } from "./utils";
 
 /**
  * Checks if two triangles meet the SAS (Side-Angle-Side) congruence requirements.
@@ -48,14 +13,17 @@ export const sameSide = (s1: Segment, s2: Segment) => {
  * @returns true if the triangles meet SAS requirements, false otherwise
  */
 export const sas = (
-  conTri: Statement,
-  conSeg1: Statement,
-  conAng: Statement,
-  conSeg2: Statement,
+  conTri: Stmt,
+  conSeg1: Stmt,
+  conAng: Stmt,
+  conSeg2: Stmt,
   ctx: DiagramContent
 ): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
   // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(conTri.arguments);
+  const [tri1, tri2] = stripTriPrefix(conTri.arguments).map((arg) =>
+    tempCtx.addTriangleFromStr(arg)
+  );
 
   const [s11, s12, s1Valid] = checkTriangleAssign(
     conSeg1.arguments,
@@ -67,11 +35,7 @@ export const sas = (
     tri1,
     tri2
   );
-  const [a1, a2, aValid] = checkTriangleAssign(
-    stripAngPrefix(conAng.arguments),
-    tri1,
-    tri2
-  );
+  const [a1, a2, aValid] = checkTriangleAssign(conAng.arguments, tri1, tri2);
 
   // For angle ABC, center point is B (middle character)
   const center1 = a1[1];
@@ -85,8 +49,8 @@ export const sas = (
 
   const valid = triangle1SAS && triangle2SAS && s1Valid && s2Valid && aValid;
   if (valid) {
-    const t1 = ctx.getTriangle(tri1);
-    const t2 = ctx.getTriangle(tri2);
+    const t1 = ctx.addTriangleFromStr(tri1.label);
+    const t2 = ctx.addTriangleFromStr(tri2.label);
 
     const t1center2 = s11.replace(center1, "");
     const t1center3 = t1.getThirdPoint(center1, t1center2);
@@ -111,14 +75,17 @@ export const sas = (
  * @returns true if the triangles meet SSS requirements, false otherwise
  */
 export const sss = (
-  t_cong: Statement,
-  conSeg1: Statement,
-  conSeg2: Statement,
-  conSeg3: Statement,
+  t_cong: Stmt,
+  conSeg1: Stmt,
+  conSeg2: Stmt,
+  conSeg3: Stmt,
   ctx: DiagramContent
 ): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
   // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments);
+  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
+    tempCtx.addTriangleFromStr(obj)
+  );
 
   // Validate triangle assignments for each pair of segments
   const [s11, s21, seg1Valid] = checkTriangleAssign(
@@ -140,8 +107,8 @@ export const sss = (
   const valid = seg1Valid && seg2Valid && seg3Valid;
   if (valid) {
     // first corner = corner between s11 and s12
-    const t1 = ctx.getTriangle(tri1);
-    const t2 = ctx.getTriangle(tri2);
+    const t1 = ctx.addTriangleFromStr(tri1.label);
+    const t2 = ctx.addTriangleFromStr(tri2.label);
 
     t1.orderTriangle(
       [commonPt(s11, s12), commonPt(s12, s13), commonPt(s13, s11)],
@@ -157,14 +124,17 @@ export const sss = (
 };
 
 export const aas = (
-  t_cong: Statement,
-  conAng1: Statement,
-  conAng2: Statement,
-  conSeg: Statement,
+  t_cong: Stmt,
+  conAng1: Stmt,
+  conAng2: Stmt,
+  conSeg: Stmt,
   ctx: DiagramContent
 ): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
   // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments);
+  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
+    tempCtx.addTriangleFromStr(obj)
+  );
 
   // Validate triangle assignments for each pair of segments
   const [a11, a21, ang1Valid] = checkTriangleAssign(
@@ -193,8 +163,8 @@ export const aas = (
   const valid = t1Valid && t2Valid && ang1Valid && ang2Valid && segValid;
 
   if (valid) {
-    const t1 = ctx.getTriangle(tri1);
-    const t2 = ctx.getTriangle(tri2);
+    const t1 = ctx.addTriangleFromStr(tri1.label);
+    const t2 = ctx.addTriangleFromStr(tri2.label);
 
     // segment will be made up of 1 angle center point and the 3rd point, strip angle center points to get 3rd pt
     t1.orderTriangle([a11c, a12c, s1.replace(a11c, "").replace(a12c, "")], ctx);
@@ -205,14 +175,17 @@ export const aas = (
 };
 
 export const asa = (
-  t_cong: Statement,
-  conAng1: Statement,
-  conSeg: Statement,
-  conAng2: Statement,
+  t_cong: Stmt,
+  conAng1: Stmt,
+  conSeg: Stmt,
+  conAng2: Stmt,
   ctx: DiagramContent
 ): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
   // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments);
+  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
+    tempCtx.addTriangleFromStr(obj)
+  );
 
   // Validate triangle assignments for each pair of segments
   const [a11, a21, ang1Valid] = checkTriangleAssign(
@@ -236,8 +209,8 @@ export const asa = (
   const valid = t1Valid && t2Valid && ang1Valid && ang2Valid && segValid;
 
   if (valid) {
-    const t1 = ctx.getTriangle(tri1);
-    const t2 = ctx.getTriangle(tri2);
+    const t1 = ctx.addTriangleFromStr(tri1.label);
+    const t2 = ctx.addTriangleFromStr(tri2.label);
 
     t1.orderTriangle([a11c, a12c, t1.getThirdPoint(a11c, a12c)], ctx);
     t2.orderTriangle([a21c, a22c, t2.getThirdPoint(a21c, a22c)], ctx);
@@ -247,14 +220,17 @@ export const asa = (
 };
 
 export const rhl = (
-  t_cong: Statement,
-  rightCon: Statement,
-  conSeg1: Statement,
-  conSeg2: Statement,
+  t_cong: Stmt,
+  rightCon: Stmt,
+  conSeg1: Stmt,
+  conSeg2: Stmt,
   ctx: DiagramContent
 ): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
   // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments);
+  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
+    tempCtx.addTriangleFromStr(obj)
+  );
 
   // Validate triangle assignments for each pair of segments
   const [r1, r2, rightValid] = checkTriangleAssign(
@@ -284,8 +260,8 @@ export const rhl = (
 
   const valid = t1Valid && t2Valid && rightValid && hypValid && segValid;
   if (valid) {
-    const t1 = ctx.getTriangle(tri1);
-    const t2 = ctx.getTriangle(tri2);
+    const t1 = ctx.addTriangleFromStr(tri1.label);
+    const t2 = ctx.addTriangleFromStr(tri2.label);
 
     // the 2 segments meet at a second point
     const t1c2 = commonPt(s11, s12);
@@ -307,12 +283,15 @@ export const rhl = (
  * @returns true if CPCTC can be applied to derive the conclusion, false otherwise
  */
 export const cpctc = (
-  t_cong: Statement,
-  conclusion: Statement,
+  t_cong: Stmt,
+  conclusion: Stmt,
   ctx: DiagramContent
 ): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
   // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments);
+  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
+    tempCtx.addTriangleFromStr(obj)
+  );
 
   // Check if the conclusion is a segment or angle congruence
   if (conclusion.function === "con_seg") {
@@ -323,7 +302,10 @@ export const cpctc = (
       tri2
     );
 
-    const [t1, t2] = [ctx.getTriangle(tri1), ctx.getTriangle(tri2)];
+    const [t1, t2] = [
+      tempCtx.addTriangleFromStr(tri1.label),
+      tempCtx.addTriangleFromStr(tri2.label),
+    ];
 
     // check that seg1 is the same index in tri1 as seg2 is in tri2
     return segValid && t1.getSegmentIndex(seg1) === t2.getSegmentIndex(seg2);
@@ -335,86 +317,50 @@ export const cpctc = (
       tri2
     );
 
-    const [t1, t2] = [ctx.getTriangle(tri1), ctx.getTriangle(tri2)];
+    const [t1, t2] = [
+      ctx.addTriangleFromStr(tri1.label),
+      ctx.addTriangleFromStr(tri2.label),
+    ];
     return angValid && t1.getAngleIndex(ang1) === t2.getAngleIndex(ang2);
   }
 
   return false;
 };
 
-export const intersect_seg = (
-  intersect_seg: Statement,
+export const isosceles = (
+  conSeg: Stmt,
+  isosceles: Stmt,
   ctx: DiagramContent
 ): boolean => {
-  const [s1, s2, pt] = intersect_seg.arguments;
-  //  check that s1 and s2 are not the same, and p is not in s1 or s2 labels
+  const tempCtx = new DiagramContent(ctx.getCtx());
+  const [s1, s2] = conSeg.arguments.map((arg) =>
+    tempCtx.addSegmentFromStr(arg)
+  );
+  const [t] = stripTriPrefix(isosceles.arguments).map((obj) =>
+    tempCtx.addTriangleFromStr(obj)
+  );
 
-  const valid =
-    s1.split("").every((pt) => !s2.includes(pt)) &&
-    !s1.includes(pt) &&
-    !s2.includes(pt);
-  // if valid, add new subsegments to context
+  const valid = t.contains(s1) && t.contains(s2) && !s1.equals(s2);
   if (valid) {
-    s1.split("").forEach((pt) => ctx.addSegmentFromStr(`${s1[0]}${pt}`));
-    s2.split("").forEach((pt) => ctx.addSegmentFromStr(`${s2[0]}${pt}`));
+    ctx.addTriangleFromStr(t.label);
   }
-
   return valid;
 };
 
-export const vert_ang = (
-  intersect_seg: Statement,
-  conAng: Statement,
-  ctx: DiagramContent
-): boolean => {
-  const [s1, s2, pt] = intersect_seg.arguments;
-  const [a1, a2] = stripAngPrefix(conAng.arguments);
-
-  // Check that angles don't include segment names (vertical angles must be across from each other)
-  const [a1_set, a2_set] = [new Set(a1.split("")), new Set(a2.split(""))];
-  const anglesValid =
-    !s1.split("").every((p) => a1_set.has(p)) &&
-    !s2.split("").every((p) => a1_set.has(p)) &&
-    !s1.split("").every((p) => a2_set.has(p)) &&
-    !s2.split("").every((p) => a2_set.has(p));
-
-  if (anglesValid) {
-    ctx.addAngleFromStr(a1);
-    ctx.addAngleFromStr(a2);
-  }
-  return anglesValid;
-};
-
-// ----- Helper functions -----
-
-// Helper function to check if a segment is in a triangle (all points of segment are in triangle)
-const segInTri = (segment: string, triangle: string): boolean => {
-  return segment.split("").every((point) => triangle.includes(point));
-};
-
-// Helper function to check if an angle is in a triangle (all points of angle are in triangle)
-const angInTri = (angle: string, triangle: string): boolean => {
-  return angle.split("").every((point) => triangle.includes(point));
-};
+// Helper functions ================================
 
 const sortPairToTri = (
   pair: string[],
-  [tri1, tri2]: [string, string]
+  [tri1, tri2]: [Triangle, Triangle]
 ): [string, string] => {
   const [l, r] = pair;
   if (l === r) {
     return [l, r];
   }
 
-  // Helper function to check if all characters in a string are contained in a triangle
-  const allCharsInTriangle = (str: string, triangle: string): boolean => {
-    const chars = str.split("");
-    return chars.every((char) => triangle.includes(char));
-  };
-
-  if (allCharsInTriangle(l, tri1) && allCharsInTriangle(r, tri2)) {
+  if (tri1.containsObjByStr(l) && tri2.containsObjByStr(r)) {
     return [l, r];
-  } else if (allCharsInTriangle(r, tri1) && allCharsInTriangle(l, tri2)) {
+  } else if (tri1.containsObjByStr(r) && tri2.containsObjByStr(l)) {
     return [r, l];
   }
 
@@ -431,20 +377,17 @@ const sortPairToTri = (
 // and sort the pair to correct triangles
 const checkTriangleAssign = (
   pair: string[],
-  tri1: string,
-  tri2: string
+  tri1: Triangle,
+  tri2: Triangle
 ): [string, string, boolean] => {
-  let inTriangleFn: (obj: string, triangle: string) => boolean = segInTri;
   if (pair[0].startsWith("a_")) {
     pair = stripAngPrefix(pair);
-    inTriangleFn = angInTri;
   }
-
   const [obj1, obj2] = sortPairToTri(pair, [tri1, tri2]);
-  const obj1_in_t1 = inTriangleFn(obj1, tri1);
-  const obj2_in_t2 = inTriangleFn(obj2, tri2);
-  const obj1_in_t2 = inTriangleFn(obj1, tri2);
-  const obj2_in_t1 = inTriangleFn(obj2, tri1);
+  const obj1_in_t1 = tri1.containsObjByStr(obj1);
+  const obj2_in_t2 = tri2.containsObjByStr(obj2);
+  const obj1_in_t2 = tri2.containsObjByStr(obj1);
+  const obj2_in_t1 = tri1.containsObjByStr(obj2);
   return [
     obj1,
     obj2,
@@ -453,12 +396,4 @@ const checkTriangleAssign = (
       (obj1_in_t1 && obj2_in_t2 && !obj1_in_t2 && !obj2_in_t1) ||
       (obj1_in_t2 && obj2_in_t1 && !obj1_in_t1 && !obj2_in_t2),
   ];
-};
-
-const stripAngPrefix = (angles: string[]) => {
-  return angles.map((angle) => angle.replace("a_", ""));
-};
-
-const stripTriPrefix = (triangles: string[]) => {
-  return triangles.map((triangle) => triangle.replace("t_", ""));
 };

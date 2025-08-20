@@ -15,8 +15,8 @@ import { Triangle } from "./Triangle";
 
 export class DiagramContent {
   private ctx: DiagramCtx;
-  constructor() {
-    this.ctx = {
+  constructor(prevCtx?: DiagramCtx) {
+    this.ctx = prevCtx ?? {
       points: [],
       segments: [],
       angles: [],

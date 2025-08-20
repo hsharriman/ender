@@ -3,7 +3,7 @@ import { Obj, SVGModes } from "../types/types";
 
 export class BaseGeometryObject {
   public readonly tag: Obj;
-  public names: string[] = [];
+  public names: Set<string> = new Set();
   public label: string = "";
   protected modes: Map<string, SVGModes>;
   public activeIdx: number;
@@ -17,7 +17,7 @@ export class BaseGeometryObject {
   }
 
   // https://stackoverflow.com/questions/9960908/permutations-in-javascript
-  protected permutator = (inputArr: string[]): string[] => {
+  protected permutator = (inputArr: string[]): Set<string> => {
     let result: string[] = [];
     const permute = (arr: string[], m: string = "") => {
       if (arr.length === 0) {
@@ -31,7 +31,7 @@ export class BaseGeometryObject {
       }
     };
     permute(inputArr);
-    return result;
+    return new Set(result);
   };
 
   protected getId = (objectType: Obj, label: string, tickNumber?: number) => {
@@ -61,5 +61,5 @@ export class BaseGeometryObject {
     return this.matches(other.label);
   };
 
-  matches = (name: string) => this.names.find((n) => n === name) !== undefined;
+  matches = (name: string) => this.names.has(name);
 }
