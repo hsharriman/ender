@@ -1,14 +1,15 @@
-title: "Comprehensive Test - Prove Triangles Congruent"
+title: "S1C1 - Prove Segments Parallel"
 premises:
-pt: A, B, C, D
-tri: t_ABC t_ADC
-con_seg(AB,AD) [01]
-con_ang(a_BAC,a_DAC) [02]
--> con_tri(t_ABC,t_ADC)
+pt: A, B, C, D, M
+tri: t_ABD t_BCD
+intersect_seg(AB,CD,M) [01]
+on_line(AB, M) [02]
+con_seg(AM,BM) [03]
+con_seg(CM,DM) [04]
+-> para(AC,BD)
 
 steps:
-reflex_s() -> con_seg(AC, AC) [03]
-sas([01], [02], [03]) -> con_tri(t_ABC,t_ADC) [04]
-sss([01], [02], [03]) -> con_tri(t_ABC,t_ADC) [05]  // Wrong reason for given dependencies
-con_seg(BC,DC) [06]  // Unused step
-sas([06], [02], [03]) -> con_tri(t_ABC,t_ADC) [07]  // Creates cycle with step 04 
+vert_ang([01]) -> con_ang(a_CMA, a_DMB) [05]
+sas([02], [03], [04]) -> con_tri(t_BAD,t_DCB) [06]
+cpctc([05]) -> con_ang(a_CAM,a_DBM) [07]
+altint_conv([06]) -> para(AC, BD) [08]

@@ -1,3 +1,10 @@
+premises
+stmt on_line(Segment s, Point p)
+stmt intersect_seg(Segment s1, Segment s2, Point p)
+stmt transversal(Segment s1, Segment s2, Segment t) 
+stmt rectangle(Quad q)
+end_premises
+
 stmt right(Angle a) 
 
 // congruence
@@ -17,9 +24,3 @@ stmt midpoint(Segment s, Point p)
 
 stmt isosceles(Triangle t)
 stmt equilateral(Triangle t)
-
-stmt intersect_seg(Segment s1, Segment s2, Point p)
-stmt transversal(Segment s1, Segment s2, Segment t) 
-stmt on_line(Segment s, Point p)
-
-stmt rectangle(Quad q)

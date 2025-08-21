@@ -67,6 +67,8 @@ export const ErrorMessages = {
       `Point '${point}' in '${object}' is not defined in premises`,
     DUPLICATE_POINTS_IN_OBJECT: (object: string) =>
       `Object '${object}' contains duplicate points`,
+    PREMISES_ONLY_STATEMENT_IN_PROOF: (stmtFunction: string) =>
+      `Statement '${stmtFunction}' is only allowed in premises section, not in proof steps`,
   },
 
   // Proof checker errors
@@ -275,6 +277,15 @@ export const logError = {
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
         } ${ErrorMessages.PARSER.DUPLICATE_POINTS_IN_OBJECT(object)}`
+      ),
+    premisesOnlyStatementInProof: (stmtFunction: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.PREMISES_ONLY_STATEMENT_IN_PROOF(
+          stmtFunction
+        )}`
       ),
   },
   proofChecker: {

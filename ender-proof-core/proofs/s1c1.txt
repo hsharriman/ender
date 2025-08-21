@@ -1,6 +1,6 @@
 title: "S1C1 - Prove Segments Parallel"
 premises:
-pt: A, B, C, D
+pt: A, B, C, D, M
 tri: t_ABD t_BCD
 intersect_seg(AB,CD,M) [01]
 con_seg(AM,BM) [02]

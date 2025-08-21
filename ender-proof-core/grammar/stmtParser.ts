@@ -46,6 +46,7 @@ const stmtLexer = moo.compile(stmtLexerRules);
 export interface StatementDefinition {
   name: string;
   parameters: string[];
+  isPremisesOnly?: boolean;
 }
 
 // Parser for statement definitions
@@ -123,16 +124,40 @@ export class StmtParser {
 
     logDebug(`📚 Parsing ${lines.length} statement definition lines`);
 
-    lines.forEach((line: string, index: number) => {
-      logDebug(`  Line ${index + 1}: "${line.trim()}"`);
+    let inPremisesSection = false;
+    let lineIndex = 0;
+
+    for (const line of lines) {
+      lineIndex++;
+      logDebug(`  Line ${lineIndex}: "${line.trim()}"`);
+
+      // Check for premises section markers
+      if (line.trim() === "premises") {
+        inPremisesSection = true;
+        logDebug(`    📍 Entering premises section`);
+        continue;
+      }
+
+      if (line.trim() === "end_premises") {
+        inPremisesSection = false;
+        logDebug(`    📍 Exiting premises section`);
+        continue;
+      }
+
       const stmtDef = this.parseStatementDefinition(line.trim());
       if (stmtDef) {
-        logDebug(`    ✅ Parsed: ${JSON.stringify(stmtDef)}`);
+        // Mark statements in premises section as premises-only
+        if (inPremisesSection) {
+          stmtDef.isPremisesOnly = true;
+          logDebug(`    ✅ Parsed (premises-only): ${JSON.stringify(stmtDef)}`);
+        } else {
+          logDebug(`    ✅ Parsed: ${JSON.stringify(stmtDef)}`);
+        }
         statements.set(stmtDef.name, stmtDef);
-      } else {
+      } else if (line.trim() !== "premises" && line.trim() !== "end_premises") {
         logError.parser.failedToParse();
       }
-    });
+    }
 
     logDebug(`📚 Loaded ${statements.size} statement definitions`);
     return statements;

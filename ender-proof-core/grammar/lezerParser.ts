@@ -1,14 +1,17 @@
 import { LRParser } from "@lezer/lr";
 import { lexer } from "./parser";
+import { loadReasonDefinitions } from "./reasonParser.js";
 
 // This will be generated from the grammar file
 // For now, we'll create a basic structure
 export class ProofParser {
   private lexer: any;
   private parser?: LRParser;
+  private reasonDefinitions: Map<string, any>;
 
   constructor() {
     this.lexer = lexer;
+    this.reasonDefinitions = loadReasonDefinitions();
     // TODO: Load the generated parser from proof.grammar
     // this.parser = require("./proof.grammar.js");
   }
@@ -330,23 +333,7 @@ export class ProofParser {
   }
 
   private isReasonFunction(functionName: string): boolean {
-    // Common reason functions in geometry proofs
-    const reasonFunctions = [
-      "reflex",
-      "reflex_s",
-      "reflex_a",
-      "sas",
-      "sss",
-      "asa",
-      "aas",
-      "rhl",
-      "aaa",
-      "cpctc",
-      "vert_ang",
-      "conv_alt_int",
-      "altintconv",
-      "conadjangle",
-    ];
-    return reasonFunctions.includes(functionName);
+    // Check if the function name exists in the loaded reason definitions
+    return this.reasonDefinitions.has(functionName);
   }
 }

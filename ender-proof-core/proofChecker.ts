@@ -37,6 +37,7 @@ interface ReasonDefinition {
 interface StatementDefinition {
   name: string;
   parameters: string[];
+  isPremisesOnly?: boolean;
 }
 
 // Types for the proof checker
@@ -470,6 +471,17 @@ const buildProofGraph = (
         );
         isCorrect = checkStatementArguments(step.statement, stmtDefs);
         logDebug(`  Statement arguments check: ${isCorrect}`);
+
+        // Check if premises-only statement is used in proof step
+        if (isCorrect && step.statement?.function) {
+          const stmtDef = stmtDefs.get(step.statement.function);
+          if (stmtDef?.isPremisesOnly && step.type === "proof") {
+            logError.parser.premisesOnlyStatementInProof(
+              step.statement.function
+            );
+            isCorrect = false;
+          }
+        }
       }
 
       // TODO add a flag to the step if there was a mistake in it
