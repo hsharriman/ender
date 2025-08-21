@@ -1,6 +1,20 @@
 // Error constants for ender-proof-core
 // This file centralizes all error messages to ensure consistency and maintainability
 
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+}
+
+export const LogLevelNames = {
+  [LogLevel.DEBUG]: "debug",
+  [LogLevel.INFO]: "info",
+  [LogLevel.WARN]: "warn",
+  [LogLevel.ERROR]: "error",
+} as const;
+
 export const ErrorMessages = {
   // Geometric object errors
   GEOMETRIC: {
@@ -31,6 +45,28 @@ export const ErrorMessages = {
     DEPENDENCY_MISMATCH: (arg: string) => `Dependency mismatch for ${arg}`,
     MISSING_REASON_OR_STATEMENT: "Missing reason or statement",
     FAILED_TO_PARSE: "Failed to parse",
+    UNDEFINED_STATEMENT: (stmtFunction: string) =>
+      `Statement '${stmtFunction}' is not defined in stmts.txt`,
+    UNDEFINED_REASON: (reasonFunction: string) =>
+      `Reason '${reasonFunction}' is not defined in reasons.txt`,
+    MISSING_POINT_IN_PREMISES: (point: string) =>
+      `Point '${point}' is used in proof but not defined in premises`,
+    DUPLICATE_STEPS: (step1: string, step2: string) =>
+      `Duplicate steps found: Step ${step1} and Step ${step2} are identical`,
+    NON_SEQUENTIAL_STEP_NUMBERS: (expected: string, found: string) =>
+      `Non-sequential step numbers: expected Step ${expected}, found Step ${found}`,
+    DUPLICATE_STEP_NUMBERS: (stepNumber: string) =>
+      `Duplicate step number found: Step ${stepNumber} appears multiple times`,
+    INVALID_SEGMENT_FORMAT: (segment: string) =>
+      `Invalid segment format: '${segment}' - segments must have exactly 2 distinct points`,
+    INVALID_ANGLE_FORMAT: (angle: string) =>
+      `Invalid angle format: '${angle}' - angles must have exactly 3 distinct points`,
+    INVALID_TRIANGLE_FORMAT: (triangle: string) =>
+      `Invalid triangle format: '${triangle}' - triangles must have exactly 3 distinct points`,
+    UNDEFINED_POINT_IN_OBJECT: (point: string, object: string) =>
+      `Point '${point}' in '${object}' is not defined in premises`,
+    DUPLICATE_POINTS_IN_OBJECT: (object: string) =>
+      `Object '${object}' contains duplicate points`,
   },
 
   // Proof checker errors
@@ -57,6 +93,32 @@ export const ErrorMessages = {
   },
 } as const;
 
+// Global log level configuration
+let currentLogLevel: LogLevel = LogLevel.WARN; // Default to warnings and errors
+
+export const setLogLevel = (level: LogLevel): void => {
+  currentLogLevel = level;
+};
+
+export const getLogLevel = (): LogLevel => {
+  return currentLogLevel;
+};
+
+// Helper function to check if a message should be logged
+const shouldLog = (level: LogLevel): boolean => {
+  return level >= currentLogLevel;
+};
+
+// Helper function for info-level logging
+export const logInfo = (message: string): void => {
+  shouldLog(LogLevel.INFO) && console.log(message);
+};
+
+// Helper function for debug-level logging
+export const logDebug = (message: string): void => {
+  shouldLog(LogLevel.DEBUG) && console.log(message);
+};
+
 // Helper functions for creating error objects
 export const createError = {
   geometric: {
@@ -81,12 +143,14 @@ export const createError = {
 export const logError = {
   geometric: {
     noCommonPoint: (seg1: string, seg2: string) =>
+      shouldLog(LogLevel.ERROR) &&
       console.error(ErrorMessages.GEOMETRIC.NO_COMMON_POINT(seg1, seg2)),
     incorrectGetThirdPointArgs: (
       triangleLabel: string,
       p1: string,
       p2: string
     ) =>
+      shouldLog(LogLevel.ERROR) &&
       console.error(
         ErrorMessages.GEOMETRIC.INCORRECT_GET_THIRD_POINT_ARGS(
           triangleLabel,
@@ -95,6 +159,7 @@ export const logError = {
         )
       ),
     trianglesDoNotContainObjects: (objects: string[], triangles: any[]) =>
+      shouldLog(LogLevel.ERROR) &&
       console.error(
         ErrorMessages.GEOMETRIC.TRIANGLES_DO_NOT_CONTAIN_OBJECTS(
           objects,
@@ -104,54 +169,141 @@ export const logError = {
   },
   parser: {
     noDefinitionForStatement: (stmtFunction: string) =>
+      shouldLog(LogLevel.ERROR) &&
       console.log(
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
         } ${ErrorMessages.PARSER.NO_DEFINITION_FOR_STATEMENT(stmtFunction)}`
       ),
     noDefinitionForReason: (reasonFunction: string) =>
+      shouldLog(LogLevel.ERROR) &&
       console.log(
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
         } ${ErrorMessages.PARSER.NO_DEFINITION_FOR_REASON(reasonFunction)}`
       ),
     dependencyMismatch: (arg: string) =>
+      shouldLog(LogLevel.DEBUG) &&
       console.log(
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
         } ${ErrorMessages.PARSER.DEPENDENCY_MISMATCH(arg)}`
       ),
     missingReasonOrStatement: () =>
+      shouldLog(LogLevel.ERROR) &&
       console.log(
         `${ErrorMessages.DEBUG.ERROR_PREFIX} ${ErrorMessages.PARSER.MISSING_REASON_OR_STATEMENT}`
       ),
     failedToParse: () =>
+      shouldLog(LogLevel.ERROR) &&
       console.log(
         `${ErrorMessages.DEBUG.ERROR_PREFIX} ${ErrorMessages.PARSER.FAILED_TO_PARSE}`
+      ),
+    undefinedStatement: (stmtFunction: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.UNDEFINED_STATEMENT(stmtFunction)}`
+      ),
+    undefinedReason: (reasonFunction: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.UNDEFINED_REASON(reasonFunction)}`
+      ),
+    missingPointInPremises: (point: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.MISSING_POINT_IN_PREMISES(point)}`
+      ),
+    duplicateSteps: (step1: string, step2: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.DUPLICATE_STEPS(step1, step2)}`
+      ),
+    nonSequentialStepNumbers: (expected: string, found: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.NON_SEQUENTIAL_STEP_NUMBERS(expected, found)}`
+      ),
+    duplicateStepNumbers: (stepNumber: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.DUPLICATE_STEP_NUMBERS(stepNumber)}`
+      ),
+    invalidSegmentFormat: (segment: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.INVALID_SEGMENT_FORMAT(segment)}`
+      ),
+    invalidAngleFormat: (angle: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.INVALID_ANGLE_FORMAT(angle)}`
+      ),
+    invalidTriangleFormat: (triangle: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.INVALID_TRIANGLE_FORMAT(triangle)}`
+      ),
+    undefinedPointInObject: (point: string, object: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.UNDEFINED_POINT_IN_OBJECT(point, object)}`
+      ),
+    duplicatePointsInObject: (object: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.DUPLICATE_POINTS_IN_OBJECT(object)}`
       ),
   },
   proofChecker: {
     incorrectSteps: (count: number) =>
+      shouldLog(LogLevel.ERROR) &&
       console.log(
         `\n${
           ErrorMessages.DEBUG.ERROR_PREFIX
         } ${ErrorMessages.PROOF_CHECKER.INCORRECT_STEPS(count)}`
       ),
     proofHasIssues: () =>
+      shouldLog(LogLevel.ERROR) &&
       console.log(
         `${ErrorMessages.DEBUG.ERROR_PREFIX} ${ErrorMessages.PROOF_CHECKER.PROOF_HAS_ISSUES}`
       ),
     errorCheckingProof: (error: any) =>
+      shouldLog(LogLevel.ERROR) &&
       console.error(
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
         } ${ErrorMessages.PROOF_CHECKER.ERROR_CHECKING_PROOF(error)}`
       ),
     missingObjectsForSAS: () =>
+      shouldLog(LogLevel.DEBUG) &&
       console.log(
         `${ErrorMessages.DEBUG.ERROR_PREFIX} ${ErrorMessages.PROOF_CHECKER.MISSING_OBJECTS_FOR_SAS}`
       ),
     errorDebuggingProof: (error: any) =>
+      shouldLog(LogLevel.ERROR) &&
       console.error(
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
@@ -160,8 +312,10 @@ export const logError = {
   },
   file: {
     fileNotFound: (path: string) =>
+      shouldLog(LogLevel.ERROR) &&
       console.error(ErrorMessages.FILE.FILE_NOT_FOUND(path)),
     usageProofToLean: () =>
+      shouldLog(LogLevel.ERROR) &&
       console.error(ErrorMessages.FILE.USAGE_PROOF_TO_LEAN),
   },
 } as const;

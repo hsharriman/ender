@@ -1,6 +1,12 @@
 import { readFileSync } from "fs";
 import { basename } from "path";
-import { createError, logError } from "./errors/errorConstants.js";
+import {
+  createError,
+  logDebug,
+  logError,
+  LogLevel,
+  setLogLevel,
+} from "./errors/errorConstants.js";
 import { Angle } from "./geometry/Angle.js";
 import { DiagramContent } from "./geometry/DiagramContent.js";
 import { Point } from "./geometry/Point.js";
@@ -34,8 +40,6 @@ interface StatementDefinition {
 }
 
 // Types for the proof checker
-
-// TODO rename/simplify proof step.
 interface ProofStep {
   type: "given" | "proof" | "goal";
   reason?: Reason;
@@ -145,7 +149,7 @@ const checkStatementArguments = (
 ): boolean => {
   const definition = stmtDefs.get(stmt.function);
   if (!definition) {
-    logError.parser.noDefinitionForStatement(stmt.function);
+    logError.parser.undefinedStatement(stmt.function);
     return false;
   }
 
@@ -170,16 +174,16 @@ const checkReasonStructure = (
 
     const definition = reasonDefs.get(reason?.function);
     if (!definition) {
-      logError.parser.noDefinitionForReason(reason.function);
+      logError.parser.undefinedReason(reason.function);
       return false;
     }
     console.log(`    ✅ Found definition:`, definition);
 
-    reason.arguments.forEach((arg) => {
+    reason.arguments.forEach((arg, idx) => {
       const stepNum = arg.replace(/[\[\]]/g, "");
       const dependencyStep = proofGraph.nodes.get(stepNum);
-
-      if (dependencyStep?.statement?.function !== arg) {
+      const expectedType = definition.dependencies[idx];
+      if (dependencyStep?.statement?.function !== expectedType) {
         logError.parser.dependencyMismatch(arg);
         return false;
       }
@@ -215,6 +219,7 @@ const checkDependencyStatements = (
 ): boolean => {
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
+    logError.parser.undefinedReason(reason.function);
     return false;
   }
 
@@ -262,6 +267,7 @@ const checkReasonApplication = (
   const reason = currStep.reason!;
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
+    logError.parser.undefinedReason(reason.function);
     return false;
   }
 
@@ -442,36 +448,36 @@ const buildProofGraph = (
         isCorrect = stmtDefs.has(step.statement.function);
       }
     } else if (step.type === "proof" && step.reason && step.statement) {
-      console.log(`\n🔍 Checking step ${stepNum}:`, step);
+      logDebug(`\n🔍 Checking step ${stepNum}:`);
+      logDebug(JSON.stringify(step, null, 2));
 
       // Check reason dependencies
       isCorrect = checkReasonStructure(step, reasonDefs, graph);
-      console.log(`  Reason structure check: ${isCorrect}`);
+      logDebug(`  Reason structure check: ${isCorrect}`);
 
       // Check dependency statements
       if (isCorrect) {
         isCorrect = checkDependencyStatements(step.reason, reasonDefs, graph);
-        console.log(`  Dependency statements check: ${isCorrect}`);
+        logDebug(`  Dependency statements check: ${isCorrect}`);
       }
 
       // Check statement
       if (isCorrect) {
-        console.log(
-          `  Checking statement: ${step.statement?.function} with args:`,
-          step.statement?.arguments
+        logDebug(
+          `  Checking statement: ${
+            step.statement?.function
+          } with args: ${JSON.stringify(step.statement?.arguments)}`
         );
         isCorrect = checkStatementArguments(step.statement, stmtDefs);
-        console.log(`  Statement arguments check: ${isCorrect}`);
+        logDebug(`  Statement arguments check: ${isCorrect}`);
       }
 
-      // TODO check that the there are no repeating statements/no objects are declared congruent twice
-      // TODO This should be done at the proofChecker level
       // TODO add a flag to the step if there was a mistake in it
 
       // Check if reason is applied correctly using reason checker methods
       if (isCorrect) {
         isCorrect = checkReasonApplication(step, reasonDefs, graph, proof, ctx);
-        console.log(`  Reason application check: ${isCorrect}`);
+        logDebug(`  Reason application check: ${isCorrect}`);
       }
 
       // Add edges from dependencies to this step
@@ -581,6 +587,215 @@ const findUnusedSteps = (graph: ProofGraph, goalStep?: string): Set<string> => {
   return unused;
 };
 
+// Check for duplicate steps in the proof
+const findDuplicateSteps = (proof: Proof): Array<[string, string]> => {
+  const duplicates: Array<[string, string]> = [];
+  const stepMap = new Map<string, string>(); // step content -> step number
+
+  // Only check proof steps (not given statements or goals)
+  const proofSteps = proof.steps.filter((step) => step.type === "proof");
+
+  for (const step of proofSteps) {
+    if (!step.statement || !step.reason) continue;
+
+    // Create a normalized representation of the step
+    const stepContent = JSON.stringify({
+      reason: step.reason.function,
+      reasonArgs: step.reason.arguments,
+      statement: step.statement.function,
+      statementArgs: step.statement.arguments,
+    });
+
+    if (stepMap.has(stepContent)) {
+      const existingStepNum = stepMap.get(stepContent)!;
+      duplicates.push([existingStepNum, step.stepNumber || "unknown"]);
+    } else {
+      stepMap.set(stepContent, step.stepNumber || "unknown");
+    }
+  }
+
+  return duplicates;
+};
+
+// Check for sequential step numbers across all steps
+const checkSequentialStepNumbers = (proof: Proof): Array<string> => {
+  const errors: Array<string> = [];
+  const seenStepNumbers = new Set<string>();
+
+  // Get all steps that have step numbers (given statements and proof steps)
+  const numberedSteps = proof.steps.filter((step) => step.stepNumber);
+
+  for (let i = 0; i < numberedSteps.length; i++) {
+    const step = numberedSteps[i];
+    const expectedStepNumber = `[${String(i + 1).padStart(2, "0")}]`;
+
+    // Check for duplicate step numbers
+    if (seenStepNumbers.has(step.stepNumber!)) {
+      logError.parser.duplicateStepNumbers(step.stepNumber!);
+      errors.push(`Duplicate step number: ${step.stepNumber}`);
+    } else {
+      seenStepNumbers.add(step.stepNumber!);
+    }
+
+    // Check for sequential numbering across all steps
+    if (step.stepNumber !== expectedStepNumber) {
+      logError.parser.nonSequentialStepNumbers(
+        expectedStepNumber,
+        step.stepNumber!
+      );
+      errors.push(
+        `Non-sequential step number: expected ${expectedStepNumber}, found ${step.stepNumber}`
+      );
+    }
+  }
+
+  return errors;
+};
+
+// Check if geometric objects are well-formed
+const checkGeometricObjects = (proof: Proof): Array<string> => {
+  const errors: Array<string> = [];
+  const definedPoints = new Set(proof.premises.points);
+
+  // Helper function to check for duplicate characters
+  const hasDuplicateChars = (str: string): boolean => {
+    const chars = str.split("");
+    return chars.length !== new Set(chars).size;
+  };
+
+  // Helper function to check if all points in an object are defined
+  const checkPointsDefined = (object: string, points: string[]): void => {
+    for (const point of points) {
+      if (!definedPoints.has(point)) {
+        logError.parser.undefinedPointInObject(point, object);
+        errors.push(
+          `Point '${point}' in '${object}' is not defined in premises`
+        );
+      }
+    }
+  };
+
+  // Check segments in premises
+  for (const segment of proof.premises.segments) {
+    if (segment.length !== 2) {
+      logError.parser.invalidSegmentFormat(segment);
+      errors.push(
+        `Invalid segment format: '${segment}' - segments must have exactly 2 points`
+      );
+      continue;
+    }
+
+    if (hasDuplicateChars(segment)) {
+      logError.parser.duplicatePointsInObject(segment);
+      errors.push(`Segment '${segment}' contains duplicate points`);
+      continue;
+    }
+
+    checkPointsDefined(segment, segment.split(""));
+  }
+
+  // Check triangles in premises
+  for (const triangle of proof.premises.triangles) {
+    const trianglePoints = triangle.substring(2); // Remove 't_' prefix
+
+    if (trianglePoints.length !== 3) {
+      logError.parser.invalidTriangleFormat(triangle);
+      errors.push(
+        `Invalid triangle format: '${triangle}' - triangles must have exactly 3 points`
+      );
+      continue;
+    }
+
+    if (hasDuplicateChars(trianglePoints)) {
+      logError.parser.duplicatePointsInObject(triangle);
+      errors.push(`Triangle '${triangle}' contains duplicate points`);
+      continue;
+    }
+
+    checkPointsDefined(triangle, trianglePoints.split(""));
+  }
+
+  // Check angles in premises
+  for (const angle of proof.premises.angles) {
+    const anglePoints = angle.substring(2); // Remove 'a_' prefix
+
+    if (anglePoints.length !== 3) {
+      logError.parser.invalidAngleFormat(angle);
+      errors.push(
+        `Invalid angle format: '${angle}' - angles must have exactly 3 points`
+      );
+      continue;
+    }
+
+    if (hasDuplicateChars(anglePoints)) {
+      logError.parser.duplicatePointsInObject(angle);
+      errors.push(`Angle '${angle}' contains duplicate points`);
+      continue;
+    }
+
+    checkPointsDefined(angle, anglePoints.split(""));
+  }
+
+  // Check geometric objects in all statements
+  for (const step of proof.steps) {
+    if (step.statement?.arguments) {
+      for (const arg of step.statement.arguments) {
+        // Check segments (2 characters, no prefix)
+        if (
+          arg.length === 2 &&
+          !arg.startsWith("a_") &&
+          !arg.startsWith("t_")
+        ) {
+          if (hasDuplicateChars(arg)) {
+            logError.parser.duplicatePointsInObject(arg);
+            errors.push(`Segment '${arg}' contains duplicate points`);
+            continue;
+          }
+          checkPointsDefined(arg, arg.split(""));
+        }
+
+        // Check angles (starts with 'a_', then 3 characters)
+        if (arg.startsWith("a_")) {
+          const anglePoints = arg.substring(2);
+          if (anglePoints.length !== 3) {
+            logError.parser.invalidAngleFormat(arg);
+            errors.push(
+              `Invalid angle format: '${arg}' - angles must have exactly 3 points`
+            );
+            continue;
+          }
+          if (hasDuplicateChars(anglePoints)) {
+            logError.parser.duplicatePointsInObject(arg);
+            errors.push(`Angle '${arg}' contains duplicate points`);
+            continue;
+          }
+          checkPointsDefined(arg, anglePoints.split(""));
+        }
+
+        // Check triangles (starts with 't_', then 3 characters)
+        if (arg.startsWith("t_")) {
+          const trianglePoints = arg.substring(2);
+          if (trianglePoints.length !== 3) {
+            logError.parser.invalidTriangleFormat(arg);
+            errors.push(
+              `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`
+            );
+            continue;
+          }
+          if (hasDuplicateChars(trianglePoints)) {
+            logError.parser.duplicatePointsInObject(arg);
+            errors.push(`Triangle '${arg}' contains duplicate points`);
+            continue;
+          }
+          checkPointsDefined(arg, trianglePoints.split(""));
+        }
+      }
+    }
+  }
+
+  return errors;
+};
+
 // Check if final statement matches the goal
 const checkGoalMatch = (
   proof: Proof,
@@ -662,6 +877,8 @@ const checkProof = (filePath: string): void => {
     const reasonDefs = loadReasonDefinitions();
     const stmtDefs = loadStatementDefinitions();
 
+    logDebug("📚 Parsing statement definitions...");
+
     // Parse proof
     const proof = parseProof(filePath);
     const goal = extractGoal(proof);
@@ -706,9 +923,7 @@ const checkProof = (filePath: string): void => {
         ) {
           // Given congruent segments - ensure both segments exist
           step.statement.arguments.forEach((arg: string) => {
-            if (!ctx.getSegment(arg)) {
-              ctx.addSegmentFromStr(arg);
-            }
+            ctx.addSegmentFromStr(arg);
           });
         } else if (
           step.statement.function === "con_ang" &&
@@ -726,20 +941,30 @@ const checkProof = (filePath: string): void => {
         ) {
           // Given intersecting segments - ensure both segments exist
           const [seg1, seg2, point] = step.statement.arguments;
+
+          // Check if the intersection point exists in premises
+          if (!proof.premises.points.includes(point)) {
+            logError.parser.missingPointInPremises(point);
+            throw new Error(
+              `Point '${point}' is used in intersect_seg but not defined in premises`
+            );
+          }
+
           ctx.addSegmentFromStr(seg1);
           ctx.addSegmentFromStr(seg2);
           // TODO add new subsegments to context
-          seg1
-            .split("")
-            .forEach((pt) => ctx.addSegmentFromStr(`${point}${pt}`));
-          seg2
-            .split("")
-            .forEach((pt) => ctx.addSegmentFromStr(`${point}${pt}`));
+          seg1.split("").forEach((pt) => {
+            ctx.addSegmentFromStr(`${point}${pt}`);
+          });
+          seg2.split("").forEach((pt) => {
+            ctx.addSegmentFromStr(`${point}${pt}`);
+          });
         }
       }
     });
 
     // Build proof graph
+    logDebug("Building proof graph...");
     const graph = buildProofGraph(proof, reasonDefs, stmtDefs, ctx);
 
     // Detect cycles
@@ -755,10 +980,19 @@ const checkProof = (filePath: string): void => {
 
     graph.unusedSteps = findUnusedSteps(graph, lastStepNum);
 
+    // Check for duplicate steps
+    const duplicateSteps = findDuplicateSteps(proof);
+
+    // Check for sequential step numbers
+    const stepNumberErrors = checkSequentialStepNumbers(proof);
+
+    // Check geometric objects are well-formed
+    const geometricObjectErrors = checkGeometricObjects(proof);
+
     // Check goal match
     const goalMatchResult = checkGoalMatch(proof, goal);
 
-    // Pretty print results
+    // Pretty print results (always displayed)
     console.log("📋 Proof Analysis Results:");
     console.log("=".repeat(50));
 
@@ -784,8 +1018,8 @@ const checkProof = (filePath: string): void => {
       }`
     );
 
-    logError.proofChecker.incorrectSteps(graph.incorrectSteps.size);
     if (graph.incorrectSteps.size > 0) {
+      logError.proofChecker.incorrectSteps(graph.incorrectSteps.size);
       Array.from(graph.incorrectSteps)
         .sort()
         .forEach((step) => {
@@ -811,11 +1045,37 @@ const checkProof = (filePath: string): void => {
       });
     }
 
+    console.log(`\n🔄 Duplicate Steps: ${duplicateSteps.length}`);
+    if (duplicateSteps.length > 0) {
+      duplicateSteps.forEach(([step1, step2]) => {
+        logError.parser.duplicateSteps(step1, step2);
+      });
+    }
+
+    console.log(`\n📝 Step Number Errors: ${stepNumberErrors.length}`);
+    if (stepNumberErrors.length > 0) {
+      stepNumberErrors.forEach((error) => {
+        console.log(`   • ${error}`);
+      });
+    }
+
+    console.log(
+      `\n🔷 Geometric Object Errors: ${geometricObjectErrors.length}`
+    );
+    if (geometricObjectErrors.length > 0) {
+      geometricObjectErrors.forEach((error) => {
+        console.log(`   • ${error}`);
+      });
+    }
+
     console.log(`\n🎯 Overall Assessment:`);
     const hasErrors =
       graph.incorrectSteps.size > 0 ||
       graph.unusedSteps.size > 0 ||
       graph.cycles.length > 0 ||
+      duplicateSteps.length > 0 ||
+      stepNumberErrors.length > 0 ||
+      geometricObjectErrors.length > 0 ||
       !goalMatchResult.matches;
 
     if (!hasErrors) {
@@ -841,12 +1101,58 @@ export {
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
-  if (args.length === 0) {
-    console.log("Usage: npm run check-proof <proof-file>");
-    console.log("Example: npm run check-proof proofs/tutorialProof.txt");
+
+  // Parse command line arguments
+  let proofFile: string | null = null;
+  let logLevel = LogLevel.WARN; // Default to warnings and errors
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === "--log-level" || arg === "-l") {
+      const levelArg = args[i + 1];
+      if (!levelArg) {
+        console.error(
+          "Error: --log-level requires a value (debug, info, warn, error)"
+        );
+        process.exit(1);
+      }
+
+      switch (levelArg.toLowerCase()) {
+        case "debug":
+          logLevel = LogLevel.DEBUG;
+          break;
+        case "info":
+          logLevel = LogLevel.INFO;
+          break;
+        case "warn":
+          logLevel = LogLevel.WARN;
+          break;
+        case "error":
+          logLevel = LogLevel.ERROR;
+          break;
+        default:
+          console.error(
+            `Error: Invalid log level '${levelArg}'. Use: debug, info, warn, error`
+          );
+          process.exit(1);
+      }
+      i++; // Skip the next argument since we consumed it
+    } else {
+      proofFile = arg;
+    }
+  }
+
+  if (!proofFile) {
+    console.log(
+      "Usage: npm run check-proof [--log-level <level>] <proof-file>"
+    );
+    console.log("Log levels: debug, info, warn, error (default: warn)");
     process.exit(1);
   }
 
-  const proofFile = args[0];
+  // Set the log level
+  setLogLevel(logLevel);
+
   checkProof(proofFile);
 }

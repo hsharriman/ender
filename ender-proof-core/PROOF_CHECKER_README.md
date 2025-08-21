@@ -156,3 +156,15 @@ It does **not** check:
 - ❌ Whether the proof strategy is optimal or complete
 
 This makes it suitable for catching common syntax errors and structural issues in proofs, but not for validating the mathematical correctness of the geometric reasoning.
+
+## Log Level
+
+1. Accepts log level options: --log-level or -l followed by debug, info, warn, or error
+2. Defaults to warning level: Only shows warnings and errors by default
+
+The log level system works as follows:
+
+- `error`: Only shows error messages and proof analysis results
+- `warn`: Shows warnings, errors, and proof analysis results (default)
+- `info`: Shows info, warnings, errors, and proof analysis results
+- `debug`: Shows all debug information, info, warnings, errors, and proof analysis results

@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import moo from "moo";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { logError } from "../errors/errorConstants.js";
+import { logDebug, logError } from "../errors/errorConstants.js";
 
 // Lexer rules for statement definitions
 const stmtLexerRules: moo.Rules = {
@@ -121,20 +121,20 @@ export class StmtParser {
       .split("\n")
       .filter((line: string) => line.trim() && !line.startsWith("//"));
 
-    console.log(`📚 Parsing ${lines.length} statement definition lines`);
+    logDebug(`📚 Parsing ${lines.length} statement definition lines`);
 
     lines.forEach((line: string, index: number) => {
-      console.log(`  Line ${index + 1}: "${line.trim()}"`);
+      logDebug(`  Line ${index + 1}: "${line.trim()}"`);
       const stmtDef = this.parseStatementDefinition(line.trim());
       if (stmtDef) {
-        console.log(`    ✅ Parsed:`, stmtDef);
+        logDebug(`    ✅ Parsed: ${JSON.stringify(stmtDef)}`);
         statements.set(stmtDef.name, stmtDef);
       } else {
         logError.parser.failedToParse();
       }
     });
 
-    console.log(`📚 Loaded ${statements.size} statement definitions`);
+    logDebug(`📚 Loaded ${statements.size} statement definitions`);
     return statements;
   }
 }
