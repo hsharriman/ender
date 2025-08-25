@@ -1,0 +1,17 @@
+title: "S1INC1 - Prove Midpoint #2"
+premises:
+pt: Q, P, R, M, N
+tri: t_QPR t_RMN
+right(a_QPR) [01]
+right(a_RMN) [02]
+midpt(PM,R) [03]
+seg_intersect(PM, QN, R) [04]
+-> midpt(QN,R)
+
+steps:
+con_right([01], [02]) -> con_ang(a_QPR, a_RMN) [05]
+midpt([03]) -> con_seg(PR, MR) [06]
+vert_ang([04]) -> con_ang(a_QRP,a_MRN) [07] 
+asa([05], [06], [07]) -> con_tri(t_QRP, t_MRN) [08]
+cpctc([08]) -> con_seg(QR, RN) [09]
+midpt_conv([09], [04]) -> midpt(QN, R) [10]

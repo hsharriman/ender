@@ -15,11 +15,7 @@ import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
 import { loadReasonDefinitions } from "./grammar/reasonParser.js";
 import { reflex_a, vert_ang } from "./grammar/reasons/angleChecks.js";
-import {
-  altint,
-  intersect_seg,
-  reflex_s,
-} from "./grammar/reasons/lineChecks.js";
+import { altint, reflex_s } from "./grammar/reasons/lineChecks.js";
 import {
   aas,
   asa,
@@ -395,11 +391,11 @@ const checkReasonApplication = (
         }
         return false;
 
-      case "intersect_seg":
-        if (currStep.statement) {
-          return intersect_seg(currStep.statement, ctx);
-        }
-        return false;
+      // case "intersect_seg":
+      //   if (currStep.statement) {
+      //     return intersect_seg(currStep.statement, ctx);
+      //   }
+      //   return false;
 
       case "vert_ang":
         const intersect_vert = getDepStmt(reason.arguments[0], proof);
@@ -950,28 +946,19 @@ const checkProof = (filePath: string): void => {
         step.statement?.function &&
         step.statement.arguments
       ) {
-        if (
-          step.statement.function === "con_seg" &&
-          step.statement.arguments.length === 2
-        ) {
+        if (step.statement.function === "con_seg") {
           // Given congruent segments - ensure both segments exist
           step.statement.arguments.forEach((arg: string) => {
             ctx.addSegmentFromStr(arg);
           });
-        } else if (
-          step.statement.function === "con_ang" &&
-          step.statement.arguments.length === 2
-        ) {
+        } else if (step.statement.function === "con_ang") {
           // Given congruent angles - ensure both angles exist
           step.statement.arguments.forEach((arg: string) => {
             if (arg.startsWith("a_")) {
               ctx.addAngleFromStr(arg.substring(2));
             }
           });
-        } else if (
-          step.statement.function === "intersect_seg" &&
-          step.statement.arguments.length === 3
-        ) {
+        } else if (step.statement.function === "intersect_seg") {
           // Given intersecting segments - ensure both segments exist
           const [seg1, seg2, point] = step.statement.arguments;
 
@@ -983,18 +970,43 @@ const checkProof = (filePath: string): void => {
             );
           }
 
-          ctx.addSegmentFromStr(seg1);
-          ctx.addSegmentFromStr(seg2);
-          // TODO add new subsegments to context
+          const s1 = ctx.addSegmentFromStr(seg1);
+          const s2 = ctx.addSegmentFromStr(seg2);
+          const p = ctx.getPoint(point);
+
           seg1.split("").forEach((pt) => {
-            ctx.addSegmentFromStr(`${point}${pt}`);
+            const subSeg = ctx.addSegmentFromStr(`${point}${pt}`);
+            s1.addSubSegment(subSeg);
+            subSeg.addParentSegment(s1);
+            console.log("adding subseg", subSeg.label, s1.label);
           });
           seg2.split("").forEach((pt) => {
-            ctx.addSegmentFromStr(`${point}${pt}`);
+            const subSeg = ctx.addSegmentFromStr(`${point}${pt}`);
+            s2.addSubSegment(subSeg);
+            subSeg.addParentSegment(s2);
           });
+        } else if (step.statement.function === "transversal") {
+          const [s1p1, s1p2, p1, s2p1, s2p2, p2] = step.statement.arguments.map(
+            (arg) => ctx.getPoint(arg)
+          );
+          const [s1, s2] = [
+            ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
+            ctx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`),
+          ];
+          ctx.addSegmentFromStr(`${p1.label}${p2.label}`);
+          p1.addOnLine(s1);
+          p2.addOnLine(s2);
+        } else if (step.statement.function === "midpt") {
+          const s = ctx.addSegmentFromStr(step.statement.arguments[0]);
+          const p = ctx.getPoint(step.statement.arguments[1]);
+          p.addOnLine(s);
+          ctx.addSegmentFromStr(`${p.label}${s.p2.label}`);
+          ctx.addSegmentFromStr(`${s.p1.label}${p.label}`);
         }
       }
     });
+
+    ctx.checkAngleOverlaps();
 
     // Build proof graph
     logDebug("Building proof graph...");

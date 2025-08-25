@@ -63,7 +63,9 @@ export class DiagramContent {
 
   addAngle = (props: AngleProps) => {
     let a = new Angle(props);
-    if (!this.getAngle(a.label)) this.ctx.angles.push(a);
+    if (!this.getAngle(a.label)) {
+      this.overlap(a);
+    }
     return a;
   };
 
@@ -132,4 +134,52 @@ export class DiagramContent {
     this.ctx.triangles.filter((t) => t.matches(label))[0];
   getQuadrilateral = (label: string) =>
     this.ctx.rectangles.filter((r) => r.matches(label))[0];
+
+  checkAngleOverlaps = () => {
+    this.ctx.angles.forEach((a) => this.overlap(a));
+  };
+
+  overlap = (a: Angle) => {
+    const [s, c, e] = a.label.split("");
+    const s1 = this.getSegment(`${s}${c}`);
+    const s2 = this.getSegment(`${c}${e}`);
+    // for each segment that has a parent identified
+    let hasOverlap = false;
+    console.log("checking angle at ", s1.label, s2.label);
+    const findOverlaps = (segSet: Set<Segment>, angleEnd: string) => {
+      console.log(segSet, angleEnd);
+      if (segSet.size > 1) {
+        segSet.forEach((s) => {
+          // add an overlapping angle if the center of the angle is one of the segment endpoints
+          if (s.label.includes(c)) {
+            const newAngleLabel = `${angleEnd}${c}${s.label.replace(c, "")}`;
+
+            // does new angle already exist?
+            const newAngle = this.getAngle(newAngleLabel);
+            if (newAngle) {
+              hasOverlap = true;
+              console.log("adding overlap", newAngleLabel, a.label);
+              const parentAngle = newAngle.getParentAngle();
+              if (parentAngle) {
+                parentAngle.addNames(angleEnd, s.label.replace(c, ""));
+              } else {
+                newAngle.addNames(angleEnd, s.label.replace(c, ""));
+              }
+            }
+          }
+        });
+      }
+    };
+    findOverlaps(s1.getParentSegments(), a.end.label);
+    console.log("s1 parent segments", s1.getParentSegments().size, s1.label);
+    findOverlaps(s2.getParentSegments(), a.start.label);
+    console.log("s2 parent segments", s2.getParentSegments().size, s2.label);
+    findOverlaps(s1.getSubSegments(), a.start.label);
+    console.log("s1 sub segments", s1.getSubSegments().size, s1.label);
+    findOverlaps(s2.getSubSegments(), a.end.label);
+    console.log("s2 sub segments", s2.getSubSegments().size, s2.label);
+    if (!hasOverlap) {
+      this.ctx.angles.push(a);
+    }
+  };
 }

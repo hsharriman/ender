@@ -20,7 +20,8 @@ stmt sim_tri(Triangle t1, Triangle t2)
 
 stmt para(Segment s1, Segment s2)
 stmt perp(Segment s1, Segment s2)
-stmt midpoint(Segment s, Point p)
+stmt midpt(Segment s, Point p)
+stmt ang_bisect(Angle a, Segment s)
 
 stmt isosceles(Triangle t)
 stmt equilateral(Triangle t)

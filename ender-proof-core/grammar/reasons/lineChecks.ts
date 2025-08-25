@@ -1,5 +1,4 @@
 import { DiagramContent } from "../../geometry/DiagramContent";
-import { Point } from "../../geometry/Point";
 import { Segment } from "../../geometry/Segment";
 import { Stmt } from "../../types/types";
 import { stripAngPrefix } from "./utils";
@@ -8,28 +7,40 @@ export const reflex_s = (s1: Segment, s2: Segment) => {
   return s1.equals(s2);
 };
 
-export const intersect_seg = (
-  intersect_seg: Stmt,
-  ctx: DiagramContent
-): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
-  const [s1, s2, pt]: [Segment, Segment, Point] = [
-    tempCtx.addSegmentFromStr(intersect_seg.arguments[0]),
-    tempCtx.addSegmentFromStr(intersect_seg.arguments[1]),
-    tempCtx.getPoint(intersect_seg.arguments[2]),
-  ];
-  //  check that s1 and s2 are not the same, and p is not in s1 or s2 labels
-  const valid = !s1.equals(s2) && !s1.contains(pt) && !s2.contains(pt);
-  // if valid, add new objects to context
-  if (valid) {
-    s1.label.split("").forEach((p) => ctx.addSegmentFromStr(`${p}${pt.label}`));
-    s2.label.split("").forEach((p) => ctx.addSegmentFromStr(`${p}${pt.label}`));
-    ctx.addSegmentFromStr(s1.label);
-    ctx.addSegmentFromStr(s2.label);
-  }
+// export const intersect_seg = (
+//   intersect_seg: Stmt,
+//   ctx: DiagramContent
+// ): boolean => {
+//   const tempCtx = new DiagramContent(ctx.getCtx());
+//   const [s1, s2, pt]: [Segment, Segment, Point] = [
+//     tempCtx.addSegmentFromStr(intersect_seg.arguments[0]),
+//     tempCtx.addSegmentFromStr(intersect_seg.arguments[1]),
+//     tempCtx.getPoint(intersect_seg.arguments[2]),
+//   ];
+//   //  check that s1 and s2 are not the same, and p is not in s1 or s2 labels
+//   const valid = !s1.equals(s2) && !s1.contains(pt) && !s2.contains(pt);
+//   // if valid, add new objects to context
+//   if (valid) {
+//     const s1New = ctx.addSegmentFromStr(s1.label);
+//     const s2New = ctx.addSegmentFromStr(s2.label);
+//     s1New.label.split("").forEach((p) => {
+//       const seg = ctx.addSegmentFromStr(`${p}${pt.label}`);
+//       s1New.addSubSegment(seg);
+//       seg.addParentSegment(s1New);
+//     });
+//     s1New.label.split("").forEach((p) => {
+//       const seg = ctx.addSegmentFromStr(`${p}${pt.label}`);
+//       s2New.addSubSegment(seg);
+//       seg.addParentSegment(s2New);
+//     });
+//     const p = ctx.getPoint(pt.label);
+//     p.addOnLine(s1New);
+//     p.addOnLine(s2New);
+//     console.log("checking intersect_seg", s1New.label, s2New.label);
+//   }
 
-  return valid;
-};
+//   return valid;
+// };
 
 export const altint = (
   conAng: Stmt,
@@ -70,13 +81,10 @@ export const altint = (
   // the corner of each angle must be on transversal
   if (a1.centerEquals(t.p1) && a2.centerEquals(t.p2)) {
     console.log(a1.label, a2.label, t.label);
+    console.log(a1.names, a2.names);
     // one of the angle's points must be on the transversal
     if (a1.contains(t.p2) && a2.contains(t.p1)) {
       // if a1 contains s1p1 as endpoint then a2 must contain s2p2
-      console.log("a1 contains s1p1", a1.contains(s1p1));
-      console.log("a2 contains s2p2", a2.contains(s2p2));
-      console.log("a1 contains s1p2", a1.contains(s1p2));
-      console.log("a2 contains s2p1", a2.contains(s2p1));
       if (a1.contains(s1p1) && a2.contains(s2p2)) {
         angleCheck = true;
         // vice versa
@@ -90,28 +98,12 @@ export const altint = (
   return segmentCheck && angleCheck;
 };
 
-// export const altint = (
-//   para: Stmt,
-//   transversal: Stmt,
-//   conAng: Stmt,
-//   ctx: DiagramContent
-// ): boolean => {
-//   const tempCtx = new DiagramContent(ctx.getCtx());
-//   const [pa1, pa2] = para.arguments.map((arg) =>
-//     tempCtx.addSegmentFromStr(arg)
-//   );
-//   const [s1p1, s1p2, p1, s2p1, s2p2, p2] = transversal.arguments.map((arg) =>
-//     tempCtx.getPoint(arg)
-//   );
-//   const [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg));
-
-//     const [s1, s2, t] = [
-//     tempCtx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
-//     tempCtx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`),
-//     tempCtx.addSegmentFromStr(`${p1.label}${p2.label}`),
-//   ];
-//   return false;
-// };
+export const midpt = (
+  conSeg: Stmt,
+  onLine: Stmt,
+  midPt: Stmt,
+  ctx: DiagramContent
+) => {};
 
 export const perp = (
   right: Stmt,
