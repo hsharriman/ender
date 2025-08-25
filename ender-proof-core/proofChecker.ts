@@ -15,7 +15,11 @@ import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
 import { loadReasonDefinitions } from "./grammar/reasonParser.js";
 import { reflex_a, vert_ang } from "./grammar/reasons/angleChecks.js";
-import { intersect_seg, reflex_s } from "./grammar/reasons/lineChecks.js";
+import {
+  altint,
+  intersect_seg,
+  reflex_s,
+} from "./grammar/reasons/lineChecks.js";
 import {
   aas,
   asa,
@@ -212,43 +216,40 @@ const checkReasonStructure = (
   return false;
 };
 
-// Check if dependency statements match expected types
-const checkDependencyStatements = (
+// Generic validator for reason dependencies. Throws on mismatch for all steps.
+const validateReasonDependencies = (
   reason: Reason,
   reasonDefs: Map<string, ReasonDefinition>,
   proofGraph: ProofGraph
-): boolean => {
+): void => {
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
-    logError.parser.undefinedReason(reason.function);
-    return false;
+    throw new Error(`Undefined reason: ${reason.function}`);
+  }
+
+  if (reason.arguments.length !== definition.dependencies.length) {
+    throw new Error(
+      `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`
+    );
   }
 
   for (let i = 0; i < reason.arguments.length; i++) {
     const depRef = reason.arguments[i];
     const expectedType = definition.dependencies[i];
-
-    // Extract step number from reference like [01]
     const stepNum = depRef.replace(/[\[\]]/g, "");
     const dependencyStep = proofGraph.nodes.get(stepNum);
-
-    if (!dependencyStep) {
-      return false;
+    if (!dependencyStep || !dependencyStep.statement) {
+      throw new Error(
+        `Missing dependency for ${reason.function} at index ${i} (ref ${depRef})`
+      );
     }
-
-    // Check if the dependency step's statement matches expected type
-    const stmt = dependencyStep.statement?.function;
-    if (!stmt) {
-      return false;
-    }
-
-    // Check if statement matches expected type exactly
-    if (stmt !== expectedType) {
-      return false;
+    const foundType = dependencyStep.statement.function;
+    if (foundType !== expectedType) {
+      throw new Error(
+        `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedType}, found ${foundType} (ref ${depRef})`
+      );
     }
   }
-
-  return true;
 };
 
 const getDepStmt = (idx: string, proof: Proof) => {
@@ -324,6 +325,21 @@ const checkReasonApplication = (
               getGeometricObject(currStep.statement.arguments[1], ctx) as Angle
             );
           }
+        }
+        return false;
+
+      case "altint":
+        const transversal = getDepStmt(reason.arguments[1], proof);
+        const para = getDepStmt(reason.arguments[2], proof);
+        if (currStep.statement && transversal && para) {
+          return altint(currStep.statement, transversal, para, ctx);
+        }
+        return false;
+      case "altint_conv":
+        const conAng_conv = getDepStmt(reason.arguments[0], proof);
+        const transversal_conv = getDepStmt(reason.arguments[1], proof);
+        if (currStep.statement && conAng_conv && transversal_conv) {
+          return altint(conAng_conv, transversal_conv, currStep.statement, ctx);
         }
         return false;
 
@@ -456,10 +472,15 @@ const buildProofGraph = (
       isCorrect = checkReasonStructure(step, reasonDefs, graph);
       logDebug(`  Reason structure check: ${isCorrect}`);
 
-      // Check dependency statements
+      // Validate dependency statements (throws on mismatch)
       if (isCorrect) {
-        isCorrect = checkDependencyStatements(step.reason, reasonDefs, graph);
-        logDebug(`  Dependency statements check: ${isCorrect}`);
+        try {
+          validateReasonDependencies(step.reason, reasonDefs, graph);
+          logDebug(`  Dependency statements check: true`);
+        } catch (e: any) {
+          logError.proofChecker.errorCheckingProof(e);
+          isCorrect = false;
+        }
       }
 
       // Check statement

@@ -165,7 +165,7 @@ export const logError = {
       console.error(
         ErrorMessages.GEOMETRIC.TRIANGLES_DO_NOT_CONTAIN_OBJECTS(
           objects,
-          triangles
+          triangles.map((t) => t.label)
         )
       ),
   },

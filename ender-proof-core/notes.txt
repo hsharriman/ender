@@ -25,17 +25,17 @@ many reqs, many conclusions: supported
 
 TODO:
 - mark steps that are incorrect internally while checking
-- add more detailed error messages so it is clear why a step is failing, log these
+- add more detailed error messages within reason checks so it is clear why a step is failing, log these
 - handle line extensions/ indicating when a point is on a line
 - add checks for geometric reasons:
-  - converse alternate interior (needs on_line)
-  - alternate interior (needs on_line)
-  - perp lines (should use on_line or specify a version where lines are perp but cross instead of intersect)
-  - midpoint / segment bisector (needs on_line)
-  - converse midpoint
-  - congruent adjacent angles
+  - easier:
   - rectangle
   - parallelogram
   - angle bisector
   - perpendicular bisector
   - quadrilateral
+  - harder:
+  - perp lines (should use on_line or specify a version where lines are perp but cross instead of intersect)
+  - midpoint / segment bisector (needs on_line)
+  - converse midpoint
+  - congruent adjacent angles

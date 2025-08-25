@@ -1,7 +1,7 @@
 premises
 stmt on_line(Segment s, Point p)
 stmt intersect_seg(Segment s1, Segment s2, Point p)
-stmt transversal(Segment s1, Segment s2, Segment t) 
+stmt transversal(Point s1p1, Point s1p2, Point p1, Point s2p1, Point s2p2, Point p2) // Point s1p1 -> s1p2 = seg1
 stmt rectangle(Quad q)
 end_premises
 

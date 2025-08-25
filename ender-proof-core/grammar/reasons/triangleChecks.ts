@@ -26,12 +26,12 @@ export const sas = (
     tempCtx.addTriangleFromStr(arg)
   );
 
-  const [s11, s12, s1Valid] = checkTriangleAssign(
+  const [s11, s21, s1Valid] = checkTriangleAssign(
     conSeg1.arguments,
     tri1,
     tri2
   );
-  const [s21, s22, s2Valid] = checkTriangleAssign(
+  const [s12, s22, s2Valid] = checkTriangleAssign(
     conSeg2.arguments,
     tri1,
     tri2
@@ -53,14 +53,14 @@ export const sas = (
     const t1 = ctx.addTriangleFromStr(tri1.label);
     const t2 = ctx.addTriangleFromStr(tri2.label);
 
-    const t1center2 = s11.replace(center1, "");
-    const t1center3 = t1.getThirdPoint(center1, t1center2);
+    const t1cp2 = s11.replace(center1, "");
+    const t1p3 = t1.getThirdPoint(center1, t1cp2);
 
-    const t2center2 = s21.replace(center2, "");
-    const t2center3 = t2.getThirdPoint(center2, t2center2);
+    const t2p2 = s21.replace(center2, "");
+    const t2p3 = t2.getThirdPoint(center2, t2p2);
 
-    t1.orderTriangle([center1, t1center2, t1center3], ctx);
-    t2.orderTriangle([center2, t2center2, t2center3], ctx);
+    t1.orderTriangle([center1, t1cp2, t1p3], ctx);
+    t2.orderTriangle([center2, t2p2, t2p3], ctx);
   }
 
   return valid;
