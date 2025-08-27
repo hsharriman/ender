@@ -80,8 +80,6 @@ export const altint = (
   }
   // the corner of each angle must be on transversal
   if (a1.centerEquals(t.p1) && a2.centerEquals(t.p2)) {
-    console.log(a1.label, a2.label, t.label);
-    console.log(a1.names, a2.names);
     // one of the angle's points must be on the transversal
     if (a1.contains(t.p2) && a2.contains(t.p1)) {
       // if a1 contains s1p1 as endpoint then a2 must contain s2p2

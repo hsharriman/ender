@@ -256,7 +256,6 @@ const getDepStmt = (idx: string, proof: Proof) => {
 // Check if reason is applied correctly using reason checker methods
 const checkReasonApplication = (
   currStep: ProofStep,
-  // reason: Reason,
   reasonDefs: Map<string, ReasonDefinition>,
   proofGraph: ProofGraph,
   proof: Proof,
@@ -975,13 +974,12 @@ const checkProof = (filePath: string): void => {
           const p = ctx.getPoint(point);
 
           seg1.split("").forEach((pt) => {
-            const subSeg = ctx.addSegmentFromStr(`${point}${pt}`);
+            const subSeg = ctx.addSegmentFromStr(`${p.label}${pt}`);
             s1.addSubSegment(subSeg);
             subSeg.addParentSegment(s1);
-            console.log("adding subseg", subSeg.label, s1.label);
           });
           seg2.split("").forEach((pt) => {
-            const subSeg = ctx.addSegmentFromStr(`${point}${pt}`);
+            const subSeg = ctx.addSegmentFromStr(`${p.label}${pt}`);
             s2.addSubSegment(subSeg);
             subSeg.addParentSegment(s2);
           });
@@ -1006,6 +1004,7 @@ const checkProof = (filePath: string): void => {
       }
     });
 
+    console.log("checking angle overlaps");
     ctx.checkAngleOverlaps();
 
     // Build proof graph
