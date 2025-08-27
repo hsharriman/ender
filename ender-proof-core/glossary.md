@@ -25,10 +25,9 @@ For the full list of supported reasons including their abbreviations, check `gra
 - `asa(con_ang, con_seg, con_ang)` - Angle-Side-Angle congruence
 - `aas(con_ang, con_ang, con_seg)` - Angle-Angle-Side congruence
 - `rhl(con_right, con_seg, con_seg)` - Right-Hypotenuse-Leg congruence
-- `aaa(con_ang, con_ang, con_ang)` - Angle-Angle-Angle similarity
 - `cpctc(con_tri)` - Corresponding Parts of Congruent Triangles
 - `vert_ang(intersect_seg)` - Vertical angles
-- `conv_alt_int(para, transversal)` - Converse of alternate interior angles
+- `intersect_seg()` - Intersecting Segments
 
 ## Supported Statements
 
@@ -40,4 +39,5 @@ For the full list of supported statements including their abbreviations, check `
 - `right(Angle a)` - Right angle
 - `para(Segment s1, Segment s2)` - Parallel segments
 - `perp(Segment s1, Segment s2)` - Perpendicular segments
+- `intersect_seg(Segment s1, Segment s2, Point p)` - Intersecting segments
 - And more...
