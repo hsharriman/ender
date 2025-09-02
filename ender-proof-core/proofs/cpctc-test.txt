@@ -10,4 +10,4 @@ steps:
 reflex_s() -> con_seg(AC, AC) [03]
 sas([01], [02], [03]) -> con_tri(t_ABC,t_ADC) [04] 
 // cpctc([04]) -> con_ang(a_ABC,a_ADC) [05] 
-cpctc([04]) -> con_seg(BC, DC) [06]
+cpctc([04]) -> con_seg(BC, DC) [05]
