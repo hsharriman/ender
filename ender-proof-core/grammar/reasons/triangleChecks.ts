@@ -1,9 +1,9 @@
 import { logError } from "../../errors/errorConstants.js";
 import { DiagramContent } from "../../geometry/DiagramContent";
 import { Triangle } from "../../geometry/Triangle";
-import { Stmt } from "../../types/types";
+import { ParseObj, Stmt } from "../../types/types";
 import { conSegMapper, conTriMapper } from "./argMappers.js";
-import { angCenter, commonPt, stripAngPrefix } from "./utils";
+import { angCenter, commonPt } from "./utils";
 
 /**
  * Checks if two triangles meet the SAS (Side-Angle-Side) congruence requirements.
@@ -304,6 +304,12 @@ export const cpctc = (
       ctx.addTriangleFromStr(tri1.label),
       ctx.addTriangleFromStr(tri2.label),
     ];
+    console.log(
+      ang1,
+      ang2,
+      angValid,
+      t1.getAngleIndex(ang1) === t2.getAngleIndex(ang2)
+    );
     return angValid && t1.getAngleIndex(ang1) === t2.getAngleIndex(ang2);
   }
 
@@ -329,21 +335,21 @@ export const isosceles = (
 // Helper functions ================================
 
 const sortPairToTri = (
-  pair: string[],
+  pair: ParseObj[],
   [tri1, tri2]: [Triangle, Triangle]
-): [string, string] => {
+): [ParseObj, ParseObj] => {
   const [l, r] = pair;
-  if (l === r) {
+  if (l.v === r.v) {
     return [l, r];
   }
 
-  if (tri1.containsObjByStr(l) && tri2.containsObjByStr(r)) {
+  if (tri1.containsParseObj(l) && tri2.containsParseObj(r)) {
     return [l, r];
-  } else if (tri1.containsObjByStr(r) && tri2.containsObjByStr(l)) {
+  } else if (tri1.containsParseObj(r) && tri2.containsParseObj(l)) {
     return [r, l];
   }
 
-  logError.geometric.trianglesDoNotContainObjects([l, r], [tri1, tri2]);
+  logError.geometric.trianglesDoNotContainObjects([l.v, r.v], [tri1, tri2]);
   return [l, r];
 };
 
@@ -351,23 +357,20 @@ const sortPairToTri = (
 // special case: if a side is shared between 2 triangles, it can be assigned to both
 // and sort the pair to correct triangles
 const checkTriangleAssign = (
-  pair: string[],
+  pair: ParseObj[],
   tri1: Triangle,
   tri2: Triangle
 ): [string, string, boolean] => {
-  if (pair[0].startsWith("a_")) {
-    pair = stripAngPrefix(pair);
-  }
   const [obj1, obj2] = sortPairToTri(pair, [tri1, tri2]);
-  const obj1_in_t1 = tri1.containsObjByStr(obj1);
-  const obj2_in_t2 = tri2.containsObjByStr(obj2);
-  const obj1_in_t2 = tri2.containsObjByStr(obj1);
-  const obj2_in_t1 = tri1.containsObjByStr(obj2);
+  const obj1_in_t1 = tri1.containsParseObj(obj1);
+  const obj2_in_t2 = tri2.containsParseObj(obj2);
+  const obj1_in_t2 = tri2.containsParseObj(obj1);
+  const obj2_in_t1 = tri1.containsParseObj(obj2);
   return [
-    obj1,
-    obj2,
+    obj1.v,
+    obj2.v,
     // either obj1 === obj2, or one is in tri1 and the other is in tri2
-    obj1 === obj2 ||
+    obj1.v === obj2.v ||
       (obj1_in_t1 && obj2_in_t2 && !obj1_in_t2 && !obj2_in_t1) ||
       (obj1_in_t2 && obj2_in_t1 && !obj1_in_t1 && !obj2_in_t2),
   ];

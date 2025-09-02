@@ -32,7 +32,7 @@ import {
   sss,
 } from "./grammar/reasons/triangleChecks.js";
 import { loadStatementDefinitions } from "./grammar/stmtParser.js";
-import { Reason, Stmt } from "./types/types.js";
+import { Obj, ParseObj, Reason, Stmt } from "./types/types.js";
 
 // Import types locally to avoid module resolution issues
 interface ReasonDefinition {
@@ -76,61 +76,45 @@ interface ProofGraph {
   cycles: string[][];
 }
 
-// Helper function to strip geometric object prefixes
-const stripGeometricPrefix = (arg: string): string => {
-  if (arg.startsWith("a_")) {
-    return arg.substring(2); // Remove 'a_' prefix for angles
-  } else if (arg.startsWith("t_")) {
-    return arg.substring(2); // Remove 't_' prefix for triangles
-  }
-  return arg; // No prefix to strip
-};
-
 // Function to get geometric object from string identifier
 const getGeometricObject = (
-  arg: string,
+  arg: ParseObj,
   ctx: DiagramContent
 ): Point | Segment | Angle | Triangle | Quadrilateral => {
-  if (arg.startsWith("a_")) {
-    // Angle format: a_ABC - remove prefix and try to find angle
-    const angleLabel = stripGeometricPrefix(arg);
-    const angle = ctx.getAngle(angleLabel);
-    if (!angle) {
-      throw createError.geometric.angleNotFound(arg);
-    }
-    return angle;
-  } else if (arg.startsWith("t_")) {
-    // Triangle format: t_ABC - remove prefix and try to find triangle
-    const triangleLabel = stripGeometricPrefix(arg);
-    const triangle = ctx.getTriangle(triangleLabel);
-    if (!triangle) {
-      throw createError.geometric.triangleNotFound(arg);
-    }
-    return triangle;
-  } else if (arg.startsWith("q_")) {
-    // Quadrilateral format: q_ABCD - remove prefix and try to find quadrilateral
-    const quadrilateralLabel = stripGeometricPrefix(arg);
-    const quadrilateral = ctx.getQuadrilateral(quadrilateralLabel);
-    if (!quadrilateral) {
-      throw createError.geometric.quadrilateralNotFound(arg);
-    }
-    return quadrilateral;
-  } else if (arg.length === 2 && /^[A-Z]{2}$/.test(arg)) {
-    // Segment format: AB
-    const segment = ctx.getSegment(arg);
-    if (!segment) {
-      throw createError.geometric.segmentNotFound(arg);
-    }
-    return segment;
-  } else if (arg.length === 1 && /^[A-Z]$/.test(arg)) {
-    // Point format: A
-    const point = ctx.getPoint(arg);
-    if (!point) {
-      throw createError.geometric.pointNotFound(arg);
-    }
-    return point;
+  switch (arg.type) {
+    case Obj.Angle:
+      const angle = ctx.getAngle(arg.v);
+      if (!angle) {
+        throw createError.geometric.angleNotFound(arg.v);
+      }
+      return angle;
+    case Obj.Triangle:
+      const triangle = ctx.getTriangle(arg.v);
+      if (!triangle) {
+        throw createError.geometric.triangleNotFound(arg.v);
+      }
+      return triangle;
+    case Obj.Quadrilateral:
+      const quadrilateral = ctx.getQuadrilateral(arg.v);
+      if (!quadrilateral) {
+        throw createError.geometric.quadrilateralNotFound(arg.v);
+      }
+      return quadrilateral;
+    case Obj.Segment:
+      const segment = ctx.getSegment(arg.v);
+      if (!segment) {
+        throw createError.geometric.segmentNotFound(arg.v);
+      }
+      return segment;
+    case Obj.Point:
+      const point = ctx.getPoint(arg.v);
+      if (!point) {
+        throw createError.geometric.pointNotFound(arg.v);
+      }
+      return point;
+    default:
+      throw createError.geometric.cannotParseGeometricObject(arg.v);
   }
-  throw createError.geometric.cannotParseGeometricObject(arg);
 };
 
 // Parse a proof file
@@ -145,9 +129,9 @@ const extractGoal = (proof: Proof): string | undefined => {
   // Look for goal in the premises section (steps with type "goal")
   const goalStep = proof.steps.find((step) => step.type === "goal");
   if (goalStep && goalStep.statement) {
-    return `${goalStep.statement.function}(${goalStep.statement.arguments.join(
-      ", "
-    )})`;
+    return `${goalStep.statement.function}(${goalStep.statement.arguments
+      .map((arg) => arg.v)
+      .join(", ")})`;
   }
 
   // Fallback: look for goal in title
@@ -304,6 +288,7 @@ const checkReasonApplication = (
       // }
 
       // Create geometric objects from the arguments
+
       dependencyArgs.push(depArgs.map((arg) => getGeometricObject(arg, ctx)));
     }
 
@@ -860,72 +845,69 @@ const checkGeometricObjects = (proof: Proof): Array<string> => {
   for (const step of proof.steps) {
     if (step.statement?.arguments) {
       for (const arg of step.statement.arguments) {
-        // Check segments (2 characters, no prefix)
-        if (
-          arg.length === 2 &&
-          !arg.startsWith("a_") &&
-          !arg.startsWith("t_")
-        ) {
-          if (hasDuplicateChars(arg)) {
-            logError.parser.duplicatePointsInObject(arg);
-            errors.push(`Segment '${arg}' contains duplicate points`);
-            continue;
-          }
-          checkPointsDefined(arg, arg.split(""));
-        }
-
-        // Check angles (starts with 'a_', then 3 characters)
-        if (arg.startsWith("a_")) {
-          const anglePoints = arg.substring(2);
-          if (anglePoints.length !== 3) {
-            logError.parser.invalidAngleFormat(arg);
-            errors.push(
-              `Invalid angle format: '${arg}' - angles must have exactly 3 points`
-            );
-            continue;
-          }
-          if (hasDuplicateChars(anglePoints)) {
-            logError.parser.duplicatePointsInObject(arg);
-            errors.push(`Angle '${arg}' contains duplicate points`);
-            continue;
-          }
-          checkPointsDefined(arg, anglePoints.split(""));
-        }
-
-        // Check triangles (starts with 't_', then 3 characters)
-        if (arg.startsWith("t_")) {
-          const trianglePoints = arg.substring(2);
-          if (trianglePoints.length !== 3) {
-            logError.parser.invalidTriangleFormat(arg);
-            errors.push(
-              `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`
-            );
-            continue;
-          }
-          if (hasDuplicateChars(trianglePoints)) {
-            logError.parser.duplicatePointsInObject(arg);
-            errors.push(`Triangle '${arg}' contains duplicate points`);
-            continue;
-          }
-          checkPointsDefined(arg, trianglePoints.split(""));
-        }
-
-        // Check quadrilaterals (starts with 'q_', then 4 characters)
-        if (arg.startsWith("q_")) {
-          const quadrilateralPoints = arg.substring(2);
-          if (quadrilateralPoints.length !== 4) {
-            logError.parser.invalidQuadrilateralFormat(arg);
-            errors.push(
-              `Invalid quadrilateral format: '${arg}' - quadrilaterals must have exactly 4 points`
-            );
-            continue;
-          }
-          if (hasDuplicateChars(quadrilateralPoints)) {
-            logError.parser.duplicatePointsInObject(arg);
-            errors.push(`Quadrilateral '${arg}' contains duplicate points`);
-            continue;
-          }
-          checkPointsDefined(arg, quadrilateralPoints.split(""));
+        switch (arg.type) {
+          case Obj.Segment:
+            if (hasDuplicateChars(arg.v)) {
+              logError.parser.duplicatePointsInObject(arg.v);
+              errors.push(`Segment '${arg.v}' contains duplicate points`);
+              break;
+            }
+            checkPointsDefined(arg.v, arg.v.split(""));
+            break;
+          case Obj.Angle:
+            if (arg.v.length !== 3) {
+              logError.parser.invalidAngleFormat(arg.v);
+              errors.push(
+                `Invalid angle format: '${arg}' - angles must have exactly 3 points`
+              );
+              break;
+            }
+            if (hasDuplicateChars(arg.v)) {
+              logError.parser.duplicatePointsInObject(arg.v);
+              errors.push(`Angle '${arg.v}' contains duplicate points`);
+              break;
+            }
+            checkPointsDefined(arg.v, arg.v.split(""));
+            break;
+          case Obj.Triangle:
+            if (arg.v.length !== 3) {
+              logError.parser.invalidTriangleFormat(arg.v);
+              errors.push(
+                `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`
+              );
+              break;
+            }
+            if (hasDuplicateChars(arg.v)) {
+              logError.parser.duplicatePointsInObject(arg.v);
+              errors.push(`Triangle '${arg.v}' contains duplicate points`);
+              break;
+            }
+            checkPointsDefined(arg.v, arg.v.split(""));
+            break;
+          case Obj.Quadrilateral:
+            if (arg.v.length !== 4) {
+              logError.parser.invalidQuadrilateralFormat(arg.v);
+              errors.push(
+                `Invalid quadrilateral format: '${arg.v}' - quadrilaterals must have exactly 4 points`
+              );
+              break;
+            }
+            if (hasDuplicateChars(arg.v)) {
+              logError.parser.duplicatePointsInObject(arg.v);
+              errors.push(`Quadrilateral '${arg.v}' contains duplicate points`);
+              break;
+            }
+            checkPointsDefined(arg.v, arg.v.split(""));
+            break;
+          case Obj.Point:
+            if (!definedPoints.has(arg.v)) {
+              logError.parser.undefinedPointInObject(arg.v, "point");
+              errors.push(`Point '${arg.v}' is not defined in premises`);
+              continue;
+            }
+            break;
+          default:
+            throw createError.geometric.cannotParseGeometricObject(arg.v);
         }
       }
     }
@@ -988,7 +970,7 @@ const checkGoalMatch = (
 
   // Check each argument
   for (let i = 0; i < expectedArgs.length; i++) {
-    if (finalStatement.arguments[i] !== expectedArgs[i]) {
+    if (finalStatement.arguments[i].v !== expectedArgs[i]) {
       return {
         matches: false,
         details: `Argument ${i + 1} mismatch: expected '${
@@ -1002,7 +984,7 @@ const checkGoalMatch = (
     matches: true,
     details: `Goal matched: ${
       finalStatement.function
-    }(${finalStatement.arguments.join(", ")})`,
+    }(${finalStatement.arguments.map((arg) => arg.v).join(", ")})`,
   };
 };
 
@@ -1074,20 +1056,20 @@ const checkProof = (filePath: string): void => {
       ) {
         if (step.statement.function === "con_seg") {
           // Given congruent segments - ensure both segments exist
-          step.statement.arguments.forEach((arg: string) => {
-            ctx.addSegmentFromStr(arg);
+          step.statement.arguments.forEach((arg: ParseObj) => {
+            ctx.addSegmentFromStr(arg.v);
           });
         } else if (step.statement.function === "con_ang") {
           // Given congruent angles - ensure both angles exist
-          step.statement.arguments.forEach((arg: string) => {
-            if (arg.startsWith("a_")) {
-              ctx.addAngleFromStr(arg.substring(2));
+          step.statement.arguments.forEach((arg: ParseObj) => {
+            if (arg.type === Obj.Angle) {
+              ctx.addAngleFromStr(arg.v);
             }
           });
         } else if (step.statement.function === "on_line") {
           const [seg, pt] = step.statement.arguments;
-          const s = ctx.addSegmentFromStr(seg);
-          const p = ctx.getPoint(pt);
+          const s = ctx.addSegmentFromStr(seg.v);
+          const p = ctx.getPoint(pt.v);
           p.addOnLine(s);
           const ps2 = ctx.addSegmentFromStr(`${p.label}${s.p2.label}`);
           const ps1 = ctx.addSegmentFromStr(`${s.p1.label}${p.label}`);
@@ -1098,30 +1080,30 @@ const checkProof = (filePath: string): void => {
           const [seg1, seg2, point] = step.statement.arguments;
 
           // Check if the intersection point exists in premises
-          if (!proof.premises.points.includes(point)) {
-            logError.parser.missingPointInPremises(point);
+          if (!proof.premises.points.includes(point.v)) {
+            logError.parser.missingPointInPremises(point.v);
             throw new Error(
               `Point '${point}' is used in intersect_seg but not defined in premises`
             );
           }
 
-          const s1 = ctx.addSegmentFromStr(seg1);
-          const s2 = ctx.addSegmentFromStr(seg2);
-          const p = ctx.getPoint(point);
+          const s1 = ctx.addSegmentFromStr(seg1.v);
+          const s2 = ctx.addSegmentFromStr(seg2.v);
+          const p = ctx.getPoint(point.v);
 
-          seg1.split("").forEach((pt) => {
+          seg1.v.split("").forEach((pt) => {
             const subSeg = ctx.addSegmentFromStr(`${p.label}${pt}`);
             s1.addSubSegment(subSeg);
             subSeg.addParentSegment(s1);
           });
-          seg2.split("").forEach((pt) => {
+          seg2.v.split("").forEach((pt) => {
             const subSeg = ctx.addSegmentFromStr(`${p.label}${pt}`);
             s2.addSubSegment(subSeg);
             subSeg.addParentSegment(s2);
           });
         } else if (step.statement.function === "transversal") {
           const [s1p1, s1p2, p1, s2p1, s2p2, p2] = step.statement.arguments.map(
-            (arg) => ctx.getPoint(arg)
+            (arg) => ctx.getPoint(arg.v)
           );
           const [s1, s2] = [
             ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
@@ -1131,8 +1113,8 @@ const checkProof = (filePath: string): void => {
           p1.addOnLine(s1);
           p2.addOnLine(s2);
         } else if (step.statement.function === "midpt") {
-          const s = ctx.addSegmentFromStr(step.statement.arguments[0]);
-          const p = ctx.getPoint(step.statement.arguments[1]);
+          const s = ctx.addSegmentFromStr(step.statement.arguments[0].v);
+          const p = ctx.getPoint(step.statement.arguments[1].v);
           p.addOnLine(s);
           ctx.addSegmentFromStr(`${p.label}${s.p2.label}`).addParentSegment(s);
           ctx.addSegmentFromStr(`${s.p1.label}${p.label}`).addParentSegment(s);

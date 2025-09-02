@@ -14,8 +14,10 @@ export const right = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  const [s1, s2] = perp.arguments.map((arg) => tempCtx.addSegmentFromStr(arg));
-  const r = tempCtx.addAngleFromStr(right.arguments[0]);
+  const [s1, s2] = perp.arguments.map((arg) =>
+    tempCtx.addSegmentFromStr(arg.v)
+  );
+  const r = tempCtx.addAngleFromStr(right.arguments[0].v);
 
   let valid = false;
   // angle includes one of the segments and a point from the other
@@ -37,11 +39,13 @@ export const vert_ang = (
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
   const [s1, s2, pt]: [Segment, Segment, Point] = [
-    tempCtx.addSegmentFromStr(intersect_seg.arguments[0]),
-    tempCtx.addSegmentFromStr(intersect_seg.arguments[1]),
-    tempCtx.getPoint(intersect_seg.arguments[2]),
+    tempCtx.addSegmentFromStr(intersect_seg.arguments[0].v),
+    tempCtx.addSegmentFromStr(intersect_seg.arguments[1].v),
+    tempCtx.getPoint(intersect_seg.arguments[2].v),
   ];
-  const [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg));
+  const [a1, a2] = conAng.arguments.map((arg) =>
+    tempCtx.addAngleFromStr(arg.v)
+  );
 
   // Check that angles don't include segment names (vertical angles must be across from each other)
   const anglesValid =
@@ -66,10 +70,12 @@ export const vert_ang = (
 export const ang_bisect = (conAng: Stmt, bisect: Stmt, ctx: DiagramContent) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
 
-  const [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg));
+  const [a1, a2] = conAng.arguments.map((arg) =>
+    tempCtx.addAngleFromStr(arg.v)
+  );
   const [ang, seg] = [
-    tempCtx.addAngleFromStr(bisect.arguments[0]),
-    tempCtx.addSegmentFromStr(bisect.arguments[1]),
+    tempCtx.addAngleFromStr(bisect.arguments[0].v),
+    tempCtx.addSegmentFromStr(bisect.arguments[1].v),
   ];
 
   // check if corner of a1/a2 is on seg + corner of ang

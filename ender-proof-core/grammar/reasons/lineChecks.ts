@@ -14,16 +14,18 @@ export const altint = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  let [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg));
+  let [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg.v));
   const [s1p1, s1p2, p1, s2p1, s2p2, p2] = transversal.arguments.map((arg) =>
-    tempCtx.getPoint(arg)
+    tempCtx.getPoint(arg.v)
   );
   const [s1, s2, t] = [
     tempCtx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
     tempCtx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`),
     tempCtx.addSegmentFromStr(`${p1.label}${p2.label}`),
   ];
-  let [pa1, pa2] = para.arguments.map((arg) => tempCtx.addSegmentFromStr(arg));
+  let [pa1, pa2] = para.arguments.map((arg) =>
+    tempCtx.addSegmentFromStr(arg.v)
+  );
 
   if (pa1.equals(s2) && pa2.equals(s1)) {
     // reassign so p1 and p2 correspond to s1 and s2
@@ -57,9 +59,9 @@ export const altint = (
     angleCheck = false;
   }
   if (segmentCheck && angleCheck) {
-    conAng.arguments.map((arg) => ctx.addAngleFromStr(arg));
+    conAng.arguments.map((arg) => ctx.addAngleFromStr(arg.v));
     ctx.addSegmentFromStr(`${p1.label}${p2.label}`);
-    para.arguments.map((arg) => ctx.addSegmentFromStr(arg));
+    para.arguments.map((arg) => ctx.addSegmentFromStr(arg.v));
   }
   return segmentCheck && angleCheck;
 };
@@ -67,11 +69,11 @@ export const altint = (
 export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: DiagramContent) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
   const [s1, s2] = conSeg.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg)
+    tempCtx.addSegmentFromStr(arg.v)
   );
   const [bigSeg, midpt] = [
-    tempCtx.addSegmentFromStr(midPt.arguments[0]),
-    tempCtx.getPoint(midPt.arguments[1]),
+    tempCtx.addSegmentFromStr(midPt.arguments[0].v),
+    tempCtx.getPoint(midPt.arguments[1].v),
   ];
 
   // segments declared to be congruent and be part of the line declared to be bisected
@@ -87,11 +89,11 @@ export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: DiagramContent) => {
 
 export const perp = (right: Stmt, perp: Stmt, ctx: DiagramContent): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  const angle = tempCtx.addAngleFromStr(right.arguments[0]);
+  const angle = tempCtx.addAngleFromStr(right.arguments[0].v);
 
   const [s1, s2] = [
-    tempCtx.addSegmentFromStr(perp.arguments[0]),
-    tempCtx.addSegmentFromStr(perp.arguments[1]),
+    tempCtx.addSegmentFromStr(perp.arguments[0].v),
+    tempCtx.addSegmentFromStr(perp.arguments[1].v),
   ];
   const intersectPt = getIntersectPt(s1, s2);
   if (intersectPt) {
@@ -107,8 +109,12 @@ export const perp = (right: Stmt, perp: Stmt, ctx: DiagramContent): boolean => {
 
 export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: DiagramContent) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  const [s1, s2] = perp.arguments.map((arg) => tempCtx.addSegmentFromStr(arg));
-  const [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg));
+  const [s1, s2] = perp.arguments.map((arg) =>
+    tempCtx.addSegmentFromStr(arg.v)
+  );
+  const [a1, a2] = conAng.arguments.map((arg) =>
+    tempCtx.addAngleFromStr(arg.v)
+  );
   const intersectPt = getIntersectPt(s1, s2);
   if (intersectPt) {
     // TODO check for shared side AND angle made up of one point on the line

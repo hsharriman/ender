@@ -4,7 +4,7 @@ import { conSegMapper } from "./argMappers";
 
 export const rectangle = (rect: Stmt, conSeg: Stmt, ctx: DiagramContent) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  const quad = tempCtx.addQuadrilateralFromStr(rect.arguments[0]);
+  const quad = tempCtx.addQuadrilateralFromStr(rect.arguments[0].v);
   const [s1, s2] = conSegMapper(conSeg, tempCtx);
 
   return (
@@ -21,7 +21,7 @@ export const parallelogram2 = (
   ctx: DiagramContent
 ) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  const quad = tempCtx.addQuadrilateralFromStr(para.arguments[0]);
+  const quad = tempCtx.addQuadrilateralFromStr(para.arguments[0].v);
   const [s1, s2] = conSegMapper(pgram, tempCtx);
 
   return (
