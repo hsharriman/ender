@@ -9,6 +9,8 @@ export class Segment extends BaseGeometryObject {
   public readonly p2: Point;
   public readonly id: string;
   public ticks: Map<string, { type: TickType; num: number }>; // frame to tick
+  private subSegments: Set<Segment> = new Set();
+  private parentSegment: Set<Segment> = new Set();
   constructor(props: SegmentProps) {
     super(Obj.Segment, props);
     this.p1 = props.p1;
@@ -59,4 +61,28 @@ export class Segment extends BaseGeometryObject {
   contains = (pt: Point) => {
     return this.label.includes(pt.label);
   };
+
+  addSubSegment = (s: Segment) => {
+    if (!this.subSegments.has(s)) {
+      this.subSegments.add(s);
+      s.addParentSegment(this);
+    }
+    return this;
+  };
+
+  addParentSegment = (s: Segment) => {
+    if (!this.parentSegment.has(s)) {
+      this.parentSegment.add(s);
+      s.addSubSegment(this);
+    }
+    return this;
+  };
+
+  getSubSegments = () => this.subSegments;
+
+  getParentSegments = () => this.parentSegment;
+
+  isSubSegment = (s: Segment) => this.parentSegment.add(s);
+
+  isParentSegment = (s: Segment) => this.subSegments.has(s);
 }

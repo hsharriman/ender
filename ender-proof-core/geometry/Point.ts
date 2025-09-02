@@ -1,6 +1,7 @@
 import { PointProps, ShowPoint } from "../types/geometryTypes";
 import { LPoint, Obj, Vector } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
+import { Segment } from "./Segment";
 
 export class Point extends BaseGeometryObject {
   // 1 point and label
@@ -8,6 +9,7 @@ export class Point extends BaseGeometryObject {
   public readonly id: string;
   readonly showPoint: ShowPoint;
   public offset: Vector = [5, 5];
+  private onLine: Set<Segment> = new Set();
   constructor(props: PointProps) {
     super(Obj.Point, props);
     this.pt = props.pt;
@@ -25,6 +27,18 @@ export class Point extends BaseGeometryObject {
 
   setOffset = (offset: Vector) => {
     this.offset = offset;
+  };
+
+  addOnLine = (s: Segment) => {
+    this.onLine.add(s);
+  };
+
+  isOnLine = (s: Segment) => {
+    return this.onLine.has(s);
+  };
+
+  equals = (p: Point) => {
+    return this.names.has(p.label);
   };
 
   // deprecated - DOM manipulation removed for package independence

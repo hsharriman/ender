@@ -29,13 +29,9 @@ TODO:
 - handle line extensions/ indicating when a point is on a line
 - add checks for geometric reasons:
   - easier:
-  - rectangle
   - parallelogram
   - angle bisector
   - perpendicular bisector
-  - quadrilateral
+
   - harder:
-  - perp lines (should use on_line or specify a version where lines are perp but cross instead of intersect)
-  - midpoint / segment bisector (needs on_line)
-  - converse midpoint
   - congruent adjacent angles

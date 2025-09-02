@@ -86,6 +86,7 @@ const proofKeywords: moo.Rules = {
   tri: "tri",
   seg: "seg",
   ang: "ang",
+  quad: "quad",
   // Step numbers: [01], [12], etc.
   stepNumber: /\[0*(?:\d+)\]/,
   // Geometric objects
@@ -93,6 +94,7 @@ const proofKeywords: moo.Rules = {
   segment: /[A-Z]{2}/,
   angle: /a_[A-Z]{3}/,
   triangle: /t_[A-Z]{3}/,
+  quadrilateral: /q_[A-Z]{4}/,
   // Statement references: [01], [12], etc.
   statementRef: /\[0*(?:\d+)\]/,
   // Coordinates: (-1.5, 2.0) format

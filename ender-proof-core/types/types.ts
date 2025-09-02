@@ -57,11 +57,16 @@ export enum AspectRatio {
 }
 export interface Stmt {
   function: string;
-  arguments: string[];
+  arguments: ParseObj[];
   stepNumber?: string;
 }
 
 export interface Reason {
   function: string;
   arguments: string[];
+}
+
+export interface ParseObj {
+  type: Obj.Point | Obj.Segment | Obj.Angle | Obj.Triangle | Obj.Quadrilateral;
+  v: string;
 }

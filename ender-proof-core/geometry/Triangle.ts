@@ -1,6 +1,6 @@
 import { logError } from "../errors/errorConstants.js";
 import { TriangleProps } from "../types/geometryTypes";
-import { Obj, SVGModes } from "../types/types";
+import { Obj, ParseObj, SVGModes } from "../types/types";
 import { Angle } from "./Angle";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { DiagramContent } from "./DiagramContent";
@@ -139,11 +139,11 @@ export class Triangle extends BaseGeometryObject {
     return this;
   };
 
-  containsObjByStr = (obj: string) => {
-    if (obj.length === 2) {
-      return this.s.some((seg) => seg.names.has(obj));
-    } else if (obj.length === 3) {
-      return this.a.some((ang) => ang.names.has(obj));
+  containsParseObj = (obj: ParseObj) => {
+    if (obj.type === Obj.Segment) {
+      return this.s.some((seg) => seg.names.has(obj.v));
+    } else if (obj.type === Obj.Angle) {
+      return this.a.some((ang) => ang.names.has(obj.v));
     }
     return false;
   };

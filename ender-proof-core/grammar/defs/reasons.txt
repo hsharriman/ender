@@ -28,6 +28,15 @@ reason intersect_seg() -> intersect_seg
 // reflexive property: any segment is congruent to itself
 reason reflex_s() -> con_seg
 
+// definition of perpendicular lines
+reason perp(right) -> perp
+
+// definition of midpoint
+reason midpt(midpt) -> con_seg
+
+// converse of definition of midpoint
+reason midpt_conv(con_seg) -> midpt
+
 
 // ------------ Angle Reasons ------------ 
 // right angle: the angle formed by two perpendicular (perp) lines is 90 degrees
@@ -39,37 +48,37 @@ reason reflex_a() -> con_ang
 // vertical angles
 reason vert_ang(intersect_seg) -> con_ang
 
-
-// ------------ not implemented ------------ 
 // converse of alternate interior angles (given that alternate interior angles are congruent, can conclude that lines are parallel)
 reason altint_conv(con_ang, transversal) -> para
 
 // alternate interior angles (given that parallel lines crossed by a transversal, can conclude alternate interior angles are congruent)
 reason altint(para, transversal) -> con_ang 
 
-// definition of perpendicular lines
-reason perp(right, on_line) -> perp
+// angle bisector
+reason ang_bisect(ang_bisect) -> con_ang
 
-// definition of midpoint
-reason midpt(con_seg, on_line) -> midpt
+// converse of angle bisector
+reason ang_bisect_conv(con_ang) -> ang_bisect
 
-// converse of definition of midpoint
-reason midpt_conv(midpt) -> con_seg, on_line
+// congruent right angles
+reason con_right(right, right) -> con_ang
 
-// definition of rectangle
-reason rectangle(con_seg) -> rectangle
+// TODO
+reason perp_con_ang(perp) -> con_ang
 
-// equilateral triangle
-reason equilateral(con_seg, con_seg) -> equilateral
-
+// ------------ Polygon Reasons ------------ 
 // definition of parallelogram (rectangle is type of parallelogram)
 reason paralellogram1(rectangle) -> parallelogram
 
 // definition of parallelogram (parallelogram has 2 sets of parallel sides)
 reason paralellogram2(para) -> parallelogram
 
-// angle bisector
-reason ang_bisect(con_ang) -> ang_bisect
+// definition of rectangle
+reason rectangle(con_seg) -> rectangle
+
+
+// not implemented
+reason equilateral(con_seg, con_seg) -> equilateral
 
 // angle-angle-angle triangle similarity
 reason aaa(con_ang, con_ang, con_ang) -> sim_tri

@@ -1,4 +1,5 @@
 import { LRParser } from "@lezer/lr";
+import { Obj, ParseObj } from "../types/types.js";
 import { lexer } from "./parser";
 import { loadReasonDefinitions } from "./reasonParser.js";
 
@@ -15,6 +16,37 @@ export class ProofParser {
     // TODO: Load the generated parser from proof.grammar
     // this.parser = require("./proof.grammar.js");
   }
+
+  // Helper function to parse objects
+  private parseObj = (arg: string): ParseObj => {
+    if (arg.startsWith("a_")) {
+      return {
+        type: Obj.Angle,
+        v: arg.substring(2),
+      };
+    } else if (arg.startsWith("t_")) {
+      return {
+        type: Obj.Triangle,
+        v: arg.substring(2),
+      };
+    } else if (arg.startsWith("q_")) {
+      return {
+        type: Obj.Quadrilateral,
+        v: arg.substring(2),
+      };
+    } else if (arg.length === 2) {
+      return {
+        type: Obj.Segment,
+        v: arg,
+      };
+    } else if (arg.length === 1) {
+      return {
+        type: Obj.Point,
+        v: arg,
+      };
+    }
+    throw new Error(`Cannot parse geometric object: ${arg}`);
+  };
 
   parse(input: string) {
     this.lexer.reset(input);
@@ -37,6 +69,7 @@ export class ProofParser {
       premises: {
         points: [] as string[],
         triangles: [] as string[],
+        quadrilaterals: [] as string[],
         segments: [] as string[],
         angles: [] as string[],
       },
@@ -83,6 +116,18 @@ export class ProofParser {
                 i++;
                 while (i < tokens.length && tokens[i].type === "triangle") {
                   result.premises.triangles.push(tokens[i].value);
+                  i++;
+                }
+              }
+            } else if (tokens[i].type === "quad") {
+              i++;
+              if (i < tokens.length && tokens[i].type === "colon") {
+                i++;
+                while (
+                  i < tokens.length &&
+                  tokens[i].type === "quadrilateral"
+                ) {
+                  result.premises.quadrilaterals.push(tokens[i].value);
                   i++;
                 }
               }
@@ -179,7 +224,7 @@ export class ProofParser {
     let i = startIndex;
     const statement = {
       function: null as string | null,
-      arguments: [] as string[],
+      arguments: [] as ParseObj[],
       stepNumber: null as string | null,
     };
 
@@ -193,10 +238,12 @@ export class ProofParser {
           if (tokens[i].type === "point") {
             // Check if this is part of a segment (two consecutive points)
             if (i + 1 < tokens.length && tokens[i + 1].type === "point") {
-              statement.arguments.push(tokens[i].value + tokens[i + 1].value);
+              statement.arguments.push(
+                this.parseObj(tokens[i].value + tokens[i + 1].value)
+              );
               i += 2;
             } else {
-              statement.arguments.push(tokens[i].value);
+              statement.arguments.push(this.parseObj(tokens[i].value));
               i++;
             }
           } else if (
@@ -205,7 +252,7 @@ export class ProofParser {
             tokens[i].type === "triangle" ||
             tokens[i].type === "statementRef"
           ) {
-            statement.arguments.push(tokens[i].value);
+            statement.arguments.push(this.parseObj(tokens[i].value));
             i++;
           } else {
             i++;

@@ -16,12 +16,14 @@
   tri { "tri" }
   seg { "seg" }
   ang { "ang" }
+  quad { "quad" }
   
   // Geometric objects
   point { [A-Z] }
   segment { [A-Z][A-Z] }
   angle { "a_" [A-Z][A-Z][A-Z] }
   triangle { "t_" [A-Z][A-Z][A-Z] }
+  quadrilateral { "q_" [A-Z][A-Z][A-Z][A-Z] }
   
   // Step numbers and references
   stepNumber { "[" [0-9]+ "]" }
@@ -35,7 +37,7 @@
   stmt_name { [a-z][a-z0-9_]* }
   
   // Parameter types and names
-  param_type { "Segment" | "Angle" | "Triangle" | "Point" }
+  param_type { "Segment" | "Angle" | "Triangle" | "Point" | "Quadrilateral" }
   param_name { [a-z][a-z0-9]* | "intersect" }
   
   // Basic symbols
@@ -80,6 +82,7 @@ PremiseList {
 PremiseItem {
   PointList |
   TriangleList |
+  QuadrilateralList |
   SegmentList |
   AngleList
 }
@@ -90,6 +93,10 @@ PointList {
 
 TriangleList {
   tri colon space* triangle (space* triangle)*
+}
+
+QuadrilateralList {
+  quad colon space* quadrilateral (space* quadrilateral)*
 }
 
 SegmentList {

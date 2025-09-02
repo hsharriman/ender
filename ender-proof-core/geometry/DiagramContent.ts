@@ -14,7 +14,7 @@ import { Segment } from "./Segment";
 import { Triangle } from "./Triangle";
 
 export class DiagramContent {
-  private ctx: DiagramCtx;
+  ctx: DiagramCtx;
   constructor(prevCtx?: DiagramCtx) {
     this.ctx = prevCtx ?? {
       points: [],
@@ -58,13 +58,12 @@ export class DiagramContent {
   addSegment = (props: SegmentProps) => {
     let s = new Segment(props);
     if (!this.getSegment(s.label)) this.ctx.segments.push(s);
-    return s;
+    return this.getSegment(s.label) ?? s;
   };
 
   addAngle = (props: AngleProps) => {
     let a = new Angle(props);
-    if (!this.getAngle(a.label)) this.ctx.angles.push(a);
-    return a;
+    return this.getAngle(a.label) ?? this.overlap(a);
   };
 
   addTriangle = (props: TriangleProps) => {
@@ -74,7 +73,7 @@ export class DiagramContent {
       this.addSegments(t.s);
       this.addAngles(t.a);
     }
-    return t;
+    return this.getTriangle(t.label) ?? t;
   };
 
   addQuadrilateral = (props: QuadrilateralProps) => {
@@ -84,7 +83,7 @@ export class DiagramContent {
       this.addSegments(q.s);
       this.addAngles(q.a);
     }
-    return q;
+    return this.getQuadrilateral(q.label) ?? q;
   };
 
   addPoints = (propsArr: PointProps[]) => {
@@ -113,11 +112,25 @@ export class DiagramContent {
   };
 
   addTriangleFromStr = (str: string) => {
+    if (str.startsWith("t_")) {
+      str = str.slice(2);
+    }
     const [a, b, c] = str.split("").map((c) => this.getPoint(c));
     return this.addTriangle({ pts: [a, b, c] });
   };
 
+  addQuadrilateralFromStr = (str: string) => {
+    if (str.startsWith("q_")) {
+      str = str.slice(2);
+    }
+    const [a, b, c, d] = str.split("").map((c) => this.getPoint(c));
+    return this.addQuadrilateral({ pts: [a, b, c, d] });
+  };
+
   addAngleFromStr = (str: string) => {
+    if (str.startsWith("a_")) {
+      str = str.slice(2);
+    }
     const [a, b, c] = str.split("").map((c) => this.getPoint(c));
     return this.addAngle({ start: a, center: b, end: c });
   };
@@ -132,4 +145,72 @@ export class DiagramContent {
     this.ctx.triangles.filter((t) => t.matches(label))[0];
   getQuadrilateral = (label: string) =>
     this.ctx.rectangles.filter((r) => r.matches(label))[0];
+
+  checkAngleOverlaps = () => {
+    this.ctx.angles.forEach((a) => this.overlap(a));
+  };
+
+  overlap = (a: Angle) => {
+    const [s, c, e] = a.label.split("");
+    // get segments that form the angle
+    const s1 = this.getSegment(`${s}${c}`);
+    const s2 = this.getSegment(`${c}${e}`);
+    let overlapsExisting = false;
+
+    const findOverlaps = (segSet: Set<Segment>, angleEnd: string) => {
+      if (segSet.size > 0) {
+        segSet.forEach((s) => {
+          // add an overlapping angle if the center of the angle is one of the segment endpoints
+          if (s.label.includes(c)) {
+            const overlapLabel = `${angleEnd}${c}${s.label.replace(c, "")}`;
+            // does overlapping angle already exist in ctx?
+            const existingAngle = this.getAngle(overlapLabel);
+            if (existingAngle) {
+              overlapsExisting = true;
+              existingAngle.addNames(angleEnd, s.label.replace(c, ""));
+            } else {
+              // overlapping angle isn't tracked, add it to original angle
+              a.addNames(angleEnd, s.label.replace(c, ""));
+            }
+          }
+        });
+      }
+    };
+    // check for overlaps with parent segments
+    findOverlaps(s1.getParentSegments(), a.end.label);
+    findOverlaps(s2.getParentSegments(), a.start.label);
+
+    // check for overlaps with sub segments
+    findOverlaps(s1.getSubSegments(), a.start.label);
+    findOverlaps(s2.getSubSegments(), a.end.label);
+
+    // if doesn't overlap with existing angles, add the angle to the ctx
+    if (!overlapsExisting) {
+      this.ctx.angles.push(a);
+    }
+    return a;
+  };
+
+  print = () => {
+    console.log(
+      "pts",
+      this.ctx.points.map((p) => p.label)
+    );
+    console.log(
+      "segs",
+      this.ctx.segments.map((s) => s.label)
+    );
+    console.log(
+      "angs",
+      this.ctx.angles.map((a) => a.label)
+    );
+    console.log(
+      "tris",
+      this.ctx.triangles.map((t) => t.label)
+    );
+    console.log(
+      "quads",
+      this.ctx.rectangles.map((q) => q.label)
+    );
+  };
 }

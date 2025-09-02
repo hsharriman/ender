@@ -1,0 +1,11 @@
+title: "S1INC2 - Prove Angles Congruent #2"
+premises:
+pt: J, K, L, M
+tri: t_JMK t_LMK
+perp(JL,KM) [01]
+con_seg(JK,LK) [02]
+-> con_tri(t_JMK,t_LMK)
+
+steps:
+sas([01], [02], [03]) -> con_tri(t_ABD,t_CDB) [04]  // Missing dependency
+cpctc([04]) -> con_ang(a_BAD,a_DCB) [05]  // Based on invalid reason

@@ -20,6 +20,8 @@ export const ErrorMessages = {
   GEOMETRIC: {
     ANGLE_NOT_FOUND: (arg: string) => `Angle ${arg} not found in context`,
     TRIANGLE_NOT_FOUND: (arg: string) => `Triangle ${arg} not found in context`,
+    QUADRILATERAL_NOT_FOUND: (arg: string) =>
+      `Quadrilateral ${arg} not found in context`,
     SEGMENT_NOT_FOUND: (arg: string) => `Segment ${arg} not found in context`,
     POINT_NOT_FOUND: (arg: string) => `Point ${arg} not found in context`,
     CANNOT_PARSE_GEOMETRIC_OBJECT: (arg: string) =>
@@ -63,6 +65,8 @@ export const ErrorMessages = {
       `Invalid angle format: '${angle}' - angles must have exactly 3 distinct points`,
     INVALID_TRIANGLE_FORMAT: (triangle: string) =>
       `Invalid triangle format: '${triangle}' - triangles must have exactly 3 distinct points`,
+    INVALID_QUADRILATERAL_FORMAT: (quadrilateral: string) =>
+      `Invalid quadrilateral format: '${quadrilateral}' - quadrilaterals must have exactly 4 distinct points`,
     UNDEFINED_POINT_IN_OBJECT: (point: string, object: string) =>
       `Point '${point}' in '${object}' is not defined in premises`,
     DUPLICATE_POINTS_IN_OBJECT: (object: string) =>
@@ -128,6 +132,8 @@ export const createError = {
       new Error(ErrorMessages.GEOMETRIC.ANGLE_NOT_FOUND(arg)),
     triangleNotFound: (arg: string) =>
       new Error(ErrorMessages.GEOMETRIC.TRIANGLE_NOT_FOUND(arg)),
+    quadrilateralNotFound: (arg: string) =>
+      new Error(ErrorMessages.GEOMETRIC.QUADRILATERAL_NOT_FOUND(arg)),
     segmentNotFound: (arg: string) =>
       new Error(ErrorMessages.GEOMETRIC.SEGMENT_NOT_FOUND(arg)),
     pointNotFound: (arg: string) =>
@@ -263,6 +269,13 @@ export const logError = {
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
         } ${ErrorMessages.PARSER.INVALID_TRIANGLE_FORMAT(triangle)}`
+      ),
+    invalidQuadrilateralFormat: (quadrilateral: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.INVALID_QUADRILATERAL_FORMAT(quadrilateral)}`
       ),
     undefinedPointInObject: (point: string, object: string) =>
       shouldLog(LogLevel.ERROR) &&

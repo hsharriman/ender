@@ -11,6 +11,7 @@ export class Angle extends BaseGeometryObject {
   public readonly end: Point;
   public id: string;
   public ticks: Map<string, { type: TickType; num: number }>; // frame to tick
+  private parentAngle: Angle | null = null;
   constructor(props: AngleProps) {
     super(Obj.Angle, props);
     this.start = props.start;
@@ -66,7 +67,7 @@ export class Angle extends BaseGeometryObject {
 
   contains = (obj: Point | Segment) => {
     if (obj.tag === Obj.Point) {
-      return this.label.includes(obj.label);
+      return Array.from(this.names).some((name) => name.includes(obj.label));
     } else {
       const segSet = new Set(obj.label.split(""));
       return (
@@ -78,5 +79,19 @@ export class Angle extends BaseGeometryObject {
 
   centerEquals = (pt: Point) => {
     return this.center.isEqualTo(pt);
+  };
+
+  addParentAngle = (a: Angle) => {
+    this.parentAngle = a;
+    return this;
+  };
+
+  getParentAngle = () => {
+    return this.parentAngle;
+  };
+
+  addNames = (start: string, end: string) => {
+    this.names.add(`${start}${this.center.label}${end}`);
+    this.names.add(`${end}${this.center.label}${start}`);
   };
 }

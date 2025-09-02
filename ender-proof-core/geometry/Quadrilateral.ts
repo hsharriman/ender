@@ -95,4 +95,15 @@ export class Quadrilateral extends BaseGeometryObject {
     this.a.forEach((ang) => ang.mode(frameKey, mode));
     return this;
   };
+
+  contains = (s: Segment | Angle | Point) => {
+    if (s.tag === Obj.Segment) {
+      return this.s.some((seg) => seg.equals(s as Segment));
+    } else if (s.tag === Obj.Angle) {
+      return this.a.some((ang) => ang.equals(s as Angle));
+    } else if (s.tag === Obj.Point) {
+      return this.p.some((pt) => pt.equals(s as Point));
+    }
+    return false;
+  };
 }

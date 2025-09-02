@@ -1,0 +1,19 @@
+title: "S1C2 - Prove Midpoint #1"
+premises:
+pt: A, B, C, D
+tri: t_ABD t_CBD
+seg: AC
+ang: a_ABC
+right(a_ADB) [01]
+ang_bisect(a_ABC, BD) [02]
+on_line(AC, D) [03] // where should this be put? in givens or separate, i.e. "constructed s.t. D is on line AC"
+-> midpt(AC,D)
+
+steps:
+ang_bisect([02]) -> con_ang(a_ABD, a_DBC) [04]
+perp([01]) -> perp(BD, AC) [05]
+perp_con_ang([05]) -> con_ang(a_ADB, a_BDC) [06] // angles on perp are both 90
+reflex_s() -> con_seg(BD, BD) [07] 
+asa([06], [07], [04]) -> con_tri(t_ABD, t_CBD) [08]
+cpctc([08]) -> con_seg(AD, DC) [09]
+midpt_conv([09]) -> midpt(AC, D) [10]
