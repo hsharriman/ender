@@ -2,7 +2,8 @@ import { logError } from "../../errors/errorConstants.js";
 import { DiagramContent } from "../../geometry/DiagramContent";
 import { Triangle } from "../../geometry/Triangle";
 import { Stmt } from "../../types/types";
-import { angCenter, commonPt, stripAngPrefix, stripTriPrefix } from "./utils";
+import { conSegMapper, conTriMapper } from "./argMappers.js";
+import { angCenter, commonPt, stripAngPrefix } from "./utils";
 
 /**
  * Checks if two triangles meet the SAS (Side-Angle-Side) congruence requirements.
@@ -21,10 +22,7 @@ export const sas = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(conTri.arguments).map((arg) =>
-    tempCtx.addTriangleFromStr(arg)
-  );
+  const [tri1, tri2] = conTriMapper(conTri, tempCtx);
 
   const [s11, s21, s1Valid] = checkTriangleAssign(
     conSeg1.arguments,
@@ -47,6 +45,8 @@ export const sas = (
 
   // Check SAS pattern for triangle 2: both segments must contain the angle center point
   const triangle2SAS = s21.includes(center2) && s22.includes(center2);
+
+  console.log(s1Valid, s2Valid, aValid, triangle1SAS, triangle2SAS, a1, a2);
 
   const valid = triangle1SAS && triangle2SAS && s1Valid && s2Valid && aValid;
   if (valid) {
@@ -83,10 +83,7 @@ export const sss = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
-    tempCtx.addTriangleFromStr(obj)
-  );
+  const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Validate triangle assignments for each pair of segments
   const [s11, s21, seg1Valid] = checkTriangleAssign(
@@ -132,10 +129,7 @@ export const aas = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
-    tempCtx.addTriangleFromStr(obj)
-  );
+  const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Validate triangle assignments for each pair of segments
   const [a11, a21, ang1Valid] = checkTriangleAssign(
@@ -183,10 +177,7 @@ export const asa = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
-    tempCtx.addTriangleFromStr(obj)
-  );
+  const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Validate triangle assignments for each pair of segments
   const [a11, a21, ang1Valid] = checkTriangleAssign(
@@ -228,10 +219,7 @@ export const rhl = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
-    tempCtx.addTriangleFromStr(obj)
-  );
+  const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Validate triangle assignments for each pair of segments
   const [r1, r2, rightValid] = checkTriangleAssign(
@@ -289,10 +277,7 @@ export const cpctc = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  // Extract triangle names (remove t_ prefix)
-  const [tri1, tri2] = stripTriPrefix(t_cong.arguments).map((obj) =>
-    tempCtx.addTriangleFromStr(obj)
-  );
+  const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Check if the conclusion is a segment or angle congruence
   if (conclusion.function === "con_seg") {
@@ -303,13 +288,10 @@ export const cpctc = (
       tri2
     );
 
-    const [t1, t2] = [
-      tempCtx.addTriangleFromStr(tri1.label),
-      tempCtx.addTriangleFromStr(tri2.label),
-    ];
-
     // check that seg1 is the same index in tri1 as seg2 is in tri2
-    return segValid && t1.getSegmentIndex(seg1) === t2.getSegmentIndex(seg2);
+    return (
+      segValid && tri1.getSegmentIndex(seg1) === tri2.getSegmentIndex(seg2)
+    );
   } else if (conclusion.function === "con_ang") {
     // For angle congruence, check that both angles are parts of the congruent triangles
     const [ang1, ang2, angValid] = checkTriangleAssign(
@@ -334,12 +316,8 @@ export const isosceles = (
   ctx: DiagramContent
 ): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  const [s1, s2] = conSeg.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg)
-  );
-  const [t] = stripTriPrefix(isosceles.arguments).map((obj) =>
-    tempCtx.addTriangleFromStr(obj)
-  );
+  const [s1, s2] = conSegMapper(conSeg, tempCtx);
+  const [t] = conTriMapper(isosceles, tempCtx);
 
   const valid = t.contains(s1) && t.contains(s2) && !s1.equals(s2);
   if (valid) {

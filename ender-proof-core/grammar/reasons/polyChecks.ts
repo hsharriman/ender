@@ -1,14 +1,11 @@
 import { DiagramContent } from "../../geometry/DiagramContent";
 import { Stmt } from "../../types/types";
+import { conSegMapper } from "./argMappers";
 
 export const rectangle = (rect: Stmt, conSeg: Stmt, ctx: DiagramContent) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
   const quad = tempCtx.addQuadrilateralFromStr(rect.arguments[0]);
-
-  const [s1, s2] = [
-    tempCtx.addSegmentFromStr(conSeg.arguments[0]),
-    tempCtx.addSegmentFromStr(conSeg.arguments[1]),
-  ];
+  const [s1, s2] = conSegMapper(conSeg, tempCtx);
 
   return (
     quad.contains(s1) &&
@@ -25,11 +22,7 @@ export const parallelogram2 = (
 ) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
   const quad = tempCtx.addQuadrilateralFromStr(para.arguments[0]);
-
-  const [s1, s2] = [
-    tempCtx.addSegmentFromStr(pgram.arguments[0]),
-    tempCtx.addSegmentFromStr(pgram.arguments[1]),
-  ];
+  const [s1, s2] = conSegMapper(pgram, tempCtx);
 
   return (
     quad.contains(s1) &&

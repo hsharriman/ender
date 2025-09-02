@@ -112,16 +112,25 @@ export class DiagramContent {
   };
 
   addTriangleFromStr = (str: string) => {
+    if (str.startsWith("t_")) {
+      str = str.slice(2);
+    }
     const [a, b, c] = str.split("").map((c) => this.getPoint(c));
     return this.addTriangle({ pts: [a, b, c] });
   };
 
   addQuadrilateralFromStr = (str: string) => {
+    if (str.startsWith("q_")) {
+      str = str.slice(2);
+    }
     const [a, b, c, d] = str.split("").map((c) => this.getPoint(c));
     return this.addQuadrilateral({ pts: [a, b, c, d] });
   };
 
   addAngleFromStr = (str: string) => {
+    if (str.startsWith("a_")) {
+      str = str.slice(2);
+    }
     const [a, b, c] = str.split("").map((c) => this.getPoint(c));
     return this.addAngle({ start: a, center: b, end: c });
   };
@@ -180,5 +189,28 @@ export class DiagramContent {
       this.ctx.angles.push(a);
     }
     return a;
+  };
+
+  print = () => {
+    console.log(
+      "pts",
+      this.ctx.points.map((p) => p.label)
+    );
+    console.log(
+      "segs",
+      this.ctx.segments.map((s) => s.label)
+    );
+    console.log(
+      "angs",
+      this.ctx.angles.map((a) => a.label)
+    );
+    console.log(
+      "tris",
+      this.ctx.triangles.map((t) => t.label)
+    );
+    console.log(
+      "quads",
+      this.ctx.rectangles.map((q) => q.label)
+    );
   };
 }

@@ -13,16 +13,19 @@ reason intersect_seg() -> intersect_seg
 reason vert_ang(intersect_seg) -> con_ang
 reason altint_conv(con_ang, transversal) -> para
 reason altint(para, transversal) -> con_ang 
-reason midpt(con_seg) -> midpt
-reason midpt_conv(midpt) -> con_seg
+reason midpt(midpt) -> con_seg
+reason midpt_conv(con_seg) -> midpt
 reason isosceles(con_seg) -> isosceles
 reason perp(right) -> perp
+reason perp_con_ang(perp) -> con_ang
 reason rectangle(con_seg) -> rectangle
 reason paralellogram1(rectangle) -> parallelogram
 reason paralellogram2(para) -> parallelogram
+reason ang_bisect(ang_bisect) -> con_ang
+reason ang_bisect_conv(con_ang) -> ang_bisect
+reason con_right(right, right) -> con_ang
 
 // not implemented
 reason equilateral(con_seg, con_seg) -> equilateral
-reason ang_bisect(con_ang) -> ang_bisect
 
 reason aaa(con_ang, con_ang, con_ang) -> sim_tri

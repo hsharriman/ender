@@ -3,7 +3,6 @@ import { DiagramContent } from "../../geometry/DiagramContent";
 import { Point } from "../../geometry/Point";
 import { Segment } from "../../geometry/Segment";
 import { Stmt } from "../../types/types";
-import { stripAngPrefix } from "./utils";
 
 export const reflex_a = (a1: Angle, a2: Angle) => {
   return a1.equals(a2);
@@ -42,9 +41,7 @@ export const vert_ang = (
     tempCtx.addSegmentFromStr(intersect_seg.arguments[1]),
     tempCtx.getPoint(intersect_seg.arguments[2]),
   ];
-  const [a1, a2] = stripAngPrefix(conAng.arguments).map((arg) =>
-    tempCtx.addAngleFromStr(arg)
-  );
+  const [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg));
 
   // Check that angles don't include segment names (vertical angles must be across from each other)
   const anglesValid =
@@ -68,9 +65,8 @@ export const vert_ang = (
 
 export const ang_bisect = (conAng: Stmt, bisect: Stmt, ctx: DiagramContent) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  const [a1, a2] = stripAngPrefix(conAng.arguments).map((arg) =>
-    tempCtx.addAngleFromStr(arg)
-  );
+
+  const [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg));
   const [ang, seg] = [
     tempCtx.addAngleFromStr(bisect.arguments[0]),
     tempCtx.addSegmentFromStr(bisect.arguments[1]),

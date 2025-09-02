@@ -15,7 +15,11 @@ import { Segment } from "./geometry/Segment.js";
 import { Triangle } from "./geometry/Triangle.js";
 import { ProofParser } from "./grammar/lezerParser.js";
 import { loadReasonDefinitions } from "./grammar/reasonParser.js";
-import { reflex_a, vert_ang } from "./grammar/reasons/angleChecks.js";
+import {
+  ang_bisect,
+  reflex_a,
+  vert_ang,
+} from "./grammar/reasons/angleChecks.js";
 import { altint, midpt, perp, reflex_s } from "./grammar/reasons/lineChecks.js";
 import { parallelogram2, rectangle } from "./grammar/reasons/polyChecks.js";
 import {
@@ -300,9 +304,7 @@ const checkReasonApplication = (
       // }
 
       // Create geometric objects from the arguments
-      const obj1 = getGeometricObject(depArgs[0], ctx);
-      const obj2 = getGeometricObject(depArgs[1], ctx);
-      dependencyArgs.push([obj1, obj2]);
+      dependencyArgs.push(depArgs.map((arg) => getGeometricObject(arg, ctx)));
     }
 
     // Call the appropriate reason checker method
@@ -347,6 +349,18 @@ const checkReasonApplication = (
         const transversal_conv = getDepStmt(reason.arguments[1], proof);
         if (currStep.statement && conAng_conv && transversal_conv) {
           return altint(conAng_conv, transversal_conv, currStep.statement, ctx);
+        }
+        return false;
+      case "ang_bisect":
+        const bisect_bisect = getDepStmt(reason.arguments[0], proof);
+        if (currStep.statement && bisect_bisect) {
+          return ang_bisect(currStep.statement, bisect_bisect, ctx);
+        }
+        return false;
+      case "ang_bisect_conv":
+        const conAng_bisect_conv = getDepStmt(reason.arguments[0], proof);
+        if (currStep.statement && conAng_bisect_conv) {
+          return ang_bisect(conAng_bisect_conv, currStep.statement, ctx);
         }
         return false;
 
@@ -410,25 +424,22 @@ const checkReasonApplication = (
         return false;
 
       case "midpt":
-        const conSeg_midpt = getDepStmt(reason.arguments[0], proof);
-        const midPt_midpt = getDepStmt(reason.arguments[1], proof);
-        if (currStep.statement && conSeg_midpt && midPt_midpt) {
-          return midpt(conSeg_midpt, midPt_midpt, ctx);
+        const midPt_midpt = getDepStmt(reason.arguments[0], proof);
+        if (currStep.statement && midPt_midpt) {
+          return midpt(currStep.statement, midPt_midpt, ctx);
         }
         return false;
       case "midpt_conv":
         const conSeg_midpt_conv = getDepStmt(reason.arguments[0], proof);
-        const midPt_midpt_conv = getDepStmt(reason.arguments[1], proof);
-        if (currStep.statement && conSeg_midpt_conv && midPt_midpt_conv) {
-          return midpt(conSeg_midpt_conv, midPt_midpt_conv, ctx);
+        if (currStep.statement && conSeg_midpt_conv) {
+          return midpt(conSeg_midpt_conv, currStep.statement, ctx);
         }
         return false;
 
       case "perp":
         const right_perp = getDepStmt(reason.arguments[0], proof);
-        const perp_perp = getDepStmt(reason.arguments[1], proof);
-        if (currStep.statement && right_perp && perp_perp) {
-          return perp(right_perp, perp_perp, ctx);
+        if (currStep.statement && right_perp) {
+          return perp(right_perp, currStep.statement, ctx);
         }
         return false;
       case "rectangle":
@@ -454,7 +465,8 @@ const checkReasonApplication = (
       //     return intersect_seg(currStep.statement, ctx);
       //   }
       //   return false;
-
+      case "con_right":
+        return true;
       case "vert_ang":
         const intersect_vert = getDepStmt(reason.arguments[0], proof);
         if (currStep.statement && intersect_vert) {
