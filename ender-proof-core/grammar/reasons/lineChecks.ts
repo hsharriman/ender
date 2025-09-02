@@ -1,4 +1,5 @@
 import { DiagramContent } from "../../geometry/DiagramContent";
+import { Point } from "../../geometry/Point";
 import { Segment } from "../../geometry/Segment";
 import { Stmt } from "../../types/types";
 import { stripAngPrefix } from "./utils";
@@ -19,25 +20,6 @@ export const reflex_s = (s1: Segment, s2: Segment) => {
 //   ];
 //   //  check that s1 and s2 are not the same, and p is not in s1 or s2 labels
 //   const valid = !s1.equals(s2) && !s1.contains(pt) && !s2.contains(pt);
-//   // if valid, add new objects to context
-//   if (valid) {
-//     const s1New = ctx.addSegmentFromStr(s1.label);
-//     const s2New = ctx.addSegmentFromStr(s2.label);
-//     s1New.label.split("").forEach((p) => {
-//       const seg = ctx.addSegmentFromStr(`${p}${pt.label}`);
-//       s1New.addSubSegment(seg);
-//       seg.addParentSegment(s1New);
-//     });
-//     s1New.label.split("").forEach((p) => {
-//       const seg = ctx.addSegmentFromStr(`${p}${pt.label}`);
-//       s2New.addSubSegment(seg);
-//       seg.addParentSegment(s2New);
-//     });
-//     const p = ctx.getPoint(pt.label);
-//     p.addOnLine(s1New);
-//     p.addOnLine(s2New);
-//     console.log("checking intersect_seg", s1New.label, s2New.label);
-//   }
 
 //   return valid;
 // };
@@ -91,31 +73,60 @@ export const altint = (
       }
     }
   } else {
-    return false;
+    angleCheck = false;
+  }
+  if (segmentCheck && angleCheck) {
+    stripAngPrefix(conAng.arguments).map((arg) => ctx.addAngleFromStr(arg));
+    ctx.addSegmentFromStr(`${p1.label}${p2.label}`);
+    para.arguments.map((arg) => ctx.addSegmentFromStr(arg));
   }
   return segmentCheck && angleCheck;
 };
 
-export const midpt = (
-  conSeg: Stmt,
-  onLine: Stmt,
-  midPt: Stmt,
-  ctx: DiagramContent
-) => {};
-
-export const perp = (
-  right: Stmt,
-  onLine: Stmt,
-  perp: Stmt,
-  ctx: DiagramContent
-): boolean => {
+export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: DiagramContent) => {
   const tempCtx = new DiagramContent(ctx.getCtx());
-  const [r, l, p] = [
-    tempCtx.addSegmentFromStr(right.arguments[0]),
-    tempCtx.addSegmentFromStr(onLine.arguments[0]),
-    tempCtx.addSegmentFromStr(perp.arguments[0]),
+  const [s1, s2] = conSeg.arguments.map((arg) =>
+    tempCtx.addSegmentFromStr(arg)
+  );
+  const [bigSeg, midpt] = [
+    tempCtx.addSegmentFromStr(midPt.arguments[0]),
+    tempCtx.getPoint(midPt.arguments[1]),
   ];
 
+  // segments declared to be congruent and be part of the line declared to be bisected
+  const segmentsEqual =
+    s1.getParentSegments().has(bigSeg) && s2.getParentSegments().has(bigSeg);
+
+  // segments must contain midpoint, not be equal
+  const segmentCheck =
+    s1.contains(midpt) && s2.contains(midpt) && !s1.equals(s2);
+
+  return segmentsEqual && segmentCheck;
+};
+
+export const perp = (right: Stmt, perp: Stmt, ctx: DiagramContent): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
+  const angle = tempCtx.addAngleFromStr(right.arguments[0]);
+
+  const [s1, s2] = [
+    tempCtx.addSegmentFromStr(perp.arguments[0]),
+    tempCtx.addSegmentFromStr(perp.arguments[1]),
+  ];
+
+  const checkIntersect = (p: Point, s: Segment) => (p.isOnLine(s) ? p : null);
+  const intersectPt =
+    checkIntersect(s1.p1, s2) ||
+    checkIntersect(s1.p2, s2) ||
+    checkIntersect(s2.p1, s1) ||
+    checkIntersect(s2.p2, s1);
+  if (intersectPt) {
+    // check if angle has corner at intersectPt and 1 pt on each line
+    return (
+      angle.centerEquals(intersectPt) &&
+      angle.contains(s1) &&
+      angle.contains(s2)
+    );
+  }
   return false;
 };
 

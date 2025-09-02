@@ -65,3 +65,24 @@ export const vert_ang = (
   }
   return anglesValid && centerValid;
 };
+
+export const ang_bisect = (conAng: Stmt, bisect: Stmt, ctx: DiagramContent) => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
+  const [a1, a2] = stripAngPrefix(conAng.arguments).map((arg) =>
+    tempCtx.addAngleFromStr(arg)
+  );
+  const [ang, seg] = [
+    tempCtx.addAngleFromStr(bisect.arguments[0]),
+    tempCtx.addSegmentFromStr(bisect.arguments[1]),
+  ];
+
+  // check if corner of a1/a2 is on seg + corner of ang
+  // and if both small angles contain the bisecting segment
+  return (
+    a1.equals(a2) &&
+    a1.contains(seg) &&
+    a2.contains(seg) &&
+    a1.centerEquals(a2.center) &&
+    a1.centerEquals(ang.center)
+  );
+};

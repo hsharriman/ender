@@ -64,11 +64,13 @@ export class Segment extends BaseGeometryObject {
 
   addSubSegment = (s: Segment) => {
     this.subSegments.add(s);
+    s.addParentSegment(this);
     return this;
   };
 
   addParentSegment = (s: Segment) => {
     this.parentSegment.add(s);
+    s.addSubSegment(this);
     return this;
   };
 

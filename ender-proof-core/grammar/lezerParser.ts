@@ -37,6 +37,7 @@ export class ProofParser {
       premises: {
         points: [] as string[],
         triangles: [] as string[],
+        quadrilaterals: [] as string[],
         segments: [] as string[],
         angles: [] as string[],
       },
@@ -83,6 +84,18 @@ export class ProofParser {
                 i++;
                 while (i < tokens.length && tokens[i].type === "triangle") {
                   result.premises.triangles.push(tokens[i].value);
+                  i++;
+                }
+              }
+            } else if (tokens[i].type === "quad") {
+              i++;
+              if (i < tokens.length && tokens[i].type === "colon") {
+                i++;
+                while (
+                  i < tokens.length &&
+                  tokens[i].type === "quadrilateral"
+                ) {
+                  result.premises.quadrilaterals.push(tokens[i].value);
                   i++;
                 }
               }

@@ -2,7 +2,6 @@ premises
 stmt on_line(Segment s, Point p)
 stmt intersect_seg(Segment s1, Segment s2, Point p)
 stmt transversal(Point s1p1, Point s1p2, Point p1, Point s2p1, Point s2p2, Point p2) // Point s1p1 -> s1p2 = seg1
-stmt rectangle(Quad q)
 end_premises
 
 stmt right(Angle a) 
@@ -22,6 +21,8 @@ stmt para(Segment s1, Segment s2)
 stmt perp(Segment s1, Segment s2)
 stmt midpt(Segment s, Point p)
 stmt ang_bisect(Angle a, Segment s)
+stmt rectangle(Quad q)
+stmt parallelogram(Quad q)
 
 stmt isosceles(Triangle t)
 stmt equilateral(Triangle t)

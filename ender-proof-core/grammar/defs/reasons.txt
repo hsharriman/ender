@@ -11,18 +11,18 @@ reason rhl(con_right, con_seg, con_seg) -> con_tri
 reason cpctc(con_tri) -> con_seg, con_ang
 reason intersect_seg() -> intersect_seg
 reason vert_ang(intersect_seg) -> con_ang
-
-// not implemented
 reason altint_conv(con_ang, transversal) -> para
 reason altint(para, transversal) -> con_ang 
-reason perp(right, on_line) -> perp
-reason midpt(con_seg, on_line) -> midpt
-reason midpt_conv(midpt) -> con_seg, on_line
-reason rectangle(con_seg) -> rectangle
+reason midpt(con_seg) -> midpt
+reason midpt_conv(midpt) -> con_seg
 reason isosceles(con_seg) -> isosceles
-reason equilateral(con_seg, con_seg) -> equilateral
+reason perp(right) -> perp
+reason rectangle(con_seg) -> rectangle
 reason paralellogram1(rectangle) -> parallelogram
 reason paralellogram2(para) -> parallelogram
+
+// not implemented
+reason equilateral(con_seg, con_seg) -> equilateral
 reason ang_bisect(con_ang) -> ang_bisect
 
 reason aaa(con_ang, con_ang, con_ang) -> sim_tri

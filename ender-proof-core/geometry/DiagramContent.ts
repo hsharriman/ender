@@ -116,6 +116,11 @@ export class DiagramContent {
     return this.addTriangle({ pts: [a, b, c] });
   };
 
+  addQuadrilateralFromStr = (str: string) => {
+    const [a, b, c, d] = str.split("").map((c) => this.getPoint(c));
+    return this.addQuadrilateral({ pts: [a, b, c, d] });
+  };
+
   addAngleFromStr = (str: string) => {
     const [a, b, c] = str.split("").map((c) => this.getPoint(c));
     return this.addAngle({ start: a, center: b, end: c });
