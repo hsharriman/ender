@@ -1,5 +1,5 @@
 import { DiagramContent } from "../../geometry/DiagramContent";
-import { Stmt } from "../../types/types";
+import { Stmt } from "../../types/checkerTypes";
 import { conSegMapper } from "./argMappers";
 
 export const rectangle = (rect: Stmt, conSeg: Stmt, ctx: DiagramContent) => {

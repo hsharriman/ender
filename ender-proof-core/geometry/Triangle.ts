@@ -1,6 +1,7 @@
-import { logError } from "../errors/errorConstants.js";
+import { logError } from "../errors/errorConstants";
+import { ParseObj } from "../types/checkerTypes";
 import { TriangleProps } from "../types/geometryTypes";
-import { Obj, ParseObj, SVGModes } from "../types/types";
+import { Obj, SVGModes } from "../types/types";
 import { Angle } from "./Angle";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { DiagramContent } from "./DiagramContent";

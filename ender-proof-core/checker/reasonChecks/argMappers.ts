@@ -1,5 +1,5 @@
 import { DiagramContent } from "../../geometry/DiagramContent";
-import { Stmt } from "../../types/types";
+import { Stmt } from "../../types/checkerTypes";
 
 export const conTriMapper = (conTri: Stmt, ctx: DiagramContent) => {
   return conTri.arguments.map((arg) => ctx.addTriangleFromStr(arg.v));

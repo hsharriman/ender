@@ -11,5 +11,5 @@
     "allowSyntheticDefaultImports": true,
     "strict": true
   },
-  "include": ["grammar/**/*", "proofChecker.ts"]
+  "include": ["grammar/**/*", "proofChecker.ts", "checker/reasonChecks"]
 }

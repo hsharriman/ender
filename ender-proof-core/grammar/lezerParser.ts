@@ -1,7 +1,8 @@
 import { LRParser } from "@lezer/lr";
-import { Obj, ParseObj } from "../types/types.js";
+import { ParseObj } from "../types/checkerTypes";
+import { Obj } from "../types/types";
 import { lexer } from "./parser";
-import { loadReasonDefinitions } from "./reasonParser.js";
+import { loadReasonDefinitions } from "./reasonParser";
 
 // This will be generated from the grammar file
 // For now, we'll create a basic structure

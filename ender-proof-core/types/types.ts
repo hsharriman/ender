@@ -55,18 +55,3 @@ export enum AspectRatio {
   Tall = "tall",
   Landscape = "landscape",
 }
-export interface Stmt {
-  function: string;
-  arguments: ParseObj[];
-  stepNumber?: string;
-}
-
-export interface Reason {
-  function: string;
-  arguments: string[];
-}
-
-export interface ParseObj {
-  type: Obj.Point | Obj.Segment | Obj.Angle | Obj.Triangle | Obj.Quadrilateral;
-  v: string;
-}

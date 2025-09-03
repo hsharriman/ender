@@ -1,4 +1,4 @@
-import { logError } from "../../errors/errorConstants.js";
+import { logError } from "../../errors/errorConstants";
 
 export const commonPt = (seg1: string, seg2: string): string => {
   for (const char of seg1) {

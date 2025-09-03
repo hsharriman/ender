@@ -2,7 +2,7 @@ import { Angle } from "../../geometry/Angle";
 import { DiagramContent } from "../../geometry/DiagramContent";
 import { Point } from "../../geometry/Point";
 import { Segment } from "../../geometry/Segment";
-import { Stmt } from "../../types/types";
+import { Stmt } from "../../types/checkerTypes";
 
 export const reflex_a = (a1: Angle, a2: Angle) => {
   return a1.equals(a2);

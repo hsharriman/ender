@@ -1,0 +1,58 @@
+import { Obj } from "./types";
+
+export interface Stmt {
+  function: string;
+  arguments: ParseObj[];
+  stepNumber?: string;
+}
+
+export interface Reason {
+  function: string;
+  arguments: string[];
+}
+
+export interface ParseObj {
+  type: Obj.Point | Obj.Segment | Obj.Angle | Obj.Triangle | Obj.Quadrilateral;
+  v: string;
+}
+
+export interface ReasonDefinition {
+  name: string;
+  dependencies: string[];
+  conclusion: string;
+}
+
+export interface StatementDefinition {
+  name: string;
+  parameters: string[];
+  isPremisesOnly?: boolean;
+}
+
+// Types for the proof checker
+export interface ProofStep {
+  type: "given" | "proof" | "goal";
+  reason?: Reason;
+  statement?: Stmt;
+  stepNumber?: string;
+}
+
+export interface ProofObj {
+  title: string | null;
+  premises: {
+    points: string[];
+    triangles: string[];
+    quadrilaterals: string[];
+    segments: string[];
+    angles: string[];
+  };
+  steps: ProofStep[];
+  goal?: string;
+}
+
+export interface ProofGraph {
+  nodes: Map<string, ProofStep>;
+  edges: Map<string, string[]>;
+  incorrectSteps: Set<string>;
+  unusedSteps: Set<string>;
+  cycles: string[][];
+}

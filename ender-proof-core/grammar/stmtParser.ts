@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import moo from "moo";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { logDebug, logError } from "../errors/errorConstants.js";
+import { logDebug, logError } from "../errors/errorConstants";
 
 // Lexer rules for statement definitions
 const stmtLexerRules: moo.Rules = {

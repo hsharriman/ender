@@ -1,0 +1,216 @@
+import { logDebug, logError } from "../errors/errorConstants";
+import { DiagramContent } from "../geometry/DiagramContent";
+import {
+  ProofGraph,
+  ProofObj,
+  ReasonDefinition,
+  StatementDefinition,
+} from "../types/checkerTypes";
+import { checkReasonApplication } from "./reasonApplication";
+import {
+  checkReasonStructure,
+  checkStatementArguments,
+  validateReasonDependencies,
+} from "./validators";
+
+// Build proof graph and check each step
+export const buildProofGraph = (
+  proof: ProofObj,
+  reasonDefs: Map<string, ReasonDefinition>,
+  stmtDefs: Map<string, StatementDefinition>,
+  ctx: DiagramContent
+): ProofGraph => {
+  const graph: ProofGraph = {
+    nodes: new Map(),
+    edges: new Map(),
+    incorrectSteps: new Set(),
+    unusedSteps: new Set(),
+    cycles: [],
+  };
+
+  // Add all steps to the graph (skip goal steps)
+  proof.steps.forEach((step) => {
+    if (step.type === "goal") return; // Skip goal steps
+
+    const stepNum = step.stepNumber?.replace(/[\[\]]/g, "");
+    if (stepNum) {
+      graph.nodes.set(stepNum, step);
+      graph.edges.set(stepNum, []);
+    }
+  });
+
+  // Check each step and build edges
+  proof.steps.forEach((step) => {
+    if (step.type === "goal") return; // Skip goal steps
+
+    const stepNum = step.stepNumber?.replace(/[\[\]]/g, "");
+
+    if (!stepNum) return;
+
+    let isCorrect = true;
+
+    if (step.type === "given") {
+      // Given statements are assumed to be true, but check format
+      if (step.statement?.function) {
+        // For now, just check if the function exists in definitions
+        // In a real implementation, you'd check the actual statement format
+        isCorrect = stmtDefs.has(step.statement.function);
+      }
+    } else if (step.type === "proof" && step.reason && step.statement) {
+      logDebug(`\n🔍 Checking step ${stepNum}:`);
+      logDebug(JSON.stringify(step, null, 2));
+
+      // Check reason dependencies
+      isCorrect = checkReasonStructure(step, reasonDefs, graph);
+      logDebug(`  Reason structure check: ${isCorrect}`);
+
+      // Validate dependency statements (throws on mismatch)
+      if (isCorrect) {
+        try {
+          validateReasonDependencies(step.reason, reasonDefs, graph);
+          logDebug(`  Dependency statements check: true`);
+        } catch (e: any) {
+          logError.proofChecker.errorCheckingProof(e);
+          isCorrect = false;
+        }
+      }
+
+      // Check statement
+      if (isCorrect) {
+        logDebug(
+          `  Checking statement: ${
+            step.statement?.function
+          } with args: ${JSON.stringify(step.statement?.arguments)}`
+        );
+        isCorrect = checkStatementArguments(step.statement, stmtDefs);
+        logDebug(`  Statement arguments check: ${isCorrect}`);
+
+        // Check if premises-only statement is used in proof step
+        if (isCorrect && step.statement?.function) {
+          const stmtDef = stmtDefs.get(step.statement.function);
+          if (stmtDef?.isPremisesOnly && step.type === "proof") {
+            logError.parser.premisesOnlyStatementInProof(
+              step.statement.function
+            );
+            isCorrect = false;
+          }
+        }
+      }
+
+      // TODO add a flag to the step if there was a mistake in it
+
+      // Check if reason is applied correctly using reason checker methods
+      if (isCorrect) {
+        isCorrect = checkReasonApplication(step, reasonDefs, graph, proof, ctx);
+        logDebug(`  Reason application check: ${isCorrect}`);
+      }
+
+      // Add edges from dependencies to this step
+      if (step.reason.arguments) {
+        step.reason.arguments.forEach((depRef) => {
+          const depStepNum = depRef.replace(/[\[\]]/g, "");
+          const edges = graph.edges.get(depStepNum) || [];
+          edges.push(stepNum);
+          graph.edges.set(depStepNum, edges);
+        });
+      }
+    }
+
+    if (!isCorrect) {
+      graph.incorrectSteps.add(stepNum);
+    }
+  });
+
+  return graph;
+};
+
+// Check for cycles in the graph using DFS
+export const detectCycles = (graph: ProofGraph): string[][] => {
+  const cycles: string[][] = [];
+  const visited = new Set<string>();
+  const recursionStack = new Set<string>();
+
+  const dfs = (node: string, path: string[]): void => {
+    if (recursionStack.has(node)) {
+      const cycleStart = path.indexOf(node);
+      cycles.push(path.slice(cycleStart));
+      return;
+    }
+
+    if (visited.has(node)) {
+      return;
+    }
+
+    visited.add(node);
+    recursionStack.add(node);
+    path.push(node);
+
+    const neighbors = graph.edges.get(node) || [];
+    neighbors.forEach((neighbor) => {
+      dfs(neighbor, [...path]);
+    });
+
+    recursionStack.delete(node);
+  };
+
+  graph.nodes.forEach((_, node) => {
+    if (!visited.has(node)) {
+      dfs(node, []);
+    }
+  });
+
+  return cycles;
+};
+
+// Find unused steps (leaf nodes that don't lead to the goal)
+export const findUnusedSteps = (
+  graph: ProofGraph,
+  goalStep?: string
+): Set<string> => {
+  const unused = new Set<string>();
+
+  if (!goalStep) {
+    // If no goal specified, mark all leaf nodes as unused
+    graph.nodes.forEach((_, node) => {
+      const edges = graph.edges.get(node) || [];
+      if (edges.length === 0) {
+        unused.add(node);
+      }
+    });
+    return unused;
+  }
+
+  // Find all nodes that can reach the goal
+  const canReachGoal = new Set<string>();
+  const visited = new Set<string>();
+
+  const dfs = (node: string): boolean => {
+    if (node === goalStep) {
+      return true;
+    }
+
+    if (visited.has(node)) {
+      return canReachGoal.has(node);
+    }
+
+    visited.add(node);
+    const neighbors = graph.edges.get(node) || [];
+
+    for (const neighbor of neighbors) {
+      if (dfs(neighbor)) {
+        canReachGoal.add(node);
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  graph.nodes.forEach((_, node) => {
+    if (!canReachGoal.has(node) && !dfs(node)) {
+      unused.add(node);
+    }
+  });
+
+  return unused;
+};
