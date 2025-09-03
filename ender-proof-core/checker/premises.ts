@@ -8,33 +8,34 @@ export const buildPremises = (proof: ProofObj) => {
   const ctx = new DiagramContent();
 
   // Add all points from premises
-  proof.premises.points.forEach((pointLabel) => {
-    ctx.addPoint({ pt: [0, 0], label: pointLabel, offset: [0, 0] }); // TODO pt coords
+  proof.premises.points.forEach((pointObj) => {
+    const label = pointObj.v;
+    ctx.addPoint({ pt: [0, 0], label, offset: [0, 0] }); // TODO pt coords
   });
 
   // Add all triangles from premises (this will also create their segments and angles)
-  proof.premises.triangles.forEach((triangleLabel) => {
+  proof.premises.triangles.forEach((triangleObj) => {
     // Parse triangle label (e.g., "t_ABC")
-    const pointLabels = triangleLabel.substring(2); // Remove 't_' prefix
+    const pointLabels = triangleObj.v;
     ctx.addTriangleFromStr(pointLabels);
   });
 
   // Add all quadrilaterals from premises (this will also create their segments and angles)
-  proof.premises.quadrilaterals.forEach((quadrilateralLabel) => {
+  proof.premises.quadrilaterals.forEach((quadrilateralObj) => {
     // Parse quadrilateral label (e.g., "q_ABCD")
-    const pointLabels = quadrilateralLabel.substring(2); // Remove 'q_' prefix
+    const pointLabels = quadrilateralObj.v;
     ctx.addQuadrilateralFromStr(pointLabels);
   });
 
   // Add all segments from premises
-  proof.premises.segments.forEach((segmentLabel) => {
-    ctx.addSegmentFromStr(segmentLabel);
+  proof.premises.segments.forEach((segmentObj) => {
+    ctx.addSegmentFromStr(segmentObj.v);
   });
 
   // Add all angles from premises
-  proof.premises.angles.forEach((angleLabel) => {
+  proof.premises.angles.forEach((angleObj) => {
     // Parse angle label (e.g., "a_BAC")
-    const pointLabels = angleLabel.substring(2); // Remove 'a_' prefix
+    const pointLabels = angleObj.v;
     ctx.addAngleFromStr(pointLabels);
   });
 
@@ -45,72 +46,99 @@ export const buildPremises = (proof: ProofObj) => {
       step.statement?.function &&
       step.statement.arguments
     ) {
-      if (step.statement.function === "con_seg") {
-        // Given congruent segments - ensure both segments exist
-        step.statement.arguments.forEach((arg: ParseObj) => {
-          ctx.addSegmentFromStr(arg.v);
-        });
-      } else if (step.statement.function === "con_ang") {
-        // Given congruent angles - ensure both angles exist
-        step.statement.arguments.forEach((arg: ParseObj) => {
-          if (arg.type === Obj.Angle) {
-            ctx.addAngleFromStr(arg.v);
-          }
-        });
-      } else if (step.statement.function === "on_line") {
-        const [seg, pt] = step.statement.arguments;
-        const s = ctx.addSegmentFromStr(seg.v);
-        const p = ctx.getPoint(pt.v);
-        p.addOnLine(s);
-        const ps2 = ctx.addSegmentFromStr(`${p.label}${s.p2.label}`);
-        const ps1 = ctx.addSegmentFromStr(`${s.p1.label}${p.label}`);
-        ps1.addParentSegment(s);
-        ps2.addParentSegment(s);
-      } else if (step.statement.function === "intersect_seg") {
-        // Given intersecting segments - ensure both segments exist
-        const [seg1, seg2, point] = step.statement.arguments;
-
-        // Check if the intersection point exists in premises
-        if (!proof.premises.points.includes(point.v)) {
-          logError.parser.missingPointInPremises(point.v);
+      switch (step.statement.function) {
+        case "con_seg":
+          step.statement.arguments.forEach((arg: ParseObj) => {
+            ctx.addSegmentFromStr(arg.v);
+          });
+          break;
+        case "con_ang":
+          step.statement.arguments.forEach((arg: ParseObj) => {
+            if (arg.type === Obj.Angle) {
+              ctx.addAngleFromStr(arg.v);
+            }
+          });
+          break;
+        case "on_line":
+          onLine(ctx, step.statement.arguments);
+          break;
+        case "intersect_seg":
+          intersectSeg(ctx, step.statement.arguments, proof);
+          break;
+        case "transversal":
+          transversal(ctx, step.statement.arguments);
+          break;
+        case "midpt":
+          midpt(ctx, step.statement.arguments);
+          break;
+        default:
           throw new Error(
-            `Point '${point}' is used in intersect_seg but not defined in premises`
+            `Unknown statement function: ${step.statement.function}`
           );
-        }
-
-        const s1 = ctx.addSegmentFromStr(seg1.v);
-        const s2 = ctx.addSegmentFromStr(seg2.v);
-        const p = ctx.getPoint(point.v);
-
-        seg1.v.split("").forEach((pt) => {
-          const subSeg = ctx.addSegmentFromStr(`${p.label}${pt}`);
-          s1.addSubSegment(subSeg);
-          subSeg.addParentSegment(s1);
-        });
-        seg2.v.split("").forEach((pt) => {
-          const subSeg = ctx.addSegmentFromStr(`${p.label}${pt}`);
-          s2.addSubSegment(subSeg);
-          subSeg.addParentSegment(s2);
-        });
-      } else if (step.statement.function === "transversal") {
-        const [s1p1, s1p2, p1, s2p1, s2p2, p2] = step.statement.arguments.map(
-          (arg) => ctx.getPoint(arg.v)
-        );
-        const [s1, s2] = [
-          ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
-          ctx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`),
-        ];
-        ctx.addSegmentFromStr(`${p1.label}${p2.label}`);
-        p1.addOnLine(s1);
-        p2.addOnLine(s2);
-      } else if (step.statement.function === "midpt") {
-        const s = ctx.addSegmentFromStr(step.statement.arguments[0].v);
-        const p = ctx.getPoint(step.statement.arguments[1].v);
-        p.addOnLine(s);
-        ctx.addSegmentFromStr(`${p.label}${s.p2.label}`).addParentSegment(s);
-        ctx.addSegmentFromStr(`${s.p1.label}${p.label}`).addParentSegment(s);
       }
     }
   });
   return ctx;
+};
+
+const onLine = (ctx: DiagramContent, args: ParseObj[]) => {
+  const [seg, pt] = args;
+  const s = ctx.addSegmentFromStr(seg.v);
+  const p = ctx.getPoint(pt.v);
+  p.addOnLine(s);
+  const ps2 = ctx.addSegmentFromStr(`${p.label}${s.p2.label}`);
+  const ps1 = ctx.addSegmentFromStr(`${s.p1.label}${p.label}`);
+  ps1.addParentSegment(s);
+  ps2.addParentSegment(s);
+};
+
+const intersectSeg = (
+  ctx: DiagramContent,
+  args: ParseObj[],
+  proof: ProofObj
+) => {
+  const [s1, s2, p] = args;
+
+  // Check if the intersection point exists in premises
+  if (!proof.premises.points.some((pt) => pt.v === p.v)) {
+    logError.parser.missingPointInPremises(p.v);
+    throw new Error(
+      `Point '${p}' is used in intersect_seg but not defined in premises`
+    );
+  }
+
+  const seg1 = ctx.addSegmentFromStr(s1.v);
+  const seg2 = ctx.addSegmentFromStr(s2.v);
+  const ip = ctx.getPoint(p.v);
+
+  s1.v.split("").forEach((pt) => {
+    const subSeg = ctx.addSegmentFromStr(`${ip.label}${pt}`);
+    seg1.addSubSegment(subSeg);
+    subSeg.addParentSegment(seg1);
+  });
+  s2.v.split("").forEach((pt) => {
+    const subSeg = ctx.addSegmentFromStr(`${ip.label}${pt}`);
+    seg2.addSubSegment(subSeg);
+    subSeg.addParentSegment(seg2);
+  });
+};
+
+const transversal = (ctx: DiagramContent, args: ParseObj[]) => {
+  const [s1p1, s1p2, p1, s2p1, s2p2, p2] = args.map((arg) =>
+    ctx.getPoint(arg.v)
+  );
+  const seg1 = ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`);
+  const seg2 = ctx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`);
+  ctx.addSegmentFromStr(`${p1.label}${p2.label}`);
+  p1.addOnLine(seg1);
+  p2.addOnLine(seg2);
+};
+
+const midpt = (ctx: DiagramContent, args: ParseObj[]) => {
+  const [seg, pt] = args;
+  const s = ctx.addSegmentFromStr(seg.v);
+  const p = ctx.getPoint(pt.v);
+  p.addOnLine(s);
+  ctx.addSegmentFromStr(`${p.label}${s.p2.label}`).addParentSegment(s);
+  ctx.addSegmentFromStr(`${s.p1.label}${p.label}`).addParentSegment(s);
 };

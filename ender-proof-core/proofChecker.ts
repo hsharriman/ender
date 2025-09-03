@@ -27,26 +27,14 @@ import { ProofObj } from "./types/checkerTypes";
 const parseProof = (filePath: string): ProofObj => {
   const content = readFileSync(filePath, "utf-8");
   const parser = new ProofParser();
-  return parser.parse(content);
+  return parser.parse(content) as unknown as ProofObj;
 };
 
-// Extract goal from proof title or premises
-const extractGoal = (proof: ProofObj): string | undefined => {
-  // Look for goal in the premises section (steps with type "goal")
+// Extract goal from steps or title (returns Stmt)
+const extractGoal = (proof: ProofObj) => {
   const goalStep = proof.steps.find((step) => step.type === "goal");
-  if (goalStep && goalStep.statement) {
-    return `${goalStep.statement.function}(${goalStep.statement.arguments
-      .map((arg) => arg.v)
-      .join(", ")})`;
-  }
-
-  // Fallback: look for goal in title
-  if (proof.title && proof.title.includes("->")) {
-    const arrowIndex = proof.title.indexOf("->");
-    return proof.title.substring(arrowIndex + 2).trim();
-  }
-
-  return undefined;
+  if (goalStep && goalStep.statement) return goalStep.statement;
+  return proof.goal;
 };
 
 // Main proof checker function
@@ -64,7 +52,7 @@ const checkProof = (filePath: string): void => {
     const proof = parseProof(filePath);
     const goal = extractGoal(proof);
 
-    // // Check geometric objects are well-formed before creating context
+    // Check geometric objects are well-formed before creating context
     const geometricObjectErrors = checkGeometricObjects(proof);
     if (geometricObjectErrors.length > 0) {
       console.log("❌ Geometric object errors found:");
@@ -92,7 +80,7 @@ const checkProof = (filePath: string): void => {
       .slice()
       .reverse()
       .find((step) => step.type === "proof");
-    const lastStepNum = lastProofStep?.stepNumber?.replace(/[\[\]]/g, "");
+    const lastStepNum = lastProofStep?.stepNumber?.replace(/\[|\]/g, "");
 
     graph.unusedSteps = findUnusedSteps(graph, lastStepNum);
 

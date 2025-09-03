@@ -48,7 +48,7 @@ export const checkReasonStructure = (
     console.log(`    ✅ Found definition:`, definition);
 
     reason.arguments.forEach((arg, idx) => {
-      const stepNum = arg.replace(/[\[\]]/g, "");
+      const stepNum = arg.replace(/\[|\]/g, "");
       const dependencyStep = proofGraph.nodes.get(stepNum);
       const expectedType = definition.dependencies[idx];
       if (dependencyStep?.statement?.function !== expectedType) {
@@ -82,7 +82,7 @@ export const checkReasonStructure = (
 // Check if geometric objects are well-formed
 export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
   const errors: Array<string> = [];
-  const definedPoints = new Set(proof.premises.points);
+  const definedPoints = new Set(proof.premises.points.map((p) => p.v));
 
   // Helper function to check for duplicate characters
   const hasDuplicateChars = (str: string): boolean => {
@@ -104,84 +104,88 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
 
   // Check segments in premises
   for (const segment of proof.premises.segments) {
-    if (segment.length !== 2) {
-      logError.parser.invalidSegmentFormat(segment);
+    const seg = segment.v;
+    if (seg.length !== 2) {
+      logError.parser.invalidSegmentFormat(seg);
       errors.push(
-        `Invalid segment format: '${segment}' - segments must have exactly 2 points`
+        `Invalid segment format: '${seg}' - segments must have exactly 2 points`
       );
       continue;
     }
 
-    if (hasDuplicateChars(segment)) {
-      logError.parser.duplicatePointsInObject(segment);
-      errors.push(`Segment '${segment}' contains duplicate points`);
+    if (hasDuplicateChars(seg)) {
+      logError.parser.duplicatePointsInObject(seg);
+      errors.push(`Segment '${seg}' contains duplicate points`);
       continue;
     }
 
-    checkPointsDefined(segment, segment.split(""));
+    checkPointsDefined(seg, seg.split(""));
   }
 
   // Check triangles in premises
   for (const triangle of proof.premises.triangles) {
-    const trianglePoints = triangle.substring(2); // Remove 't_' prefix
+    const tri = triangle.v;
+    const trianglePoints = tri.substring(2); // Remove 't_' prefix
 
     if (trianglePoints.length !== 3) {
-      logError.parser.invalidTriangleFormat(triangle);
+      logError.parser.invalidTriangleFormat(tri);
       errors.push(
-        `Invalid triangle format: '${triangle}' - triangles must have exactly 3 points`
+        `Invalid triangle format: '${tri}' - triangles must have exactly 3 points`
       );
       continue;
     }
 
     if (hasDuplicateChars(trianglePoints)) {
-      logError.parser.duplicatePointsInObject(triangle);
-      errors.push(`Triangle '${triangle}' contains duplicate points`);
+      logError.parser.duplicatePointsInObject(tri);
+      errors.push(`Triangle '${tri}' contains duplicate points`);
       continue;
     }
 
-    checkPointsDefined(triangle, trianglePoints.split(""));
+    checkPointsDefined(tri, trianglePoints.split(""));
   }
 
   // Check quadrilaterals in premises
   for (const quadrilateral of proof.premises.quadrilaterals) {
-    const quadrilateralPoints = quadrilateral.substring(2); // Remove 'q_' prefix
+    const quad = quadrilateral.v;
+    const quadrilateralPoints = quad.substring(2); // Remove 'q_' prefix
 
     if (quadrilateralPoints.length !== 4) {
-      logError.parser.invalidQuadrilateralFormat(quadrilateral);
+      logError.parser.invalidQuadrilateralFormat(quad);
       errors.push(
-        `Invalid quadrilateral format: '${quadrilateral}' - quadrilaterals must have exactly 4 points`
+        `Invalid quadrilateral format: '${quad}' - quadrilaterals must have exactly 4 points`
       );
       continue;
     }
 
     if (hasDuplicateChars(quadrilateralPoints)) {
-      logError.parser.duplicatePointsInObject(quadrilateral);
-      errors.push(`Quadrilateral '${quadrilateral}' contains duplicate points`);
+      logError.parser.duplicatePointsInObject(quad);
+      errors.push(`Quadrilateral '${quad}' contains duplicate points`);
       continue;
     }
 
-    checkPointsDefined(quadrilateral, quadrilateralPoints.split(""));
+    checkPointsDefined(quad, quadrilateralPoints.split(""));
   }
 
   // Check angles in premises
   for (const angle of proof.premises.angles) {
-    const anglePoints = angle.substring(2); // Remove 'a_' prefix
+    const ang = angle.v;
+    const anglePoints = ang.substring(2); // Remove 'a_' prefix
 
     if (anglePoints.length !== 3) {
-      logError.parser.invalidAngleFormat(angle);
+      logError.parser.invalidAngleFormat(ang);
       errors.push(
-        `Invalid angle format: '${angle}' - angles must have exactly 3 points`
+        `Invalid angle format: '${ang}' - angles must have exactly 3 points`
       );
       continue;
     }
 
     if (hasDuplicateChars(anglePoints)) {
-      logError.parser.duplicatePointsInObject(angle);
-      errors.push(`Angle '${angle}' contains duplicate points`);
+      logError.parser.duplicatePointsInObject(ang);
+      errors.push(`Angle '${ang}' contains duplicate points`);
       continue;
     }
 
-    checkPointsDefined(angle, anglePoints.split(""));
+    checkPointsDefined(ang, anglePoints.split(""));
   }
 
   // Check geometric objects in all statements
@@ -262,7 +266,7 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
 // Check if final statement matches the goal
 export const checkGoalMatch = (
   proof: ProofObj,
-  goal?: string
+  goal?: Stmt
 ): { matches: boolean; details: string } => {
   if (!goal) return { matches: true, details: "No goal specified" };
 
@@ -281,14 +285,8 @@ export const checkGoalMatch = (
     return { matches: false, details: "Last proof step has no statement" };
   }
 
-  // Parse the goal to extract function and arguments
-  const goalMatch = goal.match(/^(\w+)\(([^)]*)\)$/);
-  if (!goalMatch) {
-    return { matches: false, details: `Invalid goal format: ${goal}` };
-  }
-
-  const [, expectedFunction, expectedArgsStr] = goalMatch;
-  const expectedArgs = expectedArgsStr.split(",").map((arg) => arg.trim());
+  const expectedFunction = goal.function;
+  const expectedArgs = goal.arguments.map((a) => a.v);
 
   // Check function match
   if (finalStatement.function !== expectedFunction) {
@@ -351,7 +349,7 @@ export const validateReasonDependencies = (
   for (let i = 0; i < reason.arguments.length; i++) {
     const depRef = reason.arguments[i];
     const expectedType = definition.dependencies[i];
-    const stepNum = depRef.replace(/[\[\]]/g, "");
+    const stepNum = depRef.replace(/\[|\]/g, "");
     const dependencyStep = proofGraph.nodes.get(stepNum);
     if (!dependencyStep || !dependencyStep.statement) {
       throw new Error(

@@ -319,7 +319,7 @@ export const logError = {
       console.error(
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
-        } ${ErrorMessages.PROOF_CHECKER.ERROR_CHECKING_PROOF(error)}`
+        } ${ErrorMessages.PROOF_CHECKER.ERROR_CHECKING_PROOF(error.stack)}`
       ),
     missingObjectsForSAS: () =>
       shouldLog(LogLevel.DEBUG) &&
@@ -331,7 +331,7 @@ export const logError = {
       console.error(
         `${
           ErrorMessages.DEBUG.ERROR_PREFIX
-        } ${ErrorMessages.PROOF_CHECKER.ERROR_DEBUGGING_PROOF(error)}`
+        } ${ErrorMessages.PROOF_CHECKER.ERROR_DEBUGGING_PROOF(error.stack)}`
       ),
   },
   file: {

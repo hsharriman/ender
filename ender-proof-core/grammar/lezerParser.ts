@@ -1,5 +1,11 @@
 import { LRParser } from "@lezer/lr";
-import { ParseObj } from "../types/checkerTypes";
+import {
+  ParseObj,
+  ProofObj,
+  ProofStep,
+  Reason,
+  Stmt,
+} from "../types/checkerTypes";
 import { Obj } from "../types/types";
 import { lexer } from "./parser";
 import { loadReasonDefinitions } from "./reasonParser";
@@ -65,16 +71,17 @@ export class ProofParser {
   }
 
   private parseBasicStructure(tokens: any[]) {
-    const result = {
-      title: null as string | null,
+    const result: ProofObj = {
+      title: "",
       premises: {
-        points: [] as string[],
-        triangles: [] as string[],
-        quadrilaterals: [] as string[],
-        segments: [] as string[],
-        angles: [] as string[],
+        points: [],
+        triangles: [],
+        quadrilaterals: [],
+        segments: [],
+        angles: [],
       },
-      steps: [] as any[],
+      steps: [],
+      goal: undefined,
     };
 
     let currentSection = null;
@@ -104,7 +111,10 @@ export class ProofParser {
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
                 while (i < tokens.length && tokens[i].type === "point") {
-                  result.premises.points.push(tokens[i].value);
+                  result.premises.points.push({
+                    type: Obj.Point,
+                    v: tokens[i].value,
+                  });
                   i++;
                   if (i < tokens.length && tokens[i].type === "comma") {
                     i++;
@@ -116,7 +126,10 @@ export class ProofParser {
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
                 while (i < tokens.length && tokens[i].type === "triangle") {
-                  result.premises.triangles.push(tokens[i].value);
+                  result.premises.triangles.push({
+                    type: Obj.Triangle,
+                    v: tokens[i].value,
+                  });
                   i++;
                 }
               }
@@ -128,7 +141,10 @@ export class ProofParser {
                   i < tokens.length &&
                   tokens[i].type === "quadrilateral"
                 ) {
-                  result.premises.quadrilaterals.push(tokens[i].value);
+                  result.premises.quadrilaterals.push({
+                    type: Obj.Quadrilateral,
+                    v: tokens[i].value,
+                  });
                   i++;
                 }
               }
@@ -137,7 +153,10 @@ export class ProofParser {
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
                 while (i < tokens.length && tokens[i].type === "segment") {
-                  result.premises.segments.push(tokens[i].value);
+                  result.premises.segments.push({
+                    type: Obj.Segment,
+                    v: tokens[i].value,
+                  });
                   i++;
                 }
               }
@@ -146,7 +165,10 @@ export class ProofParser {
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
                 while (i < tokens.length && tokens[i].type === "angle") {
-                  result.premises.angles.push(tokens[i].value);
+                  result.premises.angles.push({
+                    type: Obj.Angle,
+                    v: tokens[i].value,
+                  });
                   i++;
                 }
               }
@@ -156,13 +178,13 @@ export class ProofParser {
                 // Goal statement in premises
                 i++;
                 const goal = this.parseStatement(tokens, i);
-                result.steps.push({ type: "goal", statement: goal });
+                result.goal = goal.obj;
                 i = goal.endIndex;
               } else if (tokens[i].type === "stmt_function") {
                 // Given statement in premises
                 const step = this.parseStep(tokens, i);
                 if (step) {
-                  result.steps.push(step);
+                  result.steps.push(step.obj);
                   i = step.endIndex;
                 } else {
                   i++;
@@ -184,7 +206,8 @@ export class ProofParser {
               // Goal statement
               i++;
               const goal = this.parseStatement(tokens, i);
-              result.steps.push({ type: "goal", statement: goal });
+              result.goal = goal.obj;
+              // result.steps.push({ type: "goal", statement: goal });
               break;
             } else if (tokens[i].type === "stmt_function") {
               // Check if this is a reason function (like reflex, sas, etc.)
@@ -193,7 +216,7 @@ export class ProofParser {
                 // Proof step starting with reason
                 const step = this.parseProofStep(tokens, i);
                 if (step) {
-                  result.steps.push(step);
+                  result.steps.push(step.obj);
                   i = step.endIndex;
                 } else {
                   i++;
@@ -202,7 +225,7 @@ export class ProofParser {
                 // Given statement
                 const step = this.parseStep(tokens, i);
                 if (step) {
-                  result.steps.push(step);
+                  result.steps.push(step.obj);
                   i = step.endIndex;
                 } else {
                   i++;
@@ -221,12 +244,15 @@ export class ProofParser {
     return result;
   }
 
-  private parseStatement(tokens: any[], startIndex: number) {
+  private parseStatement(
+    tokens: any[],
+    startIndex: number
+  ): { obj: Stmt; endIndex: number } {
     let i = startIndex;
-    const statement = {
-      function: null as string | null,
-      arguments: [] as ParseObj[],
-      stepNumber: null as string | null,
+    const statement: Stmt = {
+      function: "",
+      arguments: [],
+      stepNumber: "",
     };
 
     if (i < tokens.length && tokens[i].type === "stmt_function") {
@@ -281,10 +307,13 @@ export class ProofParser {
       }
     }
 
-    return { ...statement, endIndex: i };
+    return { obj: statement, endIndex: i };
   }
 
-  private parseStep(tokens: any[], startIndex: number) {
+  private parseStep(
+    tokens: any[],
+    startIndex: number
+  ): { obj: ProofStep; endIndex: number } | null {
     let i = startIndex;
 
     // Check if this is a given statement (has step number)
@@ -302,9 +331,11 @@ export class ProofParser {
       // Given statement
       const statement = this.parseStatement(tokens, i);
       return {
-        type: "given",
-        statement: statement,
-        stepNumber: statement.stepNumber,
+        obj: {
+          type: "given",
+          statement: statement.obj,
+          stepNumber: statement.obj.stepNumber,
+        },
         endIndex: statement.endIndex,
       };
     }
@@ -312,7 +343,10 @@ export class ProofParser {
     return null;
   }
 
-  private parseProofStep(tokens: any[], startIndex: number) {
+  private parseProofStep(
+    tokens: any[],
+    startIndex: number
+  ): { obj: ProofStep; endIndex: number } | null {
     let i = startIndex;
 
     // Parse reason
@@ -325,10 +359,12 @@ export class ProofParser {
       i = reason.endIndex + 1;
       const conclusion = this.parseStatement(tokens, i);
       return {
-        type: "proof",
-        reason: reason,
-        statement: conclusion,
-        stepNumber: conclusion.stepNumber,
+        obj: {
+          type: "proof",
+          reason: reason.obj,
+          statement: conclusion.obj,
+          stepNumber: conclusion.obj.stepNumber,
+        },
         endIndex: conclusion.endIndex,
       };
     }
@@ -336,11 +372,14 @@ export class ProofParser {
     return null;
   }
 
-  private parseReason(tokens: any[], startIndex: number) {
+  private parseReason(
+    tokens: any[],
+    startIndex: number
+  ): { obj: Reason; endIndex: number } | null {
     let i = startIndex;
-    const reason = {
-      function: null as string | null,
-      arguments: [] as string[],
+    const reason: Reason = {
+      function: "",
+      arguments: [],
     };
 
     if (
@@ -377,7 +416,7 @@ export class ProofParser {
       }
     }
 
-    return { ...reason, endIndex: i };
+    return { obj: reason, endIndex: i };
   }
 
   private isReasonFunction(functionName: string): boolean {

@@ -39,14 +39,14 @@ export interface ProofStep {
 export interface ProofObj {
   title: string | null;
   premises: {
-    points: string[];
-    triangles: string[];
-    quadrilaterals: string[];
-    segments: string[];
-    angles: string[];
+    points: ParseObj[];
+    triangles: ParseObj[];
+    quadrilaterals: ParseObj[];
+    segments: ParseObj[];
+    angles: ParseObj[];
   };
   steps: ProofStep[];
-  goal?: string;
+  goal?: Stmt;
 }
 
 export interface ProofGraph {
