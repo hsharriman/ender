@@ -1,4 +1,3 @@
-import { LRParser } from "@lezer/lr";
 import {
   ParseObj,
   ProofObj,
@@ -10,18 +9,13 @@ import { Obj } from "../types/types";
 import { lexer } from "./parser";
 import { loadReasonDefinitions } from "./reasonParser";
 
-// This will be generated from the grammar file
-// For now, we'll create a basic structure
 export class ProofParser {
   private lexer: any;
-  private parser?: LRParser;
   private reasonDefinitions: Map<string, any>;
 
   constructor() {
     this.lexer = lexer;
     this.reasonDefinitions = loadReasonDefinitions();
-    // TODO: Load the generated parser from proof.grammar
-    // this.parser = require("./proof.grammar.js");
   }
 
   // Helper function to parse objects
@@ -29,17 +23,17 @@ export class ProofParser {
     if (arg.startsWith("a_")) {
       return {
         type: Obj.Angle,
-        v: arg.substring(2),
+        v: arg.replace("a_", ""),
       };
     } else if (arg.startsWith("t_")) {
       return {
         type: Obj.Triangle,
-        v: arg.substring(2),
+        v: arg.replace("t_", ""),
       };
     } else if (arg.startsWith("q_")) {
       return {
         type: Obj.Quadrilateral,
-        v: arg.substring(2),
+        v: arg.replace("q_", ""),
       };
     } else if (arg.length === 2) {
       return {
@@ -66,7 +60,6 @@ export class ProofParser {
       }
     }
 
-    // For now, return a basic structure
     return this.parseBasicStructure(tokens);
   }
 
