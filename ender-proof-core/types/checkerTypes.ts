@@ -53,6 +53,8 @@ export interface ProofGraph {
   nodes: Map<string, ProofStep>;
   edges: Map<string, string[]>;
   incorrectSteps: Set<string>;
+  // Steps marked incorrect specifically because they depend on incorrect steps
+  dependencyFailureSteps: Set<string>;
   unusedSteps: Set<string>;
   cycles: string[][];
 }

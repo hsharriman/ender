@@ -8,9 +8,9 @@ import {
 } from "../types/checkerTypes";
 import { checkReasonApplication } from "./reasonApplication";
 import {
+  checkReasonDependencies,
   checkReasonStructure,
   checkStatementArguments,
-  validateReasonDependencies,
 } from "./validators";
 
 // Build proof graph and check each step
@@ -24,6 +24,7 @@ export const buildProofGraph = (
     nodes: new Map(),
     edges: new Map(),
     incorrectSteps: new Set(),
+    dependencyFailureSteps: new Set(),
     unusedSteps: new Set(),
     cycles: [],
   };
@@ -32,7 +33,7 @@ export const buildProofGraph = (
   proof.steps.forEach((step) => {
     if (step.type === "goal") return; // Skip goal steps
 
-    const stepNum = step.stepNumber?.replace(/[\[\]]/g, "");
+    const stepNum = step.stepNumber?.replace(/[[\]]/g, "");
     if (stepNum) {
       graph.nodes.set(stepNum, step);
       graph.edges.set(stepNum, []);
@@ -43,7 +44,7 @@ export const buildProofGraph = (
   proof.steps.forEach((step) => {
     if (step.type === "goal") return; // Skip goal steps
 
-    const stepNum = step.stepNumber?.replace(/[\[\]]/g, "");
+    const stepNum = step.stepNumber?.replace(/[[\]]/g, "");
 
     if (!stepNum) return;
 
@@ -64,15 +65,10 @@ export const buildProofGraph = (
       isCorrect = checkReasonStructure(step, reasonDefs, graph);
       logDebug(`  Reason structure check: ${isCorrect}`);
 
-      // Validate dependency statements (throws on mismatch)
+      // Validate dependency statements (non-throwing version)
       if (isCorrect) {
-        try {
-          validateReasonDependencies(step.reason, reasonDefs, graph);
-          logDebug(`  Dependency statements check: true`);
-        } catch (e: any) {
-          logError.proofChecker.errorCheckingProof(e);
-          isCorrect = false;
-        }
+        isCorrect = checkReasonDependencies(step.reason, reasonDefs, graph);
+        logDebug(`  Dependency statements check: ${isCorrect}`);
       }
 
       // Check statement
@@ -97,7 +93,18 @@ export const buildProofGraph = (
         }
       }
 
-      // TODO add a flag to the step if there was a mistake in it
+      // Check if any dependencies are incorrect
+      if (isCorrect && step.reason.arguments) {
+        const hasIncorrectDependency = step.reason.arguments.some((depRef) => {
+          const depStepNum = depRef.replace(/[[\]]/g, "");
+          return graph.incorrectSteps.has(depStepNum);
+        });
+
+        if (hasIncorrectDependency) {
+          isCorrect = false;
+          graph.dependencyFailureSteps.add(stepNum);
+        }
+      }
 
       // Check if reason is applied correctly using reason checker methods
       if (isCorrect) {
@@ -108,7 +115,7 @@ export const buildProofGraph = (
       // Add edges from dependencies to this step
       if (step.reason.arguments) {
         step.reason.arguments.forEach((depRef) => {
-          const depStepNum = depRef.replace(/[\[\]]/g, "");
+          const depStepNum = depRef.replace(/[[\]]/g, "");
           const edges = graph.edges.get(depStepNum) || [];
           edges.push(stepNum);
           graph.edges.set(depStepNum, edges);

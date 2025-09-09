@@ -89,12 +89,12 @@ const proofKeywords: moo.Rules = {
   quad: "quad",
   // Step numbers: [01], [12], etc.
   stepNumber: /\[0*(?:\d+)\]/,
-  // Geometric objects
-  point: /[A-Z]/,
-  segment: /[A-Z]{2}/,
-  angle: /a_[A-Z]{3}/,
-  triangle: /t_[A-Z]{3}/,
+  // Geometric objects (order matters - longer patterns first)
   quadrilateral: /q_[A-Z]{4}/,
+  triangle: /t_[A-Z]{3}/,
+  angle: /a_[A-Z]{3}/,
+  segment: /[A-Z]{2}/,
+  point: /[A-Z]/,
   // Statement references: [01], [12], etc.
   statementRef: /\[0*(?:\d+)\]/,
   // Coordinates: (-1.5, 2.0) format

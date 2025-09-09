@@ -1,6 +1,6 @@
-import { logError } from "../errors/errorConstants";
+import { createError, logError } from "../errors/errorConstants";
 import { DiagramContent } from "../geometry/DiagramContent";
-import { ParseObj, ProofObj } from "../types/checkerTypes";
+import { ParseObj, ProofObj, Stmt } from "../types/checkerTypes";
 import { Obj } from "../types/types";
 
 export const buildPremises = (proof: ProofObj) => {
@@ -48,16 +48,10 @@ export const buildPremises = (proof: ProofObj) => {
     ) {
       switch (step.statement.function) {
         case "con_seg":
-          step.statement.arguments.forEach((arg: ParseObj) => {
-            ctx.addSegmentFromStr(arg.v);
-          });
+          addAllObjects(ctx, step.statement);
           break;
         case "con_ang":
-          step.statement.arguments.forEach((arg: ParseObj) => {
-            if (arg.type === Obj.Angle) {
-              ctx.addAngleFromStr(arg.v);
-            }
-          });
+          addAllObjects(ctx, step.statement);
           break;
         case "on_line":
           onLine(ctx, step.statement.arguments);
@@ -71,14 +65,41 @@ export const buildPremises = (proof: ProofObj) => {
         case "midpt":
           midpt(ctx, step.statement.arguments);
           break;
+        case "right":
+          addAllObjects(ctx, step.statement);
+          break;
+        case "ang_bisect":
+          angBisect(ctx, step.statement.arguments);
+          break;
+        case "perp":
+          addAllObjects(ctx, step.statement);
+          break;
         default:
-          throw new Error(
-            `Unknown statement function: ${step.statement.function}`
+          logError.parser.unknownStatementFunction(step.statement.function);
+          throw createError.parser.unknownStatementFunction(
+            step.statement.function
           );
       }
     }
   });
   return ctx;
+};
+
+const angBisect = (ctx: DiagramContent, args: ParseObj[]) => {
+  const [ang, seg] = args;
+  const a = ctx.addAngleFromStr(ang.v);
+  const s = ctx.addSegmentFromStr(seg.v);
+  const sharedPt = a.contains(s.p1)
+    ? s.p2
+    : a.contains(s.p2)
+    ? s.p1
+    : undefined;
+  if (!sharedPt) {
+    logError.parser.segmentAngleOverlapError(seg.v, ang.v);
+    throw createError.parser.segmentAngleOverlapError(seg.v, ang.v);
+  }
+  ctx.addAngle({ center: a.center, start: a.start, end: sharedPt });
+  ctx.addAngle({ center: a.center, start: a.end, end: sharedPt });
 };
 
 const onLine = (ctx: DiagramContent, args: ParseObj[]) => {
@@ -101,10 +122,8 @@ const intersectSeg = (
 
   // Check if the intersection point exists in premises
   if (!proof.premises.points.some((pt) => pt.v === p.v)) {
-    logError.parser.missingPointInPremises(p.v);
-    throw new Error(
-      `Point '${p}' is used in intersect_seg but not defined in premises`
-    );
+    logError.parser.pointNotDefinedInPremises(p.v);
+    throw createError.parser.pointNotDefinedInPremises(p.v);
   }
 
   const seg1 = ctx.addSegmentFromStr(s1.v);
@@ -141,4 +160,25 @@ const midpt = (ctx: DiagramContent, args: ParseObj[]) => {
   p.addOnLine(s);
   ctx.addSegmentFromStr(`${p.label}${s.p2.label}`).addParentSegment(s);
   ctx.addSegmentFromStr(`${s.p1.label}${p.label}`).addParentSegment(s);
+};
+
+const addAllObjects = (ctx: DiagramContent, stmt: Stmt) => {
+  stmt.arguments.forEach((arg: ParseObj) => {
+    switch (arg.type) {
+      case Obj.Segment:
+        ctx.addSegmentFromStr(arg.v);
+        break;
+      case Obj.Angle:
+        ctx.addAngleFromStr(arg.v);
+        break;
+      case Obj.Triangle:
+        ctx.addTriangleFromStr(arg.v);
+        break;
+      case Obj.Quadrilateral:
+        ctx.addQuadrilateralFromStr(arg.v);
+        break;
+      default:
+        break;
+    }
+  });
 };

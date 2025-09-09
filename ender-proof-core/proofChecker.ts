@@ -124,7 +124,14 @@ const checkProof = (filePath: string): void => {
       Array.from(graph.incorrectSteps)
         .sort()
         .forEach((step) => {
-          console.log(`   • Step ${step}`);
+          const depFail = graph.dependencyFailureSteps?.has(step);
+          if (depFail) {
+            console.log(
+              `   • Step ${step} (fails due to dependency on incorrect step)`
+            );
+          } else {
+            console.log(`   • Step ${step}`);
+          }
         });
     }
 

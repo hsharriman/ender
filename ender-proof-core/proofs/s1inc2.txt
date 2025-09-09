@@ -7,5 +7,6 @@ con_seg(JK,LK) [02]
 -> con_tri(t_JMK,t_LMK)
 
 steps:
-sas([01], [02], [03]) -> con_tri(t_ABD,t_CDB) [04]  // Missing dependency
-cpctc([04]) -> con_ang(a_BAD,a_DCB) [05]  // Based on invalid reason
+perp_con_ang([01]) -> con_ang(a_JML,a_LMK) [03]
+reflex_s() -> con_seg(MK, MK) [04]
+aas([02], [03], [04]) -> con_tri(t_JMK,t_LMK) [05]  // Missing dependency for AAS on invalid reason

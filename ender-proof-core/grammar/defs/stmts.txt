@@ -58,6 +58,9 @@ stmt parallelogram(Quad q)
 // t is an isosceles triangle
 stmt isosceles(Triangle t)
 
+// s1 is perpendicular to s2
+stmt perp(Segment s1, Segment s2)
+
 // ---- TODO Not implemented: ------
 // ratio of s1:s2 is the same as ratio of s3:s4
 stmt sim_seg(Segment s1, Segment s2, Segment s3, Segment s4)

@@ -73,6 +73,12 @@ export const ErrorMessages = {
       `Object '${object}' contains duplicate points`,
     PREMISES_ONLY_STATEMENT_IN_PROOF: (stmtFunction: string) =>
       `Statement '${stmtFunction}' is only allowed in premises section, not in proof steps`,
+    UNKNOWN_STATEMENT_FUNCTION: (stmtFunction: string) =>
+      `Unknown statement function: ${stmtFunction}`,
+    SEGMENT_ANGLE_OVERLAP_ERROR: (segment: string, angle: string) =>
+      `Segment '${segment}' is used in ang_bisect but does not overlap with angle ${angle}`,
+    POINT_NOT_DEFINED_IN_PREMISES: (point: string) =>
+      `Point '${point}' is used in intersect_seg but not defined in premises`,
   },
 
   // Proof checker errors
@@ -140,6 +146,16 @@ export const createError = {
       new Error(ErrorMessages.GEOMETRIC.POINT_NOT_FOUND(arg)),
     cannotParseGeometricObject: (arg: string) =>
       new Error(ErrorMessages.GEOMETRIC.CANNOT_PARSE_GEOMETRIC_OBJECT(arg)),
+  },
+  parser: {
+    unknownStatementFunction: (stmtFunction: string) =>
+      new Error(ErrorMessages.PARSER.UNKNOWN_STATEMENT_FUNCTION(stmtFunction)),
+    segmentAngleOverlapError: (segment: string, angle: string) =>
+      new Error(
+        ErrorMessages.PARSER.SEGMENT_ANGLE_OVERLAP_ERROR(segment, angle)
+      ),
+    pointNotDefinedInPremises: (point: string) =>
+      new Error(ErrorMessages.PARSER.POINT_NOT_DEFINED_IN_PREMISES(point)),
   },
   file: {
     fileNotFound: (path: string) =>
@@ -299,6 +315,27 @@ export const logError = {
         } ${ErrorMessages.PARSER.PREMISES_ONLY_STATEMENT_IN_PROOF(
           stmtFunction
         )}`
+      ),
+    unknownStatementFunction: (stmtFunction: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.UNKNOWN_STATEMENT_FUNCTION(stmtFunction)}`
+      ),
+    segmentAngleOverlapError: (segment: string, angle: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.SEGMENT_ANGLE_OVERLAP_ERROR(segment, angle)}`
+      ),
+    pointNotDefinedInPremises: (point: string) =>
+      shouldLog(LogLevel.ERROR) &&
+      console.log(
+        `${
+          ErrorMessages.DEBUG.ERROR_PREFIX
+        } ${ErrorMessages.PARSER.POINT_NOT_DEFINED_IN_PREMISES(point)}`
       ),
   },
   proofChecker: {

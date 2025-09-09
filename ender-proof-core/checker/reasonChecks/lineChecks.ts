@@ -91,17 +91,22 @@ export const perp = (right: Stmt, perp: Stmt, ctx: DiagramContent): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
   const angle = tempCtx.addAngleFromStr(right.arguments[0].v);
 
-  const [s1, s2] = [
+  let [s1, s2] = [
     tempCtx.addSegmentFromStr(perp.arguments[0].v),
     tempCtx.addSegmentFromStr(perp.arguments[1].v),
   ];
-  const intersectPt = getIntersectPt(s1, s2);
-  if (intersectPt) {
+  const [intersectPt, intersectSeg] = getIntersectPt(s1, s2);
+  console.log("intersectPt", intersectPt?.label);
+  console.log("intersectSeg", intersectSeg?.label);
+  if (intersectPt && intersectSeg) {
+    if (intersectSeg.equals(s2)) {
+      [s1, s2] = [s2, s1];
+    }
     // check if angle has corner at intersectPt and 1 pt on each line
     return (
       angle.centerEquals(intersectPt) &&
-      angle.contains(s1) && // TODO if perp doesn't meet at a corner then this will fail
-      angle.contains(s2)
+      angle.contains(s1) &&
+      (angle.contains(s2.p1) || angle.contains(s2.p2))
     );
   }
   return false;
@@ -115,20 +120,35 @@ export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: DiagramContent) => {
   const [a1, a2] = conAng.arguments.map((arg) =>
     tempCtx.addAngleFromStr(arg.v)
   );
-  const intersectPt = getIntersectPt(s1, s2);
-  if (intersectPt) {
+  const [intersectPt, sharedSide] = getIntersectPt(s1, s2);
+  if (intersectPt && sharedSide) {
     // TODO check for shared side AND angle made up of one point on the line
     return a1.centerEquals(intersectPt) && a2.centerEquals(intersectPt);
   }
+  return false;
 };
 
 // ----- Helper functions -----
-const getIntersectPt = (s1: Segment, s2: Segment) => {
-  const checkIntersect = (p: Point, s: Segment) => (p.isOnLine(s) ? p : null);
-  return (
-    checkIntersect(s1.p1, s2) ||
-    checkIntersect(s1.p2, s2) ||
-    checkIntersect(s2.p1, s1) ||
-    checkIntersect(s2.p2, s1)
-  );
+const getIntersectPt = (
+  s1: Segment,
+  s2: Segment
+): [Point | undefined, Segment | undefined] => {
+  // Check if s1.p1 is on s2
+  if (s1.p1.isOnLine(s2)) {
+    return [s1.p1, s1];
+  }
+  // Check if s1.p2 is on s2
+  if (s1.p2.isOnLine(s2)) {
+    return [s1.p2, s1];
+  }
+  // Check if s2.p1 is on s1
+  if (s2.p1.isOnLine(s1)) {
+    return [s2.p1, s2];
+  }
+  // Check if s2.p2 is on s1
+  if (s2.p2.isOnLine(s1)) {
+    return [s2.p2, s2];
+  }
+  // No intersection found
+  return [undefined, undefined];
 };

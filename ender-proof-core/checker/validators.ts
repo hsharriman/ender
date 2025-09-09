@@ -102,92 +102,6 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
     }
   };
 
-  // Check segments in premises
-  for (const segment of proof.premises.segments) {
-    const seg = segment.v;
-    if (seg.length !== 2) {
-      logError.parser.invalidSegmentFormat(seg);
-      errors.push(
-        `Invalid segment format: '${seg}' - segments must have exactly 2 points`
-      );
-      continue;
-    }
-
-    if (hasDuplicateChars(seg)) {
-      logError.parser.duplicatePointsInObject(seg);
-      errors.push(`Segment '${seg}' contains duplicate points`);
-      continue;
-    }
-
-    checkPointsDefined(seg, seg.split(""));
-  }
-
-  // Check triangles in premises
-  for (const triangle of proof.premises.triangles) {
-    const tri = triangle.v;
-    const trianglePoints = tri.substring(2); // Remove 't_' prefix
-
-    if (trianglePoints.length !== 3) {
-      logError.parser.invalidTriangleFormat(tri);
-      errors.push(
-        `Invalid triangle format: '${tri}' - triangles must have exactly 3 points`
-      );
-      continue;
-    }
-
-    if (hasDuplicateChars(trianglePoints)) {
-      logError.parser.duplicatePointsInObject(tri);
-      errors.push(`Triangle '${tri}' contains duplicate points`);
-      continue;
-    }
-
-    checkPointsDefined(tri, trianglePoints.split(""));
-  }
-
-  // Check quadrilaterals in premises
-  for (const quadrilateral of proof.premises.quadrilaterals) {
-    const quad = quadrilateral.v;
-    const quadrilateralPoints = quad.substring(2); // Remove 'q_' prefix
-
-    if (quadrilateralPoints.length !== 4) {
-      logError.parser.invalidQuadrilateralFormat(quad);
-      errors.push(
-        `Invalid quadrilateral format: '${quad}' - quadrilaterals must have exactly 4 points`
-      );
-      continue;
-    }
-
-    if (hasDuplicateChars(quadrilateralPoints)) {
-      logError.parser.duplicatePointsInObject(quad);
-      errors.push(`Quadrilateral '${quad}' contains duplicate points`);
-      continue;
-    }
-
-    checkPointsDefined(quad, quadrilateralPoints.split(""));
-  }
-
-  // Check angles in premises
-  for (const angle of proof.premises.angles) {
-    const ang = angle.v;
-    const anglePoints = ang.substring(2); // Remove 'a_' prefix
-
-    if (anglePoints.length !== 3) {
-      logError.parser.invalidAngleFormat(ang);
-      errors.push(
-        `Invalid angle format: '${ang}' - angles must have exactly 3 points`
-      );
-      continue;
-    }
-
-    if (hasDuplicateChars(anglePoints)) {
-      logError.parser.duplicatePointsInObject(ang);
-      errors.push(`Angle '${ang}' contains duplicate points`);
-      continue;
-    }
-
-    checkPointsDefined(ang, anglePoints.split(""));
-  }
-
   // Check geometric objects in all statements
   for (const step of proof.steps) {
     if (step.statement?.arguments) {
@@ -363,6 +277,48 @@ export const validateReasonDependencies = (
       );
     }
   }
+};
+
+// Non-throwing version that returns boolean and logs errors
+export const checkReasonDependencies = (
+  reason: Reason,
+  reasonDefs: Map<string, ReasonDefinition>,
+  proofGraph: ProofGraph
+): boolean => {
+  const definition = reasonDefs.get(reason.function);
+  if (!definition) {
+    logError.parser.undefinedReason(reason.function);
+    return false;
+  }
+
+  if (reason.arguments.length !== definition.dependencies.length) {
+    logError.parser.dependencyMismatch(
+      `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`
+    );
+    return false;
+  }
+
+  for (let i = 0; i < reason.arguments.length; i++) {
+    const depRef = reason.arguments[i];
+    const expectedType = definition.dependencies[i];
+    const stepNum = depRef.replace(/[[\]]/g, "");
+    const dependencyStep = proofGraph.nodes.get(stepNum);
+    if (!dependencyStep || !dependencyStep.statement) {
+      logError.parser.dependencyMismatch(
+        `Missing dependency for ${reason.function} at index ${i} (ref ${depRef})`
+      );
+      return false;
+    }
+    const foundType = dependencyStep.statement.function;
+    if (foundType !== expectedType) {
+      logError.parser.dependencyMismatch(
+        `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedType}, found ${foundType} (ref ${depRef})`
+      );
+      return false;
+    }
+  }
+
+  return true;
 };
 
 // Check for duplicate steps in the proof
