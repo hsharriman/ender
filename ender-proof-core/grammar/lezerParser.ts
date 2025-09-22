@@ -270,6 +270,7 @@ export class ProofParser {
             tokens[i].type === "segment" ||
             tokens[i].type === "angle" ||
             tokens[i].type === "triangle" ||
+            tokens[i].type === "quadrilateral" ||
             tokens[i].type === "statementRef"
           ) {
             statement.arguments.push(this.parseObj(tokens[i].value));

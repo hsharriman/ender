@@ -175,9 +175,8 @@ export const checkReasonApplication = (
         return false;
       case "isosceles":
         const conSeg_isos = getDepStmt(reason.arguments[0], proof);
-        const isos_isos = getDepStmt(reason.arguments[1], proof);
-        if (currStep.statement && conSeg_isos && isos_isos) {
-          return isosceles(conSeg_isos, isos_isos, ctx);
+        if (currStep.statement && conSeg_isos && currStep.statement) {
+          return isosceles(conSeg_isos, currStep.statement, ctx);
         }
         return false;
 
@@ -201,9 +200,10 @@ export const checkReasonApplication = (
         }
         return false;
       case "rectangle":
-        const conSeg_rectangle = getDepStmt(reason.arguments[1], proof);
+        const conSeg_rectangle = getDepStmt(reason.arguments[0], proof);
+        console.log("conSeg_rectangle", conSeg_rectangle, currStep.statement);
         if (currStep.statement && conSeg_rectangle) {
-          return rectangle(currStep.statement, conSeg_rectangle, ctx);
+          return rectangle(conSeg_rectangle, currStep.statement, ctx);
         }
         return false;
       case "parallelogram1":

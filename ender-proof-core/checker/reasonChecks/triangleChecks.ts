@@ -325,6 +325,7 @@ export const isosceles = (
   const [s1, s2] = conSegMapper(conSeg, tempCtx);
   const [t] = conTriMapper(isosceles, tempCtx);
 
+  console.log("isosceles", t.contains(s1), t.contains(s2), !s1.equals(s2));
   const valid = t.contains(s1) && t.contains(s2) && !s1.equals(s2);
   if (valid) {
     ctx.addTriangleFromStr(t.label);

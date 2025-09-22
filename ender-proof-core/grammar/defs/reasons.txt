@@ -73,8 +73,8 @@ reason paralellogram1(rectangle) -> parallelogram
 // definition of parallelogram (parallelogram has 2 sets of parallel sides)
 reason paralellogram2(para) -> parallelogram
 
-// definition of rectangle
-reason rectangle(con_seg) -> rectangle
+// definition of rectangle, concludes that angles are 90 or opposite sides are congruent
+reason rectangle(rectangle) -> con_right, con_ang, con_seg
 
 
 // not implemented

@@ -151,10 +151,7 @@ export class DiagramContent {
   };
 
   overlap = (a: Angle) => {
-    const [s, c, e] = a.label.split("");
-    // get segments that form the angle
-    const s1 = this.getSegment(`${s}${c}`);
-    const s2 = this.getSegment(`${c}${e}`);
+    const [s, c, e] = [a.start.label, a.center.label, a.end.label];
     let overlapsExisting = false;
 
     const findOverlaps = (segSet: Set<Segment>, angleEnd: string) => {
@@ -166,6 +163,7 @@ export class DiagramContent {
             // does overlapping angle already exist in ctx?
             const existingAngle = this.getAngle(overlapLabel);
             if (existingAngle) {
+              // add new angle to existing angle's list of names instead of creating new angle
               overlapsExisting = true;
               existingAngle.addNames(angleEnd, s.label.replace(c, ""));
             } else {
@@ -176,13 +174,18 @@ export class DiagramContent {
         });
       }
     };
+
+    // get segments that form the angle
+    const startToCenter = this.getSegment(`${s}${c}`);
+    const endToCenter = this.getSegment(`${c}${e}`);
+
     // check for overlaps with parent segments
-    findOverlaps(s1.getParentSegments(), a.end.label);
-    findOverlaps(s2.getParentSegments(), a.start.label);
+    findOverlaps(startToCenter.getParentSegments(), e); // 3rd pt = end
+    findOverlaps(endToCenter.getParentSegments(), s); // 3rd pt = start
 
     // check for overlaps with sub segments
-    findOverlaps(s1.getSubSegments(), a.start.label);
-    findOverlaps(s2.getSubSegments(), a.end.label);
+    findOverlaps(startToCenter.getSubSegments(), e); // 3rd pt = end
+    findOverlaps(endToCenter.getSubSegments(), s); // 3rd pt = start
 
     // if doesn't overlap with existing angles, add the angle to the ctx
     if (!overlapsExisting) {
