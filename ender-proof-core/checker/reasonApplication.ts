@@ -62,10 +62,6 @@ export const checkReasonApplication = (
       // Get the arguments from the dependency step
       const depArgs = dependencyStep.statement?.arguments || [];
 
-      // if (depArgs.length !== 2) {
-      //   return false;
-      // }
-
       // Create geometric objects from the arguments
 
       dependencyArgs.push(depArgs.map((arg) => getGeometricObject(arg, ctx)));
