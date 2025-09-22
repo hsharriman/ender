@@ -1,0 +1,17 @@
+title: "S2INC2 - Prove Segments Parallel #3"
+premises:
+pt: X, W, Y, Z, M
+tri: t_MWX, t_MYZ
+midpt(WZ, M) [01]
+midpt(YX, M) [02]
+transversal(W, X, X, Y, Z, Y) [03]
+-> para(WX, YZ)
+
+steps:
+midpt([01]) -> con_seg(WM, MZ) [04]
+midpt([02]) -> con_seg(MX, MY) [05]
+intersect_seg([01], [02]) -> intersect_seg([06])
+vert_ang([06]) -> con_ang(a_YMZ, a_WMX) [07]
+sas([04], [07], [06]) -> con_tri(t_MYZ, t_MWX) [08]
+cpctc([09]) -> con_ang(a_MYZ, a_MWX) [09]
+altint_conv([09], [03]) -> para(WX, YZ) [10]

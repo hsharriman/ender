@@ -87,25 +87,50 @@ export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: DiagramContent) => {
   return segmentsEqual && segmentCheck;
 };
 
-export const perp = (right: Stmt, perp: Stmt, ctx: DiagramContent): boolean => {
+export const intersect_seg = (
+  intersect_on1: Stmt,
+  intersect_on2: Stmt,
+  intersect_seg: Stmt,
+  ctx: DiagramContent
+): boolean => {
+  const tempCtx = new DiagramContent(ctx.getCtx());
+  const p1 = tempCtx.getPoint(intersect_on1.arguments[1].v);
+  const p2 = tempCtx.getPoint(intersect_on2.arguments[1].v);
+
+  const [in1, in2] = intersect_seg.arguments.map((arg) =>
+    tempCtx.addSegmentFromStr(arg.v)
+  );
+  return p1 === p2 && p1.isOnLine(in1) && p1.isOnLine(in2);
+};
+
+export const perp = (
+  right: Stmt,
+  onLine: Stmt,
+  perp: Stmt,
+  ctx: DiagramContent
+): boolean => {
   const tempCtx = new DiagramContent(ctx.getCtx());
   const angle = tempCtx.addAngleFromStr(right.arguments[0].v);
 
-  let [s1, s2] = [
+  let [sharedSide, s2] = [
     tempCtx.addSegmentFromStr(perp.arguments[0].v),
     tempCtx.addSegmentFromStr(perp.arguments[1].v),
   ];
-  const [intersectPt, intersectSeg] = getIntersectPt(s1, s2);
-  console.log("intersectPt", intersectPt?.label);
-  console.log("intersectSeg", intersectSeg?.label);
-  if (intersectPt && intersectSeg) {
-    if (intersectSeg.equals(s2)) {
-      [s1, s2] = [s2, s1];
+  // segment is the line that is on the point
+  const [onLineSeg, onLinePt] = [
+    tempCtx.addSegmentFromStr(onLine.arguments[0].v),
+    tempCtx.getPoint(onLine.arguments[1].v),
+  ];
+
+  if (onLineSeg && onLinePt) {
+    // reassign so that s1 is the shared side
+    if (onLineSeg.equals(sharedSide)) {
+      [sharedSide, s2] = [s2, sharedSide];
     }
     // check if angle has corner at intersectPt and 1 pt on each line
     return (
-      angle.centerEquals(intersectPt) &&
-      angle.contains(s1) &&
+      angle.centerEquals(onLinePt) &&
+      angle.contains(sharedSide) &&
       (angle.contains(s2.p1) || angle.contains(s2.p2))
     );
   }

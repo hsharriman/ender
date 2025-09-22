@@ -26,12 +26,11 @@ many reqs, many conclusions: supported
 TODO:
 - mark steps that are incorrect internally while checking
 - add more detailed error messages within reason checks so it is clear why a step is failing, log these
-- handle line extensions/ indicating when a point is on a line
+- add error throw if an invalid reason is used (i.e. using reflex instead of reflex_s as first step of proof)
+
+make it possible to organize some statements by how general they are:
+- add handling so that anywhere con_ang is required, con_right can be used
+- add handling so that anywhere on_line is required, midpt can be used 
 - add checks for geometric reasons:
   - easier:
   - parallelogram
-  - angle bisector
-  - perpendicular bisector
-
-  - harder:
-  - congruent adjacent angles

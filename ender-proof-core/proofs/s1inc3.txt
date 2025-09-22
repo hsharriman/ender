@@ -10,4 +10,4 @@ con_seg(LM,NK) [02]
 steps:
 rectangle([02]) -> con_right(a_KLM,a_MNK) [03]
 reflex_s() -> con_seg(MK, MK) [04]
-rhl([02], [03], [04]) -> con_tri(t_KLM,t_MNK) [05]  // Missing dependency for AAS on invalid reason
+rhl([03], [02], [04]) -> con_tri(t_KLM,t_MNK) [05]  // Missing dependency for AAS on invalid reason

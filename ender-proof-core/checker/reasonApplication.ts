@@ -14,7 +14,13 @@ import {
 } from "../types/checkerTypes";
 import { Obj } from "../types/types";
 import { ang_bisect, reflex_a, vert_ang } from "./reasonChecks/angleChecks";
-import { altint, midpt, perp, reflex_s } from "./reasonChecks/lineChecks";
+import {
+  altint,
+  intersect_seg,
+  midpt,
+  perp,
+  reflex_s,
+} from "./reasonChecks/lineChecks";
 import { parallelogram2, rectangle } from "./reasonChecks/polyChecks";
 import {
   aas,
@@ -195,8 +201,9 @@ export const checkReasonApplication = (
 
       case "perp":
         const right_perp = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && right_perp) {
-          return perp(right_perp, currStep.statement, ctx);
+        const onLine_perp = getDepStmt(reason.arguments[1], proof);
+        if (currStep.statement && right_perp && onLine_perp) {
+          return perp(right_perp, onLine_perp, currStep.statement, ctx);
         }
         return false;
       case "rectangle":
@@ -218,11 +225,18 @@ export const checkReasonApplication = (
           return parallelogram2(para_parallelogram, currStep.statement, ctx);
         }
         return false;
-      // case "intersect_seg":
-      //   if (currStep.statement) {
-      //     return intersect_seg(currStep.statement, ctx);
-      //   }
-      //   return false;
+      case "intersect_seg":
+        const intersect_on1 = getDepStmt(reason.arguments[0], proof);
+        const intersect_on2 = getDepStmt(reason.arguments[1], proof);
+        if (currStep.statement && intersect_on1 && intersect_on2) {
+          return intersect_seg(
+            intersect_on1,
+            intersect_on2,
+            currStep.statement,
+            ctx
+          );
+        }
+        return false;
       case "con_right":
         return true;
       case "vert_ang":

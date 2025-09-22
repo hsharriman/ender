@@ -1,4 +1,4 @@
-title: "S1C1 - Prove Rectangle #2"
+title: "S2C1 - Prove Rectangle #2"
 premises:
 pt: E, F, G, H, J
 tri: t_FGJ

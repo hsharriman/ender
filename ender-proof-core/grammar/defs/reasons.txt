@@ -22,14 +22,14 @@ reason cpctc(con_tri) -> con_seg, con_ang
 
 
 // ------------ Line Reasons ------------ 
-// definition of intersecting lines
-reason intersect_seg() -> intersect_seg
+// definition of intersecting lines, if same point is on 2 lines then lines intersect at that point
+reason intersect_seg(on_line, on_line) -> intersect_seg
 
 // reflexive property: any segment is congruent to itself
 reason reflex_s() -> con_seg
 
 // definition of perpendicular lines
-reason perp(right) -> perp
+reason perp(right, on_line) -> perp
 
 // definition of midpoint
 reason midpt(midpt) -> con_seg
@@ -63,8 +63,8 @@ reason ang_bisect_conv(con_ang) -> ang_bisect
 // congruent right angles
 reason con_right(right, right) -> con_ang
 
-// TODO
-reason perp_con_ang(perp) -> con_ang
+// the pair of congruent angles formed by perpendicular lines are right angles
+reason perp_con_ang(perp) -> con_ang, con_right
 
 // ------------ Polygon Reasons ------------ 
 // definition of parallelogram (rectangle is type of parallelogram)
