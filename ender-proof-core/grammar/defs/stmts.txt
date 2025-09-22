@@ -3,9 +3,6 @@ premises
 // point p is on the segment s
 stmt on_line(Segment s, Point p)
 
-// segment s1 and s2 intersect at point p
-stmt intersect_seg(Segment s1, Segment s2, Point p)
-
 // the segment from s1p1 -> s1p2 is crossed by t1, and the segment from s2p1 -> s2p2
 // is crossed by t2. t1 -> t2 is the transversal.
 // NOTE: assumes that s1p1 -> s1p2 and s2p1 -> s2p2 are both chosen wrt the same direction (such as from left to right)
@@ -18,9 +15,18 @@ stmt intersect_seg(Segment s1, Segment s2, Point p)
 stmt transversal(Point s1p1, Point s1p2, Point t1, Point s2p1, Point s2p2, Point t2) // Point s1p1 -> s1p2 = seg1
 end_premises
 
-// ----- Supported statements ----- 
-// right angle: angle a is 90 degrees
+// ----- Supported statements with unidirectional substitutability ----- 
+// Congruence statements - con_right can substitute for con_ang, but not vice versa
+group congruent_angs { base: con_ang, extensions: con_right }
+
+// Point-on-line statements - midpt can substitute for on_line, but not vice versa  
+group point_on_line { base: on_line, extensions: midpt }
+
+// Individual statements
 stmt right(Angle a) 
+
+// segment s1 and s2 intersect at point p
+stmt intersect_seg(Segment s1, Segment s2, Point p)
 
 // segment s1 is congruent to s2
 stmt con_seg(Segment s1, Segment s2)

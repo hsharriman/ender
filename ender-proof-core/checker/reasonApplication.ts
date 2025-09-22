@@ -229,6 +229,12 @@ export const checkReasonApplication = (
         const intersect_on1 = getDepStmt(reason.arguments[0], proof);
         const intersect_on2 = getDepStmt(reason.arguments[1], proof);
         if (currStep.statement && intersect_on1 && intersect_on2) {
+          console.log(
+            "intersect_seg",
+            intersect_on1,
+            intersect_on2,
+            currStep.statement
+          );
           return intersect_seg(
             intersect_on1,
             intersect_on2,

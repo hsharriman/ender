@@ -6,6 +6,7 @@ import {
   Reason,
   ReasonDefinition,
   StatementDefinition,
+  StatementGroup,
   Stmt,
 } from "../types/checkerTypes";
 import { Obj } from "../types/types";
@@ -33,6 +34,7 @@ export const checkStatementArguments = (
 export const checkReasonStructure = (
   step: ProofStep,
   reasonDefs: Map<string, ReasonDefinition>,
+  groups: Map<string, StatementGroup>,
   proofGraph: ProofGraph
 ): boolean => {
   const reason = step.reason;
@@ -47,15 +49,56 @@ export const checkReasonStructure = (
     }
     console.log(`    ✅ Found definition:`, definition);
 
-    reason.arguments.forEach((arg, idx) => {
+    for (let idx = 0; idx < reason.arguments.length; idx++) {
+      const arg = reason.arguments[idx];
       const stepNum = arg.replace(/\[|\]/g, "");
       const dependencyStep = proofGraph.nodes.get(stepNum);
-      const expectedType = definition.dependencies[idx];
-      if (dependencyStep?.statement?.function !== expectedType) {
-        logError.parser.dependencyMismatch(arg);
+      const expectedDep = definition.dependencies[idx];
+
+      if (!dependencyStep?.statement) {
+        logError.parser.dependencyMismatch(
+          `Missing dependency for ${reason.function} at index ${idx} (ref ${arg})`
+        );
         return false;
       }
-    });
+
+      const foundType = dependencyStep.statement.function;
+
+      // Check if expectedDep is a group or direct statement name
+      if (typeof expectedDep === "string") {
+        const group = groups.get(expectedDep);
+        if (group) {
+          // Check if foundType can substitute for the expected base type
+          if (group.base === foundType) {
+            // Direct match with base type - valid
+            continue;
+          } else if (group.extensions.includes(foundType)) {
+            // Found type can substitute for base type - valid
+            continue;
+          } else {
+            // No valid substitution
+            logError.parser.dependencyMismatch(
+              `Dependency mismatch for ${
+                reason.function
+              } at index ${idx}: expected ${
+                group.base
+              } or one of [${group.extensions.join(
+                ", "
+              )}], found ${foundType} (ref ${arg})`
+            );
+            return false;
+          }
+        } else {
+          // Direct statement name match
+          if (foundType !== expectedDep) {
+            logError.parser.dependencyMismatch(
+              `Dependency mismatch for ${reason.function} at index ${idx}: expected ${expectedDep}, found ${foundType} (ref ${arg})`
+            );
+            return false;
+          }
+        }
+      }
+    }
 
     // Handle multiple possible conclusions (separated by commas)
     const possibleConclusions = definition.conclusion
@@ -283,6 +326,7 @@ export const validateReasonDependencies = (
 export const checkReasonDependencies = (
   reason: Reason,
   reasonDefs: Map<string, ReasonDefinition>,
+  groups: Map<string, StatementGroup>,
   proofGraph: ProofGraph
 ): boolean => {
   const definition = reasonDefs.get(reason.function);
@@ -300,7 +344,7 @@ export const checkReasonDependencies = (
 
   for (let i = 0; i < reason.arguments.length; i++) {
     const depRef = reason.arguments[i];
-    const expectedType = definition.dependencies[i];
+    const expectedDep = definition.dependencies[i];
     const stepNum = depRef.replace(/[[\]]/g, "");
     const dependencyStep = proofGraph.nodes.get(stepNum);
     if (!dependencyStep || !dependencyStep.statement) {
@@ -310,11 +354,41 @@ export const checkReasonDependencies = (
       return false;
     }
     const foundType = dependencyStep.statement.function;
-    if (foundType !== expectedType) {
-      logError.parser.dependencyMismatch(
-        `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedType}, found ${foundType} (ref ${depRef})`
-      );
-      return false;
+
+    // Check if expectedDep is a group or direct statement name
+    if (typeof expectedDep === "string") {
+      // Check if it's a group name
+      const group = groups.get(expectedDep);
+      if (group) {
+        // Check if foundType can substitute for the expected base type
+        if (group.base === foundType) {
+          // Direct match with base type
+          continue;
+        } else if (group.extensions.includes(foundType)) {
+          // Found type can substitute for base type
+          continue;
+        } else {
+          // No valid substitution
+          logError.parser.dependencyMismatch(
+            `Dependency mismatch for ${
+              reason.function
+            } at index ${i}: expected ${
+              group.base
+            } or one of [${group.extensions.join(
+              ", "
+            )}], found ${foundType} (ref ${depRef})`
+          );
+          return false;
+        }
+      } else {
+        // Direct statement name match
+        if (foundType !== expectedDep) {
+          logError.parser.dependencyMismatch(
+            `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedDep}, found ${foundType} (ref ${depRef})`
+          );
+          return false;
+        }
+      }
     }
   }
 

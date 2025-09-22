@@ -44,7 +44,7 @@ const checkProof = (filePath: string): void => {
   try {
     // Load definitions
     const reasonDefs = loadReasonDefinitions();
-    const stmtDefs = loadStatementDefinitions();
+    const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
     logDebug("📚 Parsing statement definitions...");
 
@@ -69,7 +69,7 @@ const checkProof = (filePath: string): void => {
 
     // Build proof graph
     logDebug("Building proof graph...");
-    const graph = buildProofGraph(proof, reasonDefs, stmtDefs, ctx);
+    const graph = buildProofGraph(proof, reasonDefs, stmtDefs, groups, ctx);
 
     // Detect cycles
     graph.cycles = detectCycles(graph);

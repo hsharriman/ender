@@ -8,7 +8,7 @@ con_ang(a_LPS, a_UPS) [03]
 -> con_tri(t_LNU, t_UQL)
 
 steps:
-perp_con_ang([01]) -> con_ang(a_PSL, a_PSU) [04]
+perp_con_ang([01]) -> con_right(a_PSL, a_PSU) [04]
 reflex_s() -> con_seg(PS, PS) [05]
 asa([03], [05], [04]) -> con_tri(t_LSP, t_USP) [06]
 cpctc([06]) -> con_ang(a_SLP, a_SUP) [07]

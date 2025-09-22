@@ -16,9 +16,15 @@ export interface ParseObj {
   v: string;
 }
 
+export interface StatementGroup {
+  name: string;
+  base: string; // The base statement that can be substituted for
+  extensions: string[]; // Statements that can substitute for the base
+}
+
 export interface ReasonDefinition {
   name: string;
-  dependencies: string[];
+  dependencies: (string | StatementGroup)[]; // Can be statement name or group
   conclusion: string;
 }
 
@@ -26,6 +32,7 @@ export interface StatementDefinition {
   name: string;
   parameters: string[];
   isPremisesOnly?: boolean;
+  group?: string; // Optional group membership
 }
 
 // Types for the proof checker

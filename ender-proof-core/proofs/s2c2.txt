@@ -10,7 +10,7 @@ con_seg(AF, CG) [04]
 
 steps:
 reflex_s() -> con_seg(BD, BD) [05]
-perp_con_ang([01]) -> con_ang(a_ADB,a_BDC) [06]
+perp_con_ang([01]) -> con_right(a_ADB,a_BDC) [06]
 sas([02], [06], [05]) -> con_tri(t_ABD, t_BCD) [07]
 cpctc([07]) -> con_seg(AB, BC) [08]
 sas([08], [03], [04]) -> con_tri(t_ABF, t_BCG) [09]

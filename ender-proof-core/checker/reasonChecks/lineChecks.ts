@@ -97,10 +97,12 @@ export const intersect_seg = (
   const p1 = tempCtx.getPoint(intersect_on1.arguments[1].v);
   const p2 = tempCtx.getPoint(intersect_on2.arguments[1].v);
 
-  const [in1, in2] = intersect_seg.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg.v)
-  );
-  return p1 === p2 && p1.isOnLine(in1) && p1.isOnLine(in2);
+  const [in1, in2, inpt] = [
+    tempCtx.addSegmentFromStr(intersect_seg.arguments[0].v),
+    tempCtx.addSegmentFromStr(intersect_seg.arguments[1].v),
+    tempCtx.getPoint(intersect_seg.arguments[2].v),
+  ];
+  return p1 === p2 && p1.isOnLine(in1) && p1.isOnLine(in2) && p1 === inpt;
 };
 
 export const perp = (

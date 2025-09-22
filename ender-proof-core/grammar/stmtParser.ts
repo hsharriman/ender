@@ -47,6 +47,13 @@ export interface StatementDefinition {
   name: string;
   parameters: string[];
   isPremisesOnly?: boolean;
+  group?: string; // Optional group membership
+}
+
+export interface StatementGroup {
+  name: string;
+  base: string; // The base statement that can be substituted for
+  extensions: string[]; // Statements that can substitute for the base
 }
 
 // Parser for statement definitions
@@ -112,11 +119,35 @@ export class StmtParser {
     };
   }
 
-  parseStatementDefinitions(
-    filePath: string
-  ): Map<string, StatementDefinition> {
+  parseGroupDefinition(line: string): StatementGroup | null {
+    // Parse: group group_name { base: stmt1, extensions: stmt2, stmt3 }
+    const trimmed = line.trim();
+    const hierarchyMatch = trimmed.match(
+      /^group\s+(\w+)\s*\{\s*base:\s*(\w+)\s*,\s*extensions:\s*([^}]+)\s*\}$/
+    );
+    if (hierarchyMatch) {
+      const [, groupName, base, extensionsStr] = hierarchyMatch;
+      const extensions = extensionsStr
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      return {
+        name: groupName,
+        base,
+        extensions,
+      };
+    }
+
+    return null;
+  }
+
+  parseStatementDefinitions(filePath: string): {
+    statements: Map<string, StatementDefinition>;
+    groups: Map<string, StatementGroup>;
+  } {
     const content = readFileSync(filePath, "utf-8");
     const statements = new Map<string, StatementDefinition>();
+    const groups = new Map<string, StatementGroup>();
 
     const lines = content
       .split("\n")
@@ -144,6 +175,14 @@ export class StmtParser {
         continue;
       }
 
+      // Try to parse as group first
+      const groupDef = this.parseGroupDefinition(line.trim());
+      if (groupDef) {
+        groups.set(groupDef.name, groupDef);
+        logDebug(`    ✅ Parsed group: ${JSON.stringify(groupDef)}`);
+        continue;
+      }
+
       const stmtDef = this.parseStatementDefinition(line.trim());
       if (stmtDef) {
         // Mark statements in premises section as premises-only
@@ -159,8 +198,27 @@ export class StmtParser {
       }
     }
 
-    logDebug(`📚 Loaded ${statements.size} statement definitions`);
-    return statements;
+    // Link statements to their groups
+    for (const [groupName, group] of groups) {
+      // Link base statement to group
+      const baseStmt = statements.get(group.base);
+      if (baseStmt) {
+        baseStmt.group = groupName;
+      }
+
+      // Link extension statements to group
+      for (const stmtName of group.extensions) {
+        const stmt = statements.get(stmtName);
+        if (stmt) {
+          stmt.group = groupName;
+        }
+      }
+    }
+
+    logDebug(
+      `📚 Loaded ${statements.size} statement definitions and ${groups.size} groups`
+    );
+    return { statements, groups };
   }
 }
 
@@ -169,10 +227,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Export a convenience function
-export const loadStatementDefinitions = (): Map<
-  string,
-  StatementDefinition
-> => {
+export const loadStatementDefinitions = (): {
+  statements: Map<string, StatementDefinition>;
+  groups: Map<string, StatementGroup>;
+} => {
   const parser = new StmtParser();
   const stmtsPath = join(__dirname, "defs", "stmts.txt");
   return parser.parseStatementDefinitions(stmtsPath);

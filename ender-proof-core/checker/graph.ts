@@ -5,6 +5,7 @@ import {
   ProofObj,
   ReasonDefinition,
   StatementDefinition,
+  StatementGroup,
 } from "../types/checkerTypes";
 import { checkReasonApplication } from "./reasonApplication";
 import {
@@ -18,6 +19,7 @@ export const buildProofGraph = (
   proof: ProofObj,
   reasonDefs: Map<string, ReasonDefinition>,
   stmtDefs: Map<string, StatementDefinition>,
+  groups: Map<string, StatementGroup>,
   ctx: DiagramContent
 ): ProofGraph => {
   const graph: ProofGraph = {
@@ -62,12 +64,17 @@ export const buildProofGraph = (
       logDebug(JSON.stringify(step, null, 2));
 
       // Check reason dependencies
-      isCorrect = checkReasonStructure(step, reasonDefs, graph);
+      isCorrect = checkReasonStructure(step, reasonDefs, groups, graph);
       logDebug(`  Reason structure check: ${isCorrect}`);
 
       // Validate dependency statements (non-throwing version)
       if (isCorrect) {
-        isCorrect = checkReasonDependencies(step.reason, reasonDefs, graph);
+        isCorrect = checkReasonDependencies(
+          step.reason,
+          reasonDefs,
+          groups,
+          graph
+        );
         logDebug(`  Dependency statements check: ${isCorrect}`);
       }
 

@@ -40,9 +40,15 @@ const reasonLexerRules: moo.Rules = {
 const reasonLexer = moo.compile(reasonLexerRules);
 
 // Types for reason definitions
+export interface StatementGroup {
+  name: string;
+  base: string; // The base statement that can be substituted for
+  extensions: string[]; // Statements that can substitute for the base
+}
+
 export interface ReasonDefinition {
   name: string;
-  dependencies: string[];
+  dependencies: (string | StatementGroup)[];
   conclusion: string;
 }
 
