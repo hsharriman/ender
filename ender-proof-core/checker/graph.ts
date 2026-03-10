@@ -1,5 +1,5 @@
 import { logDebug, logError } from "../errors/errorConstants";
-import { DiagramContent } from "../geometry/DiagramContent";
+import { DiagramContent } from "geometry-object";
 import {
   ProofGraph,
   ProofObj,

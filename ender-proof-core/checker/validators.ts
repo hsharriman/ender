@@ -9,7 +9,7 @@ import {
   StatementGroup,
   Stmt,
 } from "../types/checkerTypes";
-import { Obj } from "../types/types";
+import { Obj } from "geometry-object";
 
 // Check if statement arguments match the expected parameters
 export const checkStatementArguments = (

@@ -1,4 +1,4 @@
-import { DiagramContent } from "../../geometry/DiagramContent";
+import { DiagramContent } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 
 export const conTriMapper = (conTri: Stmt, ctx: DiagramContent) => {

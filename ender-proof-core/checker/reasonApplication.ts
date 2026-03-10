@@ -1,10 +1,12 @@
 import { createError, logError } from "../errors/errorConstants";
-import { Angle } from "../geometry/Angle";
-import { DiagramContent } from "../geometry/DiagramContent";
-import { Point } from "../geometry/Point";
-import { Quadrilateral } from "../geometry/Quadrilateral";
-import { Segment } from "../geometry/Segment";
-import { Triangle } from "../geometry/Triangle";
+import {
+  Angle,
+  DiagramContent,
+  Point,
+  Quadrilateral,
+  Segment,
+  Triangle,
+} from "geometry-object";
 import {
   ParseObj,
   ProofGraph,
@@ -12,7 +14,7 @@ import {
   ProofStep,
   ReasonDefinition,
 } from "../types/checkerTypes";
-import { Obj } from "../types/types";
+import { Obj } from "geometry-object";
 import { ang_bisect, reflex_a, vert_ang } from "./reasonChecks/angleChecks";
 import {
   altint,

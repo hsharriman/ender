@@ -5,7 +5,7 @@ import {
   Reason,
   Stmt,
 } from "../types/checkerTypes";
-import { Obj } from "../types/types";
+import { Obj } from "geometry-object";
 import { lexer } from "./parser";
 import { loadReasonDefinitions } from "./reasonParser";
 

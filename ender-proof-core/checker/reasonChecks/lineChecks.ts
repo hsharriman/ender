@@ -1,6 +1,4 @@
-import { DiagramContent } from "../../geometry/DiagramContent";
-import { Point } from "../../geometry/Point";
-import { Segment } from "../../geometry/Segment";
+import { DiagramContent, Point, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 
 export const reflex_s = (s1: Segment, s2: Segment) => {

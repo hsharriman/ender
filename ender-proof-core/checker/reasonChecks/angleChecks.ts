@@ -1,7 +1,4 @@
-import { Angle } from "../../geometry/Angle";
-import { DiagramContent } from "../../geometry/DiagramContent";
-import { Point } from "../../geometry/Point";
-import { Segment } from "../../geometry/Segment";
+import { Angle, DiagramContent, Point, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 
 export const reflex_a = (a1: Angle, a2: Angle) => {

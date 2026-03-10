@@ -1,6 +1,5 @@
 import { logError } from "../../errors/errorConstants";
-import { DiagramContent } from "../../geometry/DiagramContent";
-import { Triangle } from "../../geometry/Triangle";
+import { DiagramContent, Triangle } from "geometry-object";
 import { ParseObj, Stmt } from "../../types/checkerTypes";
 import { conSegMapper, conTriMapper } from "./argMappers";
 import { angCenter, commonPt } from "./utils";
