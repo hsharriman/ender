@@ -3,11 +3,13 @@
 # dependencies
 /node_modules
 /node_modules/**
+**/node_modules
 /.pnp
 .pnp.js
 
 #dev
 /dist
+**/dist
 
 # testing
 /coverage
