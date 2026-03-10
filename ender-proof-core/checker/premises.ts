@@ -1,6 +1,6 @@
+import { DiagramContent, Obj, ParseObj } from "geometry-object";
 import { createError, logError } from "../errors/errorConstants";
-import { DiagramContent, Obj } from "geometry-object";
-import { ParseObj, ProofObj, Stmt } from "../types/checkerTypes";
+import { ProofObj, Stmt } from "../types/checkerTypes";
 
 export const buildPremises = (proof: ProofObj) => {
   // Create DiagramContent context and populate it with all geometric objects from premises
@@ -54,7 +54,7 @@ export const buildPremises = (proof: ProofObj) => {
         default:
           logError.parser.unknownStatementFunction(step.statement.function);
           throw createError.parser.unknownStatementFunction(
-            step.statement.function
+            step.statement.function,
           );
       }
     }
@@ -74,7 +74,7 @@ export const buildPremises = (proof: ProofObj) => {
 
     // Find all segments that contain this point
     const segmentsWithPoint = ctx.ctx.segments.filter(
-      (seg) => seg.p1.equals(pt) || seg.p2.equals(pt)
+      (seg) => seg.p1.equals(pt) || seg.p2.equals(pt),
     );
 
     // Create angles between all pairs of segments that contain this point
@@ -184,7 +184,7 @@ export const buildPremises = (proof: ProofObj) => {
         default:
           logError.parser.unknownStatementFunction(step.statement.function);
           throw createError.parser.unknownStatementFunction(
-            step.statement.function
+            step.statement.function,
           );
       }
     }
@@ -205,8 +205,8 @@ const angBisect = (ctx: DiagramContent, args: ParseObj[]) => {
   const sharedPt = a.contains(s.p1)
     ? s.p2
     : a.contains(s.p2)
-    ? s.p1
-    : undefined;
+      ? s.p1
+      : undefined;
   if (!sharedPt) {
     logError.parser.segmentAngleOverlapError(seg.v, ang.v);
     throw createError.parser.segmentAngleOverlapError(seg.v, ang.v);
@@ -229,7 +229,7 @@ const onLine = (ctx: DiagramContent, args: ParseObj[]) => {
 const intersectSeg = (
   ctx: DiagramContent,
   args: ParseObj[],
-  proof: ProofObj
+  proof: ProofObj,
 ) => {
   const [s1, s2, p] = args;
 
@@ -257,7 +257,7 @@ const intersectSeg = (
 
 const transversal = (ctx: DiagramContent, args: ParseObj[]) => {
   const [s1p1, s1p2, p1, s2p1, s2p2, p2] = args.map((arg) =>
-    ctx.getPoint(arg.v)
+    ctx.getPoint(arg.v),
   );
   const seg1 = ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`);
   const seg2 = ctx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`);

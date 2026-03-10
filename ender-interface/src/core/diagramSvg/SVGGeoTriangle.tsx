@@ -1,13 +1,12 @@
 import { Obj, Triangle, Vector } from "geometry-object";
 import React from "react";
 import { strs } from "../geometryText";
-import { logEvent } from "../testinfra/testUtils";
 import { vops } from "../vectorOps";
 import { HoverTextLabel } from "./HoverTextLabel";
 import { getPatternId } from "./LinePattern";
 import { pops } from "./pathBuilderUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
-import { coordsToSvg, updateStyle } from "./svgUtils";
+import { coordsToSvg, permutator, updateStyle } from "./svgUtils";
 
 export type SVGTriangleProps = {
   t: Triangle;
@@ -35,10 +34,6 @@ export class SVGGeoTriangle extends React.Component<
     ) {
       this.setState({
         isActive,
-      });
-      logEvent("h", {
-        c: "t",
-        v: this.props.geoId,
       });
     }
   };
@@ -76,10 +71,6 @@ export class SVGGeoTriangle extends React.Component<
           ele.classList.remove(...cls);
         }
       }
-    });
-    logEvent("c", {
-      c: "t",
-      v: this.props.geoId,
     });
   };
 

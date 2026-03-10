@@ -1,11 +1,5 @@
-import {
-  ParseObj,
-  ProofObj,
-  ProofStep,
-  Reason,
-  Stmt,
-} from "../types/checkerTypes";
-import { Obj } from "geometry-object";
+import { Obj, ParseObj } from "geometry-object";
+import { ProofObj, ProofStep, Reason, Stmt } from "../types/checkerTypes";
 import { lexer } from "./parser";
 import { loadReasonDefinitions } from "./reasonParser";
 
@@ -239,7 +233,7 @@ export class ProofParser {
 
   private parseStatement(
     tokens: any[],
-    startIndex: number
+    startIndex: number,
   ): { obj: Stmt; endIndex: number } {
     let i = startIndex;
     const statement: Stmt = {
@@ -259,7 +253,7 @@ export class ProofParser {
             // Check if this is part of a segment (two consecutive points)
             if (i + 1 < tokens.length && tokens[i + 1].type === "point") {
               statement.arguments.push(
-                this.parseObj(tokens[i].value + tokens[i + 1].value)
+                this.parseObj(tokens[i].value + tokens[i + 1].value),
               );
               i += 2;
             } else {
@@ -306,7 +300,7 @@ export class ProofParser {
 
   private parseStep(
     tokens: any[],
-    startIndex: number
+    startIndex: number,
   ): { obj: ProofStep; endIndex: number } | null {
     let i = startIndex;
 
@@ -339,7 +333,7 @@ export class ProofParser {
 
   private parseProofStep(
     tokens: any[],
-    startIndex: number
+    startIndex: number,
   ): { obj: ProofStep; endIndex: number } | null {
     let i = startIndex;
 
@@ -368,7 +362,7 @@ export class ProofParser {
 
   private parseReason(
     tokens: any[],
-    startIndex: number
+    startIndex: number,
   ): { obj: Reason; endIndex: number } | null {
     let i = startIndex;
     const reason: Reason = {

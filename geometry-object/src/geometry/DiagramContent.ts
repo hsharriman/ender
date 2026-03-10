@@ -6,7 +6,6 @@ import {
   SegmentProps,
   TriangleProps,
 } from "../types/geometryTypes";
-import { AspectRatio } from "../types/types";
 import { Angle } from "./Angle";
 import { Point } from "./Point";
 import { Quadrilateral } from "./Quadrilateral";
@@ -24,7 +23,6 @@ export class DiagramContent {
       rectangles: [],
       frames: [],
       deps: new Map(),
-      aspect: AspectRatio.Square,
     };
   }
 
@@ -41,10 +39,6 @@ export class DiagramContent {
   addFrame = (name: string) => {
     this.ctx.frames.push(name);
     return name;
-  };
-
-  setAspect = (aspect: AspectRatio) => {
-    this.ctx.aspect = aspect;
   };
 
   getCtx = () => this.ctx;
@@ -197,23 +191,23 @@ export class DiagramContent {
   print = () => {
     console.log(
       "pts",
-      this.ctx.points.map((p) => p.label)
+      this.ctx.points.map((p) => p.label),
     );
     console.log(
       "segs",
-      this.ctx.segments.map((s) => s.label)
+      this.ctx.segments.map((s) => s.label),
     );
     console.log(
       "angs",
-      this.ctx.angles.map((a) => a.label)
+      this.ctx.angles.map((a) => a.label),
     );
     console.log(
       "tris",
-      this.ctx.triangles.map((t) => t.label)
+      this.ctx.triangles.map((t) => t.label),
     );
     console.log(
       "quads",
-      this.ctx.rectangles.map((q) => q.label)
+      this.ctx.rectangles.map((q) => q.label),
     );
   };
 }

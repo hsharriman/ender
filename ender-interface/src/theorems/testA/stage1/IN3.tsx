@@ -7,10 +7,6 @@ import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Reflexive } from "../../../core/reasons/Reflexive";
 import { RightAngle } from "../../../core/reasons/RightAngle";
-import {
-  IN3questions,
-  exploratoryQuestion,
-} from "../../../core/testinfra/questions/testQuestions";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -39,7 +35,6 @@ export const baseContent = () => {
     { start: L, center: K, end: N },
   ]);
 
-  ctx.setAspect(AspectRatio.Landscape);
   return ctx;
 };
 
@@ -147,11 +142,10 @@ const step6: StepMeta = makeStepMeta({
 
 export const T1_S1_IN3: LayoutProps = {
   name: "T1_S1_IN3",
-  questions: exploratoryQuestion(4, 6),
-  shuffleQuestions: IN3questions,
   baseContent,
   steps: [step1, step2, step3, step4, step5, step6],
   givens,
   proves,
   title: "Prove Rectangle[M]",
+  diagramAspect: AspectRatio.Landscape,
 };

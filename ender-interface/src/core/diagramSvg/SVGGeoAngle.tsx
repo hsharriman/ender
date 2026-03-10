@@ -1,6 +1,5 @@
 import { LAngle, Obj, SVGModes, TickType } from "geometry-object";
 import React from "react";
-import { logEvent } from "../testinfra/testUtils";
 import { vops } from "../vectorOps";
 import { SVGGeoTick } from "./SVGGeoTick";
 import { pops } from "./pathBuilderUtils";
@@ -31,10 +30,6 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
         isActive,
         css: updateStyle(isActive ? SVGModes.Derived : this.props.mode),
       });
-      logEvent("h", {
-        c: "a",
-        v: this.props.a.label,
-      });
     }
   };
   // deprecated
@@ -59,10 +54,6 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
           ele.classList.remove(...cls);
         }
       }
-    });
-    logEvent("h", {
-      c: "a",
-      v: this.props.a.label,
     });
   };
 

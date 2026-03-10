@@ -12,10 +12,6 @@ import {
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
-import {
-  S2IN1Questions,
-  exploratoryQuestion,
-} from "../../../core/testinfra/questions/testQuestions";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -44,7 +40,6 @@ export const baseContent = () => {
     { pts: [U, Q, L] },
   ]);
 
-  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -190,11 +185,10 @@ const step9: StepMeta = makeStepMeta({
 
 export const T1_S2_IN1: LayoutProps = {
   name: "T1_S2_IN1",
-  questions: exploratoryQuestion(4, 9),
-  shuffleQuestions: S2IN1Questions,
   baseContent,
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8, step9],
   title: "Triangle Congruence #3 [M]",
+  diagramAspect: AspectRatio.Square,
 };

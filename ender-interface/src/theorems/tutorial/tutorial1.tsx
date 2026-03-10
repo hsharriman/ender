@@ -8,10 +8,6 @@ import { EqualTriangles } from "../../core/reasons/EqualTriangles";
 import { Reflexive } from "../../core/reasons/Reflexive";
 import { SAS, SASProps } from "../../core/reasons/SAS";
 import { SSS } from "../../core/reasons/SSS";
-import {
-  tutorial1Questions,
-  tutorial2Questions,
-} from "../../core/testinfra/questions/testQuestions";
 import { LayoutProps } from "../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -35,7 +31,6 @@ export const baseContent = () => {
     { pts: [A, C, D], rotatePattern: true },
   ]);
 
-  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -126,22 +121,20 @@ const step4t2 = makeStepMeta({
 
 export const TutorialProof1: LayoutProps = {
   name: "TutorialProof1",
-  questions: tutorial1Questions,
-  shuffleQuestions: [],
   baseContent,
   givens,
   proves,
   steps: [step1, step2, step3, step4],
   title: "Prove Triangles Congruent #1a",
+  diagramAspect: AspectRatio.Square,
 };
 
 export const TutorialProof2: LayoutProps = {
   name: "TutorialProof2",
-  questions: tutorial2Questions,
-  shuffleQuestions: [],
   baseContent,
   givens,
   proves,
   steps: [step1, step2, step3, step4t2],
   title: "Prove Triangles Congruent #1b [M]",
+  diagramAspect: AspectRatio.Square,
 };

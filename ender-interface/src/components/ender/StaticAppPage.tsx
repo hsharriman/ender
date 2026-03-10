@@ -1,8 +1,6 @@
-import { DiagramContent } from "geometry-object";
+import { DiagramCtx } from "geometry-object";
 import React from "react";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
-import { Question } from "../../core/testinfra/questions/testQuestions";
-import { logEvent } from "../../core/testinfra/testUtils";
 import { Reason } from "../../core/types/layoutTypes";
 import { StaticProofTextItem } from "../../core/types/stepTypes";
 import { Definition, definitionArr } from "../../theorems/definitions";
@@ -10,17 +8,15 @@ import { StaticDiagram } from "./StaticDiagram";
 
 export interface StaticAppPageProps {
   name: string;
-  pageNum: number;
-  ctx: DiagramContent;
+  ctx: DiagramCtx;
   reasons: Reason[];
   texts: StaticProofTextItem[];
   givenText: JSX.Element;
   provesText: JSX.Element;
-  questions: Question[];
+  diagramAspect: AspectRatio;
 }
 
 interface StaticAppPageState {
-  page: number;
   activeReason: number;
   activeDef: number;
 }
@@ -33,7 +29,6 @@ export class StaticAppPage extends React.Component<
     super(props);
     // build diagram from given construction
     this.state = {
-      page: this.props.pageNum,
       activeReason: -1,
       activeDef: -1,
     };
@@ -76,10 +71,6 @@ export class StaticAppPage extends React.Component<
       this.clearReason();
     } else {
       this.setState({ activeReason: i });
-      logEvent("c", {
-        c: "sr",
-        v: this.props.texts[i].reason || "",
-      });
     }
   };
 
@@ -92,10 +83,6 @@ export class StaticAppPage extends React.Component<
       this.clearDef();
     } else {
       this.setState({ activeDef: i });
-      logEvent("c", {
-        c: "sd",
-        v: definitionArr[i].title,
-      });
     }
   };
 
@@ -179,19 +166,20 @@ export class StaticAppPage extends React.Component<
             </div>
             <div
               className={
-                this.props.ctx.aspect === AspectRatio.Square ? "ml-16" : ""
+                this.props.diagramAspect === AspectRatio.Square ? "ml-16" : ""
               }
             >
               <StaticDiagram
                 svgIdSuffix={"static"}
                 ctx={this.props.ctx}
                 width={
-                  this.props.ctx.aspect === AspectRatio.Landscape
+                  this.props.diagramAspect === AspectRatio.Landscape
                     ? "400px"
                     : "250px"
                 }
                 height="auto"
                 activeFrame={`s${numGivens}`}
+                diagramAspect={this.props.diagramAspect}
               />
             </div>
           </div>

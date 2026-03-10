@@ -1,4 +1,3 @@
-import Rand from "rand-seed";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -103,8 +102,8 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
 
   renderProof = (proof: LayoutProps) => {
     const layout = this.state.isInteractive
-      ? interactiveLayout(proof, new Rand()).meta
-      : staticLayout(proof, new Rand()).meta;
+      ? interactiveLayout(proof)
+      : staticLayout(proof);
     if (layout) {
       return (
         <div className="h-full">
@@ -112,18 +111,12 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
           <div className="w-full flex justify-start">
             {this.state.isInteractive ? (
               <InteractiveAppPage
-                {...{
-                  ...(layout.props as InteractiveAppPageProps),
-                  pageNum: this.state.activePage,
-                }}
+                {...(layout.props as InteractiveAppPageProps)}
                 key={"interactive-pg" + this.state.activePage}
               />
             ) : (
               <StaticAppPage
-                {...{
-                  ...(layout.props as StaticAppPageProps),
-                  pageNum: this.state.activePage,
-                }}
+                {...(layout.props as StaticAppPageProps)}
                 key={"static-pg" + this.state.activePage}
               />
             )}
@@ -135,10 +128,10 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
   };
 
   renderExampleTile = (proof: LayoutProps, idx: number) => {
-    const layout = staticLayout(proof, new Rand());
+    const layout = staticLayout(proof);
     const givens = proof.steps.filter((s) => s.reason === Reasons.Given).length;
-    if (layout.meta) {
-      const diagramCtx = layout.meta.props as StaticAppPageProps;
+    if (layout) {
+      const diagramCtx = layout.props as StaticAppPageProps;
       return (
         <button
           className="m-4 w-72 h-72 border-2 bg-slate-50 shadow-md rounded-md flex flex-col"
@@ -158,6 +151,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
               width="260px"
               height="auto"
               ctx={diagramCtx.ctx}
+              diagramAspect={proof.diagramAspect}
               activeFrame={`s${givens}`}
             />
             {/* <Diagram
@@ -201,7 +195,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
           </div>
           <div className="flex flex-row flex-wrap">
             {this.proofs.map((proof, idx) =>
-              this.renderExampleTile(proof, idx)
+              this.renderExampleTile(proof, idx),
             )}
           </div>
         </div>

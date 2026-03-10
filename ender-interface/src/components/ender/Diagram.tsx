@@ -1,10 +1,11 @@
-import { AspectRatio, DiagramCtx, SVGModes } from "geometry-object";
+import { DiagramCtx, SVGModes } from "geometry-object";
 import React from "react";
 import { LinePatternDefs } from "../../core/diagramSvg/LinePattern";
 import { SVGGeoAngle } from "../../core/diagramSvg/SVGGeoAngle";
 import { SVGGeoPoint } from "../../core/diagramSvg/SVGGeoPoint";
 import { SVGGeoSegment } from "../../core/diagramSvg/SVGGeoSegment";
 import { SVGGeoTriangle } from "../../core/diagramSvg/SVGGeoTriangle";
+import { AspectRatio } from "../../core/types/layoutTypes";
 
 export interface DiagramProps {
   svgIdSuffix: string;
@@ -17,6 +18,7 @@ export interface DiagramProps {
   isTutorial?: boolean;
   additionCtx?: DiagramCtx;
   highlightCtx?: DiagramCtx;
+  diagramAspect: AspectRatio;
 }
 
 export class Diagram extends React.Component<DiagramProps> {
@@ -135,9 +137,9 @@ export class Diagram extends React.Component<DiagramProps> {
 
   render() {
     const aspect =
-      this.props.ctx.aspect === AspectRatio.Square
+      this.props.diagramAspect === AspectRatio.Square
         ? "0 0 350 350"
-        : this.props.ctx.aspect === AspectRatio.Landscape
+        : this.props.diagramAspect === AspectRatio.Landscape
           ? "0 0 475 300"
           : "0 0 300 500";
     return (

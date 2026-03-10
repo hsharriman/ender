@@ -1,5 +1,4 @@
 import React from "react";
-import { logEvent } from "../../core/testinfra/testUtils";
 import { Reason } from "../../core/types/layoutTypes";
 
 interface TooltipProps {
@@ -59,10 +58,6 @@ export class DefinitionTooltip extends React.Component<
   };
 
   onMouseEnter = () => {
-    logEvent("m", {
-      c: "d",
-      v: this.props.definition.title,
-    });
     this.onClick(true);
   };
 

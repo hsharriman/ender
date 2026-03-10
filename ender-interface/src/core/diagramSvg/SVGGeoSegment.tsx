@@ -1,6 +1,5 @@
 import { LSegment, Obj, SVGModes, TickType, Vector } from "geometry-object";
 import React from "react";
-import { addTutorialActive, logEvent } from "../testinfra/testUtils";
 import { vops } from "../vectorOps";
 import { SVGGeoTick } from "./SVGGeoTick";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
@@ -32,8 +31,6 @@ export class SVGGeoSegment extends React.Component<
       isPinned: isActive,
       css: updateStyle(isActive ? SVGModes.Derived : this.props.mode),
     });
-    // for tutorial
-    addTutorialActive(this.props.geoId + "-hover");
 
     const prefix = `#${Obj.Segment}-text-`;
     const seg = this.props.geoId.replace("segment.", "");
@@ -50,11 +47,6 @@ export class SVGGeoSegment extends React.Component<
         }
       }
     });
-
-    logEvent("c", {
-      c: "s",
-      v: this.props.geoId,
-    });
   };
 
   // deprecated
@@ -67,11 +59,6 @@ export class SVGGeoSegment extends React.Component<
       this.setState({
         isActive,
         css: updateStyle(isActive ? SVGModes.Derived : this.props.mode),
-      });
-
-      logEvent("h", {
-        c: "s",
-        v: this.props.geoId,
       });
     }
   };

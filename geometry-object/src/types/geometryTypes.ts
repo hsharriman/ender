@@ -3,7 +3,7 @@ import { Point } from "../geometry/Point";
 import { Quadrilateral } from "../geometry/Quadrilateral";
 import { Segment } from "../geometry/Segment";
 import { Triangle } from "../geometry/Triangle";
-import { AspectRatio, Obj, Vector } from "./types";
+import { Obj, Vector } from "./types";
 
 export interface BaseGeometryProps {
   activeIdx?: number; // follows the state of the app
@@ -58,5 +58,4 @@ export type DiagramCtx = {
   rectangles: Quadrilateral[];
   frames: string[];
   deps: Map<string, Set<string>>;
-  aspect: AspectRatio;
 };

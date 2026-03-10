@@ -1,10 +1,4 @@
-import {
-  AspectRatio,
-  DiagramContent,
-  Obj,
-  SVGModes,
-  ShowPoint,
-} from "geometry-object";
+import { DiagramContent, Obj, SVGModes, ShowPoint } from "geometry-object";
 import { comma, triangleStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
@@ -12,11 +6,7 @@ import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
-import {
-  S2C1Questions,
-  exploratoryQuestion,
-} from "../../../core/testinfra/questions/testQuestions";
-import { LayoutProps } from "../../../core/types/layoutTypes";
+import { AspectRatio, LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
   StepMeta,
@@ -62,7 +52,6 @@ export const baseContent = () => {
     { start: F, center: G, end: H },
   ]);
 
-  ctx.setAspect(AspectRatio.Landscape);
   return ctx;
 };
 
@@ -95,7 +84,7 @@ const proves: StepMeta = makeStepMeta({
     EqualSegments.additions(
       { ...props, mode: SVGModes.Derived },
       ["FJ", "GJ"],
-      1
+      1,
     );
   },
   text: (isActive: boolean) => {
@@ -210,11 +199,10 @@ const step7: StepMeta = makeStepMeta({
 
 export const T1_S2_C1: LayoutProps = {
   name: "T1_S2_C1",
-  questions: exploratoryQuestion(3, 8),
-  shuffleQuestions: S2C1Questions,
   baseContent,
   givens,
   proves,
   steps: [step1, step2, step22, step3, step4, step5, step6, step7],
   title: "Prove Isosceles",
+  diagramAspect: AspectRatio.Landscape,
 };

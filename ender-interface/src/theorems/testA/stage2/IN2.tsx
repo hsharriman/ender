@@ -9,10 +9,6 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
-import {
-  exploratoryQuestion,
-  S2IN2Questions,
-} from "../../../core/testinfra/questions/testQuestions";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -47,7 +43,6 @@ const baseContent = () => {
     { p1: Y, p2: X },
   ]);
 
-  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -178,11 +173,10 @@ const step8: StepMeta = makeStepMeta({
 
 export const T1_S2_IN2: LayoutProps = {
   name: "T1_S2_IN2",
-  questions: exploratoryQuestion(3, 8),
-  shuffleQuestions: S2IN2Questions,
   baseContent,
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8],
   title: "Prove Segments Parallel #2 [M]",
+  diagramAspect: AspectRatio.Square,
 };

@@ -6,10 +6,6 @@ import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { SAS } from "../../../core/reasons/SAS";
-import {
-  IN1questions,
-  exploratoryQuestion,
-} from "../../../core/testinfra/questions/testQuestions";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -33,7 +29,6 @@ const baseContent = () => {
     { pts: [B, C, D], rotatePattern: true },
   ]);
 
-  ctx.setAspect(AspectRatio.Landscape);
   return ctx;
 };
 
@@ -128,11 +123,10 @@ const step5: StepMeta = makeStepMeta({
 
 export const T1_S1_IN1: LayoutProps = {
   name: "T1_S1_IN1",
-  questions: exploratoryQuestion(4, 5),
-  shuffleQuestions: IN1questions,
   baseContent,
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5],
   title: "Prove Angles Congruent #1[M]",
+  diagramAspect: AspectRatio.Landscape,
 };

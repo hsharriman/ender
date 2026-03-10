@@ -17,8 +17,7 @@ import { Midpoint } from "../../core/reasons/Midpoint";
 import { Reflexive } from "../../core/reasons/Reflexive";
 import { RightAngle } from "../../core/reasons/RightAngle";
 import { SAS, SASProps } from "../../core/reasons/SAS";
-import { placeholder } from "../../core/testinfra/questions/testQuestions";
-import { LayoutProps } from "../../core/types/layoutTypes";
+import { AspectRatio, LayoutProps } from "../../core/types/layoutTypes";
 import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
 import { Reasons } from "../reasons";
 import { makeStepMeta } from "../utils";
@@ -172,11 +171,10 @@ const step8: StepMeta = makeStepMeta({
 
 export const T1_CH1_IN1: LayoutProps = {
   name: "T1_CH1_IN1",
-  questions: placeholder,
-  shuffleQuestions: [],
   baseContent,
   givens,
   proves,
   steps: [step1, step2, step3, step4, step5, step6, step7, step8],
   title: "Challenge 1",
+  diagramAspect: AspectRatio.Square,
 };

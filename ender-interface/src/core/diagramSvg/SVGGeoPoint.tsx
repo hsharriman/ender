@@ -1,6 +1,5 @@
 import { LPoint, Obj, ShowPoint, SVGModes, Vector } from "geometry-object";
 import React from "react";
-import { logEvent } from "../testinfra/testUtils";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
 
@@ -43,10 +42,6 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
         }
       }
     });
-    logEvent("c", {
-      c: "po",
-      v: this.props.label,
-    });
   };
 
   // deprecated
@@ -59,10 +54,6 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
       this.setState({
         isActive,
         css: isActive ? updateStyle(SVGModes.Default) : "",
-      });
-      logEvent("h", {
-        c: "po",
-        v: this.props.label,
       });
     }
   };

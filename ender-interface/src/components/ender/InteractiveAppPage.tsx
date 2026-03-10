@@ -2,8 +2,6 @@ import { DiagramCtx } from "geometry-object";
 import React from "react";
 import { Legend } from "../../core/diagramSvg/Legend";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
-import { Question } from "../../core/testinfra/questions/testQuestions";
-import { logEvent } from "../../core/testinfra/testUtils";
 import { Reason } from "../../core/types/layoutTypes";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { getReasonFn } from "../../theorems/utils";
@@ -17,12 +15,10 @@ export interface InteractiveAppPageProps {
   ctx: DiagramCtx;
   linkedTexts: ProofTextItem[];
   reasonMap: Map<string, Reason>;
-  miniCtx: DiagramCtx;
-  pageNum: number;
-  questions: Question[];
   isTutorial?: boolean;
   highlightCtx: DiagramCtx;
   additionCtx: DiagramCtx;
+  diagramAspect: AspectRatio;
 }
 
 interface InteractiveAppPageState {
@@ -47,20 +43,6 @@ export class InteractiveAppPage extends React.Component<
     }
   };
 
-  onMouseEnter = () => {
-    logEvent("m", {
-      c: "mi",
-      v: "",
-    });
-  };
-
-  onMouseLeave = () => {
-    logEvent("ml", {
-      c: "mi",
-      v: "",
-    });
-  };
-
   render() {
     const rowsCompact = this.props.ctx.frames.length > 9;
     return (
@@ -82,7 +64,7 @@ export class InteractiveAppPage extends React.Component<
             <Diagram
               height="auto"
               width={
-                this.props.ctx.aspect === AspectRatio.Landscape
+                this.props.diagramAspect === AspectRatio.Landscape
                   ? "700px"
                   : "500px"
               }
@@ -93,6 +75,7 @@ export class InteractiveAppPage extends React.Component<
               isTutorial={this.props.isTutorial}
               highlightCtx={this.props.highlightCtx}
               additionCtx={this.props.additionCtx}
+              diagramAspect={this.props.diagramAspect}
             />
             <div className="w-[650px] mt-2">
               <Legend />

@@ -1,15 +1,9 @@
 import { DiagramContent, ShowPoint, SVGModes, Vector } from "geometry-object";
-import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../core/reasons/EqualSegments";
 import { ParallelLines } from "../../core/reasons/ParallelLines";
 import { RightAngle } from "../../core/reasons/RightAngle";
-import {
-  anglePretestQuestions,
-  segmentPretestQuestions,
-  trianglePretestQuestions,
-} from "../../core/testinfra/questions/pretestQuestions";
 
 const defaultProps = (ctx: DiagramContent) => {
   return { ctx: ctx, frame: "given", mode: SVGModes.Default };
@@ -204,24 +198,11 @@ export const asa = () => {
   return ctx;
 };
 
-export const P1: PretestAppPageProps = {
-  name: "P1",
-  questions: segmentPretestQuestions,
-  ctx: segmentContent().getCtx(),
-};
-
-export const P2: PretestAppPageProps = {
-  name: "P2",
-  questions: anglePretestQuestions,
-  ctx: angleContent().getCtx(),
-};
-
 export const trianglePretestProofs = [sas(), sss(), aas(), asa(), hl()].map(
   (ctx, i) => {
     return {
       name: `P${i + 3}`,
       ctx: ctx.getCtx(),
-      questions: trianglePretestQuestions,
     };
   },
 );

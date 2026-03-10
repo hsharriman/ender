@@ -11,10 +11,6 @@ import {
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
-import {
-  exploratoryQuestion,
-  S2C2Questions,
-} from "../../../core/testinfra/questions/testQuestions";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -42,7 +38,6 @@ const baseContent = () => {
     { pts: [B, C, G], rotatePattern: true },
   ]);
 
-  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -157,8 +152,6 @@ const step10: StepMeta = makeStepMeta({
 
 export const T1_S2_C2: LayoutProps = {
   name: "T1_S2_C2",
-  questions: exploratoryQuestion(5, 10),
-  shuffleQuestions: S2C2Questions,
   baseContent,
   givens,
   proves,
@@ -175,4 +168,5 @@ export const T1_S2_C2: LayoutProps = {
     step10,
   ],
   title: "Prove Angles Congruent #2",
+  diagramAspect: AspectRatio.Square,
 };

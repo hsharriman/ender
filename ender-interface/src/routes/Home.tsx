@@ -23,13 +23,6 @@ export class Home extends React.Component {
             >
               Examples
             </NavLink>
-
-            <NavLink
-              to="/ender/procedures"
-              className="py-4 px-8 m-4 text-3xl border-4 border-blue-500 rounded-lg text-blue-500 flex items-center"
-            >
-              Experiment Procedure
-            </NavLink>
           </div>
         </div>
       </div>

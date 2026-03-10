@@ -1,18 +1,10 @@
 import { SVGModes } from "geometry-object";
-import Rand from "rand-seed";
-import { PretestAppPageProps } from "../../components/procedure/pages/PretestAppPage";
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
-import { LayoutProps, Reason, TutorialStep } from "../types/layoutTypes";
+import { LayoutProps, ProofMeta, Reason } from "../types/layoutTypes";
 import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";
-import { Page, PageType } from "./pageOrder";
-import { fisherYates } from "./randomize";
 
-export const staticLayout = (
-  proofMeta: LayoutProps,
-  rand: Rand,
-  shuffleQuestions: boolean = true,
-): Page => {
+export const staticLayout = (proofMeta: LayoutProps): ProofMeta => {
   // reset stored variables
   const ctx = proofMeta.baseContent();
   const reasons: Reason[] = [];
@@ -32,30 +24,19 @@ export const staticLayout = (
     step.diagram(ctx, s);
   });
   return {
-    type: PageType.Static,
-    meta: {
-      layout: "static",
-      props: {
-        ctx: ctx.getCtx(),
-        texts: texts,
-        reasons: reasons,
-        pageNum: -1,
-        givenText: proofMeta.givens.staticText(),
-        provesText: proofMeta.proves.staticText(),
-        questions: proofMeta.questions.concat(
-          fisherYates(proofMeta.shuffleQuestions, rand),
-        ),
-        name: proofMeta.name,
-      },
+    layout: "static",
+    props: {
+      ctx: ctx.getCtx(),
+      texts: texts,
+      reasons: reasons,
+      givenText: proofMeta.givens.staticText(),
+      provesText: proofMeta.proves.staticText(),
+      name: proofMeta.name,
+      diagramAspect: proofMeta.diagramAspect,
     },
   };
 };
-export const interactiveLayout = (
-  proofMeta: LayoutProps,
-  rand: Rand,
-  shuffleQuestions: boolean = true,
-  tutorial?: TutorialStep[],
-): Page => {
+export const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
   const ctx = proofMeta.baseContent();
   const highlightCtx = proofMeta.baseContent();
   const additionCtx = proofMeta.baseContent();
@@ -114,64 +95,15 @@ export const interactiveLayout = (
     prevStep = step;
   });
   return {
-    type: tutorial ? PageType.Tutorial : PageType.Interactive,
-    meta: {
-      layout: "interactive",
-      props: {
-        ctx: ctx.getCtx(),
-        reasonMap: reasonMap,
-        linkedTexts: linkedTexts,
-        pageNum: -1,
-        questions: proofMeta.questions.concat(
-          fisherYates(proofMeta.shuffleQuestions, rand),
-        ),
-        name: proofMeta.name,
-        highlightCtx: highlightCtx.getCtx(),
-        additionCtx: additionCtx.getCtx(),
-      },
-      tutorial,
+    layout: "interactive",
+    props: {
+      ctx: ctx.getCtx(),
+      reasonMap: reasonMap,
+      linkedTexts: linkedTexts,
+      name: proofMeta.name,
+      highlightCtx: highlightCtx.getCtx(),
+      additionCtx: additionCtx.getCtx(),
+      diagramAspect: proofMeta.diagramAspect,
     },
   };
-};
-
-export const pretestLayout = (
-  props: PretestAppPageProps,
-  rand: Rand,
-  shuffleQuestions: boolean,
-): Page => {
-  return {
-    type: PageType.Pretest,
-    meta: {
-      layout: "static",
-      props: {
-        ...props,
-        questions: shuffleQuestions
-          ? fisherYates(props.questions, rand)
-          : props.questions,
-      },
-    },
-  };
-};
-
-export const randomizeLayout = (
-  proofMetas: LayoutProps[],
-  shuffleQuestions: boolean,
-  rand: Rand,
-): Page[] => {
-  let modes = proofMetas.map((p, i) => {
-    return i % 2 === 0 ? "s" : "i";
-  });
-  return fisherYates(modes, rand).map((m, i) =>
-    m === "s"
-      ? staticLayout(proofMetas[i], rand, shuffleQuestions)
-      : interactiveLayout(proofMetas[i], rand, shuffleQuestions),
-  );
-};
-
-export const getHeaderType = (pageType: PageType) => {
-  return (
-    pageType === PageType.Static ||
-    pageType === PageType.Interactive ||
-    pageType === PageType.Pretest
-  );
 };

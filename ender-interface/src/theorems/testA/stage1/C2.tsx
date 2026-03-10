@@ -11,10 +11,6 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
 import { RightAngle } from "../../../core/reasons/RightAngle";
-import {
-  exploratoryQuestion,
-  S1C2questions,
-} from "../../../core/testinfra/questions/testQuestions";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -48,7 +44,6 @@ export const baseContent = () => {
     { pts: [C, B, D], rotatePattern: true },
   ]);
 
-  ctx.setAspect(AspectRatio.Square);
   return ctx;
 };
 
@@ -197,11 +192,10 @@ const step8: StepMeta = makeStepMeta({
 
 export const T1_S1_C2: LayoutProps = {
   name: "T1_S1_C2",
-  questions: exploratoryQuestion(3, 8),
-  shuffleQuestions: S1C2questions,
   baseContent,
   givens,
   proves,
   steps: [step1, step2, step22, step3, step4, step5, step6, step7, step8],
   title: "Prove Midpoint #1",
+  diagramAspect: AspectRatio.Square,
 };

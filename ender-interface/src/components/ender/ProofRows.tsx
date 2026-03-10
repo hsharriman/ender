@@ -1,5 +1,4 @@
 import React from "react";
-import { addTutorialActive, logEvent } from "../../core/testinfra/testUtils";
 import { ProofTextItem } from "../../core/types/stepTypes";
 
 export interface ProofRowsProps {
@@ -38,16 +37,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       this.setState({ revealed: newIdx, idx: newIdx + 1 });
       const newId = `s${newIdx}`;
       this.props.onClick(newId);
-
-      // tutorial
-      if (this.props.isTutorial) {
-        addTutorialActive("reveal-step-btn");
-      }
-
-      logEvent("c", {
-        c: "pr-r",
-        v: `s${newIdx}`,
-      });
     }
   };
 
@@ -72,15 +61,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         revealed: reveal ? this.state.revealed + 1 : this.state.revealed,
       });
       this.props.onClick(newActive);
-
-      // tutorial
-      if (this.props.isTutorial) {
-        addTutorialActive(`${newActive}-tutorial`);
-      }
-      logEvent("a", {
-        c: "pr",
-        v: newActive,
-      });
     }
   };
 
@@ -91,7 +71,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       if (newIdx === -1) {
         console.error(
           "couldn't find match in ProofRows items array for key: ",
-          active
+          active,
         );
       }
       this.setState({
@@ -100,15 +80,6 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           newIdx - 1 > this.state.revealed ? newIdx - 1 : this.state.revealed,
       });
       this.props.onClick(active);
-
-      // tutorial
-      if (this.props.isTutorial) {
-        addTutorialActive(`${this.props.items[newIdx].k}-tutorial`);
-      }
-      logEvent("c", {
-        c: "pr",
-        v: active,
-      });
     }
   };
 
@@ -224,8 +195,8 @@ export class ProofRow extends React.Component<ProofRowProps> {
     let css = this.props.isActive
       ? `text-slate-900 font-semibold stroke-slate-900 `
       : this.props.depends
-      ? `text-slate-800 `
-      : `text-slate-400 `;
+        ? `text-slate-800 `
+        : `text-slate-400 `;
     return css;
   };
 
@@ -239,8 +210,8 @@ export class ProofRow extends React.Component<ProofRowProps> {
     return this.props.isActive
       ? "bg-blue-100"
       : this.props.depends
-      ? "bg-slate-50"
-      : "bg-transparent";
+        ? "bg-slate-50"
+        : "bg-transparent";
   };
 
   render() {
@@ -254,10 +225,10 @@ export class ProofRow extends React.Component<ProofRowProps> {
           this.props.isActive
             ? "bg-blue-700 text-white"
             : this.props.i > this.props.activeIdx - 2
-            ? "bg-white border-2 border-slate-500 text-slate-500"
-            : this.props.depends
-            ? "bg-slate-400 text-black"
-            : "bg-slate-200 text-black"
+              ? "bg-white border-2 border-slate-500 text-slate-500"
+              : this.props.depends
+                ? "bg-slate-400 text-black"
+                : "bg-slate-200 text-black"
         } font-bold w-8 h-8 rounded-2xl flex justify-center items-center flex-row`}
       >
         {this.props.i + 1}
@@ -301,7 +272,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
                   {num}
                   <div className="shrink">
                     {this.props.item.v(
-                      this.props.isActive || this.props.depends
+                      this.props.isActive || this.props.depends,
                     )}
                   </div>
                 </div>
