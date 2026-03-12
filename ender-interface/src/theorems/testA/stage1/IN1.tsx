@@ -1,4 +1,4 @@
-import { DiagramContent, SVGModes } from "geometry-object";
+import { DiagramContent } from "geometry-object";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { comma } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -6,6 +6,7 @@ import { EqualAngles } from "../../../core/reasons/EqualAngles";
 import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { SAS } from "../../../core/reasons/SAS";
+import { SVGModes } from "../../../core/types/diagramTypes";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,

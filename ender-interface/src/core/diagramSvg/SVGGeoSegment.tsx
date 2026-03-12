@@ -1,5 +1,6 @@
-import { LSegment, Obj, SVGModes, TickType, Vector } from "geometry-object";
+import { LSegment, Obj, Vector } from "geometry-object";
 import React from "react";
+import { SVGModes, TickType } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
 import { SVGGeoTick } from "./SVGGeoTick";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";

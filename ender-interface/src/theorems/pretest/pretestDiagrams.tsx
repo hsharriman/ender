@@ -1,9 +1,10 @@
-import { DiagramContent, ShowPoint, SVGModes, Vector } from "geometry-object";
+import { DiagramContent, ShowPoint, Vector } from "geometry-object";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../core/reasons/EqualSegments";
 import { ParallelLines } from "../../core/reasons/ParallelLines";
 import { RightAngle } from "../../core/reasons/RightAngle";
+import { SVGModes } from "../../core/types/diagramTypes";
 
 const defaultProps = (ctx: DiagramContent) => {
   return { ctx: ctx, frame: "given", mode: SVGModes.Default };

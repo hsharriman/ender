@@ -1,4 +1,4 @@
-import { DiagramContent, Obj, SVGModes, ShowPoint } from "geometry-object";
+import { DiagramContent, Obj, ShowPoint } from "geometry-object";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { comma } from "../../../core/geometryText";
 import { ASA } from "../../../core/reasons/ASA";
@@ -9,6 +9,7 @@ import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
+import { SVGModes } from "../../../core/types/diagramTypes";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,

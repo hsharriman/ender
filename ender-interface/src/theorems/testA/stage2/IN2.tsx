@@ -1,4 +1,4 @@
-import { DiagramContent, Obj, ShowPoint, SVGModes } from "geometry-object";
+import { DiagramContent, Obj, ShowPoint } from "geometry-object";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { segmentStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -9,6 +9,7 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
+import { SVGModes } from "../../../core/types/diagramTypes";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,

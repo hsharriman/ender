@@ -1,5 +1,5 @@
 import { QuadrilateralProps } from "../types/geometryTypes";
-import { Obj, SVGModes } from "../types/types";
+import { Obj } from "../types/types";
 import { Angle } from "./Angle";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
@@ -21,7 +21,7 @@ export class Quadrilateral extends BaseGeometryObject {
 
   private buildSegments = (
     pts: Point[],
-    parentFrame?: string
+    parentFrame?: string,
   ): [Segment, Segment, Segment, Segment] => {
     const sa = new Segment({
       p1: pts[0],
@@ -48,7 +48,7 @@ export class Quadrilateral extends BaseGeometryObject {
 
   private buildAngles = (
     pts: Point[],
-    parentFrame?: string
+    parentFrame?: string,
   ): [Angle, Angle, Angle, Angle] => {
     const aa = new Angle({
       start: pts[0],
@@ -75,25 +75,6 @@ export class Quadrilateral extends BaseGeometryObject {
       parentFrame,
     });
     return [aa, ab, ac, ad];
-  };
-
-  // deprecated
-  onClickText = (isActive: boolean) => {
-    // for each segment use onClickText
-    this.s.forEach((seg) => {
-      seg.onClickText(isActive);
-    });
-    this.a.forEach((ang) => {
-      ang.onClickText(isActive);
-    });
-  };
-
-  override mode = (frameKey: string, mode: SVGModes) => {
-    this.modes.set(frameKey, mode);
-    // cascading update the segments and angles
-    this.s.forEach((seg) => seg.mode(frameKey, mode));
-    this.a.forEach((ang) => ang.mode(frameKey, mode));
-    return this;
   };
 
   contains = (s: Segment | Angle | Point) => {

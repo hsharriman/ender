@@ -8,19 +8,11 @@ import { Obj, Vector } from "./types";
 export interface BaseGeometryProps {
   activeIdx?: number; // follows the state of the app
   parentFrame?: string;
-  // hoverable: boolean; // deprecated
 }
 
-export enum ShowPoint {
-  Always = "always",
-  Adaptive = "adaptive",
-  Hide = "hide",
-}
 export type PointProps = {
   pt: Vector;
   label: string;
-  offset: Vector;
-  showPoint?: ShowPoint;
 } & BaseGeometryProps;
 
 export type SegmentProps = {
@@ -36,7 +28,6 @@ export type AngleProps = {
 
 export type TriangleProps = {
   pts: [Point, Point, Point];
-  rotatePattern?: boolean;
   // add things like type of triangle, isos, right, etc.
 } & BaseGeometryProps;
 

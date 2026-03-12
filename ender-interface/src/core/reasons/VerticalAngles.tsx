@@ -1,4 +1,5 @@
-import { Obj, SVGModes } from "geometry-object";
+import { Obj } from "geometry-object";
+import { SVGModes } from "../types/diagramTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { EqualAngles } from "./EqualAngles";
 

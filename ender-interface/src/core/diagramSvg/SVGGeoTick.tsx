@@ -1,5 +1,6 @@
-import { LAngle, LSegment, Obj, TickType, Vector } from "geometry-object";
+import { LAngle, LSegment, Obj, Vector } from "geometry-object";
 import React from "react";
+import { TickType } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
 import { pops } from "./pathBuilderUtils";
 import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "./svgUtils";

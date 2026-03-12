@@ -1,19 +1,15 @@
 import { BaseGeometryProps } from "../types/geometryTypes";
-import { Obj, SVGModes } from "../types/types";
+import { Obj } from "../types/types";
 
 export class BaseGeometryObject {
   public readonly tag: Obj;
   public names: Set<string> = new Set();
   public label: string = "";
-  protected modes: Map<string, SVGModes>;
   public activeIdx: number;
-  // readonly hoverable: boolean;
 
   constructor(tag: Obj, props: BaseGeometryProps) {
     this.tag = tag;
-    this.modes = new Map<string, SVGModes>();
     this.activeIdx = props.activeIdx ? props.activeIdx : -1;
-    // this.hoverable = props.hoverable;
   }
 
   // https://stackoverflow.com/questions/9960908/permutations-in-javascript
@@ -43,18 +39,6 @@ export class BaseGeometryObject {
     }
     let id = `${objectType}.${label}`;
     return tickNumber ? `${id}.${tickNumber}` : id;
-  };
-
-  getMode = (frameKey: string) => this.modes.get(frameKey);
-
-  mode = (frameKey: string, mode: SVGModes) => {
-    this.modes.set(frameKey, mode);
-    return this;
-  };
-
-  // deprecated
-  onClickText = (isActive: boolean) => {
-    // do nothing
   };
 
   isEqualTo = (other: BaseGeometryObject) => {

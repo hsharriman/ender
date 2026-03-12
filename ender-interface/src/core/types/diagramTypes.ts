@@ -22,10 +22,15 @@ export enum HighlightType {
   HighlightUnmet = "highlightunmet",
 }
 
-// Define AspectRatio locally since we removed diagramSvg
 export enum AspectRatio {
   Square = "square",
   Wide = "wide",
   Tall = "tall",
   Landscape = "landscape",
+}
+
+export enum ShowPoint {
+  Always = "always",
+  Adaptive = "adaptive",
+  Hide = "hide",
 }

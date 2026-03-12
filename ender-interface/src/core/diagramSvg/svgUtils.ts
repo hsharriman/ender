@@ -1,4 +1,5 @@
-import { SVGModes, Vector } from "geometry-object";
+import { Vector } from "geometry-object";
+import { SVGModes } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
 import { ModeCSS } from "./SVGStyles";
 

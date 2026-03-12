@@ -1,4 +1,4 @@
-import { DiagramContent, Obj, SVGModes } from "geometry-object";
+import { DiagramContent, Obj } from "geometry-object";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { comma } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
@@ -12,6 +12,7 @@ import {
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
+import { SVGModes } from "../../../core/types/diagramTypes";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,

@@ -1,4 +1,5 @@
-import { DiagramContent, Obj, SVGModes } from "geometry-object";
+import { DiagramContent, Obj } from "geometry-object";
+import { SVGModes } from "../types/diagramTypes";
 import {
   StepFocusProps,
   StepProps,

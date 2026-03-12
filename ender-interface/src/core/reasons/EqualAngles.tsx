@@ -1,6 +1,7 @@
-import { Obj, SVGModes } from "geometry-object";
+import { Obj } from "geometry-object";
 import { makeStepMeta } from "../../theorems/utils";
 import { angleStr, resizedStrs } from "../geometryText";
+import { SVGModes } from "../types/diagramTypes";
 import { Reason } from "../types/layoutTypes";
 import { StepFocusProps, StepMeta, StepProps } from "../types/stepTypes";
 

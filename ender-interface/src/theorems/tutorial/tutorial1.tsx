@@ -1,4 +1,4 @@
-import { DiagramContent, Obj, SVGModes } from "geometry-object";
+import { DiagramContent, Obj } from "geometry-object";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { comma } from "../../core/geometryText";
 import { CongruentTriangles } from "../../core/reasons/CongruentTriangles";
@@ -8,6 +8,7 @@ import { EqualTriangles } from "../../core/reasons/EqualTriangles";
 import { Reflexive } from "../../core/reasons/Reflexive";
 import { SAS, SASProps } from "../../core/reasons/SAS";
 import { SSS } from "../../core/reasons/SSS";
+import { SVGModes } from "../../core/types/diagramTypes";
 import { LayoutProps } from "../../core/types/layoutTypes";
 import {
   StepFocusProps,

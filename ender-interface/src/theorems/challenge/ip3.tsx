@@ -1,10 +1,4 @@
-import {
-  DiagramContent,
-  Obj,
-  ShowPoint,
-  SVGModes,
-  Vector,
-} from "geometry-object";
+import { DiagramContent, Obj, ShowPoint, Vector } from "geometry-object";
 import { comma } from "../../core/geometryText";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
@@ -17,6 +11,7 @@ import { Midpoint } from "../../core/reasons/Midpoint";
 import { Reflexive } from "../../core/reasons/Reflexive";
 import { RightAngle } from "../../core/reasons/RightAngle";
 import { SAS, SASProps } from "../../core/reasons/SAS";
+import { SVGModes } from "../../core/types/diagramTypes";
 import { AspectRatio, LayoutProps } from "../../core/types/layoutTypes";
 import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
 import { Reasons } from "../reasons";

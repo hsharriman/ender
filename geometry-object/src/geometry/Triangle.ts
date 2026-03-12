@@ -12,7 +12,7 @@ export class Triangle extends BaseGeometryObject {
   private sorted: boolean;
   p: [Point, Point, Point];
   readonly id: string;
-  readonly rotatePattern: boolean;
+
   readonly congruent: Set<string> = new Set();
 
   constructor(props: TriangleProps) {
@@ -24,7 +24,7 @@ export class Triangle extends BaseGeometryObject {
     this.a = this.buildAngles(props.pts);
     this.names = this.permutator(props.pts.map((pt) => pt.label));
     this.label = `${props.pts[0].label}${props.pts[1].label}${props.pts[2].label}`;
-    this.rotatePattern = props.rotatePattern || false;
+
     this.id = this.getId(Obj.Triangle, this.label);
     this.sorted = false;
   }
@@ -108,30 +108,6 @@ export class Triangle extends BaseGeometryObject {
     return this.a.find(
       (ang) => ang.center.label.toLowerCase() === center.toLowerCase(),
     );
-  };
-
-  // deprecated
-  onClickText = (isActive: boolean) => {
-    // for each segment use onClickText
-    this.s.forEach((seg) => {
-      seg.onClickText(isActive);
-    });
-    this.a.forEach((ang) => {
-      ang.onClickText(isActive);
-    });
-  };
-
-  override mode = (frameKey: string, mode: SVGModes) => {
-    // this.modes.set(frameKey, mode);
-    // cascading update the segments and angles
-    this.s.map((seg) => seg.mode(frameKey, mode));
-    this.a.map((ang) => ang.mode(frameKey, mode));
-    return this;
-  };
-
-  labelMode = (frameKey: string, mode: SVGModes) => {
-    this.modes.set(frameKey, mode);
-    return this;
   };
 
   setCongruent = (frame: string) => {

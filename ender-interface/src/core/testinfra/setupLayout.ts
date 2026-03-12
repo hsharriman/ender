@@ -1,6 +1,6 @@
-import { SVGModes } from "geometry-object";
 import { Reasons } from "../../theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
+import { SVGModes } from "../types/diagramTypes";
 import { LayoutProps, ProofMeta, Reason } from "../types/layoutTypes";
 import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";
 

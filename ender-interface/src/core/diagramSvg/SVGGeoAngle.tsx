@@ -1,5 +1,6 @@
-import { LAngle, Obj, SVGModes, TickType } from "geometry-object";
+import { LAngle, Obj } from "geometry-object";
 import React from "react";
+import { SVGModes, TickType } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
 import { SVGGeoTick } from "./SVGGeoTick";
 import { pops } from "./pathBuilderUtils";

@@ -1,4 +1,4 @@
-import { SVGModes } from "geometry-object";
+import { SVGModes } from "../types/diagramTypes";
 
 export type BaseSVGProps = {
   geoId: string;

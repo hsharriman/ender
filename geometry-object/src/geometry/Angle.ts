@@ -1,5 +1,5 @@
 import { AngleProps } from "../types/geometryTypes";
-import { LAngle, Obj, TickType } from "../types/types";
+import { LAngle, Obj } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
@@ -10,7 +10,6 @@ export class Angle extends BaseGeometryObject {
   public readonly center: Point;
   public readonly end: Point;
   public id: string;
-  public ticks: Map<string, { type: TickType; num: number }>; // frame to tick
   private parentAngle: Angle | null = null;
   constructor(props: AngleProps) {
     super(Obj.Angle, props);
@@ -23,7 +22,6 @@ export class Angle extends BaseGeometryObject {
       `${this.end.label}${this.center.label}${this.start.label}`,
     ]);
     this.id = this.getId(Obj.Angle, this.label);
-    this.ticks = new Map<string, { type: TickType; num: number }>();
   }
 
   labeled = (): LAngle => {
@@ -38,28 +36,6 @@ export class Angle extends BaseGeometryObject {
   centerStr = () => {
     return this.center.label;
   };
-
-  // deprecated - DOM manipulation removed for package independence
-  override onClickText = (isActive: boolean) => {
-    // DOM manipulation removed for package independence
-  };
-
-  addTick = (frame: string, type: TickType, num: number = 1) => {
-    this.ticks.set(frame, { type, num });
-    return this;
-  };
-
-  inheritTick = (frame: string, prevFrame: string) => {
-    this.ticks.get(prevFrame) &&
-      this.ticks.set(frame, this.ticks.get(prevFrame)!);
-  };
-
-  hideTick = (frame: string) => {
-    this.ticks.delete(frame);
-    return this;
-  };
-
-  getTick = (frame: string) => this.ticks.get(frame);
 
   equals = (other: Angle) => {
     return this.names.has(other.label);

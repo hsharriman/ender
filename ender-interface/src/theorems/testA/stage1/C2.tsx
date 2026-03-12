@@ -1,4 +1,4 @@
-import { DiagramContent, Obj, ShowPoint, SVGModes } from "geometry-object";
+import { DiagramContent, Obj, ShowPoint } from "geometry-object";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
@@ -11,6 +11,7 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
 import { RightAngle } from "../../../core/reasons/RightAngle";
+import { SVGModes } from "../../../core/types/diagramTypes";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,

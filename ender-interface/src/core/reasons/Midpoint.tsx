@@ -1,5 +1,5 @@
-import { SVGModes } from "geometry-object";
 import { segmentStr } from "../geometryText";
+import { SVGModes } from "../types/diagramTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { EqualSegments } from "./EqualSegments";
 
