@@ -1,4 +1,5 @@
-import { DiagramContent, SVGModes, TickType } from "geometry-object";
+import { DiagramContent } from "geometry-object";
+import { SVGModes, TickType } from "./diagramTypes";
 import { Reason } from "./layoutTypes";
 
 // -------- TYPES RELATED TO RENDERING STEPS OF A PROOF --------

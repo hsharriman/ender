@@ -33,9 +33,4 @@ export class Point extends BaseGeometryObject {
   equals = (p: Point) => {
     return this.names.has(p.label);
   };
-
-  // deprecated - DOM manipulation removed for package independence
-  onClickText = (isActive: boolean) => {
-    // DOM manipulation removed for package independence
-  };
 }

@@ -1,19 +1,19 @@
-import { DiagramCtx } from "geometry-object";
 import React from "react";
+import { DiagramRenderCtx } from "../../core/types/diagramTypes";
 import { AspectRatio } from "../../core/types/layoutTypes";
 import { GIVEN_ID } from "../../theorems/utils";
 import { Diagram } from "./Diagram";
 
-export interface DiagramProps {
+export interface StaticDiagramProps {
   svgIdSuffix: string;
-  ctx: DiagramCtx;
+  ctx: DiagramRenderCtx;
   width: string;
   height: string;
   activeFrame?: string;
   diagramAspect: AspectRatio;
 }
 
-export class StaticDiagram extends React.Component<DiagramProps, {}> {
+export class StaticDiagram extends React.Component<StaticDiagramProps, {}> {
   render() {
     return (
       <Diagram

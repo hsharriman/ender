@@ -39,18 +39,6 @@ export class SVGGeoTriangle extends React.Component<
   };
 
   // deprecated
-  highlightElems = (isActive: boolean) => {
-    const a = this.props.t.a;
-    const s = this.props.t.s;
-    s.forEach((seg) => {
-      seg.onClickText(isActive);
-    });
-    a.forEach((ang) => {
-      ang.onClickText(isActive);
-    });
-  };
-
-  // deprecated
   onHoverLabelClick = (isActive: boolean) => {
     this.setState({
       isActive,

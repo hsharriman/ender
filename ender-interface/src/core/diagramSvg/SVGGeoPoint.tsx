@@ -1,6 +1,6 @@
-import { LPoint, Obj, ShowPoint, Vector } from "geometry-object";
+import { LPoint, Obj, Vector } from "geometry-object";
 import React from "react";
-import { SVGModes } from "../types/diagramTypes";
+import { ShowPoint, SVGModes } from "../types/diagramTypes";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
 

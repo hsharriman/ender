@@ -1,6 +1,6 @@
-import { DiagramCtx } from "geometry-object";
 import React from "react";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
+import { DiagramRenderCtx } from "../../core/types/diagramTypes";
 import { Reason } from "../../core/types/layoutTypes";
 import { StaticProofTextItem } from "../../core/types/stepTypes";
 import { Definition, definitionArr } from "../../theorems/definitions";
@@ -8,7 +8,7 @@ import { StaticDiagram } from "./StaticDiagram";
 
 export interface StaticAppPageProps {
   name: string;
-  ctx: DiagramCtx;
+  ctx: DiagramRenderCtx;
   reasons: Reason[];
   texts: StaticProofTextItem[];
   givenText: JSX.Element;

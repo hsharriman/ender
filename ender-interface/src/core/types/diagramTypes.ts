@@ -1,4 +1,12 @@
 import { Obj } from "geometry-object";
+import {
+  AngleBuilder,
+  PointBuilder,
+  QuadrilateralBuilder,
+  SegmentBuilder,
+  TriangleBuilder,
+} from "../builder/GeoObjectBuilders";
+
 export type TickType =
   | Obj.ParallelTick
   | Obj.EqualLengthTick
@@ -34,3 +42,22 @@ export enum ShowPoint {
   Adaptive = "adaptive",
   Hide = "hide",
 }
+
+export type DiagramRenderCtx = {
+  points: PointBuilder[];
+  segments: SegmentBuilder[];
+  angles: AngleBuilder[];
+  triangles: TriangleBuilder[];
+  rectangles: QuadrilateralBuilder[];
+  frames: string[];
+  deps: Map<string, Set<string>>;
+};
+
+export type GeoBuilderObject =
+  | PointBuilder
+  | SegmentBuilder
+  | AngleBuilder
+  | TriangleBuilder
+  | QuadrilateralBuilder;
+
+export type TickedGeoObject = SegmentBuilder | AngleBuilder;

@@ -1,7 +1,7 @@
-import { DiagramCtx } from "geometry-object";
 import React from "react";
 import { Legend } from "../../core/diagramSvg/Legend";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
+import { DiagramRenderCtx } from "../../core/types/diagramTypes";
 import { Reason } from "../../core/types/layoutTypes";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { getReasonFn } from "../../theorems/utils";
@@ -12,12 +12,12 @@ import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
 
 export interface InteractiveAppPageProps {
   name: string;
-  ctx: DiagramCtx;
+  ctx: DiagramRenderCtx;
   linkedTexts: ProofTextItem[];
   reasonMap: Map<string, Reason>;
   isTutorial?: boolean;
-  highlightCtx: DiagramCtx;
-  additionCtx: DiagramCtx;
+  highlightCtx: DiagramRenderCtx;
+  additionCtx: DiagramRenderCtx;
   diagramAspect: AspectRatio;
 }
 

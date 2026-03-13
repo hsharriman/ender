@@ -9,7 +9,7 @@ export const buildPremises = (proof: ProofObj) => {
   // Add all points from premises
   proof.premises.points.forEach((pointObj) => {
     const label = pointObj.v;
-    ctx.addPoint({ pt: [0, 0], label, offset: [0, 0] }); // TODO pt coords
+    ctx.addPoint({ pt: [0, 0], label }); // TODO pt coords
   });
 
   // loop through all pairs of points and create segments
