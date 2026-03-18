@@ -1,4 +1,5 @@
-import { DiagramContent, Obj, ShowPoint, Vector } from "geometry-object";
+import { Obj, Vector } from "geometry-object";
+import { DiagramContent } from "../../core/builder/DiagramContent";
 import { comma } from "../../core/geometryText";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
@@ -11,7 +12,7 @@ import { Midpoint } from "../../core/reasons/Midpoint";
 import { Reflexive } from "../../core/reasons/Reflexive";
 import { RightAngle } from "../../core/reasons/RightAngle";
 import { SAS, SASProps } from "../../core/reasons/SAS";
-import { SVGModes } from "../../core/types/diagramTypes";
+import { ShowPoint, SVGModes } from "../../core/types/diagramTypes";
 import { AspectRatio, LayoutProps } from "../../core/types/layoutTypes";
 import { StepFocusProps, StepMeta } from "../../core/types/stepTypes";
 import { Reasons } from "../reasons";
@@ -37,25 +38,18 @@ export const baseContent = () => {
     [-20, -5],
   ];
   const [A, B, C, D, E, G] = pts.map((c, i) =>
-    ctx.addPoint({
-      pt: c,
-      label: labels[i],
-      offset: offsets[i],
-      showPoint: ShowPoint.Adaptive,
-    }),
+    ctx.addPoint({ pt: c, label: labels[i] }, offsets[i], ShowPoint.Adaptive),
   );
 
-  ctx.addTriangles([
-    { pts: [A, B, E] },
-    { pts: [B, E, C] },
-    { pts: [D, E, C] },
-    { pts: [G, E, C] },
-  ]);
+  ctx.addTriangle({ pts: [A.obj, B.obj, E.obj] });
+  ctx.addTriangle({ pts: [B.obj, E.obj, C.obj] });
+  ctx.addTriangle({ pts: [D.obj, E.obj, C.obj] });
+  ctx.addTriangle({ pts: [G.obj, E.obj, C.obj] });
 
   // for given step:
-  ctx.addSegment({ p1: B, p2: G });
-  ctx.addAngle({ start: A, center: B, end: G });
-  ctx.addAngle({ start: C, center: B, end: G });
+  ctx.addSegment({ p1: B.obj, p2: G.obj });
+  ctx.addAngle({ start: A.obj, center: B.obj, end: G.obj });
+  ctx.addAngle({ start: C.obj, center: B.obj, end: G.obj });
   return ctx;
 };
 

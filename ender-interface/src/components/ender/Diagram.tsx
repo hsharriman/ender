@@ -31,21 +31,21 @@ export class Diagram extends React.Component<DiagramProps> {
 
   renderPoints = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
     return ctx.points.flatMap((p, i) => {
-      let setMode = p.getMode(frame);
+      let setMode = p.modes.get(frame);
       setMode = setMode === SVGModes.Unfocused ? SVGModes.Hidden : setMode;
       const mode = this.props.isStatic
         ? SVGModes.Default
         : (setMode ?? SVGModes.Hidden);
       return !this.props.miniScale ? (
         <SVGGeoPoint
-          geoId={`${p.point.id}.${layer}`}
+          geoId={`${p.obj.id}.${layer}`}
           mode={mode}
           hoverable={false}
-          key={`${p.point.id}-${i}.${layer}`}
+          key={`${p.obj.id}-${i}.${layer}`}
           {...{
-            p: p.point.labeled(),
+            p: p.obj.labeled(),
             offset: p.offset,
-            label: p.label,
+            label: p.obj.label,
             miniScale: this.props.miniScale,
             showPoint: p.showPoint,
           }}
@@ -61,18 +61,18 @@ export class Diagram extends React.Component<DiagramProps> {
     return ctx.segments.flatMap((seg, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
-        : (seg.getMode(frame) ?? SVGModes.Hidden);
+        : (seg.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoSegment
-          geoId={`${seg.segment.id}.${layer}`}
+          geoId={`${seg.obj.id}.${layer}`}
           mode={mode}
           hoverable={false}
           {...{
             miniScale: this.props.miniScale,
-            s: seg.segment.labeled(),
-            tick: seg.getTick(frame),
+            s: seg.obj.labeled(),
+            tick: seg.ticks.get(frame),
           }}
-          key={`${seg.segment.id}-${i}.${layer}`}
+          key={`${seg.obj.id}-${i}.${layer}`}
           isHighlight={layer === 1}
         />
       );
@@ -83,18 +83,18 @@ export class Diagram extends React.Component<DiagramProps> {
     return ctx.angles.flatMap((ang, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
-        : (ang.getMode(frame) ?? SVGModes.Hidden);
+        : (ang.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoAngle
           mode={mode}
-          geoId={`${ang.angle.id}.${layer}`}
+          geoId={`${ang.obj.id}.${layer}`}
           hoverable={false}
           {...{
-            a: ang.angle.labeled(),
+            a: ang.obj.labeled(),
             miniScale: this.props.miniScale,
-            tick: ang.getTick(frame),
+            tick: ang.ticks.get(frame),
           }}
-          key={`${ang.angle.id}-${i}.${layer}`}
+          key={`${ang.obj.id}-${i}.${layer}`}
           isHighlight={layer === 1}
         />
       );
@@ -105,16 +105,16 @@ export class Diagram extends React.Component<DiagramProps> {
     return ctx.triangles.flatMap((tri, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
-        : (tri.getMode(frame) ?? SVGModes.Hidden);
+        : (tri.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoTriangle
-          geoId={`${tri.id}.${layer}`}
+          geoId={`${tri.obj.id}.${layer}`}
           hoverable={false}
           {...{
             miniScale: this.props.miniScale,
-            t: tri,
+            t: tri.obj,
           }}
-          key={`${tri.id}-${i}.${layer}`}
+          key={`${tri.obj.id}-${i}.${layer}`}
           mode={mode}
           rotate={tri.rotatePattern}
           congruent={!this.props.isStatic && tri.congruent.has(frame)}

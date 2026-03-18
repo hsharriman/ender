@@ -1,6 +1,6 @@
-import { DiagramContent } from "geometry-object";
 import { InteractiveAppPageProps } from "../../components/ender/InteractiveAppPage";
 import { StaticAppPageProps } from "../../components/ender/StaticAppPage";
+import { DiagramContent } from "../builder/DiagramContent";
 import { StepMeta } from "./stepTypes";
 
 // -------- TYPES RELATED TO PROOF SETUP --------

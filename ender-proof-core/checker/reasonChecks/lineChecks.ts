@@ -1,4 +1,4 @@
-import { DiagramContent, Point, Segment } from "geometry-object";
+import { Point, ProofContent, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 
 export const reflex_s = (s1: Segment, s2: Segment) => {
@@ -9,12 +9,12 @@ export const altint = (
   conAng: Stmt,
   transversal: Stmt,
   para: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   let [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg.v));
   const [s1p1, s1p2, p1, s2p1, s2p2, p2] = transversal.arguments.map((arg) =>
-    tempCtx.getPoint(arg.v)
+    tempCtx.getPoint(arg.v),
   );
   const [s1, s2, t] = [
     tempCtx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
@@ -22,7 +22,7 @@ export const altint = (
     tempCtx.addSegmentFromStr(`${p1.label}${p2.label}`),
   ];
   let [pa1, pa2] = para.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg.v)
+    tempCtx.addSegmentFromStr(arg.v),
   );
 
   if (pa1.equals(s2) && pa2.equals(s1)) {
@@ -64,10 +64,10 @@ export const altint = (
   return segmentCheck && angleCheck;
 };
 
-export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: DiagramContent) => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: ProofContent) => {
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [s1, s2] = conSeg.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg.v)
+    tempCtx.addSegmentFromStr(arg.v),
   );
   const [bigSeg, midpt] = [
     tempCtx.addSegmentFromStr(midPt.arguments[0].v),
@@ -89,9 +89,9 @@ export const intersect_seg = (
   intersect_on1: Stmt,
   intersect_on2: Stmt,
   intersect_seg: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const p1 = tempCtx.getPoint(intersect_on1.arguments[1].v);
   const p2 = tempCtx.getPoint(intersect_on2.arguments[1].v);
 
@@ -107,9 +107,9 @@ export const perp = (
   right: Stmt,
   onLine: Stmt,
   perp: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const angle = tempCtx.addAngleFromStr(right.arguments[0].v);
 
   let [sharedSide, s2] = [
@@ -137,13 +137,13 @@ export const perp = (
   return false;
 };
 
-export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: DiagramContent) => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [s1, s2] = perp.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg.v)
+    tempCtx.addSegmentFromStr(arg.v),
   );
   const [a1, a2] = conAng.arguments.map((arg) =>
-    tempCtx.addAngleFromStr(arg.v)
+    tempCtx.addAngleFromStr(arg.v),
   );
   const [intersectPt, sharedSide] = getIntersectPt(s1, s2);
   if (intersectPt && sharedSide) {
@@ -156,7 +156,7 @@ export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: DiagramContent) => {
 // ----- Helper functions -----
 const getIntersectPt = (
   s1: Segment,
-  s2: Segment
+  s2: Segment,
 ): [Point | undefined, Segment | undefined] => {
   // Check if s1.p1 is on s2
   if (s1.p1.isOnLine(s2)) {

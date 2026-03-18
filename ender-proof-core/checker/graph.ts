@@ -1,5 +1,5 @@
 import { logDebug, logError } from "../errors/errorConstants";
-import { DiagramContent } from "geometry-object";
+import { ProofContent } from "geometry-object";
 import {
   ProofGraph,
   ProofObj,
@@ -20,7 +20,7 @@ export const buildProofGraph = (
   reasonDefs: Map<string, ReasonDefinition>,
   stmtDefs: Map<string, StatementDefinition>,
   groups: Map<string, StatementGroup>,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): ProofGraph => {
   const graph: ProofGraph = {
     nodes: new Map(),
@@ -73,7 +73,7 @@ export const buildProofGraph = (
           step.reason,
           reasonDefs,
           groups,
-          graph
+          graph,
         );
         logDebug(`  Dependency statements check: ${isCorrect}`);
       }
@@ -83,7 +83,7 @@ export const buildProofGraph = (
         logDebug(
           `  Checking statement: ${
             step.statement?.function
-          } with args: ${JSON.stringify(step.statement?.arguments)}`
+          } with args: ${JSON.stringify(step.statement?.arguments)}`,
         );
         isCorrect = checkStatementArguments(step.statement, stmtDefs);
         logDebug(`  Statement arguments check: ${isCorrect}`);
@@ -93,7 +93,7 @@ export const buildProofGraph = (
           const stmtDef = stmtDefs.get(step.statement.function);
           if (stmtDef?.isPremisesOnly && step.type === "proof") {
             logError.parser.premisesOnlyStatementInProof(
-              step.statement.function
+              step.statement.function,
             );
             isCorrect = false;
           }
@@ -179,7 +179,7 @@ export const detectCycles = (graph: ProofGraph): string[][] => {
 // Find unused steps (leaf nodes that don't lead to the goal)
 export const findUnusedSteps = (
   graph: ProofGraph,
-  goalStep?: string
+  goalStep?: string,
 ): Set<string> => {
   const unused = new Set<string>();
 

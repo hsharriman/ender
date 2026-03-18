@@ -1,4 +1,4 @@
-import { DiagramContent } from "geometry-object";
+import { DiagramContent } from "../builder/DiagramContent";
 import { SVGModes, TickType } from "./diagramTypes";
 import { Reason } from "./layoutTypes";
 

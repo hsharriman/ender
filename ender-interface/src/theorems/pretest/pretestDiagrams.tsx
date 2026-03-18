@@ -1,10 +1,11 @@
-import { DiagramContent, ShowPoint, Vector } from "geometry-object";
+import { Vector } from "geometry-object";
+import { DiagramContent } from "../../core/builder/DiagramContent";
 import { EqualAngles } from "../../core/reasons/EqualAngles";
 import { EqualRightAngles } from "../../core/reasons/EqualRightAngles";
 import { EqualSegments } from "../../core/reasons/EqualSegments";
 import { ParallelLines } from "../../core/reasons/ParallelLines";
 import { RightAngle } from "../../core/reasons/RightAngle";
-import { SVGModes } from "../../core/types/diagramTypes";
+import { ShowPoint, SVGModes } from "../../core/types/diagramTypes";
 
 const defaultProps = (ctx: DiagramContent) => {
   return { ctx: ctx, frame: "given", mode: SVGModes.Default };
@@ -28,12 +29,7 @@ export const segmentContent = () => {
   ];
   let ctx = new DiagramContent();
   const [A, B, C, D, E, F, G, H, J, M, N] = coords.map((c) =>
-    ctx.addPoint({
-      pt: c[1],
-      label: c[0],
-      offset: c[2],
-      showPoint: ShowPoint.Always,
-    }),
+    ctx.addPoint({ pt: c[1], label: c[0] }, c[2], ShowPoint.Always),
   );
   [
     [A, B],
@@ -43,7 +39,7 @@ export const segmentContent = () => {
     [H, J],
     [M, N],
   ].forEach((s) => {
-    ctx.addSegment({ p1: s[0], p2: s[1] });
+    ctx.addSegment({ p1: s[0].obj, p2: s[1].obj });
   });
 
   ctx.addFrame("given");
@@ -76,12 +72,7 @@ export const angleContent = () => {
   ];
   let ctx = new DiagramContent();
   const [A, B, C, D, E, F, G, H, J, K, L, M, N, Q, P] = coords.map((c) =>
-    ctx.addPoint({
-      pt: c[1],
-      label: c[0],
-      offset: c[2],
-      showPoint: ShowPoint.Always,
-    }),
+    ctx.addPoint({ pt: c[1], label: c[0] }, c[2], ShowPoint.Always),
   );
   [
     [A, B],
@@ -95,15 +86,15 @@ export const angleContent = () => {
     [N, Q],
     [Q, P],
   ].forEach((s) => {
-    const seg = ctx.addSegment({ p1: s[0], p2: s[1] });
+    const seg = ctx.addSegment({ p1: s[0].obj, p2: s[1].obj });
     seg.mode("given", SVGModes.Default);
   });
   ctx.addAngles([
-    { start: A, center: B, end: C },
-    { start: D, center: E, end: F },
-    { start: G, center: H, end: J },
-    { start: K, center: L, end: M },
-    { start: N, center: Q, end: P },
+    { start: A.obj, center: B.obj, end: C.obj },
+    { start: D.obj, center: E.obj, end: F.obj },
+    { start: G.obj, center: H.obj, end: J.obj },
+    { start: K.obj, center: L.obj, end: M.obj },
+    { start: N.obj, center: Q.obj, end: P.obj },
   ]);
 
   ctx.addFrame("given");
@@ -124,14 +115,10 @@ const baseTriangles = () => {
   ];
   let ctx = new DiagramContent();
   const [A, B, C, D, E, F] = coords.map((c) =>
-    ctx.addPoint({
-      pt: c[1],
-      label: c[0],
-      offset: c[2],
-    }),
+    ctx.addPoint({ pt: c[1], label: c[0] }, c[2], ShowPoint.Always),
   );
-  ctx.addTriangle({ pts: [A, B, C] });
-  ctx.addTriangle({ pts: [D, E, F] });
+  ctx.addTriangle({ pts: [A.obj, B.obj, C.obj] });
+  ctx.addTriangle({ pts: [D.obj, E.obj, F.obj] });
 
   ctx.addFrame("given");
   ctx.getTriangle("ABC").mode("given", SVGModes.Default);
@@ -150,13 +137,10 @@ export const hl = () => {
   ];
   let ctx = new DiagramContent();
   const [A, B, C, D, E, F] = coords.map((c) =>
-    ctx.addPoint({
-      pt: c[1],
-      label: c[0],
-      offset: c[2],
-    }),
+    ctx.addPoint({ pt: c[1], label: c[0] }, c[2], ShowPoint.Always),
   );
-  ctx.addTriangles([{ pts: [A, B, C] }, { pts: [D, E, F] }]);
+  ctx.addTriangle({ pts: [A.obj, B.obj, C.obj] });
+  ctx.addTriangle({ pts: [D.obj, E.obj, F.obj] });
 
   ctx.addFrame("given");
   ctx.getTriangle("ABC").mode("given", SVGModes.Default);

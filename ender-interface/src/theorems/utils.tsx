@@ -1,4 +1,5 @@
-import { DiagramContent, SVGModes } from "geometry-object";
+import { DiagramContent } from "../core/builder/DiagramContent";
+import { SVGModes } from "../core/types/diagramTypes";
 import { Reason } from "../core/types/layoutTypes";
 import { StepFocusProps, StepMeta, StepProps } from "../core/types/stepTypes";
 import { Reasons } from "./reasons";
@@ -15,7 +16,7 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   const defaultStaticText = () => <></>;
   const defaultAdditions = (props: StepFocusProps) => {};
   const defaultText: (isActive: boolean) => JSX.Element = (
-    isActive: boolean
+    isActive: boolean,
   ) => <></>;
   const defaultUnfocused = (props: StepProps) => {
     if (meta.prevStep) {

@@ -1,20 +1,20 @@
-import { createError, logError } from "../errors/errorConstants";
 import {
   Angle,
-  DiagramContent,
+  Obj,
+  ParseObj,
   Point,
+  ProofContent,
   Quadrilateral,
   Segment,
   Triangle,
 } from "geometry-object";
+import { createError, logError } from "../errors/errorConstants";
 import {
-  ParseObj,
   ProofGraph,
   ProofObj,
   ProofStep,
   ReasonDefinition,
 } from "../types/checkerTypes";
-import { Obj } from "geometry-object";
 import { ang_bisect, reflex_a, vert_ang } from "./reasonChecks/angleChecks";
 import {
   altint,
@@ -40,7 +40,7 @@ export const checkReasonApplication = (
   reasonDefs: Map<string, ReasonDefinition>,
   proofGraph: ProofGraph,
   proof: ProofObj,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
   const reason = currStep.reason!;
   const definition = reasonDefs.get(reason.function);
@@ -77,12 +77,12 @@ export const checkReasonApplication = (
             return reflex_s(
               getGeometricObject(
                 currStep.statement.arguments[0],
-                ctx
+                ctx,
               ) as Segment,
               getGeometricObject(
                 currStep.statement.arguments[1],
-                ctx
-              ) as Segment
+                ctx,
+              ) as Segment,
             );
           }
         }
@@ -93,7 +93,7 @@ export const checkReasonApplication = (
           if (currStep.statement?.arguments?.length === 2) {
             return reflex_a(
               getGeometricObject(currStep.statement.arguments[0], ctx) as Angle,
-              getGeometricObject(currStep.statement.arguments[1], ctx) as Angle
+              getGeometricObject(currStep.statement.arguments[1], ctx) as Angle,
             );
           }
         }
@@ -231,13 +231,13 @@ export const checkReasonApplication = (
             "intersect_seg",
             intersect_on1,
             intersect_on2,
-            currStep.statement
+            currStep.statement,
           );
           return intersect_seg(
             intersect_on1,
             intersect_on2,
             currStep.statement,
-            ctx
+            ctx,
           );
         }
         return false;
@@ -257,7 +257,7 @@ export const checkReasonApplication = (
   } catch (error) {
     console.error(
       `Error checking reason application for ${reason.function}:`,
-      error
+      error,
     );
     return false;
   }
@@ -266,7 +266,7 @@ export const checkReasonApplication = (
 // Function to get geometric object from string identifier
 const getGeometricObject = (
   arg: ParseObj,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): Point | Segment | Angle | Triangle | Quadrilateral => {
   switch (arg.type) {
     case Obj.Angle:

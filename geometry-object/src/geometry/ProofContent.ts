@@ -1,7 +1,7 @@
 import {
   AngleProps,
-  DiagramCtx,
   PointProps,
+  ProofCtx,
   QuadrilateralProps,
   SegmentProps,
   TriangleProps,
@@ -12,9 +12,10 @@ import { Quadrilateral } from "./Quadrilateral";
 import { Segment } from "./Segment";
 import { Triangle } from "./Triangle";
 
-export class DiagramContent {
-  ctx: DiagramCtx;
-  constructor(prevCtx?: DiagramCtx) {
+// TODO rename to ProofContent
+export class ProofContent {
+  ctx: ProofCtx;
+  constructor(prevCtx?: ProofCtx) {
     this.ctx = prevCtx ?? {
       points: [],
       segments: [],

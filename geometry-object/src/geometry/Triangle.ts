@@ -2,8 +2,8 @@ import { TriangleProps } from "../types/geometryTypes";
 import { Obj, ParseObj } from "../types/types";
 import { Angle } from "./Angle";
 import { BaseGeometryObject } from "./BaseGeometryObject";
-import { DiagramContent } from "./DiagramContent";
 import { Point } from "./Point";
+import { ProofContent } from "./ProofContent";
 import { Segment } from "./Segment";
 
 export class Triangle extends BaseGeometryObject {
@@ -12,8 +12,6 @@ export class Triangle extends BaseGeometryObject {
   private sorted: boolean;
   p: [Point, Point, Point];
   readonly id: string;
-
-  readonly congruent: Set<string> = new Set();
 
   constructor(props: TriangleProps) {
     super(Obj.Triangle, props);
@@ -77,7 +75,7 @@ export class Triangle extends BaseGeometryObject {
     return [aa, ab, ac];
   };
 
-  orderTriangle = (p: [string, string, string], ctx: DiagramContent) => {
+  orderTriangle = (p: [string, string, string], ctx: ProofContent) => {
     this.p = [ctx.getPoint(p[0]), ctx.getPoint(p[1]), ctx.getPoint(p[2])];
     this.s = this.buildSegments(this.p);
     this.a = this.buildAngles(this.p);
@@ -108,11 +106,6 @@ export class Triangle extends BaseGeometryObject {
     return this.a.find(
       (ang) => ang.center.label.toLowerCase() === center.toLowerCase(),
     );
-  };
-
-  setCongruent = (frame: string) => {
-    this.congruent.add(frame);
-    return this;
   };
 
   containsParseObj = (obj: ParseObj) => {

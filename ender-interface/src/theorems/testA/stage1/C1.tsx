@@ -1,4 +1,4 @@
-import { DiagramContent } from "geometry-object";
+import { DiagramContent } from "../../../core/builder/DiagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { comma, segmentStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -18,25 +18,24 @@ import {
 import { Reasons } from "../../reasons";
 import { makeStepMeta } from "../../utils";
 
+// need function that takes in diagramcontent from proof checker and returns new content with modes set
+// the outputs from proof checker need to include steps that are incorrect so they can be highlighted.
+// to fix these proofs (which should eventually be reduced to just proof checker object -> final rendering),
+// we need to remake diagram content with the correct types.
+
 const baseContent = () => {
   let ctx = new DiagramContent();
-  const [A, B, C, D, M] = ctx.addPoints([
-    { pt: [5, 9], label: "A", offset: [5, 5] },
-    { pt: [10, 2], label: "B", offset: [10, -10] },
-    { pt: [1, 3], label: "C", offset: [-20, -20] },
-    { pt: [14, 8], label: "D", offset: [3, 3] },
-    { pt: [7.5, 5.5], label: "M", offset: [0, 10] },
-  ]);
+  const A = ctx.addPoint({ pt: [5, 9], label: "A" }, [5, 5]);
+  const B = ctx.addPoint({ pt: [10, 2], label: "B" }, [10, -10]);
+  const C = ctx.addPoint({ pt: [1, 3], label: "C" }, [-20, -20]);
+  const D = ctx.addPoint({ pt: [14, 8], label: "D" }, [3, 3]);
+  const M = ctx.addPoint({ pt: [7.5, 5.5], label: "M" }, [0, 10]);
 
-  ctx.addTriangles([
-    { pts: [A, C, M] },
-    { pts: [B, D, M], rotatePattern: true },
-  ]);
+  ctx.addTriangle({ pts: [A.obj, C.obj, M.obj] });
+  ctx.addTriangle({ pts: [B.obj, D.obj, M.obj] }, true);
 
-  ctx.addSegments([
-    { p1: A, p2: B },
-    { p1: C, p2: D },
-  ]);
+  ctx.addSegment({ p1: A.obj, p2: B.obj });
+  ctx.addSegment({ p1: C.obj, p2: D.obj });
 
   return ctx;
 };

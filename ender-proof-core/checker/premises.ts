@@ -1,10 +1,10 @@
-import { DiagramContent, Obj, ParseObj } from "geometry-object";
+import { Obj, ParseObj, ProofContent } from "geometry-object";
 import { createError, logError } from "../errors/errorConstants";
 import { ProofObj, Stmt } from "../types/checkerTypes";
 
 export const buildPremises = (proof: ProofObj) => {
   // Create DiagramContent context and populate it with all geometric objects from premises
-  const ctx = new DiagramContent();
+  const ctx = new ProofContent();
 
   // Add all points from premises
   proof.premises.points.forEach((pointObj) => {
@@ -198,7 +198,7 @@ export const buildPremises = (proof: ProofObj) => {
   return ctx;
 };
 
-const angBisect = (ctx: DiagramContent, args: ParseObj[]) => {
+const angBisect = (ctx: ProofContent, args: ParseObj[]) => {
   const [ang, seg] = args;
   const a = ctx.addAngleFromStr(ang.v);
   const s = ctx.addSegmentFromStr(seg.v);
@@ -215,7 +215,7 @@ const angBisect = (ctx: DiagramContent, args: ParseObj[]) => {
   ctx.addAngle({ center: a.center, start: a.end, end: sharedPt });
 };
 
-const onLine = (ctx: DiagramContent, args: ParseObj[]) => {
+const onLine = (ctx: ProofContent, args: ParseObj[]) => {
   const [seg, pt] = args;
   const s = ctx.addSegmentFromStr(seg.v);
   const p = ctx.getPoint(pt.v);
@@ -226,11 +226,7 @@ const onLine = (ctx: DiagramContent, args: ParseObj[]) => {
   ps2.addParentSegment(s);
 };
 
-const intersectSeg = (
-  ctx: DiagramContent,
-  args: ParseObj[],
-  proof: ProofObj,
-) => {
+const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
   const [s1, s2, p] = args;
 
   // Check if the intersection point exists in premises
@@ -255,7 +251,7 @@ const intersectSeg = (
   });
 };
 
-const transversal = (ctx: DiagramContent, args: ParseObj[]) => {
+const transversal = (ctx: ProofContent, args: ParseObj[]) => {
   const [s1p1, s1p2, p1, s2p1, s2p2, p2] = args.map((arg) =>
     ctx.getPoint(arg.v),
   );
@@ -266,7 +262,7 @@ const transversal = (ctx: DiagramContent, args: ParseObj[]) => {
   p2.addOnLine(seg2);
 };
 
-const midpt = (ctx: DiagramContent, args: ParseObj[]) => {
+const midpt = (ctx: ProofContent, args: ParseObj[]) => {
   const [seg, pt] = args;
   const s = ctx.addSegmentFromStr(seg.v);
   const p = ctx.getPoint(pt.v);
@@ -275,7 +271,7 @@ const midpt = (ctx: DiagramContent, args: ParseObj[]) => {
   ctx.addSegment({ p1: s.p1, p2: p }).addParentSegment(s);
 };
 
-const addAllObjects = (ctx: DiagramContent, stmt: Stmt) => {
+const addAllObjects = (ctx: ProofContent, stmt: Stmt) => {
   stmt.arguments.forEach((arg: ParseObj) => {
     switch (arg.type) {
       case Obj.Segment:

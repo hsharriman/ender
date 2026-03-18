@@ -1,4 +1,5 @@
-import { DiagramContent, Obj, ShowPoint } from "geometry-object";
+import { Obj } from "geometry-object";
+import { DiagramContent } from "../../../core/builder/DiagramContent";
 import { comma, triangleStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
 import { EqualRightAngles } from "../../../core/reasons/EqualRightAngles";
@@ -6,7 +7,7 @@ import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
-import { SVGModes } from "../../../core/types/diagramTypes";
+import { ShowPoint, SVGModes } from "../../../core/types/diagramTypes";
 import { AspectRatio, LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -18,40 +19,39 @@ import { makeStepMeta } from "../../utils";
 
 export const baseContent = () => {
   let ctx = new DiagramContent();
-  const [E, F, H, G, J] = ctx.addPoints([
-    {
-      pt: [2, 2],
-      label: "E",
-      offset: [-15, -15],
-      showPoint: ShowPoint.Adaptive,
-    },
-    { pt: [2, 9], label: "F", offset: [-10, 5], showPoint: ShowPoint.Adaptive },
-    {
-      pt: [14, 2],
-      label: "H",
-      offset: [0, -17],
-      showPoint: ShowPoint.Adaptive,
-    },
-    { pt: [14, 9], label: "G", offset: [8, 0], showPoint: ShowPoint.Adaptive },
-    {
-      pt: [8, 2],
-      label: "J",
-      offset: [-5, -18],
-      showPoint: ShowPoint.Adaptive,
-    },
-  ]);
+  const E = ctx.addPoint(
+    { pt: [2, 2], label: "E" },
+    [-15, -15],
+    ShowPoint.Adaptive,
+  );
+  const F = ctx.addPoint(
+    { pt: [2, 9], label: "F" },
+    [-10, 5],
+    ShowPoint.Adaptive,
+  );
+  const H = ctx.addPoint(
+    { pt: [14, 2], label: "H" },
+    [0, -17],
+    ShowPoint.Adaptive,
+  );
+  const G = ctx.addPoint(
+    { pt: [14, 9], label: "G" },
+    [8, 0],
+    ShowPoint.Adaptive,
+  );
+  const J = ctx.addPoint(
+    { pt: [8, 2], label: "J" },
+    [-5, -18],
+    ShowPoint.Adaptive,
+  );
 
-  ctx.addTriangles([
-    { pts: [E, F, J] },
-    { pts: [J, G, H], rotatePattern: true },
-    { pts: [F, G, J] },
-  ]);
+  ctx.addTriangle({ pts: [E.obj, F.obj, J.obj] });
+  ctx.addTriangle({ pts: [J.obj, G.obj, H.obj] }, true);
+  ctx.addTriangle({ pts: [F.obj, G.obj, J.obj] });
 
   // for mini figures
-  ctx.addAngles([
-    { start: E, center: F, end: G },
-    { start: F, center: G, end: H },
-  ]);
+  ctx.addAngle({ start: E.obj, center: F.obj, end: G.obj });
+  ctx.addAngle({ start: F.obj, center: G.obj, end: H.obj });
 
   return ctx;
 };

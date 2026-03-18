@@ -1,13 +1,9 @@
-import { DiagramContent } from "geometry-object";
+import { ProofContent } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 import { conAngMapper, conSegMapper } from "./argMappers";
 
-export const rectangle = (
-  rect: Stmt,
-  conclusion: Stmt,
-  ctx: DiagramContent
-) => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+export const rectangle = (rect: Stmt, conclusion: Stmt, ctx: ProofContent) => {
+  const tempCtx = new ProofContent(ctx.getCtx());
   const quad = tempCtx.addQuadrilateralFromStr(rect.arguments[0].v);
   if (
     conclusion.function === "con_right" ||
@@ -30,12 +26,8 @@ export const rectangle = (
   return false;
 };
 
-export const parallelogram2 = (
-  para: Stmt,
-  pgram: Stmt,
-  ctx: DiagramContent
-) => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+export const parallelogram2 = (para: Stmt, pgram: Stmt, ctx: ProofContent) => {
+  const tempCtx = new ProofContent(ctx.getCtx());
   const quad = tempCtx.addQuadrilateralFromStr(para.arguments[0].v);
   const [s1, s2] = conSegMapper(pgram, tempCtx);
 

@@ -1,4 +1,5 @@
-import { DiagramContent, Obj, ShowPoint } from "geometry-object";
+import { Obj } from "geometry-object";
+import { DiagramContent } from "../../../core/builder/DiagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { angleStr, comma, segmentStr } from "../../../core/geometryText";
 import { ASA, ASAProps } from "../../../core/reasons/ASA";
@@ -11,7 +12,7 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { Perpendicular } from "../../../core/reasons/Perpendicular";
 import { Reflexive } from "../../../core/reasons/Reflexive";
 import { RightAngle } from "../../../core/reasons/RightAngle";
-import { SVGModes } from "../../../core/types/diagramTypes";
+import { ShowPoint, SVGModes } from "../../../core/types/diagramTypes";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -23,27 +24,29 @@ import { makeStepMeta } from "../../utils";
 
 export const baseContent = () => {
   let ctx = new DiagramContent();
-  const [A, B, C, D] = ctx.addPoints([
-    {
-      pt: [2, 1],
-      label: "A",
-      offset: [-15, -15],
-      showPoint: ShowPoint.Adaptive,
-    },
-    { pt: [5.5, 8], label: "B", offset: [0, 5], showPoint: ShowPoint.Adaptive },
-    { pt: [9, 1], label: "C", offset: [0, -17], showPoint: ShowPoint.Adaptive },
-    {
-      pt: [5.5, 1],
-      label: "D",
-      offset: [-5, -18],
-      showPoint: ShowPoint.Adaptive,
-    },
-  ]);
+  const A = ctx.addPoint(
+    { pt: [2, 1], label: "A" },
+    [-15, -15],
+    ShowPoint.Adaptive,
+  );
+  const B = ctx.addPoint(
+    { pt: [5.5, 8], label: "B" },
+    [0, 5],
+    ShowPoint.Adaptive,
+  );
+  const C = ctx.addPoint(
+    { pt: [9, 1], label: "C" },
+    [0, -17],
+    ShowPoint.Adaptive,
+  );
+  const D = ctx.addPoint(
+    { pt: [5.5, 1], label: "D" },
+    [-5, -18],
+    ShowPoint.Adaptive,
+  );
 
-  ctx.addTriangles([
-    { pts: [A, B, D] },
-    { pts: [C, B, D], rotatePattern: true },
-  ]);
+  ctx.addTriangle({ pts: [A.obj, B.obj, D.obj] });
+  ctx.addTriangle({ pts: [C.obj, B.obj, D.obj] }, true);
 
   return ctx;
 };

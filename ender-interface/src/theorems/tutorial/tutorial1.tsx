@@ -1,4 +1,5 @@
-import { DiagramContent, Obj } from "geometry-object";
+import { Obj } from "geometry-object";
+import { DiagramContent } from "../../core/builder/DiagramContent";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { comma } from "../../core/geometryText";
 import { CongruentTriangles } from "../../core/reasons/CongruentTriangles";
@@ -20,17 +21,13 @@ import { makeStepMeta } from "../utils";
 
 export const baseContent = () => {
   let ctx = new DiagramContent();
-  const [A, B, C, D] = ctx.addPoints([
-    { pt: [5.5, 9], label: "A", offset: [0, 5] },
-    { pt: [2, 3], label: "B", offset: [-8, -18] },
-    { pt: [5.5, 1], label: "C", offset: [-8, -17] },
-    { pt: [9, 3], label: "D", offset: [-5, -18] },
-  ]);
+  const A = ctx.addPoint({ pt: [5.5, 9], label: "A" }, [0, 5]);
+  const B = ctx.addPoint({ pt: [2, 3], label: "B" }, [-8, -18]);
+  const C = ctx.addPoint({ pt: [5.5, 1], label: "C" }, [-8, -17]);
+  const D = ctx.addPoint({ pt: [9, 3], label: "D" }, [-5, -18]);
 
-  ctx.addTriangles([
-    { pts: [A, B, C] },
-    { pts: [A, C, D], rotatePattern: true },
-  ]);
+  ctx.addTriangle({ pts: [A.obj, B.obj, C.obj] });
+  ctx.addTriangle({ pts: [A.obj, C.obj, D.obj] }, true);
 
   return ctx;
 };

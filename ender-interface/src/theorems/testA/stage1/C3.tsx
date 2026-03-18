@@ -1,4 +1,5 @@
-import { DiagramContent, Obj, ShowPoint } from "geometry-object";
+import { Obj } from "geometry-object";
+import { DiagramContent } from "../../../core/builder/DiagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { comma } from "../../../core/geometryText";
 import { ASA } from "../../../core/reasons/ASA";
@@ -9,7 +10,7 @@ import { EqualSegments } from "../../../core/reasons/EqualSegments";
 import { EqualTriangles } from "../../../core/reasons/EqualTriangles";
 import { Midpoint } from "../../../core/reasons/Midpoint";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
-import { SVGModes } from "../../../core/types/diagramTypes";
+import { ShowPoint, SVGModes } from "../../../core/types/diagramTypes";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -21,39 +22,38 @@ import { makeStepMeta } from "../../utils";
 
 export const baseContent = () => {
   let ctx = new DiagramContent();
-  const [Q, R, M, N, P] = ctx.addPoints([
-    {
-      pt: [2, 10],
-      label: "Q",
-      offset: [-18, -15],
-      showPoint: ShowPoint.Adaptive,
-    },
-    { pt: [8, 5.5], label: "R", offset: [0, 8], showPoint: ShowPoint.Adaptive },
-    {
-      pt: [14, 5.5],
-      label: "M",
-      offset: [5, -8],
-      showPoint: ShowPoint.Adaptive,
-    },
-    { pt: [14, 1], label: "N", offset: [5, 0], showPoint: ShowPoint.Adaptive },
-    {
-      pt: [2, 5.5],
-      label: "P",
-      offset: [-15, -8],
-      showPoint: ShowPoint.Adaptive,
-    },
-  ]);
+  const Q = ctx.addPoint(
+    { pt: [2, 10], label: "Q" },
+    [-18, -15],
+    ShowPoint.Adaptive,
+  );
+  const R = ctx.addPoint(
+    { pt: [8, 5.5], label: "R" },
+    [0, 8],
+    ShowPoint.Adaptive,
+  );
+  const M = ctx.addPoint(
+    { pt: [14, 5.5], label: "M" },
+    [5, -8],
+    ShowPoint.Adaptive,
+  );
+  const N = ctx.addPoint(
+    { pt: [14, 1], label: "N" },
+    [5, 0],
+    ShowPoint.Adaptive,
+  );
+  const P = ctx.addPoint(
+    { pt: [2, 5.5], label: "P" },
+    [-15, -8],
+    ShowPoint.Adaptive,
+  );
 
-  ctx.addTriangles([
-    { pts: [Q, P, R] },
-    { pts: [R, M, N], rotatePattern: true },
-  ]);
+  ctx.addTriangle({ pts: [Q.obj, P.obj, R.obj] });
+  ctx.addTriangle({ pts: [R.obj, M.obj, N.obj] }, true);
 
   // for given step:
-  ctx.addAngles([
-    { start: Q, center: P, end: R },
-    { start: R, center: M, end: N },
-  ]);
+  ctx.addAngle({ start: Q.obj, center: P.obj, end: R.obj });
+  ctx.addAngle({ start: R.obj, center: M.obj, end: N.obj });
 
   return ctx;
 };

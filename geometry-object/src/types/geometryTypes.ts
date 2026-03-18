@@ -41,7 +41,7 @@ export type SupportedObjects =
   | Obj.Angle
   | Obj.Triangle;
 
-export type DiagramCtx = {
+export type ProofCtx = {
   points: Point[];
   segments: Segment[]; // every segment tracks its own mode during build
   angles: Angle[];

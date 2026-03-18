@@ -1,6 +1,6 @@
+import { ParseObj, ProofContent, Triangle } from "geometry-object";
 import { logError } from "../../errors/errorConstants";
-import { DiagramContent, Triangle } from "geometry-object";
-import { ParseObj, Stmt } from "../../types/checkerTypes";
+import { Stmt } from "../../types/checkerTypes";
 import { conSegMapper, conTriMapper } from "./argMappers";
 import { angCenter, commonPt } from "./utils";
 
@@ -18,20 +18,20 @@ export const sas = (
   conSeg1: Stmt,
   conAng: Stmt,
   conSeg2: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [tri1, tri2] = conTriMapper(conTri, tempCtx);
 
   const [s11, s21, s1Valid] = checkTriangleAssign(
     conSeg1.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [s12, s22, s2Valid] = checkTriangleAssign(
     conSeg2.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [a1, a2, aValid] = checkTriangleAssign(conAng.arguments, tri1, tri2);
 
@@ -79,26 +79,26 @@ export const sss = (
   conSeg1: Stmt,
   conSeg2: Stmt,
   conSeg3: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Validate triangle assignments for each pair of segments
   const [s11, s21, seg1Valid] = checkTriangleAssign(
     conSeg1.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [s12, s22, seg2Valid] = checkTriangleAssign(
     conSeg2.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [s13, s23, seg3Valid] = checkTriangleAssign(
     conSeg3.arguments,
     tri1,
-    tri2
+    tri2,
   );
 
   const valid = seg1Valid && seg2Valid && seg3Valid;
@@ -109,11 +109,11 @@ export const sss = (
 
     t1.orderTriangle(
       [commonPt(s11, s12), commonPt(s12, s13), commonPt(s13, s11)],
-      ctx
+      ctx,
     );
     t2.orderTriangle(
       [commonPt(s21, s22), commonPt(s22, s23), commonPt(s23, s21)],
-      ctx
+      ctx,
     );
   }
   // All three pairs of segments must be valid for SSS congruence
@@ -125,21 +125,21 @@ export const aas = (
   conAng1: Stmt,
   conAng2: Stmt,
   conSeg: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Validate triangle assignments for each pair of segments
   const [a11, a21, ang1Valid] = checkTriangleAssign(
     conAng1.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [a12, a22, ang2Valid] = checkTriangleAssign(
     conAng2.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [s1, s2, segValid] = checkTriangleAssign(conSeg.arguments, tri1, tri2);
 
@@ -173,21 +173,21 @@ export const asa = (
   conAng1: Stmt,
   conSeg: Stmt,
   conAng2: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Validate triangle assignments for each pair of segments
   const [a11, a21, ang1Valid] = checkTriangleAssign(
     conAng1.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [a12, a22, ang2Valid] = checkTriangleAssign(
     conAng2.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [s1, s2, segValid] = checkTriangleAssign(conSeg.arguments, tri1, tri2);
 
@@ -215,26 +215,26 @@ export const rhl = (
   rightCon: Stmt,
   conSeg1: Stmt,
   conSeg2: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Validate triangle assignments for each pair of segments
   const [r1, r2, rightValid] = checkTriangleAssign(
     rightCon.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [s11, s12, hypValid] = checkTriangleAssign(
     conSeg1.arguments,
     tri1,
-    tri2
+    tri2,
   );
   const [s21, s22, segValid] = checkTriangleAssign(
     conSeg2.arguments,
     tri1,
-    tri2
+    tri2,
   );
 
   // check that one of the segments does not contain right angle center point
@@ -273,9 +273,9 @@ export const rhl = (
 export const cpctc = (
   t_cong: Stmt,
   conclusion: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [tri1, tri2] = conTriMapper(t_cong, tempCtx);
 
   // Check if the conclusion is a segment or angle congruence
@@ -284,7 +284,7 @@ export const cpctc = (
     const [seg1, seg2, segValid] = checkTriangleAssign(
       conclusion.arguments,
       tri1,
-      tri2
+      tri2,
     );
 
     // check that seg1 is the same index in tri1 as seg2 is in tri2
@@ -296,7 +296,7 @@ export const cpctc = (
     const [ang1, ang2, angValid] = checkTriangleAssign(
       conclusion.arguments,
       tri1,
-      tri2
+      tri2,
     );
 
     const [t1, t2] = [
@@ -307,7 +307,7 @@ export const cpctc = (
       ang1,
       ang2,
       angValid,
-      t1.getAngleIndex(ang1) === t2.getAngleIndex(ang2)
+      t1.getAngleIndex(ang1) === t2.getAngleIndex(ang2),
     );
     return angValid && t1.getAngleIndex(ang1) === t2.getAngleIndex(ang2);
   }
@@ -318,9 +318,9 @@ export const cpctc = (
 export const isosceles = (
   conSeg: Stmt,
   isosceles: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [s1, s2] = conSegMapper(conSeg, tempCtx);
   const [t] = conTriMapper(isosceles, tempCtx);
 
@@ -336,7 +336,7 @@ export const isosceles = (
 
 const sortPairToTri = (
   pair: ParseObj[],
-  [tri1, tri2]: [Triangle, Triangle]
+  [tri1, tri2]: [Triangle, Triangle],
 ): [ParseObj, ParseObj] => {
   const [l, r] = pair;
   if (l.v === r.v) {
@@ -359,7 +359,7 @@ const sortPairToTri = (
 const checkTriangleAssign = (
   pair: ParseObj[],
   tri1: Triangle,
-  tri2: Triangle
+  tri2: Triangle,
 ): [string, string, boolean] => {
   const [obj1, obj2] = sortPairToTri(pair, [tri1, tri2]);
   const obj1_in_t1 = tri1.containsParseObj(obj1);

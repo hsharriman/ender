@@ -1,5 +1,6 @@
+import { Vector } from "geometry-object";
 import React from "react";
-import { Vector, vops } from "geometry-object";
+import { vops } from "../../core/vectorOps";
 
 export interface ReliesOnProps {
   reliesOn: Map<string, Set<string>>;
@@ -74,7 +75,7 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
       for (let i = 0; i < deps.length; i++) {
         let dep = deps[i];
         let coords = this.getRowCoords(
-          dep.endsWith("?") ? dep.replace("?", "") : dep
+          dep.endsWith("?") ? dep.replace("?", "") : dep,
         );
         if (coords) {
           endCoords.push(coords);
@@ -107,7 +108,7 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
           fill="none"
           strokeWidth={this.STROKE_WIDTH}
         />
-      </svg>
+      </svg>,
     );
   };
 
@@ -122,7 +123,7 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
           fill="none"
           strokeWidth={this.STROKE_WIDTH}
         />
-      </svg>
+      </svg>,
     );
   };
 
@@ -163,7 +164,7 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
           fill="none"
           strokeWidth={this.STROKE_WIDTH}
         />
-      </svg>
+      </svg>,
     );
   };
 

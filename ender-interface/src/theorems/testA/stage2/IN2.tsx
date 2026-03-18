@@ -1,4 +1,5 @@
-import { DiagramContent, Obj, ShowPoint } from "geometry-object";
+import { Obj } from "geometry-object";
+import { DiagramContent } from "../../../core/builder/DiagramContent";
 import { AspectRatio } from "../../../core/diagramSvg/svgTypes";
 import { segmentStr } from "../../../core/geometryText";
 import { CongruentTriangles } from "../../../core/reasons/CongruentTriangles";
@@ -9,7 +10,7 @@ import { Midpoint } from "../../../core/reasons/Midpoint";
 import { ParallelLines } from "../../../core/reasons/ParallelLines";
 import { SAS, SASProps } from "../../../core/reasons/SAS";
 import { VerticalAngles } from "../../../core/reasons/VerticalAngles";
-import { SVGModes } from "../../../core/types/diagramTypes";
+import { ShowPoint, SVGModes } from "../../../core/types/diagramTypes";
 import { LayoutProps } from "../../../core/types/layoutTypes";
 import {
   StepFocusProps,
@@ -21,28 +22,21 @@ import { makeStepMeta } from "../../utils";
 
 const baseContent = () => {
   let ctx = new DiagramContent();
-  const [W, X, Y, Z, M] = ctx.addPoints([
-    { pt: [2, 9], label: "W", offset: [-15, 0] },
-    { pt: [9, 9], label: "X", offset: [5, -3] },
-    { pt: [2, 1], label: "Y", offset: [-17, -17] },
-    { pt: [9, 1], label: "Z", offset: [3, -10] },
-    {
-      pt: [5.5, 5],
-      label: "M",
-      offset: [10, -5],
-      showPoint: ShowPoint.Adaptive,
-    },
-  ]);
+  const W = ctx.addPoint({ pt: [2, 9], label: "W" }, [-15, 0]);
+  const X = ctx.addPoint({ pt: [9, 9], label: "X" }, [5, -3]);
+  const Y = ctx.addPoint({ pt: [2, 1], label: "Y" }, [-17, -17]);
+  const Z = ctx.addPoint({ pt: [9, 1], label: "Z" }, [3, -10]);
+  const M = ctx.addPoint(
+    { pt: [5.5, 5], label: "M" },
+    [10, -5],
+    ShowPoint.Adaptive,
+  );
 
-  ctx.addTriangles([
-    { pts: [M, Y, Z] },
-    { pts: [M, W, X], rotatePattern: true },
-  ]);
+  ctx.addTriangle({ pts: [M.obj, Y.obj, Z.obj] });
+  ctx.addTriangle({ pts: [M.obj, W.obj, X.obj] }, true);
 
-  ctx.addSegments([
-    { p1: W, p2: Z },
-    { p1: Y, p2: X },
-  ]);
+  ctx.addSegment({ p1: W.obj, p2: Z.obj });
+  ctx.addSegment({ p1: Y.obj, p2: X.obj });
 
   return ctx;
 };

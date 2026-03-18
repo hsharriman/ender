@@ -1,18 +1,14 @@
-import { Angle, DiagramContent, Point, Segment } from "geometry-object";
+import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 
 export const reflex_a = (a1: Angle, a2: Angle) => {
   return a1.equals(a2);
 };
 
-export const right = (
-  perp: Stmt,
-  right: Stmt,
-  ctx: DiagramContent
-): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+export const right = (perp: Stmt, right: Stmt, ctx: ProofContent): boolean => {
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [s1, s2] = perp.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg.v)
+    tempCtx.addSegmentFromStr(arg.v),
   );
   const r = tempCtx.addAngleFromStr(right.arguments[0].v);
 
@@ -32,16 +28,16 @@ export const right = (
 export const vert_ang = (
   intersect_seg: Stmt,
   conAng: Stmt,
-  ctx: DiagramContent
+  ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+  const tempCtx = new ProofContent(ctx.getCtx());
   const [s1, s2, pt]: [Segment, Segment, Point] = [
     tempCtx.addSegmentFromStr(intersect_seg.arguments[0].v),
     tempCtx.addSegmentFromStr(intersect_seg.arguments[1].v),
     tempCtx.getPoint(intersect_seg.arguments[2].v),
   ];
   const [a1, a2] = conAng.arguments.map((arg) =>
-    tempCtx.addAngleFromStr(arg.v)
+    tempCtx.addAngleFromStr(arg.v),
   );
 
   // Check that angles don't include segment names (vertical angles must be across from each other)
@@ -64,11 +60,11 @@ export const vert_ang = (
   return anglesValid && centerValid;
 };
 
-export const ang_bisect = (conAng: Stmt, bisect: Stmt, ctx: DiagramContent) => {
-  const tempCtx = new DiagramContent(ctx.getCtx());
+export const ang_bisect = (conAng: Stmt, bisect: Stmt, ctx: ProofContent) => {
+  const tempCtx = new ProofContent(ctx.getCtx());
 
   const [a1, a2] = conAng.arguments.map((arg) =>
-    tempCtx.addAngleFromStr(arg.v)
+    tempCtx.addAngleFromStr(arg.v),
   );
   const [ang, seg] = [
     tempCtx.addAngleFromStr(bisect.arguments[0].v),
