@@ -33,6 +33,7 @@ import {
   sas,
   sss,
 } from "./reasonChecks/triangleChecks";
+import { validateGivenProofStep } from "./validators";
 
 // Check if reason is applied correctly using reason checker methods
 export const checkReasonApplication = (
@@ -249,6 +250,9 @@ export const checkReasonApplication = (
           return vert_ang(intersect_vert, currStep.statement, ctx);
         }
         return false;
+
+      case "given":
+        return validateGivenProofStep(currStep, proofGraph);
 
       default:
         // For other reasons, we'll return true for now (syntax check passed)

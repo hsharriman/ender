@@ -1,0 +1,19 @@
+// pass
+title: "S2C1 - Prove Rectangle #2"
+premises:
+pt: E, F, G, H, J
+tri: t_FGJ
+quad: q_EFGH
+[g_01] rectangle(q_EFGH)
+[g_02] midpt(EH, J)
+-> isosceles(t_FGJ)
+
+steps:
+[01] given([g_01]) -> rectangle(q_EFGH)
+[02] given([g_02]) -> midpt(EH, J)
+[03] midpt([02]) -> con_seg(EJ, JH)
+[04] rectangle([01]) -> con_ang(a_FEJ,a_JHG)
+[05] rectangle([01]) -> con_seg(FE, GH)
+[06] sas([03], [04], [05]) -> con_tri(t_FEJ, t_JGH)
+[07] cpctc([06]) -> con_seg(FJ,GJ)
+[08] isosceles([07]) -> isosceles(t_FGJ)

@@ -1,7 +1,7 @@
 import { Obj, ParseObj } from "geometry-object";
 import { ProofObj, ProofStep, Reason, Stmt } from "../types/checkerTypes";
 import { lexer } from "./parser";
-import { loadReasonDefinitions } from "./reasonParser";
+import { loadReasonDefinitionsWithBuiltins } from "./reasonParser";
 
 export class ProofParser {
   private lexer: any;
@@ -9,7 +9,7 @@ export class ProofParser {
 
   constructor() {
     this.lexer = lexer;
-    this.reasonDefinitions = loadReasonDefinitions();
+    this.reasonDefinitions = loadReasonDefinitionsWithBuiltins();
   }
 
   // Helper function to parse objects
@@ -159,8 +159,21 @@ export class ProofParser {
                   i++;
                 }
               }
+            } else if (
+              tokens[i].type === "diagramPremiseRef" ||
+              tokens[i].type === "givenPremiseRef"
+            ) {
+              const premiseLabel = tokens[i].value as string;
+              i++;
+              const statement = this.parseStatement(tokens, i);
+              result.steps.push({
+                type: "given",
+                statement: statement.obj,
+                stepNumber: premiseLabel,
+              });
+              i = statement.endIndex;
             } else {
-              // After points/triangles/etc., parse given statements and goal until 'steps'
+              // After points/triangles/etc., parse legacy given statements and goal until 'steps'
               if (tokens[i].type === "rarrow") {
                 // Goal statement in premises
                 i++;
@@ -168,7 +181,7 @@ export class ProofParser {
                 result.goal = goal.obj;
                 i = goal.endIndex;
               } else if (tokens[i].type === "stmt_function") {
-                // Given statement in premises
+                // Legacy: given statement in premises (stmt ... [nn])
                 const step = this.parseStep(tokens, i);
                 if (step) {
                   result.steps.push(step.obj);
@@ -194,13 +207,20 @@ export class ProofParser {
               i++;
               const goal = this.parseStatement(tokens, i);
               result.goal = goal.obj;
-              // result.steps.push({ type: "goal", statement: goal });
               break;
+            } else if (tokens[i].type === "stepNumber") {
+              const label = tokens[i].value as string;
+              i++;
+              const step = this.parseProofStepWithLeadingNumber(tokens, i, label);
+              if (step) {
+                result.steps.push(step.obj);
+                i = step.endIndex;
+              } else {
+                i++;
+              }
             } else if (tokens[i].type === "stmt_function") {
-              // Check if this is a reason function (like reflex, sas, etc.)
               const functionName = tokens[i].value;
               if (this.isReasonFunction(functionName)) {
-                // Proof step starting with reason
                 const step = this.parseProofStep(tokens, i);
                 if (step) {
                   result.steps.push(step.obj);
@@ -209,7 +229,6 @@ export class ProofParser {
                   i++;
                 }
               } else {
-                // Given statement
                 const step = this.parseStep(tokens, i);
                 if (step) {
                   result.steps.push(step.obj);
@@ -234,7 +253,9 @@ export class ProofParser {
   private parseStatement(
     tokens: any[],
     startIndex: number,
+    options?: { allowTrailingStepNumber?: boolean },
   ): { obj: Stmt; endIndex: number } {
+    const allowTrailing = options?.allowTrailingStepNumber !== false;
     let i = startIndex;
     const statement: Stmt = {
       function: "",
@@ -265,7 +286,7 @@ export class ProofParser {
             tokens[i].type === "angle" ||
             tokens[i].type === "triangle" ||
             tokens[i].type === "quadrilateral" ||
-            tokens[i].type === "statementRef"
+            tokens[i].type === "stepNumber"
           ) {
             statement.arguments.push(this.parseObj(tokens[i].value));
             i++;
@@ -283,8 +304,19 @@ export class ProofParser {
       }
     }
 
-    // Check for step number
-    if (i < tokens.length && tokens[i].type === "lbracket") {
+    // Trailing step number (legacy `stmt [nn]`); skip when the line started with `[nn]` (new format).
+    if (
+      allowTrailing &&
+      i < tokens.length &&
+      tokens[i].type === "stepNumber"
+    ) {
+      statement.stepNumber = tokens[i].value as string;
+      i++;
+    } else if (
+      allowTrailing &&
+      i < tokens.length &&
+      tokens[i].type === "lbracket"
+    ) {
       i++;
       if (i < tokens.length && tokens[i].type === "float_literal") {
         statement.stepNumber = `[${tokens[i].value}]`;
@@ -308,7 +340,10 @@ export class ProofParser {
     let hasStepNumber = false;
     let tempIndex = i;
     while (tempIndex < tokens.length && tokens[tempIndex].type !== "rarrow") {
-      if (tempIndex < tokens.length && tokens[tempIndex].type === "lbracket") {
+      if (
+        tokens[tempIndex].type === "lbracket" ||
+        tokens[tempIndex].type === "stepNumber"
+      ) {
         hasStepNumber = true;
         break;
       }
@@ -360,6 +395,36 @@ export class ProofParser {
     return null;
   }
 
+  /** Format: `[01] reason(...) -> conclusion` */
+  private parseProofStepWithLeadingNumber(
+    tokens: any[],
+    startIndex: number,
+    stepLabel: string,
+  ): { obj: ProofStep; endIndex: number } | null {
+    const reason = this.parseReason(tokens, startIndex);
+    if (
+      !reason ||
+      reason.endIndex >= tokens.length ||
+      tokens[reason.endIndex].type !== "rarrow"
+    ) {
+      return null;
+    }
+    const i = reason.endIndex + 1;
+    const conclusion = this.parseStatement(tokens, i, {
+      allowTrailingStepNumber: false,
+    });
+    delete conclusion.obj.stepNumber;
+    return {
+      obj: {
+        type: "proof",
+        reason: reason.obj,
+        statement: conclusion.obj,
+        stepNumber: stepLabel,
+      },
+      endIndex: conclusion.endIndex,
+    };
+  }
+
   private parseReason(
     tokens: any[],
     startIndex: number,
@@ -381,8 +446,14 @@ export class ProofParser {
         i++;
         // Parse arguments
         while (i < tokens.length && tokens[i].type !== "rparen") {
-          if (tokens[i].type === "lbracket") {
-            // Parse statement reference like [01], [02], etc.
+          if (
+            tokens[i].type === "stepNumber" ||
+            tokens[i].type === "givenPremiseRef" ||
+            tokens[i].type === "diagramPremiseRef"
+          ) {
+            reason.arguments.push(tokens[i].value as string);
+            i++;
+          } else if (tokens[i].type === "lbracket") {
             i++;
             if (i < tokens.length && tokens[i].type === "float_literal") {
               reason.arguments.push(`[${tokens[i].value}]`);

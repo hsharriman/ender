@@ -76,9 +76,21 @@ const stmtKeywords: moo.Rules = {
   param_type: /Segment|Angle|Triangle|Point/,
 };
 
+/** Compound `[…]` tokens must be tried before bare `lbracket` (see moo match order). */
+const proofBracketRefs: moo.Rules = {
+  givenPremiseRef: {
+    match: /\[g_\d+\]/,
+    value: (x: string) => x,
+  },
+  diagramPremiseRef: {
+    match: /\[d_\d+\]/,
+    value: (x: string) => x,
+  },
+  stepNumber: /\[0*(?:\d+)\]/,
+};
+
 const proofKeywords: moo.Rules = {
-  ...basicSymbols,
-  // Proof structure keywords
+  // Proof structure keywords (do not spread basicSymbols here — order vs bracket refs matters)
   title: "title",
   premises: "premises",
   steps: "steps",
@@ -87,16 +99,12 @@ const proofKeywords: moo.Rules = {
   seg: "seg",
   ang: "ang",
   quad: "quad",
-  // Step numbers: [01], [12], etc.
-  stepNumber: /\[0*(?:\d+)\]/,
   // Geometric objects (order matters - longer patterns first)
   quadrilateral: /q_[A-Z]{4}/,
   triangle: /t_[A-Z]{3}/,
   angle: /a_[A-Z]{3}/,
   segment: /[A-Z]{2}/,
   point: /[A-Z]/,
-  // Statement references: [01], [12], etc.
-  statementRef: /\[0*(?:\d+)\]/,
   // Coordinates: (-1.5, 2.0) format
   coordinate: /^\(-?(?:\d+(?:\.\d+)?),\s*-?(?:\d+(?:\.\d+)?)\)$/,
   // Colon for separating keys and values
@@ -113,6 +121,7 @@ const proofKeywords: moo.Rules = {
 };
 
 const lexer = moo.compile({
+  ...proofBracketRefs,
   ...basicSymbols,
   ...stmtKeywords,
   ...proofKeywords,
@@ -134,7 +143,7 @@ const lexer = moo.compile({
 });
 
 // Export the lexer for testing
-export { lexer, proofKeywords, reasonKeywords };
+export { lexer, proofBracketRefs, proofKeywords, reasonKeywords };
 
 // Basic parser object for compatibility with existing tests
 export const parser = {

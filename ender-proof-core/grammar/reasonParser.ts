@@ -153,7 +153,12 @@ export class ReasonParser {
 
     const lines = content
       .split("\n")
-      .filter((line: string) => line.trim() && !line.startsWith("?"));
+      .filter(
+        (line: string) =>
+          line.trim() &&
+          !line.trim().startsWith("?") &&
+          !line.trim().startsWith("//"),
+      );
 
     lines.forEach((line: string, index: number) => {
       const reasonDef = this.parseReasonDefinition(line.trim());
@@ -174,4 +179,20 @@ export const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {
   const parser = new ReasonParser();
   const reasonsPath = join(__dirname, "defs", "reasons.txt");
   return parser.parseReasonDefinitions(reasonsPath);
+};
+
+/** Special-cased in validators / reasonApplication (refs premises `[g_nn]`). */
+export const GIVEN_REASON_DEFINITION: ReasonDefinition = {
+  name: "given",
+  dependencies: ["__given_premise__"],
+  conclusion: "__any__",
+};
+
+export const loadReasonDefinitionsWithBuiltins = (): Map<
+  string,
+  ReasonDefinition
+> => {
+  const reasons = loadReasonDefinitions();
+  reasons.set("given", GIVEN_REASON_DEFINITION);
+  return reasons;
 };

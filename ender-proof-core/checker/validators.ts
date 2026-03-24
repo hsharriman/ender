@@ -30,6 +30,76 @@ export const checkStatementArguments = (
   return stmt.arguments.length === definition.parameters.length;
 };
 
+/** `given([g_nn])` — premise must exist and conclusion must match it. */
+export const validateGivenProofStep = (
+  step: ProofStep,
+  proofGraph: ProofGraph,
+): boolean => {
+  const reason = step.reason;
+  const stmt = step.statement;
+  if (!reason || !stmt) {
+    logError.parser.missingReasonOrStatement();
+    return false;
+  }
+  if (reason.arguments.length !== 1) {
+    logError.parser.dependencyMismatch(
+      `given expects exactly one premise ref, got ${reason.arguments.length}`,
+    );
+    return false;
+  }
+  const ref = reason.arguments[0].replace(/[[\]]/g, "");
+  if (/^g_\d+$/.test(ref)) {
+    // ok
+  } else if (/^d_\d+$/.test(ref)) {
+    logError.parser.dependencyMismatch(
+      `given(${reason.arguments[0]}) is invalid: use only given premises [g_nn], not diagram premises [d_nn]`,
+    );
+    return false;
+  } else if (/^\d+$/.test(ref)) {
+    logError.parser.dependencyMismatch(
+      `given(${reason.arguments[0]}) is invalid: cite the matching [g_nn] given premise, not a proof step number`,
+    );
+    return false;
+  } else {
+    logError.parser.dependencyMismatch(
+      `given requires exactly one ref like [g_01], got ${reason.arguments[0]}`,
+    );
+    return false;
+  }
+  const depStep = proofGraph.nodes.get(ref);
+  if (!depStep?.statement) {
+    logError.parser.dependencyMismatch(
+      `Missing given premise for ref ${reason.arguments[0]}`,
+    );
+    return false;
+  }
+  const prem = depStep.statement;
+  if (prem.function !== stmt.function) {
+    logError.parser.dependencyMismatch(
+      `given conclusion mismatch: premise is ${prem.function}, step concludes ${stmt.function}`,
+    );
+    return false;
+  }
+  if (prem.arguments.length !== stmt.arguments.length) {
+    logError.parser.dependencyMismatch(
+      `given conclusion arg count mismatch for ${ref}`,
+    );
+    return false;
+  }
+  for (let i = 0; i < prem.arguments.length; i++) {
+    if (
+      prem.arguments[i].type !== stmt.arguments[i].type ||
+      prem.arguments[i].v !== stmt.arguments[i].v
+    ) {
+      logError.parser.dependencyMismatch(
+        `given conclusion arg ${i} mismatch vs premise ${ref}`,
+      );
+      return false;
+    }
+  }
+  return true;
+};
+
 // Check if reason dependencies match the expected number
 export const checkReasonStructure = (
   step: ProofStep,
@@ -40,6 +110,10 @@ export const checkReasonStructure = (
   const reason = step.reason;
   const stmt = step.statement;
   if (reason && stmt) {
+    if (reason.function === "given") {
+      return validateGivenProofStep(step, proofGraph);
+    }
+
     console.log(`    Checking reason: ${reason.function}`);
 
     const definition = reasonDefs.get(reason?.function);
@@ -327,12 +401,22 @@ export const checkReasonDependencies = (
   reason: Reason,
   reasonDefs: Map<string, ReasonDefinition>,
   groups: Map<string, StatementGroup>,
-  proofGraph: ProofGraph
+  proofGraph: ProofGraph,
+  /** Required for `given` (validates vs conclusion). */
+  fullStep?: ProofStep,
 ): boolean => {
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
     logError.parser.undefinedReason(reason.function);
     return false;
+  }
+
+  if (reason.function === "given") {
+    if (!fullStep) {
+      logError.parser.dependencyMismatch("given step missing full step context");
+      return false;
+    }
+    return validateGivenProofStep(fullStep, proofGraph);
   }
 
   if (reason.arguments.length !== definition.dependencies.length) {
@@ -427,35 +511,47 @@ export const findDuplicateSteps = (
   return duplicates;
 };
 
-// Check for sequential step numbers across all steps
+// Proof-step numbers must be unique and consecutive (e.g. [01]–[04] or legacy [04]–[10]).
+// Given (`[g_nn]`) and diagram (`[d_nn]`) premises use separate namespaces and are excluded here.
 export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
   const errors: Array<string> = [];
   const seenStepNumbers = new Set<string>();
 
-  // Get all steps that have step numbers (given statements and proof steps)
-  const numberedSteps = proof.steps.filter((step) => step.stepNumber);
+  const numberedSteps = proof.steps.filter(
+    (step) => step.type === "proof" && step.stepNumber,
+  );
 
-  for (let i = 0; i < numberedSteps.length; i++) {
-    const step = numberedSteps[i];
-    const expectedStepNumber = `[${String(i + 1).padStart(2, "0")}]`;
+  const numeric = (label: string) =>
+    parseInt(label.replace(/[[\]]/g, ""), 10);
 
-    // Check for duplicate step numbers
+  const sortedNums = numberedSteps
+    .map((s) => ({ label: s.stepNumber!, n: numeric(s.stepNumber!) }))
+    .filter((x) => !Number.isNaN(x.n))
+    .sort((a, b) => a.n - b.n);
+
+  for (const step of numberedSteps) {
     if (seenStepNumbers.has(step.stepNumber!)) {
       logError.parser.duplicateStepNumbers(step.stepNumber!);
       errors.push(`Duplicate step number: ${step.stepNumber}`);
     } else {
       seenStepNumbers.add(step.stepNumber!);
     }
+  }
 
-    // Check for sequential numbering across all steps
-    if (step.stepNumber !== expectedStepNumber) {
+  if (sortedNums.length !== numberedSteps.length) {
+    errors.push("Proof steps have invalid step number labels");
+    return errors;
+  }
+
+  const start = sortedNums[0].n;
+  for (let k = 0; k < sortedNums.length; k++) {
+    if (sortedNums[k].n !== start + k) {
+      const msg = `Non-consecutive proof step numbers: expected integer ${start + k}, found ${sortedNums[k].label} (${sortedNums[k].n})`;
       logError.parser.nonSequentialStepNumbers(
-        expectedStepNumber,
-        step.stepNumber!
+        `[${String(start + k).padStart(2, "0")}]`,
+        sortedNums[k].label,
       );
-      errors.push(
-        `Non-sequential step number: expected ${expectedStepNumber}, found ${step.stepNumber}`
-      );
+      errors.push(msg);
     }
   }
 

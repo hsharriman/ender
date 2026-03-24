@@ -1,0 +1,22 @@
+// pass
+title: "S2C2 - Prove Angles Congruent #2"
+premises:
+pt: A, B, C, D, F, G
+tri: t_FAB, t_BCG, t_BAD, t_BCD
+[g_01] perp(AC, BD)
+[g_02] con_seg(AD, DC)
+[g_03] con_ang(a_FAB, a_GCB)
+[g_04] con_seg(AF, CG)
+-> con_ang(a_AFB, a_CGB)
+
+steps:
+[01] given([g_01]) -> perp(AC, BD)
+[02] given([g_02]) -> con_seg(AD, DC)
+[03] given([g_03]) -> con_ang(a_FAB, a_GCB)
+[04] given([g_04]) -> con_seg(AF, CG)
+[05] reflex_s() -> con_seg(BD, BD)
+[06] perp_con_ang([01]) -> con_right(a_ADB,a_BDC)
+[07] sas([02], [06], [05]) -> con_tri(t_ABD, t_BCD)
+[08] cpctc([07]) -> con_seg(AB, BC)
+[09] sas([08], [03], [04]) -> con_tri(t_ABF, t_BCG)
+[10] cpctc([09]) -> con_ang(a_AFB, a_CGB)

@@ -74,8 +74,47 @@ export const buildProofGraph = (
           reasonDefs,
           groups,
           graph,
+          step,
         );
         logDebug(`  Dependency statements check: ${isCorrect}`);
+      }
+
+      // Proof steps may only cite earlier numbered proof steps (not self / future).
+      if (isCorrect && step.reason.arguments) {
+        const currN = parseInt(stepNum, 10);
+        if (!Number.isNaN(currN)) {
+          for (const depRef of step.reason.arguments) {
+            const raw = depRef.replace(/[[\]]/g, "");
+            if (/^\d+$/.test(raw)) {
+              const depN = parseInt(raw, 10);
+              if (!Number.isNaN(depN) && depN >= currN) {
+                logError.parser.dependencyMismatch(
+                  `Step [${stepNum}] cannot cite proof step [${raw}] (must cite only earlier steps)`,
+                );
+                isCorrect = false;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // Given premises `[g_nn]` may only appear in `given(...)` reasons.
+      if (
+        isCorrect &&
+        step.reason.function !== "given" &&
+        step.reason.arguments
+      ) {
+        for (const depRef of step.reason.arguments) {
+          const raw = depRef.replace(/[[\]]/g, "");
+          if (/^g_\d+$/.test(raw)) {
+            logError.parser.dependencyMismatch(
+              `Step [${stepNum}] cannot cite given premise ${depRef} outside of given(...)`,
+            );
+            isCorrect = false;
+            break;
+          }
+        }
       }
 
       // Check statement

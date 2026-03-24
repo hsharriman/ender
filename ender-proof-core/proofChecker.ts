@@ -19,7 +19,7 @@ import {
   setLogLevel,
 } from "./errors/errorConstants";
 import { ProofParser } from "./grammar/lezerParser";
-import { loadReasonDefinitions } from "./grammar/reasonParser";
+import { loadReasonDefinitionsWithBuiltins } from "./grammar/reasonParser";
 import { loadStatementDefinitions } from "./grammar/stmtParser";
 import { ProofObj } from "./types/checkerTypes";
 
@@ -43,7 +43,7 @@ const checkProof = (filePath: string): void => {
 
   try {
     // Load definitions
-    const reasonDefs = loadReasonDefinitions();
+    const reasonDefs = loadReasonDefinitionsWithBuiltins();
     const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
     logDebug("📚 Parsing statement definitions...");

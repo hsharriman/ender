@@ -1,0 +1,16 @@
+// fail on step 4, dependency error on step 5
+title: "S1INC1 - Prove Angles Congruent #1"
+premises:
+pt: A, B, C, D
+tri: t_ABD t_BCD
+[g_01] con_seg(AD,BC) [01]
+[g_02] con_seg(AB,DC) [02]
+[g_03] con_ang(a_ABD,a_CDB) [03]
+-> con_ang(a_BAD,a_DCB)
+
+steps:
+[01] given([g_01]) -> con_seg(AD,BC)
+[02] given([g_02]) -> con_seg(AB,DC)
+[03] given([g_03]) -> con_ang(a_ABD,a_CDB)
+[04] sas([01], [02], [03]) -> con_tri(t_ABD,t_CDB)  // Missing dependency
+[05] cpctc([04]) -> con_ang(a_BAD,a_DCB)  // Based on invalid reason

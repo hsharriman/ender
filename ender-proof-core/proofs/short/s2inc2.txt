@@ -1,0 +1,20 @@
+// fail on step 5, dependency error on step 6
+title: "S2INC2 - Prove Segments Parallel #3"
+premises:
+pt: X, W, Y, Z, M
+tri: t_MWX, t_MYZ
+[d_01] intersect_seg(XY, WZ, M) 
+[d_02] transversal(W, X, X, Y, Z, Y)
+[g_01] con_seg(WM, MZ)
+[g_02] con_seg(MX, MY)  
+-> para(WX, YZ)
+
+steps:
+[01] given([g_01]) -> con_seg(WM, MZ) 
+[02] given([g_02]) -> con_seg(MX, MY) 
+[03] vert_ang([d_01]) -> con_ang(a_YMZ, a_WMX) 
+[04] sas([01], [03], [02]) -> con_tri(t_MYZ, t_MWX) 
+[05] cpctc([04]) -> con_ang(a_MYZ, a_MWX) 
+[06] altint_conv([05], [d_02]) -> para(WX, YZ) 
+
+
