@@ -1,7 +1,6 @@
 import { readFileSync } from "fs";
 import moo from "moo";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
+import { ReasonDefinition } from "../types/checkerTypes";
 import { REASONS_DEFS } from "./defs/reasons.defs";
 
 // Lexer rules for reason definitions
@@ -39,21 +38,6 @@ const reasonLexerRules: moo.Rules = {
 
 // Create the lexer
 const reasonLexer = moo.compile(reasonLexerRules);
-
-// Types for reason definitions
-export interface StatementGroup {
-  name: string;
-  base: string; // The base statement that can be substituted for
-  extensions: string[]; // Statements that can substitute for the base
-}
-
-export interface ReasonDefinition {
-  name: string;
-  dependencies: (string | StatementGroup)[];
-  conclusion: string;
-}
-
-// Parser for reason definitions
 export class ReasonParser {
   private lexer: any;
 
@@ -170,10 +154,6 @@ export class ReasonParser {
     return reasons;
   }
 }
-
-// Get __dirname equivalent for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Export a convenience function
 export const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {

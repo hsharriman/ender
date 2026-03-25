@@ -41,7 +41,8 @@ export const REASONS_DEFS = {
   },
   perp: {
     name: "perp",
-    dependencies: ["right", "point_on_line"],
+    diagramDependencies: ["point_on_line"],
+    dependencies: ["right"],
     conclusion: "perp",
   },
   midpt: {
@@ -66,17 +67,20 @@ export const REASONS_DEFS = {
   },
   vert_ang: {
     name: "vert_ang",
-    dependencies: ["intersect_seg"],
+    diagramDependencies: ["intersect_seg"],
+    dependencies: [],
     conclusion: "con_ang",
   },
   altint_conv: {
     name: "altint_conv",
-    dependencies: ["con_ang", "transversal"],
+    diagramDependencies: ["transversal"],
+    dependencies: ["con_ang"],
     conclusion: "para",
   },
   altint: {
     name: "altint",
-    dependencies: ["para", "transversal"],
+    diagramDependencies: ["transversal"],
+    dependencies: ["para"],
     conclusion: "con_ang",
   },
   ang_bisect: {

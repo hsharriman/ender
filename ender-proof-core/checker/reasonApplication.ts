@@ -112,19 +112,17 @@ export const checkReasonApplication = (
         return false;
 
       case "altint":
-        const transversal = getDepStmt(reason.arguments[1], proof);
-        const para = getDepStmt(reason.arguments[2], proof);
-        if (currStep.statement && transversal && para) {
-          return altint(currStep.statement, transversal, para, ctx);
-        }
-        return false;
+        const para_alt = getDepStmt(reason.arguments[0], proof);
+        if (!currStep.statement || !para_alt) return false;
+        return proof.premises.diagramStatements
+          .filter((d) => d.statement.function === "transversal")
+          .some((d) => altint(currStep.statement!, d.statement, para_alt, ctx));
       case "altint_conv":
         const conAng_conv = getDepStmt(reason.arguments[0], proof);
-        const transversal_conv = getDepStmt(reason.arguments[1], proof);
-        if (currStep.statement && conAng_conv && transversal_conv) {
-          return altint(conAng_conv, transversal_conv, currStep.statement, ctx);
-        }
-        return false;
+        if (!currStep.statement || !conAng_conv) return false;
+        return proof.premises.diagramStatements
+          .filter((d) => d.statement.function === "transversal")
+          .some((d) => altint(conAng_conv, d.statement, currStep.statement!, ctx));
       case "ang_bisect":
         const bisect_bisect = getDepStmt(reason.arguments[0], proof);
         if (currStep.statement && bisect_bisect) {
@@ -211,11 +209,13 @@ export const checkReasonApplication = (
 
       case "perp":
         const right_perp = getDepStmt(reason.arguments[0], proof);
-        const onLine_perp = getDepStmt(reason.arguments[1], proof);
-        if (currStep.statement && right_perp && onLine_perp) {
-          return perp(right_perp, onLine_perp, currStep.statement, ctx);
-        }
-        return false;
+        if (!currStep.statement || !right_perp) return false;
+        return proof.premises.diagramStatements
+          .filter(
+            (d) =>
+              d.statement.function === "on_line" || d.statement.function === "midpt",
+          )
+          .some((d) => perp(right_perp, d.statement, currStep.statement!, ctx));
       case "rectangle":
         const conSeg_rectangle = getDepStmt(reason.arguments[0], proof);
         console.log("conSeg_rectangle", conSeg_rectangle, currStep.statement);
@@ -256,11 +256,10 @@ export const checkReasonApplication = (
       case "con_right":
         return true;
       case "vert_ang":
-        const intersect_vert = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && intersect_vert) {
-          return vert_ang(intersect_vert, currStep.statement, ctx);
-        }
-        return false;
+        if (!currStep.statement) return false;
+        return proof.premises.diagramStatements
+          .filter((d) => d.statement.function === "intersect_seg")
+          .some((d) => vert_ang(d.statement, currStep.statement!, ctx));
 
       case "given":
         return validateGivenProofStep(currStep, proofGraph);

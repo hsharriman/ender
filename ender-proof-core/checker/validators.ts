@@ -124,6 +124,27 @@ export const checkReasonStructure = (
     }
     console.log(`    ✅ Found definition:`, definition);
 
+    // Diagram dependencies are satisfied by `premises.diagramStatements` and are not passed as args.
+    if (definition.diagramDependencies?.length) {
+      for (const expected of definition.diagramDependencies) {
+        if (typeof expected !== "string") continue;
+        const group = groups.get(expected);
+        const anyMatch = proof.premises.diagramStatements.some((d) => {
+          const foundType = d.statement.function;
+          if (group) {
+            return group.base === foundType || group.extensions.includes(foundType);
+          }
+          return foundType === expected;
+        });
+        if (!anyMatch) {
+          logError.parser.dependencyMismatch(
+            `Missing diagram dependency for ${reason.function}: expected ${expected}`,
+          );
+          return false;
+        }
+      }
+    }
+
     for (let idx = 0; idx < reason.arguments.length; idx++) {
       const arg = reason.arguments[idx];
       const stepNum = arg.replace(/\[|\]/g, "");
@@ -434,6 +455,33 @@ export const checkReasonDependencies = (
       `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`,
     );
     return false;
+  }
+
+  // Diagram dependencies are satisfied by `premises.diagramStatements` and are not passed as args.
+  if (definition.diagramDependencies?.length) {
+    if (!proof) {
+      logError.parser.dependencyMismatch(
+        `Missing proof context for diagram dependency checks (${reason.function})`,
+      );
+      return false;
+    }
+    for (const expected of definition.diagramDependencies) {
+      if (typeof expected !== "string") continue;
+      const group = groups.get(expected);
+      const anyMatch = proof.premises.diagramStatements.some((d) => {
+        const foundType = d.statement.function;
+        if (group) {
+          return group.base === foundType || group.extensions.includes(foundType);
+        }
+        return foundType === expected;
+      });
+      if (!anyMatch) {
+        logError.parser.dependencyMismatch(
+          `Missing diagram dependency for ${reason.function}: expected ${expected}`,
+        );
+        return false;
+      }
+    }
   }
 
   for (let i = 0; i < reason.arguments.length; i++) {

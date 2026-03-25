@@ -1,16 +1,20 @@
+// fail on step 8, dependency error on step 9, contains cycle
 title: "S2INC1 - Prove Triangle Congruence #3"
 premises:
 pt: L, N, Q, R, S, P, U
 tri: t_PSL, t_PSU, t_LNU, t_UQL
-perp(LU, PS) [01]
-con_seg(LN, QU) [02]
-con_ang(a_LPS, a_UPS) [03]
+[g_01] perp(LU, PS) [01]
+[g_02] con_seg(LN, QU) [02]
+[g_03] con_ang(a_LPS, a_UPS) [03]
 -> con_tri(t_LNU, t_UQL)
 
 steps:
-perp_con_ang([01]) -> con_right(a_PSL, a_PSU) [04]
-reflex_s() -> con_seg(PS, PS) [05]
-asa([03], [05], [04]) -> con_tri(t_LSP, t_USP) [06]
-cpctc([06]) -> con_ang(a_SLP, a_SUP) [07]
-cpctc([09]) -> con_ang(a_LNU, a_UQL) [08]
-asa([07], [02], [08]) -> con_tri(t_LNU, t_UQL) [09]
+[01] given([g_01]) -> perp(LU, PS)
+[02] given([g_02]) -> con_seg(LN, QU)
+[03] given([g_03]) -> con_ang(a_LPS, a_UPS)
+[04] perp_con_ang([01]) -> con_right(a_PSL, a_PSU)
+[05] reflex_s() -> con_seg(PS, PS)
+[06] asa([03], [05], [04]) -> con_tri(t_LSP, t_USP)
+[07] cpctc([06]) -> con_ang(a_SLP, a_SUP)
+[08] cpctc([09]) -> con_ang(a_LNU, a_UQL)
+[09] asa([07], [02], [08]) -> con_tri(t_LNU, t_UQL)

@@ -1,13 +1,16 @@
+// fail on step 3 and dependency error on step 5
 title: "S1INC3 - Prove Rectangle"
 premises:
 pt: K, L, M, N
 seg: MK
 quad: q_KLMN
-right(a_KLM) [01]
-con_seg(LM,NK) [02]
+[g_01] right(a_KLM) [01]
+[g_02] con_seg(LM,NK) [02]
 -> con_tri(t_KLM,t_MNK)
 
 steps:
-rectangle([02]) -> con_right(a_KLM,a_MNK) [03]
-reflex_s() -> con_seg(MK, MK) [04]
-rhl([03], [02], [04]) -> con_tri(t_KLM,t_MNK) [05]  // Missing dependency for AAS on invalid reason
+[01] given([g_02]) -> con_seg(LM,NK)
+[02] given([g_01]) -> right(a_KLM) 
+[03] rectangle([02]) -> con_right(a_KLM,a_MNK)
+[04] reflex_s() -> con_seg(MK, MK)
+[05] rhl([03], [01], [04]) -> con_tri(t_KLM,t_MNK)  // Missing dependency for AAS on invalid reason

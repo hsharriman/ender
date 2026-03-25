@@ -12,8 +12,8 @@ tri: t_ACM t_BDM
 steps:
 [01] given([g_02]) ->  con_seg(CM,DM)
 [02] given([g_01]) ->  con_seg(CM,DM) 
-[03] vert_ang([d_01]) -> con_ang(a_CMA, a_DMB)
+[03] vert_ang() -> con_ang(a_CMA, a_DMB)
 [04] sas([g_01], [03], [g_02]) -> con_tri(t_ACM,t_BDM)
 [05] cpctc([06]) -> con_ang(a_CAM,a_DBM)
 [06] given([01]) -> con_seg(CM, DM)
-[07] altint_conv([07], [d_02]) -> para(AC, BD)
+[07] altint_conv([07]) -> para(AC, BD)
