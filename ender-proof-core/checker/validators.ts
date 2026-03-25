@@ -14,7 +14,7 @@ import { Obj } from "geometry-object";
 // Check if statement arguments match the expected parameters
 export const checkStatementArguments = (
   stmt: Stmt,
-  stmtDefs: Map<string, StatementDefinition>
+  stmtDefs: Map<string, StatementDefinition>,
 ): boolean => {
   const definition = stmtDefs.get(stmt.function);
   if (!definition) {
@@ -24,7 +24,7 @@ export const checkStatementArguments = (
 
   console.log(`    Statement definition:`, definition);
   console.log(
-    `    Expected ${definition.parameters.length} args, got ${stmt.arguments.length}`
+    `    Expected ${definition.parameters.length} args, got ${stmt.arguments.length}`,
   );
 
   return stmt.arguments.length === definition.parameters.length;
@@ -105,7 +105,8 @@ export const checkReasonStructure = (
   step: ProofStep,
   reasonDefs: Map<string, ReasonDefinition>,
   groups: Map<string, StatementGroup>,
-  proofGraph: ProofGraph
+  proofGraph: ProofGraph,
+  proof: ProofObj,
 ): boolean => {
   const reason = step.reason;
   const stmt = step.statement;
@@ -126,17 +127,23 @@ export const checkReasonStructure = (
     for (let idx = 0; idx < reason.arguments.length; idx++) {
       const arg = reason.arguments[idx];
       const stepNum = arg.replace(/\[|\]/g, "");
-      const dependencyStep = proofGraph.nodes.get(stepNum);
+
+      // TODO clean up when separating diagram premises from proof graph
+      const dependencyStmt =
+        proofGraph.nodes.get(stepNum)?.statement ||
+        proof.premises.diagramStatements.find((d) => d.stepNumber === stepNum)
+          ?.statement;
+
       const expectedDep = definition.dependencies[idx];
 
-      if (!dependencyStep?.statement) {
+      if (!dependencyStmt) {
         logError.parser.dependencyMismatch(
-          `Missing dependency for ${reason.function} at index ${idx} (ref ${arg})`
+          `Missing dependency for ${reason.function} at index ${idx} (ref ${arg})`,
         );
         return false;
       }
 
-      const foundType = dependencyStep.statement.function;
+      const foundType = dependencyStmt.function;
 
       // Check if expectedDep is a group or direct statement name
       if (typeof expectedDep === "string") {
@@ -157,8 +164,8 @@ export const checkReasonStructure = (
               } at index ${idx}: expected ${
                 group.base
               } or one of [${group.extensions.join(
-                ", "
-              )}], found ${foundType} (ref ${arg})`
+                ", ",
+              )}], found ${foundType} (ref ${arg})`,
             );
             return false;
           }
@@ -166,7 +173,7 @@ export const checkReasonStructure = (
           // Direct statement name match
           if (foundType !== expectedDep) {
             logError.parser.dependencyMismatch(
-              `Dependency mismatch for ${reason.function} at index ${idx}: expected ${expectedDep}, found ${foundType} (ref ${arg})`
+              `Dependency mismatch for ${reason.function} at index ${idx}: expected ${expectedDep}, found ${foundType} (ref ${arg})`,
             );
             return false;
           }
@@ -179,7 +186,7 @@ export const checkReasonStructure = (
       .split(", ")
       .map((c) => c.trim());
     console.log(
-      `    Expected conclusions: [${possibleConclusions.join(", ")}]`
+      `    Expected conclusions: [${possibleConclusions.join(", ")}]`,
     );
     console.log(`    Actual statement function: ${stmt.function}`);
 
@@ -187,7 +194,7 @@ export const checkReasonStructure = (
     const conclusionMatch = possibleConclusions.includes(stmt.function);
 
     console.log(
-      `    Name match: ${nameMatch}, Conclusion match: ${conclusionMatch}`
+      `    Name match: ${nameMatch}, Conclusion match: ${conclusionMatch}`,
     );
 
     return nameMatch && conclusionMatch;
@@ -213,7 +220,7 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
       if (!definedPoints.has(point)) {
         logError.parser.undefinedPointInObject(point, object);
         errors.push(
-          `Point '${point}' in '${object}' is not defined in premises`
+          `Point '${point}' in '${object}' is not defined in premises`,
         );
       }
     }
@@ -236,7 +243,7 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
             if (arg.v.length !== 3) {
               logError.parser.invalidAngleFormat(arg.v);
               errors.push(
-                `Invalid angle format: '${arg}' - angles must have exactly 3 points`
+                `Invalid angle format: '${arg}' - angles must have exactly 3 points`,
               );
               break;
             }
@@ -251,7 +258,7 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
             if (arg.v.length !== 3) {
               logError.parser.invalidTriangleFormat(arg.v);
               errors.push(
-                `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`
+                `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`,
               );
               break;
             }
@@ -266,7 +273,7 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
             if (arg.v.length !== 4) {
               logError.parser.invalidQuadrilateralFormat(arg.v);
               errors.push(
-                `Invalid quadrilateral format: '${arg.v}' - quadrilaterals must have exactly 4 points`
+                `Invalid quadrilateral format: '${arg.v}' - quadrilaterals must have exactly 4 points`,
               );
               break;
             }
@@ -297,7 +304,7 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
 // Check if final statement matches the goal
 export const checkGoalMatch = (
   proof: ProofObj,
-  goal?: Stmt
+  goal?: Stmt,
 ): { matches: boolean; details: string } => {
   if (!goal) return { matches: true, details: "No goal specified" };
 
@@ -364,7 +371,7 @@ export const checkGoalMatch = (
 export const validateReasonDependencies = (
   reason: Reason,
   reasonDefs: Map<string, ReasonDefinition>,
-  proofGraph: ProofGraph
+  proofGraph: ProofGraph,
 ): void => {
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
@@ -373,7 +380,7 @@ export const validateReasonDependencies = (
 
   if (reason.arguments.length !== definition.dependencies.length) {
     throw new Error(
-      `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`
+      `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`,
     );
   }
 
@@ -384,13 +391,13 @@ export const validateReasonDependencies = (
     const dependencyStep = proofGraph.nodes.get(stepNum);
     if (!dependencyStep || !dependencyStep.statement) {
       throw new Error(
-        `Missing dependency for ${reason.function} at index ${i} (ref ${depRef})`
+        `Missing dependency for ${reason.function} at index ${i} (ref ${depRef})`,
       );
     }
     const foundType = dependencyStep.statement.function;
     if (foundType !== expectedType) {
       throw new Error(
-        `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedType}, found ${foundType} (ref ${depRef})`
+        `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedType}, found ${foundType} (ref ${depRef})`,
       );
     }
   }
@@ -404,6 +411,7 @@ export const checkReasonDependencies = (
   proofGraph: ProofGraph,
   /** Required for `given` (validates vs conclusion). */
   fullStep?: ProofStep,
+  proof?: ProofObj,
 ): boolean => {
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
@@ -413,7 +421,9 @@ export const checkReasonDependencies = (
 
   if (reason.function === "given") {
     if (!fullStep) {
-      logError.parser.dependencyMismatch("given step missing full step context");
+      logError.parser.dependencyMismatch(
+        "given step missing full step context",
+      );
       return false;
     }
     return validateGivenProofStep(fullStep, proofGraph);
@@ -421,7 +431,7 @@ export const checkReasonDependencies = (
 
   if (reason.arguments.length !== definition.dependencies.length) {
     logError.parser.dependencyMismatch(
-      `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`
+      `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`,
     );
     return false;
   }
@@ -430,14 +440,18 @@ export const checkReasonDependencies = (
     const depRef = reason.arguments[i];
     const expectedDep = definition.dependencies[i];
     const stepNum = depRef.replace(/[[\]]/g, "");
-    const dependencyStep = proofGraph.nodes.get(stepNum);
-    if (!dependencyStep || !dependencyStep.statement) {
+    const dependencyStmt =
+      proofGraph.nodes.get(stepNum)?.statement ||
+      proof?.premises.diagramStatements.find((d) => d.stepNumber === stepNum)
+        ?.statement;
+
+    if (!dependencyStmt) {
       logError.parser.dependencyMismatch(
-        `Missing dependency for ${reason.function} at index ${i} (ref ${depRef})`
+        `Missing dependency for ${reason.function} at index ${i} (ref ${depRef})`,
       );
       return false;
     }
-    const foundType = dependencyStep.statement.function;
+    const foundType = dependencyStmt.function;
 
     // Check if expectedDep is a group or direct statement name
     if (typeof expectedDep === "string") {
@@ -459,8 +473,8 @@ export const checkReasonDependencies = (
             } at index ${i}: expected ${
               group.base
             } or one of [${group.extensions.join(
-              ", "
-            )}], found ${foundType} (ref ${depRef})`
+              ", ",
+            )}], found ${foundType} (ref ${depRef})`,
           );
           return false;
         }
@@ -468,7 +482,7 @@ export const checkReasonDependencies = (
         // Direct statement name match
         if (foundType !== expectedDep) {
           logError.parser.dependencyMismatch(
-            `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedDep}, found ${foundType} (ref ${depRef})`
+            `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedDep}, found ${foundType} (ref ${depRef})`,
           );
           return false;
         }
@@ -481,7 +495,7 @@ export const checkReasonDependencies = (
 
 // Check for duplicate steps in the proof
 export const findDuplicateSteps = (
-  proof: ProofObj
+  proof: ProofObj,
 ): Array<[string, string]> => {
   const duplicates: Array<[string, string]> = [];
   const stepMap = new Map<string, string>(); // step content -> step number
@@ -521,8 +535,7 @@ export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
     (step) => step.type === "proof" && step.stepNumber,
   );
 
-  const numeric = (label: string) =>
-    parseInt(label.replace(/[[\]]/g, ""), 10);
+  const numeric = (label: string) => parseInt(label.replace(/[[\]]/g, ""), 10);
 
   const sortedNums = numberedSteps
     .map((s) => ({ label: s.stepNumber!, n: numeric(s.stepNumber!) }))
@@ -540,6 +553,11 @@ export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
 
   if (sortedNums.length !== numberedSteps.length) {
     errors.push("Proof steps have invalid step number labels");
+    return errors;
+  }
+
+  if (sortedNums.length === 0) {
+    errors.push("No proof steps parsed with leading [nn] step numbers");
     return errors;
   }
 

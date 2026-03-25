@@ -64,7 +64,7 @@ export const buildProofGraph = (
       logDebug(JSON.stringify(step, null, 2));
 
       // Check reason dependencies
-      isCorrect = checkReasonStructure(step, reasonDefs, groups, graph);
+      isCorrect = checkReasonStructure(step, reasonDefs, groups, graph, proof);
       logDebug(`  Reason structure check: ${isCorrect}`);
 
       // Validate dependency statements (non-throwing version)
@@ -75,6 +75,7 @@ export const buildProofGraph = (
           groups,
           graph,
           step,
+          proof,
         );
         logDebug(`  Dependency statements check: ${isCorrect}`);
       }

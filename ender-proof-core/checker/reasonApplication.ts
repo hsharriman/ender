@@ -56,18 +56,29 @@ export const checkReasonApplication = (
     for (let i = 0; i < reason.arguments.length; i++) {
       const depRef = reason.arguments[i];
       const stepNum = depRef.replace(/[\[\]]/g, "");
-      const dependencyStep = proofGraph.nodes.get(stepNum);
 
-      if (!dependencyStep) {
+      // TODO clean up when separating diagram premises from proof graph
+      const dependencyStep =
+        proofGraph.nodes.get(stepNum) ||
+        ({
+          // Diagram premises are stored outside the proof graph.
+          statement: proof.premises.diagramStatements.find(
+            (d) => d.stepNumber === stepNum,
+          )?.statement,
+        } as any);
+
+      if (!dependencyStep?.statement) {
         return false;
       }
 
       // Get the arguments from the dependency step
-      const depArgs = dependencyStep.statement?.arguments || [];
+      const depArgs = dependencyStep.statement.arguments || [];
 
       // Create geometric objects from the arguments
 
-      dependencyArgs.push(depArgs.map((arg) => getGeometricObject(arg, ctx)));
+      dependencyArgs.push(
+        depArgs.map((arg: any) => getGeometricObject(arg, ctx)),
+      );
     }
 
     // Call the appropriate reason checker method
@@ -309,6 +320,15 @@ const getGeometricObject = (
 };
 
 const getDepStmt = (idx: string, proof: ProofObj) => {
-  const conclusionStep = proof.steps.find((step) => step.stepNumber === idx);
+  const normalized = idx.replace(/[[\]]/g, "");
+
+  const diagramDep = proof.premises.diagramStatements.find(
+    (d) => d.stepNumber === normalized,
+  );
+  if (diagramDep) return diagramDep.statement;
+
+  const conclusionStep = proof.steps.find(
+    (step) => step.stepNumber?.replace(/[[\]]/g, "") === normalized,
+  );
   return conclusionStep?.statement;
 };

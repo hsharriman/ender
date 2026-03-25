@@ -38,6 +38,12 @@ export interface ProofStep {
   stepNumber?: string;
 }
 
+export interface ParseDiagramStmt {
+  type: "diagram";
+  statement: Stmt;
+  stepNumber: string;
+}
+
 export interface ProofObj {
   title: string | null;
   premises: {
@@ -46,6 +52,7 @@ export interface ProofObj {
     quadrilaterals: ParseObj[];
     segments: ParseObj[];
     angles: ParseObj[];
+    diagramStatements: ParseDiagramStmt[];
   };
   steps: ProofStep[];
   goal?: Stmt;

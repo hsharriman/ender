@@ -1,7 +1,8 @@
 import { readFileSync } from "fs";
 import moo from "moo";
-import { dirname, join } from "path";
+import { dirname } from "path";
 import { fileURLToPath } from "url";
+import { REASONS_DEFS } from "./defs/reasons.defs";
 
 // Lexer rules for reason definitions
 const reasonLexerRules: moo.Rules = {
@@ -176,9 +177,9 @@ const __dirname = dirname(__filename);
 
 // Export a convenience function
 export const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {
-  const parser = new ReasonParser();
-  const reasonsPath = join(__dirname, "defs", "reasons.txt");
-  return parser.parseReasonDefinitions(reasonsPath);
+  return new Map<string, ReasonDefinition>(
+    Object.entries(REASONS_DEFS).map(([k, v]) => [k, v as any]),
+  );
 };
 
 /** Special-cased in validators / reasonApplication (refs premises `[g_nn]`). */
@@ -193,6 +194,7 @@ export const loadReasonDefinitionsWithBuiltins = (): Map<
   ReasonDefinition
 > => {
   const reasons = loadReasonDefinitions();
-  reasons.set("given", GIVEN_REASON_DEFINITION);
+  // Ensure `given` exists even if the generated defs are incomplete.
+  if (!reasons.has("given")) reasons.set("given", GIVEN_REASON_DEFINITION);
   return reasons;
 };

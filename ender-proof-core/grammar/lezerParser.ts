@@ -66,6 +66,7 @@ export class ProofParser {
         quadrilaterals: [],
         segments: [],
         angles: [],
+        diagramStatements: [],
       },
       steps: [],
       goal: undefined,
@@ -159,10 +160,17 @@ export class ProofParser {
                   i++;
                 }
               }
-            } else if (
-              tokens[i].type === "diagramPremiseRef" ||
-              tokens[i].type === "givenPremiseRef"
-            ) {
+            } else if (tokens[i].type === "diagramPremiseRef") {
+              const diagramLabel = tokens[i].value as string;
+              i++;
+              const statement = this.parseStatement(tokens, i);
+              result.premises.diagramStatements.push({
+                type: "diagram",
+                statement: statement.obj,
+                stepNumber: diagramLabel.replace(/[[\]]/g, ""),
+              });
+              i = statement.endIndex;
+            } else if (tokens[i].type === "givenPremiseRef") {
               const premiseLabel = tokens[i].value as string;
               i++;
               const statement = this.parseStatement(tokens, i);
@@ -172,26 +180,14 @@ export class ProofParser {
                 stepNumber: premiseLabel,
               });
               i = statement.endIndex;
+            } else if (tokens[i].type === "rarrow") {
+              // Goal statement in premises
+              i++;
+              const goal = this.parseStatement(tokens, i);
+              result.goal = goal.obj;
+              i = goal.endIndex;
             } else {
-              // After points/triangles/etc., parse legacy given statements and goal until 'steps'
-              if (tokens[i].type === "rarrow") {
-                // Goal statement in premises
-                i++;
-                const goal = this.parseStatement(tokens, i);
-                result.goal = goal.obj;
-                i = goal.endIndex;
-              } else if (tokens[i].type === "stmt_function") {
-                // Legacy: given statement in premises (stmt ... [nn])
-                const step = this.parseStep(tokens, i);
-                if (step) {
-                  result.steps.push(step.obj);
-                  i = step.endIndex;
-                } else {
-                  i++;
-                }
-              } else {
-                i++;
-              }
+              i++;
             }
           }
         }
@@ -211,31 +207,12 @@ export class ProofParser {
             } else if (tokens[i].type === "stepNumber") {
               const label = tokens[i].value as string;
               i++;
-              const step = this.parseProofStepWithLeadingNumber(tokens, i, label);
+              const step = this.parseProofStep(tokens, i, label);
               if (step) {
                 result.steps.push(step.obj);
                 i = step.endIndex;
               } else {
                 i++;
-              }
-            } else if (tokens[i].type === "stmt_function") {
-              const functionName = tokens[i].value;
-              if (this.isReasonFunction(functionName)) {
-                const step = this.parseProofStep(tokens, i);
-                if (step) {
-                  result.steps.push(step.obj);
-                  i = step.endIndex;
-                } else {
-                  i++;
-                }
-              } else {
-                const step = this.parseStep(tokens, i);
-                if (step) {
-                  result.steps.push(step.obj);
-                  i = step.endIndex;
-                } else {
-                  i++;
-                }
               }
             } else {
               i++;
@@ -253,9 +230,7 @@ export class ProofParser {
   private parseStatement(
     tokens: any[],
     startIndex: number,
-    options?: { allowTrailingStepNumber?: boolean },
   ): { obj: Stmt; endIndex: number } {
-    const allowTrailing = options?.allowTrailingStepNumber !== false;
     let i = startIndex;
     const statement: Stmt = {
       function: "",
@@ -303,100 +278,11 @@ export class ProofParser {
         }
       }
     }
-
-    // Trailing step number (legacy `stmt [nn]`); skip when the line started with `[nn]` (new format).
-    if (
-      allowTrailing &&
-      i < tokens.length &&
-      tokens[i].type === "stepNumber"
-    ) {
-      statement.stepNumber = tokens[i].value as string;
-      i++;
-    } else if (
-      allowTrailing &&
-      i < tokens.length &&
-      tokens[i].type === "lbracket"
-    ) {
-      i++;
-      if (i < tokens.length && tokens[i].type === "float_literal") {
-        statement.stepNumber = `[${tokens[i].value}]`;
-        i++;
-        if (i < tokens.length && tokens[i].type === "rbracket") {
-          i++;
-        }
-      }
-    }
-
     return { obj: statement, endIndex: i };
   }
 
-  private parseStep(
-    tokens: any[],
-    startIndex: number,
-  ): { obj: ProofStep; endIndex: number } | null {
-    let i = startIndex;
-
-    // Check if this is a given statement (has step number)
-    let hasStepNumber = false;
-    let tempIndex = i;
-    while (tempIndex < tokens.length && tokens[tempIndex].type !== "rarrow") {
-      if (
-        tokens[tempIndex].type === "lbracket" ||
-        tokens[tempIndex].type === "stepNumber"
-      ) {
-        hasStepNumber = true;
-        break;
-      }
-      tempIndex++;
-    }
-
-    if (hasStepNumber) {
-      // Given statement
-      const statement = this.parseStatement(tokens, i);
-      return {
-        obj: {
-          type: "given",
-          statement: statement.obj,
-          stepNumber: statement.obj.stepNumber,
-        },
-        endIndex: statement.endIndex,
-      };
-    }
-
-    return null;
-  }
-
-  private parseProofStep(
-    tokens: any[],
-    startIndex: number,
-  ): { obj: ProofStep; endIndex: number } | null {
-    let i = startIndex;
-
-    // Parse reason
-    const reason = this.parseReason(tokens, i);
-    if (
-      reason &&
-      reason.endIndex < tokens.length &&
-      tokens[reason.endIndex].type === "rarrow"
-    ) {
-      i = reason.endIndex + 1;
-      const conclusion = this.parseStatement(tokens, i);
-      return {
-        obj: {
-          type: "proof",
-          reason: reason.obj,
-          statement: conclusion.obj,
-          stepNumber: conclusion.obj.stepNumber,
-        },
-        endIndex: conclusion.endIndex,
-      };
-    }
-
-    return null;
-  }
-
   /** Format: `[01] reason(...) -> conclusion` */
-  private parseProofStepWithLeadingNumber(
+  private parseProofStep(
     tokens: any[],
     startIndex: number,
     stepLabel: string,
@@ -410,9 +296,7 @@ export class ProofParser {
       return null;
     }
     const i = reason.endIndex + 1;
-    const conclusion = this.parseStatement(tokens, i, {
-      allowTrailingStepNumber: false,
-    });
+    const conclusion = this.parseStatement(tokens, i);
     delete conclusion.obj.stepNumber;
     return {
       obj: {

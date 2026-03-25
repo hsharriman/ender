@@ -60,6 +60,37 @@ export const buildPremises = (proof: ProofObj) => {
     }
   });
 
+  // Process diagram-specific premises the same way (they also affect the diagram context).
+  proof.premises.diagramStatements.forEach(({ statement }) => {
+    if (!statement?.function || !statement.arguments) return;
+    switch (statement.function) {
+      case "con_seg":
+        addAllObjects(ctx, statement);
+        break;
+      case "on_line":
+        onLine(ctx, statement.arguments);
+        break;
+      case "intersect_seg":
+        intersectSeg(ctx, statement.arguments, proof);
+        break;
+      case "transversal":
+        transversal(ctx, statement.arguments);
+        break;
+      case "midpt":
+        midpt(ctx, statement.arguments);
+        break;
+      case "con_ang":
+      case "right":
+      case "ang_bisect":
+      case "perp":
+      case "rectangle":
+        break;
+      default:
+        // Ignore other statement types; they should be handled later if needed.
+        break;
+    }
+  });
+
   // ctx.ctx.segments.forEach((seg) => {
   //   console.log(
   //     seg.label,
@@ -187,6 +218,36 @@ export const buildPremises = (proof: ProofObj) => {
             step.statement.function,
           );
       }
+    }
+  });
+
+  // Process diagram-specific premises for the "other given" categories.
+  proof.premises.diagramStatements.forEach(({ statement }) => {
+    if (!statement?.function || !statement.arguments) return;
+    switch (statement.function) {
+      case "con_ang":
+        addAllObjects(ctx, statement);
+        break;
+      case "right":
+        addAllObjects(ctx, statement);
+        break;
+      case "ang_bisect":
+        angBisect(ctx, statement.arguments);
+        break;
+      case "perp":
+        addAllObjects(ctx, statement);
+        break;
+      case "rectangle":
+        addAllObjects(ctx, statement);
+        break;
+      case "con_seg":
+      case "on_line":
+      case "intersect_seg":
+      case "transversal":
+      case "midpt":
+        break;
+      default:
+        break;
     }
   });
 

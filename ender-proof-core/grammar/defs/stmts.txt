@@ -1,4 +1,4 @@
-// ------ Statements that can only appear in the premises section of a proof ----- 
+// ------ Statements that can only appear in the diagram premises of a proof ----- 
 premises
 // point p is on the segment s
 stmt on_line(Segment s, Point p)
@@ -13,6 +13,10 @@ stmt on_line(Segment s, Point p)
 //  x----x------------x
 // s2p1 t2           s2p2
 stmt transversal(Point s1p1, Point s1p2, Point t1, Point s2p1, Point s2p2, Point t2) // Point s1p1 -> s1p2 = seg1
+
+// segment s1 and s2 intersect at point p
+stmt intersect_seg(Segment s1, Segment s2, Point p)
+
 end_premises
 
 // ----- Supported statements with unidirectional substitutability ----- 
@@ -24,9 +28,6 @@ group point_on_line { base: on_line, extensions: midpt }
 
 // Individual statements
 stmt right(Angle a) 
-
-// segment s1 and s2 intersect at point p
-stmt intersect_seg(Segment s1, Segment s2, Point p)
 
 // segment s1 is congruent to s2
 stmt con_seg(Segment s1, Segment s2)

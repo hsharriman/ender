@@ -1,8 +1,9 @@
 import { readFileSync } from "fs";
 import moo from "moo";
-import { dirname, join } from "path";
+import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { logDebug, logError } from "../errors/errorConstants";
+import { STMTS_DEFS } from "./defs/stmts.defs";
 
 // Lexer rules for statement definitions
 const stmtLexerRules: moo.Rules = {
@@ -123,7 +124,7 @@ export class StmtParser {
     // Parse: group group_name { base: stmt1, extensions: stmt2, stmt3 }
     const trimmed = line.trim();
     const hierarchyMatch = trimmed.match(
-      /^group\s+(\w+)\s*\{\s*base:\s*(\w+)\s*,\s*extensions:\s*([^}]+)\s*\}$/
+      /^group\s+(\w+)\s*\{\s*base:\s*(\w+)\s*,\s*extensions:\s*([^}]+)\s*\}$/,
     );
     if (hierarchyMatch) {
       const [, groupName, base, extensionsStr] = hierarchyMatch;
@@ -216,7 +217,7 @@ export class StmtParser {
     }
 
     logDebug(
-      `📚 Loaded ${statements.size} statement definitions and ${groups.size} groups`
+      `📚 Loaded ${statements.size} statement definitions and ${groups.size} groups`,
     );
     return { statements, groups };
   }
@@ -231,7 +232,11 @@ export const loadStatementDefinitions = (): {
   statements: Map<string, StatementDefinition>;
   groups: Map<string, StatementGroup>;
 } => {
-  const parser = new StmtParser();
-  const stmtsPath = join(__dirname, "defs", "stmts.txt");
-  return parser.parseStatementDefinitions(stmtsPath);
+  const statements = new Map<string, StatementDefinition>(
+    Object.entries(STMTS_DEFS.statements).map(([k, v]) => [k, v as any]),
+  );
+  const groups = new Map<string, StatementGroup>(
+    Object.entries(STMTS_DEFS.groups).map(([k, v]) => [k, v as any]),
+  );
+  return { statements, groups };
 };
