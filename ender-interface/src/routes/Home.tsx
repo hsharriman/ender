@@ -11,7 +11,7 @@ export class Home extends React.Component {
           id="header"
         >
           <NavLink to={"/ender"} className="px-3 text-sm h-8">
-            <img src={ender} className="h-12 w-auto shadow-sm" />
+            <img src={ender} alt="Ender logo" className="h-12 w-auto shadow-sm" />
           </NavLink>
           <div className="text-white italic tracking-widest">Ender</div>
         </div>
@@ -22,6 +22,12 @@ export class Home extends React.Component {
               className="py-4 px-8 m-4 text-3xl bg-blue-700 rounded-lg text-white flex items-center"
             >
               Examples
+            </NavLink>
+            <NavLink
+              to="/ender/harness"
+              className="py-4 px-8 m-4 text-3xl bg-violet-700 rounded-lg text-white flex items-center"
+            >
+              ProofObj Harness
             </NavLink>
           </div>
         </div>

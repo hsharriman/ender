@@ -23,6 +23,18 @@ import { loadReasonDefinitionsWithBuiltins } from "./grammar/reasonParser";
 import { loadStatementDefinitions } from "./grammar/stmtParser";
 import { ProofObj } from "./types/checkerTypes";
 
+type GoalMatchResult = { matches: boolean; details: string };
+
+type ProofCheckResult = {
+  proof: ProofObj;
+  goal: any;
+  graph: ReturnType<typeof buildProofGraph>;
+  duplicateSteps: Array<[string, string]>;
+  stepNumberErrors: string[];
+  geometricObjectErrors: string[];
+  goalMatchResult: GoalMatchResult;
+};
+
 // Parse a proof file
 const parseProof = (filePath: string): ProofObj => {
   const content = readFileSync(filePath, "utf-8");
@@ -35,6 +47,136 @@ const extractGoal = (proof: ProofObj) => {
   const goalStep = proof.steps.find((step) => step.type === "goal");
   if (goalStep && goalStep.statement) return goalStep.statement;
   return proof.goal;
+};
+
+const printProofResult = (result: ProofCheckResult): void => {
+  const {
+    proof,
+    goal,
+    graph,
+    duplicateSteps,
+    stepNumberErrors,
+    geometricObjectErrors,
+    goalMatchResult,
+  } = result;
+
+  console.log("📋 Proof Analysis Results:");
+  console.log("=".repeat(50));
+
+  console.log(`\n📝 Title: ${proof.title || "No title"}`);
+  if (goal) {
+    console.log(`🎯 Goal: ${goal}`);
+    console.log(`✅ Goal Match: ${goalMatchResult.matches ? "YES" : "NO"}`);
+    console.log(`📋 Goal Details: ${goalMatchResult.details}`);
+    if (!goalMatchResult.matches) {
+      proof.errors.push({
+        type: "goal_not_reached",
+        data: {
+          details: goalMatchResult.details,
+        },
+      });
+    }
+  }
+
+  console.log(`\n📊 Statistics:`);
+  console.log(
+    `   • Total Steps: ${proof.steps.filter((s) => s.type !== "goal").length}`,
+  );
+  console.log(
+    `   • Given Statements: ${
+      proof.steps.filter((s) => s.type === "given").length
+    }`,
+  );
+  console.log(
+    `   • Proof Steps: ${proof.steps.filter((s) => s.type === "proof").length}`,
+  );
+
+  if (graph.incorrectSteps.size > 0) {
+    logError.proofChecker.incorrectSteps(graph.incorrectSteps.size);
+    Array.from(graph.incorrectSteps)
+      .sort()
+      .forEach((step) => {
+        const depFail = graph.dependencyFailureSteps?.has(step);
+        if (depFail) {
+          console.log(
+            `   • Step ${step} (fails due to dependency on incorrect step)`,
+          );
+        } else {
+          console.log(`   • Step ${step}`);
+        }
+      });
+  }
+
+  console.log(`\n🚫 Unused Steps: ${graph.unusedSteps.size}`);
+  if (graph.unusedSteps.size > 0) {
+    proof.errors.push({
+      type: "unused_step",
+      data: {
+        steps: Array.from(graph.unusedSteps),
+      },
+    });
+    Array.from(graph.unusedSteps)
+      .sort()
+      .forEach((step) => {
+        console.log(`   • Step ${step}`);
+      });
+  }
+
+  console.log(`\n🔄 Cycles: ${graph.cycles.length}`);
+  if (graph.cycles.length > 0) {
+    proof.errors.push({
+      type: "cycle",
+      data: {
+        steps: graph.cycles,
+      },
+    });
+    graph.cycles.forEach((cycle, index) => {
+      console.log(`   • Cycle ${index + 1}: ${cycle.join(" → ")} → ${cycle[0]}`);
+    });
+  }
+
+  console.log(`\n🔄 Duplicate Steps: ${duplicateSteps.length}`);
+  if (duplicateSteps.length > 0) {
+    proof.errors.push({
+      type: "duplicate_step",
+      data: {
+        steps: duplicateSteps,
+      },
+    });
+    duplicateSteps.forEach(([step1, step2]) => {
+      logError.parser.duplicateSteps(step1, step2);
+    });
+  }
+
+  console.log(`\n📝 Step Number Errors: ${stepNumberErrors.length}`);
+  if (stepNumberErrors.length > 0) {
+    stepNumberErrors.forEach((error) => {
+      console.log(`   • ${error}`);
+    });
+  }
+
+  console.log(`\n🔷 Geometric Object Errors: ${geometricObjectErrors.length}`);
+  if (geometricObjectErrors.length > 0) {
+    geometricObjectErrors.forEach((error) => {
+      console.log(`   • ${error}`);
+    });
+  }
+
+  console.log(`\n🎯 Overall Assessment:`);
+  const hasErrors =
+    graph.incorrectSteps.size > 0 ||
+    graph.unusedSteps.size > 0 ||
+    graph.cycles.length > 0 ||
+    duplicateSteps.length > 0 ||
+    stepNumberErrors.length > 0 ||
+    geometricObjectErrors.length > 0 ||
+    !goalMatchResult.matches;
+
+  if (!hasErrors) {
+    console.log("✅ Proof is CORRECT!");
+  } else {
+    logError.proofChecker.proofHasIssues();
+  }
 };
 
 // Main proof checker function
@@ -51,6 +193,7 @@ const checkProof = (filePath: string): void => {
     // Parse proof
     const proof = parseProof(filePath);
     const goal = extractGoal(proof);
+    proof.errors = [];
 
     // Check geometric objects are well-formed before creating context
     const geometricObjectErrors = checkGeometricObjects(proof);
@@ -93,104 +236,15 @@ const checkProof = (filePath: string): void => {
     // Check goal match
     const goalMatchResult = checkGoalMatch(proof, goal);
 
-    // Pretty print results (always displayed)
-    console.log("📋 Proof Analysis Results:");
-    console.log("=".repeat(50));
-
-    console.log(`\n📝 Title: ${proof.title || "No title"}`);
-    if (goal) {
-      console.log(`🎯 Goal: ${goal}`);
-      console.log(`✅ Goal Match: ${goalMatchResult.matches ? "YES" : "NO"}`);
-      console.log(`📋 Goal Details: ${goalMatchResult.details}`);
-    }
-
-    console.log(`\n📊 Statistics:`);
-    console.log(
-      `   • Total Steps: ${proof.steps.filter((s) => s.type !== "goal").length}`
-    );
-    console.log(
-      `   • Given Statements: ${
-        proof.steps.filter((s) => s.type === "given").length
-      }`
-    );
-    console.log(
-      `   • Proof Steps: ${
-        proof.steps.filter((s) => s.type === "proof").length
-      }`
-    );
-
-    if (graph.incorrectSteps.size > 0) {
-      logError.proofChecker.incorrectSteps(graph.incorrectSteps.size);
-      Array.from(graph.incorrectSteps)
-        .sort()
-        .forEach((step) => {
-          const depFail = graph.dependencyFailureSteps?.has(step);
-          if (depFail) {
-            console.log(
-              `   • Step ${step} (fails due to dependency on incorrect step)`
-            );
-          } else {
-            console.log(`   • Step ${step}`);
-          }
-        });
-    }
-
-    console.log(`\n🚫 Unused Steps: ${graph.unusedSteps.size}`);
-    if (graph.unusedSteps.size > 0) {
-      Array.from(graph.unusedSteps)
-        .sort()
-        .forEach((step) => {
-          console.log(`   • Step ${step}`);
-        });
-    }
-
-    console.log(`\n🔄 Cycles: ${graph.cycles.length}`);
-    if (graph.cycles.length > 0) {
-      graph.cycles.forEach((cycle, index) => {
-        console.log(
-          `   • Cycle ${index + 1}: ${cycle.join(" → ")} → ${cycle[0]}`
-        );
-      });
-    }
-
-    console.log(`\n🔄 Duplicate Steps: ${duplicateSteps.length}`);
-    if (duplicateSteps.length > 0) {
-      duplicateSteps.forEach(([step1, step2]) => {
-        logError.parser.duplicateSteps(step1, step2);
-      });
-    }
-
-    console.log(`\n📝 Step Number Errors: ${stepNumberErrors.length}`);
-    if (stepNumberErrors.length > 0) {
-      stepNumberErrors.forEach((error) => {
-        console.log(`   • ${error}`);
-      });
-    }
-
-    console.log(
-      `\n🔷 Geometric Object Errors: ${geometricObjectErrors.length}`
-    );
-    if (geometricObjectErrors.length > 0) {
-      geometricObjectErrors.forEach((error) => {
-        console.log(`   • ${error}`);
-      });
-    }
-
-    console.log(`\n🎯 Overall Assessment:`);
-    const hasErrors =
-      graph.incorrectSteps.size > 0 ||
-      graph.unusedSteps.size > 0 ||
-      graph.cycles.length > 0 ||
-      duplicateSteps.length > 0 ||
-      stepNumberErrors.length > 0 ||
-      geometricObjectErrors.length > 0 ||
-      !goalMatchResult.matches;
-
-    if (!hasErrors) {
-      console.log("✅ Proof is CORRECT!");
-    } else {
-      logError.proofChecker.proofHasIssues();
-    }
+    printProofResult({
+      proof,
+      goal,
+      graph,
+      duplicateSteps,
+      stepNumberErrors,
+      geometricObjectErrors,
+      goalMatchResult,
+    });
   } catch (error) {
     logError.proofChecker.errorCheckingProof(error);
   }
@@ -214,7 +268,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const levelArg = args[i + 1];
       if (!levelArg) {
         console.error(
-          "Error: --log-level requires a value (debug, info, warn, error)"
+          "Error: --log-level requires a value (debug, info, warn, error)",
         );
         process.exit(1);
       }
@@ -234,7 +288,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
           break;
         default:
           console.error(
-            `Error: Invalid log level '${levelArg}'. Use: debug, info, warn, error`
+            `Error: Invalid log level '${levelArg}'. Use: debug, info, warn, error`,
           );
           process.exit(1);
       }
@@ -246,7 +300,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   if (!proofFile) {
     console.log(
-      "Usage: npm run check-proof [--log-level <level>] <proof-file>"
+      "Usage: npm run check-proof [--log-level <level>] <proof-file>",
     );
     console.log("Log levels: debug, info, warn, error (default: warn)");
     process.exit(1);

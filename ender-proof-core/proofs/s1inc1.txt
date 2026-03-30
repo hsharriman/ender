@@ -1,7 +1,7 @@
 // fail on step 4, dependency error on step 5
 title: "S1INC1 - Prove Angles Congruent #1"
 premises:
-pt: A, B, C, D
+pt: A (1, 2, -15, -10), B (10, 2, 10, -10), C (14, 9, 3, -10), D (5, 9, -25, -10)
 tri: t_ABD t_BCD
 [g_01] con_seg(AD,BC) [01]
 [g_02] con_seg(AB,DC) [02]

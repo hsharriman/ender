@@ -57,6 +57,38 @@ export class ProofParser {
     return this.parseBasicStructure(tokens);
   }
 
+  private parsePointPlacement(
+    tokens: any[],
+    startIndex: number,
+  ):
+    | { pt: [number, number]; offset: [number, number]; endIndex: number }
+    | null {
+    let i = startIndex;
+    if (i >= tokens.length || tokens[i].type !== "lparen") return null;
+    i++;
+    if (i >= tokens.length || tokens[i].type !== "float_literal") return null;
+    const x = Number(tokens[i].value);
+    i++;
+    if (i >= tokens.length || tokens[i].type !== "comma") return null;
+    i++;
+    if (i >= tokens.length || tokens[i].type !== "float_literal") return null;
+    const y = Number(tokens[i].value);
+    i++;
+    if (i >= tokens.length || tokens[i].type !== "comma") return null;
+    i++;
+    if (i >= tokens.length || tokens[i].type !== "float_literal") return null;
+    const offsetX = Number(tokens[i].value);
+    i++;
+    if (i >= tokens.length || tokens[i].type !== "comma") return null;
+    i++;
+    if (i >= tokens.length || tokens[i].type !== "float_literal") return null;
+    const offsetY = Number(tokens[i].value);
+    i++;
+    if (i >= tokens.length || tokens[i].type !== "rparen") return null;
+    i++;
+    return { pt: [x, y], offset: [offsetX, offsetY], endIndex: i };
+  }
+
   private parseBasicStructure(tokens: any[]) {
     const result: ProofObj = {
       title: "",
@@ -70,6 +102,7 @@ export class ProofParser {
       },
       steps: [],
       goal: undefined,
+      errors: [],
     };
 
     let currentSection = null;
@@ -99,11 +132,21 @@ export class ProofParser {
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
                 while (i < tokens.length && tokens[i].type === "point") {
+                  const pointLabel = tokens[i].value;
+                  i++;
+                  const placement = this.parsePointPlacement(tokens, i);
+                  if (!placement) {
+                    throw new Error(
+                      `Expected coordinates and offsets after point '${pointLabel}' in premises. Use format: pt: A (x, y, offsetX, offsetY), B (x, y, offsetX, offsetY)`,
+                    );
+                  }
                   result.premises.points.push({
                     type: Obj.Point,
-                    v: tokens[i].value,
+                    v: pointLabel,
+                    pt: placement.pt,
+                    offset: placement.offset,
                   });
-                  i++;
+                  i = placement.endIndex;
                   if (i < tokens.length && tokens[i].type === "comma") {
                     i++;
                   }
@@ -168,6 +211,7 @@ export class ProofParser {
                 type: "diagram",
                 statement: statement.obj,
                 stepNumber: diagramLabel.replace(/[[\]]/g, ""),
+                errors: [],
               });
               i = statement.endIndex;
             } else if (tokens[i].type === "givenPremiseRef") {
@@ -178,6 +222,7 @@ export class ProofParser {
                 type: "given",
                 statement: statement.obj,
                 stepNumber: premiseLabel,
+                errors: [],
               });
               i = statement.endIndex;
             } else if (tokens[i].type === "rarrow") {
@@ -304,6 +349,7 @@ export class ProofParser {
         reason: reason.obj,
         statement: conclusion.obj,
         stepNumber: stepLabel,
+        errors: [],
       },
       endIndex: conclusion.endIndex,
     };

@@ -1,7 +1,7 @@
 // pass
 title: "S1C3 - Prove Midpoint #2"
 premises:
-pt: Q, P, R, M, N
+pt: Q (2, 10, -18, -15), P (2, 5.5, -15, -8), R (8, 5.5, 0, 8), M (14, 5.5, 5, -8) , N (14, 1, 5, 0)
 tri: t_QPR t_RMN
 [g_01] right(a_QPR)
 [g_02] right(a_RMN)

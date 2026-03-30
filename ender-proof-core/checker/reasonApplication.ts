@@ -25,14 +25,15 @@ import {
 } from "./reasonChecks/lineChecks";
 import { parallelogram2, rectangle } from "./reasonChecks/polyChecks";
 import {
-  aas,
-  asa,
-  cpctc,
-  isosceles,
-  rhl,
-  sas,
-  sss,
+  checkAas,
+  checkAsa,
+  checkCpctc,
+  checkIsosceles,
+  checkRhl,
+  checkSas,
+  checkSss,
 } from "./reasonChecks/triangleChecks";
+import { addError, addReasonCheckError } from "./reasonChecks/utils";
 import { validateGivenProofStep } from "./validators";
 
 // Check if reason is applied correctly using reason checker methods
@@ -122,7 +123,9 @@ export const checkReasonApplication = (
         if (!currStep.statement || !conAng_conv) return false;
         return proof.premises.diagramStatements
           .filter((d) => d.statement.function === "transversal")
-          .some((d) => altint(conAng_conv, d.statement, currStep.statement!, ctx));
+          .some((d) =>
+            altint(conAng_conv, d.statement, currStep.statement!, ctx),
+          );
       case "ang_bisect":
         const bisect_bisect = getDepStmt(reason.arguments[0], proof);
         if (currStep.statement && bisect_bisect) {
@@ -136,63 +139,92 @@ export const checkReasonApplication = (
         }
         return false;
 
-      case "sas":
+      case "sas": {
         const s1 = getDepStmt(reason.arguments[0], proof);
         const a = getDepStmt(reason.arguments[1], proof);
         const s2 = getDepStmt(reason.arguments[2], proof);
-        if (currStep.statement && s1 && a && s2) {
-          return sas(currStep.statement, s1, a, s2, ctx);
+        if (!currStep.statement || !s1 || !a || !s2) return false;
+        const r = checkSas(currStep.statement, s1, a, s2, ctx);
+        if (!r.ok) {
+          addReasonCheckError(currStep.errors, r.failure);
+          return false;
         }
-        return false;
+        return true;
+      }
 
-      case "sss":
+      case "sss": {
         const s1_sss = getDepStmt(reason.arguments[0], proof);
         const s2_sss = getDepStmt(reason.arguments[1], proof);
         const s3_sss = getDepStmt(reason.arguments[2], proof);
-        if (currStep.statement && s1_sss && s2_sss && s3_sss) {
-          return sss(currStep.statement, s1_sss, s2_sss, s3_sss, ctx);
+        if (!currStep.statement || !s1_sss || !s2_sss || !s3_sss) return false; // TODO add error here
+        const r = checkSss(currStep.statement, s1_sss, s2_sss, s3_sss, ctx);
+        if (!r.ok) {
+          addReasonCheckError(currStep.errors, r.failure);
+          return false;
         }
-        return false;
+        return true;
+      }
 
-      case "cpctc":
+      case "cpctc": {
         const t_cong = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && t_cong) {
-          return cpctc(t_cong, currStep.statement, ctx);
+        if (!currStep.statement || !t_cong) return false;
+        const r = checkCpctc(t_cong, currStep.statement, ctx);
+        if (!r.ok) {
+          addReasonCheckError(currStep.errors, r.failure);
+          return false;
         }
-        return false;
+        return true;
+      }
 
-      case "aas":
+      case "aas": {
         const a1_aas = getDepStmt(reason.arguments[0], proof);
         const a2_aas = getDepStmt(reason.arguments[1], proof);
         const s_aas = getDepStmt(reason.arguments[2], proof);
-        if (currStep.statement && a1_aas && a2_aas && s_aas) {
-          return aas(currStep.statement, a1_aas, a2_aas, s_aas, ctx);
+        if (!currStep.statement || !a1_aas || !a2_aas || !s_aas) return false;
+        const r = checkAas(currStep.statement, a1_aas, a2_aas, s_aas, ctx);
+        if (!r.ok) {
+          addReasonCheckError(currStep.errors, r.failure);
+          return false;
         }
-        return false;
+        return true;
+      }
 
-      case "asa":
+      case "asa": {
         const a1_asa = getDepStmt(reason.arguments[0], proof);
         const s_asa = getDepStmt(reason.arguments[1], proof);
         const a2_asa = getDepStmt(reason.arguments[2], proof);
-        if (currStep.statement && a1_asa && s_asa && a2_asa) {
-          return asa(currStep.statement, a1_asa, s_asa, a2_asa, ctx);
+        if (!currStep.statement || !a1_asa || !s_asa || !a2_asa) return false;
+        const r = checkAsa(currStep.statement, a1_asa, s_asa, a2_asa, ctx);
+        if (!r.ok) {
+          addReasonCheckError(currStep.errors, r.failure);
+          return false;
         }
-        return false;
+        return true;
+      }
 
-      case "rhl":
+      case "rhl": {
         const right_rhl = getDepStmt(reason.arguments[0], proof);
         const s1_rhl = getDepStmt(reason.arguments[1], proof);
         const s2_rhl = getDepStmt(reason.arguments[2], proof);
-        if (currStep.statement && right_rhl && s1_rhl && s2_rhl) {
-          return rhl(currStep.statement, right_rhl, s1_rhl, s2_rhl, ctx);
+        if (!currStep.statement || !right_rhl || !s1_rhl || !s2_rhl)
+          return false;
+        const r = checkRhl(currStep.statement, right_rhl, s1_rhl, s2_rhl, ctx);
+        if (!r.ok) {
+          addReasonCheckError(currStep.errors, r.failure);
+          return false;
         }
-        return false;
-      case "isosceles":
+        return true;
+      }
+      case "isosceles": {
         const conSeg_isos = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && conSeg_isos && currStep.statement) {
-          return isosceles(conSeg_isos, currStep.statement, ctx);
+        if (!currStep.statement || !conSeg_isos) return false;
+        const r = checkIsosceles(conSeg_isos, currStep.statement, ctx);
+        if (!r.ok) {
+          addReasonCheckError(currStep.errors, r.failure);
+          return false;
         }
-        return false;
+        return true;
+      }
 
       case "midpt":
         const midPt_midpt = getDepStmt(reason.arguments[0], proof);
@@ -213,7 +245,8 @@ export const checkReasonApplication = (
         return proof.premises.diagramStatements
           .filter(
             (d) =>
-              d.statement.function === "on_line" || d.statement.function === "midpt",
+              d.statement.function === "on_line" ||
+              d.statement.function === "midpt",
           )
           .some((d) => perp(right_perp, d.statement, currStep.statement!, ctx));
       case "rectangle":

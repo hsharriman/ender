@@ -1,7 +1,7 @@
 // pass
 title: "S2C1 - Prove Rectangle #2"
 premises:
-pt: E, F, G, H, J
+pt: E (2, 2, -15, -15), F (2, 9, -10, 5), G (14, 9, 8, 0), H (14, 2, 0, -17), J (8, 2, -5, -18)
 tri: t_FGJ
 quad: q_EFGH
 [g_01] rectangle(q_EFGH)

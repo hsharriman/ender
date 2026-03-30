@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import { Examples } from "./routes/Examples";
 import { Home } from "./routes/Home";
+import { ProofObjHarness } from "./routes/ProofObjHarness";
 
 const router = createBrowserRouter([
   {
@@ -13,6 +14,10 @@ const router = createBrowserRouter([
   {
     path: "/ender/examples",
     element: <Examples />,
+  },
+  {
+    path: "/ender/harness",
+    element: <ProofObjHarness />,
   },
 ]);
 

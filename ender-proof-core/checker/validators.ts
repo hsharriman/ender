@@ -132,7 +132,9 @@ export const checkReasonStructure = (
         const anyMatch = proof.premises.diagramStatements.some((d) => {
           const foundType = d.statement.function;
           if (group) {
-            return group.base === foundType || group.extensions.includes(foundType);
+            return (
+              group.base === foundType || group.extensions.includes(foundType)
+            );
           }
           return foundType === expected;
         });
@@ -471,7 +473,9 @@ export const checkReasonDependencies = (
       const anyMatch = proof.premises.diagramStatements.some((d) => {
         const foundType = d.statement.function;
         if (group) {
-          return group.base === foundType || group.extensions.includes(foundType);
+          return (
+            group.base === foundType || group.extensions.includes(foundType)
+          );
         }
         return foundType === expected;
       });
@@ -568,6 +572,15 @@ export const findDuplicateSteps = (
     } else {
       stepMap.set(stepContent, step.stepNumber || "unknown");
     }
+  }
+
+  if (duplicates.length > 0) {
+    proof.errors.push({
+      type: "duplicate_step",
+      data: {
+        steps: duplicates,
+      },
+    });
   }
 
   return duplicates;

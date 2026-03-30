@@ -32,24 +32,54 @@ export interface StatementDefinition {
   group?: string; // Optional group membership
 }
 
+export type ErrorType =
+  | "stmt_arg_mismatch"
+  | "reason_dep_missing"
+  | "reason_dep_mismatch"
+  | "reason_stmt_mismatch"
+  | "dependency_error"
+  | "reason_deps_impl"
+  | "reason_objs_not_in_stmt_obj"
+  | "object_not_in_premises"
+  | "cycle"
+  | "unused_step"
+  | "duplicate_step"
+  | "goal_not_reached"
+  | "reason_check";
+
+export type ErrorObj = {
+  type: ErrorType;
+  data?: any;
+};
+
+export type ReasonCheckResult = {
+  ok: boolean;
+  errors: ErrorObj[];
+};
+
 // Types for the proof checker
+// errors here:
 export interface ProofStep {
   type: "given" | "proof" | "goal";
   reason?: Reason;
   statement?: Stmt;
   stepNumber?: string;
+  errors: ErrorObj[];
 }
 
+// errors here: invalid diagram statement (can't find objects in premises)
 export interface ParseDiagramStmt {
   type: "diagram";
   statement: Stmt;
   stepNumber: string;
+  errors: ErrorObj[];
 }
 
+// errors here: cycles, unused steps, duplicate steps, goal not reached
 export interface ProofObj {
   title: string | null;
   premises: {
-    points: ParseObj[];
+    points: ParsePointObj[];
     triangles: ParseObj[];
     quadrilaterals: ParseObj[];
     segments: ParseObj[];
@@ -58,7 +88,13 @@ export interface ProofObj {
   };
   steps: ProofStep[];
   goal?: Stmt;
+  errors: ErrorObj[];
 }
+
+export type ParsePointObj = ParseObj & {
+  pt: [number, number];
+  offset: [number, number];
+};
 
 export interface ProofGraph {
   nodes: Map<string, ProofStep>;

@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/ender/static/css/main.b2c1a133.css",
+    "main.js": "/ender/static/js/main.8afe1f22.js",
+    "index.html": "/ender/index.html",
+    "main.b2c1a133.css.map": "/ender/static/css/main.b2c1a133.css.map",
+    "main.8afe1f22.js.map": "/ender/static/js/main.8afe1f22.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.b2c1a133.css",
+    "static/js/main.8afe1f22.js"
+  ]
+}

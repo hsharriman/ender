@@ -1,0 +1,14 @@
+title: "S1INC2 - Prove Angles Congruent #2"
+premises:
+pt: J (2, 9, -15, -15), K (5.5, 1, -5, -17), L (9, 9, 8, -15), M (5.5, 9, -5, 6)
+tri: t_JMK t_LMK
+[g_01] perp(JL,KM)
+[g_02] con_seg(JK,LK) [02]
+-> con_tri(t_JMK,t_LMK)
+
+steps:
+[01] given([g_01]) -> perp(JL,KM)
+[02] given([g_02]) -> con_seg(JK,LK)
+[03] perp_con_ang([01]) -> con_ang(a_JML,a_LMK)
+[04] reflex_s() -> con_seg(MK, MK)
+[05] aas([02], [03], [04]) -> con_tri(t_JMK,t_LMK)  // Missing dependency for AAS on invalid reason
