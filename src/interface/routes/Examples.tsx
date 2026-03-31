@@ -10,7 +10,10 @@ import {
   StaticAppPageProps,
 } from "../components/ender/StaticAppPage";
 import { StaticDiagram } from "../components/ender/StaticDiagram";
-import { interactiveLayout, staticLayout } from "../core/testinfra/setupLayout";
+import {
+  interactiveLayout,
+  staticLayout,
+} from "../core/grammarToLayout/setupLayout";
 import { LayoutProps } from "../core/types/layoutTypes";
 import { Reasons } from "../theorems/reasons";
 import { T1_S1_C1 } from "../theorems/testA/stage1/C1";

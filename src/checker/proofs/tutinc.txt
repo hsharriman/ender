@@ -1,7 +1,7 @@
 // fail on step 4
 title: "Tutorial #2 - INC Prove Triangles Congruent"
 premises:
-pt: A, B, C, D
+pt: A (5.5, 9, 0, 5), B (2, 3, -8, -18), C (5.5, 1, -8, -17), D (9, 3, -5, -18)
 tri: t_ABC t_ADC
 [g_01] con_seg(AB,AD)
 [g_02] con_ang(a_BAC,a_DAC)

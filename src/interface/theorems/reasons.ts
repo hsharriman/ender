@@ -124,6 +124,7 @@ export const reasonFromFunction = (fn?: string): ReasonItem => {
     midpt: Reasons.Midpoint,
     midpt_conv: Reasons.ConverseMidpoint,
     con_right: Reasons.CongAdjAngles,
+    perp_con_ang: Reasons.CongAdjAngles,
     rectangle: Reasons.Rectangle,
     isosceles: Reasons.Isosceles,
     parallelogram1: Reasons.Parallelogram,
