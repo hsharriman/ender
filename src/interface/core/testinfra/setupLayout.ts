@@ -1,13 +1,20 @@
-import { Point } from "geometry-object";
+import { ProofObj, ProofStep, Stmt } from "checker/types/checkerTypes";
 import React from "react";
-import { InteractiveAppPageProps } from "../../components/ender/InteractiveAppPage";
-import { Reasons } from "../../theorems/reasons";
-import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
+import { reasonFromFunction, Reasons } from "../../theorems/reasons";
+import { GIVEN_ID, makeStepMeta, PROVE_ID } from "../../theorems/utils";
 import { DiagramContent } from "../builder/DiagramContent";
 import { AspectRatio } from "../diagramSvg/svgTypes";
+import { CongruentTriangles } from "../reasons/CongruentTriangles";
+import { EqualAngles } from "../reasons/EqualAngles";
+import { EqualSegments } from "../reasons/EqualSegments";
+import { EqualTriangles } from "../reasons/EqualTriangles";
 import { ShowPoint, SVGModes } from "../types/diagramTypes";
 import { LayoutProps, ProofMeta, Reason } from "../types/layoutTypes";
-import { ProofTextItem, StaticProofTextItem } from "../types/stepTypes";
+import {
+  ProofTextItem,
+  StaticProofTextItem,
+  StepMeta,
+} from "../types/stepTypes";
 
 export const staticLayout = (proofMeta: LayoutProps): ProofMeta => {
   // reset stored variables
@@ -113,74 +120,54 @@ export const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
   };
 };
 
-type ParseObjLike = {
-  v: string;
-};
-
-type ParsePointObjLike = ParseObjLike & {
-  pt: [number, number];
-  offset: [number, number];
-};
-
-type StmtLike = {
-  function: string;
-  arguments: ParseObjLike[];
-};
-
-type ReasonLike = {
-  function: string;
-  arguments: string[];
-};
-
-type ProofStepLike = {
-  type: "given" | "proof" | "goal";
-  reason?: ReasonLike;
-  statement?: StmtLike;
-  stepNumber?: string;
-};
-
-export type ProofObjLike = {
-  title: string | null;
-  premises: {
-    points: ParsePointObjLike[];
-    triangles: ParseObjLike[];
-    quadrilaterals: ParseObjLike[];
-    segments: ParseObjLike[];
-    angles: ParseObjLike[];
-  };
-  steps: ProofStepLike[];
-  goal?: StmtLike;
-};
-
-const parseStepRef = (ref: string): number | null => {
-  const raw = ref.replace(/\[|\]/g, "");
-  if (/^\d+$/.test(raw)) {
-    return parseInt(raw, 10);
+const stmtToText = (stmt?: Stmt) => (isActive: boolean) => {
+  if (!stmt) return React.createElement("span", null, "");
+  const args = stmt.arguments.map((a) => a.v);
+  if (stmt.function === "con_seg" && args.length === 2) {
+    return EqualSegments.text([args[0], args[1]])(isActive);
   }
-  return null;
+  if (stmt.function === "con_ang" && args.length === 2) {
+    return EqualAngles.text([args[0], args[1]])(isActive);
+  }
+  if (stmt.function === "con_tri" && args.length === 2) {
+    return EqualTriangles.text([args[0], args[1]])(isActive);
+  }
+  return React.createElement(
+    "span",
+    null,
+    `${stmt.function}(${args.join(", ")})`,
+  );
 };
 
-const stmtToText = (stmt?: StmtLike): string => {
-  if (!stmt) return "";
-  const args = stmt.arguments.map((a) => a.v).join(", ");
-  return `${stmt.function}(${args})`;
-};
+const stmtListToText =
+  (stmts: Array<Stmt | undefined>) => (isActive: boolean) =>
+    React.createElement(
+      "span",
+      null,
+      ...stmts.flatMap((stmt, i) => {
+        const parts: React.ReactNode[] = [];
+        if (i > 0) parts.push("; ");
+        parts.push(
+          React.createElement(
+            React.Fragment,
+            { key: `stmt-${i}` },
+            stmtToText(stmt)(isActive),
+          ),
+        );
+        return parts;
+      }),
+    );
 
-const stepText = (content: string) => () =>
-  React.createElement("span", null, content);
-
-const normalizeStepNumber = (step: ProofStepLike, fallback: number): number => {
+const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
   const raw = step.stepNumber?.replace(/\[|\]/g, "") ?? "";
   const parsed = parseInt(raw, 10);
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
-const seedBaseContentFromPremises = (
-  proof: ProofObjLike,
-  content: DiagramContent,
-): void => {
+const seedBaseContentFromPremises = (proof: ProofObj): DiagramContent => {
+  const ctx = new DiagramContent();
   proof.premises.points.forEach((pt) => {
-    content.addPoint(
+    ctx.addPoint(
       {
         label: pt.v,
         pt: pt.pt,
@@ -192,125 +179,194 @@ const seedBaseContentFromPremises = (
 
   proof.premises.segments.forEach((seg) => {
     if (seg.v.length !== 2) return;
-    const p1 = content.getPoint(seg.v[0]);
-    const p2 = content.getPoint(seg.v[1]);
+    const p1 = ctx.getPoint(seg.v[0]);
+    const p2 = ctx.getPoint(seg.v[1]);
     if (p1 && p2) {
-      content.addSegment({ p1: p1.obj as Point, p2: p2.obj as Point });
+      ctx.addSegment({ p1: p1.obj, p2: p2.obj });
     }
   });
 
   proof.premises.triangles.forEach((tri) => {
     if (tri.v.length !== 3) return;
-    const p1 = content.getPoint(tri.v[0]);
-    const p2 = content.getPoint(tri.v[1]);
-    const p3 = content.getPoint(tri.v[2]);
+    const p1 = ctx.getPoint(tri.v[0]);
+    const p2 = ctx.getPoint(tri.v[1]);
+    const p3 = ctx.getPoint(tri.v[2]);
     if (p1 && p2 && p3) {
-      content.addTriangle({
-        pts: [p1.obj as Point, p2.obj as Point, p3.obj as Point],
+      ctx.addTriangle({
+        pts: [p1.obj, p2.obj, p3.obj],
       });
     }
   });
 
   proof.premises.quadrilaterals.forEach((quad) => {
     if (quad.v.length !== 4) return;
-    const p1 = content.getPoint(quad.v[0]);
-    const p2 = content.getPoint(quad.v[1]);
-    const p3 = content.getPoint(quad.v[2]);
-    const p4 = content.getPoint(quad.v[3]);
+    const p1 = ctx.getPoint(quad.v[0]);
+    const p2 = ctx.getPoint(quad.v[1]);
+    const p3 = ctx.getPoint(quad.v[2]);
+    const p4 = ctx.getPoint(quad.v[3]);
     if (p1 && p2 && p3 && p4) {
-      content.addQuadrilateral({
-        pts: [
-          p1.obj as Point,
-          p2.obj as Point,
-          p3.obj as Point,
-          p4.obj as Point,
-        ],
+      ctx.addQuadrilateral({
+        pts: [p1.obj, p2.obj, p3.obj, p4.obj],
       });
     }
   });
 
   proof.premises.angles.forEach((ang) => {
     if (ang.v.length !== 3) return;
-    const start = content.getPoint(ang.v[0]);
-    const center = content.getPoint(ang.v[1]);
-    const end = content.getPoint(ang.v[2]);
+    const start = ctx.getPoint(ang.v[0]);
+    const center = ctx.getPoint(ang.v[1]);
+    const end = ctx.getPoint(ang.v[2]);
     if (start && center && end) {
-      content.addAngle({
-        start: start.obj as Point,
-        center: center.obj as Point,
-        end: end.obj as Point,
+      ctx.addAngle({
+        start: start.obj,
+        center: center.obj,
+        end: end.obj,
       });
     }
   });
+  return ctx;
 };
 
-export const interactiveLayoutFromProofObj = (
-  proof: ProofObjLike,
-): InteractiveAppPageProps => {
-  const ctx = new DiagramContent();
-  const highlightCtx = new DiagramContent();
-  const additionCtx = new DiagramContent();
+export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
+  const applyStmtObjects = (
+    ctx: DiagramContent,
+    frame: string,
+    mode: SVGModes,
+    stmt?: Stmt,
+  ) => {
+    if (!stmt) return;
+    if (stmt.function === "con_seg" && stmt.arguments.length === 2) {
+      EqualSegments.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
+      return;
+    }
+    if (stmt.function === "con_ang" && stmt.arguments.length === 2) {
+      EqualAngles.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
+      return;
+    }
+    if (stmt.function === "con_tri" && stmt.arguments.length === 2) {
+      CongruentTriangles.congruentLabel(
+        { ctx, frame },
+        [stmt.arguments[0].v, stmt.arguments[1].v],
+        mode,
+      );
+      return;
+    }
+    // stmt.arguments.forEach((arg) => {
+    //   if (arg.type === Obj.Segment) {
+    //     const s = ctx.getSegment(arg.v);
+    //     if (s) s.mode(frame, mode);
+    //   } else if (arg.type === Obj.Angle) {
+    //     const a = ctx.getAngle(arg.v);
+    //     if (a) a.mode(frame, mode);
+    //   } else if (arg.type === Obj.Triangle) {
+    //     const t = ctx.getTriangle(arg.v);
+    //     if (t) t.mode(frame, mode);
+    //   } else if (arg.type === Obj.Quadrilateral) {
+    //     const q = ctx.getQuadrilateral(arg.v);
+    //     if (q) q.mode(frame, mode);
+    //   } else if (arg.type === Obj.Point) {
+    //     const p = ctx.getPoint(arg.v);
+    //     if (p) p.mode(frame, mode);
+    //   }
+    // });
+  };
 
-  seedBaseContentFromPremises(proof, ctx);
-  seedBaseContentFromPremises(proof, highlightCtx);
-  seedBaseContentFromPremises(proof, additionCtx);
+  const applyPremisesObjects = (
+    ctx: DiagramContent,
+    frame: string,
+    mode: SVGModes,
+  ) => {
+    const base = ctx.getCtx();
+    base.segments.forEach((s) => s.mode(frame, mode));
+    base.angles.forEach((a) => a.mode(frame, mode));
+    base.triangles.forEach((t) => t.mode(frame, mode));
+    base.rectangles.forEach((q) => q.mode(frame, mode));
+    base.points.forEach((p) => p.mode(frame, mode));
+  };
 
-  ctx.addFrame(GIVEN_ID);
-  ctx.addFrame(PROVE_ID);
+  const premisesSummary = (isActive: boolean) => {
+    const entries: Array<(active: boolean) => JSX.Element> = [];
+    const givenSteps = proof.steps.filter((s) => s.type === "given");
+    if (givenSteps.length > 0) {
+      entries.push(stmtListToText(givenSteps.map((s) => s.statement)));
+    }
+    if (entries.length === 0) return React.createElement("span", null, "");
+    return React.createElement(
+      "span",
+      null,
+      ...entries.flatMap((entry, i) => {
+        if (i === 0) return [entry(isActive)];
+        return [", ", entry(isActive)];
+      }),
+    );
+  };
 
-  const linkedTexts: ProofTextItem[] = [];
-  const reasonMap = new Map<string, Reason>();
-
-  const givenSteps = proof.steps.filter((s) => s.type === "given");
   const proveStmt =
     proof.goal ?? proof.steps.find((s) => s.type === "goal")?.statement;
 
-  linkedTexts.push({
-    k: GIVEN_ID,
-    v: stepText(givenSteps.map((s) => stmtToText(s.statement)).join("; ")),
-    alwaysActive: true,
+  const givensMeta = makeStepMeta({
+    reason: Reasons.Given,
+    text: premisesSummary,
+    additions: ({ ctx, frame, mode }) => {
+      applyPremisesObjects(ctx, frame, mode);
+      const givenSteps = proof.steps.filter((s) => s.type === "given");
+      givenSteps.forEach((s) =>
+        applyStmtObjects(ctx, frame, mode, s.statement),
+      );
+    },
   });
-  linkedTexts.push({
-    k: PROVE_ID,
-    v: stepText(stmtToText(proveStmt)),
-    alwaysActive: true,
+
+  const provesMeta = makeStepMeta({
+    reason: Reasons.Empty,
+    prevStep: givensMeta,
+    text: stmtToText(proveStmt),
+    additions: ({ ctx, frame, mode }) =>
+      applyStmtObjects(ctx, frame, SVGModes.Derived, proveStmt),
   });
 
   const proofSteps = proof.steps.filter((s) => s.type === "proof");
+  const stepLabelToUiIndex = new Map<number, number>();
   proofSteps.forEach((step, idx) => {
-    const stepNumber = normalizeStepNumber(step, idx + 1);
-    const frame = `s${stepNumber}`;
-    ctx.addFrame(frame);
-    highlightCtx.addFrame(frame);
-    additionCtx.addFrame(frame);
+    const uiIndex = idx + 1;
+    const stepLabelNumber = normalizeStepNumber(step, uiIndex);
+    stepLabelToUiIndex.set(stepLabelNumber, uiIndex);
+  });
 
-    const depIds =
+  const stepMetas: StepMeta[] = [];
+  proofSteps.forEach((step, idx) => {
+    const dependsOn =
       step.reason?.arguments
-        ?.map((ref) => parseStepRef(ref))
+        ?.map((arg) => (/^\d+$/.test(arg) ? parseInt(arg, 10) : null))
         .filter((n): n is number => n !== null)
-        .map((n) => `s${n}`) ?? [];
-    if (depIds.length > 0) {
-      ctx.reliesOn(frame, depIds);
-    }
+        .map((stepLabelNumber) => stepLabelToUiIndex.get(stepLabelNumber))
+        .filter((n): n is number => n !== undefined)
+        .map((n) => String(n)) ?? [];
 
-    const reasonTitle = step.reason?.function ?? "";
-    reasonMap.set(frame, { title: reasonTitle, body: "" });
-    linkedTexts.push({
-      k: frame,
-      v: stepText(stmtToText(step.statement)),
-      reason: reasonTitle,
-      dependsOn: depIds.length > 0 ? new Set(depIds) : undefined,
+    const prevStep = idx === 0 ? givensMeta : stepMetas[idx - 1];
+    const stepMeta = makeStepMeta({
+      reason: reasonFromFunction(step.reason?.function),
+      prevStep,
+      dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
+      text: stmtToText(step.statement),
+      additions: ({ ctx, frame, mode }) =>
+        applyStmtObjects(ctx, frame, mode, step.statement),
     });
+    stepMetas.push(stepMeta);
   });
 
   return {
     name: proof.title ?? "Imported proof",
-    ctx: ctx.getCtx(),
-    linkedTexts,
-    reasonMap,
-    isTutorial: false,
-    highlightCtx: highlightCtx.getCtx(),
-    additionCtx: additionCtx.getCtx(),
-    diagramAspect: AspectRatio.Landscape,
+    title: proof.title ?? "Imported proof",
+    baseContent: () => seedBaseContentFromPremises(proof),
+    givens: givensMeta,
+    proves: provesMeta,
+    steps: stepMetas,
+    diagramAspect: AspectRatio.Square,
   };
 };

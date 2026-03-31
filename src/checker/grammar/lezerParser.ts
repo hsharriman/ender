@@ -1,4 +1,5 @@
 import { Obj, ParseObj } from "../../geometry-object";
+import { normalizeProofObj } from "../normalizeProofObj";
 import { ProofObj, ProofStep, Reason, Stmt } from "../types/checkerTypes";
 import { lexer } from "./parser";
 import { loadReasonDefinitionsWithBuiltins } from "./reasonParser";
@@ -271,7 +272,7 @@ export class ProofParser {
       }
     }
 
-    return result;
+    return normalizeProofObj(result);
   }
 
   private parseStatement(

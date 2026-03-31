@@ -27,7 +27,7 @@ const patternEle = (rotate: number, c: PatternColors) => (
     <rect x="0" y="0" width="100%" height="100%" fill="none" />
     <path
       d="M0 10h20z"
-      stroke-width="1"
+      strokeWidth="1"
       className={`${updateStyle(c.id)} ${
         c.id === SVGModes.Unfocused || c.id === SVGModes.ReliesOn
           ? "opacity-5"

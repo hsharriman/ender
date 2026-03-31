@@ -1,4 +1,9 @@
-export const Reasons = {
+export interface ReasonItem {
+  title: string;
+  body: string;
+  src?: string;
+}
+export const Reasons: Record<string, ReasonItem> = {
   Empty: { title: "", body: "", src: "" },
   Given: { title: "Given", body: "", src: "" },
   SAS: {
@@ -96,4 +101,35 @@ export const Reasons = {
     body: "Any four-sided polygon.",
     src: "quadrilateral",
   },
+};
+
+export const reasonFromFunction = (fn?: string): ReasonItem => {
+  if (!fn) return Reasons.Empty;
+  const key = fn.toLowerCase();
+  const map: Record<string, ReasonItem> = {
+    given: Reasons.Given,
+    sas: Reasons.SAS,
+    sss: Reasons.SSS,
+    asa: Reasons.ASA,
+    aas: Reasons.AAS,
+    rhl: Reasons.RHL,
+    cpctc: Reasons.CPCTC,
+    vert_ang: Reasons.VerticalAngles,
+    altint: Reasons.AlternateInteriorAngles,
+    altint_conv: Reasons.ConverseAltInteriorAngs,
+    perpendicular: Reasons.PerpendicularLines,
+    perp: Reasons.PerpendicularLines,
+    reflex_s: Reasons.Reflexive,
+    reflex_a: Reasons.Reflexive,
+    midpt: Reasons.Midpoint,
+    midpt_conv: Reasons.ConverseMidpoint,
+    con_right: Reasons.CongAdjAngles,
+    rectangle: Reasons.Rectangle,
+    isosceles: Reasons.Isosceles,
+    parallelogram1: Reasons.Parallelogram,
+    parallelogram2: Reasons.Parallelogram,
+    ang_bisect: Reasons.Bisector,
+    ang_bisect_conv: Reasons.Bisector,
+  };
+  return map[key] ?? { title: fn, body: "", src: "" };
 };

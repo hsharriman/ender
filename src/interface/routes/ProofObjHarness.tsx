@@ -1,11 +1,15 @@
 import { ProofParser } from "checker/grammar/lezerParser";
+import { ProofObj } from "checker/types/checkerTypes";
 import { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
-import { InteractiveAppPage } from "../components/ender/InteractiveAppPage";
 import {
+  InteractiveAppPage,
+  InteractiveAppPageProps,
+} from "../components/ender/InteractiveAppPage";
+import {
+  interactiveLayout,
   interactiveLayoutFromProofObj,
-  ProofObjLike,
 } from "../core/testinfra/setupLayout";
 
 const defaultProofText = `title: "Tutorial #1 - Prove Triangles Congruent"
@@ -27,15 +31,15 @@ const parser = new ProofParser();
 export function ProofObjHarness() {
   const [isEditorOpen, setIsEditorOpen] = useState(true);
   const [proofText, setProofText] = useState(defaultProofText);
-  const [lastGoodProof, setLastGoodProof] = useState<ProofObjLike>(
-    () => parser.parse(defaultProofText) as unknown as ProofObjLike,
+  const [lastGoodProof, setLastGoodProof] = useState<ProofObj>(
+    () => parser.parse(defaultProofText) as unknown as ProofObj,
   );
   const [parseError, setParseError] = useState("");
 
   const onTextChange = (next: string) => {
     setProofText(next);
     try {
-      const parsed = parser.parse(next) as unknown as ProofObjLike;
+      const parsed = parser.parse(next) as unknown as ProofObj;
       setLastGoodProof(parsed);
       setParseError("");
     } catch (err) {
@@ -44,7 +48,9 @@ export function ProofObjHarness() {
   };
 
   const props = useMemo(
-    () => interactiveLayoutFromProofObj(lastGoodProof),
+    () =>
+      interactiveLayout(interactiveLayoutFromProofObj(lastGoodProof))
+        .props as InteractiveAppPageProps,
     [lastGoodProof],
   );
 
