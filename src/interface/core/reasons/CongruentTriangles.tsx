@@ -31,8 +31,9 @@ export class CongruentTriangles {
     mode: SVGModes,
   ) => {
     const { ctx, frame } = props;
-    ctx.getTriangle(labels[0]).setCongruent(frame).labelMode(frame, mode);
+    ctx.getTriangle(labels[0])?.setCongruent(frame).labelMode(frame, mode);
     const t2 = ctx.getTriangle(labels[1]);
+    if (!t2) return;
     t2.setRotatePattern(true);
     t2.setCongruent(frame).labelMode(frame, mode);
   };

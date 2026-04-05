@@ -80,7 +80,7 @@ npm run check-proof -- --log-level debug proofs/yourProof.txt
 ### Programmatic Usage
 
 ```typescript
-import { checkProof } from "./proofChecker";
+import { checkProof } from "./proofCheckerCli";
 
 // Check a proof file
 checkProof("path/to/proof.txt");
@@ -110,7 +110,8 @@ ender-proof-core/
 ├── geometry/               # Geometric object implementations
 ├── proofs/                 # Example proof files
 ├── types/                  # TypeScript type definitions
-└── proofChecker.ts         # Main proof checker
+├── proofChecker.ts         # Core checker (`runProofChecker`, browser-safe)
+└── proofCheckerCli.ts      # CLI: `checkProof` + file I/O
 ```
 
 ### Key Terms for Proof

@@ -64,6 +64,7 @@ export interface ProofStep {
   reason?: Reason;
   statement?: Stmt;
   stepNumber?: string;
+  diagramDeps?: ParseDiagramStmt[];
   errors: ErrorObj[];
 }
 

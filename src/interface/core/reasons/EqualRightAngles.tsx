@@ -27,7 +27,7 @@ export class EqualRightAngles {
     mode: SVGModes,
   ) => {
     const { ctx, frame } = props;
-    ctx.getAngle(a1).addTick(frame, Obj.RightTick).mode(frame, mode);
-    ctx.getAngle(a2).addTick(frame, Obj.RightTick).mode(frame, mode);
+    ctx.getAngle(a1)?.addTick(frame, Obj.RightTick).mode(frame, mode);
+    ctx.getAngle(a2)?.addTick(frame, Obj.RightTick).mode(frame, mode);
   };
 }

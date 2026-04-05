@@ -75,12 +75,7 @@ const givens: StepMeta = makeStepMeta({
 const proves: StepMeta = makeStepMeta({
   prevStep: givens,
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(
-      { ...props, mode: SVGModes.Derived },
-      "D",
-      ["AD", "CD"],
-      1,
-    );
+    Midpoint.additions({ ...props, mode: SVGModes.Derived }, "D", "AC");
   },
   text: (active: boolean) => Midpoint.text("D", "AC")(true),
 });

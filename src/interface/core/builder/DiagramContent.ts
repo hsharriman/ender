@@ -23,6 +23,7 @@ import {
 // TODO has lots of redundancy with ProofContent
 export class DiagramContent {
   private ctx: DiagramRenderCtx;
+  private warnedMissingKeys = new Set<string>();
   constructor(ctx?: DiagramRenderCtx) {
     this.ctx = ctx ?? {
       points: [],
@@ -59,55 +60,55 @@ export class DiagramContent {
   ) => {
     const pt = new Point(props);
     const ptBuilder = new PointBuilder(pt, showPoint, offset);
-    if (!this.getPoint(pt.label)) {
+    if (!this.findPoint(pt.label)) {
       this.ctx.points.push(ptBuilder);
       return ptBuilder;
     }
-    return this.getPoint(pt.label);
+    return this.findPoint(pt.label);
   };
 
   addSegment = (props: SegmentProps) => {
     const s = new Segment(props);
     const sBuilder = new SegmentBuilder(s);
-    if (!this.getSegment(s.label)) {
+    if (!this.findSegment(s.label)) {
       this.ctx.segments.push(sBuilder);
       return sBuilder;
     }
-    return this.getSegment(s.label);
+    return this.findSegment(s.label);
   };
 
   addAngle = (props: AngleProps) => {
     const a = new Angle(props);
     const aBuilder = new AngleBuilder(a);
-    if (!this.getAngle(a.label)) {
+    if (!this.findAngle(a.label)) {
       this.ctx.angles.push(aBuilder);
       return aBuilder;
     }
-    return this.getAngle(a.label);
+    return this.findAngle(a.label);
   };
 
   addTriangle = (props: TriangleProps, rotatePattern?: boolean) => {
     const t = new Triangle(props);
     const tBuilder = new TriangleBuilder(t, rotatePattern);
-    if (!this.getTriangle(t.label)) {
+    if (!this.findTriangle(t.label)) {
       this.ctx.triangles.push(tBuilder);
       this.addSegments(tBuilder.s.map((s) => s.obj));
       this.addAngles(tBuilder.a.map((a) => a.obj));
       return tBuilder;
     }
-    return this.getTriangle(t.label);
+    return this.findTriangle(t.label);
   };
 
   addQuadrilateral = (props: QuadrilateralProps) => {
     const q = new Quadrilateral(props);
     const qBuilder = new QuadrilateralBuilder(q);
-    if (!this.getQuadrilateral(q.label)) {
+    if (!this.findQuadrilateral(q.label)) {
       this.ctx.rectangles.push(qBuilder);
       this.addSegments(qBuilder.s.map((s) => s.obj));
       this.addAngles(qBuilder.a.map((a) => a.obj));
       return qBuilder;
     }
-    return this.getQuadrilateral(q.label);
+    return this.findQuadrilateral(q.label);
   };
 
   addPoints = (propsArr: PointProps[]) => {
@@ -122,14 +123,46 @@ export class DiagramContent {
     return propsArr.map((a) => this.addAngle(a));
   };
 
-  getPoint = (label: string) =>
+  private warnMissing = (
+    kind: "segment" | "angle" | "triangle" | "quadrilateral",
+    label: string,
+  ) => {
+    const key = `${kind}:${label}`;
+    if (this.warnedMissingKeys.has(key)) return;
+    this.warnedMissingKeys.add(key);
+    console.log(`[diagram] Missing ${kind} reference: "${label}"`);
+  };
+
+  private findPoint = (label: string) =>
     this.ctx.points.filter((p) => p.obj.matches(label))[0];
-  getSegment = (label: string) =>
+  private findSegment = (label: string) =>
     this.ctx.segments.filter((s) => s.obj.matches(label))[0];
-  getAngle = (label: string) =>
+  private findAngle = (label: string) =>
     this.ctx.angles.filter((a) => a.obj.matches(label))[0];
-  getTriangle = (label: string) =>
+  private findTriangle = (label: string) =>
     this.ctx.triangles.filter((t) => t.obj.matches(label))[0];
-  getQuadrilateral = (label: string) =>
+  private findQuadrilateral = (label: string) =>
     this.ctx.rectangles.filter((r) => r.obj.matches(label))[0];
+
+  getPoint = (label: string) => this.findPoint(label);
+  getSegment = (label: string) => {
+    const seg = this.findSegment(label);
+    if (!seg) this.warnMissing("segment", label);
+    return seg;
+  };
+  getAngle = (label: string) => {
+    const ang = this.findAngle(label);
+    if (!ang) this.warnMissing("angle", label);
+    return ang;
+  };
+  getTriangle = (label: string) => {
+    const tri = this.findTriangle(label);
+    if (!tri) this.warnMissing("triangle", label);
+    return tri;
+  };
+  getQuadrilateral = (label: string) => {
+    const quad = this.findQuadrilateral(label);
+    if (!quad) this.warnMissing("quadrilateral", label);
+    return quad;
+  };
 }

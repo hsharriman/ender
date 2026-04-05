@@ -13,6 +13,7 @@ export class EqualAngles {
   ) => {
     const a1a = props.ctx.getAngle(a1);
     const a2a = props.ctx.getAngle(a2);
+    if (!a1a || !a2a) return;
     a1a
       .addTick(props.frame, Obj.EqualAngleTick, numTicks)
       .mode(props.frame, props.mode);
@@ -38,8 +39,14 @@ export class EqualAngles {
     num: number = 1,
   ) => {
     const { ctx, frame } = props;
-    ctx.getAngle(a1).addTick(frame, Obj.EqualAngleTick, num).mode(frame, mode);
-    ctx.getAngle(a2).addTick(frame, Obj.EqualAngleTick, num).mode(frame, mode);
+    ctx
+      .getAngle(a1)
+      ?.addTick(frame, Obj.EqualAngleTick, num)
+      .mode(frame, mode);
+    ctx
+      .getAngle(a2)
+      ?.addTick(frame, Obj.EqualAngleTick, num)
+      .mode(frame, mode);
   };
 }
 

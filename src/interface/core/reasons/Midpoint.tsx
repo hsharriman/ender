@@ -1,5 +1,5 @@
 import { segmentStr } from "../geometryText";
-import { SVGModes } from "../types/diagramTypes";
+import { ShowPoint, SVGModes } from "../types/diagramTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
 import { EqualSegments } from "./EqualSegments";
 
@@ -8,14 +8,16 @@ export class Midpoint {
   static additions = (
     props: StepFocusProps,
     pt: string,
-    segs: [string, string],
-    num?: number,
+    seg: string,
     ptMode?: SVGModes,
   ) => {
-    props.ctx.getPoint(pt).mode(props.frame, ptMode || props.mode);
-    props.ctx.getSegment(segs[0]).mode(props.frame, props.mode);
-    props.ctx.getSegment(segs[1]).mode(props.frame, props.mode);
-    // EqualSegments.additions(props, segs, num);
+    props.ctx
+      .getPoint(pt)
+      ?.setShowPoint(ShowPoint.Adaptive)
+      .mode(props.frame, ptMode || props.mode);
+    const [s1, s2] = midpointSubsegments(seg, pt);
+    props.ctx.getSegment(s1)?.mode(props.frame, props.mode);
+    props.ctx.getSegment(s2)?.mode(props.frame, props.mode);
   };
   static text = (label: string, pt: string) => (isActive: boolean) => {
     return (
@@ -35,7 +37,16 @@ export class Midpoint {
     mode: SVGModes,
     num?: number,
   ) => {
-    props.ctx.getPoint(pt).mode(props.frame, ptMode);
+    props.ctx.getPoint(pt)?.mode(props.frame, ptMode);
     EqualSegments.highlight(props, segs, mode, num);
   };
 }
+
+const midpointSubsegments = (
+  segment: string,
+  midpoint: string,
+): [string, string] => {
+  const a = segment[0];
+  const b = segment[segment.length - 1];
+  return [`${a}${midpoint}`, `${midpoint}${b}`];
+};

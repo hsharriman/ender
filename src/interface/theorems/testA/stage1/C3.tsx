@@ -72,14 +72,14 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("QRP").mode(props.frame, props.mode);
     props.ctx.getTriangle("MRN").mode(props.frame, props.mode);
     EqualRightAngles.additions(props, ["QPR", "RMN"]);
-    Midpoint.additions(props, "R", ["PR", "RM"]);
+    Midpoint.additions(props, "R", "PM");
   },
 });
 
 const proves: StepMeta = makeStepMeta({
   prevStep: givens,
   additions: (props: StepFocusProps) => {
-    Midpoint.additions({ ...props, mode: SVGModes.Derived }, "R", ["QR", "NR"]);
+    Midpoint.additions({ ...props, mode: SVGModes.Derived }, "R", "QR");
   },
   text: (active: boolean) => Midpoint.text("R", "QN")(true),
 });
@@ -97,7 +97,7 @@ const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
   prevStep: step1,
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "R", ["PR", "RM"]);
+    Midpoint.additions(props, "R", "PM");
   },
   text: Midpoint.text("R", "PM"),
 });
@@ -121,14 +121,7 @@ const step3: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) =>
     EqualAngles.additions(props, ["QRP", "MRN"]),
   highlight: (props: StepProps) =>
-    VerticalAngles.highlight(
-      props,
-      {
-        angs: ["QRP", "MRN"],
-        segs: ["QR", "RN"],
-      },
-      ["PR", "RM"],
-    ),
+    VerticalAngles.highlight(props, "PM", "QN", "R"),
 });
 
 const step4: StepMeta = makeStepMeta({

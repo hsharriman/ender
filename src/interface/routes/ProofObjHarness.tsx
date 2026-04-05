@@ -1,4 +1,5 @@
 import { ProofParser } from "checker/grammar/lezerParser";
+import { runProofChecker } from "checker/proofChecker";
 import buggyProofUrl from "checker/proofs/buggyproof.txt";
 import s1c1Url from "checker/proofs/s1c1.txt";
 import s1c2Url from "checker/proofs/s1c2.txt";
@@ -58,9 +59,11 @@ export const ProofObjHarness = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(true);
   const [selectedProofKey, setSelectedProofKey] = useState("tutorial");
   const [proofText, setProofText] = useState(defaultProofText);
-  const [lastGoodProof, setLastGoodProof] = useState<ProofObj>(
-    () => parser.parse(defaultProofText) as unknown as ProofObj,
-  );
+  const [lastGoodProof, setLastGoodProof] = useState<ProofObj>(() => {
+    const p = parser.parse(defaultProofText) as unknown as ProofObj;
+    runProofChecker(p);
+    return p;
+  });
   const [parseVersion, setParseVersion] = useState(0);
   const [parseError, setParseError] = useState("");
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -70,6 +73,7 @@ export const ProofObjHarness = () => {
     setProofText(next);
     try {
       const parsed = parser.parse(next) as unknown as ProofObj;
+      runProofChecker(parsed);
       setLastGoodProof(parsed);
       // Reset InteractiveAppPage/ProofRows state to "Given" after successful parse.
       setParseVersion((v) => v + 1);

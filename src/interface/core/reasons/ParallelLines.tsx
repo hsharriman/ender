@@ -11,11 +11,11 @@ export class ParallelLines {
   ) => {
     props.ctx
       .getSegment(s1)
-      .addTick(props.frame, Obj.ParallelTick, numTicks)
+      ?.addTick(props.frame, Obj.ParallelTick, numTicks)
       .mode(props.frame, props.mode);
     props.ctx
       .getSegment(s2)
-      .addTick(props.frame, Obj.ParallelTick, numTicks)
+      ?.addTick(props.frame, Obj.ParallelTick, numTicks)
       .mode(props.frame, props.mode);
   };
   static text =
@@ -35,7 +35,7 @@ export class ParallelLines {
     mode: SVGModes,
   ) => {
     const { ctx, frame } = props;
-    ctx.getSegment(s1).addTick(frame, Obj.ParallelTick).mode(frame, mode);
-    ctx.getSegment(s2).addTick(frame, Obj.ParallelTick).mode(frame, mode);
+    ctx.getSegment(s1)?.addTick(frame, Obj.ParallelTick).mode(frame, mode);
+    ctx.getSegment(s2)?.addTick(frame, Obj.ParallelTick).mode(frame, mode);
   };
 }

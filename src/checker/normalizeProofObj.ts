@@ -143,7 +143,8 @@ export function normalizeProofObj(proof: ProofObj): ProofObj {
     normalizeDiagramStmt,
   );
 
-  const steps = proof.steps.map(normalizeStep);
+  // `diagramDeps` is unset until `runProofChecker` (parse → normalize → checker).
+  const steps = proof.steps.map((step) => normalizeStep(step));
   const goal = normalizeStmt(proof.goal);
 
   return {

@@ -55,8 +55,8 @@ const givens: StepMeta = makeStepMeta({
   additions: (props: StepFocusProps) => {
     props.ctx.getTriangle("MYZ").mode(props.frame, props.mode);
     props.ctx.getTriangle("MWX").mode(props.frame, props.mode);
-    Midpoint.additions(props, "M", ["WM", "MZ"]);
-    Midpoint.additions(props, "M", ["YM", "XM"], 2);
+    Midpoint.additions(props, "M", "WZ");
+    Midpoint.additions(props, "M", "YM");
   },
 });
 
@@ -73,7 +73,7 @@ const step1: StepMeta = makeStepMeta({
   prevStep: givens,
   text: Midpoint.text("M", "WZ"),
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "M", ["WM", "MZ"]);
+    Midpoint.additions(props, "M", "WZ");
   },
 });
 
@@ -82,7 +82,7 @@ const step2: StepMeta = makeStepMeta({
   prevStep: step1,
   text: Midpoint.text("M", "XY"),
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "M", ["YM", "XM"], 2);
+    Midpoint.additions(props, "M", "YM");
   },
 });
 
@@ -106,11 +106,7 @@ const step5: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["YMZ", "WMX"]),
   text: EqualAngles.text(["YMZ", "WMX"]),
   highlight: (props: StepProps) =>
-    VerticalAngles.highlight(
-      props,
-      { angs: ["YMZ", "WMX"], segs: ["WM", "MZ"] },
-      ["XM", "YM"],
-    ),
+    VerticalAngles.highlight(props, "WZ", "XY", "M"),
 });
 
 const step6SASProps: SASProps = {

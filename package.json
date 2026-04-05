@@ -16,7 +16,7 @@
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "checkProof": "tsx src/checker/proofChecker.ts",
+    "checkProof": "tsx src/checker/proofCheckerCli.ts",
     "debugProof": "tsx src/checker/debugProofChecker.ts",
     "test-core": "jest"
   },

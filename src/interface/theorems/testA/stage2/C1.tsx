@@ -74,7 +74,7 @@ const givens: StepMeta = makeStepMeta({
     props.ctx.getTriangle("FGJ").mode(props.frame, props.mode);
     props.ctx.getSegment("FJ").mode(props.frame, props.mode);
     props.ctx.getSegment("GJ").mode(props.frame, props.mode);
-    Midpoint.additions(props, "J", ["EJ", "JH"]);
+    Midpoint.additions(props, "J", "EH");
   },
 });
 
@@ -117,7 +117,7 @@ const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
   prevStep: step1,
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "J", ["EJ", "JH"]);
+    Midpoint.additions(props, "J", "EH");
   },
   text: Midpoint.text("J", "EH"),
 });

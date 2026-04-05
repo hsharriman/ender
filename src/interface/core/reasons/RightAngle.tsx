@@ -9,7 +9,7 @@ export class RightAngle {
   static additions = (props: StepFocusProps, a: string) => {
     props.ctx
       .getAngle(a)
-      .addTick(props.frame, Obj.RightTick)
+      ?.addTick(props.frame, Obj.RightTick)
       .mode(props.frame, props.mode);
   };
   static text = (a: string) => (isActive: boolean) => {

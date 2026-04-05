@@ -1,12 +1,13 @@
 import { Stmt } from "checker/types/checkerTypes";
+import { DiagramContent } from "../builder/DiagramContent";
 import { CongruentTriangles } from "../reasons/CongruentTriangles";
 import { EqualAngles } from "../reasons/EqualAngles";
 import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
+import { Midpoint } from "../reasons/Midpoint";
 import { ParallelLines } from "../reasons/ParallelLines";
 import { RightAngle } from "../reasons/RightAngle";
 import { SVGModes } from "../types/diagramTypes";
-import { DiagramContent } from "../builder/DiagramContent";
 
 const normalizeCongruentPairKey = (a: string, b: string): string =>
   [a, b].sort().join("|");
@@ -71,10 +72,10 @@ export const createStmtObjectApplier =
     }
     if (stmt.function === "con_ang" && stmt.arguments.length === 2) {
       if (options?.isRightAngleEquality) {
-        EqualRightAngles.additions(
-          { ctx, frame, mode },
-          [stmt.arguments[0].v, stmt.arguments[1].v],
-        );
+        EqualRightAngles.additions({ ctx, frame, mode }, [
+          stmt.arguments[0].v,
+          stmt.arguments[1].v,
+        ]);
         return;
       }
       const key = normalizeCongruentPairKey(
@@ -98,10 +99,10 @@ export const createStmtObjectApplier =
       return;
     }
     if (stmt.function === "para" && stmt.arguments.length === 2) {
-      ParallelLines.additions(
-        { ctx, frame, mode },
-        [stmt.arguments[0].v, stmt.arguments[1].v],
-      );
+      ParallelLines.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
       return;
     }
     if (stmt.function === "right" && stmt.arguments.length === 1) {
@@ -109,10 +110,16 @@ export const createStmtObjectApplier =
       return;
     }
     if (stmt.function === "con_right" && stmt.arguments.length === 2) {
-      EqualRightAngles.additions(
-        { ctx, frame, mode },
-        [stmt.arguments[0].v, stmt.arguments[1].v],
-      );
+      EqualRightAngles.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
+      return;
+    }
+    if (stmt.function === "midpt" && stmt.arguments.length === 2) {
+      const segment = stmt.arguments[0].v;
+      const point = stmt.arguments[1].v;
+      Midpoint.additions({ ctx, frame, mode }, point, segment);
     }
   };
 
@@ -128,4 +135,3 @@ export const applyPremisesObjects = (
   base.rectangles.forEach((q) => q.mode(frame, mode));
   base.points.forEach((p) => p.mode(frame, mode));
 };
-

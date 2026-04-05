@@ -14,7 +14,7 @@ export class EqualTriangles {
       );
     };
   static additions = (props: StepFocusProps, [t1, t2]: [string, string]) => {
-    props.ctx.getTriangle(t1).mode(props.frame, props.mode);
-    props.ctx.getTriangle(t2).mode(props.frame, props.mode);
+    props.ctx.getTriangle(t1)?.mode(props.frame, props.mode);
+    props.ctx.getTriangle(t2)?.mode(props.frame, props.mode);
   };
 }

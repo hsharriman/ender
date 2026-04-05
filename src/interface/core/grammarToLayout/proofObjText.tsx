@@ -4,6 +4,7 @@ import { EqualAngles } from "../reasons/EqualAngles";
 import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
 import { EqualTriangles } from "../reasons/EqualTriangles";
+import { Midpoint } from "../reasons/Midpoint";
 import { ParallelLines } from "../reasons/ParallelLines";
 import { RightAngle } from "../reasons/RightAngle";
 
@@ -27,6 +28,9 @@ export const stmtToText = (stmt?: Stmt) => (isActive: boolean) => {
   }
   if (stmt.function === "con_right" && args.length === 2) {
     return EqualRightAngles.text([args[0], args[1]])(isActive);
+  }
+  if (stmt.function === "midpt" && args.length === 2) {
+    return Midpoint.text(args[1], args[0])(isActive);
   }
   return React.createElement(
     "span",

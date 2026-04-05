@@ -1,3 +1,4 @@
+// DEPRECATED: Human-readable reference only. Source of truth is reasons.defs.ts.
 // ------------ Triangle Reasons ------------ 
 // iscosceles triangle
 reason isosceles(con_seg) -> isosceles

@@ -100,7 +100,7 @@ const step2: StepMeta = makeStepMeta({
   reason: Reasons.Given,
   prevStep: step1,
   additions: (props: StepFocusProps) => {
-    Midpoint.additions(props, "E", ["AE", "EC"]);
+    Midpoint.additions(props, "E", "AC");
   },
   text: Midpoint.text("E", "AC"),
 });

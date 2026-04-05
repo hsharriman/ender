@@ -3,6 +3,7 @@ import React from "react";
 import { reasonFromFunction, Reasons } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
 import { AspectRatio } from "../diagramSvg/svgTypes";
+import { VerticalAngles } from "../reasons/VerticalAngles";
 import { SVGModes } from "../types/diagramTypes";
 import { LayoutProps } from "../types/layoutTypes";
 import { StepMeta } from "../types/stepTypes";
@@ -30,10 +31,14 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
       (reasonFunction ?? "").toLowerCase(),
     );
 
+  // const isVertAngReason = (reasonFunction?: string): boolean =>
+  //   (reasonFunction ?? "").toLowerCase() === "vert_ang";
+
   const tickTracker = buildCongruenceTickTracker([
     ...givenSteps.map((s) => s.statement),
     ...proofSteps.map((s) =>
-      s.statement?.function === "con_ang" && isConRightReason(s.reason?.function)
+      s.statement?.function === "con_ang" &&
+      isConRightReason(s.reason?.function)
         ? undefined
         : s.statement,
     ),
@@ -62,7 +67,9 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
     text: premisesSummary,
     additions: ({ ctx, frame, mode }) => {
       applyPremisesObjects(ctx, frame, mode);
-      givenSteps.forEach((s) => applyStmtObjects(ctx, frame, mode, s.statement));
+      givenSteps.forEach((s) =>
+        applyStmtObjects(ctx, frame, mode, s.statement),
+      );
     },
   });
 
@@ -99,9 +106,19 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
         isRightAngleEquality: isConRightReason(depStep.reason?.function),
       }));
 
-    const isGivenReason = (step.reason?.function ?? "").toLowerCase() === "given";
-    const isCpctcReason = (step.reason?.function ?? "").toLowerCase() === "cpctc";
+    const isGivenReason =
+      (step.reason?.function ?? "").toLowerCase() === "given";
+    const isCpctcReason =
+      (step.reason?.function ?? "").toLowerCase() === "cpctc";
     const isRightAngleEqualityStep = isConRightReason(step.reason?.function);
+    // Diagram premises for reasons with `diagramDependencies` are attached only
+    // after `checkReasonApplication` in `runProofChecker`.
+    const intersectSegDep = step.diagramDeps?.find(
+      (d) => d.statement.function === "intersect_seg",
+    );
+    // const hasVertAngDiagramHighlight =
+    //   isVertAngReason(step.reason?.function) &&
+    //   intersectSegDep?.statement.arguments?.length === 3;
 
     const prevStep = idx === 0 ? givensMeta : stepMetas[idx - 1];
     const stepMeta = makeStepMeta({
@@ -122,13 +139,21 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
         });
       },
       highlight:
-        !isGivenReason && dependencyStatements.length > 0
+        !isGivenReason &&
+        (dependencyStatements.length > 0 || Boolean(step.diagramDeps?.length))
           ? ({ ctx, frame }) => {
               dependencyStatements.forEach((dep) =>
                 applyStmtObjects(ctx, frame, SVGModes.ReliesOn, dep.stmt, {
                   isRightAngleEquality: dep.isRightAngleEquality,
                 }),
               );
+
+              if (intersectSegDep) {
+                const [s1, s2, p] = intersectSegDep.statement.arguments.map(
+                  (a) => a.v,
+                );
+                VerticalAngles.highlight({ ctx, frame }, s1, s2, p);
+              }
             }
           : undefined,
     });
@@ -145,4 +170,3 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
     diagramAspect: AspectRatio.Square,
   };
 };
-

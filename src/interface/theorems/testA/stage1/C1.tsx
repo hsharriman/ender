@@ -117,14 +117,7 @@ const step4: StepMeta = makeStepMeta({
     EqualAngles.additions(props, ["CMA", "DMB"]),
   text: EqualAngles.text(["CMA", "DMB"]),
   highlight: (props: StepProps) =>
-    VerticalAngles.highlight(
-      props,
-      {
-        angs: ["CMA", "DMB"],
-        segs: ["AM", "BM"],
-      },
-      ["CM", "DM"],
-    ),
+    VerticalAngles.highlight(props, "AB", "CD", "M"),
 });
 
 const step4SASProps: SASProps = {

@@ -13,11 +13,11 @@ export class EqualSegments {
   ) => {
     props.ctx
       .getSegment(s1)
-      .addTick(props.frame, Obj.EqualLengthTick, numTicks)
+      ?.addTick(props.frame, Obj.EqualLengthTick, numTicks)
       .mode(props.frame, props.mode);
     props.ctx
       .getSegment(s2)
-      .addTick(props.frame, Obj.EqualLengthTick, numTicks)
+      ?.addTick(props.frame, Obj.EqualLengthTick, numTicks)
       .mode(props.frame, props.mode);
   };
   static text =
@@ -40,11 +40,11 @@ export class EqualSegments {
     const { ctx, frame } = props;
     ctx
       .getSegment(s1)
-      .addTick(frame, Obj.EqualLengthTick, num)
+      ?.addTick(frame, Obj.EqualLengthTick, num)
       .mode(frame, mode);
     ctx
       .getSegment(s2)
-      .addTick(frame, Obj.EqualLengthTick, num)
+      ?.addTick(frame, Obj.EqualLengthTick, num)
       .mode(frame, mode);
   };
 }

@@ -130,9 +130,12 @@ export class Diagram extends React.Component<DiagramProps> {
         {this.renderSegments(ctx, this.props.activeFrame, layer)}
         {this.renderTriangles(ctx, this.props.activeFrame, layer)}
         {this.renderAngles(ctx, this.props.activeFrame, layer)}
-        {this.renderPoints(ctx, this.props.activeFrame, layer)}
       </>
     );
+  };
+
+  renderPointsFromCtx = (ctx: DiagramRenderCtx, layer: number) => {
+    return <>{this.renderPoints(ctx, this.props.activeFrame, layer)}</>;
   };
 
   render() {
@@ -156,14 +159,26 @@ export class Diagram extends React.Component<DiagramProps> {
           preserveAspectRatio="xMidYMid meet"
         >
           {LinePatternDefs}
+          {/* Render non-point geometry first. */}
           {this.renderObjectsFromCtx(this.props.ctx, 0)}
-          {this.props.additionCtx &&
-            this.renderObjectsFromCtx(this.props.additionCtx, 2)}
+          {/* Render dependency highlights (ReliesOn) before derived additions. */}
           {this.props.highlightCtx &&
             this.props.highlightCtx.frames.filter(
               (f) => f === this.props.activeFrame,
             ).length > 0 &&
             this.renderObjectsFromCtx(this.props.highlightCtx, 1)}
+          {this.props.additionCtx &&
+            this.renderObjectsFromCtx(this.props.additionCtx, 2)}
+
+          {/* Render all points last so they stay on top. */}
+          {this.renderPointsFromCtx(this.props.ctx, 0)}
+          {this.props.highlightCtx &&
+            this.props.highlightCtx.frames.filter(
+              (f) => f === this.props.activeFrame,
+            ).length > 0 &&
+            this.renderPointsFromCtx(this.props.highlightCtx, 1)}
+          {this.props.additionCtx &&
+            this.renderPointsFromCtx(this.props.additionCtx, 2)}
         </svg>
       </div>
     );

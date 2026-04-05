@@ -352,6 +352,8 @@ export class ProofParser {
         reason: reason.obj,
         statement: conclusion.obj,
         stepNumber: stepLabel,
+        // Diagram deps are attached by the checker after geometric validation
+        // (`runProofChecker` → `checkReasonApplication`).
         errors: [],
       },
       endIndex: conclusion.endIndex,

@@ -1,3 +1,4 @@
+// DEPRECATED: Human-readable reference only. Source of truth is stmts.defs.ts.
 // ------ Statements that can only appear in the diagram premises of a proof ----- 
 premises
 // point p is on the segment s

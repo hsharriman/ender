@@ -3,6 +3,7 @@ title: "S1INC3 - Prove Rectangle"
 premises:
 pt: K (14, 2, 0, -17), L (2, 2, -15, -15), M (2, 9, -10, 5), N (14, 9, 8, 0)
 seg: MK
+tri: t_KLM t_MNK
 quad: q_KLMN
 [g_01] right(a_KLM) [01]
 [g_02] con_seg(LM,NK) [02]

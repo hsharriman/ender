@@ -8,7 +8,7 @@ export class Reflexive {
   static additions = (props: StepFocusProps, s: string, num = 1) => {
     props.ctx
       .getSegment(s)
-      .addTick(props.frame, Obj.EqualLengthTick, num)
+      ?.addTick(props.frame, Obj.EqualLengthTick, num)
       .mode(props.frame, props.mode);
   };
   static text = (s: string) => (isActive: boolean) => {
