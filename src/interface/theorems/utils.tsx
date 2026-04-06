@@ -54,10 +54,3 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   };
 };
 
-export const possibleStepAnswers = (s: number, e: number) => {
-  let answers = [];
-  for (let i = s; i <= e; i++) {
-    answers.push("Step " + i);
-  }
-  return answers;
-};

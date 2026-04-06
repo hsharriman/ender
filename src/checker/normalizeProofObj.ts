@@ -6,6 +6,10 @@ import {
   Stmt,
 } from "./types/checkerTypes";
 
+export const stripStepRefBrackets = (value: string): string => {
+  return value.replace(/[[\]]/g, "");
+};
+
 /** Strip t_/a_/q_ prefixes from premise object labels (lexer keeps raw tokens). */
 const stripPremiseObjPrefix = (type: Obj, v: string): string => {
   if (type === Obj.Triangle && v.startsWith("t_")) return v.slice(2);
@@ -16,31 +20,32 @@ const stripPremiseObjPrefix = (type: Obj, v: string): string => {
 
 /**
  * Normalize step refs: drop brackets, drop leading zeros on numeric ids.
- * `[01]` → `1`, `[g_01]` → `g_1`, `[d_03]` → `d_3`
+ * `[01]` → `1`, `g_01` → `g_1`, `[d_03]` → `d_3`.
+ * Source uses `[g_n]` only in premises; reason deps use bare `g_n` (parser-enforced).
  */
 export const normalizeStepRef = (ref: string): string => {
   const trimmed = ref.trim();
-  const mG = trimmed.match(/^\[g_0*(\d+)\]$/i);
-  if (mG) return `g_${parseInt(mG[1], 10)}`;
+  const mGBare = trimmed.match(/^g_0*(\d+)$/i);
+  if (mGBare) return `g_${parseInt(mGBare[1], 10)}`;
   const mD = trimmed.match(/^\[d_0*(\d+)\]$/i);
   if (mD) return `d_${parseInt(mD[1], 10)}`;
   const mNum = trimmed.match(/^\[0*(\d+)\]$/);
   if (mNum) return String(parseInt(mNum[1], 10));
-  const bare = trimmed.replace(/[[\]]/g, "");
+  const bare = stripStepRefBrackets(trimmed);
   if (/^\d+$/.test(bare)) return String(parseInt(bare, 10));
   return trimmed;
 };
 
 const normalizeDiagramStepNumber = (raw: string): string => {
-  const s = raw.replace(/[[\]]/g, "");
+  const s = stripStepRefBrackets(raw);
   const m = s.match(/^d_0*(\d+)$/i);
   if (m) return `d_${parseInt(m[1], 10)}`;
   return s;
 };
 
 const normalizeGivenPremiseStepNumber = (raw: string): string => {
-  const m = raw.match(/^\[g_0*(\d+)\]$/i);
-  if (m) return `g_${parseInt(m[1], 10)}`;
+  const bare = raw.match(/^g_0*(\d+)$/i);
+  if (bare) return `g_${parseInt(bare[1], 10)}`;
   return normalizeStepRef(raw);
 };
 
@@ -72,7 +77,7 @@ const normalizeStmt = (stmt: Stmt | undefined): Stmt | undefined => {
 const normalizeReasonArgs = (args: string[]): string[] => {
   return args.map((a) => {
     const t = a.trim();
-    if (/^\[g_/i.test(t) || /^\[d_/i.test(t) || /^\[\d/.test(t)) {
+    if (/^g_\d/i.test(t) || /^\[d_/i.test(t) || /^\[\d/.test(t)) {
       return normalizeStepRef(t);
     }
     return t;
@@ -139,9 +144,8 @@ export const normalizeProofObj = (proof: ProofObj): ProofObj => {
     v: stripPremiseObjPrefix(Obj.Quadrilateral, o.v),
   }));
 
-  premises.diagramStatements = premises.diagramStatements.map(
-    normalizeDiagramStmt,
-  );
+  premises.diagramStatements =
+    premises.diagramStatements.map(normalizeDiagramStmt);
 
   // `diagramDeps` is unset until `runProofChecker` (parse → normalize → checker).
   const steps = proof.steps.map((step) => normalizeStep(step));

@@ -5,18 +5,18 @@ pt: A (2 ,1, -15, -15), B (5.5, 8, 0, 5), C (9, 1, 0, -17), D (5.5, 1, -5, -18)
 tri: t_ABD t_CBD
 seg: AC
 ang: a_ABC
-[g_01] right(a_ADB)
-[g_02] ang_bisect(a_ABC, BD)
+[g_1] right(a_ADB)
+[g_2] ang_bisect(a_ABC, BD)
 [d_01] on_line(AC, D)
 -> midpt(AC,D)
 
 steps:
-[01] given([g_01]) -> right(a_ADB)
-[02] given([g_02]) -> ang_bisect(a_ABC, BD)
-[03] ang_bisect([02]) -> con_ang(a_ABD, a_DBC)
-[04] perp([01]) -> perp(BD, AC)
-[05] perp_con_ang([04]) -> con_right(a_ADB, a_BDC) // angles on perp are both 90
+[01] given(g_1) -> right(a_ADB)
+[02] given(g_2) -> ang_bisect(a_ABC, BD)
+[03] ang_bisect(2) -> con_ang(a_ABD, a_DBC)
+[04] perp(1) -> perp(BD, AC)
+[05] perp_con_ang(4) -> con_right(a_ADB, a_BDC) // angles on perp are both 90
 [06] reflex_s() -> con_seg(BD, BD)
-[07] asa([05], [06], [03]) -> con_tri(t_ABD, t_CBD)
-[08] cpctc([07]) -> con_seg(AD, DC)
-[09] midpt_conv([08]) -> midpt(AC, D)
+[07] asa(5, 6, 3) -> con_tri(t_ABD, t_CBD)
+[08] cpctc(7) -> con_seg(AD, DC)
+[09] midpt_conv(8) -> midpt(AC, D)

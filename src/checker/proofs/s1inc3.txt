@@ -5,13 +5,13 @@ pt: K (14, 2, 0, -17), L (2, 2, -15, -15), M (2, 9, -10, 5), N (14, 9, 8, 0)
 seg: MK
 tri: t_KLM t_MNK
 quad: q_KLMN
-[g_01] right(a_KLM) [01]
-[g_02] con_seg(LM,NK) [02]
+[g_1] right(a_KLM) [01]
+[g_2] con_seg(LM,NK) [02]
 -> con_tri(t_KLM,t_MNK)
 
 steps:
-[01] given([g_02]) -> con_seg(LM,NK)
-[02] given([g_01]) -> right(a_KLM) 
-[03] rectangle([02]) -> con_right(a_KLM,a_MNK)
+[01] given(g_2) -> con_seg(LM,NK)
+[02] given(g_1) -> right(a_KLM) 
+[03] rectangle(2) -> con_right(a_KLM,a_MNK)
 [04] reflex_s() -> con_seg(MK, MK)
-[05] rhl([03], [01], [04]) -> con_tri(t_KLM,t_MNK)  // Missing dependency for AAS on invalid reason
+[05] rhl(3, 1, 4) -> con_tri(t_KLM,t_MNK)  // Missing dependency for AAS on invalid reason

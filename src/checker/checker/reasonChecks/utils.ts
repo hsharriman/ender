@@ -35,7 +35,7 @@ export const addReasonCheckError = (
   details: Record<string, unknown>,
 ) => {
   errors.push({
-    type: "reason_check",
+    type: "reason_dep_type_mismatch",
     data: details,
   });
   return errors;

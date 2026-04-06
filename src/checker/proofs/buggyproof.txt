@@ -5,15 +5,15 @@ pt: A, B, C, D, M
 tri: t_ACM t_BDM
 [d_01] intersect_seg(AB,CD,M)
 [d_02] transversal(A, C, A, B, D, B)
-[g_01] con_seg(AM,BM) 
-[g_02] con_seg(CM,DM)
+[g_1] con_seg(AM,BM) 
+[g_2] con_seg(CM,DM)
 -> para(AC,BD)
 
 steps:
-[01] given([g_02]) ->  con_seg(CM,DM)
-[02] given([g_01]) ->  con_seg(CM,DM) 
+[01] given(g_2) ->  con_seg(CM,DM)
+[02] given(g_1) ->  con_seg(CM,DM) 
 [03] vert_ang() -> con_ang(a_CMA, a_DMB)
-[04] sas([g_01], [03], [g_02]) -> con_tri(t_ACM,t_BDM)
-[05] cpctc([06]) -> con_ang(a_CAM,a_DBM)
-[06] given([01]) -> con_seg(CM, DM)
-[07] altint_conv([07]) -> para(AC, BD)
+[04] sas(g_1, 3, g_2) -> con_tri(t_ACM,t_BDM)
+[05] cpctc(6) -> con_ang(a_CAM,a_DBM)
+[06] given(1) -> con_seg(CM, DM)
+[07] altint_conv(7) -> para(AC, BD)

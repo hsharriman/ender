@@ -17,7 +17,7 @@ import {
 import { stmtListToText, stmtToText } from "./proofObjText";
 
 const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
-  const raw = step.stepNumber?.replace(/\[|\]/g, "") ?? "";
+  const raw = step.stepNumber ?? "";
   const parsed = parseInt(raw, 10);
   return Number.isNaN(parsed) ? fallback : parsed;
 };
@@ -91,9 +91,14 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
 
   const stepMetas: StepMeta[] = [];
   proofSteps.forEach((step, idx) => {
+    const currStep = idx + 1;
     const dependencyErrorIndices = new Set(
       step.errors
-        .filter((e) => e.type === "dependency_error")
+        .filter(
+          (e) =>
+            e.type === "reason_dep_missing" ||
+            e.type === "reason_dep_type_mismatch",
+        )
         .map((e) => e.data?.index)
         .filter((index): index is number => typeof index === "number"),
     );
@@ -102,10 +107,12 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
         ?.map((arg, argIdx) => {
           if (dependencyErrorIndices.has(argIdx)) return "?";
 
-          const stepRef = arg.replace(/\[|\]/g, "");
-          if (!/^\d+$/.test(stepRef)) return undefined;
-          const stepLabelNumber = parseInt(stepRef, 10);
+          if (!/^\d+$/.test(arg)) return undefined;
+          const stepLabelNumber = parseInt(arg, 10);
           const uiIndex = stepLabelToUiIndex.get(stepLabelNumber);
+          // Future-step dependencies imply a cycle/invalid reference for this row:
+          // render as a missing dependency marker on the current step instead.
+          if (uiIndex !== undefined && uiIndex > currStep) return "?";
           return uiIndex !== undefined ? String(uiIndex) : undefined;
         })
         .filter((dep): dep is string => dep !== undefined) ?? [];

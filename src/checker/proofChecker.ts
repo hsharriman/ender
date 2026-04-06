@@ -11,9 +11,11 @@ import {
   findDuplicateSteps,
 } from "./checker/validators";
 import { logDebug } from "./errors/errorConstants";
+import {
+  loadReasonDefinitionsWithBuiltins,
+  loadStatementDefinitions,
+} from "./grammar/defsParsers";
 import { ProofParser } from "./grammar/lezerParser";
-import { loadReasonDefinitionsWithBuiltins } from "./grammar/reasonParser";
-import { loadStatementDefinitions } from "./grammar/stmtParser";
 import { ProofGraph, ProofObj, Stmt } from "./types/checkerTypes";
 
 export type ProofGoalMatchResult = { matches: boolean; details: string };
@@ -85,7 +87,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
     .slice()
     .reverse()
     .find((step) => step.type === "proof");
-  const lastStepNum = lastProofStep?.stepNumber?.replace(/[[\]]/g, "");
+  const lastStepNum = lastProofStep?.stepNumber;
   graph.unusedSteps = findUnusedSteps(graph, lastStepNum);
 
   const duplicateSteps = findDuplicateSteps(proof);

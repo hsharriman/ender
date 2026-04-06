@@ -33,7 +33,7 @@ import {
   checkSas,
   checkSss,
 } from "./reasonChecks/triangleChecks";
-import { addError, addReasonCheckError } from "./reasonChecks/utils";
+import { addReasonCheckError } from "./reasonChecks/utils";
 import { validateGivenProofStep } from "./validators";
 
 // Check if reason is applied correctly using reason checker methods
@@ -370,15 +370,11 @@ const getGeometricObject = (
 };
 
 const getDepStmt = (idx: string, proof: ProofObj) => {
-  const normalized = idx.replace(/[[\]]/g, "");
-
   const diagramDep = proof.premises.diagramStatements.find(
-    (d) => d.stepNumber === normalized,
+    (d) => d.stepNumber === idx,
   );
   if (diagramDep) return diagramDep.statement;
 
-  const conclusionStep = proof.steps.find(
-    (step) => step.stepNumber?.replace(/[[\]]/g, "") === normalized,
-  );
+  const conclusionStep = proof.steps.find((step) => step.stepNumber === idx);
   return conclusionStep?.statement;
 };

@@ -30,7 +30,7 @@ export const checkStatementArguments = (
   return stmt.arguments.length === definition.parameters.length;
 };
 
-/** `given([g_nn])` — premise must exist and conclusion must match it. */
+/** `given(g_n)` — premise must exist and conclusion must match it. */
 export const validateGivenProofStep = (
   step: ProofStep,
   proofGraph: ProofGraph,
@@ -47,22 +47,22 @@ export const validateGivenProofStep = (
     );
     return false;
   }
-  const ref = reason.arguments[0].replace(/[[\]]/g, "");
+  const ref = reason.arguments[0];
   if (/^g_\d+$/.test(ref)) {
     // ok
   } else if (/^d_\d+$/.test(ref)) {
     logError.parser.dependencyMismatch(
-      `given(${reason.arguments[0]}) is invalid: use only given premises [g_nn], not diagram premises [d_nn]`,
+      `given(${reason.arguments[0]}) is invalid: use only given premises g_n, not diagram premises [d_nn]`,
     );
     return false;
   } else if (/^\d+$/.test(ref)) {
     logError.parser.dependencyMismatch(
-      `given(${reason.arguments[0]}) is invalid: cite the matching [g_nn] given premise, not a proof step number`,
+      `given(${reason.arguments[0]}) is invalid: cite the matching g_n given premise, not a proof step number`,
     );
     return false;
   } else {
     logError.parser.dependencyMismatch(
-      `given requires exactly one ref like [g_01], got ${reason.arguments[0]}`,
+      `given requires exactly one ref like g_1, got ${reason.arguments[0]}`,
     );
     return false;
   }
@@ -118,8 +118,15 @@ export const checkReasonStructure = (
     receivedType?: string;
     allowedTypes?: string[];
   }) => {
+    const isCountMismatch =
+      typeof data.expectedLength === "number" &&
+      typeof data.receivedLength === "number";
+    const isMissingDependencyRef = data.receivedType === "__missing__";
     step.errors.push({
-      type: "dependency_error",
+      type:
+        isCountMismatch || isMissingDependencyRef
+          ? "reason_dep_missing"
+          : "reason_dep_type_mismatch",
       data,
     });
   };
@@ -176,8 +183,7 @@ export const checkReasonStructure = (
     }
 
     for (let idx = 0; idx < reason.arguments.length; idx++) {
-      const arg = reason.arguments[idx];
-      const stepNum = arg.replace(/\[|\]/g, "");
+      const stepNum = reason.arguments[idx];
 
       // TODO clean up when separating diagram premises from proof graph
       const dependencyStmt =
@@ -191,13 +197,13 @@ export const checkReasonStructure = (
         addDependencyError({
           reason: reason.function,
           index: idx,
-          ref: arg,
+          ref: stepNum,
           expectedType:
             typeof expectedDep === "string" ? expectedDep : "__unknown__",
           receivedType: "__missing__",
         });
         logError.parser.dependencyMismatch(
-          `Missing dependency for ${reason.function} at index ${idx} (ref ${arg})`,
+          `Missing dependency for ${reason.function} at index ${idx} (ref ${stepNum})`,
         );
         return false;
       }
@@ -220,7 +226,7 @@ export const checkReasonStructure = (
             addDependencyError({
               reason: reason.function,
               index: idx,
-              ref: arg,
+              ref: stepNum,
               expectedType: group.base,
               allowedTypes: group.extensions,
               receivedType: foundType,
@@ -232,7 +238,7 @@ export const checkReasonStructure = (
                 group.base
               } or one of [${group.extensions.join(
                 ", ",
-              )}], found ${foundType} (ref ${arg})`,
+              )}], found ${foundType} (ref ${stepNum})`,
             );
             return false;
           }
@@ -242,12 +248,12 @@ export const checkReasonStructure = (
             addDependencyError({
               reason: reason.function,
               index: idx,
-              ref: arg,
+              ref: stepNum,
               expectedType: expectedDep,
               receivedType: foundType,
             });
             logError.parser.dependencyMismatch(
-              `Dependency mismatch for ${reason.function} at index ${idx}: expected ${expectedDep}, found ${foundType} (ref ${arg})`,
+              `Dependency mismatch for ${reason.function} at index ${idx}: expected ${expectedDep}, found ${foundType} (ref ${stepNum})`,
             );
             return false;
           }
@@ -461,7 +467,7 @@ export const validateReasonDependencies = (
   for (let i = 0; i < reason.arguments.length; i++) {
     const depRef = reason.arguments[i];
     const expectedType = definition.dependencies[i];
-    const stepNum = depRef.replace(/\[|\]/g, "");
+    const stepNum = depRef;
     const dependencyStep = proofGraph.nodes.get(stepNum);
     if (!dependencyStep || !dependencyStep.statement) {
       throw new Error(
@@ -540,9 +546,8 @@ export const checkReasonDependencies = (
   }
 
   for (let i = 0; i < reason.arguments.length; i++) {
-    const depRef = reason.arguments[i];
+    const stepNum = reason.arguments[i];
     const expectedDep = definition.dependencies[i];
-    const stepNum = depRef.replace(/[[\]]/g, "");
     const dependencyStmt =
       proofGraph.nodes.get(stepNum)?.statement ||
       proof?.premises.diagramStatements.find((d) => d.stepNumber === stepNum)
@@ -550,7 +555,7 @@ export const checkReasonDependencies = (
 
     if (!dependencyStmt) {
       logError.parser.dependencyMismatch(
-        `Missing dependency for ${reason.function} at index ${i} (ref ${depRef})`,
+        `Missing dependency for ${reason.function} at index ${i} (ref ${stepNum})`,
       );
       return false;
     }
@@ -577,7 +582,7 @@ export const checkReasonDependencies = (
               group.base
             } or one of [${group.extensions.join(
               ", ",
-            )}], found ${foundType} (ref ${depRef})`,
+            )}], found ${foundType} (ref ${stepNum})`,
           );
           return false;
         }
@@ -585,7 +590,7 @@ export const checkReasonDependencies = (
         // Direct statement name match
         if (foundType !== expectedDep) {
           logError.parser.dependencyMismatch(
-            `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedDep}, found ${foundType} (ref ${depRef})`,
+            `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedDep}, found ${foundType} (ref ${stepNum})`,
           );
           return false;
         }
@@ -638,7 +643,7 @@ export const findDuplicateSteps = (
 };
 
 // Proof-step numbers must be unique and consecutive (e.g. [01]–[04] or legacy [04]–[10]).
-// Given (`[g_nn]`) and diagram (`[d_nn]`) premises use separate namespaces and are excluded here.
+// Given (`g_n`) and diagram (`[d_nn]`) premises use separate namespaces and are excluded here.
 export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
   const errors: Array<string> = [];
   const seenStepNumbers = new Set<string>();
@@ -647,7 +652,7 @@ export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
     (step) => step.type === "proof" && step.stepNumber,
   );
 
-  const numeric = (label: string) => parseInt(label.replace(/[[\]]/g, ""), 10);
+  const numeric = (label: string) => parseInt(label, 10);
 
   const sortedNums = numberedSteps
     .map((s) => ({ label: s.stepNumber!, n: numeric(s.stepNumber!) }))

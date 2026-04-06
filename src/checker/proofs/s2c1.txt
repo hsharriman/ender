@@ -4,16 +4,16 @@ premises:
 pt: E (2, 2, -15, -15), F (2, 9, -10, 5), G (14, 9, 8, 0), H (14, 2, 0, -17), J (8, 2, -5, -18)
 tri: t_FGJ t_FEJ t_JGH
 quad: q_EFGH
-[g_01] rectangle(q_EFGH)
-[g_02] midpt(EH, J)
+[g_1] rectangle(q_EFGH)
+[g_2] midpt(EH, J)
 -> isosceles(t_FGJ)
 
 steps:
-[01] given([g_01]) -> rectangle(q_EFGH)
-[02] given([g_02]) -> midpt(EH, J)
-[03] midpt([02]) -> con_seg(EJ, JH)
-[04] rectangle([01]) -> con_ang(a_FEJ,a_JHG)
-[05] rectangle([01]) -> con_seg(FE, GH)
-[06] sas([03], [04], [05]) -> con_tri(t_FEJ, t_JGH)
-[07] cpctc([06]) -> con_seg(FJ,GJ)
-[08] isosceles([07]) -> isosceles(t_FGJ)
+[01] given(g_1) -> rectangle(q_EFGH)
+[02] given(g_2) -> midpt(EH, J)
+[03] midpt(2) -> con_seg(EJ, JH)
+[04] rectangle(1) -> con_ang(a_FEJ,a_JHG)
+[05] rectangle(1) -> con_seg(FE, GH)
+[06] sas(3, 4, 5) -> con_tri(t_FEJ, t_JGH)
+[07] cpctc(6) -> con_seg(FJ,GJ)
+[08] isosceles(7) -> isosceles(t_FGJ)

@@ -1,6 +1,5 @@
 import { ProofParser } from "checker/grammar/lezerParser";
 import { runProofChecker } from "checker/proofChecker";
-import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
 import buggyProofUrl from "checker/proofs/buggyproof.txt";
 import s1c1Url from "checker/proofs/s1c1.txt";
 import s1c2Url from "checker/proofs/s1c2.txt";
@@ -14,6 +13,7 @@ import s2inc1Url from "checker/proofs/s2inc1.txt";
 import s2inc2Url from "checker/proofs/s2inc2.txt";
 import tutincUrl from "checker/proofs/tutinc.txt";
 import tutorialUrl from "checker/proofs/tutorial.txt";
+import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -28,15 +28,15 @@ const defaultProofText = `title: "Tutorial #1 - Prove Triangles Congruent"
 premises:
 pt: A (5.5, 9, 0, 5), B (2, 3, -8, -18), C (5.5, 1, -8, -17), D (9, 3, -5, -18)
 tri: t_ABC t_ADC
-[g_01] con_seg(AB,AD)
-[g_02] con_ang(a_BAC,a_DAC) 
+[g_1] con_seg(AB,AD)
+[g_2] con_ang(a_BAC,a_DAC) 
 -> con_tri(t_ABC,t_ADC)
 
 steps:
-[01] given([g_01]) -> con_seg(AB,AD)
-[02] given([g_02]) -> con_ang(a_BAC,a_DAC) 
+[01] given(g_1) -> con_seg(AB,AD)
+[02] given(g_2) -> con_ang(a_BAC,a_DAC) 
 [03] reflex_s() -> con_seg(AC, AC)
-[04] sas([01], [02], [03]) -> con_tri(t_ABC,t_ADC) 
+[04] sas(1, 2, 3) -> con_tri(t_ABC,t_ADC) 
 `;
 const parser = new ProofParser();
 const proofOptions: Array<{ key: string; label: string; url: string }> = [
@@ -65,7 +65,9 @@ export const ProofObjHarness = () => {
     return p;
   });
   const [parseVersion, setParseVersion] = useState(0);
-  const [statusMessage, setStatusMessage] = useState("Proof parsed successfully.");
+  const [statusMessage, setStatusMessage] = useState(
+    "Proof parsed successfully.",
+  );
   const [proofWideIssues, setProofWideIssues] = useState<string[]>([]);
   const [incorrectStepErrors, setIncorrectStepErrors] = useState<
     Map<string, ErrorObj[]>
@@ -115,7 +117,7 @@ export const ProofObjHarness = () => {
         const nextIncorrectStepErrors = new Map<string, ErrorObj[]>();
         result.graph.incorrectSteps.forEach((stepNum) => {
           const step = result.proof.steps.find(
-            (s) => s.stepNumber?.replace(/[[\]]/g, "") === stepNum,
+            (s) => s.stepNumber === stepNum,
           );
           nextIncorrectStepErrors.set(stepNum, step?.errors ?? []);
         });
@@ -123,7 +125,9 @@ export const ProofObjHarness = () => {
 
         const nextProofIssues: string[] = [];
         if (!result.goalMatchResult.matches) {
-          nextProofIssues.push(`Goal not reached: ${result.goalMatchResult.details}`);
+          nextProofIssues.push(
+            `Goal not reached: ${result.goalMatchResult.details}`,
+          );
         }
         if (result.graph.unusedSteps.size > 0) {
           nextProofIssues.push(
@@ -286,19 +290,21 @@ export const ProofObjHarness = () => {
               Checker annotations
             </div>
             <pre className="font-mono text-xs whitespace-pre-wrap break-words">
-              {buildAnnotatedLines(proofText, incorrectStepErrors).map((line, i) => (
-                <div
-                  key={`${i}-${line.text}`}
-                  title={line.tooltip}
-                  className={
-                    line.isIncorrect
-                      ? "bg-red-100 hover:bg-red-200 rounded px-1"
-                      : undefined
-                  }
-                >
-                  {line.text || " "}
-                </div>
-              ))}
+              {buildAnnotatedLines(proofText, incorrectStepErrors).map(
+                (line, i) => (
+                  <div
+                    key={`${i}-${line.text}`}
+                    title={line.tooltip}
+                    className={
+                      line.isIncorrect
+                        ? "bg-red-100 hover:bg-red-200 rounded px-1"
+                        : undefined
+                    }
+                  >
+                    {line.text || " "}
+                  </div>
+                ),
+              )}
             </pre>
           </div>
         </div>

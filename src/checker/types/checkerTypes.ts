@@ -35,17 +35,15 @@ export interface StatementDefinition {
 export type ErrorType =
   | "stmt_arg_mismatch"
   | "reason_dep_missing"
-  | "reason_dep_mismatch"
+  | "reason_dep_type_mismatch"
   | "reason_stmt_mismatch"
-  | "dependency_error"
-  | "reason_deps_impl"
+  | "upstream_dep_error"
   | "reason_objs_not_in_stmt_obj"
   | "object_not_in_premises"
   | "cycle"
   | "unused_step"
   | "duplicate_step"
-  | "goal_not_reached"
-  | "reason_check";
+  | "goal_not_reached";
 
 export type ErrorObj = {
   type: ErrorType;

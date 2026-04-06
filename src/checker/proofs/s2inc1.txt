@@ -3,18 +3,18 @@ title: "S2INC1 - Prove Triangle Congruence #3"
 premises:
 pt: L (2, 1, -15, -15), N (3.5, 4, -16, 0), Q (8.5, 4, 5, 5), R (6, 2.85, 6, 12), S (6, 1, -5, -18), P (6, 9, 8, -10), U (10, 1, 0, -17)
 tri: t_PSL t_PSU t_LNU t_UQL
-[g_01] perp(LU, PS) [01]
-[g_02] con_seg(LN, QU) [02]
-[g_03] con_ang(a_LPS, a_UPS) [03]
+[g_1] perp(LU, PS) [01]
+[g_2] con_seg(LN, QU) [02]
+[g_3] con_ang(a_LPS, a_UPS) [03]
 -> con_tri(t_LNU, t_UQL)
 
 steps:
-[01] given([g_01]) -> perp(LU, PS)
-[02] given([g_02]) -> con_seg(LN, QU)
-[03] given([g_03]) -> con_ang(a_LPS, a_UPS)
-[04] perp_con_ang([01]) -> con_right(a_PSL, a_PSU)
+[01] given(g_1) -> perp(LU, PS)
+[02] given(g_2) -> con_seg(LN, QU)
+[03] given(g_3) -> con_ang(a_LPS, a_UPS)
+[04] perp_con_ang(1) -> con_right(a_PSL, a_PSU)
 [05] reflex_s() -> con_seg(PS, PS)
-[06] asa([03], [05], [04]) -> con_tri(t_LSP, t_USP)
-[07] cpctc([06]) -> con_ang(a_SLP, a_SUP)
-[08] cpctc([09]) -> con_ang(a_LNU, a_UQL)
-[09] asa([07], [02], [08]) -> con_tri(t_LNU, t_UQL)
+[06] asa(3, 5, 4) -> con_tri(t_LSP, t_USP)
+[07] cpctc(6) -> con_ang(a_SLP, a_SUP)
+[08] cpctc(9) -> con_ang(a_LNU, a_UQL)
+[09] asa(7, 2, 8) -> con_tri(t_LNU, t_UQL)

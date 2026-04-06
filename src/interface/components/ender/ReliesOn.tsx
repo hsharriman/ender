@@ -149,16 +149,17 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
       .replaceAll(",", " ");
   };
 
-  renderArrow = (d: Dims) => {
+  renderArrow = (d: Dims, isInconsistent: boolean = false) => {
     const rightPad = 23;
     const corner: Vector = [this.MIDX + rightPad, this.MIDY];
     const pts = this.chevron(13, corner);
+    const strokeClass = isInconsistent ? "stroke-red-500" : this.DEFAULT_CLR;
     return this.container(
       d,
       <svg width="100%" height="100%">
         <polyline
           points={pts}
-          className={this.DEFAULT_CLR}
+          className={strokeClass}
           fill="none"
           strokeWidth={this.STROKE_WIDTH}
           strokeLinecap="round"
@@ -169,7 +170,7 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
           y1={`${corner[1]}px`}
           x2={`${this.MIDX}px`}
           y2={`${corner[1]}px`}
-          className={this.DEFAULT_CLR}
+          className={strokeClass}
           fill="none"
           strokeWidth={this.STROKE_WIDTH}
         />
@@ -224,7 +225,11 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
             : this.renderDepEdge(depRow.coords),
         ),
         ...(rows.hasCurrentQuestion ? [this.renderQuestionEdge(rows.startCoords)] : []),
-        ...(rows.deps.length > 0 ? [this.renderArrow(rows.startCoords)] : []),
+        ...(rows.deps.length > 0
+          ? [this.renderArrow(rows.startCoords)]
+          : rows.hasCurrentQuestion
+            ? [this.renderArrow(rows.startCoords, true)]
+            : []),
       ];
       innerContent = (
         <div>

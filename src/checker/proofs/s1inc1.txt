@@ -3,14 +3,14 @@ title: "S1INC1 - Prove Angles Congruent #1"
 premises:
 pt: A (1, 2, -15, -10), B (10, 2, 10, -10), C (14, 9, 3, -10), D (5, 9, -25, -10)
 tri: t_ABD t_BCD
-[g_01] con_seg(AD,BC) [01]
-[g_02] con_seg(AB,DC) [02]
-[g_03] con_ang(a_ABD,a_CDB) [03]
+[g_1] con_seg(AD,BC) [01]
+[g_2] con_seg(AB,DC) [02]
+[g_3] con_ang(a_ABD,a_CDB) [03]
 -> con_ang(a_BAD,a_DCB)
 
 steps:
-[01] given([g_01]) -> con_seg(AD,BC)
-[02] given([g_02]) -> con_seg(AB,DC)
-[03] given([g_03]) -> con_ang(a_ABD,a_CDB)
-[04] sas([01], [02], [03]) -> con_tri(t_ABD,t_CDB)  // Missing dependency
-[05] cpctc([04]) -> con_ang(a_BAD,a_DCB)  // Based on invalid reason
+[01] given(g_1) -> con_seg(AD,BC)
+[02] given(g_2) -> con_seg(AB,DC)
+[03] given(g_3) -> con_ang(a_ABD,a_CDB)
+[04] sas(1, 2, 3) -> con_tri(t_ABD,t_CDB)  // Missing dependency
+[05] cpctc(4) -> con_ang(a_BAD,a_DCB)  // Based on invalid reason

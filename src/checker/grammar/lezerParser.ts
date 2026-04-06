@@ -1,8 +1,8 @@
 import { Obj, ParseObj } from "../../geometry-object";
 import { normalizeProofObj } from "../normalizeProofObj";
 import { ProofObj, ProofStep, Reason, Stmt } from "../types/checkerTypes";
+import { loadReasonDefinitionsWithBuiltins } from "./defsParsers";
 import { lexer } from "./parser";
-import { loadReasonDefinitionsWithBuiltins } from "./reasonParser";
 
 export class ProofParser {
   private lexer: any;
@@ -42,6 +42,11 @@ export class ProofParser {
       };
     }
     throw new Error(`Cannot parse geometric object: ${arg}`);
+  };
+
+  private normalizeNumericRef = (raw: string): string => {
+    const n = parseInt(raw.replace(/[[\]]/g, ""), 10);
+    return Number.isNaN(n) ? raw : String(n);
   };
 
   parse(input: string) {
@@ -108,14 +113,12 @@ export class ProofParser {
       errors: [],
     };
 
-    let currentSection = null;
     let i = 0;
 
     while (i < tokens.length) {
       const token = tokens[i];
 
       if (token.type === "title") {
-        currentSection = "title";
         i++;
         if (i < tokens.length && tokens[i].type === "colon") {
           i++;
@@ -124,7 +127,6 @@ export class ProofParser {
           }
         }
       } else if (token.type === "premises") {
-        currentSection = "premises";
         i++;
         if (i < tokens.length && tokens[i].type === "colon") {
           i++;
@@ -213,11 +215,11 @@ export class ProofParser {
               result.premises.diagramStatements.push({
                 type: "diagram",
                 statement: statement.obj,
-                stepNumber: diagramLabel.replace(/[[\]]/g, ""),
+                stepNumber: diagramLabel,
                 errors: [],
               });
               i = statement.endIndex;
-            } else if (tokens[i].type === "givenPremiseRef") {
+            } else if (tokens[i].type === "givenPremiseDefRef") {
               const premiseLabel = tokens[i].value as string;
               i++;
               const statement = this.parseStatement(tokens, i);
@@ -240,7 +242,6 @@ export class ProofParser {
           }
         }
       } else if (token.type === "steps") {
-        currentSection = "steps";
         i++;
         if (i < tokens.length && tokens[i].type === "colon") {
           i++;
@@ -329,7 +330,7 @@ export class ProofParser {
     return { obj: statement, endIndex: i };
   }
 
-  /** Format: `[01] reason(...) -> conclusion` */
+  /** Format: `[01] reason(1, 3, 2) -> conclusion` */
   private parseProofStep(
     tokens: any[],
     startIndex: number,
@@ -351,7 +352,7 @@ export class ProofParser {
         type: "proof",
         reason: reason.obj,
         statement: conclusion.obj,
-        stepNumber: stepLabel,
+        stepNumber: this.normalizeNumericRef(stepLabel),
         // Diagram deps are attached by the checker after geometric validation
         // (`runProofChecker` → `checkReasonApplication`).
         errors: [],
@@ -382,21 +383,17 @@ export class ProofParser {
         // Parse arguments
         while (i < tokens.length && tokens[i].type !== "rparen") {
           if (
-            tokens[i].type === "stepNumber" ||
             tokens[i].type === "givenPremiseRef" ||
             tokens[i].type === "diagramPremiseRef"
           ) {
             reason.arguments.push(tokens[i].value as string);
             i++;
-          } else if (tokens[i].type === "lbracket") {
-            i++;
-            if (i < tokens.length && tokens[i].type === "float_literal") {
-              reason.arguments.push(`[${tokens[i].value}]`);
-              i++;
-              if (i < tokens.length && tokens[i].type === "rbracket") {
-                i++;
-              }
+          } else if (tokens[i].type === "float_literal") {
+            const value = tokens[i].value as string;
+            if (/^\d+$/.test(value)) {
+              reason.arguments.push(this.normalizeNumericRef(value));
             }
+            i++;
           } else {
             i++;
           }

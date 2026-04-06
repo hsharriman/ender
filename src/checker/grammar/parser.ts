@@ -78,9 +78,21 @@ const stmtKeywords: moo.Rules = {
 
 /** Compound `[…]` tokens must be tried before bare `lbracket` (see moo match order). */
 const proofBracketRefs: moo.Rules = {
-  givenPremiseRef: {
+  /** In `premises:` only — e.g. `[g_1] con_seg(AB,CD)`. Value normalized to `g_n`. */
+  givenPremiseDefRef: {
     match: /\[g_\d+\]/,
-    value: (x: string) => x,
+    value: (x: string) => {
+      const m = x.match(/^\[g_(\d+)\]$/);
+      return m ? `g_${parseInt(m[1], 10)}` : x;
+    },
+  },
+  /** In reason args only — e.g. `given(g_1)`. Not valid in premises (use `givenPremiseDefRef`). */
+  givenPremiseRef: {
+    match: /g_\d+/,
+    value: (x: string) => {
+      const m = x.match(/^g_(\d+)$/);
+      return m ? `g_${parseInt(m[1], 10)}` : x;
+    },
   },
   diagramPremiseRef: {
     match: /\[d_\d+\]/,

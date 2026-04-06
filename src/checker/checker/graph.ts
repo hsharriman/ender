@@ -1,5 +1,5 @@
-import { logDebug, logError } from "../errors/errorConstants";
 import { ProofContent } from "geometry-object";
+import { logDebug, logError } from "../errors/errorConstants";
 import {
   ProofGraph,
   ProofObj,
@@ -35,7 +35,7 @@ export const buildProofGraph = (
   proof.steps.forEach((step) => {
     if (step.type === "goal") return; // Skip goal steps
 
-    const stepNum = step.stepNumber?.replace(/[[\]]/g, "");
+    const stepNum = step.stepNumber;
     if (stepNum) {
       graph.nodes.set(stepNum, step);
       graph.edges.set(stepNum, []);
@@ -46,7 +46,7 @@ export const buildProofGraph = (
   proof.steps.forEach((step) => {
     if (step.type === "goal") return; // Skip goal steps
 
-    const stepNum = step.stepNumber?.replace(/[[\]]/g, "");
+    const stepNum = step.stepNumber;
 
     if (!stepNum) return;
 
@@ -85,12 +85,11 @@ export const buildProofGraph = (
         const currN = parseInt(stepNum, 10);
         if (!Number.isNaN(currN)) {
           for (const depRef of step.reason.arguments) {
-            const raw = depRef.replace(/[[\]]/g, "");
-            if (/^\d+$/.test(raw)) {
-              const depN = parseInt(raw, 10);
+            if (/^\d+$/.test(depRef)) {
+              const depN = parseInt(depRef, 10);
               if (!Number.isNaN(depN) && depN >= currN) {
                 logError.parser.dependencyMismatch(
-                  `Step [${stepNum}] cannot cite proof step [${raw}] (must cite only earlier steps)`,
+                  `Step [${stepNum}] cannot cite proof step [${depRef}] (must cite only earlier steps)`,
                 );
                 isCorrect = false;
                 break;
@@ -100,15 +99,14 @@ export const buildProofGraph = (
         }
       }
 
-      // Given premises `[g_nn]` may only appear in `given(...)` reasons.
+      // Given premises `g_n` may only appear in `given(...)` reasons.
       if (
         isCorrect &&
         step.reason.function !== "given" &&
         step.reason.arguments
       ) {
         for (const depRef of step.reason.arguments) {
-          const raw = depRef.replace(/[[\]]/g, "");
-          if (/^g_\d+$/.test(raw)) {
+          if (/^g_\d+$/.test(depRef)) {
             logError.parser.dependencyMismatch(
               `Step [${stepNum}] cannot cite given premise ${depRef} outside of given(...)`,
             );
@@ -142,14 +140,21 @@ export const buildProofGraph = (
 
       // Check if any dependencies are incorrect
       if (isCorrect && step.reason.arguments) {
-        const hasIncorrectDependency = step.reason.arguments.some((depRef) => {
-          const depStepNum = depRef.replace(/[[\]]/g, "");
-          return graph.incorrectSteps.has(depStepNum);
-        });
+        const incorrectDeps = step.reason.arguments
+          .map((depRef) => depRef)
+          .filter((depStepNum) => graph.incorrectSteps.has(depStepNum));
+        const hasIncorrectDependency = incorrectDeps.length > 0;
 
         if (hasIncorrectDependency) {
           isCorrect = false;
           graph.dependencyFailureSteps.add(stepNum);
+          step.errors.push({
+            type: "upstream_dep_error",
+            data: {
+              reason: step.reason.function,
+              dependsOn: incorrectDeps,
+            },
+          });
         }
       }
 
@@ -162,10 +167,9 @@ export const buildProofGraph = (
       // Add edges from dependencies to this step
       if (step.reason.arguments) {
         step.reason.arguments.forEach((depRef) => {
-          const depStepNum = depRef.replace(/[[\]]/g, "");
-          const edges = graph.edges.get(depStepNum) || [];
+          const edges = graph.edges.get(depRef) || [];
           edges.push(stepNum);
-          graph.edges.set(depStepNum, edges);
+          graph.edges.set(depRef, edges);
         });
       }
     }
