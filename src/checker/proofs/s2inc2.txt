@@ -2,7 +2,7 @@
 title: "S2INC2 - Prove Segments Parallel #3"
 premises:
 pt: X (9, 9, 5, -3), W (2, 9, -15, 0), Y (2, 1, -17, -17), Z (9, 1, 3, -10), M (5.5, 5, 10, -5)
-tri: t_MWX, t_MYZ
+tri: t_MWX t_MYZ
 [d_01] intersect_seg(XY, WZ, M) 
 [d_02] transversal(W, X, X, Y, Z, Y)
 [g_01] con_seg(WM, MZ)

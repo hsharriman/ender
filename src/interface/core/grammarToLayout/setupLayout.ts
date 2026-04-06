@@ -74,7 +74,7 @@ export const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
     step.additions({ ctx: additionCtx, frame: s, mode: SVGModes.Derived });
 
     if (step.dependsOn) {
-      const depIds = step.dependsOn.map((i) => `s${i}`);
+      const depIds = step.dependsOn.map((i) => (i === "?" ? "?" : `s${i}`));
       ctx.reliesOn(s, depIds);
       textMeta = { dependsOn: new Set(depIds) };
     }

@@ -17,6 +17,10 @@ interface Dims {
   b: number;
   key: string;
 }
+interface DependencyRow {
+  coords: Dims;
+  isQuestion: boolean;
+}
 
 export class ReliesOn extends React.Component<ReliesOnProps> {
   private SVGWIDTH: number;
@@ -48,12 +52,12 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
     }
   };
 
-  container = (d: Dims, innerContent: JSX.Element) => {
+  container = (d: Dims, innerContent: JSX.Element, kind: string) => {
     const divHeight = Math.round(d.b - d.t);
     return (
       <div
         className="absolute w-16"
-        key={`relies-${d.t}`}
+        key={`relies-${d.key}-${d.t}-${kind}`}
         style={{
           top: `${d.t}px`,
           left: `${d.r}px`,
@@ -65,30 +69,33 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
     );
   };
 
-  vertDists = (): Dims[] => {
+  dependencyRows = ():
+    | { startCoords: Dims; deps: DependencyRow[]; hasCurrentQuestion: boolean }
+    | undefined => {
     const dependsOn = this.props.reliesOn.get(this.props.activeFrame);
     if (dependsOn) {
       const startCoords = this.getRowCoords(this.props.activeFrame);
-
-      let endCoords = [];
-      const deps = Array.from(dependsOn);
-      for (let i = 0; i < deps.length; i++) {
-        let dep = deps[i];
-        let coords = this.getRowCoords(
-          dep.endsWith("?") ? dep.replace("?", "") : dep,
-        );
+      const depRows: DependencyRow[] = [];
+      let hasCurrentQuestion = false;
+      for (const dep of Array.from(dependsOn)) {
+        if (dep === "?") {
+          hasCurrentQuestion = true;
+          continue;
+        }
+        const isQuestion = dep.endsWith("?");
+        const depFrame = isQuestion ? dep.replace("?", "") : dep;
+        const coords = this.getRowCoords(depFrame);
         if (coords) {
-          endCoords.push(coords);
+          depRows.push({ coords, isQuestion });
         }
       }
 
-      if (startCoords && endCoords.length > 0) {
-        const tops = endCoords.sort((a, b) => a.t - b.t);
-        tops.push(startCoords);
-        return tops;
+      if (startCoords && (depRows.length > 0 || hasCurrentQuestion)) {
+        depRows.sort((a, b) => a.coords.t - b.coords.t);
+        return { startCoords, deps: depRows, hasCurrentQuestion };
       }
     }
-    return [];
+    return undefined;
   };
 
   renderQuestionEdge = (d: Dims) => {
@@ -109,6 +116,7 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
           strokeWidth={this.STROKE_WIDTH}
         />
       </svg>,
+      "question",
     );
   };
 
@@ -124,6 +132,7 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
           strokeWidth={this.STROKE_WIDTH}
         />
       </svg>,
+      "dependency",
     );
   };
 
@@ -165,6 +174,7 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
           strokeWidth={this.STROKE_WIDTH}
         />
       </svg>,
+      "arrow",
     );
   };
 
@@ -200,28 +210,25 @@ export class ReliesOn extends React.Component<ReliesOnProps> {
   };
 
   render() {
-    const dependsOn = this.props.reliesOn.get(this.props.activeFrame);
     let innerContent = <></>;
-    if (dependsOn) {
-      const dims = this.vertDists();
-
-      let lastBottom = dims[0].b;
-      const svgs = dims.map((d, i) => {
-        if (i === dims.length - 1) {
-          return this.renderArrow(d);
-        }
-        if (Array.from(dependsOn)[i].endsWith("?")) {
-          const svg = this.renderQuestionEdge(d);
-          lastBottom = d.b;
-          return svg;
-        }
-        const svg = this.renderDepEdge(d);
-        lastBottom = d.b;
-        return svg;
-      });
+    const rows = this.dependencyRows();
+    if (rows) {
+      const connectorDims =
+        rows.deps.length > 0
+          ? [...rows.deps.map((d) => d.coords), rows.startCoords]
+          : [];
+      const svgs = [
+        ...rows.deps.map((depRow) =>
+          depRow.isQuestion
+            ? this.renderQuestionEdge(depRow.coords)
+            : this.renderDepEdge(depRow.coords),
+        ),
+        ...(rows.hasCurrentQuestion ? [this.renderQuestionEdge(rows.startCoords)] : []),
+        ...(rows.deps.length > 0 ? [this.renderArrow(rows.startCoords)] : []),
+      ];
       innerContent = (
         <div>
-          {this.renderFullConnector(dims)}
+          {rows.deps.length > 0 ? this.renderFullConnector(connectorDims) : null}
           {svgs}
         </div>
       );

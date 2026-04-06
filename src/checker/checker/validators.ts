@@ -108,6 +108,22 @@ export const checkReasonStructure = (
   proofGraph: ProofGraph,
   proof: ProofObj,
 ): boolean => {
+  const addDependencyError = (data: {
+    reason: string;
+    index?: number;
+    ref?: string;
+    expectedLength?: number;
+    receivedLength?: number;
+    expectedType?: string;
+    receivedType?: string;
+    allowedTypes?: string[];
+  }) => {
+    step.errors.push({
+      type: "dependency_error",
+      data,
+    });
+  };
+
   const reason = step.reason;
   const stmt = step.statement;
   if (reason && stmt) {
@@ -123,6 +139,18 @@ export const checkReasonStructure = (
       return false;
     }
     console.log(`    ✅ Found definition:`, definition);
+
+    if (reason.arguments.length !== definition.dependencies.length) {
+      addDependencyError({
+        reason: reason.function,
+        expectedLength: definition.dependencies.length,
+        receivedLength: reason.arguments.length,
+      });
+      logError.parser.dependencyMismatch(
+        `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`,
+      );
+      return false;
+    }
 
     // Diagram dependencies are satisfied by `premises.diagramStatements` and are not passed as args.
     if (definition.diagramDependencies?.length) {
@@ -160,6 +188,14 @@ export const checkReasonStructure = (
       const expectedDep = definition.dependencies[idx];
 
       if (!dependencyStmt) {
+        addDependencyError({
+          reason: reason.function,
+          index: idx,
+          ref: arg,
+          expectedType:
+            typeof expectedDep === "string" ? expectedDep : "__unknown__",
+          receivedType: "__missing__",
+        });
         logError.parser.dependencyMismatch(
           `Missing dependency for ${reason.function} at index ${idx} (ref ${arg})`,
         );
@@ -181,6 +217,14 @@ export const checkReasonStructure = (
             continue;
           } else {
             // No valid substitution
+            addDependencyError({
+              reason: reason.function,
+              index: idx,
+              ref: arg,
+              expectedType: group.base,
+              allowedTypes: group.extensions,
+              receivedType: foundType,
+            });
             logError.parser.dependencyMismatch(
               `Dependency mismatch for ${
                 reason.function
@@ -195,6 +239,13 @@ export const checkReasonStructure = (
         } else {
           // Direct statement name match
           if (foundType !== expectedDep) {
+            addDependencyError({
+              reason: reason.function,
+              index: idx,
+              ref: arg,
+              expectedType: expectedDep,
+              receivedType: foundType,
+            });
             logError.parser.dependencyMismatch(
               `Dependency mismatch for ${reason.function} at index ${idx}: expected ${expectedDep}, found ${foundType} (ref ${arg})`,
             );

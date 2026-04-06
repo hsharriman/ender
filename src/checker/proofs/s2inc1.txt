@@ -2,7 +2,7 @@
 title: "S2INC1 - Prove Triangle Congruence #3"
 premises:
 pt: L (2, 1, -15, -15), N (3.5, 4, -16, 0), Q (8.5, 4, 5, 5), R (6, 2.85, 6, 12), S (6, 1, -5, -18), P (6, 9, 8, -10), U (10, 1, 0, -17)
-tri: t_PSL, t_PSU, t_LNU, t_UQL
+tri: t_PSL t_PSU t_LNU t_UQL
 [g_01] perp(LU, PS) [01]
 [g_02] con_seg(LN, QU) [02]
 [g_03] con_ang(a_LPS, a_UPS) [03]

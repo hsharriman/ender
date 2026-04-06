@@ -91,13 +91,24 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
 
   const stepMetas: StepMeta[] = [];
   proofSteps.forEach((step, idx) => {
+    const dependencyErrorIndices = new Set(
+      step.errors
+        .filter((e) => e.type === "dependency_error")
+        .map((e) => e.data?.index)
+        .filter((index): index is number => typeof index === "number"),
+    );
     const dependsOn =
       step.reason?.arguments
-        ?.map((arg) => (/^\d+$/.test(arg) ? parseInt(arg, 10) : null))
-        .filter((n): n is number => n !== null)
-        .map((stepLabelNumber) => stepLabelToUiIndex.get(stepLabelNumber))
-        .filter((n): n is number => n !== undefined)
-        .map((n) => String(n)) ?? [];
+        ?.map((arg, argIdx) => {
+          if (dependencyErrorIndices.has(argIdx)) return "?";
+
+          const stepRef = arg.replace(/\[|\]/g, "");
+          if (!/^\d+$/.test(stepRef)) return undefined;
+          const stepLabelNumber = parseInt(stepRef, 10);
+          const uiIndex = stepLabelToUiIndex.get(stepLabelNumber);
+          return uiIndex !== undefined ? String(uiIndex) : undefined;
+        })
+        .filter((dep): dep is string => dep !== undefined) ?? [];
 
     const dependencyStatements = dependsOn
       .map((n) => proofSteps[Number(n) - 1])
