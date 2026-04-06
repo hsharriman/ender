@@ -1,5 +1,6 @@
 import { ProofParser } from "checker/grammar/lezerParser";
 import { runProofChecker } from "checker/proofChecker";
+import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
 import buggyProofUrl from "checker/proofs/buggyproof.txt";
 import s1c1Url from "checker/proofs/s1c1.txt";
 import s1c2Url from "checker/proofs/s1c2.txt";
@@ -13,7 +14,6 @@ import s2inc1Url from "checker/proofs/s2inc1.txt";
 import s2inc2Url from "checker/proofs/s2inc2.txt";
 import tutincUrl from "checker/proofs/tutinc.txt";
 import tutorialUrl from "checker/proofs/tutorial.txt";
-import { ProofObj } from "checker/types/checkerTypes";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -65,23 +65,115 @@ export const ProofObjHarness = () => {
     return p;
   });
   const [parseVersion, setParseVersion] = useState(0);
-  const [parseError, setParseError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("Proof parsed successfully.");
+  const [proofWideIssues, setProofWideIssues] = useState<string[]>([]);
+  const [incorrectStepErrors, setIncorrectStepErrors] = useState<
+    Map<string, ErrorObj[]>
+  >(new Map());
   const editorRef = useRef<HTMLDivElement | null>(null);
   const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const onTextChange = (next: string) => {
     setProofText(next);
-    try {
-      const parsed = parser.parse(next) as unknown as ProofObj;
-      runProofChecker(parsed);
-      setLastGoodProof(parsed);
-      // Reset InteractiveAppPage/ProofRows state to "Given" after successful parse.
-      setParseVersion((v) => v + 1);
-      setParseError("");
-    } catch (err) {
-      setParseError(err instanceof Error ? err.message : String(err));
-    }
   };
+
+  const formatErrorList = (errors: ErrorObj[] | undefined): string => {
+    if (!errors?.length) return "Incorrect step (no step.errors payload)";
+    return errors
+      .map((e, i) => {
+        const suffix =
+          e.data === undefined ? "" : `: ${JSON.stringify(e.data, null, 2)}`;
+        return `${i + 1}. ${e.type}${suffix}`;
+      })
+      .join("\n");
+  };
+
+  const buildAnnotatedLines = (
+    text: string,
+    stepErrorsByStep: Map<string, ErrorObj[]>,
+  ): Array<{ text: string; tooltip?: string; isIncorrect: boolean }> => {
+    return text.split("\n").map((line) => {
+      const m = line.match(/^\s*\[(\d+)\]/);
+      if (!m) return { text: line, isIncorrect: false };
+      const stepNum = String(parseInt(m[1], 10));
+      const stepErrors = stepErrorsByStep.get(stepNum);
+      if (!stepErrors) return { text: line, isIncorrect: false };
+      return {
+        text: line,
+        isIncorrect: true,
+        tooltip: formatErrorList(stepErrors),
+      };
+    });
+  };
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      try {
+        const parsed = parser.parse(proofText) as unknown as ProofObj;
+        const result = runProofChecker(parsed);
+
+        const nextIncorrectStepErrors = new Map<string, ErrorObj[]>();
+        result.graph.incorrectSteps.forEach((stepNum) => {
+          const step = result.proof.steps.find(
+            (s) => s.stepNumber?.replace(/[[\]]/g, "") === stepNum,
+          );
+          nextIncorrectStepErrors.set(stepNum, step?.errors ?? []);
+        });
+        setIncorrectStepErrors(nextIncorrectStepErrors);
+
+        const nextProofIssues: string[] = [];
+        if (!result.goalMatchResult.matches) {
+          nextProofIssues.push(`Goal not reached: ${result.goalMatchResult.details}`);
+        }
+        if (result.graph.unusedSteps.size > 0) {
+          nextProofIssues.push(
+            `Unused steps: ${Array.from(result.graph.unusedSteps).sort().join(", ")}`,
+          );
+        }
+        if (result.graph.cycles.length > 0) {
+          nextProofIssues.push(
+            `Cycles: ${result.graph.cycles.map((c) => c.join(" -> ")).join(" | ")}`,
+          );
+        }
+        if (result.duplicateSteps.length > 0) {
+          nextProofIssues.push(
+            `Duplicate steps: ${result.duplicateSteps
+              .map(([a, b]) => `${a} & ${b}`)
+              .join(", ")}`,
+          );
+        }
+        if (result.stepNumberErrors.length > 0) {
+          nextProofIssues.push(
+            `Step numbering issues: ${result.stepNumberErrors.join(" | ")}`,
+          );
+        }
+        if (result.geometricObjectErrors.length > 0) {
+          nextProofIssues.push(
+            `Geometric object issues: ${result.geometricObjectErrors.join(" | ")}`,
+          );
+        }
+        if (result.graph.incorrectSteps.size > 0) {
+          nextProofIssues.push(
+            `Incorrect steps: ${Array.from(result.graph.incorrectSteps).sort().join(", ")}`,
+          );
+        }
+        setProofWideIssues(nextProofIssues);
+        setStatusMessage("Proof parsed successfully.");
+
+        setLastGoodProof(parsed);
+        // Reset InteractiveAppPage/ProofRows state to "Given" after successful parse.
+        setParseVersion((v) => v + 1);
+      } catch (err) {
+        setStatusMessage(err instanceof Error ? err.message : String(err));
+        setProofWideIssues([]);
+        setIncorrectStepErrors(new Map());
+      }
+    }, 500);
+
+    return () => {
+      window.clearTimeout(handle);
+    };
+  }, [proofText]);
 
   useEffect(() => {
     const selected = proofOptions.find((p) => p.key === selectedProofKey);
@@ -94,7 +186,9 @@ export const ProofObjHarness = () => {
       })
       .catch((err) => {
         if (!isCancelled) {
-          setParseError(`Failed to load ${selected.label}: ${String(err)}`);
+          setStatusMessage(`Failed to load ${selected.label}: ${String(err)}`);
+          setProofWideIssues([]);
+          setIncorrectStepErrors(new Map());
         }
       });
     return () => {
@@ -172,9 +266,40 @@ export const ProofObjHarness = () => {
             onChange={(e) => onTextChange(e.target.value)}
           />
           <div
-            className={`mt-2 text-xs ${parseError ? "text-red-600" : "text-green-700"}`}
+            className={`mt-2 text-xs ${
+              statusMessage === "Proof parsed successfully."
+                ? "text-green-700"
+                : "text-red-600"
+            }`}
           >
-            {parseError || "Parsed successfully."}
+            {statusMessage}
+          </div>
+          {proofWideIssues.length > 0 && (
+            <div className="mt-1 text-xs text-red-700 space-y-1">
+              {proofWideIssues.map((issue) => (
+                <div key={issue}>- {issue}</div>
+              ))}
+            </div>
+          )}
+          <div className="mt-2 border border-slate-200 rounded p-2 bg-slate-50 h-36 overflow-auto">
+            <div className="text-[11px] text-slate-500 mb-1">
+              Checker annotations
+            </div>
+            <pre className="font-mono text-xs whitespace-pre-wrap break-words">
+              {buildAnnotatedLines(proofText, incorrectStepErrors).map((line, i) => (
+                <div
+                  key={`${i}-${line.text}`}
+                  title={line.tooltip}
+                  className={
+                    line.isIncorrect
+                      ? "bg-red-100 hover:bg-red-200 rounded px-1"
+                      : undefined
+                  }
+                >
+                  {line.text || " "}
+                </div>
+              ))}
+            </pre>
           </div>
         </div>
       )}

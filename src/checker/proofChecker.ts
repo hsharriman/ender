@@ -11,6 +11,7 @@ import {
   findDuplicateSteps,
 } from "./checker/validators";
 import { logDebug } from "./errors/errorConstants";
+import { ProofParser } from "./grammar/lezerParser";
 import { loadReasonDefinitionsWithBuiltins } from "./grammar/reasonParser";
 import { loadStatementDefinitions } from "./grammar/stmtParser";
 import { ProofGraph, ProofObj, Stmt } from "./types/checkerTypes";
@@ -100,4 +101,75 @@ export function runProofChecker(proof: ProofObj): ProofCheckerResult {
     geometricObjectErrors,
     goalMatchResult,
   };
+}
+
+const parser = new ProofParser();
+
+/** Direct programmatic entry: parse proof text then run checker. */
+export function runProofCheckerFromText(proofText: string): ProofCheckerResult {
+  const proof = parser.parse(proofText) as unknown as ProofObj;
+  return runProofChecker(proof);
+}
+
+/** Console logger for checker output (kept in this module for direct use). */
+export function logProofCheckerResult(result: ProofCheckerResult): void {
+  const {
+    proof,
+    goal,
+    graph,
+    duplicateSteps,
+    stepNumberErrors,
+    geometricObjectErrors,
+    goalMatchResult,
+  } = result;
+
+  console.log("📋 Proof Analysis Results:");
+  console.log("=".repeat(50));
+  console.log(`\n📝 Title: ${proof.title || "No title"}`);
+  if (goal) {
+    console.log(`🎯 Goal: ${goal}`);
+    console.log(`✅ Goal Match: ${goalMatchResult.matches ? "YES" : "NO"}`);
+    console.log(`📋 Goal Details: ${goalMatchResult.details}`);
+  }
+  console.log(`\n📊 Statistics:`);
+  console.log(
+    `   • Total Steps: ${proof.steps.filter((s) => s.type !== "goal").length}`,
+  );
+  console.log(
+    `   • Given Statements: ${proof.steps.filter((s) => s.type === "given").length}`,
+  );
+  console.log(
+    `   • Proof Steps: ${proof.steps.filter((s) => s.type === "proof").length}`,
+  );
+  if (graph.incorrectSteps.size > 0) {
+    console.log(`\n❌ Incorrect Steps: ${graph.incorrectSteps.size}`);
+    Array.from(graph.incorrectSteps)
+      .sort()
+      .forEach((step) => {
+        const depFail = graph.dependencyFailureSteps?.has(step);
+        console.log(
+          depFail
+            ? `   • Step ${step} (fails due to dependency on incorrect step)`
+            : `   • Step ${step}`,
+        );
+      });
+  }
+  console.log(`\n🚫 Unused Steps: ${graph.unusedSteps.size}`);
+  console.log(`\n🔄 Cycles: ${graph.cycles.length}`);
+  console.log(`\n🔄 Duplicate Steps: ${duplicateSteps.length}`);
+  console.log(`\n📝 Step Number Errors: ${stepNumberErrors.length}`);
+  console.log(`\n🔷 Geometric Object Errors: ${geometricObjectErrors.length}`);
+}
+
+/**
+ * Convenience API: accepts either already-parsed `ProofObj` or raw proof text.
+ * Runs checker and logs result summary to console.
+ */
+export function checkProof(input: ProofObj | string): ProofCheckerResult {
+  const result =
+    typeof input === "string"
+      ? runProofCheckerFromText(input)
+      : runProofChecker(input);
+  logProofCheckerResult(result);
+  return result;
 }

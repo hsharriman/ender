@@ -3,6 +3,7 @@ import React from "react";
 import { reasonFromFunction, Reasons } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
 import { AspectRatio } from "../diagramSvg/svgTypes";
+import { Transversal } from "../reasons/Transversal";
 import { VerticalAngles } from "../reasons/VerticalAngles";
 import { SVGModes } from "../types/diagramTypes";
 import { LayoutProps } from "../types/layoutTypes";
@@ -108,14 +109,15 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
 
     const isGivenReason =
       (step.reason?.function ?? "").toLowerCase() === "given";
-    const isCpctcReason =
-      (step.reason?.function ?? "").toLowerCase() === "cpctc";
     const isRightAngleEqualityStep = isConRightReason(step.reason?.function);
     // Diagram premises for reasons with `diagramDependencies` are attached only
     // after `checkReasonApplication` in `runProofChecker`.
     const intersectSegDep = step.diagramDeps?.find(
       (d) => d.statement.function === "intersect_seg",
     );
+    const transversalDeps =
+      step.diagramDeps?.filter((d) => d.statement.function === "transversal") ??
+      [];
     // const hasVertAngDiagramHighlight =
     //   isVertAngReason(step.reason?.function) &&
     //   intersectSegDep?.statement.arguments?.length === 3;
@@ -127,13 +129,6 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
       dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
       text: stmtToText(step.statement),
       additions: ({ ctx, frame, mode }) => {
-        if (isCpctcReason) {
-          dependencyStatements.forEach((dep) =>
-            applyStmtObjects(ctx, frame, SVGModes.Derived, dep.stmt, {
-              isRightAngleEquality: dep.isRightAngleEquality,
-            }),
-          );
-        }
         applyStmtObjects(ctx, frame, mode, step.statement, {
           isRightAngleEquality: isRightAngleEqualityStep,
         });
@@ -153,6 +148,9 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
                   (a) => a.v,
                 );
                 VerticalAngles.highlight({ ctx, frame }, s1, s2, p);
+              }
+              for (const dep of transversalDeps) {
+                Transversal.highlight({ ctx, frame }, dep.statement);
               }
             }
           : undefined,

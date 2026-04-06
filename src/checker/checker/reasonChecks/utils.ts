@@ -34,8 +34,9 @@ export const addReasonCheckError = (
   errors: ErrorObj[],
   details: Record<string, unknown>,
 ) => {
-  return addError(errors, {
+  errors.push({
     type: "reason_check",
     data: details,
   });
+  return errors;
 };
