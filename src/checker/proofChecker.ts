@@ -28,13 +28,13 @@ export type ProofCheckerResult = {
   goalMatchResult: ProofGoalMatchResult;
 };
 
-function extractGoal(proof: ProofObj) {
+const extractGoal = (proof: ProofObj) => {
   const goalStep = proof.steps.find((step) => step.type === "goal");
   if (goalStep && goalStep.statement) return goalStep.statement;
   return proof.goal;
-}
+};
 
-function emptyProofGraph(): ProofGraph {
+const emptyProofGraph = (): ProofGraph => {
   return {
     nodes: new Map(),
     edges: new Map(),
@@ -43,7 +43,7 @@ function emptyProofGraph(): ProofGraph {
     unusedSteps: new Set(),
     cycles: [],
   };
-}
+};
 
 /**
  * Single checker workflow on an already-parsed proof (after `normalizeProofObj`).
@@ -52,7 +52,7 @@ function emptyProofGraph(): ProofGraph {
  * `ProofStep.diagramDeps` is set) → cycles → unused steps → duplicate / step-number
  * checks → goal match.
  */
-export function runProofChecker(proof: ProofObj): ProofCheckerResult {
+export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const goal = extractGoal(proof);
   proof.errors = [];
 
@@ -101,18 +101,20 @@ export function runProofChecker(proof: ProofObj): ProofCheckerResult {
     geometricObjectErrors,
     goalMatchResult,
   };
-}
+};
 
 const parser = new ProofParser();
 
 /** Direct programmatic entry: parse proof text then run checker. */
-export function runProofCheckerFromText(proofText: string): ProofCheckerResult {
+export const runProofCheckerFromText = (
+  proofText: string,
+): ProofCheckerResult => {
   const proof = parser.parse(proofText) as unknown as ProofObj;
   return runProofChecker(proof);
-}
+};
 
 /** Console logger for checker output (kept in this module for direct use). */
-export function logProofCheckerResult(result: ProofCheckerResult): void {
+export const logProofCheckerResult = (result: ProofCheckerResult): void => {
   const {
     proof,
     goal,
@@ -159,17 +161,17 @@ export function logProofCheckerResult(result: ProofCheckerResult): void {
   console.log(`\n🔄 Duplicate Steps: ${duplicateSteps.length}`);
   console.log(`\n📝 Step Number Errors: ${stepNumberErrors.length}`);
   console.log(`\n🔷 Geometric Object Errors: ${geometricObjectErrors.length}`);
-}
+};
 
 /**
  * Convenience API: accepts either already-parsed `ProofObj` or raw proof text.
  * Runs checker and logs result summary to console.
  */
-export function checkProof(input: ProofObj | string): ProofCheckerResult {
+export const checkProof = (input: ProofObj | string): ProofCheckerResult => {
   const result =
     typeof input === "string"
       ? runProofCheckerFromText(input)
       : runProofChecker(input);
   logProofCheckerResult(result);
   return result;
-}
+};

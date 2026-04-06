@@ -7,13 +7,13 @@ export type TriangleReasonResult =
   | { ok: true }
   | { ok: false; failure: TriangleReasonFailure };
 
-export function triangleOk(): TriangleReasonResult {
+export const triangleOk = (): TriangleReasonResult => {
   return { ok: true };
-}
+};
 
-export function triangleFail(
+export const triangleFail = (
   code: string,
   details?: Record<string, unknown>,
-): TriangleReasonResult {
+): TriangleReasonResult  => {
   return { ok: false, failure: { code, details } };
-}
+};
