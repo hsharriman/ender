@@ -24,6 +24,7 @@ export const buildProofGraph = (
 ): ProofGraph => {
   const graph: ProofGraph = {
     nodes: new Map(),
+    diagramPremises: new Map(),
     edges: new Map(),
     incorrectSteps: new Set(),
     dependencyFailureSteps: new Set(),
@@ -40,6 +41,11 @@ export const buildProofGraph = (
       graph.nodes.set(stepNum, step);
       graph.edges.set(stepNum, []);
     }
+  });
+
+  // Add diagram premises for direct lookup by step number.
+  proof.premises.diagramStatements.forEach((d) => {
+    graph.diagramPremises.set(d.stepNumber, d);
   });
 
   // Check each step and build edges
@@ -64,7 +70,7 @@ export const buildProofGraph = (
       logDebug(JSON.stringify(step, null, 2));
 
       // Check reason dependencies
-      isCorrect = checkReasonStructure(step, reasonDefs, groups, graph, proof);
+      isCorrect = checkReasonStructure(step, reasonDefs, groups, graph);
       logDebug(`  Reason structure check: ${isCorrect}`);
 
       // Validate dependency statements (non-throwing version)
@@ -75,7 +81,6 @@ export const buildProofGraph = (
           groups,
           graph,
           step,
-          proof,
         );
         logDebug(`  Dependency statements check: ${isCorrect}`);
       }
@@ -107,6 +112,13 @@ export const buildProofGraph = (
       ) {
         for (const depRef of step.reason.arguments) {
           if (/^g_\d+$/.test(depRef)) {
+            step.errors.push({
+              type: "illegal_given_dep",
+              data: {
+                reason: step.reason.function,
+                ref: depRef,
+              },
+            });
             logError.parser.dependencyMismatch(
               `Step [${stepNum}] cannot cite given premise ${depRef} outside of given(...)`,
             );
@@ -160,7 +172,7 @@ export const buildProofGraph = (
 
       // Check if reason is applied correctly using reason checker methods
       if (isCorrect) {
-        isCorrect = checkReasonApplication(step, reasonDefs, graph, proof, ctx);
+        isCorrect = checkReasonApplication(step, reasonDefs, graph, ctx);
         logDebug(`  Reason application check: ${isCorrect}`);
       }
 

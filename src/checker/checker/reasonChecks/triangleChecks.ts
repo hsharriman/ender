@@ -7,7 +7,7 @@ import {
   TriangleReasonFailure,
   TriangleReasonResult,
 } from "./triangleReasonResult";
-import { angCenter, commonPt } from "./utils";
+import { angCenter, commonPt, findDuplicateDependencyStatements } from "./utils";
 
 type TriangleAssignResult =
   | { ok: true; left: string; right: string }
@@ -16,10 +16,10 @@ type TriangleAssignResult =
 const congruentTrianglePair = (
   conTri: Stmt,
   ctx: ProofContent,
-): [Triangle, Triangle]  => {
+): [Triangle, Triangle] => {
   const tempCtx = new ProofContent(ctx.getCtx());
   return conTriMapper(conTri, tempCtx) as [Triangle, Triangle];
-}
+};
 
 const sortPairToTri = (
   pair: ParseObj[],
@@ -42,13 +42,13 @@ const sortPairToTri = (
       details: { left: l.v, right: r.v, tri1: tri1.label, tri2: tri2.label },
     },
   };
-}
+};
 
 const checkTriangleAssign = (
   pair: ParseObj[],
   tri1: Triangle,
   tri2: Triangle,
-): TriangleAssignResult  => {
+): TriangleAssignResult => {
   const sorted = sortPairToTri(pair, [tri1, tri2]);
   if (!sorted.ok) {
     return sorted;
@@ -75,15 +75,26 @@ const checkTriangleAssign = (
     };
   }
   return { ok: true, left: left.v, right: right.v };
-}
+};
 
 const sasSideAnglePattern = (
   segLeft1: string,
   segLeft2: string,
   angleCenter: string,
-): boolean  => {
+): boolean => {
   return segLeft1.includes(angleCenter) && segLeft2.includes(angleCenter);
-}
+};
+
+const checkDistinctDependencyStmts = (
+  reason: string,
+  deps: Stmt[],
+): TriangleReasonResult => {
+  const dup = findDuplicateDependencyStatements(deps);
+  if (dup) {
+    return triangleFail("TRI_DUP_DEP_STMT", { reason, ...dup });
+  }
+  return triangleOk();
+};
 
 /** Validates SAS and updates triangle vertex order in `ctx` when valid. */
 export const checkSas = (
@@ -92,7 +103,9 @@ export const checkSas = (
   conAng: Stmt,
   conSeg2: Stmt,
   ctx: ProofContent,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
+  const dup = checkDistinctDependencyStmts("sas", [conSeg1, conAng, conSeg2]);
+  if (!dup.ok) return dup;
   const [tri1, tri2] = congruentTrianglePair(conTri, ctx);
 
   const a1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2);
@@ -134,7 +147,7 @@ export const checkSas = (
   t2.orderTriangle([center2, t2p2, t2p3], ctx);
 
   return triangleOk();
-}
+};
 
 export const checkSss = (
   t_cong: Stmt,
@@ -142,7 +155,9 @@ export const checkSss = (
   conSeg2: Stmt,
   conSeg3: Stmt,
   ctx: ProofContent,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
+  const dup = checkDistinctDependencyStmts("sss", [conSeg1, conSeg2, conSeg3]);
+  if (!dup.ok) return dup;
   const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
 
   const r1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2);
@@ -172,18 +187,18 @@ export const checkSss = (
   );
 
   return triangleOk();
-}
+};
 
 const aasSideTouchesOneAngleEach = (
   segLeft: string,
   c1: string,
   c2: string,
-): boolean  => {
+): boolean => {
   return (
     (segLeft.includes(c1) && !segLeft.includes(c2)) ||
     (!segLeft.includes(c1) && segLeft.includes(c2))
   );
-}
+};
 
 export const checkAas = (
   t_cong: Stmt,
@@ -191,7 +206,9 @@ export const checkAas = (
   conAng2: Stmt,
   conSeg: Stmt,
   ctx: ProofContent,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
+  const dup = checkDistinctDependencyStmts("aas", [conAng1, conAng2, conSeg]);
+  if (!dup.ok) return dup;
   const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
 
   const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
@@ -227,7 +244,7 @@ export const checkAas = (
   t2.orderTriangle([a21c, a22c, s2.replace(a21c, "").replace(a22c, "")], ctx);
 
   return triangleOk();
-}
+};
 
 export const checkAsa = (
   t_cong: Stmt,
@@ -235,7 +252,9 @@ export const checkAsa = (
   conSeg: Stmt,
   conAng2: Stmt,
   ctx: ProofContent,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
+  const dup = checkDistinctDependencyStmts("asa", [conAng1, conSeg, conAng2]);
+  if (!dup.ok) return dup;
   const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
 
   const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
@@ -271,18 +290,18 @@ export const checkAsa = (
   t2.orderTriangle([a21c, a22c, t2.getThirdPoint(a21c, a22c)], ctx);
 
   return triangleOk();
-}
+};
 
 const rhlLegPattern = (
   segLeft1: string,
   segLeft2: string,
   rightCenter: string,
-): boolean  => {
+): boolean => {
   return (
     (!segLeft1.includes(rightCenter) && segLeft2.includes(rightCenter)) ||
     (segLeft1.includes(rightCenter) && !segLeft2.includes(rightCenter))
   );
-}
+};
 
 export const checkRhl = (
   t_cong: Stmt,
@@ -290,7 +309,9 @@ export const checkRhl = (
   conSeg1: Stmt,
   conSeg2: Stmt,
   ctx: ProofContent,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
+  const dup = checkDistinctDependencyStmts("rhl", [rightCon, conSeg1, conSeg2]);
+  if (!dup.ok) return dup;
   const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
 
   const er = checkTriangleAssign(rightCon.arguments, tri1, tri2);
@@ -332,13 +353,13 @@ export const checkRhl = (
   t2.orderTriangle([r2c, t2c2, t2.getThirdPoint(r2c, t2c2)], ctx);
 
   return triangleOk();
-}
+};
 
 const checkCpctcSegment = (
   tri1: Triangle,
   tri2: Triangle,
   conclusion: Stmt,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
   const assign = checkTriangleAssign(conclusion.arguments, tri1, tri2);
   if (!assign.ok) {
     return triangleFail(assign.failure.code, assign.failure.details);
@@ -353,14 +374,14 @@ const checkCpctcSegment = (
     });
   }
   return triangleOk();
-}
+};
 
 const checkCpctcAngle = (
   tri1: Triangle,
   tri2: Triangle,
   conclusion: Stmt,
   ctx: ProofContent,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
   const assign = checkTriangleAssign(conclusion.arguments, tri1, tri2);
   if (!assign.ok) {
     return triangleFail(assign.failure.code, assign.failure.details);
@@ -375,13 +396,13 @@ const checkCpctcAngle = (
     });
   }
   return triangleOk();
-}
+};
 
 export const checkCpctc = (
   t_cong: Stmt,
   conclusion: Stmt,
   ctx: ProofContent,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
   const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
 
   if (conclusion.function === "con_seg") {
@@ -391,13 +412,13 @@ export const checkCpctc = (
     return checkCpctcAngle(tri1, tri2, conclusion, ctx);
   }
   return triangleFail("CPCTC_CONCLUSION", { function: conclusion.function });
-}
+};
 
 export const checkIsosceles = (
   conSeg: Stmt,
   isoscelesStmt: Stmt,
   ctx: ProofContent,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
   const tempCtx = new ProofContent(ctx.getCtx());
   const [s1, s2] = conSegMapper(conSeg, tempCtx);
   const [t] = conTriMapper(isoscelesStmt, tempCtx);
@@ -407,4 +428,4 @@ export const checkIsosceles = (
   }
   ctx.addTriangleFromStr(t.label);
   return triangleOk();
-}
+};

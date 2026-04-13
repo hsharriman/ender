@@ -30,10 +30,10 @@ reason intersect_seg(point_on_line, point_on_line) -> intersect_seg
 reason reflex_s() -> con_seg
 
 // definition of perpendicular lines
-reason perp(right, point_on_line) -> perp
+reason def_perp(right, point_on_line) -> perp
 
 // definition of midpoint
-reason midpt(midpt) -> con_seg
+reason def_midpt(midpt) -> con_seg
 
 // converse of definition of midpoint
 reason midpt_conv(con_seg) -> midpt
@@ -56,13 +56,16 @@ reason altint_conv(con_ang, transversal) -> para
 reason altint(para, transversal) -> con_ang 
 
 // angle bisector
-reason ang_bisect(ang_bisect) -> con_ang
+reason def_ang_bisect(ang_bisect) -> con_ang
 
 // converse of angle bisector
 reason ang_bisect_conv(con_ang) -> ang_bisect
 
-// congruent right angles
-reason con_right(right, right) -> con_ang
+// two angles already given as right → congruent (each 90°)
+reason def_con_right(right, right) -> con_ang
+
+// adjacent right angles that share a side (same corner, one common leg)
+reason cong_adj_angles(right, right) -> con_ang
 
 // the pair of congruent angles formed by perpendicular lines are right angles
 reason perp_con_ang(perp) -> con_ang, con_right

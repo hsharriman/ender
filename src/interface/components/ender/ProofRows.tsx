@@ -282,7 +282,9 @@ export class ProofRow extends React.Component<ProofRowProps> {
                 >
                   <div
                     className={`px-2 rounded-md py-1 ${
-                      this.props.isActive && this.props.item.reason !== "Given"
+                      this.props.isActive &&
+                      Boolean(this.props.item.reason) &&
+                      this.props.item.reason !== "Given"
                         ? "border-black border-2"
                         : ""
                     }`}

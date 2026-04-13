@@ -1,45 +1,131 @@
 import { Obj, ParseObj } from "../../geometry-object";
 import { normalizeProofObj } from "../normalizeProofObj";
-import { ProofObj, ProofStep, Reason, Stmt } from "../types/checkerTypes";
-import { loadReasonDefinitionsWithBuiltins } from "./defsParsers";
+import {
+  ProofObj,
+  ProofStep,
+  Reason,
+  ReasonDefinition,
+  StatementDefinition,
+  Stmt,
+} from "../types/checkerTypes";
+import { loadReasonDefinitions, loadStatementDefinitions } from "./defsParsers";
 import { lexer } from "./parser";
 
 export class ProofParser {
+  /** Lexer types for bare geometric literals in premises lists. */
+  private static readonly geomPremiseTokenTypes = new Set([
+    "point",
+    "segment",
+    "angle",
+    "triangle",
+    "quadrilateral",
+  ]);
+
   private lexer: any;
-  private reasonDefinitions: Map<string, any>;
+  private reasonDefinitions: Map<string, ReasonDefinition>;
+  private statementDefinitions: Map<string, StatementDefinition>;
 
   constructor() {
     this.lexer = lexer;
-    this.reasonDefinitions = loadReasonDefinitionsWithBuiltins();
+    this.reasonDefinitions = loadReasonDefinitions();
+    this.statementDefinitions = loadStatementDefinitions().statements;
   }
+
+  /** Three labeled points, all distinct (e.g. angle ABC, triangle ABC). */
+  private distinctThreePoints = (body: string): boolean => {
+    return body.length === 3 && new Set(body).size === 3;
+  };
+
+  private validateAngleToken = (full: string): string => {
+    const v = full.startsWith("a_") ? full.slice(2) : full;
+    if (v.length !== 3) {
+      throw new Error(
+        `Invalid angle '${full}': expected exactly 3 point labels after 'a_'`,
+      );
+    }
+    if (!this.distinctThreePoints(v)) {
+      throw new Error(
+        `Invalid angle '${full}': duplicate point labels are not allowed (need 3 distinct points)`,
+      );
+    }
+    return v;
+  };
+
+  private validateTriangleToken = (full: string): string => {
+    const v = full.startsWith("t_") ? full.slice(2) : full;
+    if (v.length !== 3) {
+      throw new Error(
+        `Invalid triangle '${full}': expected exactly 3 point labels after 't_'`,
+      );
+    }
+    if (!this.distinctThreePoints(v)) {
+      throw new Error(
+        `Invalid triangle '${full}': duplicate point labels are not allowed (need 3 distinct points)`,
+      );
+    }
+    return v;
+  };
+
+  private validateQuadrilateralToken = (full: string): string => {
+    const v = full.startsWith("q_") ? full.slice(2) : full;
+    if (v.length !== 4) {
+      throw new Error(
+        `Invalid quadrilateral '${full}': expected exactly 4 point labels after 'q_'`,
+      );
+    }
+    if (new Set(v).size !== 4) {
+      throw new Error(
+        `Invalid quadrilateral '${full}': duplicate point labels are not allowed (need 4 distinct points)`,
+      );
+    }
+    return v;
+  };
+
+  private validateSegmentLabel = (segment: string) => {
+    if (segment[0] === segment[1]) {
+      throw new Error(
+        `Invalid segment '${segment}': endpoints must be two distinct points`,
+      );
+    }
+  };
 
   // Helper function to parse objects
   private parseObj = (arg: string): ParseObj => {
     if (arg.startsWith("a_")) {
       return {
         type: Obj.Angle,
-        v: arg.replace("a_", ""),
+        v: this.validateAngleToken(arg),
       };
-    } else if (arg.startsWith("t_")) {
+    }
+    if (arg.startsWith("t_")) {
       return {
         type: Obj.Triangle,
-        v: arg.replace("t_", ""),
+        v: this.validateTriangleToken(arg),
       };
-    } else if (arg.startsWith("q_")) {
+    }
+    if (arg.startsWith("q_")) {
       return {
         type: Obj.Quadrilateral,
-        v: arg.replace("q_", ""),
+        v: this.validateQuadrilateralToken(arg),
       };
-    } else if (arg.length === 2) {
+    }
+    if (arg.length === 2) {
+      this.validateSegmentLabel(arg);
       return {
         type: Obj.Segment,
         v: arg,
       };
-    } else if (arg.length === 1) {
+    }
+    if (arg.length === 1) {
       return {
         type: Obj.Point,
         v: arg,
       };
+    }
+    if (arg.length > 2) {
+      throw new Error(
+        `Malformed object '${arg}': names longer than 2 characters must use a prefix ('a_', 't_', or 'q_')`,
+      );
     }
     throw new Error(`Cannot parse geometric object: ${arg}`);
   };
@@ -48,6 +134,64 @@ export class ProofParser {
     const n = parseInt(raw.replace(/[[\]]/g, ""), 10);
     return Number.isNaN(n) ? raw : String(n);
   };
+
+  /**
+   * After `tri:`, `seg:`, etc., the next token (if any) must not be a different kind of
+   * geometric literal — otherwise it was silently skipped by the old parser.
+   */
+  private assertPremiseListHead = (
+    tokens: any[],
+    i: number,
+    sectionLabel: string,
+    expected: "point" | "segment" | "angle" | "triangle" | "quadrilateral",
+    humanReadable: string,
+  ): void => {
+    if (i >= tokens.length) return;
+    const t = tokens[i];
+    if (!ProofParser.geomPremiseTokenTypes.has(t.type)) return;
+    if (t.type !== expected) {
+      throw new Error(
+        `In ${sectionLabel}: section, only ${humanReadable} are allowed; found ${t.type} '${t.value}'`,
+      );
+    }
+  };
+
+  /**
+   * Lexer emits malformed prefixed objects like `t_RA` as `identifier` tokens
+   * (not as `triangle`/`angle`/`quadrilateral`), so we detect and reject them.
+   */
+  private asMalformedObjectIdentifier = (token: any): string | null => {
+    if (token?.type !== "identifier" || typeof token.value !== "string") {
+      return null;
+    }
+    const v = token.value as string;
+    if (/^[atq]_/.test(v)) return v;
+    return null;
+  };
+
+  private assertNoMalformedObjectIdentifier = (
+    token: any,
+    context: string,
+  ): void => {
+    const malformed = this.asMalformedObjectIdentifier(token);
+    if (!malformed) return;
+    throw new Error(
+      `Malformed object '${malformed}' in ${context}: use 'a_' with 3 points, 't_' with 3 points, or 'q_' with 4 points`,
+    );
+  };
+
+  private makeProofStep = (
+    stepLabel: string,
+    parts: { reason?: Reason; statement?: Stmt },
+  ): ProofStep => ({
+    type: "proof",
+    reason: parts.reason,
+    statement: parts.statement,
+    stepNumber: this.normalizeNumericRef(stepLabel),
+    // Diagram deps are attached by the checker after geometric validation
+    // (`runProofChecker` → `checkReasonApplication`).
+    errors: [],
+  });
 
   parse(input: string) {
     this.lexer.reset(input);
@@ -136,6 +280,13 @@ export class ProofParser {
               i++;
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
+                this.assertPremiseListHead(
+                  tokens,
+                  i,
+                  "pt",
+                  "point",
+                  "single-letter points (then coordinates in parentheses)",
+                );
                 while (i < tokens.length && tokens[i].type === "point") {
                   const pointLabel = tokens[i].value;
                   i++;
@@ -161,7 +312,15 @@ export class ProofParser {
               i++;
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
+                this.assertPremiseListHead(
+                  tokens,
+                  i,
+                  "tri",
+                  "triangle",
+                  "triangles (t_XYZ)",
+                );
                 while (i < tokens.length && tokens[i].type === "triangle") {
+                  this.validateTriangleToken(tokens[i].value as string);
                   result.premises.triangles.push({
                     type: Obj.Triangle,
                     v: tokens[i].value,
@@ -173,10 +332,18 @@ export class ProofParser {
               i++;
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
+                this.assertPremiseListHead(
+                  tokens,
+                  i,
+                  "quad",
+                  "quadrilateral",
+                  "quadrilaterals (q_WXYZ)",
+                );
                 while (
                   i < tokens.length &&
                   tokens[i].type === "quadrilateral"
                 ) {
+                  this.validateQuadrilateralToken(tokens[i].value as string);
                   result.premises.quadrilaterals.push({
                     type: Obj.Quadrilateral,
                     v: tokens[i].value,
@@ -188,7 +355,15 @@ export class ProofParser {
               i++;
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
+                this.assertPremiseListHead(
+                  tokens,
+                  i,
+                  "seg",
+                  "segment",
+                  "segments (two capital letters, e.g. AB)",
+                );
                 while (i < tokens.length && tokens[i].type === "segment") {
+                  this.validateSegmentLabel(tokens[i].value as string);
                   result.premises.segments.push({
                     type: Obj.Segment,
                     v: tokens[i].value,
@@ -200,7 +375,15 @@ export class ProofParser {
               i++;
               if (i < tokens.length && tokens[i].type === "colon") {
                 i++;
+                this.assertPremiseListHead(
+                  tokens,
+                  i,
+                  "ang",
+                  "angle",
+                  "angles (a_XYZ)",
+                );
                 while (i < tokens.length && tokens[i].type === "angle") {
+                  this.validateAngleToken(tokens[i].value as string);
                   result.premises.angles.push({
                     type: Obj.Angle,
                     v: tokens[i].value,
@@ -236,7 +419,17 @@ export class ProofParser {
               const goal = this.parseStatement(tokens, i);
               result.goal = goal.obj;
               i = goal.endIndex;
+            } else if (ProofParser.geomPremiseTokenTypes.has(tokens[i].type)) {
+              throw new Error(
+                `Unexpected ${tokens[i].type} '${tokens[i].value}' in goal statement.`,
+              );
+            } else if (
+              tokens[i].type === "comma" ||
+              tokens[i].type === "comment"
+            ) {
+              i++;
             } else {
+              this.assertNoMalformedObjectIdentifier(tokens[i], "premises");
               i++;
             }
           }
@@ -261,7 +454,17 @@ export class ProofParser {
                 result.steps.push(step.obj);
                 i = step.endIndex;
               } else {
-                i++;
+                // Preserve blank step rows like `[03]` so the interface can render
+                // an empty proof row tied to that step id.
+                result.steps.push({
+                  type: "proof",
+                  stepNumber: this.normalizeNumericRef(label),
+                  errors: [],
+                });
+                // Avoid skipping a legitimate next step token.
+                if (i < tokens.length && tokens[i].type !== "stepNumber") {
+                  i++;
+                }
               }
             } else {
               i++;
@@ -284,7 +487,6 @@ export class ProofParser {
     const statement: Stmt = {
       function: "",
       arguments: [],
-      stepNumber: "",
     };
 
     if (i < tokens.length && tokens[i].type === "stmt_function") {
@@ -294,6 +496,10 @@ export class ProofParser {
         i++;
         // Parse arguments
         while (i < tokens.length && tokens[i].type !== "rparen") {
+          this.assertNoMalformedObjectIdentifier(
+            tokens[i],
+            `statement '${statement.function}' arguments`,
+          );
           if (tokens[i].type === "point") {
             // Check if this is part of a segment (two consecutive points)
             if (i + 1 < tokens.length && tokens[i + 1].type === "point") {
@@ -327,6 +533,20 @@ export class ProofParser {
         }
       }
     }
+
+    if (statement.function) {
+      if (this.reasonDefinitions.has(statement.function)) {
+        throw new Error(
+          `'${statement.function}' is defined as a reason only and cannot be used as a statement`,
+        );
+      }
+      if (!this.statementDefinitions.has(statement.function)) {
+        throw new Error(
+          `'${statement.function}' is not a defined reason or statement`,
+        );
+      }
+    }
+
     return { obj: statement, endIndex: i };
   }
 
@@ -337,28 +557,38 @@ export class ProofParser {
     stepLabel: string,
   ): { obj: ProofStep; endIndex: number } | null {
     const reason = this.parseReason(tokens, startIndex);
-    if (
-      !reason ||
-      reason.endIndex >= tokens.length ||
-      tokens[reason.endIndex].type !== "rarrow"
-    ) {
-      return null;
+    if (reason && tokens[reason.endIndex]?.type === "rarrow") {
+      const i = reason.endIndex + 1;
+      const conclusion = this.parseStatement(tokens, i);
+      if (conclusion.obj.function) {
+        return {
+          obj: this.makeProofStep(stepLabel, {
+            reason: reason.obj,
+            statement: conclusion.obj,
+          }),
+          endIndex: conclusion.endIndex,
+        };
+      }
     }
-    const i = reason.endIndex + 1;
-    const conclusion = this.parseStatement(tokens, i);
-    delete conclusion.obj.stepNumber;
-    return {
-      obj: {
-        type: "proof",
-        reason: reason.obj,
-        statement: conclusion.obj,
-        stepNumber: this.normalizeNumericRef(stepLabel),
-        // Diagram deps are attached by the checker after geometric validation
-        // (`runProofChecker` → `checkReasonApplication`).
-        errors: [],
-      },
-      endIndex: conclusion.endIndex,
-    };
+
+    // If the line starts with a known reason, keep it as reason only — do not let
+    // parseStatement treat e.g. sas(1,2,3) or sas(1,2,3) -> as a statement.
+    if (reason && reason.obj.function) {
+      return {
+        obj: this.makeProofStep(stepLabel, { reason: reason.obj }),
+        endIndex: reason.endIndex,
+      };
+    }
+
+    // Incomplete step: statement without reason, e.g. `[05] con_seg(AB,CD)`.
+    const statementOnly = this.parseStatement(tokens, startIndex);
+    if (statementOnly.obj.function) {
+      return {
+        obj: this.makeProofStep(stepLabel, { statement: statementOnly.obj }),
+        endIndex: statementOnly.endIndex,
+      };
+    }
+    return null;
   }
 
   private parseReason(
@@ -382,6 +612,10 @@ export class ProofParser {
         i++;
         // Parse arguments
         while (i < tokens.length && tokens[i].type !== "rparen") {
+          this.assertNoMalformedObjectIdentifier(
+            tokens[i],
+            `reason '${reason.function}' arguments`,
+          );
           if (
             tokens[i].type === "givenPremiseRef" ||
             tokens[i].type === "diagramPremiseRef"

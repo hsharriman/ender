@@ -39,6 +39,7 @@ export type ErrorType =
   | "reason_stmt_mismatch"
   | "upstream_dep_error"
   | "reason_objs_not_in_stmt_obj"
+  | "illegal_given_dep"
   | "object_not_in_premises"
   | "cycle"
   | "unused_step"
@@ -97,6 +98,7 @@ export type ParsePointObj = ParseObj & {
 
 export interface ProofGraph {
   nodes: Map<string, ProofStep>;
+  diagramPremises: Map<string, ParseDiagramStmt>;
   edges: Map<string, string[]>;
   incorrectSteps: Set<string>;
   // Steps marked incorrect specifically because they depend on incorrect steps

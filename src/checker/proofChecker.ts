@@ -12,7 +12,7 @@ import {
 } from "./checker/validators";
 import { logDebug } from "./errors/errorConstants";
 import {
-  loadReasonDefinitionsWithBuiltins,
+  loadReasonDefinitions,
   loadStatementDefinitions,
 } from "./grammar/defsParsers";
 import { ProofParser } from "./grammar/lezerParser";
@@ -39,6 +39,7 @@ const extractGoal = (proof: ProofObj) => {
 const emptyProofGraph = (): ProofGraph => {
   return {
     nodes: new Map(),
+    diagramPremises: new Map(),
     edges: new Map(),
     incorrectSteps: new Set(),
     dependencyFailureSteps: new Set(),
@@ -75,7 +76,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   logDebug("checking angle overlaps");
   ctx.checkAngleOverlaps();
 
-  const reasonDefs = loadReasonDefinitionsWithBuiltins();
+  const reasonDefs = loadReasonDefinitions();
   const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
   logDebug("Building proof graph (reason application; diagram deps)...");

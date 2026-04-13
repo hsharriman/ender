@@ -1,5 +1,6 @@
 import { Point, ProofContent, Segment } from "../../../geometry-object";
 import { Stmt } from "../../types/checkerTypes";
+import { findDuplicateDependencyStatements } from "./utils";
 
 export const reflex_s = (s1: Segment, s2: Segment) => {
   return s1.equals(s2);
@@ -13,6 +14,7 @@ export const altint = (
 ): boolean => {
   const tempCtx = new ProofContent(ctx.getCtx());
   let [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg.v));
+  if (a1.equals(a2)) return false;
   const [s1p1, s1p2, p1, s2p1, s2p2, p2] = transversal.arguments.map((arg) =>
     tempCtx.getPoint(arg.v),
   );
@@ -21,6 +23,7 @@ export const altint = (
     tempCtx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`),
     tempCtx.addSegmentFromStr(`${p1.label}${p2.label}`),
   ];
+  if (s1.equals(s2) || s1.equals(t) || s2.equals(t)) return false;
   let [pa1, pa2] = para.arguments.map((arg) =>
     tempCtx.addSegmentFromStr(arg.v),
   );
@@ -69,6 +72,7 @@ export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: ProofContent) => {
   const [s1, s2] = conSeg.arguments.map((arg) =>
     tempCtx.addSegmentFromStr(arg.v),
   );
+  if (s1.equals(s2)) return false;
   const [bigSeg, midpt] = [
     tempCtx.addSegmentFromStr(midPt.arguments[0].v),
     tempCtx.getPoint(midPt.arguments[1].v),
@@ -91,6 +95,14 @@ export const intersect_seg = (
   intersect_seg: Stmt,
   ctx: ProofContent,
 ): boolean => {
+  if (
+    findDuplicateDependencyStatements([
+      intersect_on1,
+      intersect_on2,
+      intersect_seg,
+    ])
+  )
+    return false;
   const tempCtx = new ProofContent(ctx.getCtx());
   const p1 = tempCtx.getPoint(intersect_on1.arguments[1].v);
   const p2 = tempCtx.getPoint(intersect_on2.arguments[1].v);
@@ -137,21 +149,22 @@ export const perp = (
   return false;
 };
 
-export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
-  const tempCtx = new ProofContent(ctx.getCtx());
-  const [s1, s2] = perp.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg.v),
-  );
-  const [a1, a2] = conAng.arguments.map((arg) =>
-    tempCtx.addAngleFromStr(arg.v),
-  );
-  const [intersectPt, sharedSide] = getIntersectPt(s1, s2);
-  if (intersectPt && sharedSide) {
-    // TODO check for shared side AND angle made up of one point on the line
-    return a1.centerEquals(intersectPt) && a2.centerEquals(intersectPt);
-  }
-  return false;
-};
+// export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
+//   if (findDuplicateDependencyStatements([perp, conAng])) return false;
+//   const tempCtx = new ProofContent(ctx.getCtx());
+//   const [s1, s2] = perp.arguments.map((arg) =>
+//     tempCtx.addSegmentFromStr(arg.v),
+//   );
+//   const [a1, a2] = conAng.arguments.map((arg) =>
+//     tempCtx.addAngleFromStr(arg.v),
+//   );
+//   const [intersectPt, sharedSide] = getIntersectPt(s1, s2);
+//   if (intersectPt && sharedSide) {
+//     // TODO check for shared side AND angle made up of one point on the line
+//     return a1.centerEquals(intersectPt) && a2.centerEquals(intersectPt);
+//   }
+//   return false;
+// };
 
 // ----- Helper functions -----
 const getIntersectPt = (

@@ -39,14 +39,14 @@ export const REASONS_DEFS = {
     dependencies: [],
     conclusion: "con_seg",
   },
-  perp: {
-    name: "perp",
+  def_perp: {
+    name: "def_perp",
     diagramDependencies: ["point_on_line"],
     dependencies: ["right"],
     conclusion: "perp",
   },
-  midpt: {
-    name: "midpt",
+  def_midpt: {
+    name: "def_midpt",
     dependencies: ["midpt"],
     conclusion: "con_seg",
   },
@@ -54,11 +54,6 @@ export const REASONS_DEFS = {
     name: "midpt_conv",
     dependencies: ["con_seg"],
     conclusion: "midpt",
-  },
-  right: {
-    name: "right",
-    dependencies: ["perp"],
-    conclusion: "right",
   },
   reflex_a: {
     name: "reflex_a",
@@ -83,8 +78,8 @@ export const REASONS_DEFS = {
     dependencies: ["para"],
     conclusion: "con_ang",
   },
-  ang_bisect: {
-    name: "ang_bisect",
+  def_ang_bisect: {
+    name: "def_ang_bisect",
     dependencies: ["ang_bisect"],
     conclusion: "con_ang",
   },
@@ -93,8 +88,13 @@ export const REASONS_DEFS = {
     dependencies: ["con_ang"],
     conclusion: "ang_bisect",
   },
-  con_right: {
-    name: "con_right",
+  def_con_right: {
+    name: "def_con_right",
+    dependencies: ["right", "right"],
+    conclusion: "con_ang, con_right",
+  },
+  cong_adj_angles: {
+    name: "cong_adj_angles",
     dependencies: ["right", "right"],
     conclusion: "con_ang",
   },

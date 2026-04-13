@@ -10,12 +10,18 @@ import {
 } from "../../geometry-object";
 import { createError, logError } from "../errors/errorConstants";
 import {
+  ParseDiagramStmt,
   ProofGraph,
-  ProofObj,
   ProofStep,
   ReasonDefinition,
 } from "../types/checkerTypes";
-import { ang_bisect, reflex_a, vert_ang } from "./reasonChecks/angleChecks";
+import {
+  congAdjAngles,
+  def_ang_bisect,
+  defConRight,
+  reflex_a,
+  vert_ang,
+} from "./reasonChecks/angleChecks";
 import {
   altint,
   intersect_seg,
@@ -33,15 +39,46 @@ import {
   checkSas,
   checkSss,
 } from "./reasonChecks/triangleChecks";
-import { addReasonCheckError } from "./reasonChecks/utils";
+import { TriangleReasonFailure } from "./reasonChecks/triangleReasonResult";
 import { validateGivenProofStep } from "./validators";
+
+const addStmtArgMismatchError = (
+  errors: ProofStep["errors"],
+  reason: string,
+  failure: TriangleReasonFailure,
+) => {
+  errors.push({
+    type: "stmt_arg_mismatch",
+    data: {
+      reason,
+      code: failure.code,
+      ...(failure.details ?? {}),
+    },
+  });
+};
+
+const failStmtArgMismatch = (
+  currStep: ProofStep,
+  reason: string,
+  code: string,
+  details?: Record<string, unknown>,
+): false => {
+  currStep.errors.push({
+    type: "stmt_arg_mismatch",
+    data: {
+      reason,
+      code,
+      ...(details ?? {}),
+    },
+  });
+  return false;
+};
 
 // Check if reason is applied correctly using reason checker methods
 export const checkReasonApplication = (
   currStep: ProofStep,
   reasonDefs: Map<string, ReasonDefinition>,
   proofGraph: ProofGraph,
-  proof: ProofObj,
   ctx: ProofContent,
 ): boolean => {
   const reason = currStep.reason!;
@@ -52,263 +89,255 @@ export const checkReasonApplication = (
   }
 
   try {
-    // Get the dependency steps and their arguments
-    const dependencyArgs: any[] = [];
-    for (let i = 0; i < reason.arguments.length; i++) {
-      const depRef = reason.arguments[i];
-      const stepNum = depRef.replace(/[\[\]]/g, "");
-
-      // TODO clean up when separating diagram premises from proof graph
-      const dependencyStep =
-        proofGraph.nodes.get(stepNum) ||
-        ({
-          // Diagram premises are stored outside the proof graph.
-          statement: proof.premises.diagramStatements.find(
-            (d) => d.stepNumber === stepNum,
-          )?.statement,
-        } as any);
-
-      if (!dependencyStep?.statement) {
-        return false;
-      }
-
-      // Get the arguments from the dependency step
-      const depArgs = dependencyStep.statement.arguments || [];
-
-      // Create geometric objects from the arguments
-
-      dependencyArgs.push(
-        depArgs.map((arg: any) => getGeometricObject(arg, ctx)),
-      );
-    }
+    const stmt = currStep.statement!;
 
     // Call the appropriate reason checker method
     switch (reason.function) {
       case "reflex_s":
-        if (dependencyArgs.length === 0) {
-          if (currStep.statement?.arguments?.length === 2) {
-            return reflex_s(
-              getGeometricObject(
-                currStep.statement.arguments[0],
-                ctx,
-              ) as Segment,
-              getGeometricObject(
-                currStep.statement.arguments[1],
-                ctx,
-              ) as Segment,
-            );
-          }
-        }
-        return false;
+        return (
+          reflex_s(
+            getGeometricObject(stmt.arguments[0], ctx) as Segment,
+            getGeometricObject(stmt.arguments[1], ctx) as Segment,
+          ) ||
+          failStmtArgMismatch(currStep, reason.function, "REFLEX_S_MISMATCH")
+        );
 
       case "reflex_a":
-        if (dependencyArgs.length === 0) {
-          if (currStep.statement?.arguments?.length === 2) {
-            return reflex_a(
-              getGeometricObject(currStep.statement.arguments[0], ctx) as Angle,
-              getGeometricObject(currStep.statement.arguments[1], ctx) as Angle,
-            );
-          }
-        }
-        return false;
+        return (
+          reflex_a(
+            getGeometricObject(stmt.arguments[0], ctx) as Angle,
+            getGeometricObject(stmt.arguments[1], ctx) as Angle,
+          ) ||
+          failStmtArgMismatch(currStep, reason.function, "REFLEX_A_MISMATCH")
+        );
 
       case "altint": {
-        const para_alt = getDepStmt(reason.arguments[0], proof);
-        if (!currStep.statement || !para_alt) return false;
-        const altintMatches = proof.premises.diagramStatements.filter(
-          (d) =>
-            d.statement.function === "transversal" &&
-            altint(currStep.statement!, d.statement, para_alt, ctx),
-        );
-        if (altintMatches.length === 0) return false;
+        const para_alt = getDepStmt(reason.arguments[0], proofGraph)!;
+        const altintMatches = diagramPremisesByFunction(
+          proofGraph,
+          "transversal",
+        ).filter((d) => altint(stmt, d.statement, para_alt, ctx));
+        if (altintMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "ALTINT_NO_MATCH",
+          );
         currStep.diagramDeps = altintMatches;
         return true;
       }
       case "altint_conv": {
-        const conAng_conv = getDepStmt(reason.arguments[0], proof);
-        if (!currStep.statement || !conAng_conv) return false;
-        const altintConvMatches = proof.premises.diagramStatements.filter(
-          (d) =>
-            d.statement.function === "transversal" &&
-            altint(conAng_conv, d.statement, currStep.statement!, ctx),
-        );
-        if (altintConvMatches.length === 0) return false;
+        const conAng_conv = getDepStmt(reason.arguments[0], proofGraph)!;
+        const altintConvMatches = diagramPremisesByFunction(
+          proofGraph,
+          "transversal",
+        ).filter((d) => altint(conAng_conv, d.statement, stmt, ctx));
+        if (altintConvMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "ALTINT_CONV_NO_MATCH",
+          );
         currStep.diagramDeps = altintConvMatches;
         return true;
       }
-      case "ang_bisect":
-        const bisect_bisect = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && bisect_bisect) {
-          return ang_bisect(currStep.statement, bisect_bisect, ctx);
-        }
-        return false;
+      case "def_ang_bisect":
+        const bisect_bisect = getDepStmt(reason.arguments[0], proofGraph)!;
+        return (
+          def_ang_bisect(stmt, bisect_bisect, ctx) ||
+          failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "DEF_ANG_BISECT_MISMATCH",
+          )
+        );
       case "ang_bisect_conv":
-        const conAng_bisect_conv = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && conAng_bisect_conv) {
-          return ang_bisect(conAng_bisect_conv, currStep.statement, ctx);
-        }
-        return false;
+        const conAng_bisect_conv = getDepStmt(reason.arguments[0], proofGraph)!;
+        return (
+          def_ang_bisect(conAng_bisect_conv, stmt, ctx) ||
+          failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "ANG_BISECT_CONV_MISMATCH",
+          )
+        );
 
       case "sas": {
-        const s1 = getDepStmt(reason.arguments[0], proof);
-        const a = getDepStmt(reason.arguments[1], proof);
-        const s2 = getDepStmt(reason.arguments[2], proof);
-        if (!currStep.statement || !s1 || !a || !s2) return false;
-        const r = checkSas(currStep.statement, s1, a, s2, ctx);
+        const s1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const a = getDepStmt(reason.arguments[1], proofGraph)!;
+        const s2 = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkSas(stmt, s1, a, s2, ctx);
         if (!r.ok) {
-          addReasonCheckError(currStep.errors, r.failure);
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
         }
         return true;
       }
 
       case "sss": {
-        const s1_sss = getDepStmt(reason.arguments[0], proof);
-        const s2_sss = getDepStmt(reason.arguments[1], proof);
-        const s3_sss = getDepStmt(reason.arguments[2], proof);
-        if (!currStep.statement || !s1_sss || !s2_sss || !s3_sss) return false; // TODO add error here
-        const r = checkSss(currStep.statement, s1_sss, s2_sss, s3_sss, ctx);
+        const s1_sss = getDepStmt(reason.arguments[0], proofGraph)!;
+        const s2_sss = getDepStmt(reason.arguments[1], proofGraph)!;
+        const s3_sss = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkSss(stmt, s1_sss, s2_sss, s3_sss, ctx);
         if (!r.ok) {
-          addReasonCheckError(currStep.errors, r.failure);
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
         }
         return true;
       }
 
       case "cpctc": {
-        const t_cong = getDepStmt(reason.arguments[0], proof);
-        if (!currStep.statement || !t_cong) return false;
-        const r = checkCpctc(t_cong, currStep.statement, ctx);
+        const t_cong = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = checkCpctc(t_cong, stmt, ctx);
         if (!r.ok) {
-          addReasonCheckError(currStep.errors, r.failure);
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
         }
         return true;
       }
 
       case "aas": {
-        const a1_aas = getDepStmt(reason.arguments[0], proof);
-        const a2_aas = getDepStmt(reason.arguments[1], proof);
-        const s_aas = getDepStmt(reason.arguments[2], proof);
-        if (!currStep.statement || !a1_aas || !a2_aas || !s_aas) return false;
-        const r = checkAas(currStep.statement, a1_aas, a2_aas, s_aas, ctx);
+        const a1_aas = getDepStmt(reason.arguments[0], proofGraph)!;
+        const a2_aas = getDepStmt(reason.arguments[1], proofGraph)!;
+        const s_aas = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkAas(stmt, a1_aas, a2_aas, s_aas, ctx);
         if (!r.ok) {
-          addReasonCheckError(currStep.errors, r.failure);
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
         }
         return true;
       }
 
       case "asa": {
-        const a1_asa = getDepStmt(reason.arguments[0], proof);
-        const s_asa = getDepStmt(reason.arguments[1], proof);
-        const a2_asa = getDepStmt(reason.arguments[2], proof);
-        if (!currStep.statement || !a1_asa || !s_asa || !a2_asa) return false;
-        const r = checkAsa(currStep.statement, a1_asa, s_asa, a2_asa, ctx);
+        const a1_asa = getDepStmt(reason.arguments[0], proofGraph)!;
+        const s_asa = getDepStmt(reason.arguments[1], proofGraph)!;
+        const a2_asa = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkAsa(stmt, a1_asa, s_asa, a2_asa, ctx);
         if (!r.ok) {
-          addReasonCheckError(currStep.errors, r.failure);
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
         }
         return true;
       }
 
       case "rhl": {
-        const right_rhl = getDepStmt(reason.arguments[0], proof);
-        const s1_rhl = getDepStmt(reason.arguments[1], proof);
-        const s2_rhl = getDepStmt(reason.arguments[2], proof);
-        if (!currStep.statement || !right_rhl || !s1_rhl || !s2_rhl)
-          return false;
-        const r = checkRhl(currStep.statement, right_rhl, s1_rhl, s2_rhl, ctx);
+        const right_rhl = getDepStmt(reason.arguments[0], proofGraph)!;
+        const s1_rhl = getDepStmt(reason.arguments[1], proofGraph)!;
+        const s2_rhl = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkRhl(stmt, right_rhl, s1_rhl, s2_rhl, ctx);
         if (!r.ok) {
-          addReasonCheckError(currStep.errors, r.failure);
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
         }
         return true;
       }
       case "isosceles": {
-        const conSeg_isos = getDepStmt(reason.arguments[0], proof);
-        if (!currStep.statement || !conSeg_isos) return false;
-        const r = checkIsosceles(conSeg_isos, currStep.statement, ctx);
+        const conSeg_isos = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = checkIsosceles(conSeg_isos, stmt, ctx);
         if (!r.ok) {
-          addReasonCheckError(currStep.errors, r.failure);
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
         }
         return true;
       }
 
-      case "midpt":
-        const midPt_midpt = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && midPt_midpt) {
-          return midpt(currStep.statement, midPt_midpt, ctx);
-        }
-        return false;
+      case "def_midpt":
+        const midPt_midpt = getDepStmt(reason.arguments[0], proofGraph)!;
+        return midpt(stmt, midPt_midpt, ctx)
+          ? true
+          : failStmtArgMismatch(currStep, reason.function, "MIDPT_MISMATCH");
       case "midpt_conv":
-        const conSeg_midpt_conv = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && conSeg_midpt_conv) {
-          return midpt(conSeg_midpt_conv, currStep.statement, ctx);
-        }
-        return false;
-
-      case "perp": {
-        const right_perp = getDepStmt(reason.arguments[0], proof);
-        if (!currStep.statement || !right_perp) return false;
-        const perpMatches = proof.premises.diagramStatements.filter(
-          (d) =>
-            (d.statement.function === "on_line" ||
-              d.statement.function === "midpt") &&
-            perp(right_perp, d.statement, currStep.statement!, ctx),
+        const conSeg_midpt_conv = getDepStmt(reason.arguments[0], proofGraph)!;
+        return (
+          midpt(conSeg_midpt_conv, stmt, ctx) ||
+          failStmtArgMismatch(currStep, reason.function, "MIDPT_CONV_MISMATCH")
         );
-        if (perpMatches.length === 0) return false;
+
+      case "def_perp": {
+        const right_perp = getDepStmt(reason.arguments[0], proofGraph)!;
+        const perpMatches = Array.from(proofGraph.diagramPremises.values())
+          .filter(
+            (d) =>
+              d.statement.function === "on_line" ||
+              d.statement.function === "midpt",
+          )
+          .filter((d) => perp(right_perp, d.statement, stmt, ctx));
+        if (perpMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "PERP_NO_MATCH",
+          );
         currStep.diagramDeps = perpMatches;
         return true;
       }
       case "rectangle":
-        const conSeg_rectangle = getDepStmt(reason.arguments[0], proof);
-        console.log("conSeg_rectangle", conSeg_rectangle, currStep.statement);
-        if (currStep.statement && conSeg_rectangle) {
-          return rectangle(conSeg_rectangle, currStep.statement, ctx);
-        }
-        return false;
-      case "parallelogram1":
-        const rect_parallelogram = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && rect_parallelogram) {
-          return true;
-        }
-        return false;
-      case "parallelogram2":
-        const para_parallelogram = getDepStmt(reason.arguments[0], proof);
-        if (currStep.statement && para_parallelogram) {
-          return parallelogram2(para_parallelogram, currStep.statement, ctx);
-        }
-        return false;
-      case "intersect_seg":
-        const intersect_on1 = getDepStmt(reason.arguments[0], proof);
-        const intersect_on2 = getDepStmt(reason.arguments[1], proof);
-        if (currStep.statement && intersect_on1 && intersect_on2) {
-          console.log(
-            "intersect_seg",
-            intersect_on1,
-            intersect_on2,
-            currStep.statement,
-          );
-          return intersect_seg(
-            intersect_on1,
-            intersect_on2,
-            currStep.statement,
-            ctx,
-          );
-        }
-        return false;
-      case "con_right":
-        return true;
-      case "vert_ang":
-        if (!currStep.statement) return false;
-        const vertAngIntersectMatches = proof.premises.diagramStatements.filter(
-          (d) =>
-            d.statement.function === "intersect_seg" &&
-            vert_ang(d.statement, currStep.statement!, ctx),
+        const conSeg_rectangle = getDepStmt(reason.arguments[0], proofGraph)!;
+        console.log("conSeg_rectangle", conSeg_rectangle, stmt);
+        return (
+          rectangle(conSeg_rectangle, stmt, ctx) ||
+          failStmtArgMismatch(currStep, reason.function, "RECTANGLE_MISMATCH")
         );
-        if (vertAngIntersectMatches.length === 0) return false;
+      case "parallelogram1":
+        // TODO implement
+        return true;
+      case "parallelogram2":
+        const para_parallelogram = getDepStmt(reason.arguments[0], proofGraph)!;
+        return (
+          parallelogram2(para_parallelogram, stmt, ctx) ||
+          failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "PARALLELOGRAM2_MISMATCH",
+          )
+        );
+      case "intersect_seg":
+        const intersect_on1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const intersect_on2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        console.log("intersect_seg", intersect_on1, intersect_on2, stmt);
+        return (
+          intersect_seg(intersect_on1, intersect_on2, stmt, ctx) ||
+          failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "INTERSECT_SEG_MISMATCH",
+          )
+        );
+      case "def_con_right": {
+        const right1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const right2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        return (
+          defConRight(right1, right2, ctx) ||
+          failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "DEF_CON_RIGHT_MISMATCH",
+          )
+        );
+      }
+      case "cong_adj_angles": {
+        const right1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const right2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        return (
+          congAdjAngles(right1, right2, ctx) ||
+          failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "CONG_ADJ_ANGLES_MISMATCH",
+          )
+        );
+      }
+      case "vert_ang":
+        const vertAngIntersectMatches = diagramPremisesByFunction(
+          proofGraph,
+          "intersect_seg",
+        ).filter((d) => vert_ang(d.statement, stmt, ctx));
+        if (vertAngIntersectMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "VERT_ANG_NO_MATCH",
+          );
         currStep.diagramDeps = vertAngIntersectMatches;
         return true;
 
@@ -324,7 +353,11 @@ export const checkReasonApplication = (
       `Error checking reason application for ${reason.function}:`,
       error,
     );
-    return false;
+    return failStmtArgMismatch(
+      currStep,
+      reason.function,
+      "REASON_APPLICATION_EXCEPTION",
+    );
   }
 };
 
@@ -369,12 +402,17 @@ const getGeometricObject = (
   }
 };
 
-const getDepStmt = (idx: string, proof: ProofObj) => {
-  const diagramDep = proof.premises.diagramStatements.find(
-    (d) => d.stepNumber === idx,
-  );
+const getDepStmt = (idx: string, proofGraph: ProofGraph) => {
+  const diagramDep = proofGraph.diagramPremises.get(idx);
   if (diagramDep) return diagramDep.statement;
+  return proofGraph.nodes.get(idx)?.statement;
+};
 
-  const conclusionStep = proof.steps.find((step) => step.stepNumber === idx);
-  return conclusionStep?.statement;
+const diagramPremisesByFunction = (
+  proofGraph: ProofGraph,
+  fn: string,
+): ParseDiagramStmt[] => {
+  return Array.from(proofGraph.diagramPremises.values()).filter(
+    (d) => d.statement.function === fn,
+  );
 };

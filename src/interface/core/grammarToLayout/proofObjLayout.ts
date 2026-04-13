@@ -27,10 +27,8 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
   const proofSteps = proof.steps.filter((s) => s.type === "proof");
   const proveStmt =
     proof.goal ?? proof.steps.find((s) => s.type === "goal")?.statement;
-  const isConRightReason = (reasonFunction?: string): boolean =>
-    ["con_right", "perp_con_ang"].includes(
-      (reasonFunction ?? "").toLowerCase(),
-    );
+  const isConRightStmt = (stmt?: Stmt): boolean =>
+    stmt?.function === "con_right";
 
   // const isVertAngReason = (reasonFunction?: string): boolean =>
   //   (reasonFunction ?? "").toLowerCase() === "vert_ang";
@@ -38,8 +36,7 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
   const tickTracker = buildCongruenceTickTracker([
     ...givenSteps.map((s) => s.statement),
     ...proofSteps.map((s) =>
-      s.statement?.function === "con_ang" &&
-      isConRightReason(s.reason?.function)
+      s.statement?.function === "con_ang" && isConRightStmt(s.statement)
         ? undefined
         : s.statement,
     ),
@@ -122,12 +119,12 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
       .filter((depStep): depStep is ProofStep => Boolean(depStep?.statement))
       .map((depStep) => ({
         stmt: depStep.statement as Stmt,
-        isRightAngleEquality: isConRightReason(depStep.reason?.function),
+        isRightAngleEquality: isConRightStmt(depStep.statement),
       }));
 
     const isGivenReason =
       (step.reason?.function ?? "").toLowerCase() === "given";
-    const isRightAngleEqualityStep = isConRightReason(step.reason?.function);
+    const isRightAngleEqualityStep = isConRightStmt(step.statement);
     // Diagram premises for reasons with `diagramDependencies` are attached only
     // after `checkReasonApplication` in `runProofChecker`.
     const intersectSegDep = step.diagramDeps?.find(

@@ -22,6 +22,7 @@ import {
   InteractiveAppPage,
   InteractiveAppPageProps,
 } from "../components/ender/InteractiveAppPage";
+import { AspectRatio } from "../core/diagramSvg/svgTypes";
 import { interactiveLayout } from "../core/grammarToLayout/setupLayout";
 
 const defaultProofText = `title: "Tutorial #1 - Prove Triangles Congruent"
@@ -72,8 +73,14 @@ export const ProofObjHarness = () => {
   const [incorrectStepErrors, setIncorrectStepErrors] = useState<
     Map<string, ErrorObj[]>
   >(new Map());
+  const [hoverTooltip, setHoverTooltip] = useState("");
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [editorScrollTop, setEditorScrollTop] = useState(0);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
+  const editorOverlayRef = useRef<HTMLPreElement | null>(null);
 
   const onTextChange = (next: string) => {
     setProofText(next);
@@ -116,9 +123,7 @@ export const ProofObjHarness = () => {
 
         const nextIncorrectStepErrors = new Map<string, ErrorObj[]>();
         result.graph.incorrectSteps.forEach((stepNum) => {
-          const step = result.proof.steps.find(
-            (s) => s.stepNumber === stepNum,
-          );
+          const step = result.proof.steps.find((s) => s.stepNumber === stepNum);
           nextIncorrectStepErrors.set(stepNum, step?.errors ?? []);
         });
         setIncorrectStepErrors(nextIncorrectStepErrors);
@@ -214,12 +219,24 @@ export const ProofObjHarness = () => {
     };
   }, [isEditorOpen]);
 
-  const props = useMemo(
-    () =>
-      interactiveLayout(interactiveLayoutFromProofObj(lastGoodProof))
-        .props as InteractiveAppPageProps,
-    [lastGoodProof],
+  const props = useMemo(() => {
+    const base = interactiveLayout(interactiveLayoutFromProofObj(lastGoodProof))
+      .props as InteractiveAppPageProps;
+    const maxX = Math.max(
+      ...lastGoodProof.premises.points.map((p) => p.pt?.[0] ?? -Infinity),
+    );
+    if (maxX > 10) {
+      return { ...base, diagramAspect: AspectRatio.Landscape };
+    } else {
+      return { ...base, diagramAspect: AspectRatio.Square };
+    }
+  }, [lastGoodProof]);
+  const annotatedLines = useMemo(
+    () => buildAnnotatedLines(proofText, incorrectStepErrors),
+    [proofText, incorrectStepErrors],
   );
+  const lineHeightPx = 16;
+  const editorPaddingTopPx = 8;
 
   return (
     <div className="h-screen">
@@ -264,11 +281,73 @@ export const ProofObjHarness = () => {
               </option>
             ))}
           </select>
-          <textarea
-            className="w-full h-full border border-slate-200 rounded p-2 font-mono text-xs"
-            value={proofText}
-            onChange={(e) => onTextChange(e.target.value)}
-          />
+          <div className="relative w-full h-full border border-slate-200 rounded font-mono text-xs overflow-hidden">
+            <pre
+              ref={editorOverlayRef}
+              aria-hidden
+              className="absolute inset-0 m-0 p-2 leading-4 whitespace-pre-wrap break-words pointer-events-none overflow-auto"
+            >
+              {annotatedLines.map((line, i) => (
+                <div
+                  key={`${i}-${line.text}`}
+                  className={
+                    line.isIncorrect
+                      ? "bg-red-100 rounded px-1 -mx-1"
+                      : undefined
+                  }
+                >
+                  {line.text || " "}
+                </div>
+              ))}
+            </pre>
+            <textarea
+              className="absolute inset-0 w-full h-full p-2 m-0 resize-none bg-transparent text-transparent caret-black selection:bg-blue-200 border-0 rounded focus:outline-none leading-4 whitespace-pre-wrap break-words overflow-auto"
+              value={proofText}
+              onChange={(e) => onTextChange(e.target.value)}
+              onScroll={(e) => {
+                if (!editorOverlayRef.current) return;
+                setEditorScrollTop(e.currentTarget.scrollTop);
+                editorOverlayRef.current.scrollTop = e.currentTarget.scrollTop;
+                editorOverlayRef.current.scrollLeft =
+                  e.currentTarget.scrollLeft;
+              }}
+              spellCheck={false}
+            />
+            <div className="absolute left-0 top-0 w-3 h-full">
+              {annotatedLines.map((line, idx) => {
+                if (!line.isIncorrect || !line.tooltip) return null;
+                const dotY =
+                  editorPaddingTopPx +
+                  idx * lineHeightPx +
+                  lineHeightPx / 2 -
+                  editorScrollTop;
+                return (
+                  <button
+                    key={`dot-${idx}`}
+                    className="absolute left-[2px] w-2 h-2 rounded-full bg-red-600"
+                    style={{ top: `${dotY}px` }}
+                    onMouseEnter={() => {
+                      setHoverTooltip(line.tooltip ?? "");
+                      setHoverPos({ x: 16, y: Math.max(8, dotY - 8) });
+                    }}
+                    onMouseLeave={() => {
+                      setHoverTooltip("");
+                      setHoverPos(null);
+                    }}
+                    aria-label={`Show checker errors for line ${idx + 1}`}
+                  />
+                );
+              })}
+            </div>
+            {hoverTooltip && hoverPos && (
+              <div
+                className="absolute z-20 max-w-[420px] rounded border border-slate-300 bg-white/95 px-2 py-1 text-[11px] leading-4 text-slate-900 shadow pointer-events-none whitespace-pre-wrap"
+                style={{ left: hoverPos.x, top: hoverPos.y }}
+              >
+                {hoverTooltip}
+              </div>
+            )}
+          </div>
           <div
             className={`mt-2 text-xs ${
               statusMessage === "Proof parsed successfully."
@@ -285,28 +364,6 @@ export const ProofObjHarness = () => {
               ))}
             </div>
           )}
-          <div className="mt-2 border border-slate-200 rounded p-2 bg-slate-50 h-36 overflow-auto">
-            <div className="text-[11px] text-slate-500 mb-1">
-              Checker annotations
-            </div>
-            <pre className="font-mono text-xs whitespace-pre-wrap break-words">
-              {buildAnnotatedLines(proofText, incorrectStepErrors).map(
-                (line, i) => (
-                  <div
-                    key={`${i}-${line.text}`}
-                    title={line.tooltip}
-                    className={
-                      line.isIncorrect
-                        ? "bg-red-100 hover:bg-red-200 rounded px-1"
-                        : undefined
-                    }
-                  >
-                    {line.text || " "}
-                  </div>
-                ),
-              )}
-            </pre>
-          </div>
         </div>
       )}
 

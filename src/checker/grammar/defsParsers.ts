@@ -26,10 +26,7 @@ export const loadStatementDefinitions = (): {
   return { statements, groups };
 };
 
-export const loadReasonDefinitionsWithBuiltins = (): Map<
-  string,
-  ReasonDefinition
-> => {
+export const loadReasonDefinitions = (): Map<string, ReasonDefinition> => {
   const reasons = new Map<string, ReasonDefinition>(
     Object.entries(REASONS_DEFS).map(([k, v]) => [
       k,
