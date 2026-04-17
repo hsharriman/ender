@@ -1,6 +1,7 @@
 import { DiagramContent } from "../builder/DiagramContent";
 import { SVGModes, TickType } from "./diagramTypes";
 import { Reason } from "./layoutTypes";
+import { WaysToProveSummary } from "checker/types/checkerTypes";
 
 // -------- TYPES RELATED TO RENDERING STEPS OF A PROOF --------
 export interface StepProps {
@@ -16,6 +17,7 @@ export interface ProofTextItem {
   k: string;
   v: (isActive: boolean) => JSX.Element;
   reason?: string;
+  waysToProve?: WaysToProveSummary;
   dependsOn?: Set<string>;
   alwaysActive?: boolean;
 }
@@ -46,5 +48,6 @@ export interface SetupStepMeta {
 }
 export interface StepMeta extends SetupStepMeta {
   reason: Reason;
+  waysToProve?: WaysToProveSummary;
   dependsOn?: string[];
 }

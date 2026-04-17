@@ -44,6 +44,7 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
 
   return {
     reason: meta.reason || Reasons.Empty,
+    waysToProve: meta.waysToProve,
     dependsOn: meta.dependsOn,
     unfocused: meta.unfocused || defaultUnfocused,
     diagram,

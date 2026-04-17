@@ -88,7 +88,7 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
           id={this.props.geoId}
           key={this.props.geoId}
           style={{
-            font: "18px serif",
+            font: this.props.miniScale ? "36px serif" : "18px serif",
             fontStyle: "italic",
           }}
           className={this.state.isActive ? this.state.css : ""}

@@ -11,6 +11,33 @@ export interface Reason {
   arguments: string[];
 }
 
+export interface WaysToProveSlot {
+  slotId: string;
+  expected: string;
+  state: "matched" | "missing" | "conflicting";
+  sourceRef?: string;
+  visualRef?: string;
+  visualRefs?: string[];
+}
+
+export interface WaysToProveCandidate {
+  reasonFunction: string;
+  templateId: string;
+  completion: number;
+  slots: WaysToProveSlot[];
+  dependencyRefs: string[];
+  diagramRefs: string[];
+  statementRefs: string[];
+  contributors: string[];
+}
+
+export interface WaysToProveSummary {
+  reasonFunction: string;
+  totalSlots: number;
+  matchedSlots: number;
+  candidates: WaysToProveCandidate[];
+}
+
 export interface StatementGroup {
   name: string;
   base: string; // The base statement that can be substituted for
@@ -64,6 +91,7 @@ export interface ProofStep {
   statement?: Stmt;
   stepNumber?: string;
   diagramDeps?: ParseDiagramStmt[];
+  waysToProve?: WaysToProveSummary;
   errors: ErrorObj[];
 }
 

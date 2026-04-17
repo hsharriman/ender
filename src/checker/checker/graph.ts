@@ -7,7 +7,13 @@ import {
   StatementDefinition,
   StatementGroup,
 } from "../types/checkerTypes";
+import {
+  computeWaysToProve,
+  createReasonApplicabilityIndex,
+  indexProofStepForReasons,
+} from "./reasonFulfillment";
 import { checkReasonApplication } from "./reasonApplication";
+import { buildReasonTemplateMap } from "./reasonTemplates";
 import {
   checkReasonDependencies,
   checkReasonStructure,
@@ -22,6 +28,7 @@ export const buildProofGraph = (
   groups: Map<string, StatementGroup>,
   ctx: ProofContent,
 ): ProofGraph => {
+  const reasonTemplates = buildReasonTemplateMap(reasonDefs);
   const graph: ProofGraph = {
     nodes: new Map(),
     diagramPremises: new Map(),
@@ -47,6 +54,7 @@ export const buildProofGraph = (
   proof.premises.diagramStatements.forEach((d) => {
     graph.diagramPremises.set(d.stepNumber, d);
   });
+  const reasonIndex = createReasonApplicabilityIndex(graph);
 
   // Check each step and build edges
   proof.steps.forEach((step) => {
@@ -57,6 +65,18 @@ export const buildProofGraph = (
     if (!stepNum) return;
 
     let isCorrect = true;
+
+    if (step.type === "proof" && step.reason && step.statement) {
+      step.waysToProve = computeWaysToProve({
+        currStep: step,
+        proofGraph: graph,
+        reasonDefs,
+        groups,
+        template: reasonTemplates.get(step.reason.function),
+        index: reasonIndex,
+        ctx,
+      });
+    }
 
     if (step.type === "given") {
       // Given statements are assumed to be true, but check format
@@ -189,6 +209,7 @@ export const buildProofGraph = (
     if (!isCorrect) {
       graph.incorrectSteps.add(stepNum);
     }
+    indexProofStepForReasons({ step, stepNum, isCorrect, index: reasonIndex });
   });
 
   return graph;

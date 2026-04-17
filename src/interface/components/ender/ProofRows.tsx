@@ -264,7 +264,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
               className={this.bgClr() + btnStyle}
             >
               <div
-                className={`${this.textClr()} ${this.borderClr()} grid grid-rows-1 grid-cols-2  h-full`}
+                className={`${this.textClr()} ${this.borderClr()} grid grid-rows-1 grid-cols-2 h-full`}
               >
                 <div
                   className={`flex flex-row justify-start gap-8 -ml-[18px] items-center align-baseline ${padding}`}

@@ -36,7 +36,7 @@ export class Diagram extends React.Component<DiagramProps> {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : (setMode ?? SVGModes.Hidden);
-      return !this.props.miniScale ? (
+      return (
         <SVGGeoPoint
           geoId={`${p.obj.id}.${layer}`}
           mode={mode}
@@ -51,8 +51,6 @@ export class Diagram extends React.Component<DiagramProps> {
           }}
           isHighlight={layer === 1}
         />
-      ) : (
-        <></>
       );
     });
   };

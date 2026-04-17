@@ -140,6 +140,7 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
     const prevStep = idx === 0 ? givensMeta : stepMetas[idx - 1];
     const stepMeta = makeStepMeta({
       reason: reasonFromFunction(step.reason?.function),
+      waysToProve: step.waysToProve,
       prevStep,
       dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
       text: stmtToText(step.statement),

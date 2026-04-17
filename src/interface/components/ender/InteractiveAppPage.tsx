@@ -9,12 +9,14 @@ import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
+import { WaysToProveFigures } from "./WaysToProveFigures";
 
 export interface InteractiveAppPageProps {
   name: string;
   ctx: DiagramRenderCtx;
   linkedTexts: ProofTextItem[];
   reasonMap: Map<string, Reason>;
+  miniReasonCtxMap: Map<string, DiagramRenderCtx[]>;
   isTutorial?: boolean;
   highlightCtx: DiagramRenderCtx;
   additionCtx: DiagramRenderCtx;
@@ -80,12 +82,18 @@ export class InteractiveAppPage extends React.Component<
             <div className="w-[650px] mt-2">
               <Legend />
             </div>
-            <div className="mt-4 mr-4 w-[650px] h-8">
+            <div className="mt-4 mr-4 w-[650px] min-h-8">
               <ReasonText
                 activeFrame={this.state.activeFrame}
                 textFn={getReasonFn(this.props.reasonMap)}
               />
             </div>
+            <WaysToProveFigures
+              activeFrame={this.state.activeFrame}
+              linkedTexts={this.props.linkedTexts}
+              miniReasonCtxMap={this.props.miniReasonCtxMap}
+              diagramAspect={this.props.diagramAspect}
+            />
           </div>
           <div id="proof-steps" className="col-start-7 col-span-4 w-[700px]">
             <div className="pt-8">

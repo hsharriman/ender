@@ -6,8 +6,8 @@ import { pops } from "./pathBuilderUtils";
 import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "./svgUtils";
 
 const SINGLE_ARC_RADIUS = 0.65;
-const MINI_ARC_R = 0.5;
-const SINGLE_MINI_ARC_RADIUS = 0.8;
+const MINI_ARC_R = 1.0;
+const SINGLE_MINI_ARC_RADIUS = 1.6;
 const MINI_ARC_PADDING = 0.3;
 const ARC_PADDING = 0.2;
 const PARALLEL_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.6 : 0.45);

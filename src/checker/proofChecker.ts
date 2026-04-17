@@ -80,7 +80,13 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
   logDebug("Building proof graph (reason application; diagram deps)...");
-  const graph = buildProofGraph(proof, reasonDefs, stmtDefs, groups, ctx);
+  const graph = buildProofGraph(
+    proof,
+    reasonDefs,
+    stmtDefs,
+    groups,
+    ctx,
+  );
 
   graph.cycles = detectCycles(graph);
 
