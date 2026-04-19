@@ -22,7 +22,10 @@ const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
-export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
+export const interactiveLayoutFromProofObj = (
+  proof: ProofObj,
+  incorrectSteps?: Set<string>,
+): LayoutProps => {
   const givenSteps = proof.steps.filter((s) => s.type === "given");
   const proofSteps = proof.steps.filter((s) => s.type === "proof");
   const proveStmt =
@@ -138,9 +141,12 @@ export const interactiveLayoutFromProofObj = (proof: ProofObj): LayoutProps => {
     //   intersectSegDep?.statement.arguments?.length === 3;
 
     const prevStep = idx === 0 ? givensMeta : stepMetas[idx - 1];
+    const isIncorrect =
+      Boolean(step.stepNumber && incorrectSteps?.has(step.stepNumber));
     const stepMeta = makeStepMeta({
       reason: reasonFromFunction(step.reason?.function),
       waysToProve: step.waysToProve,
+      isIncorrect,
       prevStep,
       dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
       text: stmtToText(step.statement),

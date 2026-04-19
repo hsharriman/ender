@@ -24,6 +24,9 @@
 .env.test.local
 .env.production.local
 
+# Local OpenAI key for harness / llm-feedback CLI (see `src/llm-feedback/loadDotenv.ts`)
+/src/llm-feedback/.env
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -14,6 +14,6 @@ export const triangleOk = (): TriangleReasonResult => {
 export const triangleFail = (
   code: string,
   details?: Record<string, unknown>,
-): TriangleReasonResult  => {
+): TriangleReasonResult => {
   return { ok: false, failure: { code, details } };
 };

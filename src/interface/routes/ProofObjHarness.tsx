@@ -1,3 +1,4 @@
+import { loadReasonDefinitions } from "checker/grammar/defsParsers";
 import { ProofParser } from "checker/grammar/lezerParser";
 import { runProofChecker } from "checker/proofChecker";
 import buggyProofUrl from "checker/proofs/buggyproof.txt";
@@ -13,11 +14,27 @@ import s2inc1Url from "checker/proofs/s2inc1.txt";
 import s2inc2Url from "checker/proofs/s2inc2.txt";
 import tutincUrl from "checker/proofs/tutinc.txt";
 import tutorialUrl from "checker/proofs/tutorial.txt";
+import {
+  isNewProofStepPlaceholderSource,
+  NEW_PROOF_STEP_PLACEHOLDER_HINT,
+} from "checker/proofStepPlaceholder";
 import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
+import { insertProofStepAfter } from "interface/core/grammarToLayout/insertProofStep";
+import {
+  extractProofStepLineBodyAfterBracket,
+  reasonToDsl,
+  replaceProofStepLine,
+  stmtToDsl,
+} from "interface/core/grammarToLayout/proofDsl";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  parseLlmStepFeedbackList,
+  runLlmFeedback,
+} from "llm-feedback/llmFeedback";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
+import type { HarnessLlmFeedbackEntry } from "../components/ender/HarnessStepFeedbackPanel";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
@@ -40,6 +57,7 @@ steps:
 [04] sas(1, 2, 3) -> con_tri(t_ABC,t_ADC) 
 `;
 const parser = new ProofParser();
+
 const proofOptions: Array<{ key: string; label: string; url: string }> = [
   { key: "tutorial", label: "tutorial.txt", url: tutorialUrl },
   { key: "tutinc", label: "tutinc.txt", url: tutincUrl },
@@ -65,7 +83,10 @@ export const ProofObjHarness = () => {
     runProofChecker(p);
     return p;
   });
-  const [parseVersion, setParseVersion] = useState(0);
+  const [incorrectSteps, setIncorrectSteps] = useState<Set<string>>(() => {
+    const p = parser.parse(defaultProofText) as unknown as ProofObj;
+    return runProofChecker(p).graph.incorrectSteps;
+  });
   const [statusMessage, setStatusMessage] = useState(
     "Proof parsed successfully.",
   );
@@ -73,11 +94,17 @@ export const ProofObjHarness = () => {
   const [incorrectStepErrors, setIncorrectStepErrors] = useState<
     Map<string, ErrorObj[]>
   >(new Map());
+  const [proofParseSucceeded, setProofParseSucceeded] = useState(true);
   const [hoverTooltip, setHoverTooltip] = useState("");
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(
     null,
   );
   const [editorScrollTop, setEditorScrollTop] = useState(0);
+  const [harnessLlmByStep, setHarnessLlmByStep] = useState<
+    Map<string, HarnessLlmFeedbackEntry>
+  >(() => new Map());
+  const [harnessLlmLoading, setHarnessLlmLoading] = useState(false);
+  const [harnessLlmError, setHarnessLlmError] = useState<string | undefined>();
   const editorRef = useRef<HTMLDivElement | null>(null);
   const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
   const editorOverlayRef = useRef<HTMLPreElement | null>(null);
@@ -170,12 +197,14 @@ export const ProofObjHarness = () => {
         setStatusMessage("Proof parsed successfully.");
 
         setLastGoodProof(parsed);
-        // Reset InteractiveAppPage/ProofRows state to "Given" after successful parse.
-        setParseVersion((v) => v + 1);
+        setIncorrectSteps(result.graph.incorrectSteps);
+        setProofParseSucceeded(true);
       } catch (err) {
         setStatusMessage(err instanceof Error ? err.message : String(err));
         setProofWideIssues([]);
         setIncorrectStepErrors(new Map());
+        setIncorrectSteps(new Set());
+        setProofParseSucceeded(false);
       }
     }, 500);
 
@@ -183,6 +212,60 @@ export const ProofObjHarness = () => {
       window.clearTimeout(handle);
     };
   }, [proofText]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const clearLlm = (): void => {
+      setHarnessLlmLoading(false);
+      setHarnessLlmError(undefined);
+      setHarnessLlmByStep(new Map());
+    };
+
+    if (!proofParseSucceeded) {
+      clearLlm();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (lastGoodProof.isCorrect === true) {
+      clearLlm();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setHarnessLlmLoading(true);
+    setHarnessLlmError(undefined);
+    void (async () => {
+      try {
+        const raw = await runLlmFeedback({ proof: lastGoodProof });
+        if (cancelled) return;
+        const list = parseLlmStepFeedbackList(raw);
+        const next = new Map<string, HarnessLlmFeedbackEntry>();
+        for (const row of list) {
+          if (row.step == null) continue;
+          const key = String(parseInt(String(row.step), 10));
+          next.set(key, {
+            feedback: row.feedback ?? "",
+            nextHint: row.next_hint ?? "",
+          });
+        }
+        setHarnessLlmByStep(next);
+      } catch (e) {
+        if (!cancelled) {
+          setHarnessLlmError(e instanceof Error ? e.message : String(e));
+          setHarnessLlmByStep(new Map());
+        }
+      } finally {
+        if (!cancelled) setHarnessLlmLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [lastGoodProof, proofParseSucceeded]);
 
   useEffect(() => {
     const selected = proofOptions.find((p) => p.key === selectedProofKey);
@@ -219,18 +302,111 @@ export const ProofObjHarness = () => {
     };
   }, [isEditorOpen]);
 
+  const reasonNames = useMemo(
+    () =>
+      Array.from(loadReasonDefinitions().keys()).sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    [],
+  );
+
+  const harnessStepByKey = useMemo(() => {
+    const m = new Map<
+      string,
+      {
+        stepNumber: string;
+        statementDsl: string;
+        reasonDsl: string;
+        harnessEmptyStepHint?: string;
+      }
+    >();
+    const proofSteps = lastGoodProof.steps.filter((s) => s.type === "proof");
+    proofSteps.forEach((step, i) => {
+      const k = `s${i + 1}`;
+      const sn = step.stepNumber ?? String(i + 1);
+      const rawBody = extractProofStepLineBodyAfterBracket(proofText, sn) ?? "";
+      const isPlaceholderRow =
+        !step.statement &&
+        !step.reason &&
+        isNewProofStepPlaceholderSource(rawBody);
+      m.set(k, {
+        stepNumber: sn,
+        statementDsl: step.statement ? stmtToDsl(step.statement) : "",
+        reasonDsl: step.reason ? reasonToDsl(step.reason) : "",
+        harnessEmptyStepHint: isPlaceholderRow
+          ? NEW_PROOF_STEP_PLACEHOLDER_HINT
+          : undefined,
+      });
+    });
+    return m;
+  }, [lastGoodProof, proofText]);
+
+  const onHarnessInlineCommit = useCallback(
+    (stepNumber: string, statementDsl: string, reasonDsl: string) => {
+      try {
+        setProofText((prev) =>
+          replaceProofStepLine(prev, stepNumber, reasonDsl, statementDsl),
+        );
+      } catch (e) {
+        setStatusMessage(e instanceof Error ? e.message : String(e));
+      }
+    },
+    [],
+  );
+
+  const onInsertProofStepAfter = useCallback((afterStepNumber: string) => {
+    const n = parseInt(afterStepNumber, 10);
+    if (Number.isNaN(n)) {
+      setStatusMessage(`Invalid step number: ${afterStepNumber}`);
+      return;
+    }
+    try {
+      setProofText((prev) => insertProofStepAfter(prev, n));
+    } catch (e) {
+      setStatusMessage(e instanceof Error ? e.message : String(e));
+    }
+  }, []);
+
+  const harnessInlineEdit = useMemo(
+    () => ({
+      reasonNames,
+      stepByKey: harnessStepByKey,
+      onCommit: onHarnessInlineCommit,
+    }),
+    [reasonNames, harnessStepByKey, onHarnessInlineCommit],
+  );
+
   const props = useMemo(() => {
-    const base = interactiveLayout(interactiveLayoutFromProofObj(lastGoodProof))
-      .props as InteractiveAppPageProps;
+    const base = interactiveLayout(
+      interactiveLayoutFromProofObj(lastGoodProof, incorrectSteps),
+    ).props as InteractiveAppPageProps;
     const maxX = Math.max(
       ...lastGoodProof.premises.points.map((p) => p.pt?.[0] ?? -Infinity),
     );
-    if (maxX > 10) {
-      return { ...base, diagramAspect: AspectRatio.Landscape };
-    } else {
-      return { ...base, diagramAspect: AspectRatio.Square };
-    }
-  }, [lastGoodProof]);
+    const diagramAspect =
+      maxX > 10 ? AspectRatio.Landscape : AspectRatio.Square;
+    return {
+      ...base,
+      diagramAspect,
+      proofHarnessMode: true,
+      harnessInlineEdit,
+      insertProofStepAfter: onInsertProofStepAfter,
+      harnessIncorrectStepNumbers: incorrectSteps,
+      harnessLlmFeedback: {
+        byStepNumber: harnessLlmByStep,
+        loading: harnessLlmLoading,
+        error: harnessLlmError,
+      },
+    };
+  }, [
+    lastGoodProof,
+    incorrectSteps,
+    harnessInlineEdit,
+    onInsertProofStepAfter,
+    harnessLlmByStep,
+    harnessLlmLoading,
+    harnessLlmError,
+  ]);
   const annotatedLines = useMemo(
     () => buildAnnotatedLines(proofText, incorrectStepErrors),
     [proofText, incorrectStepErrors],
@@ -368,7 +544,7 @@ export const ProofObjHarness = () => {
       )}
 
       <div className="w-full flex justify-start">
-        <InteractiveAppPage key={`proof-${parseVersion}`} {...props} />
+        <InteractiveAppPage key={selectedProofKey} {...props} />
       </div>
     </div>
   );

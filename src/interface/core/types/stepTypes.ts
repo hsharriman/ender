@@ -20,6 +20,8 @@ export interface ProofTextItem {
   waysToProve?: WaysToProveSummary;
   dependsOn?: Set<string>;
   alwaysActive?: boolean;
+  /** Set when layout is built from a checked proof; used for harness / checker UX */
+  isIncorrect?: boolean;
 }
 
 export interface StaticProofTextItem {
@@ -50,4 +52,6 @@ export interface StepMeta extends SetupStepMeta {
   reason: Reason;
   waysToProve?: WaysToProveSummary;
   dependsOn?: string[];
+  /** True when the checker marked this proof step as incorrect */
+  isIncorrect?: boolean;
 }

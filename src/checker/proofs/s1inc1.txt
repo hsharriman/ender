@@ -12,5 +12,5 @@ steps:
 [01] given(g_1) -> con_seg(AD,BC)
 [02] given(g_2) -> con_seg(AB,DC)
 [03] given(g_3) -> con_ang(a_ABD,a_CDB)
-[04] sas(1, 2, 3) -> con_tri(t_ABD,t_CDB)  // Missing dependency
+[04] sas(1, 3, 2) -> con_tri(t_ABD,t_CDB)  // Missing dependency
 [05] cpctc(4) -> con_ang(a_BAD,a_DCB)  // Based on invalid reason

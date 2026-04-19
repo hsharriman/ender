@@ -1,5 +1,6 @@
 import { Obj, ParseObj } from "../../geometry-object";
 import { normalizeProofObj } from "../normalizeProofObj";
+import { NEW_PROOF_STEP_PLACEHOLDER_SOURCE } from "../proofStepPlaceholder";
 import {
   ProofObj,
   ProofStep,
@@ -255,6 +256,7 @@ export class ProofParser {
       steps: [],
       goal: undefined,
       errors: [],
+      isCorrect: false,
     };
 
     let i = 0;
@@ -550,12 +552,41 @@ export class ProofParser {
     return { obj: statement, endIndex: i };
   }
 
+  /**
+   * Single `comment` token matching {@link NEW_PROOF_STEP_PLACEHOLDER_SOURCE} is an
+   * empty proof step (harness placeholder), not DSL.
+   */
+  private tryConsumeNewProofStepPlaceholder(
+    tokens: any[],
+    startIndex: number,
+  ): number | null {
+    if (startIndex >= tokens.length) return null;
+    const t = tokens[startIndex];
+    if (t.type !== "comment") return null;
+    const raw =
+      typeof t.text === "string"
+        ? t.text
+        : typeof t.value === "string"
+          ? t.value
+          : "";
+    if (raw.trim() !== NEW_PROOF_STEP_PLACEHOLDER_SOURCE) return null;
+    return startIndex + 1;
+  }
+
   /** Format: `[01] reason(1, 3, 2) -> conclusion` */
   private parseProofStep(
     tokens: any[],
     startIndex: number,
     stepLabel: string,
   ): { obj: ProofStep; endIndex: number } | null {
+    const phEnd = this.tryConsumeNewProofStepPlaceholder(tokens, startIndex);
+    if (phEnd !== null) {
+      return {
+        obj: this.makeProofStep(stepLabel, {}),
+        endIndex: phEnd,
+      };
+    }
+
     const reason = this.parseReason(tokens, startIndex);
     if (reason && tokens[reason.endIndex]?.type === "rarrow") {
       const i = reason.endIndex + 1;
