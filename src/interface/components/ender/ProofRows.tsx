@@ -2,6 +2,9 @@ import React from "react";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { ReasonPickerPopover } from "./ReasonPickerPopover";
 
+const HARNESS_EMPTY_STATEMENT_PLACEHOLDER = "New statement (click to edit)";
+const HARNESS_EMPTY_REASON_PLACEHOLDER = "New reason (click to edit)";
+
 /** Inline proof editing in ProofObjHarness: DSL strings + commit to shared proof text. */
 export interface HarnessInlineEditConfig {
   reasonNames: string[];
@@ -33,10 +36,16 @@ export interface ProofRowsProps {
   harnessInlineEdit?: HarnessInlineEditConfig;
   /** ProofObjHarness: insert a new step after the active proof step (by checker step number). */
   insertProofStepAfter?: (afterStepNumber: string) => void;
+  /** ProofObjHarness: delete the active proof step (by checker step number). */
+  deleteProofStep?: (stepNumber: string) => void;
 }
 export interface ProofRowsState {
   idx: number;
   revealed: number;
+  harnessPreviewByStep: Map<
+    string,
+    { statementDraft: string; reasonDraft: string }
+  >;
   harnessEditState: null | {
     stepKey: string;
     field: "statement" | "reason";
@@ -51,6 +60,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     this.state = {
       idx: 0,
       revealed: 0,
+      harnessPreviewByStep: new Map(),
       harnessEditState: null,
     };
   }
@@ -164,6 +174,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     if (!hi) return;
     const meta = hi.stepByKey.get(stepKey);
     if (!meta) return;
+    const preview = this.state.harnessPreviewByStep.get(stepKey);
     this.setState((prev) => {
       const cur = prev.harnessEditState;
       if (cur?.stepKey === stepKey) {
@@ -178,8 +189,8 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         harnessEditState: {
           stepKey,
           field,
-          statementDraft: meta.statementDsl,
-          reasonDraft: meta.reasonDsl,
+          statementDraft: preview?.statementDraft ?? meta.statementDsl,
+          reasonDraft: preview?.reasonDraft ?? meta.reasonDsl,
         },
       };
     });
@@ -196,11 +207,35 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       st.statementDraft.trim(),
       st.reasonDraft.trim(),
     );
-    this.setState({ harnessEditState: null });
+    this.setState((prev) => {
+      const nextPreview = new Map(prev.harnessPreviewByStep);
+      nextPreview.delete(st.stepKey);
+      return {
+        harnessEditState: null,
+        harnessPreviewByStep: nextPreview,
+      };
+    });
   };
 
   cancelHarnessEdit = () => {
     this.setState({ harnessEditState: null });
+  };
+
+  /** UI-only blur behavior: keep draft visible, do not commit parser/checker. */
+  blurHarnessEditToPreview = () => {
+    this.setState((prev) => {
+      const st = prev.harnessEditState;
+      if (!st) return null;
+      const nextPreview = new Map(prev.harnessPreviewByStep);
+      nextPreview.set(st.stepKey, {
+        statementDraft: st.statementDraft,
+        reasonDraft: st.reasonDraft,
+      });
+      return {
+        harnessEditState: null,
+        harnessPreviewByStep: nextPreview,
+      };
+    });
   };
 
   updateHarnessDraft = (
@@ -244,10 +279,17 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     const hi = this.props.harnessInlineEdit;
     const meta = hi?.stepByKey.get(item.k);
     const hEdit = this.state.harnessEditState;
+    const preview = this.state.harnessPreviewByStep.get(item.k);
+    const displayStatementDsl = preview?.statementDraft ?? meta?.statementDsl ?? "";
+    const displayReasonDsl = preview?.reasonDraft ?? meta?.reasonDsl ?? "";
+    const harnessShowRawPreview = Boolean(preview);
     const harnessInline =
       hi && meta
         ? {
             ...meta,
+            statementDsl: displayStatementDsl,
+            reasonDsl: displayReasonDsl,
+            harnessShowRawPreview,
             reasonNames: hi.reasonNames,
             editing:
               hEdit?.stepKey === item.k
@@ -261,11 +303,13 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
             onDraftChange: this.updateHarnessDraft,
             onCommitEdit: this.commitHarnessEdit,
             onCancelEdit: this.cancelHarnessEdit,
+            onFocusLossEdit: this.blurHarnessEditToPreview,
             onSelectRow: this.selectRowKey,
           }
         : undefined;
 
     const insertFn = this.props.insertProofStepAfter;
+    const deleteFn = this.props.deleteProofStep;
     const stepNumForInsert = meta?.stepNumber;
     const showInsertButton = Boolean(
       insertFn &&
@@ -278,6 +322,13 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
       ? () => {
           if (insertFn && stepNumForInsert !== undefined) {
             insertFn(stepNumForInsert);
+          }
+        }
+      : undefined;
+    const harnessDeleteStep = showInsertButton
+      ? () => {
+          if (deleteFn && stepNumForInsert !== undefined) {
+            deleteFn(stepNumForInsert);
           }
         }
       : undefined;
@@ -296,6 +347,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         isCompact={this.props.isCompact}
         harnessInline={harnessInline}
         harnessInsertAfter={harnessInsertAfter}
+        harnessDeleteStep={harnessDeleteStep}
       />
     );
   };
@@ -371,6 +423,8 @@ export interface ProofRowHarnessInlineProps {
   stepNumber: string;
   statementDsl: string;
   reasonDsl: string;
+  /** True while the row has uncommitted edits (focus left without Shift+Enter); show DSL, not linked text. */
+  harnessShowRawPreview?: boolean;
   /** When the source line is the new-step placeholder, show this in the statement column. */
   harnessEmptyStepHint?: string;
   reasonNames: string[];
@@ -389,6 +443,7 @@ export interface ProofRowHarnessInlineProps {
   ) => void;
   onCommitEdit: () => void;
   onCancelEdit: () => void;
+  onFocusLossEdit: () => void;
   onSelectRow: (stepKey: string) => void;
 }
 
@@ -405,6 +460,8 @@ interface ProofRowProps {
   harnessInline?: ProofRowHarnessInlineProps;
   /** When set, a “+” insert control is rendered inside the harness row (active proof step). */
   harnessInsertAfter?: () => void;
+  /** When set, a "-" delete control is rendered under insert inside harness row. */
+  harnessDeleteStep?: () => void;
 }
 export class ProofRow extends React.Component<ProofRowProps> {
   private idPrefix = "prooftext-";
@@ -461,6 +518,11 @@ export class ProofRow extends React.Component<ProofRowProps> {
     }
   };
 
+  /** Focus-loss is UI-only; Shift+Enter is the parser-triggering commit path. */
+  private onEditFieldFocusLoss = () => {
+    this.props.harnessInline?.onFocusLossEdit();
+  };
+
   render() {
     const h = this.props.isCompact ? "h-12" : "h-16";
     const fontSize = this.props.isCompact ? "text-md" : "text-lg";
@@ -489,16 +551,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
               n.toLowerCase().includes(reasonTypeAhead.toLowerCase()),
             )
           : [];
-      // Match default proof row height when not editing; only grow while a field is open.
-      const outerRowClass = ed
-        ? ed.field === "statement"
-          ? this.props.isCompact
-            ? "min-h-28"
-            : "min-h-40"
-          : this.props.isCompact
-            ? "min-h-16"
-            : "min-h-20"
-        : h;
+      const outerRowClass = h;
 
       return (
         <div
@@ -508,7 +561,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
         >
           <div
             id={`${this.idPrefix}${this.props.item.k}`}
-            className={`flex flex-row flex-1 w-full items-stretch overflow-visible ${this.bgClr()}${harnessRowChrome}${ed ? "" : ` ${h}`}`}
+            className={`flex flex-row flex-1 w-full items-stretch overflow-visible ${this.bgClr()}${harnessRowChrome} ${h}`}
           >
             <div
               className={`${this.textClr()} ${this.borderClr()} grid grid-rows-1 grid-cols-2 h-full min-h-0 min-w-0 flex-1 overflow-visible`}
@@ -536,15 +589,18 @@ export class ProofRow extends React.Component<ProofRowProps> {
                 >
                   {ed?.field === "statement" ? (
                     <textarea
-                      className="w-full min-h-0 flex-1 resize-none font-mono text-xs leading-snug border border-slate-400 rounded px-1 py-0.5 bg-white text-slate-900"
+                      className={`w-full shrink-0 resize-none font-mono text-xs leading-snug border border-slate-400 rounded px-1 py-0.5 bg-white text-slate-900 overflow-y-auto ${
+                        this.props.isCompact ? "h-7" : "h-10"
+                      }`}
                       title="Shift+Enter: check proof · Esc: cancel"
                       placeholder="Proof DSL · Shift+Enter · Esc"
-                      rows={3}
+                      rows={1}
                       value={ed.statementDraft}
                       aria-label="Statement (proof DSL)"
                       onChange={(e) =>
                         hi.onDraftChange({ statementDraft: e.target.value })
                       }
+                      onBlur={this.onEditFieldFocusLoss}
                       onKeyDown={this.harnessShiftEnter}
                       onClick={(e) => e.stopPropagation()}
                     />
@@ -552,9 +608,14 @@ export class ProofRow extends React.Component<ProofRowProps> {
                     <div
                       className={`${this.textClr()} text-left break-words cursor-text shrink`}
                     >
-                      {hi.harnessEmptyStepHint ? (
+                      {hi.harnessShowRawPreview && hi.statementDsl.trim() ? (
+                        <span className="font-mono text-xs text-slate-800 whitespace-pre-wrap">
+                          {hi.statementDsl}
+                        </span>
+                      ) : hi.harnessEmptyStepHint || !hi.statementDsl.trim() ? (
                         <span className="text-slate-400 italic font-mono text-xs">
-                          {hi.harnessEmptyStepHint}
+                          {hi.harnessEmptyStepHint ??
+                            HARNESS_EMPTY_STATEMENT_PLACEHOLDER}
                         </span>
                       ) : (
                         this.props.item.v(
@@ -591,6 +652,7 @@ export class ProofRow extends React.Component<ProofRowProps> {
                       onChange={(e) =>
                         hi.onDraftChange({ reasonDraft: e.target.value })
                       }
+                      onBlur={this.onEditFieldFocusLoss}
                       onKeyDown={(e) => {
                         if (e.key === "Escape") {
                           e.preventDefault();
@@ -628,16 +690,26 @@ export class ProofRow extends React.Component<ProofRowProps> {
                         : ""
                     }`}
                   >
-                    {this.props.item.reason}
+                    {hi.harnessShowRawPreview && hi.reasonDsl.trim() ? (
+                      <span className="font-mono text-xs text-slate-800 whitespace-pre-wrap">
+                        {hi.reasonDsl}
+                      </span>
+                    ) : hi.reasonDsl.trim() ? (
+                      this.props.item.reason || hi.reasonDsl
+                    ) : (
+                      <span className="text-slate-400 italic font-mono text-xs">
+                        {HARNESS_EMPTY_REASON_PLACEHOLDER}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
             </div>
             {this.props.harnessInsertAfter ? (
-              <div className="flex shrink-0 flex-col items-center justify-center pl-2 pr-2">
+              <div className="flex shrink-0 flex-col items-center justify-center gap-1 pl-2 pr-2">
                 <button
                   type="button"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-blue-600 text-xl font-light leading-none text-blue-600 hover:bg-blue-50/90"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base font-medium leading-none text-blue-600 hover:bg-blue-50/90"
                   aria-label="Insert step after this step"
                   title="Insert step after"
                   onClick={(e) => {
@@ -647,6 +719,20 @@ export class ProofRow extends React.Component<ProofRowProps> {
                 >
                   +
                 </button>
+                {this.props.harnessDeleteStep ? (
+                  <button
+                    type="button"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base font-medium leading-none text-red-600 hover:bg-red-50/90"
+                    aria-label="Delete this step"
+                    title="Delete step"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      this.props.harnessDeleteStep?.();
+                    }}
+                  >
+                    -
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>

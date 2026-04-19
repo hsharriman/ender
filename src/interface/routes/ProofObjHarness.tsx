@@ -3,6 +3,7 @@ import { ProofParser } from "checker/grammar/lezerParser";
 import { runProofChecker } from "checker/proofChecker";
 import buggyProofUrl from "checker/proofs/buggyproof.txt";
 import s1c1Url from "checker/proofs/s1c1.txt";
+import s1c1incompleteUrl from "checker/proofs/s1c1incomplete.txt";
 import s1c2Url from "checker/proofs/s1c2.txt";
 import s1c3Url from "checker/proofs/s1c3.txt";
 import s1inc1Url from "checker/proofs/s1inc1.txt";
@@ -10,6 +11,7 @@ import s1inc2Url from "checker/proofs/s1inc2.txt";
 import s1inc3Url from "checker/proofs/s1inc3.txt";
 import s2c1Url from "checker/proofs/s2c1.txt";
 import s2c2Url from "checker/proofs/s2c2.txt";
+import s2c2incompleteUrl from "checker/proofs/s2c2incomplete.txt";
 import s2inc1Url from "checker/proofs/s2inc1.txt";
 import s2inc2Url from "checker/proofs/s2inc2.txt";
 import tutincUrl from "checker/proofs/tutinc.txt";
@@ -19,7 +21,10 @@ import {
   NEW_PROOF_STEP_PLACEHOLDER_HINT,
 } from "checker/proofStepPlaceholder";
 import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
-import { insertProofStepAfter } from "interface/core/grammarToLayout/insertProofStep";
+import {
+  deleteProofStep,
+  insertProofStepAfter,
+} from "interface/core/grammarToLayout/insertProofStep";
 import {
   extractProofStepLineBodyAfterBracket,
   reasonToDsl,
@@ -62,12 +67,22 @@ const proofOptions: Array<{ key: string; label: string; url: string }> = [
   { key: "tutorial", label: "tutorial.txt", url: tutorialUrl },
   { key: "tutinc", label: "tutinc.txt", url: tutincUrl },
   { key: "s1c1", label: "s1c1.txt", url: s1c1Url },
+  {
+    key: "s1c1incomplete",
+    label: "s1c1incomplete.txt",
+    url: s1c1incompleteUrl,
+  },
   { key: "s1c2", label: "s1c2.txt", url: s1c2Url },
   { key: "s1c3", label: "s1c3.txt", url: s1c3Url },
   { key: "s1inc1", label: "s1inc1.txt", url: s1inc1Url },
   { key: "s1inc2", label: "s1inc2.txt", url: s1inc2Url },
   { key: "s1inc3", label: "s1inc3.txt", url: s1inc3Url },
   { key: "s2c1", label: "s2c1.txt", url: s2c1Url },
+  {
+    key: "s2c2incomplete",
+    label: "s2c2incomplete.txt",
+    url: s2c2incompleteUrl,
+  },
   { key: "s2c2", label: "s2c2.txt", url: s2c2Url },
   { key: "s2inc1", label: "s2inc1.txt", url: s2inc1Url },
   { key: "s2inc2", label: "s2inc2.txt", url: s2inc2Url },
@@ -244,13 +259,27 @@ export const ProofObjHarness = () => {
         if (cancelled) return;
         const list = parseLlmStepFeedbackList(raw);
         const next = new Map<string, HarnessLlmFeedbackEntry>();
+        const proofSteps = lastGoodProof.steps.filter((s) => s.type === "proof");
+        const lastCompleteStep = [...proofSteps]
+          .reverse()
+          .find((s) => Boolean(s.reason && s.statement));
+        const lastCompleteStepNumber = lastCompleteStep?.stepNumber;
         for (const row of list) {
-          if (row.step == null) continue;
-          const key = String(parseInt(String(row.step), 10));
-          next.set(key, {
+          const entry = {
             feedback: row.feedback ?? "",
             nextHint: row.next_hint ?? "",
-          });
+          };
+          if (row.step == null) {
+            if (lastCompleteStepNumber && !next.has(lastCompleteStepNumber)) {
+              next.set(lastCompleteStepNumber, {
+                ...entry,
+                collapsed: true,
+              });
+            }
+            continue;
+          }
+          const key = String(parseInt(String(row.step), 10));
+          next.set(key, entry);
         }
         setHarnessLlmByStep(next);
       } catch (e) {
@@ -367,6 +396,19 @@ export const ProofObjHarness = () => {
     }
   }, []);
 
+  const onDeleteProofStep = useCallback((stepNumber: string) => {
+    const n = parseInt(stepNumber, 10);
+    if (Number.isNaN(n)) {
+      setStatusMessage(`Invalid step number: ${stepNumber}`);
+      return;
+    }
+    try {
+      setProofText((prev) => deleteProofStep(prev, n));
+    } catch (e) {
+      setStatusMessage(e instanceof Error ? e.message : String(e));
+    }
+  }, []);
+
   const harnessInlineEdit = useMemo(
     () => ({
       reasonNames,
@@ -391,6 +433,7 @@ export const ProofObjHarness = () => {
       proofHarnessMode: true,
       harnessInlineEdit,
       insertProofStepAfter: onInsertProofStepAfter,
+      deleteProofStep: onDeleteProofStep,
       harnessIncorrectStepNumbers: incorrectSteps,
       harnessLlmFeedback: {
         byStepNumber: harnessLlmByStep,
@@ -403,6 +446,7 @@ export const ProofObjHarness = () => {
     incorrectSteps,
     harnessInlineEdit,
     onInsertProofStepAfter,
+    onDeleteProofStep,
     harnessLlmByStep,
     harnessLlmLoading,
     harnessLlmError,

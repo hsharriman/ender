@@ -24,6 +24,7 @@ export interface Reason {
   title: string;
   body: string;
   src?: string;
+  expectedDependenciesDescription?: string;
 }
 
 export interface ProofMeta {

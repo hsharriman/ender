@@ -16,6 +16,8 @@ INSTRUCTIONS:
 - Be concise
 - Identify all incorrect steps (if any)
 - For each incorrect step, provide feedback in the output format and give a hint to improve the proof
+- If the proof is incomplete (goal not reached or steps missing) and there are no specific incorrect steps,
+  include one proof-level row with "step": null describing what is missing and a next hint
 - For a correct proof, output empty list
 
 OUTPUT FORMAT (strict):

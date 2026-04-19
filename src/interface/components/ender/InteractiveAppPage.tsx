@@ -15,8 +15,6 @@ import { ReasonText } from "./ReasonText";
 import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
 // import { WaysToProveFigures } from "./WaysToProveFigures";
 
-const EMPTY_INCORRECT_STEPS = new Set<string>();
-
 export interface InteractiveAppPageProps {
   name: string;
   ctx: DiagramRenderCtx;
@@ -30,6 +28,8 @@ export interface InteractiveAppPageProps {
   harnessInlineEdit?: HarnessInlineEditConfig;
   /** Optional: insert a new proof step after the active step (ProofObjHarness). */
   insertProofStepAfter?: (afterStepNumber: string) => void;
+  /** Optional: delete a proof step by checker step number (ProofObjHarness). */
+  deleteProofStep?: (stepNumber: string) => void;
   /** Harness: checker-incorrect step ids (numeric strings) for LLM feedback panel. */
   harnessIncorrectStepNumbers?: Set<string>;
   /** Harness: LLM feedback keyed by checker step number. */
@@ -118,10 +118,6 @@ export class InteractiveAppPage extends React.Component<
               <HarnessStepFeedbackPanel
                 activeFrame={this.state.activeFrame}
                 harnessInlineEdit={this.props.harnessInlineEdit}
-                incorrectStepNumbers={
-                  this.props.harnessIncorrectStepNumbers ??
-                  EMPTY_INCORRECT_STEPS
-                }
                 llmByStepNumber={this.props.harnessLlmFeedback.byStepNumber}
                 llmLoading={this.props.harnessLlmFeedback.loading}
                 llmError={this.props.harnessLlmFeedback.error}
@@ -142,6 +138,7 @@ export class InteractiveAppPage extends React.Component<
                 revealAll={this.props.proofHarnessMode}
                 harnessInlineEdit={this.props.harnessInlineEdit}
                 insertProofStepAfter={this.props.insertProofStepAfter}
+                deleteProofStep={this.props.deleteProofStep}
               />
             </div>
           </div>
