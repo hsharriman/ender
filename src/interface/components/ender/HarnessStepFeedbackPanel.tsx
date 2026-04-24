@@ -67,6 +67,10 @@ export class HarnessStepFeedbackPanel extends React.Component<
         <div className="font-semibold text-amber-900">
           Step feedback
         </div>
+        <p className="mt-1 text-[11px] italic text-amber-800/80">
+          AI-generated feedback; please verify with your teacher and course
+          materials.
+        </p>
         {llmLoading && (
           <p className="mt-1 text-slate-600">Getting feedback from the model…</p>
         )}
