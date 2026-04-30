@@ -34,6 +34,7 @@ import {
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import {
   parseLlmStepFeedbackList,
+  resolveOpenAiApiKey,
   runLlmFeedback,
 } from "llm-feedback/llmFeedback";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -245,6 +246,13 @@ export const ProofObjHarness = () => {
     }
 
     if (lastGoodProof.isCorrect === true) {
+      clearLlm();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (!resolveOpenAiApiKey()) {
       clearLlm();
       return () => {
         cancelled = true;

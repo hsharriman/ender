@@ -1,5 +1,77 @@
 # Ender
 
+## Run the Project
+
+### Prerequisites
+
+- Node.js 18+ (recommended)
+- npm
+
+Install dependencies once (there will be many critical dependency errors caused by create-react-app, I'm sorry):
+
+```bash
+npm install
+```
+
+### Interface (React app)
+
+#### Run with LLM feedback enabled (FOLLOW THESE FOR THE HUMAN-AI INTERACTION FINAL PROJECT)
+
+The browser harness expects `REACT_APP_OPENAI_API_KEY` (Create React App only exposes `REACT_APP_*` vars to browser code).
+
+Option A (recommended for this repo): put your key in `src/llm-feedback/.env`:
+
+```bash
+REACT_APP_OPENAI_API_KEY=your_key_here
+```
+
+Then run:
+
+```bash
+npm run start:with-llm-env
+```
+
+Option B: set `REACT_APP_OPENAI_API_KEY` in your shell (or a CRA env file like `.env.local`) and run `npm start`.
+
+#### LLM feedback walkthrough (Harness)
+
+1. Start the app with LLM enabled (`npm run start:with-llm-env`).
+2. Open [http://localhost:3000](http://localhost:3000).
+3. Click the `Harness` button to open `ProofObjHarness`.
+4. Click the `Show Editor` button (top-right) to open the proof selector/editor.
+5. Use the proof dropdown to switch examples:
+   - files with an `inc` suffix include an intentional mistake
+   - files with an `incomplete` suffix are missing steps
+6. LLM feedback appears for incorrect/incomplete proofs in the step feedback panel.
+
+#### Run without LLM feedback
+
+```bash
+npm start
+```
+
+This starts the UI at [http://localhost:3000](http://localhost:3000).
+
+### CLI proof checker
+
+Run the checker on one proof file:
+
+```bash
+npm run checkProof -- src/checker/proofs/tutorial.txt
+```
+
+Run debug checker:
+
+```bash
+npm run debugProof -- src/checker/proofs/tutorial.txt
+```
+
+The CLI checker does not require OpenAI/LLM configuration.
+
+### Common proof files
+
+Proof samples live in `src/checker/proofs/` (for example: `tutorial.txt`, `tutinc.txt`, `s1c1.txt`, `s2c2.txt`).
+
 ## Contributing
 
 1. Open a branch with the naming convention `<user-alias>/<description>` (i.e., `hharriman/render-points`)
@@ -10,7 +82,7 @@
    c. `chore:` Some utility/devops/upkeep is done
 4. In the PR description provide a list of the changes that were made
 
-# Getting Started with Create React App
+## CRA Reference
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
