@@ -1,6 +1,7 @@
 import { ProofParser } from "checker/grammar/lezerParser";
 import { runProofChecker } from "checker/proofChecker";
 import buggyProofUrl from "checker/proofs/buggyproof.txt";
+import overlapUrl from "checker/proofs/overlap.txt";
 import s1c1Url from "checker/proofs/s1c1.txt";
 import s1c2Url from "checker/proofs/s1c2.txt";
 import s1c3Url from "checker/proofs/s1c3.txt";
@@ -22,23 +23,16 @@ import {
   InteractiveAppPage,
   InteractiveAppPageProps,
 } from "../components/ender/InteractiveAppPage";
+import {
+  StaticAppPage,
+  StaticAppPageProps,
+} from "../components/ender/StaticAppPage";
 import { AspectRatio } from "../core/diagramSvg/svgTypes";
-import { interactiveLayout } from "../core/grammarToLayout/setupLayout";
+import {
+  interactiveLayout,
+  staticLayout,
+} from "../core/grammarToLayout/setupLayout";
 
-const defaultProofText = `title: "Tutorial #1 - Prove Triangles Congruent"
-premises:
-pt: A (5.5, 9, 0, 5), B (2, 3, -8, -18), C (5.5, 1, -8, -17), D (9, 3, -5, -18)
-tri: t_ABC t_ADC
-[g_1] con_seg(AB,AD)
-[g_2] con_ang(a_BAC,a_DAC) 
--> con_tri(t_ABC,t_ADC)
-
-steps:
-[01] given(g_1) -> con_seg(AB,AD)
-[02] given(g_2) -> con_ang(a_BAC,a_DAC) 
-[03] reflex_s() -> con_seg(AC, AC)
-[04] sas(1, 2, 3) -> con_tri(t_ABC,t_ADC) 
-`;
 const parser = new ProofParser();
 const proofOptions: Array<{ key: string; label: string; url: string }> = [
   { key: "tutorial", label: "tutorial.txt", url: tutorialUrl },
@@ -54,21 +48,17 @@ const proofOptions: Array<{ key: string; label: string; url: string }> = [
   { key: "s2inc1", label: "s2inc1.txt", url: s2inc1Url },
   { key: "s2inc2", label: "s2inc2.txt", url: s2inc2Url },
   { key: "buggyproof", label: "buggyproof.txt", url: buggyProofUrl },
+  { key: "overlap", label: "overlap.txt", url: overlapUrl },
 ];
 
 export const ProofObjHarness = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(true);
+  const [isInteractiveLayout, setIsInteractiveLayout] = useState(true);
   const [selectedProofKey, setSelectedProofKey] = useState("tutorial");
-  const [proofText, setProofText] = useState(defaultProofText);
-  const [lastGoodProof, setLastGoodProof] = useState<ProofObj>(() => {
-    const p = parser.parse(defaultProofText) as unknown as ProofObj;
-    runProofChecker(p);
-    return p;
-  });
+  const [proofText, setProofText] = useState("");
+  const [lastGoodProof, setLastGoodProof] = useState<ProofObj | null>(null);
   const [parseVersion, setParseVersion] = useState(0);
-  const [statusMessage, setStatusMessage] = useState(
-    "Proof parsed successfully.",
-  );
+  const [statusMessage, setStatusMessage] = useState("Loading proof...");
   const [proofWideIssues, setProofWideIssues] = useState<string[]>([]);
   const [incorrectStepErrors, setIncorrectStepErrors] = useState<
     Map<string, ErrorObj[]>
@@ -79,7 +69,7 @@ export const ProofObjHarness = () => {
   );
   const [editorScrollTop, setEditorScrollTop] = useState(0);
   const editorRef = useRef<HTMLDivElement | null>(null);
-  const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
+  const controlsRef = useRef<HTMLDivElement | null>(null);
   const editorOverlayRef = useRef<HTMLPreElement | null>(null);
 
   const onTextChange = (next: string) => {
@@ -116,6 +106,7 @@ export const ProofObjHarness = () => {
   };
 
   useEffect(() => {
+    if (!proofText.trim()) return;
     const handle = window.setTimeout(() => {
       try {
         const parsed = parser.parse(proofText) as unknown as ProofObj;
@@ -210,7 +201,7 @@ export const ProofObjHarness = () => {
     const onMouseDown = (event: MouseEvent) => {
       const target = event.target as Node;
       if (editorRef.current?.contains(target)) return;
-      if (toggleBtnRef.current?.contains(target)) return;
+      if (controlsRef.current?.contains(target)) return;
       setIsEditorOpen(false);
     };
     document.addEventListener("mousedown", onMouseDown);
@@ -219,17 +210,24 @@ export const ProofObjHarness = () => {
     };
   }, [isEditorOpen]);
 
-  const props = useMemo(() => {
-    const base = interactiveLayout(interactiveLayoutFromProofObj(lastGoodProof))
-      .props as InteractiveAppPageProps;
+  const layouts = useMemo(() => {
+    if (!lastGoodProof) return null;
+    const layoutProps = interactiveLayoutFromProofObj(lastGoodProof);
     const maxX = Math.max(
       ...lastGoodProof.premises.points.map((p) => p.pt?.[0] ?? -Infinity),
     );
-    if (maxX > 10) {
-      return { ...base, diagramAspect: AspectRatio.Landscape };
-    } else {
-      return { ...base, diagramAspect: AspectRatio.Square };
-    }
+    const diagramAspect =
+      maxX > 10 ? AspectRatio.Landscape : AspectRatio.Square;
+    return {
+      interactive: {
+        ...(interactiveLayout(layoutProps).props as InteractiveAppPageProps),
+        diagramAspect,
+      },
+      static: {
+        ...(staticLayout(layoutProps).props as StaticAppPageProps),
+        diagramAspect,
+      },
+    };
   }, [lastGoodProof]);
   const annotatedLines = useMemo(
     () => buildAnnotatedLines(proofText, incorrectStepErrors),
@@ -245,13 +243,18 @@ export const ProofObjHarness = () => {
           <img src={ender} alt="Ender logo" className="h-12 w-auto shadow-sm" />
         </NavLink>
         <div className="font-semibold">ProofObj Harness</div>
-        <div className="flex items-center gap-4">
+        <div ref={controlsRef} className="flex items-center gap-4">
           <button
-            ref={toggleBtnRef}
             onClick={() => setIsEditorOpen((v) => !v)}
             className="px-3 py-1 rounded-md bg-blue-600 text-white text-sm"
           >
             {isEditorOpen ? "Hide Editor" : "Show Editor"}
+          </button>
+          <button
+            onClick={() => setIsInteractiveLayout((v) => !v)}
+            className="px-3 py-1 rounded-md bg-slate-700 text-white text-sm"
+          >
+            {isInteractiveLayout ? "Show Static Layout" : "Show Interactive Layout"}
           </button>
           <NavLink
             to={"/ender/examples"}
@@ -368,7 +371,19 @@ export const ProofObjHarness = () => {
       )}
 
       <div className="w-full flex justify-start">
-        <InteractiveAppPage key={`proof-${parseVersion}`} {...props} />
+        {layouts ? (
+          isInteractiveLayout ? (
+            <InteractiveAppPage
+              key={`proof-interactive-${parseVersion}`}
+              {...layouts.interactive}
+            />
+          ) : (
+            <StaticAppPage
+              key={`proof-static-${parseVersion}`}
+              {...layouts.static}
+            />
+          )
+        ) : null}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 // fail on step 3 and dependency error on step 5
 title: "S1INC3 - Prove Rectangle"
 premises:
-pt: K (14, 2, 0, -17), L (2, 2, -15, -15), M (2, 9, -10, 5), N (14, 9, 8, 0)
+pt: K (14, 2, br), L (2, 2, bl), M (2, 9, l), N (14, 9, r)
 seg: MK
 tri: t_KLM t_MNK
 quad: q_KLMN

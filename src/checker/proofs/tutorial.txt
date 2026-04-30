@@ -1,7 +1,7 @@
 // pass
 title: "Tutorial #1 - Prove Triangles Congruent"
 premises:
-pt: A (5.5, 9, 0, 5), B (2, 3, -8, -18), C (5.5, 1, -8, -17), D (9, 3, -5, -18)
+pt: A (5.5, 9, t), B (2, 3, l), C (5.5, 1, b), D (9, 3, r)
 tri: t_ABC t_ADC
 [g_1] con_seg(AB,AD)
 [g_2] con_ang(a_BAC,a_DAC) 

@@ -212,7 +212,7 @@ export class ProofParser {
     startIndex: number,
   ): {
     pt: [number, number];
-    offset: [number, number];
+    offsetCode: string;
     endIndex: number;
   } | null {
     let i = startIndex;
@@ -228,17 +228,22 @@ export class ProofParser {
     i++;
     if (i >= tokens.length || tokens[i].type !== "comma") return null;
     i++;
-    if (i >= tokens.length || tokens[i].type !== "float_literal") return null;
-    const offsetX = Number(tokens[i].value);
-    i++;
-    if (i >= tokens.length || tokens[i].type !== "comma") return null;
-    i++;
-    if (i >= tokens.length || tokens[i].type !== "float_literal") return null;
-    const offsetY = Number(tokens[i].value);
-    i++;
+    let parsedOffsetCode: string | null = null;
+    if (
+      i < tokens.length &&
+      (tokens[i].type === "identifier" || tokens[i].type === "param_name")
+    ) {
+      parsedOffsetCode = String(tokens[i].value).toLowerCase();
+      i++;
+    }
+    if (!parsedOffsetCode) return null;
     if (i >= tokens.length || tokens[i].type !== "rparen") return null;
     i++;
-    return { pt: [x, y], offset: [offsetX, offsetY], endIndex: i };
+    return {
+      pt: [x, y],
+      offsetCode: parsedOffsetCode,
+      endIndex: i,
+    };
   }
 
   private parseBasicStructure(tokens: any[]) {
@@ -293,14 +298,14 @@ export class ProofParser {
                   const placement = this.parsePointPlacement(tokens, i);
                   if (!placement) {
                     throw new Error(
-                      `Expected coordinates and offsets after point '${pointLabel}' in premises. Use format: pt: A (x, y, offsetX, offsetY), B (x, y, offsetX, offsetY)`,
+                      `Expected coordinates and offset code after point '${pointLabel}' in premises. Use format: pt: A (x, y, offsetCode), B (x, y, offsetCode). Valid offsetCode values: t, tr, r, br, b, bl, l, tl.`,
                     );
                   }
                   result.premises.points.push({
                     type: Obj.Point,
                     v: pointLabel,
                     pt: placement.pt,
-                    offset: placement.offset,
+                    offsetCode: placement.offsetCode,
                   });
                   i = placement.endIndex;
                   if (i < tokens.length && tokens[i].type === "comma") {
@@ -535,12 +540,14 @@ export class ProofParser {
     }
 
     if (statement.function) {
-      if (this.reasonDefinitions.has(statement.function)) {
+      const isReason = this.reasonDefinitions.has(statement.function);
+      const isStatement = this.statementDefinitions.has(statement.function);
+      if (isReason && !isStatement) {
         throw new Error(
           `'${statement.function}' is defined as a reason only and cannot be used as a statement`,
         );
       }
-      if (!this.statementDefinitions.has(statement.function)) {
+      if (!isStatement) {
         throw new Error(
           `'${statement.function}' is not a defined reason or statement`,
         );

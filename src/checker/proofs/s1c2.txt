@@ -1,7 +1,7 @@
 // pass
 title: "S1C2 - Prove Midpoint #1"
 premises:
-pt: A (2 ,1, -15, -15), B (5.5, 8, 0, 5), C (9, 1, 0, -17), D (5.5, 1, -5, -18)
+pt: A (2 ,1, bl), B (5.5, 8, t), C (9, 1, br), D (5.5, 1, b)
 tri: t_ABD t_CBD
 seg: AC
 ang: a_ABC

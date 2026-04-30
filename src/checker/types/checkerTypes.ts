@@ -121,7 +121,8 @@ export interface ProofObj {
 
 export type ParsePointObj = ParseObj & {
   pt: [number, number];
-  offset: [number, number];
+  /** Shorthand label offset code (t, tr, r, br, b, bl, l, tl). */
+  offsetCode: string;
 };
 
 export interface ProofGraph {

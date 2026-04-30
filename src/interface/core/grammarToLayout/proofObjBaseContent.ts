@@ -1,6 +1,7 @@
 import { ProofObj } from "checker/types/checkerTypes";
 import { DiagramContent } from "../builder/DiagramContent";
 import { ShowPoint } from "../types/diagramTypes";
+import { resolvePointLabelOffset } from "./pointLabelOffset";
 
 export const seedBaseContentFromPremises = (proof: ProofObj): DiagramContent => {
   const ctx = new DiagramContent();
@@ -10,7 +11,7 @@ export const seedBaseContentFromPremises = (proof: ProofObj): DiagramContent => 
         label: pt.v,
         pt: pt.pt,
       },
-      pt.offset,
+      resolvePointLabelOffset(pt.offsetCode),
       ShowPoint.Hide,
     );
   });
