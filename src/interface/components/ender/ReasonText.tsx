@@ -8,7 +8,8 @@ export interface ReasonTextProps {
 }
 export class ReasonText extends React.Component<ReasonTextProps> {
   render() {
-    const { title, body } = this.props.textFn(this.props.activeFrame);
+    const { title, body, expectedDependenciesDescription } =
+      this.props.textFn(this.props.activeFrame);
     if (
       this.props.activeFrame === "prove" ||
       title === Reasons.Given.title ||
@@ -30,6 +31,11 @@ export class ReasonText extends React.Component<ReasonTextProps> {
             </div>
           </div>
           <div className="text-base">{body}</div>
+          {expectedDependenciesDescription ? (
+            <div className="text-base text-slate-600 mt-2">
+              {expectedDependenciesDescription}
+            </div>
+          ) : null}
         </div>
       </>
     );

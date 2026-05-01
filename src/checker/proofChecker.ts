@@ -48,6 +48,21 @@ const emptyProofGraph = (): ProofGraph => {
   };
 };
 
+const isCorrect = (
+  goalMatchResult: ProofGoalMatchResult,
+  graph: ProofGraph,
+  duplicateSteps: Array<[string, string]>,
+  stepNumberErrors: string[],
+  geometricObjectErrors: string[],
+): boolean =>
+  goalMatchResult.matches &&
+  graph.unusedSteps.size === 0 &&
+  graph.cycles.length === 0 &&
+  duplicateSteps.length === 0 &&
+  stepNumberErrors.length === 0 &&
+  geometricObjectErrors.length === 0 &&
+  graph.incorrectSteps.size === 0;
+
 /**
  * Single checker workflow on an already-parsed proof (after `normalizeProofObj`).
  * Steps: geometric premises → premise geometry context → **build proof graph**
@@ -61,6 +76,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
 
   const geometricObjectErrors = checkGeometricObjects(proof);
   if (geometricObjectErrors.length > 0) {
+    proof.isCorrect = false;
     return {
       proof,
       goal,
@@ -80,13 +96,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
   logDebug("Building proof graph (reason application; diagram deps)...");
-  const graph = buildProofGraph(
-    proof,
-    reasonDefs,
-    stmtDefs,
-    groups,
-    ctx,
-  );
+  const graph = buildProofGraph(proof, reasonDefs, stmtDefs, groups, ctx);
 
   graph.cycles = detectCycles(graph);
 
@@ -100,6 +110,14 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const duplicateSteps = findDuplicateSteps(proof);
   const stepNumberErrors = checkSequentialStepNumbers(proof);
   const goalMatchResult = checkGoalMatch(proof, goal);
+
+  proof.isCorrect = isCorrect(
+    goalMatchResult,
+    graph,
+    duplicateSteps,
+    stepNumberErrors,
+    geometricObjectErrors,
+  );
 
   return {
     proof,

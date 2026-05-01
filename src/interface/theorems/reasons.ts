@@ -1,7 +1,11 @@
+import { loadReasonDefinitions } from "checker/grammar/defsParsers";
+
 export interface ReasonItem {
   title: string;
   body: string;
   src?: string;
+  /** Checker-derived dependency expectations; shown below `body` in the UI. */
+  expectedDependenciesDescription?: string;
 }
 export const Reasons: Record<string, ReasonItem> = {
   Empty: { title: "", body: "", src: "" },
@@ -108,6 +112,21 @@ export const Reasons: Record<string, ReasonItem> = {
   },
 };
 
+const reasonDefinitions = loadReasonDefinitions();
+
+const expectedDependenciesDescriptionFor = (
+  reasonFn?: string,
+): string | null => {
+  if (!reasonFn) return null;
+  const def = reasonDefinitions.get(reasonFn.toLowerCase());
+  if (!def) return null;
+  const expected = def.dependencies.map((dep) =>
+    typeof dep === "string" ? dep : dep.name,
+  );
+  if (expected.length === 0) return "expects 0 dependencies.";
+  return `This reason expects ${expected.length} dependencies, in order of: ${expected.join(", ")}.`;
+};
+
 export const reasonFromFunction = (fn?: string): ReasonItem => {
   if (!fn) return Reasons.Empty;
   const key = fn.toLowerCase();
@@ -138,5 +157,11 @@ export const reasonFromFunction = (fn?: string): ReasonItem => {
     def_ang_bisect: Reasons.Bisector,
     ang_bisect_conv: Reasons.Bisector,
   };
-  return map[key] ?? { title: fn, body: "", src: "" };
+  const base = map[key] ?? { title: fn, body: "", src: "" };
+  const depsDescription = expectedDependenciesDescriptionFor(key);
+  if (!depsDescription) return base;
+  return {
+    ...base,
+    expectedDependenciesDescription: depsDescription,
+  };
 };

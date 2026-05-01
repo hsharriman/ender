@@ -1,5 +1,28 @@
 import React from "react";
 import { ProofTextItem } from "../../core/types/stepTypes";
+import { ReasonPickerPopover } from "./ReasonPickerPopover";
+
+const HARNESS_EMPTY_STATEMENT_PLACEHOLDER = "New statement (click to edit)";
+const HARNESS_EMPTY_REASON_PLACEHOLDER = "New reason (click to edit)";
+
+/** Inline proof editing in ProofObjHarness: DSL strings + commit to shared proof text. */
+export interface HarnessInlineEditConfig {
+  reasonNames: string[];
+  stepByKey: Map<
+    string,
+    {
+      stepNumber: string;
+      statementDsl: string;
+      reasonDsl: string;
+      harnessEmptyStepHint?: string;
+    }
+  >;
+  onCommit: (
+    stepNumber: string,
+    statementDsl: string,
+    reasonDsl: string,
+  ) => void;
+}
 
 export interface ProofRowsProps {
   active: string;
@@ -8,10 +31,27 @@ export interface ProofRowsProps {
   isCompact: boolean;
   reliesOn?: Map<string, Set<string>>;
   isTutorial?: boolean;
+  /** When true, every proof step row is expanded (harness / dev tooling). */
+  revealAll?: boolean;
+  harnessInlineEdit?: HarnessInlineEditConfig;
+  /** ProofObjHarness: insert a new step after the active proof step (by checker step number). */
+  insertProofStepAfter?: (afterStepNumber: string) => void;
+  /** ProofObjHarness: delete the active proof step (by checker step number). */
+  deleteProofStep?: (stepNumber: string) => void;
 }
 export interface ProofRowsState {
   idx: number;
   revealed: number;
+  harnessPreviewByStep: Map<
+    string,
+    { statementDraft: string; reasonDraft: string }
+  >;
+  harnessEditState: null | {
+    stepKey: string;
+    field: "statement" | "reason";
+    statementDraft: string;
+    reasonDraft: string;
+  };
 }
 export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
   private idPrefix = "prooftext-";
@@ -20,6 +60,8 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     this.state = {
       idx: 0,
       revealed: 0,
+      harnessPreviewByStep: new Map(),
+      harnessEditState: null,
     };
   }
 
@@ -29,6 +71,38 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
 
   componentWillUnmount() {
     document.removeEventListener("keydown", this.onKeyboardPress);
+  }
+
+  private maxRevealIdx(): number {
+    return Math.max(0, this.props.items.length - 2);
+  }
+
+  private effectiveRevealed(): number {
+    if (this.props.revealAll) {
+      return this.maxRevealIdx();
+    }
+    return this.state.revealed;
+  }
+
+  componentDidUpdate(prevProps: ProofRowsProps) {
+    if (prevProps.items.length !== this.props.items.length) {
+      const maxIdx = this.props.items.length - 1;
+      if (this.state.idx > maxIdx) {
+        const k = this.props.items[maxIdx]?.k;
+        this.setState({
+          idx: maxIdx,
+          revealed: this.maxRevealIdx(),
+          harnessEditState: null,
+        });
+        if (k) this.props.onClick(k);
+      }
+    }
+    if (
+      prevProps.harnessInlineEdit !== this.props.harnessInlineEdit &&
+      this.state.harnessEditState
+    ) {
+      this.setState({ harnessEditState: null });
+    }
   }
 
   onReveal = () => {
@@ -42,14 +116,14 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
 
   onKeyboardPress = (event: KeyboardEvent) => {
     let newIdx = this.state.idx;
-    let reveal =
-      this.state.idx > 0 && this.state.revealed < this.props.items.length - 2;
+    const rev = this.effectiveRevealed();
+    let reveal = this.state.idx > 0 && rev < this.props.items.length - 2;
     if (
       event.key === "ArrowDown" &&
       this.state.idx < this.props.items.length - 1
     ) {
       newIdx = this.state.idx + 1;
-      reveal = this.state.idx > this.state.revealed; // false if active idx is not beyond what has been revealed
+      reveal = this.state.idx > rev; // false if active idx is not beyond what has been revealed
     } else if (event.key === "ArrowUp" && this.state.idx > 0) {
       newIdx = this.state.idx - 1;
       reveal = false; // don't reveal on Up arrow press
@@ -83,6 +157,102 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     }
   };
 
+  selectRowKey = (itemKey: string) => {
+    if (this.props.active === itemKey) return;
+    const newIdx = this.props.items.findIndex((item) => item.k === itemKey);
+    if (newIdx === -1) return;
+    this.setState({
+      idx: newIdx,
+      revealed:
+        newIdx - 1 > this.state.revealed ? newIdx - 1 : this.state.revealed,
+    });
+    this.props.onClick(itemKey);
+  };
+
+  beginHarnessEdit = (stepKey: string, field: "statement" | "reason") => {
+    const hi = this.props.harnessInlineEdit;
+    if (!hi) return;
+    const meta = hi.stepByKey.get(stepKey);
+    if (!meta) return;
+    const preview = this.state.harnessPreviewByStep.get(stepKey);
+    this.setState((prev) => {
+      const cur = prev.harnessEditState;
+      if (cur?.stepKey === stepKey) {
+        return {
+          harnessEditState: {
+            ...cur,
+            field,
+          },
+        };
+      }
+      return {
+        harnessEditState: {
+          stepKey,
+          field,
+          statementDraft: preview?.statementDraft ?? meta.statementDsl,
+          reasonDraft: preview?.reasonDraft ?? meta.reasonDsl,
+        },
+      };
+    });
+  };
+
+  commitHarnessEdit = () => {
+    const hi = this.props.harnessInlineEdit;
+    const st = this.state.harnessEditState;
+    if (!hi || !st) return;
+    const meta = hi.stepByKey.get(st.stepKey);
+    if (!meta) return;
+    hi.onCommit(
+      meta.stepNumber,
+      st.statementDraft.trim(),
+      st.reasonDraft.trim(),
+    );
+    this.setState((prev) => {
+      const nextPreview = new Map(prev.harnessPreviewByStep);
+      nextPreview.delete(st.stepKey);
+      return {
+        harnessEditState: null,
+        harnessPreviewByStep: nextPreview,
+      };
+    });
+  };
+
+  cancelHarnessEdit = () => {
+    this.setState({ harnessEditState: null });
+  };
+
+  /** UI-only blur behavior: keep draft visible, do not commit parser/checker. */
+  blurHarnessEditToPreview = () => {
+    this.setState((prev) => {
+      const st = prev.harnessEditState;
+      if (!st) return null;
+      const nextPreview = new Map(prev.harnessPreviewByStep);
+      nextPreview.set(st.stepKey, {
+        statementDraft: st.statementDraft,
+        reasonDraft: st.reasonDraft,
+      });
+      return {
+        harnessEditState: null,
+        harnessPreviewByStep: nextPreview,
+      };
+    });
+  };
+
+  updateHarnessDraft = (
+    patch: Partial<{
+      statementDraft: string;
+      reasonDraft: string;
+      field: "statement" | "reason";
+    }>,
+  ) => {
+    this.setState((prev) => ({
+      harnessEditState:
+        prev.harnessEditState === null
+          ? null
+          : { ...prev.harnessEditState, ...patch },
+    }));
+  };
+
   renderPremise = (premise: string, item: ProofTextItem) => {
     return (
       <div className="flex flex-row justify-start">
@@ -106,18 +276,111 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     const isActive = activeItem && item.k === activeItem.k;
     // if the active row is given or prove, focus all the proof rows
     const depends = (activeItem && activeItem.dependsOn?.has(item.k)) || false;
+    const hi = this.props.harnessInlineEdit;
+    const meta = hi?.stepByKey.get(item.k);
+    const hEdit = this.state.harnessEditState;
+    const preview = this.state.harnessPreviewByStep.get(item.k);
+    const displayStatementDsl = preview?.statementDraft ?? meta?.statementDsl ?? "";
+    const displayReasonDsl = preview?.reasonDraft ?? meta?.reasonDsl ?? "";
+    const harnessShowRawPreview = Boolean(preview);
+    const harnessInline =
+      hi && meta
+        ? {
+            ...meta,
+            statementDsl: displayStatementDsl,
+            reasonDsl: displayReasonDsl,
+            harnessShowRawPreview,
+            reasonNames: hi.reasonNames,
+            editing:
+              hEdit?.stepKey === item.k
+                ? {
+                    field: hEdit.field,
+                    statementDraft: hEdit.statementDraft,
+                    reasonDraft: hEdit.reasonDraft,
+                  }
+                : null,
+            onBeginEdit: this.beginHarnessEdit,
+            onDraftChange: this.updateHarnessDraft,
+            onCommitEdit: this.commitHarnessEdit,
+            onCancelEdit: this.cancelHarnessEdit,
+            onFocusLossEdit: this.blurHarnessEditToPreview,
+            onSelectRow: this.selectRowKey,
+          }
+        : undefined;
+
+    const insertFn = this.props.insertProofStepAfter;
+    const deleteFn = this.props.deleteProofStep;
+    const stepNumForInsert = meta?.stepNumber;
+    const showInsertButton = Boolean(
+      insertFn &&
+      stepNumForInsert !== undefined &&
+      isActive &&
+      item.k.startsWith("s"),
+    );
+
+    const harnessInsertAfter = showInsertButton
+      ? () => {
+          if (insertFn && stepNumForInsert !== undefined) {
+            insertFn(stepNumForInsert);
+          }
+        }
+      : undefined;
+    const harnessDeleteStep = showInsertButton
+      ? () => {
+          if (deleteFn && stepNumForInsert !== undefined) {
+            deleteFn(stepNumForInsert);
+          }
+        }
+      : undefined;
+
     return (
       <ProofRow
+        key={item.k}
         isActive={isActive}
         depends={depends}
         onClick={this.onClick}
         isTutorial={this.props.isTutorial || false}
-        revealed={this.state.revealed < i + 1}
+        revealed={this.effectiveRevealed() < i + 1}
         item={item}
         i={i}
         activeIdx={this.state.idx}
         isCompact={this.props.isCompact}
+        harnessInline={harnessInline}
+        harnessInsertAfter={harnessInsertAfter}
+        harnessDeleteStep={harnessDeleteStep}
       />
+    );
+  };
+
+  renderRevealBounceButton = (): React.ReactNode => {
+    if (
+      this.props.revealAll ||
+      this.state.revealed >= this.props.items.length - 2
+    ) {
+      return <></>;
+    }
+    return (
+      <button
+        onClick={this.onReveal}
+        className="text-blue-500 animate-smallBounce"
+      >
+        <div
+          className="animate-bounce bg-blue-500 p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center"
+          id="reveal-step-btn"
+        >
+          <svg
+            className="w-6 h-6 text-white"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+        </div>
+      </button>
     );
   };
 
@@ -146,29 +409,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
           </div>
           <div className="w-full flex justify-center">
             <div id="reveal-btn-container">
-              {this.state.revealed < this.props.items.length - 2 && (
-                <button
-                  onClick={this.onReveal}
-                  className="text-blue-500 animate-smallBounce"
-                >
-                  <div
-                    className="animate-bounce bg-blue-500 p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center"
-                    id="reveal-step-btn"
-                  >
-                    <svg
-                      className="w-6 h-6 text-white"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                    </svg>
-                  </div>
-                </button>
-              )}
+              {this.renderRevealBounceButton()}
             </div>
           </div>
         </>
@@ -176,6 +417,34 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     }
     return <></>;
   }
+}
+
+export interface ProofRowHarnessInlineProps {
+  stepNumber: string;
+  statementDsl: string;
+  reasonDsl: string;
+  /** True while the row has uncommitted edits (focus left without Shift+Enter); show DSL, not linked text. */
+  harnessShowRawPreview?: boolean;
+  /** When the source line is the new-step placeholder, show this in the statement column. */
+  harnessEmptyStepHint?: string;
+  reasonNames: string[];
+  editing: null | {
+    field: "statement" | "reason";
+    statementDraft: string;
+    reasonDraft: string;
+  };
+  onBeginEdit: (stepKey: string, field: "statement" | "reason") => void;
+  onDraftChange: (
+    patch: Partial<{
+      statementDraft: string;
+      reasonDraft: string;
+      field: "statement" | "reason";
+    }>,
+  ) => void;
+  onCommitEdit: () => void;
+  onCancelEdit: () => void;
+  onFocusLossEdit: () => void;
+  onSelectRow: (stepKey: string) => void;
 }
 
 interface ProofRowProps {
@@ -188,9 +457,15 @@ interface ProofRowProps {
   isCompact: boolean;
   activeIdx: number;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  harnessInline?: ProofRowHarnessInlineProps;
+  /** When set, a “+” insert control is rendered inside the harness row (active proof step). */
+  harnessInsertAfter?: () => void;
+  /** When set, a "-" delete control is rendered under insert inside harness row. */
+  harnessDeleteStep?: () => void;
 }
 export class ProofRow extends React.Component<ProofRowProps> {
   private idPrefix = "prooftext-";
+  private reasonInputRef = React.createRef<HTMLInputElement>();
   private textClr = () => {
     let css = this.props.isActive
       ? `text-slate-900 font-semibold stroke-slate-900 `
@@ -207,38 +482,267 @@ export class ProofRow extends React.Component<ProofRowProps> {
   };
 
   private bgClr = () => {
-    return this.props.isActive
-      ? "bg-blue-100"
-      : this.props.depends
-        ? "bg-slate-50"
-        : "bg-transparent";
+    return this.props.item.isIncorrect
+      ? "bg-red-500/10"
+      : this.props.isActive
+        ? "bg-blue-100"
+        : this.props.depends
+          ? "bg-slate-50"
+          : "bg-transparent";
+  };
+
+  private numClass = (): string => {
+    const inc = this.props.item.isIncorrect;
+    if (this.props.isActive && inc) {
+      return "bg-red-200 text-red-900 border border-red-300";
+    }
+    if (this.props.isActive) {
+      return "bg-blue-700 text-white";
+    }
+    if (this.props.i > this.props.activeIdx - 2) {
+      return "bg-white border-2 border-slate-500 text-slate-500";
+    }
+    if (this.props.depends) {
+      return "bg-slate-400 text-black";
+    }
+    return "bg-slate-200 text-black";
+  };
+
+  private harnessShiftEnter = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && e.shiftKey) {
+      e.preventDefault();
+      this.props.harnessInline?.onCommitEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      this.props.harnessInline?.onCancelEdit();
+    }
+  };
+
+  /** Focus-loss is UI-only; Shift+Enter is the parser-triggering commit path. */
+  private onEditFieldFocusLoss = () => {
+    this.props.harnessInline?.onFocusLossEdit();
   };
 
   render() {
-    // if the active row is given or prove, focus all the proof rows
     const h = this.props.isCompact ? "h-12" : "h-16";
     const fontSize = this.props.isCompact ? "text-md" : "text-lg";
-    const padding = this.props.isCompact ? "py-2" : "py-2";
+    const padding = "py-2";
+    const { harnessInline: hi } = this.props;
+    const incorrectBg = this.props.item.isIncorrect ? "bg-red-500/10" : "";
     const num = (
       <div
-        className={`${
-          this.props.isActive
-            ? "bg-blue-700 text-white"
-            : this.props.i > this.props.activeIdx - 2
-              ? "bg-white border-2 border-slate-500 text-slate-500"
-              : this.props.depends
-                ? "bg-slate-400 text-black"
-                : "bg-slate-200 text-black"
-        } font-bold w-8 h-8 rounded-2xl flex justify-center items-center flex-row`}
+        className={`${this.numClass()} font-bold w-8 h-8 rounded-2xl flex justify-center items-center flex-row`}
       >
         {this.props.i + 1}
       </div>
     );
     const btnStyle = ` border-b-2 border-l-4 border-gray-300 border-l-slate-500 ml-6  w-full ${h} ${fontSize} focus:outline-none`;
+    const harnessRowChrome = ` border-b-2 border-l-4 border-gray-300 border-l-slate-500 ml-6  w-full ${fontSize} focus:outline-none`;
+
+    if (hi && !this.props.revealed) {
+      const ed = hi.editing;
+      const reasonTypeAhead =
+        ed?.field === "reason"
+          ? (ed.reasonDraft.match(/^[^()]*/)?.[0]?.trim() ?? "")
+          : "";
+      const filtered =
+        ed?.field === "reason" && reasonTypeAhead.length > 0
+          ? hi.reasonNames.filter((n) =>
+              n.toLowerCase().includes(reasonTypeAhead.toLowerCase()),
+            )
+          : [];
+      const outerRowClass = h;
+
+      return (
+        <div
+          className={`flex flex-row justify-start ${outerRowClass} ${
+            ed ? " relative z-[60] overflow-visible" : ""
+          }`}
+        >
+          <div
+            id={`${this.idPrefix}${this.props.item.k}`}
+            className={`flex flex-row flex-1 w-full items-stretch overflow-visible ${this.bgClr()}${harnessRowChrome} ${h}`}
+          >
+            <div
+              className={`${this.textClr()} ${this.borderClr()} grid grid-rows-1 grid-cols-2 h-full min-h-0 min-w-0 flex-1 overflow-visible`}
+            >
+              <div
+                className={`flex flex-row justify-start gap-8 -ml-[18px] items-center align-baseline ${padding} min-h-0 min-w-0 overflow-visible`}
+              >
+                <button
+                  type="button"
+                  className="shrink-0 cursor-pointer focus:outline-none flex flex-col justify-center"
+                  onClick={() => hi.onSelectRow(this.props.item.k)}
+                >
+                  {num}
+                </button>
+                <div
+                  className="proof-row-edit-area min-w-0 flex-1 flex flex-col justify-center min-h-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!this.props.isActive) {
+                      hi.onSelectRow(this.props.item.k);
+                    } else {
+                      hi.onBeginEdit(this.props.item.k, "statement");
+                    }
+                  }}
+                >
+                  {ed?.field === "statement" ? (
+                    <textarea
+                      className={`w-full shrink-0 resize-none font-mono text-xs leading-snug border border-slate-400 rounded px-1 py-0.5 bg-white text-slate-900 overflow-y-auto ${
+                        this.props.isCompact ? "h-7" : "h-10"
+                      }`}
+                      title="Shift+Enter: check proof · Esc: cancel"
+                      placeholder="Proof DSL · Shift+Enter · Esc"
+                      rows={1}
+                      value={ed.statementDraft}
+                      aria-label="Statement (proof DSL)"
+                      onChange={(e) =>
+                        hi.onDraftChange({ statementDraft: e.target.value })
+                      }
+                      onBlur={this.onEditFieldFocusLoss}
+                      onKeyDown={this.harnessShiftEnter}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <div
+                      className={`${this.textClr()} text-left break-words cursor-text shrink`}
+                    >
+                      {hi.harnessShowRawPreview && hi.statementDsl.trim() ? (
+                        <span className="font-mono text-xs text-slate-800 whitespace-pre-wrap">
+                          {hi.statementDsl}
+                        </span>
+                      ) : hi.harnessEmptyStepHint || !hi.statementDsl.trim() ? (
+                        <span className="text-slate-400 italic font-mono text-xs">
+                          {hi.harnessEmptyStepHint ??
+                            HARNESS_EMPTY_STATEMENT_PLACEHOLDER}
+                        </span>
+                      ) : (
+                        this.props.item.v(
+                          this.props.isActive || this.props.depends,
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div
+                className={`proof-row-edit-area -ml-[9px] flex min-h-0 min-w-0 overflow-visible ${padding} shrink flex-row justify-start items-center align-baseline`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!this.props.isActive) {
+                    hi.onSelectRow(this.props.item.k);
+                  } else {
+                    hi.onBeginEdit(this.props.item.k, "reason");
+                  }
+                }}
+              >
+                {ed?.field === "reason" ? (
+                  <>
+                    <input
+                      ref={this.reasonInputRef}
+                      type="text"
+                      autoComplete="off"
+                      spellCheck={false}
+                      className="w-full h-8 shrink-0 font-mono text-xs leading-none border border-slate-400 rounded px-2 py-1 bg-white text-slate-900"
+                      title="Shift+Enter: check proof · Esc: cancel"
+                      placeholder="reason(args) · type to filter · Shift+Enter"
+                      value={ed.reasonDraft}
+                      aria-label="Reason (proof DSL)"
+                      onChange={(e) =>
+                        hi.onDraftChange({ reasonDraft: e.target.value })
+                      }
+                      onBlur={this.onEditFieldFocusLoss}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          e.preventDefault();
+                          hi.onCancelEdit();
+                          return;
+                        }
+                        this.harnessShiftEnter(e);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <ReasonPickerPopover
+                      open={
+                        ed.reasonDraft.trim().length > 0 && filtered.length > 0
+                      }
+                      anchorRef={this.reasonInputRef}
+                      names={filtered}
+                      onPick={(name) => {
+                        const prev = ed.reasonDraft;
+                        const paren = prev.indexOf("(");
+                        const keepArgs =
+                          paren > 0 && prev.startsWith(name + "(");
+                        hi.onDraftChange({
+                          reasonDraft: keepArgs ? prev : `${name}()`,
+                        });
+                      }}
+                    />
+                  </>
+                ) : (
+                  <div
+                    className={`px-2 rounded-md py-1 text-left ${
+                      this.props.isActive &&
+                      Boolean(this.props.item.reason) &&
+                      this.props.item.reason !== "Given"
+                        ? "border-black border-2"
+                        : ""
+                    }`}
+                  >
+                    {hi.harnessShowRawPreview && hi.reasonDsl.trim() ? (
+                      <span className="font-mono text-xs text-slate-800 whitespace-pre-wrap">
+                        {hi.reasonDsl}
+                      </span>
+                    ) : hi.reasonDsl.trim() ? (
+                      this.props.item.reason || hi.reasonDsl
+                    ) : (
+                      <span className="text-slate-400 italic font-mono text-xs">
+                        {HARNESS_EMPTY_REASON_PLACEHOLDER}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            {this.props.harnessInsertAfter ? (
+              <div className="flex shrink-0 flex-col items-center justify-center gap-1 pl-2 pr-2">
+                <button
+                  type="button"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base font-medium leading-none text-blue-600 hover:bg-blue-50/90"
+                  aria-label="Insert step after this step"
+                  title="Insert step after"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    this.props.harnessInsertAfter?.();
+                  }}
+                >
+                  +
+                </button>
+                {this.props.harnessDeleteStep ? (
+                  <button
+                    type="button"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base font-medium leading-none text-red-600 hover:bg-red-50/90"
+                    aria-label="Delete this step"
+                    title="Delete step"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      this.props.harnessDeleteStep?.();
+                    }}
+                  >
+                    -
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
-        className={`flex flex-row justify-start ${h}`}
-        key={this.props.item.k}
+        className={`flex flex-row justify-start ${h} ${incorrectBg}`}
         id={this.props.isTutorial ? `${this.props.item.k}-tutorial` : ""}
       >
         {this.props.revealed ? (

@@ -292,17 +292,6 @@ export const checkAsa = (
   return triangleOk();
 };
 
-const rhlLegPattern = (
-  segLeft1: string,
-  segLeft2: string,
-  rightCenter: string,
-): boolean => {
-  return (
-    (!segLeft1.includes(rightCenter) && segLeft2.includes(rightCenter)) ||
-    (segLeft1.includes(rightCenter) && !segLeft2.includes(rightCenter))
-  );
-};
-
 export const checkRhl = (
   t_cong: Stmt,
   rightCon: Stmt,
@@ -336,18 +325,50 @@ export const checkRhl = (
   const r1c = angCenter(r1);
   const r2c = angCenter(r2);
 
-  const t1Valid = rhlLegPattern(s11, s12, r1c);
-  const t2Valid = rhlLegPattern(s21, s22, r2c);
+  /** Reason args: hypotenuses first, congruent legs second (see `grammar/defs/reasons`). */
+  const hypoValid =
+    !s11.includes(r1c) && !s12.includes(r2c);
+  const legValid = s21.includes(r1c) && s22.includes(r2c);
 
-  if (!(t1Valid && t2Valid)) {
-    return triangleFail("RHL_PATTERN", { t1Valid, t2Valid, r1c, r2c });
+  if (!(hypoValid && legValid)) {
+    return triangleFail("RHL_PATTERN", {
+      hypoValid,
+      legValid,
+      r1c,
+      r2c,
+    });
   }
 
   const t1 = ctx.addTriangleFromStr(tri1.label);
   const t2 = ctx.addTriangleFromStr(tri2.label);
 
-  const t1c2 = commonPt(s11, s12);
-  const t2c2 = commonPt(s21, s22);
+  const orderVertex = (
+    hypotenuse: string,
+    leg: string,
+    rightCenter: string,
+  ): string => {
+    const shared = commonPt(hypotenuse, leg);
+    if (shared !== rightCenter) return shared;
+    // Shared-side case (e.g. MK ≅ MK): use the leg endpoint opposite the right corner.
+    const opposite = leg
+      .split("")
+      .find((label) => label !== rightCenter);
+    return opposite ?? shared;
+  };
+
+  const t1c2 = orderVertex(s11, s21, r1c);
+  const t2c2 = orderVertex(s12, s22, r2c);
+  if (t1c2 === r1c || t2c2 === r2c) {
+    return triangleFail("RHL_PATTERN", {
+      hypoValid,
+      legValid,
+      vertexOrderUnresolved: true,
+      r1c,
+      r2c,
+      t1c2,
+      t2c2,
+    });
+  }
 
   t1.orderTriangle([r1c, t1c2, t1.getThirdPoint(r1c, t1c2)], ctx);
   t2.orderTriangle([r2c, t2c2, t2.getThirdPoint(r2c, t2c2)], ctx);

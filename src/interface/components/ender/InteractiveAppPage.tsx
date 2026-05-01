@@ -6,9 +6,14 @@ import { Reason } from "../../core/types/layoutTypes";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { getReasonFn } from "../../theorems/utils";
 import { Diagram } from "./Diagram";
-import { ProofRows } from "./ProofRows";
+import {
+  HarnessLlmFeedbackEntry,
+  HarnessStepFeedbackPanel,
+} from "./HarnessStepFeedbackPanel";
+import { HarnessInlineEditConfig, ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
+// import { WaysToProveFigures } from "./WaysToProveFigures";
 
 export interface InteractiveAppPageProps {
   name: string;
@@ -17,6 +22,22 @@ export interface InteractiveAppPageProps {
   reasonMap: Map<string, Reason>;
   miniReasonCtxMap: Map<string, DiagramRenderCtx[]>;
   isTutorial?: boolean;
+  /** When true, proof rows show every step (no reveal animation); used by ProofObjHarness */
+  proofHarnessMode?: boolean;
+  /** Optional: edit proof steps as DSL + reason picker (ProofObjHarness). */
+  harnessInlineEdit?: HarnessInlineEditConfig;
+  /** Optional: insert a new proof step after the active step (ProofObjHarness). */
+  insertProofStepAfter?: (afterStepNumber: string) => void;
+  /** Optional: delete a proof step by checker step number (ProofObjHarness). */
+  deleteProofStep?: (stepNumber: string) => void;
+  /** Harness: checker-incorrect step ids (numeric strings) for LLM feedback panel. */
+  harnessIncorrectStepNumbers?: Set<string>;
+  /** Harness: LLM feedback keyed by checker step number. */
+  harnessLlmFeedback?: {
+    byStepNumber: Map<string, HarnessLlmFeedbackEntry>;
+    loading: boolean;
+    error?: string;
+  };
   highlightCtx: DiagramRenderCtx;
   additionCtx: DiagramRenderCtx;
   diagramAspect: AspectRatio;
@@ -93,15 +114,31 @@ export class InteractiveAppPage extends React.Component<
               miniReasonCtxMap={this.props.miniReasonCtxMap}
               diagramAspect={this.props.diagramAspect}
             /> */}
+            {this.props.proofHarnessMode && this.props.harnessLlmFeedback ? (
+              <HarnessStepFeedbackPanel
+                activeFrame={this.state.activeFrame}
+                harnessInlineEdit={this.props.harnessInlineEdit}
+                llmByStepNumber={this.props.harnessLlmFeedback.byStepNumber}
+                llmLoading={this.props.harnessLlmFeedback.loading}
+                llmError={this.props.harnessLlmFeedback.error}
+              />
+            ) : null}
           </div>
-          <div id="proof-steps" className="col-start-7 col-span-4 w-[700px]">
-            <div className="pt-8">
+          <div
+            id="proof-steps"
+            className="col-start-7 col-span-4 w-[700px] overflow-visible z-0"
+          >
+            <div className="pt-8 overflow-visible">
               <ProofRows
                 items={this.props.linkedTexts}
                 active={this.state.activeFrame}
                 onClick={this.handleClick}
                 isTutorial={this.props.isTutorial}
                 isCompact={rowsCompact}
+                revealAll={this.props.proofHarnessMode}
+                harnessInlineEdit={this.props.harnessInlineEdit}
+                insertProofStepAfter={this.props.insertProofStepAfter}
+                deleteProofStep={this.props.deleteProofStep}
               />
             </div>
           </div>

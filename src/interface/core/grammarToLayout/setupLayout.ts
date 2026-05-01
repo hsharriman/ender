@@ -152,6 +152,7 @@ export const interactiveLayout = (proofMeta: LayoutProps): ProofMeta => {
       v: step.text,
       reason: step.reason.title,
       waysToProve: step.waysToProve,
+      isIncorrect: step.isIncorrect,
     });
     step = { ...step, prevStep: prevStep };
     prevStep = step;

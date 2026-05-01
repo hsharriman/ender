@@ -117,6 +117,7 @@ export interface ProofObj {
   steps: ProofStep[];
   goal?: Stmt;
   errors: ErrorObj[];
+  isCorrect: boolean;
 }
 
 export type ParsePointObj = ParseObj & {
