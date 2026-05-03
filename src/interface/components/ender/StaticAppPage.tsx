@@ -138,7 +138,7 @@ export class StaticAppPage extends React.Component<
             <div className="text-base">{item.body}</div>
           </div>
           <img
-            src={process.env.PUBLIC_URL + `/reasons/${item.src}.png`}
+            src={`${import.meta.env.BASE_URL}reasons/${item.src}.png`}
             className="h-16 w-auto self-center ml-2"
           />
         </div>

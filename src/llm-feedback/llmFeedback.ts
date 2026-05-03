@@ -96,11 +96,11 @@ export const parseLlmStepFeedbackList = (raw: string): LlmStepFeedbackRow[] => {
   return out;
 };
 
-/** Resolve API key for browser (CRA inlines only `REACT_APP_*`). */
+/** Resolve API key for browser (Vite exposes only `VITE_*` to client code). */
 export const resolveOpenAiApiKey = (explicit?: string): string | undefined => {
   if (explicit && explicit.trim()) return explicit.trim();
-  const fromReact = process.env.REACT_APP_OPENAI_API_KEY?.trim();
-  if (fromReact) return fromReact;
+  const fromVite = import.meta.env.VITE_OPENAI_API_KEY?.trim();
+  if (fromVite) return fromVite;
   return undefined;
 };
 
@@ -137,7 +137,7 @@ export const runLlmFeedback = async (
   const apiKey = resolveOpenAiApiKey(opts.apiKey);
   if (!apiKey) {
     throw new Error(
-      "Missing OpenAI API key. Set REACT_APP_OPENAI_API_KEY for the browser harness.",
+      "Missing OpenAI API key. Set VITE_OPENAI_API_KEY for the browser harness.",
     );
   }
 

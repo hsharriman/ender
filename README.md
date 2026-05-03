@@ -7,7 +7,7 @@
 - Node.js 18+ (recommended)
 - npm
 
-Install dependencies once (there will be many critical dependency errors caused by create-react-app, I'm sorry):
+Install dependencies once:
 
 ```bash
 npm install
@@ -17,26 +17,28 @@ npm install
 
 #### Run with LLM feedback enabled (FOLLOW THESE FOR THE HUMAN-AI INTERACTION FINAL PROJECT)
 
-The browser harness expects `REACT_APP_OPENAI_API_KEY` (Create React App only exposes `REACT_APP_*` vars to browser code).
+The browser harness expects `VITE_OPENAI_API_KEY` (Vite only exposes env variables whose names start with `VITE_` to client code).
 
-Option A (recommended for this repo): put your key in `src/llm-feedback/.env`:
+Option A (recommended for this repo): put your key in `src/llm-feedback/.env` (Vite is configured to load env files from that directory):
 
 ```bash
-REACT_APP_OPENAI_API_KEY=your_key_here
+VITE_OPENAI_API_KEY=your_key_here
 ```
 
 Then run:
 
 ```bash
-npm run start:with-llm-env
+npm start
 ```
 
-Option B: set `REACT_APP_OPENAI_API_KEY` in your shell (or a CRA env file like `.env.local`) and run `npm start`.
+The legacy script `npm run start:with-llm-env` is kept as an alias and does the same thing.
+
+Option B: set `VITE_OPENAI_API_KEY` in your shell, or add a project-root `.env` / `.env.local` with that variable, and run `npm start`.
 
 #### LLM feedback walkthrough (Harness)
 
-1. Start the app with LLM enabled (`npm run start:with-llm-env`).
-2. Open [http://localhost:3000](http://localhost:3000).
+1. Start the app with LLM enabled (`npm start` with your key in `src/llm-feedback/.env` as above).
+2. Open [http://localhost:3000/ender/](http://localhost:3000/ender/) (Vite uses the `/ender/` base path to match GitHub Pages).
 3. Click the `Harness` button to open `ProofObjHarness`.
 4. Click the `Show Editor` button (top-right) to open the proof selector/editor.
 5. Use the proof dropdown to switch examples:
@@ -50,7 +52,7 @@ Option B: set `REACT_APP_OPENAI_API_KEY` in your shell (or a CRA env file like `
 npm start
 ```
 
-This starts the UI at [http://localhost:3000](http://localhost:3000).
+This starts the UI at [http://localhost:3000/ender/](http://localhost:3000/ender/) (the dev server redirects `/` to `/ender/`).
 
 ### CLI proof checker
 
@@ -105,18 +107,18 @@ Proofs are text files parsed into a `ProofObj`, checked by `src/checker/proofChe
 
 Use this when you introduce a new kind of literal in proofs (new premise section, new statement argument shape, and usually new diagram behavior).
 
-| Area | What to change |
-| --- | --- |
-| **Tokenization** | `src/checker/grammar/parser.ts` — add a `moo` rule for the literal (put **longer** patterns before shorter ones so they are not swallowed). If you add a named premises list (like `tri:`), add a keyword token and a section label (e.g. `circ:`). |
-| **AST / `ProofObj` premises** | `src/checker/types/checkerTypes.ts` — extend `premises` (e.g. add `circles: ParseObj[]`) if circles are listed in the premises block. |
-| **Object model** | `src/geometry-object/types/types.ts` — add a value to `Obj` and extend the `ParseObj` union. Implement a geometry class if the diagram needs it (see `geometry-object/geometry/*`, `ProofContent` / `DiagramContent`). |
-| **Parser** | `src/checker/grammar/lezerParser.ts` — `parseObj`, `geomPremiseTokenTypes`, `assertPremiseListHead`, the `premises` loop (new branch like `tri` / `quad`), `parseStatement` (if the lexer emits a new token type for literals inside `stmt(...)`), plus validators like `validateTriangleToken` for your spelling rules. |
-| **Normalization** | `src/checker/normalizeProofObj.ts` — strip or canonicalize prefixes on objects if you use them in proofs. |
-| **Well-formedness** | `src/checker/checker/validators.ts` — `checkGeometricObjects`: add a `switch` case for the new `Obj` (point sets, duplicate letters, etc.). |
-| **Semantic premises / diagram seed** | `src/checker/checker/premises.ts` — only if givens or diagram premises must update geometric context (often `switch` on `statement.function`). |
-| **Reason machinery** | `src/checker/checker/reasonApplication.ts` — `getGeometricObject` must support your `Obj` if any reason pulls live geometry from `ProofContent`. |
-| **Interface: diagram** | `src/interface/core/grammarToLayout/proofObjBaseContent.ts` — seed `DiagramContent` from the new premise list. Add drawing helpers under `src/interface/core/` as needed. |
-| **Docs / samples** | `src/checker/glossary.md`, `src/checker/README.md`, and a proof under `src/checker/proofs/` that exercises the new syntax. |
+| Area                                 | What to change                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Tokenization**                     | `src/checker/grammar/parser.ts` — add a `moo` rule for the literal (put **longer** patterns before shorter ones so they are not swallowed). If you add a named premises list (like `tri:`), add a keyword token and a section label (e.g. `circ:`).                                                                      |
+| **AST / `ProofObj` premises**        | `src/checker/types/checkerTypes.ts` — extend `premises` (e.g. add `circles: ParseObj[]`) if circles are listed in the premises block.                                                                                                                                                                                    |
+| **Object model**                     | `src/geometry-object/types/types.ts` — add a value to `Obj` and extend the `ParseObj` union. Implement a geometry class if the diagram needs it (see `geometry-object/geometry/*`, `ProofContent` / `DiagramContent`).                                                                                                   |
+| **Parser**                           | `src/checker/grammar/lezerParser.ts` — `parseObj`, `geomPremiseTokenTypes`, `assertPremiseListHead`, the `premises` loop (new branch like `tri` / `quad`), `parseStatement` (if the lexer emits a new token type for literals inside `stmt(...)`), plus validators like `validateTriangleToken` for your spelling rules. |
+| **Normalization**                    | `src/checker/normalizeProofObj.ts` — strip or canonicalize prefixes on objects if you use them in proofs.                                                                                                                                                                                                                |
+| **Well-formedness**                  | `src/checker/checker/validators.ts` — `checkGeometricObjects`: add a `switch` case for the new `Obj` (point sets, duplicate letters, etc.).                                                                                                                                                                              |
+| **Semantic premises / diagram seed** | `src/checker/checker/premises.ts` — only if givens or diagram premises must update geometric context (often `switch` on `statement.function`).                                                                                                                                                                           |
+| **Reason machinery**                 | `src/checker/checker/reasonApplication.ts` — `getGeometricObject` must support your `Obj` if any reason pulls live geometry from `ProofContent`.                                                                                                                                                                         |
+| **Interface: diagram**               | `src/interface/core/grammarToLayout/proofObjBaseContent.ts` — seed `DiagramContent` from the new premise list. Add drawing helpers under `src/interface/core/` as needed.                                                                                                                                                |
+| **Docs / samples**                   | `src/checker/glossary.md`, `src/checker/README.md`, and a proof under `src/checker/proofs/` that exercises the new syntax.                                                                                                                                                                                               |
 
 ---
 
@@ -124,16 +126,16 @@ Use this when you introduce a new kind of literal in proofs (new premise section
 
 Many statements only combine existing object kinds (segments, angles, triangles, …). The project already defines `sim_tri` with two triangle arguments in `stmts.defs.ts`; the checklist below is what you would repeat for a **new** statement name.
 
-| Area | What to change |
-| --- | --- |
-| **Definition (required)** | `src/checker/grammar/defs/stmts.defs.ts` — add an entry under `statements`: `name`, `parameters` (human-readable labels like today’s `triangle("t1")`), optional `isPremisesOnly`, optional `group` for substitute-able statements (see `congruent_angs`). Optionally mirror in `src/checker/grammar/defs/stmts.txt` for readers (**deprecated** file). |
-| **Object kinds** | If parameters use only existing `ParseObj` types, nothing else is required in `geometry-object`. If you need a **new** parameter type (e.g. a circle), complete **section 1** first. |
-| **Parser** | Usually no change if statement arguments are already valid `parseObj` inputs. If you add a new token type, update `lezerParser.ts` in the statement-argument loop. |
-| **Checker** | `checkStatementArguments` in `src/checker/checker/validators.ts` currently checks **arity** against `stmts.defs`. Graph building in `src/checker/checker/graph.ts` uses statement defs for step validity. Add **domain checks** in `reasonChecks/` or `validators` if you need more than arity. |
-| **Given / diagram premises** | If the statement can appear in givens and affects the built diagram, extend `src/checker/checker/premises.ts` (and the same for `proof.premises.diagramStatements`). |
-| **Interface: text** | `src/interface/core/grammarToLayout/proofObjText.tsx` — add a branch in `stmtToText` (or the step falls back to `function(arg1, arg2, …)` plain text). |
-| **Interface: diagram** | `src/interface/core/grammarToLayout/proofObjObjectApplication.ts` — in `createStmtObjectApplier`, map the new `stmt.function` to tick marks, labels, or overlays (see `con_seg`, `con_ang`, `con_tri`). If you need congruence-style tick tracking, extend `buildCongruenceTickTracker`. |
-| **Layout** | `src/interface/core/grammarToLayout/proofObjLayout.ts` — only if the new statement needs special transversal/vertical-angle style behavior (rare; most changes stay in `proofObjObjectApplication.ts`). |
+| Area                         | What to change                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Definition (required)**    | `src/checker/grammar/defs/stmts.defs.ts` — add an entry under `statements`: `name`, `parameters` (human-readable labels like today’s `triangle("t1")`), optional `isPremisesOnly`, optional `group` for substitute-able statements (see `congruent_angs`). Optionally mirror in `src/checker/grammar/defs/stmts.txt` for readers (**deprecated** file). |
+| **Object kinds**             | If parameters use only existing `ParseObj` types, nothing else is required in `geometry-object`. If you need a **new** parameter type (e.g. a circle), complete **section 1** first.                                                                                                                                                                    |
+| **Parser**                   | Usually no change if statement arguments are already valid `parseObj` inputs. If you add a new token type, update `lezerParser.ts` in the statement-argument loop.                                                                                                                                                                                      |
+| **Checker**                  | `checkStatementArguments` in `src/checker/checker/validators.ts` currently checks **arity** against `stmts.defs`. Graph building in `src/checker/checker/graph.ts` uses statement defs for step validity. Add **domain checks** in `reasonChecks/` or `validators` if you need more than arity.                                                         |
+| **Given / diagram premises** | If the statement can appear in givens and affects the built diagram, extend `src/checker/checker/premises.ts` (and the same for `proof.premises.diagramStatements`).                                                                                                                                                                                    |
+| **Interface: text**          | `src/interface/core/grammarToLayout/proofObjText.tsx` — add a branch in `stmtToText` (or the step falls back to `function(arg1, arg2, …)` plain text).                                                                                                                                                                                                  |
+| **Interface: diagram**       | `src/interface/core/grammarToLayout/proofObjObjectApplication.ts` — in `createStmtObjectApplier`, map the new `stmt.function` to tick marks, labels, or overlays (see `con_seg`, `con_ang`, `con_tri`). If you need congruence-style tick tracking, extend `buildCongruenceTickTracker`.                                                                |
+| **Layout**                   | `src/interface/core/grammarToLayout/proofObjLayout.ts` — only if the new statement needs special transversal/vertical-angle style behavior (rare; most changes stay in `proofObjObjectApplication.ts`).                                                                                                                                                 |
 
 ---
 
@@ -141,14 +143,14 @@ Many statements only combine existing object kinds (segments, angles, triangles,
 
 Reasons tie dependency step numbers to a conclusion statement. They are listed in `reasons.defs.ts` and checked in `reasonApplication.ts`.
 
-| Area | What to change |
-| --- | --- |
-| **Definition (required)** | `src/checker/grammar/defs/reasons.defs.ts` — add a key (lowercase function name used in proof text). Set `dependencies` to statement names or **groups** from `stmts.defs` (see `ReasonDefinition`). Use `diagramDependencies` when refs come from diagram premises instead of step lists. Set `conclusion` to the statement name(s) allowed for this reason — comma-separated if multiple (see existing entries). Optionally mirror `src/checker/grammar/defs/reasons.txt` (**not** source of truth). |
-| **Collision with statements** | `lezerParser.ts` — `parseStatement` rejects names that are **only** reasons; keep names consistent with defs. |
-| **Structural checks** | `src/checker/checker/validators.ts` — reason/step shape and dependency typing vs defs (already wired through the graph). |
-| **Geometric / logical check** | `src/checker/checker/reasonApplication.ts` — add a `case "your_reason":` that calls helpers in `src/checker/checker/reasonChecks/`. If you omit this, unknown reasons fall through to `default` and **return `true`** after syntax passes (placeholder behavior). |
-| **Interface: theorem panel** | `src/interface/theorems/reasons.ts` — extend `reasonFromFunction`’s map so the step shows a proper title/body; otherwise the UI shows the raw function name. Add a `Reasons.YourReason` entry with `title` / `body` / optional `src` for assets. `expectedDependenciesDescription` is filled automatically from `reasons.defs` when possible. |
-| **Interface: highlights** | Optional: add a small helper under `src/interface/core/reasons/` (like `Transversal.tsx`) and hook it from `proofObjLayout.ts` if the step needs custom diagram emphasis. |
+| Area                          | What to change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Definition (required)**     | `src/checker/grammar/defs/reasons.defs.ts` — add a key (lowercase function name used in proof text). Set `dependencies` to statement names or **groups** from `stmts.defs` (see `ReasonDefinition`). Use `diagramDependencies` when refs come from diagram premises instead of step lists. Set `conclusion` to the statement name(s) allowed for this reason — comma-separated if multiple (see existing entries). Optionally mirror `src/checker/grammar/defs/reasons.txt` (**not** source of truth). |
+| **Collision with statements** | `lezerParser.ts` — `parseStatement` rejects names that are **only** reasons; keep names consistent with defs.                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Structural checks**         | `src/checker/checker/validators.ts` — reason/step shape and dependency typing vs defs (already wired through the graph).                                                                                                                                                                                                                                                                                                                                                                               |
+| **Geometric / logical check** | `src/checker/checker/reasonApplication.ts` — add a `case "your_reason":` that calls helpers in `src/checker/checker/reasonChecks/`. If you omit this, unknown reasons fall through to `default` and **return `true`** after syntax passes (placeholder behavior).                                                                                                                                                                                                                                      |
+| **Interface: theorem panel**  | `src/interface/theorems/reasons.ts` — extend `reasonFromFunction`’s map so the step shows a proper title/body; otherwise the UI shows the raw function name. Add a `Reasons.YourReason` entry with `title` / `body` / optional `src` for assets. `expectedDependenciesDescription` is filled automatically from `reasons.defs` when possible.                                                                                                                                                          |
+| **Interface: highlights**     | Optional: add a small helper under `src/interface/core/reasons/` (like `Transversal.tsx`) and hook it from `proofObjLayout.ts` if the step needs custom diagram emphasis.                                                                                                                                                                                                                                                                                                                              |
 
 ---
 
@@ -161,49 +163,16 @@ Reasons tie dependency step numbers to a conclusion statement. They are listed i
 - [ ] **`proofObjText.tsx`** and **`proofObjObjectApplication.ts`** for readable text and diagram updates
 - [ ] Sample proof in **`src/checker/proofs/`** and **`npm run checkProof`** on it
 
-## CRA Reference
+## Build tool (Vite)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The web interface is built with [Vite](https://vitejs.dev/). `vite.config.ts` sets `base: "/ender/"` for GitHub Pages. Client env vars use the `VITE_` prefix; `envDir` points at `src/llm-feedback` so a local `.env` there is picked up automatically.
 
-## Available Scripts
+## Available scripts
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+| Command                          | Description                                                                        |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
+| `npm start`                      | Dev server (port 3000, app at `/ender/`)                                           |
+| `npm run build`                  | Typecheck with `tsc` and production build to `dist/`                               |
+| `npm run preview`                | Serve the `dist/` build locally                                                    |
+| `npm test` / `npm run test-core` | Run [Jest](https://jestjs.io/) (see `jest.config.js`)                              |
+| `npm run deploy`                 | Build and publish `dist/` to the `gh-pages` branch (see `package.json` `homepage`) |
