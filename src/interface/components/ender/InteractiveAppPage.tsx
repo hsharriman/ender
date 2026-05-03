@@ -5,15 +5,12 @@ import { DiagramRenderCtx } from "../../core/types/diagramTypes";
 import { Reason } from "../../core/types/layoutTypes";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { getReasonFn } from "../../theorems/utils";
+import { StepFeedbackPanel } from "../stepFeedback/StepFeedbackPanel";
+import { LlmFeedbackEntry } from "../stepFeedback/types";
 import { Diagram } from "./Diagram";
-import {
-  HarnessLlmFeedbackEntry,
-  HarnessStepFeedbackPanel,
-} from "./HarnessStepFeedbackPanel";
-import { HarnessInlineEditConfig, ProofRows } from "./ProofRows";
+import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
-// import { WaysToProveFigures } from "./WaysToProveFigures";
 
 export interface InteractiveAppPageProps {
   name: string;
@@ -24,17 +21,10 @@ export interface InteractiveAppPageProps {
   isTutorial?: boolean;
   /** When true, proof rows show every step (no reveal animation); used by ProofObjHarness */
   proofHarnessMode?: boolean;
-  /** Optional: edit proof steps as DSL + reason picker (ProofObjHarness). */
-  harnessInlineEdit?: HarnessInlineEditConfig;
-  /** Optional: insert a new proof step after the active step (ProofObjHarness). */
-  insertProofStepAfter?: (afterStepNumber: string) => void;
-  /** Optional: delete a proof step by checker step number (ProofObjHarness). */
-  deleteProofStep?: (stepNumber: string) => void;
-  /** Harness: checker-incorrect step ids (numeric strings) for LLM feedback panel. */
-  harnessIncorrectStepNumbers?: Set<string>;
-  /** Harness: LLM feedback keyed by checker step number. */
+  /** Maps layout frame keys (`s1`…) to checker step ids for optional harness tooling (e.g. LLM feedback). */
+  checkerStepByFrameKey?: Map<string, string>;
   harnessLlmFeedback?: {
-    byStepNumber: Map<string, HarnessLlmFeedbackEntry>;
+    byStepNumber: Map<string, LlmFeedbackEntry>;
     loading: boolean;
     error?: string;
   };
@@ -108,16 +98,10 @@ export class InteractiveAppPage extends React.Component<
                 textFn={getReasonFn(this.props.reasonMap)}
               />
             </div>
-            {/* <WaysToProveFigures
-              activeFrame={this.state.activeFrame}
-              linkedTexts={this.props.linkedTexts}
-              miniReasonCtxMap={this.props.miniReasonCtxMap}
-              diagramAspect={this.props.diagramAspect}
-            /> */}
             {this.props.proofHarnessMode && this.props.harnessLlmFeedback ? (
-              <HarnessStepFeedbackPanel
+              <StepFeedbackPanel
                 activeFrame={this.state.activeFrame}
-                harnessInlineEdit={this.props.harnessInlineEdit}
+                checkerStepByFrameKey={this.props.checkerStepByFrameKey}
                 llmByStepNumber={this.props.harnessLlmFeedback.byStepNumber}
                 llmLoading={this.props.harnessLlmFeedback.loading}
                 llmError={this.props.harnessLlmFeedback.error}
@@ -136,9 +120,6 @@ export class InteractiveAppPage extends React.Component<
                 isTutorial={this.props.isTutorial}
                 isCompact={rowsCompact}
                 revealAll={this.props.proofHarnessMode}
-                harnessInlineEdit={this.props.harnessInlineEdit}
-                insertProofStepAfter={this.props.insertProofStepAfter}
-                deleteProofStep={this.props.deleteProofStep}
               />
             </div>
           </div>

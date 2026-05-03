@@ -1,44 +1,30 @@
 import React from "react";
-import { HarnessInlineEditConfig } from "./ProofRows";
-
-export type HarnessLlmFeedbackEntry = {
-  feedback: string;
-  nextHint: string;
-  collapsed?: boolean;
-};
-
-export interface HarnessStepFeedbackPanelProps {
-  activeFrame: string;
-  harnessInlineEdit?: HarnessInlineEditConfig;
-  llmByStepNumber: Map<string, HarnessLlmFeedbackEntry>;
-  llmLoading: boolean;
-  llmError?: string;
-}
+import type { StepFeedbackPanelProps } from "./types";
 
 type State = { hintRevealed: boolean; contentExpanded: boolean };
 
 /**
- * Harness-only: shows LLM feedback for the active proof row when the checker marks that step incorrect.
- * Replaces the mini “ways to prove” figures in harness mode.
+ * Shows optional LLM feedback for the active proof row (e.g. when the checker marks that step incorrect).
  */
-export class HarnessStepFeedbackPanel extends React.Component<
-  HarnessStepFeedbackPanelProps,
+export class StepFeedbackPanel extends React.Component<
+  StepFeedbackPanelProps,
   State
 > {
   state: State = { hintRevealed: false, contentExpanded: false };
 
   private stepNumberForActive(): string | undefined {
-    if (!this.props.activeFrame.startsWith("s")) return undefined;
-    const meta = this.props.harnessInlineEdit?.stepByKey.get(
-      this.props.activeFrame,
-    );
-    return meta?.stepNumber;
+    const frame = this.props.activeFrame;
+    if (!frame.startsWith("s")) return undefined;
+    const fromMap = this.props.checkerStepByFrameKey?.get(frame);
+    if (fromMap !== undefined) return fromMap;
+    const n = parseInt(frame.slice(1), 10);
+    return Number.isNaN(n) ? undefined : String(n);
   }
 
-  componentDidUpdate(prevProps: HarnessStepFeedbackPanelProps) {
+  componentDidUpdate(prevProps: StepFeedbackPanelProps) {
     const prevStep = prevProps.activeFrame.startsWith("s")
-      ? prevProps.harnessInlineEdit?.stepByKey.get(prevProps.activeFrame)
-          ?.stepNumber
+      ? (prevProps.checkerStepByFrameKey?.get(prevProps.activeFrame) ??
+        String(parseInt(prevProps.activeFrame.slice(1), 10)))
       : undefined;
     const nextStep = this.stepNumberForActive();
     if (prevStep !== nextStep) {
@@ -47,12 +33,7 @@ export class HarnessStepFeedbackPanel extends React.Component<
   }
 
   render() {
-    const {
-      activeFrame,
-      llmByStepNumber,
-      llmLoading,
-      llmError,
-    } = this.props;
+    const { activeFrame, llmByStepNumber, llmLoading, llmError } = this.props;
     const stepNumber = this.stepNumberForActive();
     const entry =
       activeFrame.startsWith("s") && stepNumber
@@ -64,15 +45,15 @@ export class HarnessStepFeedbackPanel extends React.Component<
 
     return (
       <div className="mt-4 w-[650px] rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2 text-sm text-slate-800 shadow-sm">
-        <div className="font-semibold text-amber-900">
-          Step feedback
-        </div>
+        <div className="font-semibold text-amber-900">Step feedback</div>
         <p className="mt-1 text-[11px] italic text-amber-800/80">
           AI-generated feedback; please verify with your teacher and course
           materials.
         </p>
         {llmLoading && (
-          <p className="mt-1 text-slate-600">Getting feedback from the model…</p>
+          <p className="mt-1 text-slate-600">
+            Getting feedback from the model…
+          </p>
         )}
         {!llmLoading && llmError && (
           <p className="mt-1 text-red-700 whitespace-pre-wrap">{llmError}</p>
@@ -88,16 +69,10 @@ export class HarnessStepFeedbackPanel extends React.Component<
             </button>
           </div>
         ) : null}
-        {!llmLoading &&
-          !llmError &&
-          entry?.feedback &&
-          showContent && (
+        {!llmLoading && !llmError && entry?.feedback && showContent && (
           <p className="mt-1 leading-snug">{entry.feedback}</p>
         )}
-        {!llmLoading &&
-          !llmError &&
-          !entry?.feedback &&
-          showContent && (
+        {!llmLoading && !llmError && !entry?.feedback && showContent && (
           <p className="mt-1 text-slate-600">
             No model feedback for this step yet.
           </p>
