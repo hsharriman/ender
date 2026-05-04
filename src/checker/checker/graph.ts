@@ -8,12 +8,11 @@ import {
   StatementGroup,
 } from "../types/checkerTypes";
 import {
-  computeWaysToProve,
   createReasonApplicabilityIndex,
   indexProofStepForReasons,
 } from "./reasonFulfillment";
 import { checkReasonApplication } from "./reasonApplication";
-import { buildReasonTemplateMap } from "./reasonTemplates";
+import { waysToProve } from "./waysToProve";
 import {
   checkReasonDependencies,
   checkReasonStructure,
@@ -28,7 +27,6 @@ export const buildProofGraph = (
   groups: Map<string, StatementGroup>,
   ctx: ProofContent,
 ): ProofGraph => {
-  const reasonTemplates = buildReasonTemplateMap(reasonDefs);
   const graph: ProofGraph = {
     nodes: new Map(),
     diagramPremises: new Map(),
@@ -67,15 +65,7 @@ export const buildProofGraph = (
     let isCorrect = true;
 
     if (step.type === "proof" && step.reason && step.statement) {
-      step.waysToProve = computeWaysToProve({
-        currStep: step,
-        proofGraph: graph,
-        reasonDefs,
-        groups,
-        template: reasonTemplates.get(step.reason.function),
-        index: reasonIndex,
-        ctx,
-      });
+      step.waysToProve = waysToProve(step, ctx);
     }
 
     if (step.type === "given") {

@@ -10,6 +10,7 @@ import {
 } from "../types/checkerTypes";
 import { checkReasonApplication } from "./reasonApplication";
 import { ReasonTemplate } from "./reasonTemplates";
+import { stmtKey } from "./reasonChecks/utils";
 
 export interface ReasonApplicabilityIndex {
   statementRefsByFunction: Map<string, string[]>;
@@ -44,11 +45,71 @@ const collectRefObjects = (stmt?: Stmt): string[] => {
   return stmt.arguments.map((arg: ParseObj) => arg.v);
 };
 
+/** Sort step refs numerically when they are integers (e.g. "01"), else lexically. */
+const sortRefMultiset = (refs: string[]): string[] =>
+  [...refs].sort((a, b) => {
+    const na = /^\d+$/.test(a) ? parseInt(a, 10) : Number.NaN;
+    const nb = /^\d+$/.test(b) ? parseInt(b, 10) : Number.NaN;
+    if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+    return a.localeCompare(b);
+  });
+
+/**
+ * Stable key for validated ways-to-prove: multiset of citation refs (unordered).
+ * Different permutations of the same multiset compare equal.
+ */
+const canonicalValidCandidateMultisetKey = (
+  candidate: WaysToProveCandidate,
+): string =>
+  [
+    candidate.reasonFunction,
+    sortRefMultiset(candidate.dependencyRefs).join(","),
+    sortRefMultiset(candidate.diagramRefs).join(","),
+  ].join("|");
+
+/**
+ * Collapse candidates that cite the same multiset of proof-step / diagram refs
+ * (under the same reason), regardless of dependency-slot **order**.
+ * Safe only when every dependency slot expects the **same** type (e.g. SSS /
+ * three `con_seg`): order is then immaterial up to multiset. For asymmetric
+ * reasons (e.g. SAS: segment / angle / segment), applying this would wrongly
+ * merge distinct slot assignments such as `(1,3,2)` vs `(2,3,1)`.
+ */
+const dedupeCandidatesByCitationMultiset = (
+  candidates: WaysToProveCandidate[],
+): WaysToProveCandidate[] => {
+  const byKey = new Map<string, WaysToProveCandidate>();
+  for (const c of candidates) {
+    const key = canonicalValidCandidateMultisetKey(c);
+    if (!byKey.has(key)) byKey.set(key, c);
+  }
+  return [...byKey.values()];
+};
+
 // Creates a readable contributor label from a statement.
 const formatStmtLabel = (stmt?: Stmt): string | undefined => {
   if (!stmt) return undefined;
   const args = stmt.arguments.map((arg) => arg.v).join(", ");
   return `${stmt.function}(${args})`;
+};
+
+/** Dedupes duplicate statements (same `stmtKey`), e.g. premise `g_1` vs step `1`. */
+const uniqueContributorLabelsFromRefs = (
+  proofGraph: ProofGraph,
+  refs: readonly string[],
+): string[] => {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const ref of refs) {
+    const stmt = getStepStatement(proofGraph, ref);
+    if (!stmt) continue;
+    const k = stmtKey(stmt);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    const label = formatStmtLabel(stmt);
+    if (label) out.push(label);
+  }
+  return out;
 };
 
 // Returns all currently available refs that can satisfy a slot.
@@ -66,8 +127,16 @@ const getRefsForSlot = (
   return types.flatMap((typeName) => sourceMap.get(typeName) ?? []);
 };
 
-// Enumerates candidate ref combinations for dependency slots. If a slot has no
-// refs, we include `undefined` so partial ways-to-prove can still be surfaced.
+// Enumerates candidate ref combinations for dependency slots.
+// Each slot consumes at most one citation; the same proof step cannot fill two holes.
+//
+// Choices for a hole are:
+// - `[undefined]` if no statements match that hole, or every matching ref is already
+//   used in an earlier dependency slot (`unusedRefs.length === 0`).
+// - Otherwise every **still-available** citation for this hole **plus `undefined`**.
+// The explicit `undefined` branch is essential for partial ways-to-prove: e.g. SAS
+// can surface `(seg₁, ∅, seg₂)` and `(seg₁, ang, ∅)` from the same walk without
+// hard-coding asymmetry (bookends vs SSS gaps).
 const enumerateDependencyRefCombos = (
   dependencySlots: ReasonTemplate["slots"],
   index: ReasonApplicabilityIndex,
@@ -77,11 +146,17 @@ const enumerateDependencyRefCombos = (
   let combos: Array<Array<string | undefined>> = [[]];
   for (const slot of dependencySlots) {
     const refs = getRefsForSlot(slot.expectedType, slot.source, index, groups);
-    const slotRefs: Array<string | undefined> =
-      refs.length > 0 ? refs : [undefined];
     const nextCombos: Array<Array<string | undefined>> = [];
     combos.forEach((partial) => {
-      slotRefs.forEach((ref) => {
+      const used = new Set(
+        partial.filter((r): r is string => typeof r === "string" && r.length > 0),
+      );
+      const unusedRefs = refs.filter((ref) => !used.has(ref));
+      const choices: Array<string | undefined> =
+        refs.length === 0 || unusedRefs.length === 0
+          ? [undefined]
+          : [...unusedRefs, undefined];
+      choices.forEach((ref) => {
         if (nextCombos.length >= cap) return;
         nextCombos.push([...partial, ref]);
       });
@@ -91,6 +166,15 @@ const enumerateDependencyRefCombos = (
   }
   return combos;
 };
+
+const homogeneousDependencySlots = (
+  dependencySlots: ReasonTemplate["slots"],
+): boolean =>
+  dependencySlots.length <= 1 ||
+  dependencySlots.every(
+    (slot) =>
+      slot.expectedType === dependencySlots[0]?.expectedType,
+  );
 
 // Computes ways-to-prove for one step by enumerating candidate dependency combos,
 // validating full combos through reason checks, and falling back to partial combos
@@ -169,9 +253,10 @@ export const computeWaysToProve = ({
         ? 1
         : matchedDependencyCount / dependencySlots.length;
 
-    const baseContributors = concreteDepRefs
-      .map((ref) => formatStmtLabel(getStepStatement(proofGraph, ref)))
-      .filter((label): label is string => Boolean(label));
+    const baseContributors = uniqueContributorLabelsFromRefs(
+      proofGraph,
+      concreteDepRefs,
+    );
 
     // Missing dependency refs => partial candidate only.
     if (!allDependencyRefsPresent) {
@@ -205,12 +290,18 @@ export const computeWaysToProve = ({
       proofGraph,
       ctx,
     );
-    // Failed reason check => keep as partial candidate.
+    // Failed reason check => partial candidate with capped completion (all deps cited
+    // does not imply the reason applies geometrically).
     if (!isCorrect) {
+      const completionGeomFail =
+        dependencySlots.length > 0
+          ? (dependencySlots.length - 1) /
+            Math.max(template.slots.length, 1)
+          : dependencyCompletion;
       partialCandidates.push({
         reasonFunction: reason.function,
         templateId: template.id,
-        completion: dependencyCompletion,
+        completion: completionGeomFail,
         slots: dependencyRefSlots,
         contributors: baseContributors,
         dependencyRefs: concreteDepRefs,
@@ -237,14 +328,10 @@ export const computeWaysToProve = ({
     const slots = [...dependencyRefSlots, ...diagramSlots];
     const diagramRefs =
       trialStep.diagramDeps?.map((diagramDep) => diagramDep.stepNumber) ?? [];
-    const contributors = [
-      ...concreteDepRefs.map((ref) =>
-        formatStmtLabel(getStepStatement(proofGraph, ref)),
-      ),
-      ...diagramRefs.map((ref) =>
-        formatStmtLabel(getStepStatement(proofGraph, ref)),
-      ),
-    ].filter((label): label is string => Boolean(label));
+    const contributors = uniqueContributorLabelsFromRefs(proofGraph, [
+      ...concreteDepRefs,
+      ...diagramRefs,
+    ]);
     validCandidates.push({
       reasonFunction: reason.function,
       templateId: template.id,
@@ -263,9 +350,16 @@ export const computeWaysToProve = ({
       ],
     });
   });
-  // Dedupes equivalent candidates based on contributor and slot signatures so
-  // different reference paths that imply the same way collapse into one.
-  const dedupeByRefs = (candidatesToDedupe: WaysToProveCandidate[]) => {
+  const primaryPool =
+    validCandidates.length > 0 ? validCandidates : partialCandidates;
+  let dedupedList = homogeneousDependencySlots(dependencySlots)
+    ? dedupeCandidatesByCitationMultiset(primaryPool)
+    : [...primaryPool];
+
+  // Rare: same multiset + same slot-level visuals (distinct failure modes)—trim.
+  const dedupeBySlotSignature = (
+    candidatesToDedupe: WaysToProveCandidate[],
+  ): WaysToProveCandidate[] => {
     const seen = new Set<string>();
     return candidatesToDedupe.filter((candidate) => {
       const contributorKey = candidate.contributors.slice().sort().join(" | ");
@@ -283,10 +377,10 @@ export const computeWaysToProve = ({
       return true;
     });
   };
-  // Prefer fully valid candidates; otherwise surface the best partial options.
-  const candidates = dedupeByRefs(
-    validCandidates.length > 0 ? validCandidates : partialCandidates,
-  ).sort((a, b) => b.completion - a.completion);
+
+  dedupedList = dedupeBySlotSignature(dedupedList);
+
+  const candidates = dedupedList.sort((a, b) => b.completion - a.completion);
   const top = candidates[0];
   const matchedTop = top
     ? top.slots.filter((slot) => slot.state === "matched").length
@@ -340,5 +434,8 @@ export const indexProofStepForReasons = ({
   index: ReasonApplicabilityIndex;
 }): void => {
   if (!isCorrect || !step.statement) return;
+  // Omit premise labels like `g_1`; they duplicate numbered proof rows for the same
+  // facts and let enumeration produce illegal combos (e.g. g_1 + 1 both con_seg AB,AD).
+  if (!/^\d+$/.test(stepNum)) return;
   upsertRef(index.statementRefsByFunction, step.statement.function, stepNum);
 };

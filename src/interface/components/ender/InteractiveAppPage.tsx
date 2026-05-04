@@ -11,6 +11,7 @@ import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
+import { WaysToProveFigures } from "./WaysToProveFigures";
 
 export interface InteractiveAppPageProps {
   name: string;
@@ -98,6 +99,12 @@ export class InteractiveAppPage extends React.Component<
                 textFn={getReasonFn(this.props.reasonMap)}
               />
             </div>
+            <WaysToProveFigures
+              activeFrame={this.state.activeFrame}
+              linkedTexts={this.props.linkedTexts}
+              miniReasonCtxMap={this.props.miniReasonCtxMap}
+              diagramAspect={this.props.diagramAspect}
+            />
             {this.props.proofHarnessMode && this.props.harnessLlmFeedback ? (
               <StepFeedbackPanel
                 activeFrame={this.state.activeFrame}

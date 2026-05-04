@@ -1,14 +1,6 @@
-import {
-  Angle,
-  Obj,
-  ParseObj,
-  Point,
-  ProofContent,
-  Quadrilateral,
-  Segment,
-  Triangle,
-} from "../../geometry-object";
-import { createError, logError } from "../errors/errorConstants";
+import { getGeometricObject } from "checker/utils/utils";
+import { Angle, ProofContent, Segment } from "../../geometry-object";
+import { logError } from "../errors/errorConstants";
 import {
   ParseDiagramStmt,
   ProofGraph,
@@ -358,47 +350,6 @@ export const checkReasonApplication = (
       reason.function,
       "REASON_APPLICATION_EXCEPTION",
     );
-  }
-};
-
-// Function to get geometric object from string identifier
-const getGeometricObject = (
-  arg: ParseObj,
-  ctx: ProofContent,
-): Point | Segment | Angle | Triangle | Quadrilateral => {
-  switch (arg.type) {
-    case Obj.Angle:
-      const angle = ctx.getAngle(arg.v);
-      if (!angle) {
-        throw createError.geometric.angleNotFound(arg.v);
-      }
-      return angle;
-    case Obj.Triangle:
-      const triangle = ctx.getTriangle(arg.v);
-      if (!triangle) {
-        throw createError.geometric.triangleNotFound(arg.v);
-      }
-      return triangle;
-    case Obj.Quadrilateral:
-      const quadrilateral = ctx.getQuadrilateral(arg.v);
-      if (!quadrilateral) {
-        throw createError.geometric.quadrilateralNotFound(arg.v);
-      }
-      return quadrilateral;
-    case Obj.Segment:
-      const segment = ctx.getSegment(arg.v);
-      if (!segment) {
-        throw createError.geometric.segmentNotFound(arg.v);
-      }
-      return segment;
-    case Obj.Point:
-      const point = ctx.getPoint(arg.v);
-      if (!point) {
-        throw createError.geometric.pointNotFound(arg.v);
-      }
-      return point;
-    default:
-      throw createError.geometric.cannotParseGeometricObject(arg.v);
   }
 };
 
