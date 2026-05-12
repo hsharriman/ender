@@ -7,7 +7,11 @@ import {
   TriangleReasonFailure,
   TriangleReasonResult,
 } from "./triangleReasonResult";
-import { angCenter, commonPt, findDuplicateDependencyStatements } from "./utils";
+import {
+  angCenter,
+  commonPt,
+  findDuplicateDependencyStatements,
+} from "./utils";
 
 type TriangleAssignResult =
   | { ok: true; left: string; right: string }
@@ -326,8 +330,7 @@ export const checkRhl = (
   const r2c = angCenter(r2);
 
   /** Reason args: hypotenuses first, congruent legs second (see `grammar/defs/reasons`). */
-  const hypoValid =
-    !s11.includes(r1c) && !s12.includes(r2c);
+  const hypoValid = !s11.includes(r1c) && !s12.includes(r2c);
   const legValid = s21.includes(r1c) && s22.includes(r2c);
 
   if (!(hypoValid && legValid)) {
@@ -342,33 +345,10 @@ export const checkRhl = (
   const t1 = ctx.addTriangleFromStr(tri1.label);
   const t2 = ctx.addTriangleFromStr(tri2.label);
 
-  const orderVertex = (
-    hypotenuse: string,
-    leg: string,
-    rightCenter: string,
-  ): string => {
-    const shared = commonPt(hypotenuse, leg);
-    if (shared !== rightCenter) return shared;
-    // Shared-side case (e.g. MK ≅ MK): use the leg endpoint opposite the right corner.
-    const opposite = leg
-      .split("")
-      .find((label) => label !== rightCenter);
-    return opposite ?? shared;
-  };
-
-  const t1c2 = orderVertex(s11, s21, r1c);
-  const t2c2 = orderVertex(s12, s22, r2c);
-  if (t1c2 === r1c || t2c2 === r2c) {
-    return triangleFail("RHL_PATTERN", {
-      hypoValid,
-      legValid,
-      vertexOrderUnresolved: true,
-      r1c,
-      r2c,
-      t1c2,
-      t2c2,
-    });
-  }
+  // After RHL validation, the leg contains the right vertex; the other endpoint
+  // is the corresponding vertex adjacent to the right angle.
+  const t1c2 = s21.replace(r1c, "");
+  const t2c2 = s22.replace(r2c, "");
 
   t1.orderTriangle([r1c, t1c2, t1.getThirdPoint(r1c, t1c2)], ctx);
   t2.orderTriangle([r2c, t2c2, t2.getThirdPoint(r2c, t2c2)], ctx);
