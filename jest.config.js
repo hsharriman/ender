@@ -9,6 +9,11 @@ module.exports = {
   transform: {
     "^.+\\.(ts|tsx)$": "ts-jest",
   },
+  moduleNameMapper: {
+    "^checker/(.*)$": "<rootDir>/src/checker/$1",
+    "^geometry-object$": "<rootDir>/src/geometry-object",
+    "^geometry-object/(.*)$": "<rootDir>/src/geometry-object/$1",
+  },
   collectCoverageFrom: ["src/**/*.{ts,tsx}", "!src/**/*.d.ts"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
 };

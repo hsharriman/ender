@@ -32,7 +32,7 @@ const sortPairToTri = (
   | { ok: true; left: ParseObj; right: ParseObj }
   | { ok: false; failure: TriangleReasonFailure } => {
   const [l, r] = pair;
-  if (l.v === r.v || (tri1.containsParseObj(l) && tri2.containsParseObj(r))) {
+  if (tri1.containsParseObj(l) && tri2.containsParseObj(r)) {
     return { ok: true, left: l, right: r };
   }
   if (tri1.containsParseObj(r) && tri2.containsParseObj(l)) {
@@ -64,8 +64,12 @@ const checkTriangleAssign = (
   const obj1_in_t2 = tri2.containsParseObj(left);
   const obj2_in_t1 = tri1.containsParseObj(right);
 
+  // identical congruent sides are only valid if the object is in both tri
+  const sharedValid =
+    left.v === right.v && obj1_in_t1 && obj1_in_t2 && obj2_in_t1 && obj2_in_t2;
+
   const valid =
-    left.v === right.v ||
+    sharedValid ||
     (obj1_in_t1 && obj2_in_t2 && !obj1_in_t2 && !obj2_in_t1) ||
     (obj1_in_t2 && obj2_in_t1 && !obj1_in_t1 && !obj2_in_t2);
 
