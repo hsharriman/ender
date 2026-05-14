@@ -1,0 +1,15 @@
+// fail on step 5
+title: "S1INC2 - Prove Angles Congruent #2"
+premises:
+pt: J (2, 9, bl), K (5.5, 1, b), L (9, 9, br), M (5.5, 9, t)
+tri: t_JMK t_LMK
+[g_1] perp(JL,KM)
+[g_2] con_seg(JK,LK) [02]
+-> con_tri(t_JMK,t_LMK)
+
+steps:
+[01] given(g_1) -> perp(JL,KM)
+[02] given(g_2) -> con_seg(JK,LK)
+[03] perp_con_ang(1) -> con_right(a_JMK,a_LMK)
+[04] reflex_s() -> con_seg(MK, MK)
+[05] aas(2, 3, 4) -> con_tri(t_JMK,t_LMK)  // Missing dependency for AAS on invalid reason

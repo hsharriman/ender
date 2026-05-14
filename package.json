@@ -3,51 +3,52 @@
   "homepage": "https://hsharriman.github.io/ender",
   "version": "0.1.0",
   "private": true,
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
+  },
+  "main": "src/index.tsx",
+  "scripts": {
+    "start": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "jest --passWithNoTests",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
+    "checkProof": "tsx src/checker/proofCheckerCli.ts",
+    "debugProof": "tsx src/checker/debugProofChecker.ts",
+    "test-core": "jest --passWithNoTests"
+  },
   "dependencies": {
+    "@lezer/generator": "^1.8.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.71",
+    "@types/moo": "^0.5.10",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "moo": "^0.5.2",
+    "npm": "^11.4.2",
     "paper": "^0.12.17",
     "rand-seed": "^2.1.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.26.2",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "openai": "^4.104.0",
+    "typescript": "^4.9.5"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.5.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
     "gh-pages": "^6.1.1",
-    "tailwindcss": "^3.4.1"
+    "jest": "^29.0.0",
+    "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.0",
+    "tsx": "^4.20.3",
+    "vite": "^6.0.3"
   }
 }

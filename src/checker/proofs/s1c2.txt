@@ -1,0 +1,22 @@
+// pass
+title: "S1C2 - Prove Midpoint #1"
+premises:
+pt: A (2 ,1, bl), B (5.5, 8, t), C (9, 1, br), D (5.5, 1, b)
+tri: t_ABD t_CBD
+seg: AC
+ang: a_ABC
+[g_1] right(a_ADB)
+[g_2] ang_bisect(a_ABC, BD)
+[d_01] on_line(AC, D)
+-> midpt(AC,D)
+
+steps:
+[01] given(g_1) -> right(a_ADB)
+[02] given(g_2) -> ang_bisect(a_ABC, BD)
+[03] def_ang_bisect(2) -> con_ang(a_ABD, a_DBC)
+[04] def_perp(1) -> perp(BD, AC)
+[05] perp_con_ang(4) -> con_right(a_ADB, a_BDC) // angles on perp are both 90
+[06] reflex_s() -> con_seg(BD, BD)
+[07] asa(5, 6, 3) -> con_tri(t_ABD, t_CBD)
+[08] cpctc(7) -> con_seg(AD, DC)
+[09] midpt_conv(8) -> midpt(AC, D)

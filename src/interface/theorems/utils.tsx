@@ -1,0 +1,58 @@
+import { DiagramContent } from "../core/builder/DiagramContent";
+import { SVGModes } from "../core/types/diagramTypes";
+import { Reason } from "../core/types/layoutTypes";
+import { StepFocusProps, StepMeta, StepProps } from "../core/types/stepTypes";
+import { Reasons } from "./reasons";
+
+export const GIVEN_ID = "given";
+export const PROVE_ID = "prove";
+
+export const getReasonFn =
+  (reasonMap: Map<string, Reason>) => (activeFrame: string) => {
+    return reasonMap.get(activeFrame) || { title: "", body: "" };
+  };
+
+export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
+  const defaultStaticText = () => <></>;
+  const defaultAdditions = (props: StepFocusProps) => {};
+  const defaultText: (isActive: boolean) => JSX.Element = (
+    isActive: boolean,
+  ) => <></>;
+  const defaultUnfocused = (props: StepProps) => {
+    if (meta.prevStep) {
+      meta.prevStep.additions({
+        ctx: props.ctx,
+        frame: props.frame,
+        mode: SVGModes.Unfocused,
+      });
+      meta.prevStep.unfocused(props);
+    }
+  };
+  const diagram = (ctx: DiagramContent, frame: string, prevStep?: StepMeta) => {
+    const additionProps = {
+      ctx,
+      frame,
+      mode: SVGModes.Default,
+    };
+    meta.unfocused
+      ? meta.unfocused({ ctx, frame })
+      : defaultUnfocused({ ctx, frame });
+    meta.additions
+      ? meta.additions(additionProps)
+      : defaultAdditions(additionProps);
+  };
+
+  return {
+    reason: meta.reason || Reasons.Empty,
+    waysToProve: meta.waysToProve,
+    dependsOn: meta.dependsOn,
+    isIncorrect: meta.isIncorrect,
+    unfocused: meta.unfocused || defaultUnfocused,
+    diagram,
+    text: meta.text || defaultText,
+    staticText: meta.text ? () => meta.text!(true) : defaultStaticText,
+    additions: meta.additions || defaultAdditions,
+    highlight: meta.highlight,
+  };
+};
+

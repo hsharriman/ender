@@ -1,0 +1,88 @@
+// DEPRECATED: Human-readable reference only. Source of truth is reasons.defs.ts.
+// ------------ Triangle Reasons ------------ 
+// iscosceles triangle
+reason isosceles(con_seg) -> isosceles
+
+// side-angle-side triangle congruence
+reason sas(con_seg, congruent_angs, con_seg) -> con_tri
+
+// side-side-side triangle congruence
+reason sss(con_seg, con_seg, con_seg) -> con_tri
+
+// angle-side-angle triangle congruence
+reason asa(congruent_angs, con_seg, congruent_angs) -> con_tri
+
+// angle-angle-side triangle congruence
+reason aas(congruent_angs, congruent_angs, con_seg) -> con_tri
+
+// right-hypotenuse-leg triangle congruence
+reason rhl(con_right, con_seg, con_seg) -> con_tri
+
+// corresponding parts of congruent triangles are congruent
+reason cpctc(con_tri) -> con_seg, con_ang
+
+
+// ------------ Line Reasons ------------ 
+// definition of intersecting lines, if same point is on 2 lines then lines intersect at that point
+reason intersect_seg(point_on_line, point_on_line) -> intersect_seg
+
+// reflexive property: any segment is congruent to itself
+reason reflex_s() -> con_seg
+
+// definition of perpendicular lines
+reason def_perp(right, point_on_line) -> perp
+
+// definition of midpoint
+reason def_midpt(midpt) -> con_seg
+
+// converse of definition of midpoint
+reason midpt_conv(con_seg) -> midpt
+
+
+// ------------ Angle Reasons ------------ 
+// right angle: the angle formed by two perpendicular (perp) lines is 90 degrees
+reason right(perp) -> right
+
+// reflexive property: any angle is congruent to itself
+reason reflex_a() -> con_ang
+
+// vertical angles
+reason vert_ang(intersect_seg) -> con_ang
+
+// converse of alternate interior angles (given that alternate interior angles are congruent, can conclude that lines are parallel)
+reason altint_conv(con_ang, transversal) -> para
+
+// alternate interior angles (given that parallel lines crossed by a transversal, can conclude alternate interior angles are congruent)
+reason altint(para, transversal) -> con_ang 
+
+// angle bisector
+reason def_ang_bisect(ang_bisect) -> con_ang
+
+// converse of angle bisector
+reason ang_bisect_conv(con_ang) -> ang_bisect
+
+// two angles already given as right → congruent (each 90°)
+reason def_con_right(right, right) -> con_ang
+
+// adjacent right angles that share a side (same corner, one common leg)
+reason cong_adj_angles(right, right) -> con_ang
+
+// the pair of congruent angles formed by perpendicular lines are right angles
+reason perp_con_ang(perp) -> con_ang, con_right
+
+// ------------ Polygon Reasons ------------ 
+// definition of parallelogram (rectangle is type of parallelogram)
+reason paralellogram1(rectangle) -> parallelogram
+
+// definition of parallelogram (parallelogram has 2 sets of parallel sides)
+reason paralellogram2(para) -> parallelogram
+
+// definition of rectangle, concludes that angles are 90 or opposite sides are congruent
+reason rectangle(rectangle) -> con_right, con_ang, con_seg
+
+
+// not implemented
+reason equilateral(con_seg, con_seg) -> equilateral
+
+// angle-angle-angle triangle similarity
+reason aaa(con_ang, con_ang, con_ang) -> sim_tri

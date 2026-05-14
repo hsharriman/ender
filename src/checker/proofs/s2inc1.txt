@@ -1,0 +1,20 @@
+// fail on step 8, dependency error on step 9, contains cycle
+title: "S2INC1 - Prove Triangle Congruence #3"
+premises:
+pt: L (2, 1, bl), N (3.5, 4, l), Q (8.5, 4, tr), R (6, 2.85, tl), S (6, 1, b), P (6, 9, r), U (10, 1, br)
+tri: t_PSL t_PSU t_LNU t_UQL
+[g_1] perp(LU, PS) [01]
+[g_2] con_seg(LN, QU) [02]
+[g_3] con_ang(a_LPS, a_UPS) [03]
+-> con_tri(t_LNU, t_UQL)
+
+steps:
+[01] given(g_1) -> perp(LU, PS)
+[02] given(g_2) -> con_seg(LN, QU)
+[03] given(g_3) -> con_ang(a_LPS, a_UPS)
+[04] perp_con_ang(1) -> con_right(a_PSL, a_PSU)
+[05] reflex_s() -> con_seg(PS, PS)
+[06] asa(3, 5, 4) -> con_tri(t_LSP, t_USP)
+[07] cpctc(6) -> con_ang(a_SLP, a_SUP)
+[08] cpctc(9) -> con_ang(a_LNU, a_UQL)
+[09] asa(7, 2, 8) -> con_tri(t_LNU, t_UQL)

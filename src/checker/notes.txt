@@ -1,0 +1,36 @@
+
+what about when the comparisons aren't to create congruent/similar things (i.e. some relationship between circle + line)
+or circumcenter/incenter/centroid relationships
+
+centroid: conclude point == centroid if segments w/in triangle all bisect opposite sides and P intersects w all 3
+  reason centroid(bisect, bisect, bisect) -> centroid(p: Point, t: Triangle, x: Point, y: Point, z: Point)
+centroid (converse): if point == centroid, all segments within triangle bisect
+  reason centroid_c(p_centroid) -> bisect
+  // issue here is that there are 3 different segments that could be concluded to be bisecting
+  // in reasonDef, make it clear that based on the triangle, intersect pts, centroid pt, which lines are perp bisectors
+some construction steps might be necessary here (like stating that certain lines/points are collinear/intersecting, invisible (or hidden by default) for a proof)
+
+// reasons and conclusions can match or be different: supported
+perpendicular(con_adj_ang) -> perpendicular(s1: Segment, s2: Segment)
+
+
+// reasons involving angles:
+reason supplementary() -> 
+
+1 req, many conclusions: supported
+reason cpctc(con_tri) -> con_seg, con_ang 
+
+many reqs, many conclusions: supported
+
+
+TODO:
+- mark steps that are incorrect internally while checking
+- add more detailed error messages within reason checks so it is clear why a step is failing, log these
+- add error throw if an invalid reason is used (i.e. using reflex instead of reflex_s as first step of proof)
+
+make it possible to organize some statements by how general they are:
+- add handling so that anywhere con_ang is required, con_right can be used
+- add handling so that anywhere on_line is required, midpt can be used 
+- add checks for geometric reasons:
+  - easier:
+  - parallelogram
