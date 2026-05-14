@@ -15,7 +15,7 @@ npm install
 
 ### Interface (React app)
 
-#### Run with LLM feedback enabled (FOLLOW THESE FOR THE HUMAN-AI INTERACTION FINAL PROJECT)
+#### Run with LLM feedback enabled
 
 The browser harness expects `VITE_OPENAI_API_KEY` (Vite only exposes env variables whose names start with `VITE_` to client code).
 
