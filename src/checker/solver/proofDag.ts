@@ -188,9 +188,7 @@ export const prettyPrintProofDag = (dag: ProofDag): string => {
     "# proof_dag structured_text_v1 (YAML-like; safe to parse line-by-line)",
   );
   push("# Schema: top-level goal_fact_id, node_count, then facts[] each with");
-  push(
-    "#   id, statement, is_goal, incoming[] (diagram premise | inference).",
-  );
+  push("#   id, statement, is_goal, incoming[] (diagram premise | inference).");
   push(
     "# Inference edges include cited_step_refs, dependency_fact_ids, and when lengths",
   );

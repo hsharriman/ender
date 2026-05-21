@@ -1,10 +1,6 @@
 import { Obj } from "../../geometry-object";
 import { createError, logError } from "../errors/errorConstants";
 import {
-  isPointOnLineGroup,
-  proofGraphHasPointOnLineDiagram,
-} from "./pointOnLineGroup";
-import {
   ProofGraph,
   ProofObj,
   ProofStep,
@@ -14,6 +10,10 @@ import {
   StatementGroup,
   Stmt,
 } from "../types/checkerTypes";
+import {
+  isPointOnLineGroup,
+  proofGraphHasPointOnLineDiagram,
+} from "./pointOnLineGroup";
 
 // Check if statement arguments match the expected parameters
 export const checkStatementArguments = (
