@@ -1,0 +1,129 @@
+source: checker/proofs/s1c2.txt
+--- premises (solver input) ---
+title: "S1C2 - Prove Midpoint #1"
+premises:
+pt: A (2 ,1, bl), B (5.5, 8, t), C (9, 1, br), D (5.5, 1, b)
+tri: t_ABD t_CBD
+seg: AC
+ang: a_ABC
+[g_1] right(a_ADB)
+[g_2] ang_bisect(a_ABC, BD)
+[d_01] on_line(AC, D)
+-> midpt(AC,D)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+s1c2.txt	50031	4	not-found	454ms; cpctc-retry
+--- s1c2.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+reflex_s;—;con_seg
+reflex_s -> reflex_a;— | —;con_ang
+reflex_a;—;con_ang
+reflex_a -> reflex_s;— | —;con_seg
+reflex_a -> reflex_s -> reflex_a;— | — | —;con_ang
+reflex_a -> reflex_s -> reflex_a -> asa;— | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a;— | —;con_ang
+reflex_a -> reflex_a -> reflex_s;— | — | —;con_seg
+reflex_a -> reflex_a -> reflex_s -> aas;— | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_s -> aas -> cpctc;— | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_s -> midpt_conv;— | con_seg d:point_on_line;midpt
+reflex_s -> midpt_conv -> def_midpt;— | con_seg d:point_on_line | midpt;con_seg
+reflex_s -> midpt_conv -> def_midpt -> reflex_a;— | con_seg d:point_on_line | midpt | —;con_ang
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | —;con_ang
+reflex_s -> reflex_a -> reflex_a;— | — | —;con_ang
+reflex_s -> reflex_a -> reflex_a -> reflex_a;— | — | — | —;con_ang
+reflex_s -> midpt_conv -> def_midpt -> reflex_a -> reflex_a;— | con_seg d:point_on_line | midpt | — | —;con_ang
+reflex_s -> midpt_conv -> def_midpt -> reflex_a -> reflex_a -> reflex_a;— | con_seg d:point_on_line | midpt | — | — | —;con_ang
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | —;con_ang
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> reflex_a;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_s -> reflex_a;— | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa;— | — | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a;— | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_s;— | — | — | —;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas;— | — | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc;— | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas -> cpctc;— | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_s -> midpt_conv;— | — | con_seg d:point_on_line;midpt
+reflex_a -> reflex_s -> midpt_conv -> def_midpt;— | — | con_seg d:point_on_line | midpt;con_seg
+reflex_a -> reflex_s -> midpt_conv -> def_midpt -> reflex_a;— | — | con_seg d:point_on_line | midpt | —;con_ang
+reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a;— | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | —;con_ang
+reflex_a -> reflex_s -> midpt_conv -> def_midpt -> reflex_a -> asa;— | — | con_seg d:point_on_line | midpt | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> asa;— | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas -> cpctc -> reflex_a -> asa;— | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a;— | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa;— | — | — | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s;— | — | — | — | —;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas;— | — | — | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc;— | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas -> cpctc;— | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_s -> midpt_conv;— | — | — | con_seg d:point_on_line;midpt
+reflex_a -> reflex_a -> reflex_s -> midpt_conv -> def_midpt;— | — | — | con_seg d:point_on_line | midpt;con_seg
+reflex_a -> reflex_a -> reflex_s -> midpt_conv -> def_midpt -> aas;— | — | — | con_seg d:point_on_line | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> aas;— | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas -> cpctc -> aas;— | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | congruent_angs,congruent_angs,con_seg;con_tri
+def_perp;right d:point_on_line;perp
+def_perp -> perp_con_ang;right d:point_on_line | perp;con_right
+def_perp -> perp_con_ang -> reflex_s;right d:point_on_line | perp | —;con_seg
+def_perp -> perp_con_ang -> reflex_s -> reflex_a;right d:point_on_line | perp | — | —;con_ang
+def_perp -> perp_con_ang -> reflex_a;right d:point_on_line | perp | —;con_ang
+def_perp -> perp_con_ang -> reflex_a -> reflex_s;right d:point_on_line | perp | — | —;con_seg
+def_perp -> perp_con_ang -> reflex_a -> reflex_s -> reflex_a;right d:point_on_line | perp | — | — | —;con_ang
+def_perp -> perp_con_ang -> reflex_a -> reflex_s -> reflex_a -> asa;right d:point_on_line | perp | — | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+def_perp -> perp_con_ang -> reflex_a -> reflex_a;right d:point_on_line | perp | — | —;con_ang
+def_perp -> perp_con_ang -> reflex_a -> reflex_a -> reflex_s;right d:point_on_line | perp | — | — | —;con_seg
+def_perp -> perp_con_ang -> reflex_a -> reflex_a -> reflex_s -> aas;right d:point_on_line | perp | — | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+def_perp -> perp_con_ang -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc;right d:point_on_line | perp | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+def_perp -> perp_con_ang -> reflex_a -> reflex_a -> reflex_s -> aas -> cpctc;right d:point_on_line | perp | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+def_perp -> perp_con_ang -> reflex_s -> midpt_conv;right d:point_on_line | perp | — | con_seg d:point_on_line;midpt
+def_perp -> perp_con_ang -> reflex_s -> midpt_conv -> def_midpt;right d:point_on_line | perp | — | con_seg d:point_on_line | midpt;con_seg
+def_perp -> perp_con_ang -> reflex_s -> reflex_a -> reflex_a;right d:point_on_line | perp | — | — | —;con_ang
+def_perp -> perp_con_ang -> reflex_s -> midpt_conv -> def_midpt -> reflex_a;right d:point_on_line | perp | — | con_seg d:point_on_line | midpt | —;con_ang
+def_perp -> perp_con_ang -> reflex_s -> midpt_conv -> def_midpt -> reflex_a -> reflex_a;right d:point_on_line | perp | — | con_seg d:point_on_line | midpt | — | —;con_ang
+def_perp -> perp_con_ang -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a;right d:point_on_line | perp | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | —;con_ang
+def_perp -> perp_con_ang -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a;right d:point_on_line | perp | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | —;con_ang
+reflex_a -> reflex_s -> midpt_conv -> def_midpt -> reflex_a -> asa -> cpctc;— | — | con_seg d:point_on_line | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_s -> midpt_conv -> def_midpt -> aas -> cpctc;— | — | — | con_seg d:point_on_line | midpt | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas -> cpctc -> reflex_a -> asa -> cpctc;— | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> aas -> cpctc;— | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> asa -> cpctc;— | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas -> cpctc -> aas -> cpctc;— | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> midpt_conv;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg d:point_on_line;midpt
+reflex_a -> reflex_a -> reflex_s -> aas -> cpctc -> midpt_conv;— | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg d:point_on_line;midpt
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> midpt_conv -> def_midpt;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg d:point_on_line | midpt;con_seg
+reflex_a -> reflex_a -> reflex_s -> aas -> cpctc -> midpt_conv -> def_midpt;— | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg d:point_on_line | midpt;con_seg
+reflex_a -> reflex_s -> midpt_conv -> def_midpt -> reflex_a -> asa -> cpctc -> reflex_a;— | — | con_seg d:point_on_line | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_s -> aas -> cpctc -> reflex_a -> asa -> cpctc -> reflex_a;— | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri | —;con_ang
+reflex_s -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | —;con_ang
+reflex_s -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | —;con_ang
+reflex_s -> reflex_a -> def_perp;— | — | right d:point_on_line;perp
+reflex_s -> reflex_a -> def_perp -> perp_con_ang;— | — | right d:point_on_line | perp;con_right
+reflex_s -> reflex_a -> def_perp -> perp_con_ang -> reflex_a;— | — | right d:point_on_line | perp | —;con_ang
+reflex_s -> reflex_a -> def_perp -> perp_con_ang -> reflex_a -> reflex_a;— | — | right d:point_on_line | perp | — | —;con_ang
+reflex_s -> midpt_conv -> def_midpt -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | con_seg d:point_on_line | midpt | — | — | — | —;con_ang
+reflex_s -> midpt_conv -> def_midpt -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | con_seg d:point_on_line | midpt | — | — | — | — | —;con_ang
+reflex_s -> midpt_conv -> def_midpt -> reflex_a -> def_perp;— | con_seg d:point_on_line | midpt | — | right d:point_on_line;perp
+reflex_s -> midpt_conv -> def_midpt -> reflex_a -> def_perp -> perp_con_ang;— | con_seg d:point_on_line | midpt | — | right d:point_on_line | perp;con_right
+reflex_s -> midpt_conv -> def_midpt -> reflex_a -> def_perp -> perp_con_ang -> reflex_a;— | con_seg d:point_on_line | midpt | — | right d:point_on_line | perp | —;con_ang
+reflex_s -> midpt_conv -> def_midpt -> reflex_a -> def_perp -> perp_con_ang -> reflex_a -> reflex_a;— | con_seg d:point_on_line | midpt | — | right d:point_on_line | perp | — | —;con_ang
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | — | —;con_ang
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | — | — | —;con_ang
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> def_perp;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | right d:point_on_line;perp
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> def_perp -> perp_con_ang;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | right d:point_on_line | perp;con_right
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> def_perp -> perp_con_ang -> reflex_a;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | right d:point_on_line | perp | —;con_ang
+reflex_a -> reflex_s -> reflex_a -> asa -> cpctc -> reflex_a -> def_perp -> perp_con_ang -> reflex_a -> reflex_a;— | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | right d:point_on_line | perp | — | —;con_ang
+reflex_a -> reflex_s -> midpt_conv -> def_midpt -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a;— | — | con_seg d:point_on_line | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri | — | —;con_ang
+reflex_a -> reflex_s -> midpt_conv -> def_midpt -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> reflex_a;— | — | con_seg d:point_on_line | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | —;con_ang
+reflex_a -> reflex_s -> midpt_conv -> def_midpt -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | con_seg d:point_on_line | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | — | —;con_ang
+--- s1c2.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;reflex_s;;con_seg(BD, BD)
+fail;midpt_conv;@3;midpt(AC, D)
+ok;reflex_s;;con_seg(BD, BD)
+fail;midpt_conv;@3;midpt(AC, D)
+
+--- final proof ---
+(solver status: not-found)
+

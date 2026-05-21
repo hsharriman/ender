@@ -1,0 +1,181 @@
+source: checker/proofs/s2c2.txt
+--- premises (solver input) ---
+title: "S2C2 - Prove Angles Congruent #2"
+premises:
+pt: A (2, 1, bl), B (5.5, 6, t), C (9, 1, br), D (5.5, 1, b), F (1, 9, l), G (10, 9, r)
+tri: t_FAB t_BCG t_BAD t_BCD
+[g_1] perp(AC, BD)
+[g_2] con_seg(AD, DC)
+[g_3] con_ang(a_FAB, a_GCB)
+[g_4] con_seg(AF, CG)
+-> con_ang(a_AFB, a_CGB)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+s2c2.txt	162	72440	not-found	24170ms; cpctc-retry
+--- s2c2.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+sas;con_seg,congruent_angs,con_seg;con_tri
+reflex_s;—;con_seg
+reflex_s -> sss;— | con_seg,con_seg,con_seg;con_tri
+reflex_a;—;con_ang
+reflex_a -> asa;— | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> aas;— | congruent_angs,congruent_angs,con_seg;con_tri
+sas -> cpctc;con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_s -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> aas -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> sss;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+sas -> cpctc -> sss;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_s -> sss -> cpctc -> sss;— | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> aas -> cpctc -> sss;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+perp_con_ang;perp;con_right
+perp_con_ang -> rhl;perp | con_right,con_seg,con_seg;con_tri
+perp_con_ang -> rhl -> cpctc;perp | con_right,con_seg,con_seg | con_tri;con_seg
+sas -> cpctc -> sss -> cpctc;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> sss -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> aas -> cpctc -> sss -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_s -> sss -> cpctc -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+perp_con_ang -> rhl -> cpctc -> sss;perp | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+sas -> cpctc -> sss -> cpctc -> sss;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> asa -> cpctc -> sss -> cpctc -> sss;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> aas -> cpctc -> sss -> cpctc -> sss;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_s -> sss -> cpctc -> sss -> cpctc -> sss;— | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+perp_con_ang -> rhl -> cpctc -> sss -> cpctc;perp | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+sas -> cpctc -> sss -> cpctc -> sss -> cpctc;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> sss -> cpctc -> sss -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> aas -> cpctc -> sss -> cpctc -> sss -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_s -> sss -> cpctc -> sss -> cpctc -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+perp_con_ang -> rhl -> cpctc -> sss -> cpctc -> sss;perp | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+sas -> cpctc -> sss -> cpctc -> sss -> cpctc -> sss;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> asa -> cpctc -> sss -> cpctc -> sss -> cpctc -> sss;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> aas -> cpctc -> sss -> cpctc -> sss -> cpctc -> sss;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_s -> sss -> cpctc -> sss -> cpctc -> sss -> cpctc -> sss;— | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+perp_con_ang -> rhl -> cpctc -> sss -> cpctc -> sss -> cpctc;perp | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+sas -> cpctc -> sss -> cpctc -> sss -> cpctc -> sss -> cpctc;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+perp_con_ang -> rhl -> cpctc -> sss -> cpctc -> sss -> cpctc -> sss;perp | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+sas -> cpctc;con_seg,congruent_angs,con_seg | con_tri;con_ang
+perp_con_ang -> rhl -> cpctc;perp | con_right,con_seg,con_seg | con_tri;con_ang
+sas -> cpctc -> sss -> cpctc;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_s -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_a -> asa -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+reflex_a -> aas -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+perp_con_ang -> rhl -> cpctc -> sss -> cpctc;perp | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_a -> asa -> cpctc -> sss -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_a -> aas -> cpctc -> sss -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_s -> sss -> cpctc -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+sas -> cpctc -> sss -> cpctc -> sss -> cpctc;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+perp_con_ang -> rhl -> cpctc -> sss -> cpctc -> sss -> cpctc;perp | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_a -> asa -> cpctc -> sss -> cpctc -> sss -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_a -> aas -> cpctc -> sss -> cpctc -> sss -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_s -> sss -> cpctc -> sss -> cpctc -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+sas -> cpctc -> sss -> cpctc -> sss -> cpctc -> sss -> cpctc;con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_ang
+perp_con_ang;perp;con_ang
+--- s2c2.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;reflex_a;;con_ang(a_ABC, a_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_ABC, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_ABD, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_ABD, t_ABD)
+fail;asa;@3 | @2 | @5;con_tri(t_ABD, t_ACD)
+fail;asa;@3 | @2 | @5;con_tri(t_ABD, t_ADF)
+fail;asa;@3 | @2 | @5;con_tri(t_ABD, t_ADG)
+fail;asa;@3 | @2 | @5;con_tri(t_ABD, t_BCD)
+fail;asa;@3 | @2 | @5;con_tri(t_ABD, t_CDF)
+fail;asa;@3 | @2 | @5;con_tri(t_ABD, t_CDG)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_ABD)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_ABF)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_ACD)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_ADF)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_ADG)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_BCD)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_BCG)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_CDF)
+fail;asa;@3 | @2 | @5;con_tri(t_ABF, t_CDG)
+fail;asa;@3 | @2 | @5;con_tri(t_ACD, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_ACD, t_ACD)
+fail;asa;@3 | @2 | @5;con_tri(t_ACD, t_ADF)
+fail;asa;@3 | @2 | @5;con_tri(t_ACD, t_ADG)
+fail;asa;@3 | @2 | @5;con_tri(t_ACD, t_BCD)
+fail;asa;@3 | @2 | @5;con_tri(t_ACD, t_CDF)
+fail;asa;@3 | @2 | @5;con_tri(t_ACD, t_CDG)
+fail;asa;@3 | @2 | @5;con_tri(t_ADF, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_ADF, t_ADF)
+fail;asa;@3 | @2 | @5;con_tri(t_ADF, t_ADG)
+fail;asa;@3 | @2 | @5;con_tri(t_ADF, t_BCD)
+fail;asa;@3 | @2 | @5;con_tri(t_ADF, t_CDF)
+fail;asa;@3 | @2 | @5;con_tri(t_ADF, t_CDG)
+fail;asa;@3 | @2 | @5;con_tri(t_ADG, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_ADG, t_ADG)
+fail;asa;@3 | @2 | @5;con_tri(t_ADG, t_BCD)
+fail;asa;@3 | @2 | @5;con_tri(t_ADG, t_CDF)
+fail;asa;@3 | @2 | @5;con_tri(t_ADG, t_CDG)
+fail;asa;@3 | @2 | @5;con_tri(t_BCD, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_BCD, t_BCD)
+fail;asa;@3 | @2 | @5;con_tri(t_BCD, t_CDF)
+fail;asa;@3 | @2 | @5;con_tri(t_BCD, t_CDG)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_ABD)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_ACD)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_ADF)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_ADG)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_BCD)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_BCG)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_CDF)
+fail;asa;@3 | @2 | @5;con_tri(t_BCG, t_CDG)
+fail;asa;@3 | @2 | @5;con_tri(t_CDF, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_CDF, t_CDF)
+fail;asa;@3 | @2 | @5;con_tri(t_CDF, t_CDG)
+fail;asa;@3 | @2 | @5;con_tri(t_CDG, t_ABC)
+fail;asa;@3 | @2 | @5;con_tri(t_CDG, t_CDG)
+fail;asa;@3 | @4 | @5;con_tri(t_ABC, t_ABC)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_ABC)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_ABF)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_ACF)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_ACG)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_ADF)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_AFG)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_BCG)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_CDG)
+fail;asa;@3 | @4 | @5;con_tri(t_ABF, t_CFG)
+fail;asa;@3 | @4 | @5;con_tri(t_ACF, t_ABC)
+fail;asa;@3 | @4 | @5;con_tri(t_ACF, t_ACF)
+fail;asa;@3 | @4 | @5;con_tri(t_ACF, t_ACG)
+fail;asa;@3 | @4 | @5;con_tri(t_ACF, t_ADF)
+fail;asa;@3 | @4 | @5;con_tri(t_ACF, t_AFG)
+fail;asa;@3 | @4 | @5;con_tri(t_ACF, t_CDG)
+fail;asa;@3 | @4 | @5;con_tri(t_ACF, t_CFG)
+fail;asa;@3 | @4 | @5;con_tri(t_ACG, t_ABC)
+fail;asa;@3 | @4 | @5;con_tri(t_ACG, t_ACG)
+fail;asa;@3 | @4 | @5;con_tri(t_ACG, t_CDG)
+fail;asa;@3 | @4 | @5;con_tri(t_ACG, t_CFG)
+fail;asa;@3 | @4 | @5;con_tri(t_ADF, t_ABC)
+fail;asa;@3 | @4 | @5;con_tri(t_ADF, t_ACG)
+fail;asa;@3 | @4 | @5;con_tri(t_ADF, t_ADF)
+fail;asa;@3 | @4 | @5;con_tri(t_ADF, t_AFG)
+fail;asa;@3 | @4 | @5;con_tri(t_ADF, t_CDG)
+fail;asa;@3 | @4 | @5;con_tri(t_ADF, t_CFG)
+fail;asa;@3 | @4 | @5;con_tri(t_AFG, t_ABC)
+fail;asa;@3 | @4 | @5;con_tri(t_AFG, t_ACG)
+fail;asa;@3 | @4 | @5;con_tri(t_AFG, t_AFG)
+fail;asa;@3 | @4 | @5;con_tri(t_AFG, t_CDG)
+fail;asa;@3 | @4 | @5;con_tri(t_AFG, t_CFG)
+fail;asa;@3 | @4 | @5;con_tri(t_BCG, t_ABC)
+fail;asa;@3 | @4 | @5;con_tri(t_BCG, t_ACF)
+fail;asa;@3 | @4 | @5;con_tri(t_BCG, t_ACG)
+fail;asa;@3 | @4 | @5;con_tri(t_BCG, t_ADF)
+fail;asa;@3 | @4 | @5;con_tri(t_BCG, t_AFG)
+fail;asa;@3 | @4 | @5;con_tri(t_BCG, t_BCG)
+fail;asa;@3 | @4 | @5;con_tri(t_BCG, t_CDG)
+fail;asa;@3 | @4 | @5;con_tri(t_BCG, t_CFG)
+fail;asa;@3 | @4 | @5;con_tri(t_CDG, t_ABC)
+fail;asa;@3 | @4 | @5;con_tri(t_CDG, t_CDG)
+fail;asa;@3 | @4 | @5;con_tri(t_CDG, t_CFG)
+fail;asa;@3 | @4 | @5;con_tri(t_CFG, t_ABC)
+... (72340 more attempts omitted)
+
+--- final proof ---
+(solver status: not-found)
+

@@ -19,8 +19,13 @@ import {
   intersect_seg,
   midpt,
   perp,
+  perp_con_ang,
   reflex_s,
 } from "./reasonChecks/lineChecks";
+import {
+  filterDiagramsForPointOnLineGroup,
+  filterOnLineDiagramsForMidptConv,
+} from "./pointOnLineGroup";
 import { parallelogram2, rectangle } from "./reasonChecks/polyChecks";
 import {
   checkAas,
@@ -99,6 +104,7 @@ export const checkReasonApplication = (
           reflex_a(
             getGeometricObject(stmt.arguments[0], ctx) as Angle,
             getGeometricObject(stmt.arguments[1], ctx) as Angle,
+            ctx,
           ) ||
           failStmtArgMismatch(currStep, reason.function, "REFLEX_A_MISMATCH")
         );
@@ -238,22 +244,39 @@ export const checkReasonApplication = (
         return midpt(stmt, midPt_midpt, ctx)
           ? true
           : failStmtArgMismatch(currStep, reason.function, "MIDPT_MISMATCH");
-      case "midpt_conv":
+      case "midpt_conv": {
         const conSeg_midpt_conv = getDepStmt(reason.arguments[0], proofGraph)!;
+        const midptConvMatches = filterOnLineDiagramsForMidptConv(
+          proofGraph,
+        ).filter((d) =>
+          midpt(
+            conSeg_midpt_conv,
+            {
+              function: "midpt",
+              arguments: d.statement.arguments,
+            },
+            ctx,
+          ),
+        );
+        if (midptConvMatches.length === 0) {
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "MIDPT_CONV_NO_ON_LINE",
+          );
+        }
+        currStep.diagramDeps = midptConvMatches;
         return (
           midpt(conSeg_midpt_conv, stmt, ctx) ||
           failStmtArgMismatch(currStep, reason.function, "MIDPT_CONV_MISMATCH")
         );
+      }
 
       case "def_perp": {
         const right_perp = getDepStmt(reason.arguments[0], proofGraph)!;
-        const perpMatches = Array.from(proofGraph.diagramPremises.values())
-          .filter(
-            (d) =>
-              d.statement.function === "on_line" ||
-              d.statement.function === "midpt",
-          )
-          .filter((d) => perp(right_perp, d.statement, stmt, ctx));
+        const perpMatches = filterDiagramsForPointOnLineGroup(
+          proofGraph,
+        ).filter((d) => perp(right_perp, d.statement, stmt, ctx));
         if (perpMatches.length === 0)
           return failStmtArgMismatch(
             currStep,
@@ -263,9 +286,19 @@ export const checkReasonApplication = (
         currStep.diagramDeps = perpMatches;
         return true;
       }
+      case "perp_con_ang": {
+        const perp_dep = getDepStmt(reason.arguments[0], proofGraph)!;
+        return (
+          perp_con_ang(perp_dep, stmt, ctx) ||
+          failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "PERP_CON_ANG_MISMATCH",
+          )
+        );
+      }
       case "rectangle":
         const conSeg_rectangle = getDepStmt(reason.arguments[0], proofGraph)!;
-        console.log("conSeg_rectangle", conSeg_rectangle, stmt);
         return (
           rectangle(conSeg_rectangle, stmt, ctx) ||
           failStmtArgMismatch(currStep, reason.function, "RECTANGLE_MISMATCH")
@@ -286,7 +319,6 @@ export const checkReasonApplication = (
       case "intersect_seg":
         const intersect_on1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const intersect_on2 = getDepStmt(reason.arguments[1], proofGraph)!;
-        console.log("intersect_seg", intersect_on1, intersect_on2, stmt);
         return (
           intersect_seg(intersect_on1, intersect_on2, stmt, ctx) ||
           failStmtArgMismatch(

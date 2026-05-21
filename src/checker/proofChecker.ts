@@ -1,5 +1,9 @@
+import type { ProofContent } from "geometry-object";
 import {
+  appendProofStepToGraph,
   buildProofGraph,
+  cloneProofGraph,
+  cloneReasonApplicabilityIndex,
   detectCycles,
   findUnusedSteps,
 } from "./checker/graph";
@@ -16,7 +20,13 @@ import {
   loadStatementDefinitions,
 } from "./grammar/defsParsers";
 import { ProofParser } from "./grammar/lezerParser";
-import { ProofGraph, ProofObj, Stmt } from "./types/checkerTypes";
+import {
+  ProofGraph,
+  ProofObj,
+  ProofStep,
+  Stmt,
+} from "./types/checkerTypes";
+import type { ReasonApplicabilityIndex } from "./checker/reasonFulfillment";
 
 export type ProofGoalMatchResult = { matches: boolean; details: string };
 
@@ -24,6 +34,8 @@ export type ProofCheckerResult = {
   proof: ProofObj;
   goal: Stmt | undefined;
   graph: ProofGraph;
+  /** Applicability index after a full graph build; used for incremental solver trials. */
+  reasonIndex: ReasonApplicabilityIndex;
   duplicateSteps: Array<[string, string]>;
   stepNumberErrors: string[];
   geometricObjectErrors: string[];
@@ -81,6 +93,10 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
       proof,
       goal,
       graph: emptyProofGraph(),
+      reasonIndex: {
+        statementRefsByFunction: new Map(),
+        diagramRefsByFunction: new Map(),
+      },
       duplicateSteps: [],
       stepNumberErrors: [],
       geometricObjectErrors,
@@ -96,7 +112,13 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
   logDebug("Building proof graph (reason application; diagram deps)...");
-  const graph = buildProofGraph(proof, reasonDefs, stmtDefs, groups, ctx);
+  const { graph, reasonIndex } = buildProofGraph(
+    proof,
+    reasonDefs,
+    stmtDefs,
+    groups,
+    ctx,
+  );
 
   graph.cycles = detectCycles(graph);
 
@@ -123,10 +145,74 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
     proof,
     goal,
     graph,
+    reasonIndex,
     duplicateSteps,
     stepNumberErrors,
     geometricObjectErrors,
     goalMatchResult,
+  };
+};
+
+export type TrialAppendProofStepResult = {
+  trialProof: ProofObj;
+  graph: ProofGraph;
+  reasonIndex: ReasonApplicabilityIndex;
+  duplicateSteps: Array<[string, string]>;
+  stepNumberErrors: string[];
+  geometricObjectErrors: string[];
+};
+
+/** Incrementally validate one appended proof row (no full proof rebuild / full graph scan). */
+export const trialAppendProofStep = (
+  parentProof: ProofObj,
+  parentGraph: ProofGraph,
+  parentReasonIndex: ReasonApplicabilityIndex,
+  newStep: ProofStep,
+  ctx: ProofContent,
+  geometricObjectErrors: string[],
+): TrialAppendProofStepResult => {
+  const reasonDefs = loadReasonDefinitions();
+  const { statements: stmtDefs, groups } = loadStatementDefinitions();
+
+  const stepNum = newStep.stepNumber;
+  if (!stepNum) {
+    throw new Error("trialAppendProofStep: newStep.stepNumber is required");
+  }
+
+  const trialStep: ProofStep = {
+    ...newStep,
+    errors: [],
+    waysToProve: undefined,
+    diagramDeps: undefined,
+  };
+
+  const trialProof: ProofObj = {
+    ...parentProof,
+    steps: [...parentProof.steps, trialStep],
+  };
+
+  const graph = cloneProofGraph(parentGraph);
+  const reasonIndex = cloneReasonApplicabilityIndex(parentReasonIndex);
+  appendProofStepToGraph(
+    graph,
+    reasonIndex,
+    trialStep,
+    stepNum,
+    ctx,
+    reasonDefs,
+    stmtDefs,
+    groups,
+  );
+
+  graph.cycles = detectCycles(graph);
+
+  return {
+    trialProof,
+    graph,
+    reasonIndex,
+    duplicateSteps: findDuplicateSteps(trialProof),
+    stepNumberErrors: checkSequentialStepNumbers(trialProof),
+    geometricObjectErrors,
   };
 };
 

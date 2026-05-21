@@ -7,6 +7,8 @@ tri: t_QPR t_RMN
 [g_2] right(a_RMN)
 [g_3] midpt(PM,R)
 [d_01] intersect_seg(PM, QN, R)
+[d_02] on_line(PM, R)
+[d_03] on_line(QN, R)
 -> midpt(QN,R)
 
 steps:

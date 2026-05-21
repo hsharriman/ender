@@ -1,0 +1,41 @@
+source: checker/proofs/tutinc.txt
+--- premises (solver input) ---
+title: "Tutorial #2 - INC Prove Triangles Congruent"
+premises:
+pt: A (5.5, 9, t), B (2, 3, bl), C (5.5, 1, bl), D (9, 3, bl)
+tri: t_ABC t_ADC
+[g_1] con_seg(AB,AD)
+[g_2] con_ang(a_BAC,a_DAC)
+-> con_tri(t_ABC,t_ADC)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+tutinc.txt	16	2	solved	3ms
+--- tutinc.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+reflex_s;—;con_seg
+reflex_s -> sas;— | con_seg,congruent_angs,con_seg;con_tri
+reflex_a;—;con_ang
+reflex_a -> asa;— | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> aas;— | congruent_angs,congruent_angs,con_seg;con_tri
+--- tutinc.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;reflex_s;;con_seg(AC, AC)
+ok;sas;con_seg(AB, AD) | con_ang(a_BAC, a_DAC) | con_seg(AC, AC);con_tri(t_ABC, t_ADC)
+
+--- final proof ---
+title: "Tutorial #2 - INC Prove Triangles Congruent"
+premises:
+pt: A (5.5, 9, t), B (2, 3, bl), C (5.5, 1, bl), D (9, 3, bl)
+tri: t_ABC t_ADC
+[g_1] con_seg(AB, AD)
+[g_2] con_ang(a_BAC, a_DAC)
+-> con_tri(t_ABC, t_ADC)
+
+steps:
+[01] given(g_1) -> con_seg(AB, AD)
+[02] given(g_2) -> con_ang(a_BAC, a_DAC)
+[03] reflex_s() -> con_seg(AC, AC)
+[04] sas(1, 2, 3) -> con_tri(t_ABC, t_ADC)
+

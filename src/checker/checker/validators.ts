@@ -1,6 +1,10 @@
 import { Obj } from "../../geometry-object";
 import { createError, logError } from "../errors/errorConstants";
 import {
+  isPointOnLineGroup,
+  proofGraphHasPointOnLineDiagram,
+} from "./pointOnLineGroup";
+import {
   ProofGraph,
   ProofObj,
   ProofStep,
@@ -21,11 +25,6 @@ export const checkStatementArguments = (
     logError.parser.undefinedStatement(stmt.function);
     return false;
   }
-
-  console.log(`    Statement definition:`, definition);
-  console.log(
-    `    Expected ${definition.parameters.length} args, got ${stmt.arguments.length}`,
-  );
 
   return stmt.arguments.length === definition.parameters.length;
 };
@@ -195,15 +194,18 @@ export const checkReasonStructure = (
       for (const expected of definition.diagramDependencies) {
         if (typeof expected !== "string") continue;
         const group = groups.get(expected);
-        const anyMatch = Array.from(proofGraph.diagramPremises.values()).some((d) => {
-          const foundType = d.statement.function;
-          if (group) {
-            return (
-              group.base === foundType || group.extensions.includes(foundType)
-            );
-          }
-          return foundType === expected;
-        });
+        const anyMatch = isPointOnLineGroup(expected, groups)
+          ? proofGraphHasPointOnLineDiagram(proofGraph)
+          : Array.from(proofGraph.diagramPremises.values()).some((d) => {
+              const foundType = d.statement.function;
+              if (group) {
+                return (
+                  group.base === foundType ||
+                  group.extensions.includes(foundType)
+                );
+              }
+              return foundType === expected;
+            });
         if (!anyMatch) {
           structureOk = false;
           logError.parser.dependencyMismatch(
@@ -245,32 +247,26 @@ export const checkReasonStructure = (
           if (group) {
             // Check if foundType can substitute for the expected base type
             if (group.base === foundType) {
-              // Direct match with base type - valid
               continue;
             } else if (group.extensions.includes(foundType)) {
-              // Found type can substitute for base type - valid
               continue;
-            } else {
-              // No valid substitution
-              structureOk = false;
-              addDependencyError({
-                reason: reason.function,
-                index: idx,
-                ref: stepNum,
-                expectedType: group.base,
-                allowedTypes: group.extensions,
-                receivedType: foundType,
-              });
-              logError.parser.dependencyMismatch(
-                `Dependency mismatch for ${
-                  reason.function
-                } at index ${idx}: expected ${
-                  group.base
-                } or one of [${group.extensions.join(
-                  ", ",
-                )}], found ${foundType} (ref ${stepNum})`,
-              );
             }
+            structureOk = false;
+            addDependencyError({
+              reason: reason.function,
+              index: idx,
+              ref: stepNum,
+              expectedType: group.base,
+              allowedTypes: group.extensions,
+              receivedType: foundType,
+            });
+            logError.parser.dependencyMismatch(
+              `Dependency mismatch for ${
+                reason.function
+              } at index ${idx}: expected ${
+                group.base
+              } or one of [${group.extensions.join(", ")}], found ${foundType} (ref ${stepNum})`,
+            );
           } else {
             // Direct statement name match
             if (foundType !== expectedDep) {
@@ -555,15 +551,17 @@ export const checkReasonDependencies = (
     for (const expected of definition.diagramDependencies) {
       if (typeof expected !== "string") continue;
       const group = groups.get(expected);
-      const anyMatch = Array.from(proofGraph.diagramPremises.values()).some((d) => {
-        const foundType = d.statement.function;
-        if (group) {
-          return (
-            group.base === foundType || group.extensions.includes(foundType)
-          );
-        }
-        return foundType === expected;
-      });
+      const anyMatch = isPointOnLineGroup(expected, groups)
+        ? proofGraphHasPointOnLineDiagram(proofGraph)
+        : Array.from(proofGraph.diagramPremises.values()).some((d) => {
+            const foundType = d.statement.function;
+            if (group) {
+              return (
+                group.base === foundType || group.extensions.includes(foundType)
+              );
+            }
+            return foundType === expected;
+          });
       if (!anyMatch) {
         logError.parser.dependencyMismatch(
           `Missing diagram dependency for ${reason.function}: expected ${expected}`,
@@ -593,26 +591,17 @@ export const checkReasonDependencies = (
       // Check if it's a group name
       const group = groups.get(expectedDep);
       if (group) {
-        // Check if foundType can substitute for the expected base type
         if (group.base === foundType) {
-          // Direct match with base type
           continue;
         } else if (group.extensions.includes(foundType)) {
-          // Found type can substitute for base type
           continue;
-        } else {
-          // No valid substitution
-          logError.parser.dependencyMismatch(
-            `Dependency mismatch for ${
-              reason.function
-            } at index ${i}: expected ${
-              group.base
-            } or one of [${group.extensions.join(
-              ", ",
-            )}], found ${foundType} (ref ${stepNum})`,
-          );
-          return false;
         }
+        logError.parser.dependencyMismatch(
+          `Dependency mismatch for ${reason.function} at index ${i}: expected ${
+            group.base
+          } or one of [${group.extensions.join(", ")}], found ${foundType} (ref ${stepNum})`,
+        );
+        return false;
       } else {
         // Direct statement name match
         if (foundType !== expectedDep) {

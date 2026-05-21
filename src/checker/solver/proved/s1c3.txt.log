@@ -1,0 +1,227 @@
+source: checker/proofs/s1c3.txt
+--- premises (solver input) ---
+title: "S1C3 - Prove Midpoint #2"
+premises:
+pt: Q (2, 10, bl), P (2, 5.5, bl), R (8, 5.5, t), M (14, 5.5, br), N (14, 1, r)
+tri: t_QPR t_RMN
+[g_1] right(a_QPR)
+[g_2] right(a_RMN)
+[g_3] midpt(PM,R)
+[d_01] intersect_seg(PM, QN, R)
+[d_02] on_line(PM, R)
+[d_03] on_line(QN, R)
+-> midpt(QN,R)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+s1c3.txt	50047	130	not-found	1251ms; cpctc-retry
+--- s1c3.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+reflex_s;—;con_seg
+def_midpt;midpt;con_seg
+reflex_s -> vert_ang;— | — d:intersect_seg;con_ang
+reflex_s -> reflex_a;— | —;con_ang
+reflex_s -> vert_ang -> def_midpt;— | — d:intersect_seg | midpt;con_seg
+reflex_s -> vert_ang -> def_midpt -> sas;— | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg;con_tri
+reflex_s -> reflex_a -> def_midpt -> sas;— | — | midpt | con_seg,congruent_angs,con_seg;con_tri
+def_midpt -> vert_ang -> def_midpt -> sas;midpt | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg;con_tri
+def_midpt -> reflex_a -> def_midpt -> sas;midpt | — | midpt | con_seg,congruent_angs,con_seg;con_tri
+reflex_s -> def_midpt;— | midpt;con_seg
+vert_ang;— d:intersect_seg;con_ang
+reflex_a;—;con_ang
+vert_ang -> reflex_s;— d:intersect_seg | —;con_seg
+vert_ang -> def_midpt;— d:intersect_seg | midpt;con_seg
+vert_ang -> reflex_s -> vert_ang;— d:intersect_seg | — | — d:intersect_seg;con_ang
+vert_ang -> reflex_s -> reflex_a;— d:intersect_seg | — | —;con_ang
+vert_ang -> reflex_s -> reflex_a -> asa;— d:intersect_seg | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_s -> vert_ang -> asa;— | — | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> reflex_s -> vert_ang -> asa;— d:intersect_seg | — | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> def_midpt -> reflex_a -> asa;— d:intersect_seg | midpt | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> def_midpt -> vert_ang -> asa;— | midpt | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_s -> reflex_a -> asa;— | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> def_midpt -> vert_ang -> asa;— d:intersect_seg | midpt | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> def_midpt -> reflex_a -> asa;— | midpt | — | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> vert_ang;— d:intersect_seg | — d:intersect_seg;con_ang
+vert_ang -> reflex_a;— d:intersect_seg | —;con_ang
+vert_ang -> reflex_a -> reflex_s;— d:intersect_seg | — | —;con_seg
+vert_ang -> reflex_a -> def_midpt;— d:intersect_seg | — | midpt;con_seg
+vert_ang -> reflex_a -> reflex_s -> aas;— d:intersect_seg | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> vert_ang -> reflex_s -> aas;— | — d:intersect_seg | — | congruent_angs,congruent_angs,con_seg;con_tri
+vert_ang -> vert_ang -> reflex_s -> aas;— d:intersect_seg | — d:intersect_seg | — | congruent_angs,congruent_angs,con_seg;con_tri
+vert_ang -> reflex_a -> def_midpt -> aas;— d:intersect_seg | — | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> vert_ang -> def_midpt -> aas;— | — d:intersect_seg | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_s -> aas;— | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+vert_ang -> vert_ang -> def_midpt -> aas;— d:intersect_seg | — d:intersect_seg | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> def_midpt -> aas;— | — | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+def_con_right;right,right;con_right
+def_con_right -> reflex_s;right,right | —;con_seg
+def_con_right -> def_midpt;right,right | midpt;con_seg
+def_con_right -> def_midpt -> reflex_s;right,right | midpt | —;con_seg
+def_con_right -> def_midpt -> reflex_s -> rhl;right,right | midpt | — | con_right,con_seg,con_seg;con_tri
+def_con_right -> reflex_s -> reflex_s -> rhl;right,right | — | — | con_right,con_seg,con_seg;con_tri
+def_con_right -> def_midpt -> reflex_s -> rhl -> cpctc;right,right | midpt | — | con_right,con_seg,con_seg | con_tri;con_seg
+reflex_s -> vert_ang -> def_midpt -> sas -> cpctc;— | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg | con_tri;con_seg
+vert_ang -> def_midpt -> reflex_a -> asa -> cpctc;— d:intersect_seg | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> def_midpt -> vert_ang -> asa -> cpctc;— | midpt | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_s -> reflex_a -> def_midpt -> sas -> cpctc;— | — | midpt | con_seg,congruent_angs,con_seg | con_tri;con_seg
+vert_ang -> reflex_a -> def_midpt -> aas -> cpctc;— d:intersect_seg | — | midpt | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> vert_ang -> def_midpt -> aas -> cpctc;— | — d:intersect_seg | midpt | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+vert_ang -> reflex_s -> reflex_a -> asa -> cpctc;— d:intersect_seg | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_s -> vert_ang -> asa -> cpctc;— | — | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+vert_ang -> reflex_a -> reflex_s -> aas -> cpctc;— d:intersect_seg | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> vert_ang -> reflex_s -> aas -> cpctc;— | — d:intersect_seg | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+def_midpt -> vert_ang -> def_midpt -> sas -> cpctc;midpt | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg | con_tri;con_seg
+vert_ang -> def_midpt -> vert_ang -> asa -> cpctc;— d:intersect_seg | midpt | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+vert_ang -> vert_ang -> def_midpt -> aas -> cpctc;— d:intersect_seg | — d:intersect_seg | midpt | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+def_midpt -> reflex_a -> def_midpt -> sas -> cpctc;midpt | — | midpt | con_seg,congruent_angs,con_seg | con_tri;con_seg
+def_con_right -> reflex_s -> reflex_s -> rhl -> cpctc;right,right | — | — | con_right,con_seg,con_seg | con_tri;con_seg
+def_con_right -> def_midpt -> reflex_s -> rhl -> cpctc -> vert_ang;right,right | midpt | — | con_right,con_seg,con_seg | con_tri | — d:intersect_seg;con_ang
+def_con_right -> def_midpt -> reflex_s -> rhl -> cpctc -> reflex_a;right,right | midpt | — | con_right,con_seg,con_seg | con_tri | —;con_ang
+reflex_s -> vert_ang -> def_midpt -> sas -> cpctc -> vert_ang;— | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg | con_tri | — d:intersect_seg;con_ang
+reflex_s -> vert_ang -> def_midpt -> sas -> cpctc -> reflex_a;— | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg | con_tri | —;con_ang
+vert_ang -> def_midpt -> reflex_a -> asa -> cpctc -> vert_ang;— d:intersect_seg | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri | — d:intersect_seg;con_ang
+vert_ang -> def_midpt -> reflex_a -> asa -> cpctc -> reflex_a;— d:intersect_seg | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri | —;con_ang
+reflex_s -> vert_ang -> def_midpt -> vert_ang;— | — d:intersect_seg | midpt | — d:intersect_seg;con_ang
+reflex_s -> vert_ang -> def_midpt -> reflex_a;— | — d:intersect_seg | midpt | —;con_ang
+reflex_s -> vert_ang -> vert_ang;— | — d:intersect_seg | — d:intersect_seg;con_ang
+reflex_s -> vert_ang -> reflex_a;— | — d:intersect_seg | —;con_ang
+reflex_s -> vert_ang -> vert_ang -> def_midpt;— | — d:intersect_seg | — d:intersect_seg | midpt;con_seg
+reflex_s -> vert_ang -> vert_ang -> def_midpt -> vert_ang;— | — d:intersect_seg | — d:intersect_seg | midpt | — d:intersect_seg;con_ang
+reflex_s -> vert_ang -> vert_ang -> def_midpt -> reflex_a;— | — d:intersect_seg | — d:intersect_seg | midpt | —;con_ang
+reflex_s -> vert_ang -> vert_ang -> def_midpt -> reflex_a -> asa;— | — d:intersect_seg | — d:intersect_seg | midpt | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_s -> vert_ang -> reflex_a -> def_midpt -> vert_ang -> asa;— | — d:intersect_seg | — | midpt | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_s -> vert_ang -> vert_ang -> def_midpt -> vert_ang -> asa;— | — d:intersect_seg | — d:intersect_seg | midpt | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_s -> vert_ang -> reflex_a -> def_midpt -> reflex_a -> asa;— | — d:intersect_seg | — | midpt | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_s -> vert_ang -> vert_ang -> vert_ang;— | — d:intersect_seg | — d:intersect_seg | — d:intersect_seg;con_ang
+reflex_s -> vert_ang -> vert_ang -> reflex_a;— | — d:intersect_seg | — d:intersect_seg | —;con_ang
+reflex_s -> vert_ang -> vert_ang -> reflex_a -> def_midpt;— | — d:intersect_seg | — d:intersect_seg | — | midpt;con_seg
+reflex_s -> vert_ang -> vert_ang -> reflex_a -> def_midpt -> aas;— | — d:intersect_seg | — d:intersect_seg | — | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_s -> vert_ang -> reflex_a -> vert_ang -> def_midpt -> aas;— | — d:intersect_seg | — | — d:intersect_seg | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_s -> vert_ang -> vert_ang -> vert_ang -> def_midpt -> aas;— | — d:intersect_seg | — d:intersect_seg | — d:intersect_seg | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_s -> vert_ang -> reflex_a -> reflex_a -> def_midpt -> aas;— | — d:intersect_seg | — | — | midpt | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_s -> vert_ang -> def_con_right;— | — d:intersect_seg | right,right;con_right
+reflex_s -> vert_ang -> def_con_right -> def_midpt;— | — d:intersect_seg | right,right | midpt;con_seg
+reflex_s -> vert_ang -> vert_ang -> def_midpt -> reflex_a -> asa -> cpctc;— | — d:intersect_seg | — d:intersect_seg | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_s -> vert_ang -> reflex_a -> def_midpt -> vert_ang -> asa -> cpctc;— | — d:intersect_seg | — | midpt | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_s -> vert_ang -> vert_ang -> reflex_a -> def_midpt -> aas -> cpctc;— | — d:intersect_seg | — d:intersect_seg | — | midpt | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_s -> vert_ang -> reflex_a -> vert_ang -> def_midpt -> aas -> cpctc;— | — d:intersect_seg | — | — d:intersect_seg | midpt | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_s -> vert_ang -> vert_ang -> def_midpt -> vert_ang -> asa -> cpctc;— | — d:intersect_seg | — d:intersect_seg | midpt | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_s -> vert_ang -> vert_ang -> vert_ang -> def_midpt -> aas -> cpctc;— | — d:intersect_seg | — d:intersect_seg | — d:intersect_seg | midpt | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_s -> vert_ang -> reflex_a -> def_midpt -> reflex_a -> asa -> cpctc;— | — d:intersect_seg | — | midpt | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_s -> vert_ang -> reflex_a -> reflex_a -> def_midpt -> aas -> cpctc;— | — d:intersect_seg | — | — | midpt | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+def_con_right -> def_midpt -> reflex_s -> rhl -> cpctc -> vert_ang -> vert_ang;right,right | midpt | — | con_right,con_seg,con_seg | con_tri | — d:intersect_seg | — d:intersect_seg;con_ang
+def_con_right -> def_midpt -> reflex_s -> rhl -> cpctc -> vert_ang -> reflex_a;right,right | midpt | — | con_right,con_seg,con_seg | con_tri | — d:intersect_seg | —;con_ang
+def_con_right -> def_midpt -> reflex_s -> rhl -> cpctc -> vert_ang -> vert_ang -> vert_ang;right,right | midpt | — | con_right,con_seg,con_seg | con_tri | — d:intersect_seg | — d:intersect_seg | — d:intersect_seg;con_ang
+def_con_right -> def_midpt -> reflex_s -> rhl -> cpctc -> vert_ang -> vert_ang -> reflex_a;right,right | midpt | — | con_right,con_seg,con_seg | con_tri | — d:intersect_seg | — d:intersect_seg | —;con_ang
+def_con_right -> def_midpt -> reflex_s -> rhl -> cpctc -> vert_ang -> def_con_right;right,right | midpt | — | con_right,con_seg,con_seg | con_tri | — d:intersect_seg | right,right;con_right
+reflex_s -> vert_ang -> def_midpt -> sas -> cpctc -> reflex_a -> vert_ang;— | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg | con_tri | — | — d:intersect_seg;con_ang
+reflex_s -> vert_ang -> def_midpt -> sas -> cpctc -> reflex_a -> reflex_a;— | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg | con_tri | — | —;con_ang
+reflex_s -> vert_ang -> def_midpt -> sas -> cpctc -> reflex_a -> vert_ang -> vert_ang;— | — d:intersect_seg | midpt | con_seg,congruent_angs,con_seg | con_tri | — | — d:intersect_seg | — d:intersect_seg;con_ang
+--- s1c3.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;reflex_s;;con_seg(MN, MN)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(PM, MN)
+ok;reflex_s;;con_seg(PM, PM)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(PM, PN)
+fail;reflex_s;;con_seg(PM, RM)
+fail;reflex_s;;con_seg(PM, RN)
+fail;reflex_s;;con_seg(PN, MN)
+ok;reflex_s;;con_seg(PN, PN)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(PN, RM)
+fail;reflex_s;;con_seg(PN, RN)
+fail;reflex_s;;con_seg(PR, MN)
+fail;reflex_s;;con_seg(PR, PM)
+fail;reflex_s;;con_seg(PR, PN)
+ok;reflex_s;;con_seg(PR, PR)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(PR, RM)
+fail;reflex_s;;con_seg(PR, RN)
+fail;reflex_s;;con_seg(QM, MN)
+fail;reflex_s;;con_seg(QM, PM)
+fail;reflex_s;;con_seg(QM, PN)
+fail;reflex_s;;con_seg(QM, PR)
+ok;reflex_s;;con_seg(QM, QM)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(QM, QN)
+fail;reflex_s;;con_seg(QM, RM)
+fail;reflex_s;;con_seg(QM, RN)
+fail;reflex_s;;con_seg(QN, MN)
+fail;reflex_s;;con_seg(QN, PM)
+fail;reflex_s;;con_seg(QN, PN)
+fail;reflex_s;;con_seg(QN, PR)
+ok;reflex_s;;con_seg(QN, QN)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(QN, RM)
+fail;reflex_s;;con_seg(QN, RN)
+fail;reflex_s;;con_seg(QP, MN)
+fail;reflex_s;;con_seg(QP, PM)
+fail;reflex_s;;con_seg(QP, PN)
+fail;reflex_s;;con_seg(QP, PR)
+fail;reflex_s;;con_seg(QP, QM)
+fail;reflex_s;;con_seg(QP, QN)
+ok;reflex_s;;con_seg(QP, QP)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(QP, QR)
+fail;reflex_s;;con_seg(QP, RM)
+fail;reflex_s;;con_seg(QP, RN)
+fail;reflex_s;;con_seg(QR, MN)
+fail;reflex_s;;con_seg(QR, PM)
+fail;reflex_s;;con_seg(QR, PN)
+fail;reflex_s;;con_seg(QR, PR)
+fail;reflex_s;;con_seg(QR, QM)
+fail;reflex_s;;con_seg(QR, QN)
+ok;reflex_s;;con_seg(QR, QR)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(QR, RM)
+fail;reflex_s;;con_seg(QR, RN)
+fail;reflex_s;;con_seg(RM, MN)
+ok;reflex_s;;con_seg(RM, RM)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(RM, RN)
+fail;reflex_s;;con_seg(RN, MN)
+ok;reflex_s;;con_seg(RN, RN)
+fail;midpt_conv;@4;midpt(QN, R)
+ok;reflex_s;;con_seg(MN, MN)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(PM, MN)
+ok;reflex_s;;con_seg(PM, PM)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(PM, PN)
+fail;reflex_s;;con_seg(PM, RM)
+fail;reflex_s;;con_seg(PM, RN)
+fail;reflex_s;;con_seg(PN, MN)
+ok;reflex_s;;con_seg(PN, PN)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(PN, RM)
+fail;reflex_s;;con_seg(PN, RN)
+fail;reflex_s;;con_seg(PR, MN)
+fail;reflex_s;;con_seg(PR, PM)
+fail;reflex_s;;con_seg(PR, PN)
+ok;reflex_s;;con_seg(PR, PR)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(PR, RM)
+fail;reflex_s;;con_seg(PR, RN)
+fail;reflex_s;;con_seg(QM, MN)
+fail;reflex_s;;con_seg(QM, PM)
+fail;reflex_s;;con_seg(QM, PN)
+fail;reflex_s;;con_seg(QM, PR)
+ok;reflex_s;;con_seg(QM, QM)
+fail;midpt_conv;@4;midpt(QN, R)
+fail;reflex_s;;con_seg(QM, QN)
+fail;reflex_s;;con_seg(QM, RM)
+fail;reflex_s;;con_seg(QM, RN)
+fail;reflex_s;;con_seg(QN, MN)
+fail;reflex_s;;con_seg(QN, PM)
+fail;reflex_s;;con_seg(QN, PN)
+fail;reflex_s;;con_seg(QN, PR)
+ok;reflex_s;;con_seg(QN, QN)
+fail;midpt_conv;@4;midpt(QN, R)
+... (30 more attempts omitted)
+
+--- final proof ---
+(solver status: not-found)
+

@@ -1,0 +1,117 @@
+test	backward_reasons_tried	forward_step_attempts	status	note
+solves a valid incomplete proof with BFS	2398	0	not-found	68ms
+statement generation skips reversed duplicates	—	—	skipped	no solve() call; 0ms
+returns capped when the plan budget is exhausted	0	0	capped	1ms
+solves incomplete s1c1	9	3	solved	35ms
+solves incomplete s1c1 missing 3 steps	24	4	solved	28ms
+S1C1: completes a partial proof (first three rows fixed) to canonical proofText	30	27	solved	43ms
+solves tutorial #1 from incomplete state	16	2	solved	4ms
+--- solves incomplete s1c1 missing 3 steps: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+sas;con_seg,congruent_angs,con_seg;con_tri
+reflex_s;—;con_seg
+reflex_s -> sss;— | con_seg,con_seg,con_seg;con_tri
+vert_ang;— d:intersect_seg;con_ang
+reflex_a;—;con_ang
+vert_ang -> asa;— d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> asa;— | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> aas;— d:intersect_seg | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> aas;— | congruent_angs,congruent_angs,con_seg;con_tri
+sas -> cpctc;con_seg,congruent_angs,con_seg | con_tri;con_ang
+vert_ang -> asa -> cpctc;— d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+vert_ang -> aas -> cpctc;— d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+reflex_s -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_a -> asa -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+reflex_a -> aas -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+reflex_a -> asa -> cpctc -> altint_conv;— | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+sas -> cpctc -> altint_conv;con_seg,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+vert_ang -> asa -> cpctc -> altint_conv;— d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+vert_ang -> aas -> cpctc -> altint_conv;— d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_s -> sss -> cpctc -> altint_conv;— | con_seg,con_seg,con_seg | con_tri | con_ang d:transversal;para
+reflex_a -> aas -> cpctc -> altint_conv;— | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+--- solves incomplete s1c1 missing 3 steps: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;sas;con_seg(CM, DM) | con_ang(a_CMA, a_DMB) | con_seg(AM, BM);con_tri(t_ACM, t_BDM)
+ok;cpctc;con_tri(t_ACM, t_BDM);con_ang(a_MAC, a_MBD)
+fail;altint_conv;con_ang(a_CMA, a_DMB);para(AC, BD)
+ok;altint_conv;con_ang(a_MAC, a_MBD);para(AC, BD)
+--- S1C1: completes a partial proof (first three rows fixed) to canonical proofText: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+vert_ang;— d:intersect_seg;con_ang
+reflex_a;—;con_ang
+vert_ang -> sas;— d:intersect_seg | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> sas;— | con_seg,congruent_angs,con_seg;con_tri
+reflex_s;—;con_seg
+reflex_s -> sss;— | con_seg,con_seg,con_seg;con_tri
+vert_ang -> vert_ang;— d:intersect_seg | — d:intersect_seg;con_ang
+vert_ang -> reflex_a;— d:intersect_seg | —;con_ang
+vert_ang -> reflex_a -> asa;— d:intersect_seg | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> vert_ang -> asa;— | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> vert_ang -> asa;— d:intersect_seg | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> asa;— | — | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> reflex_a -> aas;— d:intersect_seg | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> vert_ang -> aas;— | — d:intersect_seg | congruent_angs,congruent_angs,con_seg;con_tri
+vert_ang -> vert_ang -> aas;— d:intersect_seg | — d:intersect_seg | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> aas;— | — | congruent_angs,congruent_angs,con_seg;con_tri
+vert_ang -> sas -> cpctc;— d:intersect_seg | con_seg,congruent_angs,con_seg | con_tri;con_ang
+reflex_a -> sas -> cpctc;— | con_seg,congruent_angs,con_seg | con_tri;con_ang
+reflex_s -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri;con_ang
+vert_ang -> reflex_a -> asa -> cpctc;— d:intersect_seg | — | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+reflex_a -> vert_ang -> asa -> cpctc;— | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+vert_ang -> reflex_a -> aas -> cpctc;— d:intersect_seg | — | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+reflex_a -> vert_ang -> aas -> cpctc;— | — d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+vert_ang -> vert_ang -> asa -> cpctc;— d:intersect_seg | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+vert_ang -> vert_ang -> aas -> cpctc;— d:intersect_seg | — d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+reflex_a -> reflex_a -> asa -> cpctc;— | — | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+reflex_a -> reflex_a -> aas -> cpctc;— | — | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+vert_ang -> sas -> cpctc -> altint_conv;— d:intersect_seg | con_seg,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_a -> sas -> cpctc -> altint_conv;— | con_seg,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_s -> sss -> cpctc -> altint_conv;— | con_seg,con_seg,con_seg | con_tri | con_ang d:transversal;para
+vert_ang -> reflex_a -> asa -> cpctc -> altint_conv;— d:intersect_seg | — | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+reflex_a -> vert_ang -> asa -> cpctc -> altint_conv;— | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+vert_ang -> reflex_a -> aas -> cpctc -> altint_conv;— d:intersect_seg | — | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_a -> vert_ang -> aas -> cpctc -> altint_conv;— | — d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+vert_ang -> vert_ang -> asa -> cpctc -> altint_conv;— d:intersect_seg | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+vert_ang -> vert_ang -> aas -> cpctc -> altint_conv;— d:intersect_seg | — d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_a -> reflex_a -> asa -> cpctc -> altint_conv;— | — | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+reflex_a -> reflex_a -> aas -> cpctc -> altint_conv;— | — | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+--- S1C1: completes a partial proof (first three rows fixed) to canonical proofText: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+fail;vert_ang;;con_ang(a_ABA, a_CBD)
+fail;vert_ang;;con_ang(a_ABA, a_MBM)
+fail;vert_ang;;con_ang(a_ABC, a_DBM)
+fail;vert_ang;;con_ang(a_ABC, a_MBM)
+fail;vert_ang;;con_ang(a_ABD, a_MBM)
+fail;vert_ang;;con_ang(a_ABM, a_CBD)
+fail;vert_ang;;con_ang(a_ACB, a_DCD)
+fail;vert_ang;;con_ang(a_ACB, a_DCM)
+fail;vert_ang;;con_ang(a_ACB, a_MCM)
+fail;vert_ang;;con_ang(a_ACD, a_BCM)
+fail;vert_ang;;con_ang(a_ACD, a_MCM)
+fail;vert_ang;;con_ang(a_ACM, a_BCD)
+fail;vert_ang;;con_ang(a_ACM, a_DCD)
+fail;vert_ang;;con_ang(a_ADB, a_CDC)
+fail;vert_ang;;con_ang(a_ADB, a_CDM)
+fail;vert_ang;;con_ang(a_ADB, a_MDM)
+fail;vert_ang;;con_ang(a_ADC, a_BDM)
+fail;vert_ang;;con_ang(a_ADC, a_MDM)
+fail;vert_ang;;con_ang(a_ADM, a_BDC)
+fail;vert_ang;;con_ang(a_ADM, a_CDC)
+ok;vert_ang;;con_ang(a_AMB, a_CMD)
+fail;sas;con_seg(AM, BM) | con_ang(a_AMC, a_BMD) | con_seg(CM, DM);con_tri(t_ACM, t_BDM)
+ok;vert_ang;;con_ang(a_AMC, a_BMD)
+ok;sas;con_seg(AM, BM) | con_ang(a_AMC, a_BMD) | con_seg(CM, DM);con_tri(t_ACM, t_BDM)
+ok;cpctc;con_tri(t_ACM, t_BDM);con_ang(a_MAC, a_MBD)
+fail;altint_conv;con_ang(a_AMC, a_BMD);para(AC, BD)
+ok;altint_conv;con_ang(a_MAC, a_MBD);para(AC, BD)
+--- solves tutorial #1 from incomplete state: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+reflex_s;—;con_seg
+reflex_s -> sas;— | con_seg,congruent_angs,con_seg;con_tri
+reflex_a;—;con_ang
+reflex_a -> asa;— | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> aas;— | congruent_angs,congruent_angs,con_seg;con_tri
+--- solves tutorial #1 from incomplete state: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;reflex_s;;con_seg(AC, AC)
+ok;sas;con_seg(AB, AD) | con_ang(a_BAC, a_DAC) | con_seg(AC, AC);con_tri(t_ABC, t_ADC)

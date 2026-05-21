@@ -1,0 +1,98 @@
+source: checker/proofs/s1inc2.txt
+--- premises (solver input) ---
+title: "S1INC2 - Prove Angles Congruent #2"
+premises:
+pt: J (2, 9, bl), K (5.5, 1, b), L (9, 9, br), M (5.5, 9, t)
+tri: t_JMK t_LMK
+[g_1] perp(JL,KM)
+[g_2] con_seg(JK,LK) [02]
+-> con_tri(t_JMK,t_LMK)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+s1inc2.txt	21	53	solved	21ms
+--- s1inc2.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+reflex_a;—;con_ang
+reflex_a -> reflex_s;— | —;con_seg
+reflex_a -> reflex_s -> sas;— | — | con_seg,congruent_angs,con_seg;con_tri
+reflex_s;—;con_seg
+reflex_a -> reflex_a;— | —;con_ang
+reflex_a -> reflex_a -> asa;— | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> aas;— | — | congruent_angs,congruent_angs,con_seg;con_tri
+perp_con_ang;perp;con_right
+perp_con_ang -> reflex_s;perp | —;con_seg
+perp_con_ang -> reflex_s -> rhl;perp | — | con_right,con_seg,con_seg;con_tri
+--- s1inc2.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_JKL)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_JKM)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_JLK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_JLM)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_JMK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_JML)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_KLM)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_KML)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKL, a_LKM)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKM, a_JKM)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JKM, a_JLK)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JKM, a_JLM)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JKM, a_JMK)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKM, a_JML)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JKM, a_KLM)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JKM, a_KML)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JKM, a_LKM)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JLK, a_JLK)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JLK, a_JLM)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JLK, a_JMK)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JLK, a_JML)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JLK, a_KLM)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JLK, a_KML)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JLM, a_JLM)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JLM, a_JMK)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JLM, a_JML)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JLM, a_KLM)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JLM, a_KML)
+ok;reflex_s;;con_seg(KM, KM)
+fail;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JMK, a_JMK)
+fail;perp_con_ang;perp(JL, KM);con_right(a_JMK, a_JML)
+ok;perp_con_ang;perp(JL, KM);con_right(a_JMK, a_KML)
+ok;reflex_s;;con_seg(KM, KM)
+ok;rhl;con_right(a_JMK, a_KML) | con_seg(JK, LK) | con_seg(KM, KM);con_tri(t_JMK, t_LMK)
+
+--- final proof ---
+title: "S1INC2 - Prove Angles Congruent #2"
+premises:
+pt: J (2, 9, bl), K (5.5, 1, b), L (9, 9, br), M (5.5, 9, t)
+tri: t_JMK t_LMK
+[g_1] perp(JL, KM)
+[g_2] con_seg(JK, LK)
+-> con_tri(t_JMK, t_LMK)
+
+steps:
+[01] given(g_1) -> perp(JL, KM)
+[02] given(g_2) -> con_seg(JK, LK)
+[03] perp_con_ang(1) -> con_right(a_JMK, a_KML)
+[04] reflex_s() -> con_seg(KM, KM)
+[05] rhl(3, 2, 4) -> con_tri(t_JMK, t_LMK)
+

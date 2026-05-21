@@ -52,6 +52,7 @@ export const REASONS_DEFS = {
   },
   midpt_conv: {
     name: "midpt_conv",
+    diagramDependencies: ["point_on_line"],
     dependencies: ["con_seg"],
     conclusion: "midpt",
   },

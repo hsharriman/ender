@@ -3,6 +3,7 @@ import { logDebug, logError } from "../errors/errorConstants";
 import {
   ProofGraph,
   ProofObj,
+  ProofStep,
   ReasonDefinition,
   StatementDefinition,
   StatementGroup,
@@ -10,6 +11,7 @@ import {
 import {
   createReasonApplicabilityIndex,
   indexProofStepForReasons,
+  type ReasonApplicabilityIndex,
 } from "./reasonFulfillment";
 import { checkReasonApplication } from "./reasonApplication";
 import { waysToProve } from "./waysToProve";
@@ -19,6 +21,194 @@ import {
   checkStatementArguments,
 } from "./validators";
 
+/** Deep-clone graph maps/sets so incremental search branches do not alias. */
+export const cloneProofGraph = (g: ProofGraph): ProofGraph => ({
+  nodes: new Map(g.nodes),
+  diagramPremises: new Map(g.diagramPremises),
+  edges: new Map([...g.edges.entries()].map(([k, v]) => [k, [...v]])),
+  incorrectSteps: new Set(g.incorrectSteps),
+  dependencyFailureSteps: new Set(g.dependencyFailureSteps),
+  unusedSteps: new Set(g.unusedSteps),
+  cycles: g.cycles.map((c) => [...c]),
+});
+
+export const cloneReasonApplicabilityIndex = (
+  idx: ReasonApplicabilityIndex,
+): ReasonApplicabilityIndex => ({
+  statementRefsByFunction: new Map(
+    [...idx.statementRefsByFunction.entries()].map(([k, v]) => [k, [...v]]),
+  ),
+  diagramRefsByFunction: new Map(
+    [...idx.diagramRefsByFunction.entries()].map(([k, v]) => [k, [...v]]),
+  ),
+});
+
+/**
+ * Validates one step that is already registered in `graph.nodes` / `graph.edges`.
+ * Mutates `step`, `graph`, and `reasonIndex` like `buildProofGraph`.
+ */
+export const checkProofStep = (
+  graph: ProofGraph,
+  reasonIndex: ReasonApplicabilityIndex,
+  step: ProofStep,
+  stepNum: string,
+  ctx: ProofContent,
+  reasonDefs: Map<string, ReasonDefinition>,
+  stmtDefs: Map<string, StatementDefinition>,
+  groups: Map<string, StatementGroup>,
+): boolean => {
+  let isCorrect = true;
+
+  if (step.type === "proof" && step.reason && step.statement) {
+    step.waysToProve = waysToProve(step, ctx);
+  }
+
+  if (step.type === "given") {
+    if (step.statement?.function) {
+      isCorrect = stmtDefs.has(step.statement.function);
+    }
+  } else if (step.type === "proof" && step.reason && step.statement) {
+    logDebug(`\n🔍 Checking step ${stepNum}:`);
+    logDebug(JSON.stringify(step, null, 2));
+
+    isCorrect = checkReasonStructure(step, reasonDefs, groups, graph);
+    logDebug(`  Reason structure check: ${isCorrect}`);
+
+    if (isCorrect) {
+      isCorrect = checkReasonDependencies(
+        step.reason,
+        reasonDefs,
+        groups,
+        graph,
+        step,
+      );
+      logDebug(`  Dependency statements check: ${isCorrect}`);
+    }
+
+    if (isCorrect && step.reason.arguments) {
+      const currN = parseInt(stepNum, 10);
+      if (!Number.isNaN(currN)) {
+        for (const depRef of step.reason.arguments) {
+          if (/^\d+$/.test(depRef)) {
+            const depN = parseInt(depRef, 10);
+            if (!Number.isNaN(depN) && depN >= currN) {
+              logError.parser.dependencyMismatch(
+                `Step [${stepNum}] cannot cite proof step [${depRef}] (must cite only earlier steps)`,
+              );
+              isCorrect = false;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (
+      isCorrect &&
+      step.reason.function !== "given" &&
+      step.reason.arguments
+    ) {
+      for (const depRef of step.reason.arguments) {
+        if (/^g_\d+$/.test(depRef)) {
+          step.errors.push({
+            type: "illegal_given_dep",
+            data: {
+              reason: step.reason.function,
+              ref: depRef,
+            },
+          });
+          logError.parser.dependencyMismatch(
+            `Step [${stepNum}] cannot cite given premise ${depRef} outside of given(...)`,
+          );
+          isCorrect = false;
+          break;
+        }
+      }
+    }
+
+    if (isCorrect) {
+      logDebug(
+        `  Checking statement: ${
+          step.statement?.function
+        } with args: ${JSON.stringify(step.statement?.arguments)}`,
+      );
+      isCorrect = checkStatementArguments(step.statement, stmtDefs);
+      logDebug(`  Statement arguments check: ${isCorrect}`);
+
+      if (isCorrect && step.statement?.function) {
+        const stmtDef = stmtDefs.get(step.statement.function);
+        if (stmtDef?.isPremisesOnly && step.type === "proof") {
+          logError.parser.premisesOnlyStatementInProof(step.statement.function);
+          isCorrect = false;
+        }
+      }
+    }
+
+    if (isCorrect && step.reason.arguments) {
+      const incorrectDeps = step.reason.arguments
+        .map((depRef) => depRef)
+        .filter((depStepNum) => graph.incorrectSteps.has(depStepNum));
+      const hasIncorrectDependency = incorrectDeps.length > 0;
+
+      if (hasIncorrectDependency) {
+        isCorrect = false;
+        graph.dependencyFailureSteps.add(stepNum);
+        step.errors.push({
+          type: "upstream_dep_error",
+          data: {
+            reason: step.reason.function,
+            dependsOn: incorrectDeps,
+          },
+        });
+      }
+    }
+
+    if (isCorrect) {
+      isCorrect = checkReasonApplication(step, reasonDefs, graph, ctx);
+      logDebug(`  Reason application check: ${isCorrect}`);
+    }
+
+    if (step.reason.arguments) {
+      step.reason.arguments.forEach((depRef) => {
+        const edges = graph.edges.get(depRef) || [];
+        edges.push(stepNum);
+        graph.edges.set(depRef, edges);
+      });
+    }
+  }
+
+  if (!isCorrect) {
+    graph.incorrectSteps.add(stepNum);
+  }
+  indexProofStepForReasons({ step, stepNum, isCorrect, index: reasonIndex });
+  return isCorrect;
+};
+
+/** Append one proof row to a cloned graph and validate only that row. */
+export const appendProofStepToGraph = (
+  graph: ProofGraph,
+  reasonIndex: ReasonApplicabilityIndex,
+  step: ProofStep,
+  stepNum: string,
+  ctx: ProofContent,
+  reasonDefs: Map<string, ReasonDefinition>,
+  stmtDefs: Map<string, StatementDefinition>,
+  groups: Map<string, StatementGroup>,
+): void => {
+  graph.nodes.set(stepNum, step);
+  graph.edges.set(stepNum, []);
+  checkProofStep(
+    graph,
+    reasonIndex,
+    step,
+    stepNum,
+    ctx,
+    reasonDefs,
+    stmtDefs,
+    groups,
+  );
+};
+
 // Build proof graph and check each step
 export const buildProofGraph = (
   proof: ProofObj,
@@ -26,7 +216,7 @@ export const buildProofGraph = (
   stmtDefs: Map<string, StatementDefinition>,
   groups: Map<string, StatementGroup>,
   ctx: ProofContent,
-): ProofGraph => {
+): { graph: ProofGraph; reasonIndex: ReasonApplicabilityIndex } => {
   const graph: ProofGraph = {
     nodes: new Map(),
     diagramPremises: new Map(),
@@ -37,9 +227,8 @@ export const buildProofGraph = (
     cycles: [],
   };
 
-  // Add all steps to the graph (skip goal steps)
   proof.steps.forEach((step) => {
-    if (step.type === "goal") return; // Skip goal steps
+    if (step.type === "goal") return;
 
     const stepNum = step.stepNumber;
     if (stepNum) {
@@ -48,161 +237,51 @@ export const buildProofGraph = (
     }
   });
 
-  // Add diagram premises for direct lookup by step number.
   proof.premises.diagramStatements.forEach((d) => {
     graph.diagramPremises.set(d.stepNumber, d);
+    if (
+      d.statement.function === "intersect_seg" &&
+      d.statement.arguments.length >= 3
+    ) {
+      const [s1, s2, p] = d.statement.arguments;
+      const base = d.stepNumber;
+      const on1: typeof d = {
+        type: "diagram",
+        errors: [],
+        stepNumber: `${base}~on1`,
+        statement: { function: "on_line", arguments: [s1, p] },
+      };
+      const on2: typeof d = {
+        type: "diagram",
+        errors: [],
+        stepNumber: `${base}~on2`,
+        statement: { function: "on_line", arguments: [s2, p] },
+      };
+      graph.diagramPremises.set(on1.stepNumber, on1);
+      graph.diagramPremises.set(on2.stepNumber, on2);
+    }
   });
   const reasonIndex = createReasonApplicabilityIndex(graph);
 
-  // Check each step and build edges
   proof.steps.forEach((step) => {
-    if (step.type === "goal") return; // Skip goal steps
+    if (step.type === "goal") return;
 
     const stepNum = step.stepNumber;
-
     if (!stepNum) return;
 
-    let isCorrect = true;
-
-    if (step.type === "proof" && step.reason && step.statement) {
-      step.waysToProve = waysToProve(step, ctx);
-    }
-
-    if (step.type === "given") {
-      // Given statements are assumed to be true, but check format
-      if (step.statement?.function) {
-        // For now, just check if the function exists in definitions
-        // In a real implementation, you'd check the actual statement format
-        isCorrect = stmtDefs.has(step.statement.function);
-      }
-    } else if (step.type === "proof" && step.reason && step.statement) {
-      logDebug(`\n🔍 Checking step ${stepNum}:`);
-      logDebug(JSON.stringify(step, null, 2));
-
-      // Check reason dependencies
-      isCorrect = checkReasonStructure(step, reasonDefs, groups, graph);
-      logDebug(`  Reason structure check: ${isCorrect}`);
-
-      // Validate dependency statements (non-throwing version)
-      if (isCorrect) {
-        isCorrect = checkReasonDependencies(
-          step.reason,
-          reasonDefs,
-          groups,
-          graph,
-          step,
-        );
-        logDebug(`  Dependency statements check: ${isCorrect}`);
-      }
-
-      // Proof steps may only cite earlier numbered proof steps (not self / future).
-      if (isCorrect && step.reason.arguments) {
-        const currN = parseInt(stepNum, 10);
-        if (!Number.isNaN(currN)) {
-          for (const depRef of step.reason.arguments) {
-            if (/^\d+$/.test(depRef)) {
-              const depN = parseInt(depRef, 10);
-              if (!Number.isNaN(depN) && depN >= currN) {
-                logError.parser.dependencyMismatch(
-                  `Step [${stepNum}] cannot cite proof step [${depRef}] (must cite only earlier steps)`,
-                );
-                isCorrect = false;
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      // Given premises `g_n` may only appear in `given(...)` reasons.
-      if (
-        isCorrect &&
-        step.reason.function !== "given" &&
-        step.reason.arguments
-      ) {
-        for (const depRef of step.reason.arguments) {
-          if (/^g_\d+$/.test(depRef)) {
-            step.errors.push({
-              type: "illegal_given_dep",
-              data: {
-                reason: step.reason.function,
-                ref: depRef,
-              },
-            });
-            logError.parser.dependencyMismatch(
-              `Step [${stepNum}] cannot cite given premise ${depRef} outside of given(...)`,
-            );
-            isCorrect = false;
-            break;
-          }
-        }
-      }
-
-      // Check statement
-      if (isCorrect) {
-        logDebug(
-          `  Checking statement: ${
-            step.statement?.function
-          } with args: ${JSON.stringify(step.statement?.arguments)}`,
-        );
-        isCorrect = checkStatementArguments(step.statement, stmtDefs);
-        logDebug(`  Statement arguments check: ${isCorrect}`);
-
-        // Check if premises-only statement is used in proof step
-        if (isCorrect && step.statement?.function) {
-          const stmtDef = stmtDefs.get(step.statement.function);
-          if (stmtDef?.isPremisesOnly && step.type === "proof") {
-            logError.parser.premisesOnlyStatementInProof(
-              step.statement.function,
-            );
-            isCorrect = false;
-          }
-        }
-      }
-
-      // Check if any dependencies are incorrect
-      if (isCorrect && step.reason.arguments) {
-        const incorrectDeps = step.reason.arguments
-          .map((depRef) => depRef)
-          .filter((depStepNum) => graph.incorrectSteps.has(depStepNum));
-        const hasIncorrectDependency = incorrectDeps.length > 0;
-
-        if (hasIncorrectDependency) {
-          isCorrect = false;
-          graph.dependencyFailureSteps.add(stepNum);
-          step.errors.push({
-            type: "upstream_dep_error",
-            data: {
-              reason: step.reason.function,
-              dependsOn: incorrectDeps,
-            },
-          });
-        }
-      }
-
-      // Check if reason is applied correctly using reason checker methods
-      if (isCorrect) {
-        isCorrect = checkReasonApplication(step, reasonDefs, graph, ctx);
-        logDebug(`  Reason application check: ${isCorrect}`);
-      }
-
-      // Add edges from dependencies to this step
-      if (step.reason.arguments) {
-        step.reason.arguments.forEach((depRef) => {
-          const edges = graph.edges.get(depRef) || [];
-          edges.push(stepNum);
-          graph.edges.set(depRef, edges);
-        });
-      }
-    }
-
-    if (!isCorrect) {
-      graph.incorrectSteps.add(stepNum);
-    }
-    indexProofStepForReasons({ step, stepNum, isCorrect, index: reasonIndex });
+    checkProofStep(
+      graph,
+      reasonIndex,
+      step,
+      stepNum,
+      ctx,
+      reasonDefs,
+      stmtDefs,
+      groups,
+    );
   });
 
-  return graph;
+  return { graph, reasonIndex };
 };
 
 // Check for cycles in the graph using DFS

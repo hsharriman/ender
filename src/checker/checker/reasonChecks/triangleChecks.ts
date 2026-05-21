@@ -1,4 +1,4 @@
-import { ParseObj, ProofContent, Triangle } from "../../../geometry-object";
+import { Obj, ParseObj, ProofContent, Triangle } from "../../../geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 import { conSegMapper, conTriMapper } from "./argMappers";
 import {
@@ -7,6 +7,7 @@ import {
   TriangleReasonFailure,
   TriangleReasonResult,
 } from "./triangleReasonResult";
+import { prepareCongruentAngForTriangles } from "./triangleAnglePrep";
 import {
   angCenter,
   commonPt,
@@ -115,12 +116,18 @@ export const checkSas = (
   const dup = checkDistinctDependencyStmts("sas", [conSeg1, conAng, conSeg2]);
   if (!dup.ok) return dup;
   const [tri1, tri2] = congruentTrianglePair(conTri, ctx);
+  const conAngResolved = prepareCongruentAngForTriangles(
+    conAng,
+    tri1,
+    tri2,
+    ctx,
+  );
 
   const a1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2);
   if (!a1.ok) return triangleFail(a1.failure.code, a1.failure.details);
   const a2 = checkTriangleAssign(conSeg2.arguments, tri1, tri2);
   if (!a2.ok) return triangleFail(a2.failure.code, a2.failure.details);
-  const ang = checkTriangleAssign(conAng.arguments, tri1, tri2);
+  const ang = checkTriangleAssign(conAngResolved.arguments, tri1, tri2);
   if (!ang.ok) return triangleFail(ang.failure.code, ang.failure.details);
 
   const s11 = a1.left;
@@ -218,10 +225,12 @@ export const checkAas = (
   const dup = checkDistinctDependencyStmts("aas", [conAng1, conAng2, conSeg]);
   if (!dup.ok) return dup;
   const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
+  const ang1 = prepareCongruentAngForTriangles(conAng1, tri1, tri2, ctx);
+  const ang2 = prepareCongruentAngForTriangles(conAng2, tri1, tri2, ctx);
 
-  const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
+  const e1 = checkTriangleAssign(ang1.arguments, tri1, tri2);
   if (!e1.ok) return triangleFail(e1.failure.code, e1.failure.details);
-  const e2 = checkTriangleAssign(conAng2.arguments, tri1, tri2);
+  const e2 = checkTriangleAssign(ang2.arguments, tri1, tri2);
   if (!e2.ok) return triangleFail(e2.failure.code, e2.failure.details);
   const es = checkTriangleAssign(conSeg.arguments, tri1, tri2);
   if (!es.ok) return triangleFail(es.failure.code, es.failure.details);
@@ -264,10 +273,12 @@ export const checkAsa = (
   const dup = checkDistinctDependencyStmts("asa", [conAng1, conSeg, conAng2]);
   if (!dup.ok) return dup;
   const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
+  const ang1 = prepareCongruentAngForTriangles(conAng1, tri1, tri2, ctx);
+  const ang2 = prepareCongruentAngForTriangles(conAng2, tri1, tri2, ctx);
 
-  const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
+  const e1 = checkTriangleAssign(ang1.arguments, tri1, tri2);
   if (!e1.ok) return triangleFail(e1.failure.code, e1.failure.details);
-  const e2 = checkTriangleAssign(conAng2.arguments, tri1, tri2);
+  const e2 = checkTriangleAssign(ang2.arguments, tri1, tri2);
   if (!e2.ok) return triangleFail(e2.failure.code, e2.failure.details);
   const es = checkTriangleAssign(conSeg.arguments, tri1, tri2);
   if (!es.ok) return triangleFail(es.failure.code, es.failure.details);
@@ -387,7 +398,13 @@ const checkCpctcAngle = (
   conclusion: Stmt,
   ctx: ProofContent,
 ): TriangleReasonResult => {
-  const assign = checkTriangleAssign(conclusion.arguments, tri1, tri2);
+  const resolved = prepareCongruentAngForTriangles(
+    conclusion,
+    tri1,
+    tri2,
+    ctx,
+  );
+  const assign = checkTriangleAssign(resolved.arguments, tri1, tri2);
   if (!assign.ok) {
     return triangleFail(assign.failure.code, assign.failure.details);
   }
@@ -401,6 +418,36 @@ const checkCpctcAngle = (
     });
   }
   return triangleOk();
+};
+
+/** At most three `con_ang` / `con_seg` conclusions: corresponding parts by triangle index. */
+export const cpctcCorrespondingConclusions = (
+  conTri: Stmt,
+  conclusionFn: "con_ang" | "con_seg",
+  ctx: ProofContent,
+): Stmt[] => {
+  const [tri1, tri2] = congruentTrianglePair(conTri, ctx);
+  const out: Stmt[] = [];
+  for (let i = 0; i < 3; i++) {
+    if (conclusionFn === "con_ang") {
+      out.push({
+        function: "con_ang",
+        arguments: [
+          { type: Obj.Angle, v: tri1.a[i].label },
+          { type: Obj.Angle, v: tri2.a[i].label },
+        ],
+      });
+    } else {
+      out.push({
+        function: "con_seg",
+        arguments: [
+          { type: Obj.Segment, v: tri1.s[i].label },
+          { type: Obj.Segment, v: tri2.s[i].label },
+        ],
+      });
+    }
+  }
+  return out;
 };
 
 export const checkCpctc = (

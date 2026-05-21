@@ -1,0 +1,225 @@
+source: checker/proofs/s1inc3.txt
+--- premises (solver input) ---
+title: "S1INC3 - Prove Rectangle"
+premises:
+pt: K (14, 2, br), L (2, 2, bl), M (2, 9, l), N (14, 9, r)
+seg: MK
+tri: t_KLM t_MNK
+quad: q_KLMN
+[g_1] right(a_KLM) [01]
+[g_2] con_seg(LM,NK) [02]
+-> con_tri(t_KLM,t_MNK)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+s1inc3.txt	10514	1371067	not-found	396047ms; cpctc-retry
+--- s1inc3.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+reflex_a;—;con_ang
+reflex_a -> reflex_a;— | —;con_ang
+reflex_a -> reflex_a -> reflex_a;— | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | — | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s;— | — | — | — | — | — | — | — | — | — | — | — | —;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s;— | — | — | — | — | — | — | — | — | — | — | —;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a;— | — | — | — | — | — | — | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s;— | — | — | — | — | — | — | — | — | — | —;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a;— | — | — | — | — | — | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a;— | — | — | — | — | — | — | — | — | — | — | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> asa;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> aas;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> asa -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> aas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> asa;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> aas;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> asa -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_s;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | —;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_s -> sas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_s;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | —;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | —;con_ang
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> asa;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> aas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_s -> sas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> asa -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> asa -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_s -> sss;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> aas -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_s -> sss;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> asa -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_s -> sas -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_a -> reflex_s -> sas -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_a -> reflex_a -> asa -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> asa -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc -> sss;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> asa -> cpctc -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_s -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> aas -> cpctc -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_s -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> sas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> sas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> sas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> asa -> cpctc -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_s -> sas -> cpctc -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_a -> reflex_s -> sas -> cpctc -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_a -> reflex_a -> asa -> cpctc -> sss -> cpctc;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas;— | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> asa -> cpctc -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_s -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> reflex_a -> reflex_a -> aas -> cpctc -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_s -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> sas -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> sas -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> sas -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> asa -> cpctc -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_s -> sas -> cpctc -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc -> reflex_a -> reflex_s -> sas -> cpctc -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri | — | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc -> reflex_a -> reflex_a -> aas -> cpctc -> sss -> cpctc -> sas;— | — | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri | — | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s;— | — | — | — | — | — | — | — | — | —;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa;— | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas;— | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_s -> sas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> asa -> cpctc;— | — | — | — | — | — | — | — | — | — | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> reflex_a -> aas -> cpctc;— | — | — | — | — | — | — | — | — | — | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+--- s1inc3.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;reflex_a;;con_ang(a_KLM, a_KLM)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_KLM, a_KLN)
+fail;reflex_a;;con_ang(a_KLM, a_KML)
+fail;reflex_a;;con_ang(a_KLM, a_KMN)
+fail;reflex_a;;con_ang(a_KLM, a_KNL)
+fail;reflex_a;;con_ang(a_KLM, a_KNM)
+fail;reflex_a;;con_ang(a_KLM, a_LMN)
+fail;reflex_a;;con_ang(a_KLM, a_LNM)
+fail;reflex_a;;con_ang(a_KLM, a_MLN)
+ok;reflex_a;;con_ang(a_KLN, a_KLN)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_KLN, a_KML)
+fail;reflex_a;;con_ang(a_KLN, a_KMN)
+fail;reflex_a;;con_ang(a_KLN, a_KNL)
+fail;reflex_a;;con_ang(a_KLN, a_KNM)
+fail;reflex_a;;con_ang(a_KLN, a_LMN)
+fail;reflex_a;;con_ang(a_KLN, a_LNM)
+fail;reflex_a;;con_ang(a_KLN, a_MLN)
+ok;reflex_a;;con_ang(a_KML, a_KML)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_KML, a_KMN)
+fail;reflex_a;;con_ang(a_KML, a_KNL)
+fail;reflex_a;;con_ang(a_KML, a_KNM)
+fail;reflex_a;;con_ang(a_KML, a_LMN)
+fail;reflex_a;;con_ang(a_KML, a_LNM)
+ok;reflex_a;;con_ang(a_KMN, a_KMN)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_KMN, a_KNL)
+fail;reflex_a;;con_ang(a_KMN, a_KNM)
+fail;reflex_a;;con_ang(a_KMN, a_LMN)
+fail;reflex_a;;con_ang(a_KMN, a_LNM)
+ok;reflex_a;;con_ang(a_KNL, a_KNL)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_KNL, a_KNM)
+fail;reflex_a;;con_ang(a_KNL, a_LNM)
+ok;reflex_a;;con_ang(a_KNM, a_KNM)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_KNM, a_LNM)
+fail;reflex_a;;con_ang(a_LKM, a_KLM)
+fail;reflex_a;;con_ang(a_LKM, a_KLN)
+fail;reflex_a;;con_ang(a_LKM, a_KML)
+fail;reflex_a;;con_ang(a_LKM, a_KMN)
+fail;reflex_a;;con_ang(a_LKM, a_KNL)
+fail;reflex_a;;con_ang(a_LKM, a_KNM)
+ok;reflex_a;;con_ang(a_LKM, a_LKM)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_LKM, a_LKN)
+fail;reflex_a;;con_ang(a_LKM, a_LMN)
+fail;reflex_a;;con_ang(a_LKM, a_LNM)
+fail;reflex_a;;con_ang(a_LKM, a_MKN)
+fail;reflex_a;;con_ang(a_LKM, a_MLN)
+fail;reflex_a;;con_ang(a_LKN, a_KLM)
+fail;reflex_a;;con_ang(a_LKN, a_KLN)
+fail;reflex_a;;con_ang(a_LKN, a_KML)
+fail;reflex_a;;con_ang(a_LKN, a_KMN)
+fail;reflex_a;;con_ang(a_LKN, a_KNL)
+fail;reflex_a;;con_ang(a_LKN, a_KNM)
+ok;reflex_a;;con_ang(a_LKN, a_LKN)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_LKN, a_LMN)
+fail;reflex_a;;con_ang(a_LKN, a_LNM)
+fail;reflex_a;;con_ang(a_LKN, a_MKN)
+fail;reflex_a;;con_ang(a_LKN, a_MLN)
+fail;reflex_a;;con_ang(a_LMN, a_KNL)
+fail;reflex_a;;con_ang(a_LMN, a_KNM)
+ok;reflex_a;;con_ang(a_LMN, a_LMN)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_LMN, a_LNM)
+ok;reflex_a;;con_ang(a_LNM, a_LNM)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_MKN, a_KLM)
+fail;reflex_a;;con_ang(a_MKN, a_KLN)
+fail;reflex_a;;con_ang(a_MKN, a_KML)
+fail;reflex_a;;con_ang(a_MKN, a_KMN)
+fail;reflex_a;;con_ang(a_MKN, a_KNL)
+fail;reflex_a;;con_ang(a_MKN, a_KNM)
+fail;reflex_a;;con_ang(a_MKN, a_LMN)
+fail;reflex_a;;con_ang(a_MKN, a_LNM)
+ok;reflex_a;;con_ang(a_MKN, a_MKN)
+ok;reflex_s;;con_seg(KM, KM)
+fail;sas;@2 | @3 | @4;con_tri(t_KLM, t_MNK)
+fail;reflex_a;;con_ang(a_MKN, a_MLN)
+fail;reflex_a;;con_ang(a_MLN, a_KML)
+fail;reflex_a;;con_ang(a_MLN, a_KMN)
+fail;reflex_a;;con_ang(a_MLN, a_KNL)
+fail;reflex_a;;con_ang(a_MLN, a_KNM)
+fail;reflex_a;;con_ang(a_MLN, a_LMN)
+fail;reflex_a;;con_ang(a_MLN, a_LNM)
+ok;reflex_a;;con_ang(a_MLN, a_MLN)
+... (1370967 more attempts omitted)
+
+--- final proof ---
+(solver status: not-found)
+

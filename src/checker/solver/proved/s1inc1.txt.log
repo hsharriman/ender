@@ -1,0 +1,149 @@
+source: checker/proofs/s1inc1.txt
+--- premises (solver input) ---
+title: "S1INC1 - Prove Angles Congruent #1"
+premises:
+pt: A (1, 2, bl), B (10, 2, br), C (14, 9, r), D (5, 9, l)
+tri: t_ABD t_BCD
+[g_1] con_seg(AD,BC) [01]
+[g_2] con_seg(AB,DC) [02]
+[g_3] con_ang(a_ABD,a_CDB) [03]
+-> con_ang(a_BAD,a_DCB)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+s1inc1.txt	18	106	solved	34ms
+--- s1inc1.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+sas;con_seg,congruent_angs,con_seg;con_tri
+reflex_s;—;con_seg
+reflex_s -> sss;— | con_seg,con_seg,con_seg;con_tri
+reflex_a;—;con_ang
+reflex_a -> asa;— | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> aas;— | congruent_angs,congruent_angs,con_seg;con_tri
+sas -> cpctc;con_seg,congruent_angs,con_seg | con_tri;con_ang
+reflex_s -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri;con_ang
+reflex_a -> asa -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+reflex_a -> aas -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+--- s1inc1.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;reflex_a;;con_ang(a_ABC, a_ABC)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_ABC, a_ABD)
+fail;reflex_a;;con_ang(a_ABC, a_ACB)
+fail;reflex_a;;con_ang(a_ABC, a_ACD)
+fail;reflex_a;;con_ang(a_ABC, a_ADB)
+fail;reflex_a;;con_ang(a_ABC, a_ADC)
+fail;reflex_a;;con_ang(a_ABC, a_BCD)
+fail;reflex_a;;con_ang(a_ABC, a_BDC)
+fail;reflex_a;;con_ang(a_ABC, a_CBD)
+ok;reflex_a;;con_ang(a_ABD, a_ABD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_ABD, a_ACB)
+fail;reflex_a;;con_ang(a_ABD, a_ACD)
+fail;reflex_a;;con_ang(a_ABD, a_ADB)
+fail;reflex_a;;con_ang(a_ABD, a_ADC)
+fail;reflex_a;;con_ang(a_ABD, a_BCD)
+fail;reflex_a;;con_ang(a_ABD, a_CBD)
+ok;reflex_a;;con_ang(a_ACB, a_ACB)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_ACB, a_ACD)
+fail;reflex_a;;con_ang(a_ACB, a_ADB)
+fail;reflex_a;;con_ang(a_ACB, a_ADC)
+fail;reflex_a;;con_ang(a_ACB, a_BCD)
+fail;reflex_a;;con_ang(a_ACB, a_BDC)
+ok;reflex_a;;con_ang(a_ACD, a_ACD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_ACD, a_ADB)
+fail;reflex_a;;con_ang(a_ACD, a_ADC)
+fail;reflex_a;;con_ang(a_ACD, a_BCD)
+fail;reflex_a;;con_ang(a_ACD, a_BDC)
+ok;reflex_a;;con_ang(a_ADB, a_ADB)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_ADB, a_ADC)
+fail;reflex_a;;con_ang(a_ADB, a_BDC)
+ok;reflex_a;;con_ang(a_ADC, a_ADC)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_ADC, a_BDC)
+fail;reflex_a;;con_ang(a_BAC, a_ABC)
+fail;reflex_a;;con_ang(a_BAC, a_ABD)
+fail;reflex_a;;con_ang(a_BAC, a_ACB)
+fail;reflex_a;;con_ang(a_BAC, a_ACD)
+fail;reflex_a;;con_ang(a_BAC, a_ADB)
+fail;reflex_a;;con_ang(a_BAC, a_ADC)
+ok;reflex_a;;con_ang(a_BAC, a_BAC)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_BAC, a_BAD)
+fail;reflex_a;;con_ang(a_BAC, a_BCD)
+fail;reflex_a;;con_ang(a_BAC, a_BDC)
+fail;reflex_a;;con_ang(a_BAC, a_CAD)
+fail;reflex_a;;con_ang(a_BAC, a_CBD)
+fail;reflex_a;;con_ang(a_BAD, a_ABC)
+fail;reflex_a;;con_ang(a_BAD, a_ABD)
+fail;reflex_a;;con_ang(a_BAD, a_ACB)
+fail;reflex_a;;con_ang(a_BAD, a_ACD)
+fail;reflex_a;;con_ang(a_BAD, a_ADB)
+fail;reflex_a;;con_ang(a_BAD, a_ADC)
+ok;reflex_a;;con_ang(a_BAD, a_BAD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_BAD, a_BCD)
+fail;reflex_a;;con_ang(a_BAD, a_BDC)
+fail;reflex_a;;con_ang(a_BAD, a_CAD)
+fail;reflex_a;;con_ang(a_BAD, a_CBD)
+fail;reflex_a;;con_ang(a_BCD, a_ADB)
+fail;reflex_a;;con_ang(a_BCD, a_ADC)
+ok;reflex_a;;con_ang(a_BCD, a_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_BCD, a_BDC)
+ok;reflex_a;;con_ang(a_BDC, a_BDC)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_CAD, a_ABC)
+fail;reflex_a;;con_ang(a_CAD, a_ABD)
+fail;reflex_a;;con_ang(a_CAD, a_ACB)
+fail;reflex_a;;con_ang(a_CAD, a_ACD)
+fail;reflex_a;;con_ang(a_CAD, a_ADB)
+fail;reflex_a;;con_ang(a_CAD, a_ADC)
+fail;reflex_a;;con_ang(a_CAD, a_BCD)
+fail;reflex_a;;con_ang(a_CAD, a_BDC)
+ok;reflex_a;;con_ang(a_CAD, a_CAD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AB, DC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+fail;reflex_a;;con_ang(a_CAD, a_CBD)
+fail;reflex_a;;con_ang(a_CBD, a_ACB)
+fail;reflex_a;;con_ang(a_CBD, a_ACD)
+fail;reflex_a;;con_ang(a_CBD, a_ADB)
+fail;reflex_a;;con_ang(a_CBD, a_ADC)
+fail;reflex_a;;con_ang(a_CBD, a_BCD)
+fail;reflex_a;;con_ang(a_CBD, a_BDC)
+ok;reflex_a;;con_ang(a_CBD, a_CBD)
+fail;asa;con_ang(a_ABD, a_CDB) | con_seg(AD, BC) | con_seg(BD, BD);con_tri(t_ABD, t_BCD)
+... (6 more attempts omitted)
+
+--- final proof ---
+title: "S1INC1 - Prove Angles Congruent #1"
+premises:
+pt: A (1, 2, bl), B (10, 2, br), C (14, 9, r), D (5, 9, l)
+tri: t_ABD t_BCD
+[g_1] con_seg(AD, BC)
+[g_2] con_seg(AB, DC)
+[g_3] con_ang(a_ABD, a_CDB)
+-> con_ang(a_BAD, a_DCB)
+
+steps:
+[01] given(g_1) -> con_seg(AD, BC)
+[02] given(g_2) -> con_seg(AB, DC)
+[03] given(g_3) -> con_ang(a_ABD, a_CDB)
+[04] reflex_s() -> con_seg(BD, BD)
+[05] sss(1, 2, 4) -> con_tri(t_ABD, t_BCD)
+[06] cpctc(5) -> con_ang(a_BAD, a_DCB)
+

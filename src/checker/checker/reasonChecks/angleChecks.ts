@@ -2,8 +2,8 @@ import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 import { findDuplicateDependencyStatements } from "./utils";
 
-export const reflex_a = (a1: Angle, a2: Angle) => {
-  return a1.equals(a2);
+export const reflex_a = (a1: Angle, a2: Angle, ctx: ProofContent) => {
+  return ctx.angleLabelsOverlap(a1.label, a2.label);
 };
 
 export const right = (perp: Stmt, right: Stmt, ctx: ProofContent): boolean => {

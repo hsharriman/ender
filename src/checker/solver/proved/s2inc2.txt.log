@@ -1,0 +1,98 @@
+source: checker/proofs/s2inc2.txt
+--- premises (solver input) ---
+title: "S2INC2 - Prove Segments Parallel #3"
+premises:
+pt: X (9, 9, r), W (2, 9, l), Y (2, 1, bl), Z (9, 1, br), M (5.5, 5, r)
+tri: t_MWX t_MYZ
+[d_01] intersect_seg(XY, WZ, M)
+[d_02] transversal(W, X, X, Y, Z, Y)
+[g_1] con_seg(WM, MZ)
+[g_2] con_seg(MX, MY)
+-> para(WX, YZ)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+s2inc2.txt	30	20	solved	22ms
+--- s2inc2.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+vert_ang;— d:intersect_seg;con_ang
+reflex_a;—;con_ang
+vert_ang -> sas;— d:intersect_seg | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> sas;— | con_seg,congruent_angs,con_seg;con_tri
+reflex_s;—;con_seg
+reflex_s -> sss;— | con_seg,con_seg,con_seg;con_tri
+vert_ang -> vert_ang;— d:intersect_seg | — d:intersect_seg;con_ang
+vert_ang -> reflex_a;— d:intersect_seg | —;con_ang
+vert_ang -> reflex_a -> asa;— d:intersect_seg | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> vert_ang -> asa;— | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> vert_ang -> asa;— d:intersect_seg | — d:intersect_seg | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> reflex_a -> asa;— | — | congruent_angs,con_seg,congruent_angs;con_tri
+vert_ang -> reflex_a -> aas;— d:intersect_seg | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> vert_ang -> aas;— | — d:intersect_seg | congruent_angs,congruent_angs,con_seg;con_tri
+vert_ang -> vert_ang -> aas;— d:intersect_seg | — d:intersect_seg | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> reflex_a -> aas;— | — | congruent_angs,congruent_angs,con_seg;con_tri
+vert_ang -> sas -> cpctc;— d:intersect_seg | con_seg,congruent_angs,con_seg | con_tri;con_ang
+reflex_a -> sas -> cpctc;— | con_seg,congruent_angs,con_seg | con_tri;con_ang
+reflex_s -> sss -> cpctc;— | con_seg,con_seg,con_seg | con_tri;con_ang
+vert_ang -> reflex_a -> asa -> cpctc;— d:intersect_seg | — | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+reflex_a -> vert_ang -> asa -> cpctc;— | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+vert_ang -> reflex_a -> aas -> cpctc;— d:intersect_seg | — | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+reflex_a -> vert_ang -> aas -> cpctc;— | — d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+vert_ang -> vert_ang -> asa -> cpctc;— d:intersect_seg | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+vert_ang -> vert_ang -> aas -> cpctc;— d:intersect_seg | — d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+reflex_a -> reflex_a -> asa -> cpctc;— | — | congruent_angs,con_seg,congruent_angs | con_tri;con_ang
+reflex_a -> reflex_a -> aas -> cpctc;— | — | congruent_angs,congruent_angs,con_seg | con_tri;con_ang
+vert_ang -> sas -> cpctc -> altint_conv;— d:intersect_seg | con_seg,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_a -> sas -> cpctc -> altint_conv;— | con_seg,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_s -> sss -> cpctc -> altint_conv;— | con_seg,con_seg,con_seg | con_tri | con_ang d:transversal;para
+vert_ang -> reflex_a -> asa -> cpctc -> altint_conv;— d:intersect_seg | — | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+reflex_a -> vert_ang -> asa -> cpctc -> altint_conv;— | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+vert_ang -> reflex_a -> aas -> cpctc -> altint_conv;— d:intersect_seg | — | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_a -> vert_ang -> aas -> cpctc -> altint_conv;— | — d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+vert_ang -> vert_ang -> asa -> cpctc -> altint_conv;— d:intersect_seg | — d:intersect_seg | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+vert_ang -> vert_ang -> aas -> cpctc -> altint_conv;— d:intersect_seg | — d:intersect_seg | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+reflex_a -> reflex_a -> asa -> cpctc -> altint_conv;— | — | congruent_angs,con_seg,congruent_angs | con_tri | con_ang d:transversal;para
+reflex_a -> reflex_a -> aas -> cpctc -> altint_conv;— | — | congruent_angs,congruent_angs,con_seg | con_tri | con_ang d:transversal;para
+--- s2inc2.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+fail;vert_ang;;con_ang(a_MYM, a_WYZ)
+fail;vert_ang;;con_ang(a_WXM, a_YXY)
+fail;vert_ang;;con_ang(a_WXM, a_YXZ)
+fail;vert_ang;;con_ang(a_WXY, a_MXM)
+fail;vert_ang;;con_ang(a_WXY, a_ZXM)
+fail;vert_ang;;con_ang(a_WXZ, a_MXM)
+fail;vert_ang;;con_ang(a_WXZ, a_YXM)
+fail;vert_ang;;con_ang(a_WXZ, a_YXY)
+fail;vert_ang;;con_ang(a_WYM, a_XYX)
+fail;vert_ang;;con_ang(a_WYM, a_XYZ)
+fail;vert_ang;;con_ang(a_WZW, a_MZM)
+fail;vert_ang;;con_ang(a_WZY, a_MZM)
+ok;vert_ang;;con_ang(a_XMW, a_YMZ)
+ok;sas;con_seg(WM, MZ) | con_ang(a_XMW, a_YMZ) | con_seg(MX, MY);con_tri(t_MWX, t_MYZ)
+ok;cpctc;con_tri(t_MWX, t_MYZ);con_ang(a_MWX, a_MZY)
+fail;altint_conv;con_ang(a_XMW, a_YMZ);para(WX, YZ)
+fail;altint_conv;con_ang(a_MXW, a_MYZ);para(WX, YZ)
+ok;cpctc;con_tri(t_MWX, t_MYZ);con_ang(a_MXW, a_MYZ)
+fail;altint_conv;con_ang(a_XMW, a_YMZ);para(WX, YZ)
+ok;altint_conv;con_ang(a_MXW, a_MYZ);para(WX, YZ)
+
+--- final proof ---
+title: "S2INC2 - Prove Segments Parallel #3"
+premises:
+pt: X (9, 9, r), W (2, 9, l), Y (2, 1, bl), Z (9, 1, br), M (5.5, 5, r)
+tri: t_MWX t_MYZ
+[g_1] con_seg(WM, MZ)
+[g_2] con_seg(MX, MY)
+[d_1] intersect_seg(XY, WZ, M)
+[d_2] transversal(W, X, X, Y, Z, Y)
+-> para(WX, YZ)
+
+steps:
+[01] given(g_1) -> con_seg(WM, MZ)
+[02] given(g_2) -> con_seg(MX, MY)
+[03] vert_ang() -> con_ang(a_XMW, a_YMZ)
+[04] sas(1, 3, 2) -> con_tri(t_MWX, t_MYZ)
+[05] cpctc(4) -> con_ang(a_MXW, a_MYZ)
+[06] altint_conv(5) -> para(WX, YZ)
+

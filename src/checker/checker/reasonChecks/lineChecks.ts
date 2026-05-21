@@ -1,5 +1,7 @@
 import { Point, ProofContent, Segment } from "../../../geometry-object";
+import { Obj } from "../../../geometry-object/types/types";
 import { Stmt } from "../../types/checkerTypes";
+import { right as angleIsRightFromPerp } from "./angleChecks";
 import { findDuplicateDependencyStatements } from "./utils";
 
 export const reflex_s = (s1: Segment, s2: Segment) => {
@@ -149,22 +151,37 @@ export const perp = (
   return false;
 };
 
-// export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
-//   if (findDuplicateDependencyStatements([perp, conAng])) return false;
-//   const tempCtx = new ProofContent(ctx.getCtx());
-//   const [s1, s2] = perp.arguments.map((arg) =>
-//     tempCtx.addSegmentFromStr(arg.v),
-//   );
-//   const [a1, a2] = conAng.arguments.map((arg) =>
-//     tempCtx.addAngleFromStr(arg.v),
-//   );
-//   const [intersectPt, sharedSide] = getIntersectPt(s1, s2);
-//   if (intersectPt && sharedSide) {
-//     // TODO check for shared side AND angle made up of one point on the line
-//     return a1.centerEquals(intersectPt) && a2.centerEquals(intersectPt);
-//   }
-//   return false;
-// };
+/**
+ * `perp_con_ang`: from `perp(s1,s2)` conclude `con_right` or `con_ang` for the two
+ * right angles at the intersection of s1 and s2 (not unrelated angles).
+ */
+export const perp_con_ang = (
+  perp: Stmt,
+  conclusion: Stmt,
+  ctx: ProofContent,
+): boolean => {
+  if (conclusion.function !== "con_ang" && conclusion.function !== "con_right") {
+    return false;
+  }
+  const [a1, a2] = conclusion.arguments;
+  if (!a1 || !a2 || a1.v === a2.v) return false;
+
+  const asRight = (angleV: string): Stmt => ({
+    function: "right",
+    arguments: [{ type: Obj.Angle, v: angleV }],
+  });
+
+  if (
+    !angleIsRightFromPerp(perp, asRight(a1.v), ctx) ||
+    !angleIsRightFromPerp(perp, asRight(a2.v), ctx)
+  ) {
+    return false;
+  }
+
+  ctx.addAngleFromStr(a1.v);
+  ctx.addAngleFromStr(a2.v);
+  return true;
+};
 
 // ----- Helper functions -----
 const getIntersectPt = (

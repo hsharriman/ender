@@ -24,7 +24,8 @@ end_premises
 // Congruence statements - con_right can substitute for con_ang, but not vice versa
 group congruent_angs { base: con_ang, extensions: con_right }
 
-// Point-on-line statements - midpt can substitute for on_line, but not vice versa  
+// Point-on-line: midpt may substitute for on_line on diagram slots (e.g. def_perp).
+// midpt_conv alone requires diagram on_line + proof con_seg (not diagram midpt as substitute).
 group point_on_line { base: on_line, extensions: midpt }
 
 // Individual statements

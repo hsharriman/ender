@@ -1,15 +1,22 @@
 import { Obj, ParseObj, ProofContent } from "../../geometry-object";
 import { buildPremises } from "../checker/premises";
+import { proofHasPointOnLineDiagram } from "../checker/pointOnLineGroup";
+import { cpctcCorrespondingConclusions } from "../checker/reasonChecks/triangleChecks";
 import { stmtKey } from "../checker/reasonChecks/utils";
 import { REASONS_DEFS } from "../grammar/defs/reasons.defs";
 import {
   loadReasonDefinitions,
   loadStatementDefinitions,
 } from "../grammar/defsParsers";
-import { runProofChecker } from "../proofChecker";
-import { stmtToString } from "../proofToString";
+import {
+  runProofChecker,
+  trialAppendProofStep,
+  type TrialAppendProofStepResult,
+} from "../proofChecker";
+import { stmtToString, proofToString } from "../proofToString";
 import {
   ParseDiagramStmt,
+  ProofGraph,
   ProofObj,
   ProofStep,
   ReasonDefinition,
@@ -17,18 +24,18 @@ import {
   StatementGroup,
   Stmt,
 } from "../types/checkerTypes";
-import { buildProofDag, prettyPrintProofDag } from "./proofDag";
+import type { ReasonApplicabilityIndex } from "../checker/reasonFulfillment";
+import { buildProofPlans, type PlanStep, type ProofPlan } from "./proofPlan";
 import {
   SolverAttempt,
   SolverOpts,
   SolverResult,
-  SolverState,
+  SolverStats,
   SolverStep,
 } from "./types";
 
 const UNSAFE_REASONS = new Set([
   "given",
-  "perp_con_ang",
   "paralellogram1",
   "paralellogram2",
   "equilateral",
@@ -40,12 +47,6 @@ const DEFINED_REASONS = new Set(
 );
 
 type Pool = Map<ParseObj["type"], ParseObj[]>;
-type ReasonChoice = {
-  name: string;
-  reason: ReasonDefinition;
-  fulfilled: number;
-  total: number;
-};
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 const orderedChars = (value: string) =>
@@ -127,7 +128,10 @@ export const objectPool = (ctx: ProofContent): Pool => {
   content.segments.forEach((segment) =>
     addObj(pool, Obj.Segment, segment.label),
   );
-  content.angles.forEach((angle) => addObj(pool, Obj.Angle, angle.label));
+  content.angles.forEach((angle) => {
+    addObj(pool, Obj.Angle, angle.label);
+    angle.names.forEach((name) => addObj(pool, Obj.Angle, name));
+  });
   content.triangles.forEach((triangle) =>
     addObj(pool, Obj.Triangle, triangle.label),
   );
@@ -240,9 +244,29 @@ const scopedPool = (
   matchingDiags(proof, reason, groups).forEach((diag) =>
     addStmtScope(pool, ctx, diag.statement),
   );
-  return refs.length || reason.diagramDependencies?.length || pool.size > 0
-    ? pool
-    : objectPool(ctx);
+  return pool.size > 0 ? pool : objectPool(ctx);
+};
+
+
+
+const midptCandidatesFromOnLine = (proof: ProofObj, goal?: Stmt): Stmt[] => {
+  const rows = proof.premises.diagramStatements
+    .filter((diag) => diag.statement.function === "on_line")
+    .map((diag) => ({
+      function: "midpt" as const,
+      arguments: [diag.statement.arguments[0], diag.statement.arguments[1]],
+    }));
+  const deduped: Stmt[] = [];
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const key = stmtKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(row);
+  }
+  if (!goal || goal.function !== "midpt") return deduped;
+  const goalKey = stmtKey(goal);
+  return deduped.filter((stmt) => stmtKey(stmt) === goalKey);
 };
 
 const argCombinations = (
@@ -324,7 +348,11 @@ const hasDiag = (
   dep: string | StatementGroup,
   groups: Map<string, StatementGroup>,
 ) => {
-  const fns = depFns(depName(dep), groups);
+  const key = depName(dep);
+  if (key === "point_on_line") {
+    return proofHasPointOnLineDiagram(proof);
+  }
+  const fns = depFns(key, groups);
   return proof.premises.diagramStatements.some((diag) =>
     fns.includes(diag.statement.function),
   );
@@ -338,69 +366,6 @@ const depRefSlots = (
   reason.dependencies.map((dep) =>
     depFns(depName(dep), groups).flatMap((fn) => facts.get(fn) ?? []),
   );
-
-const maxFulfilledSlots = (slots: string[][]) => {
-  const ordered = [...slots].sort((left, right) => left.length - right.length);
-
-  const walk = (index: number, used: Set<string>): number => {
-    if (index === ordered.length) return 0;
-    let best = walk(index + 1, used);
-    for (const ref of ordered[index]) {
-      if (used.has(ref)) continue;
-      used.add(ref);
-      best = Math.max(best, 1 + walk(index + 1, used));
-      used.delete(ref);
-    }
-    return best;
-  };
-
-  return walk(0, new Set());
-};
-
-const fulfilledDeps = (
-  reason: ReasonDefinition,
-  proof: ProofObj,
-  groups: Map<string, StatementGroup>,
-  facts: Map<string, string[]>,
-) => {
-  const proofDeps = maxFulfilledSlots(depRefSlots(reason, groups, facts));
-  const diagramDeps =
-    reason.diagramDependencies?.filter((dep) => hasDiag(proof, dep, groups))
-      .length ?? 0;
-  return proofDeps + diagramDeps;
-};
-
-const reasonChoices = (
-  reasons: Map<string, ReasonDefinition>,
-  proof: ProofObj,
-  groups: Map<string, StatementGroup>,
-): ReasonChoice[] => {
-  const facts = factMap(proof);
-  const choices = [...reasons]
-    .filter(([name]) => DEFINED_REASONS.has(name))
-    .map(([name, reason]) => {
-      const total =
-        reason.dependencies.length + (reason.diagramDependencies?.length ?? 0);
-      return {
-        name,
-        reason,
-        fulfilled: fulfilledDeps(reason, proof, groups, facts),
-        total,
-      };
-    });
-  const ready = choices.filter(
-    ({ fulfilled, total }) => total > 0 && fulfilled === total,
-  );
-  const zeroDep = choices.filter(({ total }) => total === 0);
-  const selected = ready.length ? [...ready, ...zeroDep] : zeroDep;
-
-  return selected.sort(
-    (left, right) =>
-      right.fulfilled - left.fulfilled ||
-      right.total - left.total ||
-      left.name.localeCompare(right.name),
-  );
-};
 
 const refCombinations = (
   reason: ReasonDefinition,
@@ -439,19 +404,77 @@ const refCombinations = (
   return combos;
 };
 
-const stepSignature = (step: ProofStep) =>
+const candSortKey = (step: ProofStep) =>
   JSON.stringify({
     reason: step.reason?.function,
     reasonArgs: step.reason?.arguments,
     statement: step.statement ? stmtKey(step.statement) : "",
   });
 
-const stateSignature = (proof: ProofObj) =>
-  proof.steps
-    .filter((step) => step.type !== "goal")
-    .map(stepSignature)
-    .sort((left, right) => left.localeCompare(right))
-    .join("\n");
+const angleCenter = (label: string) => {
+  const raw = label.startsWith("a_") ? label.slice(2) : label;
+  return raw.length >= 3 ? raw[1] : "";
+};
+
+const angleEndpoints = (label: string) => {
+  const raw = label.startsWith("a_") ? label.slice(2) : label;
+  return raw.length >= 3 ? [raw[0], raw[2]] : [];
+};
+
+/** True when the two angles share a vertex but no common side (vertical pair). */
+const isVerticalAnglePair = (left: string, right: string) => {
+  const center = angleCenter(left);
+  if (center !== angleCenter(right)) return false;
+  const sharesArm = (ends: string[], other: string[]) =>
+    ends.some((end) => end !== center && other.includes(end));
+  return !sharesArm(angleEndpoints(left), angleEndpoints(right));
+};
+
+/** Prefer geometrically plausible candidates; backtracking validates the rest. */
+const candidateRank = (
+  planStep: PlanStep,
+  step: SolverStep,
+  proof?: ProofObj,
+): number => {
+  const stmt = step.statement;
+  if (!stmt) return 10;
+  if (planStep.reasonName === "asa" && proof && step.reason?.arguments) {
+    const refs = step.reason.arguments;
+    if (refs.length === 3 && refs[0] === "2" && refs[1] === "1") return 0;
+  }
+  if (planStep.reasonName === "vert_ang" && stmt.function === "con_ang") {
+    const [left, right] = stmt.arguments;
+    if (
+      left?.type === Obj.Angle &&
+      right?.type === Obj.Angle &&
+      isVerticalAnglePair(left.v, right.v)
+    ) {
+      return 0;
+    }
+    return 5;
+  }
+  return 10;
+};
+
+const sortCandidates = (
+  planStep: PlanStep,
+  steps: SolverStep[],
+  proof?: ProofObj,
+) =>
+  [...steps].sort(
+    (left, right) =>
+      candidateRank(planStep, left, proof) -
+        candidateRank(planStep, right, proof) ||
+      candSortKey(left).localeCompare(candSortKey(right)),
+  );
+
+const knownStatementKeys = (proof: ProofObj): Set<string> => {
+  const keys = new Set<string>();
+  for (const step of proof.steps) {
+    if (step.statement) keys.add(stmtKey(step.statement));
+  }
+  return keys;
+};
 
 const nextStepNumber = (proof: ProofObj) => {
   const nums = proof.steps
@@ -462,15 +485,82 @@ const nextStepNumber = (proof: ProofObj) => {
   return `${Math.max(0, ...nums) + 1}`;
 };
 
-const addStep = (proof: ProofObj, step: SolverStep): ProofObj => ({
-  ...clone(proof),
-  steps: [...clone(proof.steps), step],
-});
-
 const statementExists = (proof: ProofObj, statement: Stmt) =>
   proof.steps.some(
     (step) => step.statement && statementsEquivalent(step.statement, statement),
   );
+
+const triangleLabel = (value: string) =>
+  value.startsWith("t_") ? value.slice(2) : value;
+
+/** Shared side between two triangles (e.g. `AC` for `ABC` and `ADC`). */
+const sharedSegmentLabel = (
+  ctx: ProofContent,
+  tri1: string,
+  tri2: string,
+): string | undefined => {
+  const left = ctx.getTriangle(triangleLabel(tri1));
+  const right = ctx.getTriangle(triangleLabel(tri2));
+  if (!left || !right) return undefined;
+  const leftLabels = new Set(left.s.map((segment) => segment.label));
+  const shared = right.s.find((segment) => leftLabels.has(segment.label));
+  return shared?.label;
+};
+
+/** When premises name exactly two triangles, use them as the `con_tri` statement target. */
+const premiseTrianglePair = (proof: ProofObj): Stmt | undefined => {
+  const tris = proof.premises.triangles;
+  if (tris.length !== 2) return undefined;
+  return {
+    function: "con_tri",
+    arguments: tris.map((tri) => ({ type: Obj.Triangle, v: tri.v })),
+  };
+};
+
+/** Reflexive `con_ang` for the sole named angle in premises (e.g. ASA slot `a_EGD`). */
+const reflexAngFromPremises = (proof: ProofObj): Stmt | undefined => {
+  const angles = proof.premises.angles;
+  if (angles.length !== 1) return undefined;
+  const v = angles[0]!.v;
+  return {
+    function: "con_ang",
+    arguments: [
+      { type: Obj.Angle, v },
+      { type: Obj.Angle, v },
+    ],
+  };
+};
+
+const reflexSegFromPremiseTriangles = (
+  proof: ProofObj,
+  ctx: ProofContent,
+): Stmt | undefined => {
+  const triGoal = premiseTrianglePair(proof);
+  if (!triGoal) return undefined;
+  return reflexSegForCongruenceGoal(triGoal, ctx);
+};
+
+const reflexSegForCongruenceGoal = (
+  goal: Stmt | undefined,
+  ctx: ProofContent,
+): Stmt | undefined => {
+  if (!goal || goal.function !== "con_tri" || goal.arguments.length !== 2) {
+    return undefined;
+  }
+  const seg = sharedSegmentLabel(
+    ctx,
+    goal.arguments[0].v,
+    goal.arguments[1].v,
+  );
+  if (!seg) return undefined;
+  return {
+    function: "con_seg",
+    arguments: [
+      { type: Obj.Segment, v: seg },
+      { type: Obj.Segment, v: seg },
+    ],
+  };
+};
 
 const makeStep = (
   stepNumber: string,
@@ -508,39 +598,113 @@ const seedGivenSteps = (
   };
 };
 
-export const genSteps = (
+/** Forward pass: candidates for one planned reason row. */
+const genStepsForPlan = (
   proof: ProofObj,
   ctx: ProofContent,
-  goal?: Stmt,
+  planStep: PlanStep,
+  goal: Stmt | undefined,
+  reasons: Map<string, ReasonDefinition>,
+  statements: Map<string, StatementDefinition>,
+  groups: Map<string, StatementGroup>,
+  opts?: { isLastPlanStep?: boolean },
 ): SolverStep[] => {
-  const reasons = loadReasonDefinitions();
-  const { statements, groups } = loadStatementDefinitions();
-  const nextNumber = nextStepNumber(proof);
-  const steps: SolverStep[] = [];
+  const reason = reasons.get(planStep.reasonName);
+  if (!reason || !DEFINED_REASONS.has(planStep.reasonName)) return [];
 
-  for (const { name, reason } of reasonChoices(reasons, proof, groups)) {
-    const reasonSteps: SolverStep[] = [];
-    const refs = refCombinations(reason, proof, groups);
-    if (reason.dependencies.length > 0 && refs.length === 0) continue;
-    const dependencySets = reason.dependencies.length === 0 ? [[]] : refs;
-    for (const deps of dependencySets) {
-      const pool = scopedPool(proof, ctx, reason, deps, groups);
-      for (const fn of conclusions(reason)) {
-        if (fn.startsWith("__")) continue;
-        for (const statement of statementsFor(fn, statements, pool, goal)) {
-          if (statementExists(proof, statement)) continue;
-          reasonSteps.push(makeStep(nextNumber, name, deps, statement));
-        }
-      }
+  const nextNumber = nextStepNumber(proof);
+  const knownFacts = knownStatementKeys(proof);
+  const reasonSteps: SolverStep[] = [];
+  const refs = refCombinations(reason, proof, groups);
+  if (reason.dependencies.length > 0 && refs.length === 0) return [];
+  const dependencySets = reason.dependencies.length === 0 ? [[]] : refs;
+
+  for (const deps of dependencySets) {
+    let stmtGoal =
+      opts?.isLastPlanStep &&
+      goal?.function === planStep.conclusionFn
+        ? goal
+        : undefined;
+    if (
+      !stmtGoal &&
+      planStep.reasonName === "reflex_s" &&
+      planStep.conclusionFn === "con_seg"
+    ) {
+      stmtGoal =
+        reflexSegFromPremiseTriangles(proof, ctx) ??
+        (goal?.function === "con_tri"
+          ? reflexSegForCongruenceGoal(goal, ctx)
+          : undefined);
     }
-    steps.push(
-      ...reasonSteps.sort((left, right) =>
-        stepSignature(left).localeCompare(stepSignature(right)),
-      ),
-    );
+    if (
+      !stmtGoal &&
+      planStep.reasonName === "reflex_a" &&
+      planStep.conclusionFn === "con_ang"
+    ) {
+      stmtGoal = reflexAngFromPremises(proof);
+    }
+    if (!stmtGoal && planStep.conclusionFn === "con_tri") {
+      stmtGoal = premiseTrianglePair(proof);
+    }
+    const cpctcConclusions =
+      planStep.reasonName === "cpctc" &&
+      (planStep.conclusionFn === "con_ang" ||
+        planStep.conclusionFn === "con_seg") &&
+      deps.length === 1
+        ? (() => {
+            const conTri = stmtByRef(proof, deps[0]);
+            if (!conTri || conTri.function !== "con_tri") return [];
+            let candidates = cpctcCorrespondingConclusions(
+              conTri,
+              planStep.conclusionFn as "con_ang" | "con_seg",
+              ctx,
+            );
+            if (stmtGoal) {
+              const goalKey = stmtKey(stmtGoal);
+              candidates = [...candidates].sort((left, right) => {
+                const leftMatch = stmtKey(left) === goalKey ? -1 : 0;
+                const rightMatch = stmtKey(right) === goalKey ? -1 : 0;
+                return leftMatch - rightMatch;
+              });
+            }
+            return candidates;
+          })()
+        : null;
+
+    const midptFromOnLine =
+      planStep.conclusionFn === "midpt"
+        ? midptCandidatesFromOnLine(proof, stmtGoal)
+        : null;
+
+    let pool = scopedPool(proof, ctx, reason, deps, groups);
+    const statementCandidates =
+      cpctcConclusions ??
+      midptFromOnLine ??
+      (() => {
+        if (
+          !statementsFor(planStep.conclusionFn, statements, pool, stmtGoal)
+            .length
+        ) {
+          pool = objectPool(ctx);
+        }
+        return statementsFor(
+          planStep.conclusionFn,
+          statements,
+          pool,
+          stmtGoal,
+        );
+      })();
+
+    for (const statement of statementCandidates) {
+      if (knownFacts.has(stmtKey(statement))) continue;
+      if (statementExists(proof, statement)) continue;
+      reasonSteps.push(
+        makeStep(nextNumber, planStep.reasonName, deps, statement),
+      );
+    }
   }
 
-  return steps;
+  return sortCandidates(planStep, reasonSteps, proof);
 };
 
 const startErrors = (result: ReturnType<typeof runProofChecker>): string[] => {
@@ -559,61 +723,81 @@ const startErrors = (result: ReturnType<typeof runProofChecker>): string[] => {
   return errors;
 };
 
-const trialPassed = (
-  result: ReturnType<typeof runProofChecker>,
-  step: string,
-) => startErrors(result).length === 0 && !result.graph.incorrectSteps.has(step);
+const trialStartErrors = (trial: TrialAppendProofStepResult): string[] => {
+  const errors: string[] = [];
+  if (trial.geometricObjectErrors.length)
+    errors.push(...trial.geometricObjectErrors);
+  if (trial.duplicateSteps.length)
+    errors.push(`Duplicate steps: ${trial.duplicateSteps.length}`);
+  if (trial.stepNumberErrors.length) errors.push(...trial.stepNumberErrors);
+  if (trial.graph.cycles.length)
+    errors.push(`Cycles: ${trial.graph.cycles.length}`);
+  if (trial.graph.incorrectSteps.size)
+    errors.push(
+      `Incorrect steps: ${[...trial.graph.incorrectSteps].join(", ")}`,
+    );
+  return errors;
+};
 
-export const solve = (proof: ProofObj, opts: SolverOpts = {}): SolverResult => {
-  const maxDepth = opts.maxDepth ?? 4;
-  const maxStates = opts.maxStates ?? 500;
-  const maxCandidates = opts.maxCandidatesPerState ?? 1000;
-  const seeded = seedGivenSteps(proof);
-  const initial = runProofChecker(clean(seeded.proof));
-  const errors = startErrors(initial);
-  const attempts: SolverAttempt[] = [];
-  if (errors.length) return { status: "invalid-start", errors, attempts };
+type ForwardState = {
+  proof: ProofObj;
+  graph: ProofGraph;
+  reasonIndex: ReasonApplicabilityIndex;
+  solverSteps: SolverStep[];
+};
 
-  const goal = goalOf(initial.proof);
-  if (!goal)
-    return { status: "invalid-start", errors: ["No goal found"], attempts };
-  if (statementExists(initial.proof, goal))
-    return {
-      status: "solved",
-      steps: [],
-      checkedProof: initial.proof,
-      dagText: prettyPrintProofDag(buildProofDag(initial.proof)),
-      attempts,
-    };
+const realizePlan = (
+  plan: ProofPlan,
+  initial: ForwardState,
+  goal: Stmt,
+  premiseCtx: ProofContent,
+  geometricObjectErrors: string[],
+  reasons: Map<string, ReasonDefinition>,
+  statements: Map<string, StatementDefinition>,
+  groups: Map<string, StatementGroup>,
+  maxCandidatesPerStep: number,
+  attempts: SolverAttempt[],
+  planIndex: number,
+): ForwardState | null => {
+  const realizeFrom = (
+    stepIdx: number,
+    state: ForwardState,
+  ): ForwardState | null => {
+    if (stepIdx >= plan.steps.length) {
+      return statementExists(state.proof, goal) ? state : null;
+    }
 
-  const queue: SolverState[] = [
-    { proof: initial.proof, steps: seeded.steps, depth: 0 },
-  ];
-  const seenStates = new Set([stateSignature(initial.proof)]);
-  let searched = 0;
-  let depth = 0;
+    const planStep = plan.steps[stepIdx];
+    const candidates = sortCandidates(
+      planStep,
+      genStepsForPlan(
+        state.proof,
+        premiseCtx,
+        planStep,
+        goal,
+        reasons,
+        statements,
+        groups,
+        { isLastPlanStep: stepIdx === plan.steps.length - 1 },
+      ),
+      state.proof,
+    ).slice(0, maxCandidatesPerStep);
 
-  while (queue.length) {
-    if (searched >= maxStates)
-      return { status: "capped", searched, depth, attempts };
-    const state = queue.shift()!;
-    searched++;
-    depth = Math.max(depth, state.depth);
-    if (state.depth >= maxDepth) continue;
-
-    const ctx = buildPremises(state.proof);
-    ctx.checkAngleOverlaps();
-    for (const candidate of genSteps(state.proof, ctx, goal).slice(
-      0,
-      maxCandidates,
-    )) {
-      const trial = runProofChecker(clean(addStep(state.proof, candidate)));
-      const candidateErrors = startErrors(trial);
+    for (const candidate of candidates) {
+      const trial = trialAppendProofStep(
+        state.proof,
+        state.graph,
+        state.reasonIndex,
+        candidate,
+        premiseCtx,
+        geometricObjectErrors,
+      );
+      const candidateErrors = trialStartErrors(trial);
       const passed =
         candidateErrors.length === 0 &&
         !trial.graph.incorrectSteps.has(candidate.stepNumber);
       attempts.push({
-        depth: state.depth + 1,
+        depth: planIndex * 100 + stepIdx + 1,
         reason: candidate.reason.function,
         refs: candidate.reason.arguments,
         statement: stmtToString(candidate.statement),
@@ -621,28 +805,193 @@ export const solve = (proof: ProofObj, opts: SolverOpts = {}): SolverResult => {
         errors: candidateErrors,
       });
       if (!passed) continue;
-      const checkedStep = trial.proof.steps.find(
+
+      const checkedStep = trial.trialProof.steps.find(
         (step) => step.stepNumber === candidate.stepNumber,
       );
       const step = (checkedStep ?? candidate) as SolverStep;
-      const steps = [...state.steps, step];
-      if (statementsEquivalent(step.statement, goal)) {
-        return {
-          status: "solved",
-          steps,
-          checkedProof: trial.proof,
-          dagText: prettyPrintProofDag(buildProofDag(trial.proof)),
-          attempts,
-        };
-      }
-      const signature = stateSignature(trial.proof);
-      if (seenStates.has(signature)) continue;
-      seenStates.add(signature);
-      queue.push({ proof: trial.proof, steps, depth: state.depth + 1 });
+      const nextState: ForwardState = {
+        proof: trial.trialProof,
+        graph: trial.graph,
+        reasonIndex: trial.reasonIndex,
+        solverSteps: [...state.solverSteps, step],
+      };
+      const finished = realizeFrom(stepIdx + 1, nextState);
+      if (finished) return finished;
     }
-  }
 
-  return { status: "not-found", searched, depth, attempts };
+    return null;
+  };
+
+  return realizeFrom(0, initial);
 };
 
-export const __solverTest = { argCombinations, objectPool, statementsFor };
+const emptyStats = (): SolverStats => ({
+  backwardReasonsTried: 0,
+  backwardPlansGenerated: 0,
+  forwardStepAttempts: 0,
+  backwardChains: [],
+});
+
+export const solve = (proof: ProofObj, opts: SolverOpts = {}): SolverResult => {
+  const maxDepth = opts.maxDepth ?? 4;
+  const stopAfterFirstPlan = opts.stopAfterFirstPlan ?? false;
+  const maxPlans =
+    opts.maxPlans ?? (stopAfterFirstPlan ? 1 : 500);
+  const maxCandidatesPerStep = opts.maxCandidatesPerStep ?? 1000;
+  const maxChildPlans = stopAfterFirstPlan ? 1 : opts.maxChildPlans;
+  const seeded = seedGivenSteps(proof);
+  const initial = runProofChecker(clean(seeded.proof));
+  const errors = startErrors(initial);
+  if (errors.length) {
+    return { status: "invalid-start", errors, attempts: [], stats: emptyStats() };
+  }
+
+  const goal = goalOf(initial.proof);
+  if (!goal) {
+    return {
+      status: "invalid-start",
+      errors: ["No goal found"],
+      attempts: [],
+      stats: emptyStats(),
+    };
+  }
+  if (statementExists(initial.proof, goal)) {
+    return {
+      status: "solved",
+      proofText: proofToString(initial.proof),
+      checkedProof: initial.proof,
+      proofSteps: [],
+      attempts: [],
+      stats: emptyStats(),
+    };
+  }
+
+  const premiseCtx = buildPremises(initial.proof);
+  premiseCtx.checkAngleOverlaps();
+
+  const reasons = loadReasonDefinitions();
+  const { statements, groups } = loadStatementDefinitions();
+  if (maxPlans <= 0) {
+    return { status: "capped", plansTried: 0, attempts: [], stats: emptyStats() };
+  }
+
+  const runPass = (allowCpctcForCongruentParts: boolean): SolverResult => {
+    const attempts: SolverAttempt[] = [];
+    const stats = emptyStats();
+    const forwardInitial: ForwardState = {
+      proof: initial.proof,
+      graph: initial.graph,
+      reasonIndex: initial.reasonIndex,
+      solverSteps: seeded.steps,
+    };
+    const forwardSolvedRef: { current: ForwardState | null } = {
+      current: null,
+    };
+
+    const { plans, stats: planStats, chains } = buildProofPlans(
+      goal,
+      initial.proof,
+      {
+        maxDepth,
+        maxPlans,
+        maxChildPlans,
+        stopAfterFirstPlan,
+        logChainsMax: opts.logBackwardChains ?? 0,
+        allowCpctcForCongruentParts,
+        onNewCompleteRootPlan: (plan) => {
+          const result = realizePlan(
+            plan,
+            forwardInitial,
+            goal,
+            premiseCtx,
+            initial.geometricObjectErrors,
+            reasons,
+            statements,
+            groups,
+            maxCandidatesPerStep,
+            attempts,
+            0,
+          );
+          if (result) {
+            forwardSolvedRef.current = result;
+            return true;
+          }
+          return false;
+        },
+      },
+    );
+    stats.backwardReasonsTried = planStats.reasonsTried;
+    stats.backwardPlansGenerated = planStats.plansGenerated;
+    stats.backwardChains = chains;
+
+    const forwardSolved = forwardSolvedRef.current;
+    if (forwardSolved) {
+      stats.forwardStepAttempts = attempts.length;
+      const finalized = runProofChecker(forwardSolved.proof);
+      return {
+        status: "solved",
+        proofText: proofToString(finalized.proof),
+        checkedProof: finalized.proof,
+        proofSteps: forwardSolved.solverSteps,
+        attempts,
+        stats,
+      };
+    }
+
+    for (let planIndex = 0; planIndex < plans.length; planIndex++) {
+      const result = realizePlan(
+        plans[planIndex],
+        forwardInitial,
+        goal,
+        premiseCtx,
+        initial.geometricObjectErrors,
+        reasons,
+        statements,
+        groups,
+        maxCandidatesPerStep,
+        attempts,
+        planIndex,
+      );
+      if (!result) continue;
+
+      stats.forwardStepAttempts = attempts.length;
+      const finalized = runProofChecker(result.proof);
+      return {
+        status: "solved",
+        proofText: proofToString(finalized.proof),
+        checkedProof: finalized.proof,
+        proofSteps: result.solverSteps,
+        attempts,
+        stats,
+      };
+    }
+
+    stats.forwardStepAttempts = attempts.length;
+    if (stopAfterFirstPlan && plans.length >= maxPlans) {
+      return { status: "capped", plansTried: plans.length, attempts, stats };
+    }
+    return { status: "not-found", plansTried: plans.length, attempts, stats };
+  };
+
+  const cpctcOnlyPass = opts.allowCpctcForCongruentParts === true;
+  let result = runPass(cpctcOnlyPass);
+  if (result.status !== "solved" && !cpctcOnlyPass) {
+    result = runPass(true);
+    result.stats.cpctcRetryUsed = true;
+  }
+  return result;
+};
+
+export const __solverTest = {
+  argCombinations,
+  objectPool,
+  scopedPool,
+  statementsFor,
+  genStepsForPlan,
+  buildProofPlans,
+  refCombinations,
+  knownStatementKeys,
+  seedGivenSteps,
+  realizePlan,
+};

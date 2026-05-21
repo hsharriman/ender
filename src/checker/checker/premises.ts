@@ -176,12 +176,9 @@ export const buildPremises = (proof: ProofObj) => {
   //   ctx.addSegmentFromStr(segmentObj.v);
   // });
 
-  // // Add all angles from premises
-  // proof.premises.angles.forEach((angleObj) => {
-  //   // Parse angle label (e.g., "a_BAC")
-  //   const pointLabels = angleObj.v;
-  //   ctx.addAngleFromStr(pointLabels);
-  // });
+  proof.premises.angles.forEach((angleObj) => {
+    ctx.addAngleFromStr(angleObj.v);
+  });
 
   // process all other given steps
   proof.steps.forEach((step) => {
@@ -253,9 +250,6 @@ export const buildPremises = (proof: ProofObj) => {
 
   ctx.checkAngleOverlaps();
 
-  ctx.ctx.angles.forEach((a) => {
-    console.log(a.label, [...Array.from(a.names)]);
-  });
   return ctx;
 };
 
@@ -310,6 +304,10 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
     seg2.addSubSegment(subSeg);
     subSeg.addParentSegment(seg2);
   });
+
+  // Intersection implies the point lies on both lines (used by def_perp, midpt_conv, etc.).
+  onLine(ctx, [s1, p]);
+  onLine(ctx, [s2, p]);
 };
 
 const transversal = (ctx: ProofContent, args: ParseObj[]) => {

@@ -56,6 +56,8 @@ export interface StatementDefinition {
   name: string;
   parameters: string[];
   isPremisesOnly?: boolean;
+  /** Geometric definition (converse reasons may only conclude this when it is the proof goal). */
+  definition?: boolean;
   group?: string; // Optional group membership
 }
 

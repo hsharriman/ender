@@ -70,6 +70,24 @@ export const canonicalFactId = (stmt: Stmt): FactId => {
   return `${fn}::${args.map(argKey).join(";")}`;
 };
 
+/** Fact ids from diagram premises and every non-goal step that carries a statement (incl. proof rows). */
+export const establishedFactIds = (proof: ProofObj): Set<FactId> => {
+  const ids = new Set<FactId>();
+  for (const step of proof.steps) {
+    if (step.type === "goal") continue;
+    if (step.statement && step.stepNumber)
+      ids.add(canonicalFactId(step.statement));
+  }
+  for (const diag of proof.premises.diagramStatements) {
+    ids.add(canonicalFactId(diag.statement));
+  }
+  return ids;
+};
+
+/** BFS / visited key: which facts are established, order-independent. */
+export const factSetSignature = (proof: ProofObj): string =>
+  [...establishedFactIds(proof)].sort((a, b) => a.localeCompare(b)).join("\n");
+
 const ensureNode = (
   nodes: Map<FactId, FactNode>,
   id: FactId,

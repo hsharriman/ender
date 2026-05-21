@@ -54,6 +54,8 @@ export const STMTS_DEFS = {
     para: {
       name: "para",
       parameters: [segment("s1"), segment("s2")],
+      // Converse head for `altint_conv` (parallel from congruent alternate interior angles).
+      definition: true,
     },
     isosceles: {
       name: "isosceles",
@@ -67,10 +69,12 @@ export const STMTS_DEFS = {
       name: "midpt",
       parameters: [segment("s"), point("p")],
       group: "point_on_line",
+      definition: true,
     },
     ang_bisect: {
       name: "ang_bisect",
       parameters: [angle("a"), segment("s")],
+      definition: true,
     },
     rectangle: {
       name: "rectangle",

@@ -6,11 +6,17 @@ import {
   SegmentProps,
   TriangleProps,
 } from "../types/geometryTypes";
+import { Obj, ParseObj } from "../types/types";
 import { Angle } from "./Angle";
 import { Point } from "./Point";
 import { Quadrilateral } from "./Quadrilateral";
 import { Segment } from "./Segment";
 import { Triangle } from "./Triangle";
+
+type CongruentAngStmt = {
+  function: string;
+  arguments: ParseObj[];
+};
 
 // TODO rename to ProofContent
 export class ProofContent {
@@ -57,18 +63,20 @@ export class ProofContent {
   };
 
   addAngle = (props: AngleProps) => {
-    let a = new Angle(props);
-    return this.getAngle(a.label) ?? this.overlap(a);
+    const a = new Angle(props);
+    const exact = this.ctx.angles.find((ang) => ang.label === a.label);
+    if (exact) return exact;
+    return this.overlap(a);
   };
 
   addTriangle = (props: TriangleProps) => {
-    let t = new Triangle(props);
-    if (!this.getTriangle(t.label)) {
-      this.ctx.triangles.push(t);
-      this.addSegments(t.s);
-      this.addAngles(t.a);
-    }
-    return this.getTriangle(t.label) ?? t;
+    const t = new Triangle(props);
+    const exact = this.ctx.triangles.find((tri) => tri.label === t.label);
+    if (exact) return exact;
+    this.ctx.triangles.push(t);
+    this.addSegments(t.s);
+    this.addAngles(t.a);
+    return t;
   };
 
   addQuadrilateral = (props: QuadrilateralProps) => {
@@ -110,8 +118,11 @@ export class ProofContent {
     if (str.startsWith("t_")) {
       str = str.slice(2);
     }
-    const [a, b, c] = str.split("").map((c) => this.getPoint(c));
-    return this.addTriangle({ pts: [a, b, c] });
+    const labels = str.split("");
+    const pts = labels.map((c) => this.getPoint(c));
+    const exact = this.ctx.triangles.find((t) => t.label === labels.join(""));
+    if (exact) return exact;
+    return this.addTriangle({ pts });
   };
 
   addQuadrilateralFromStr = (str: string) => {
@@ -127,6 +138,9 @@ export class ProofContent {
       str = str.slice(2);
     }
     const [a, b, c] = str.split("").map((c) => this.getPoint(c));
+    const bare = `${a.label}${b.label}${c.label}`;
+    const exact = this.ctx.angles.find((ang) => ang.label === bare);
+    if (exact) return exact;
     return this.addAngle({ start: a, center: b, end: c });
   };
 
@@ -134,15 +148,131 @@ export class ProofContent {
     this.ctx.points.filter((p) => p.matches(label))[0];
   getSegment = (label: string) =>
     this.ctx.segments.filter((s) => s.matches(label))[0];
-  getAngle = (label: string) =>
-    this.ctx.angles.filter((a) => a.matches(label))[0];
-  getTriangle = (label: string) =>
-    this.ctx.triangles.filter((t) => t.matches(label))[0];
+  getAngle = (label: string) => {
+    const bare = label.startsWith("a_") ? label.slice(2) : label;
+    return (
+      this.ctx.angles.find((a) => a.label === bare) ??
+      this.ctx.angles.find((a) => a.matches(label))
+    );
+  };
+
+  /** True when two angle labels denote the same angle via shared `names` entries. */
+  angleLabelsOverlap = (labelA: string, labelB: string): boolean => {
+    const a = this.getAngle(labelA) ?? this.addAngleFromStr(labelA);
+    const b = this.getAngle(labelB) ?? this.addAngleFromStr(labelB);
+    for (const name of a.names) {
+      if (b.names.has(name)) return true;
+    }
+    return this.anglesGeometricallyCoincide(a, b);
+  };
+
+  angleObjectsOverlap = (left: Angle, right: Angle): boolean => {
+    for (const name of left.names) {
+      if (right.names.has(name)) return true;
+    }
+    return this.anglesGeometricallyCoincide(left, right);
+  };
+
+  /** Same vertex and the same open angle (both rays). */
+  anglesSameSector = (left: Angle, right: Angle): boolean => {
+    if (!left.center.equals(right.center)) return false;
+    const leftEnds = [left.start.label, left.end.label];
+    const rightEnds = [right.start.label, right.end.label];
+    return (
+      (leftEnds[0] === rightEnds[0] && leftEnds[1] === rightEnds[1]) ||
+      (leftEnds[0] === rightEnds[1] && leftEnds[1] === rightEnds[0])
+    );
+  };
+
+  /** Same vertex and at least one shared ray endpoint (overlapping angle sectors). */
+  anglesGeometricallyCoincide = (left: Angle, right: Angle): boolean => {
+    if (!left.center.equals(right.center)) return false;
+    const leftEnds = [left.start.label, left.end.label];
+    const rightEnds = [right.start.label, right.end.label];
+    return leftEnds.some((end) => rightEnds.includes(end));
+  };
+
+  /**
+   * When `angleLabel` overlaps an interior angle of `tri`, return a label for that
+   * interior angle (preserving `a_` prefix when the query used one).
+   */
+  interiorAngleLabelForTriangle = (
+    tri: Triangle,
+    angleLabel: string,
+  ): string | undefined => {
+    const probe = this.addAngleFromStr(angleLabel);
+    for (const interior of tri.a) {
+      if (!probe.center.equals(interior.center)) continue;
+      if (!tri.p.some((pt) => pt.label === probe.center.label)) continue;
+      if (!this.angleObjectsOverlap(probe, interior)) continue;
+      return angleLabel.startsWith("a_")
+        ? `a_${interior.label}`
+        : interior.label;
+    }
+    return undefined;
+  };
+
+  /** Map `con_ang` args to each triangle's overlapping interior angle, when present. */
+  resolveCongruentAngForTriangles = (
+    stmt: CongruentAngStmt,
+    tri1: Triangle,
+    tri2: Triangle,
+  ): CongruentAngStmt => {
+    if (stmt.function !== "con_ang" || stmt.arguments.length !== 2) {
+      return stmt;
+    }
+    const [left, right] = stmt.arguments;
+    if (left.type !== Obj.Angle || right.type !== Obj.Angle) {
+      return stmt;
+    }
+    const l =
+      this.interiorAngleLabelForTriangle(tri1, left.v) ?? left.v;
+    const r =
+      this.interiorAngleLabelForTriangle(tri2, right.v) ?? right.v;
+    return {
+      function: "con_ang",
+      arguments: [
+        { type: Obj.Angle, v: l },
+        { type: Obj.Angle, v: r },
+      ],
+    };
+  };
+  getTriangle = (label: string) => {
+    const bare = label.startsWith("t_") ? label.slice(2) : label;
+    return (
+      this.ctx.triangles.find((t) => t.label === bare) ??
+      this.ctx.triangles.find((t) => t.matches(bare))
+    );
+  };
   getQuadrilateral = (label: string) =>
     this.ctx.rectangles.filter((r) => r.matches(label))[0];
 
+  /** Share `names` entries between diagram angles and triangle interior angles. */
+  syncTriangleInteriorAngleNames = () => {
+    for (const tri of this.ctx.triangles) {
+      for (const interior of tri.a) {
+        for (const ctxAng of this.ctx.angles) {
+          if (!ctxAng.center.equals(interior.center)) continue;
+          if (
+            !this.angleObjectsOverlap(ctxAng, interior) &&
+            !this.anglesSameSector(ctxAng, interior)
+          ) {
+            continue;
+          }
+          for (const name of ctxAng.names) {
+            interior.names.add(name);
+            if (!name.startsWith("a_")) {
+              interior.names.add(`a_${name}`);
+            }
+          }
+        }
+      }
+    }
+  };
+
   checkAngleOverlaps = () => {
     this.ctx.angles.forEach((a) => this.overlap(a));
+    this.syncTriangleInteriorAngleNames();
   };
 
   overlap = (a: Angle) => {
@@ -158,9 +288,10 @@ export class ProofContent {
             // does overlapping angle already exist in ctx?
             const existingAngle = this.getAngle(overlapLabel);
             if (existingAngle) {
-              // add new angle to existing angle's list of names instead of creating new angle
-              overlapsExisting = true;
               existingAngle.addNames(angleEnd, s.label.replace(c, ""));
+              if (this.anglesSameSector(a, existingAngle)) {
+                overlapsExisting = true;
+              }
             } else {
               // overlapping angle isn't tracked, add it to original angle
               a.addNames(angleEnd, s.label.replace(c, ""));

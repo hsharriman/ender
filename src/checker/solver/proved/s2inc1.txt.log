@@ -1,0 +1,224 @@
+source: checker/proofs/s2inc1.txt
+--- premises (solver input) ---
+title: "S2INC1 - Prove Triangle Congruence #3"
+premises:
+pt: L (2, 1, bl), N (3.5, 4, l), Q (8.5, 4, tr), R (6, 2.85, tl), S (6, 1, b), P (6, 9, r), U (10, 1, br)
+tri: t_PSL t_PSU t_LNU t_UQL
+[g_1] perp(LU, PS) [01]
+[g_2] con_seg(LN, QU) [02]
+[g_3] con_ang(a_LPS, a_UPS) [03]
+-> con_tri(t_LNU, t_UQL)
+
+steps:
+
+test	backward_reasons_tried	forward_step_attempts	status	note
+s2inc1.txt	50035	101946	not-found	38788ms; cpctc-retry
+--- s2inc1.txt: first 100 backward reasoning chains ---
+reason_chain;dependency_slots;conclusion
+reflex_s;—;con_seg
+reflex_s -> sas;— | con_seg,congruent_angs,con_seg;con_tri
+reflex_a;—;con_ang
+reflex_a -> asa;— | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> aas;— | congruent_angs,congruent_angs,con_seg;con_tri
+perp_con_ang;perp;con_right
+perp_con_ang -> reflex_s;perp | —;con_seg
+perp_con_ang -> reflex_s -> rhl;perp | — | con_right,con_seg,con_seg;con_tri
+reflex_s -> sas -> cpctc;— | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> aas -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+perp_con_ang -> reflex_s -> rhl -> cpctc;perp | — | con_right,con_seg,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> sas;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_s -> sas -> cpctc -> sas;— | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> aas -> cpctc -> sas;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+perp_con_ang -> reflex_s -> rhl -> cpctc -> sas;perp | — | con_right,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> asa -> cpctc -> reflex_s;— | congruent_angs,con_seg,congruent_angs | con_tri | —;con_seg
+reflex_a -> asa -> cpctc -> reflex_s -> sas;— | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> asa -> cpctc -> reflex_a;— | congruent_angs,con_seg,congruent_angs | con_tri | —;con_ang
+reflex_a -> asa -> cpctc -> reflex_a -> asa;— | congruent_angs,con_seg,congruent_angs | con_tri | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_a -> asa -> cpctc -> reflex_a -> aas;— | congruent_angs,con_seg,congruent_angs | con_tri | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_a -> asa -> cpctc -> perp_con_ang;— | congruent_angs,con_seg,congruent_angs | con_tri | perp;con_right
+reflex_a -> asa -> cpctc -> perp_con_ang -> reflex_s;— | congruent_angs,con_seg,congruent_angs | con_tri | perp | —;con_seg
+reflex_a -> asa -> cpctc -> perp_con_ang -> reflex_s -> rhl;— | congruent_angs,con_seg,congruent_angs | con_tri | perp | — | con_right,con_seg,con_seg;con_tri
+reflex_a -> asa -> cpctc -> reflex_s -> sas -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> reflex_a -> asa -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_a -> asa -> cpctc -> reflex_a -> aas -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> perp_con_ang -> reflex_s -> rhl -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | perp | — | con_right,con_seg,con_seg | con_tri;con_seg
+reflex_s -> reflex_a;— | —;con_ang
+reflex_s -> reflex_a -> asa;— | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_s -> reflex_a -> aas;— | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_s -> perp_con_ang;— | perp;con_right
+reflex_s -> reflex_a -> asa -> cpctc;— | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_s -> reflex_a -> aas -> cpctc;— | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_s -> sas -> cpctc -> reflex_a;— | con_seg,congruent_angs,con_seg | con_tri | —;con_ang
+reflex_s -> sas -> cpctc -> reflex_a -> asa;— | con_seg,congruent_angs,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs;con_tri
+reflex_s -> sas -> cpctc -> reflex_a -> aas;— | con_seg,congruent_angs,con_seg | con_tri | — | congruent_angs,congruent_angs,con_seg;con_tri
+reflex_s -> sas -> cpctc -> perp_con_ang;— | con_seg,congruent_angs,con_seg | con_tri | perp;con_right
+reflex_s -> sas -> cpctc -> reflex_a -> asa -> cpctc;— | con_seg,congruent_angs,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+reflex_s -> sas -> cpctc -> reflex_a -> aas -> cpctc;— | con_seg,congruent_angs,con_seg | con_tri | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+perp_con_ang -> reflex_s -> rhl -> cpctc -> reflex_a;perp | — | con_right,con_seg,con_seg | con_tri | —;con_ang
+perp_con_ang -> reflex_s -> rhl -> cpctc -> reflex_a -> asa;perp | — | con_right,con_seg,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs;con_tri
+perp_con_ang -> reflex_s -> rhl -> cpctc -> reflex_a -> aas;perp | — | con_right,con_seg,con_seg | con_tri | — | congruent_angs,congruent_angs,con_seg;con_tri
+perp_con_ang -> reflex_s -> rhl -> cpctc -> perp_con_ang;perp | — | con_right,con_seg,con_seg | con_tri | perp;con_right
+perp_con_ang -> reflex_s -> rhl -> cpctc -> reflex_a -> asa -> cpctc;perp | — | con_right,con_seg,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+perp_con_ang -> reflex_s -> rhl -> cpctc -> reflex_a -> aas -> cpctc;perp | — | con_right,con_seg,con_seg | con_tri | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> reflex_s -> sss;— | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,con_seg,con_seg;con_tri
+reflex_s -> reflex_a -> asa -> cpctc -> sss;— | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_s -> reflex_a -> aas -> cpctc -> sss;— | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> aas -> cpctc -> reflex_s -> sss;— | congruent_angs,congruent_angs,con_seg | con_tri | — | con_seg,con_seg,con_seg;con_tri
+reflex_a -> asa -> cpctc -> reflex_s -> sas -> cpctc -> sss;— | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_s -> sas -> cpctc -> reflex_a -> asa -> cpctc -> sss;— | con_seg,congruent_angs,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_s -> sas -> cpctc -> reflex_a -> aas -> cpctc -> sss;— | con_seg,congruent_angs,con_seg | con_tri | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> aas -> cpctc -> reflex_s -> sas -> cpctc -> sss;— | congruent_angs,congruent_angs,con_seg | con_tri | — | con_seg,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> asa -> cpctc -> reflex_a -> aas -> cpctc -> sss;— | congruent_angs,con_seg,congruent_angs | con_tri | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> aas -> cpctc -> reflex_a -> asa -> cpctc -> sss;— | congruent_angs,congruent_angs,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> asa -> cpctc -> perp_con_ang -> reflex_s -> rhl -> cpctc -> sss;— | congruent_angs,con_seg,congruent_angs | con_tri | perp | — | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+perp_con_ang -> reflex_s -> rhl -> cpctc -> reflex_a -> asa -> cpctc -> sss;perp | — | con_right,con_seg,con_seg | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> aas -> cpctc -> perp_con_ang -> reflex_s -> rhl -> cpctc -> sss;— | congruent_angs,congruent_angs,con_seg | con_tri | perp | — | con_right,con_seg,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+perp_con_ang -> reflex_s -> rhl -> cpctc -> reflex_a -> aas -> cpctc -> sss;perp | — | con_right,con_seg,con_seg | con_tri | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> asa -> cpctc -> reflex_a -> asa -> cpctc -> sss;— | congruent_angs,con_seg,congruent_angs | con_tri | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg;con_tri
+reflex_a -> aas -> cpctc -> reflex_a -> aas -> cpctc -> sss;— | congruent_angs,congruent_angs,con_seg | con_tri | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg;con_tri
+perp_con_ang -> reflex_s -> sas;perp | — | con_seg,congruent_angs,con_seg;con_tri
+perp_con_ang -> reflex_a;perp | —;con_ang
+perp_con_ang -> reflex_a -> asa;perp | — | congruent_angs,con_seg,congruent_angs;con_tri
+perp_con_ang -> reflex_a -> aas;perp | — | congruent_angs,congruent_angs,con_seg;con_tri
+perp_con_ang -> perp_con_ang;perp | perp;con_right
+perp_con_ang -> perp_con_ang -> reflex_s;perp | perp | —;con_seg
+perp_con_ang -> perp_con_ang -> reflex_s -> rhl;perp | perp | — | con_right,con_seg,con_seg;con_tri
+perp_con_ang -> reflex_s -> sas -> cpctc;perp | — | con_seg,congruent_angs,con_seg | con_tri;con_seg
+perp_con_ang -> reflex_a -> asa -> cpctc;perp | — | congruent_angs,con_seg,congruent_angs | con_tri;con_seg
+perp_con_ang -> reflex_a -> aas -> cpctc;perp | — | congruent_angs,congruent_angs,con_seg | con_tri;con_seg
+perp_con_ang -> perp_con_ang -> reflex_s -> rhl -> cpctc;perp | perp | — | con_right,con_seg,con_seg | con_tri;con_seg
+perp_con_ang -> reflex_s -> sas -> cpctc -> rhl;perp | — | con_seg,congruent_angs,con_seg | con_tri | con_right,con_seg,con_seg;con_tri
+perp_con_ang -> reflex_a -> asa -> cpctc -> rhl;perp | — | congruent_angs,con_seg,congruent_angs | con_tri | con_right,con_seg,con_seg;con_tri
+perp_con_ang -> reflex_a -> aas -> cpctc -> rhl;perp | — | congruent_angs,congruent_angs,con_seg | con_tri | con_right,con_seg,con_seg;con_tri
+perp_con_ang -> perp_con_ang -> reflex_s -> rhl -> cpctc -> rhl;perp | perp | — | con_right,con_seg,con_seg | con_tri | con_right,con_seg,con_seg;con_tri
+reflex_a -> asa -> cpctc -> sas -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_a -> aas -> cpctc -> sas -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri;con_seg
+reflex_s -> sas -> cpctc -> sas -> cpctc;— | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri;con_seg
+perp_con_ang -> reflex_s -> rhl -> cpctc -> sas -> cpctc;perp | — | con_right,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri;con_seg
+perp_con_ang -> reflex_s -> sas -> cpctc -> rhl -> cpctc;perp | — | con_seg,congruent_angs,con_seg | con_tri | con_right,con_seg,con_seg | con_tri;con_seg
+perp_con_ang -> reflex_a -> asa -> cpctc -> rhl -> cpctc;perp | — | congruent_angs,con_seg,congruent_angs | con_tri | con_right,con_seg,con_seg | con_tri;con_seg
+perp_con_ang -> reflex_a -> aas -> cpctc -> rhl -> cpctc;perp | — | congruent_angs,congruent_angs,con_seg | con_tri | con_right,con_seg,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> reflex_s -> sss -> cpctc;— | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_s -> reflex_a -> asa -> cpctc -> sss -> cpctc;— | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_s -> reflex_a -> aas -> cpctc -> sss -> cpctc;— | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri;con_seg
+reflex_a -> aas -> cpctc -> reflex_s -> sss -> cpctc;— | congruent_angs,congruent_angs,con_seg | con_tri | — | con_seg,con_seg,con_seg | con_tri;con_seg
+perp_con_ang -> perp_con_ang -> reflex_s -> rhl -> cpctc -> rhl -> cpctc;perp | perp | — | con_right,con_seg,con_seg | con_tri | con_right,con_seg,con_seg | con_tri;con_seg
+reflex_a -> asa -> cpctc -> sas -> cpctc -> sas;— | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> aas -> cpctc -> sas -> cpctc -> sas;— | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_s -> sas -> cpctc -> sas -> cpctc -> sas;— | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+perp_con_ang -> reflex_s -> rhl -> cpctc -> sas -> cpctc -> sas;perp | — | con_right,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+perp_con_ang -> reflex_s -> sas -> cpctc -> rhl -> cpctc -> sas;perp | — | con_seg,congruent_angs,con_seg | con_tri | con_right,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+perp_con_ang -> reflex_a -> asa -> cpctc -> rhl -> cpctc -> sas;perp | — | congruent_angs,con_seg,congruent_angs | con_tri | con_right,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+perp_con_ang -> reflex_a -> aas -> cpctc -> rhl -> cpctc -> sas;perp | — | congruent_angs,congruent_angs,con_seg | con_tri | con_right,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> asa -> cpctc -> reflex_s -> sss -> cpctc -> sas;— | congruent_angs,con_seg,congruent_angs | con_tri | — | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_s -> reflex_a -> asa -> cpctc -> sss -> cpctc -> sas;— | — | congruent_angs,con_seg,congruent_angs | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_s -> reflex_a -> aas -> cpctc -> sss -> cpctc -> sas;— | — | congruent_angs,congruent_angs,con_seg | con_tri | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+reflex_a -> aas -> cpctc -> reflex_s -> sss -> cpctc -> sas;— | congruent_angs,congruent_angs,con_seg | con_tri | — | con_seg,con_seg,con_seg | con_tri | con_seg,congruent_angs,con_seg;con_tri
+--- s2inc1.txt: first 100 forward step attempts ---
+status;reason;dependencies;conclusion
+ok;reflex_s;;con_seg(LU, LU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_UQL)
+ok;reflex_s;;con_seg(LU, LU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_LNP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_LNU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_LQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_LSP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_NQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_QPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_QRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_QSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNP, t_SPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LNP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LNQ)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LNR)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LNS)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LNU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LSP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_NQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_QPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_QRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_QSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNQ, t_SPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LNP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LNR)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LNS)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LNU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LSP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_NQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_QPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_QRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_QSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNR, t_SPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_LNP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_LNS)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_LNU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_LQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_LSP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_NQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_QPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_QRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_QSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNS, t_SPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_LNU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_LQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_LSP)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_NQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_QPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_QRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_QSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LNU, t_SPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LPU, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_LQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_LSP)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_NQU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_QPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_QRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_QSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LQU, t_SPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LRU, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LRU, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LRU, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LSP, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LSP, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_LSP, t_LSP)
+fail;sas;@2 | @3 | @4;con_tri(t_LSP, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_LSP, t_SPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LSU, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_LSU, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_LRU)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_LSP)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_LSU)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_NQU)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_QPU)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_QRU)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_QSU)
+fail;sas;@2 | @3 | @4;con_tri(t_NQU, t_SPU)
+fail;sas;@2 | @3 | @4;con_tri(t_QPU, t_LPU)
+fail;sas;@2 | @3 | @4;con_tri(t_QPU, t_LRU)
+... (101846 more attempts omitted)
+
+--- final proof ---
+(solver status: not-found)
+
