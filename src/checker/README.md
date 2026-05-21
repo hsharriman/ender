@@ -69,21 +69,17 @@ If you're on an Apple Silicon Mac, follow these additional steps:
 ### Command Line
 
 ```bash
-# Check a single proof file
-npm run check-proof proofs/yourProof.txt
-
-# Debug mode with detailed output
-npm run check-proof -- --log-level debug proofs/yourProof.txt
-
+# Check a single proof file (prints harness-style issues to stdout)
+npm run checkProof src/checker/proofs/yourProof.txt
 ```
 
 ### Programmatic Usage
 
 ```typescript
-import { checkProof } from "./proofCheckerCli";
+import { collectProofCheckerIssues, runProofCheckerFromText } from "./proofChecker";
 
-// Check a proof file
-checkProof("path/to/proof.txt");
+const result = runProofCheckerFromText(proofText);
+const issues = collectProofCheckerIssues(result);
 ```
 
 ### Testing
@@ -250,18 +246,6 @@ Tests are written using Jest with TypeScript support:
 # Compile TypeScript to js
 npm run build
 ``` -->
-
-## Log Level
-
-1. Accepts log level options: --log-level or -l followed by debug, info, warn, or error
-2. Defaults to warning level: Only shows warnings and errors by default
-
-The log level system works as follows:
-
-- `error`: Only shows error messages and proof analysis results
-- `warn`: Shows warnings, errors, and proof analysis results (default)
-- `info`: Shows info, warnings, errors, and proof analysis results
-- `debug`: Shows all debug information, info, warnings, errors, and proof analysis results
 
 ## Troubleshooting
 

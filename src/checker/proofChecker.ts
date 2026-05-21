@@ -10,13 +10,12 @@ import {
   checkSequentialStepNumbers,
   findDuplicateSteps,
 } from "./checker/validators";
-import { logDebug } from "./errors/errorConstants";
 import {
   loadReasonDefinitions,
   loadStatementDefinitions,
 } from "./grammar/defsParsers";
 import { ProofParser } from "./grammar/lezerParser";
-import { ProofGraph, ProofObj, Stmt } from "./types/checkerTypes";
+import { ErrorObj, ProofGraph, ProofObj, Stmt } from "./types/checkerTypes";
 
 export type ProofGoalMatchResult = { matches: boolean; details: string };
 
@@ -89,13 +88,11 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   }
 
   const ctx = buildPremises(proof);
-  logDebug("checking angle overlaps");
   ctx.checkAngleOverlaps();
 
   const reasonDefs = loadReasonDefinitions();
   const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
-  logDebug("Building proof graph (reason application; diagram deps)...");
   const graph = buildProofGraph(proof, reasonDefs, stmtDefs, groups, ctx);
 
   graph.cycles = detectCycles(graph);
@@ -140,65 +137,76 @@ export const runProofCheckerFromText = (
   return runProofChecker(proof);
 };
 
-/** Console logger for checker output (kept in this module for direct use). */
-export const logProofCheckerResult = (result: ProofCheckerResult): void => {
+const formatStepErrors = (errors: ErrorObj[] | undefined): string => {
+  if (!errors?.length) return "(no step.errors payload)";
+  return errors
+    .map((e, i) => {
+      const suffix =
+        e.data === undefined ? "" : `: ${JSON.stringify(e.data)}`;
+      return `  ${i + 1}. ${e.type}${suffix}`;
+    })
+    .join("\n");
+};
+
+/** Proof-wide and per-step issues in the same shape the harness surfaces. */
+export const collectProofCheckerIssues = (
+  result: ProofCheckerResult,
+): string[] => {
+  const issues: string[] = [];
   const {
-    proof,
-    goal,
     graph,
     duplicateSteps,
     stepNumberErrors,
     geometricObjectErrors,
     goalMatchResult,
+    proof,
   } = result;
 
-  console.log("📋 Proof Analysis Results:");
-  console.log("=".repeat(50));
-  console.log(`\n📝 Title: ${proof.title || "No title"}`);
-  if (goal) {
-    console.log(`🎯 Goal: ${goal}`);
-    console.log(`✅ Goal Match: ${goalMatchResult.matches ? "YES" : "NO"}`);
-    console.log(`📋 Goal Details: ${goalMatchResult.details}`);
+  if (!goalMatchResult.matches) {
+    issues.push(`Goal not reached: ${goalMatchResult.details}`);
   }
-  console.log(`\n📊 Statistics:`);
-  console.log(
-    `   • Total Steps: ${proof.steps.filter((s) => s.type !== "goal").length}`,
-  );
-  console.log(
-    `   • Given Statements: ${proof.steps.filter((s) => s.type === "given").length}`,
-  );
-  console.log(
-    `   • Proof Steps: ${proof.steps.filter((s) => s.type === "proof").length}`,
-  );
+  if (graph.unusedSteps.size > 0) {
+    issues.push(
+      `Unused steps: ${Array.from(graph.unusedSteps).sort().join(", ")}`,
+    );
+  }
+  if (graph.cycles.length > 0) {
+    issues.push(
+      `Cycles: ${graph.cycles.map((c) => c.join(" -> ")).join(" | ")}`,
+    );
+  }
+  if (duplicateSteps.length > 0) {
+    issues.push(
+      `Duplicate steps: ${duplicateSteps
+        .map(([a, b]) => `${a} & ${b}`)
+        .join(", ")}`,
+    );
+  }
+  if (stepNumberErrors.length > 0) {
+    issues.push(`Step numbering issues: ${stepNumberErrors.join(" | ")}`);
+  }
+  if (geometricObjectErrors.length > 0) {
+    issues.push(
+      `Geometric object issues: ${geometricObjectErrors.join(" | ")}`,
+    );
+  }
   if (graph.incorrectSteps.size > 0) {
-    console.log(`\n❌ Incorrect Steps: ${graph.incorrectSteps.size}`);
-    Array.from(graph.incorrectSteps)
-      .sort()
-      .forEach((step) => {
-        const depFail = graph.dependencyFailureSteps?.has(step);
-        console.log(
-          depFail
-            ? `   • Step ${step} (fails due to dependency on incorrect step)`
-            : `   • Step ${step}`,
-        );
-      });
+    const sorted = Array.from(graph.incorrectSteps).sort();
+    issues.push(`Incorrect steps: ${sorted.join(", ")}`);
+    for (const stepNum of sorted) {
+      const step = proof.steps.find((s) => s.stepNumber === stepNum);
+      issues.push(`Step ${stepNum}:\n${formatStepErrors(step?.errors)}`);
+    }
   }
-  console.log(`\n🚫 Unused Steps: ${graph.unusedSteps.size}`);
-  console.log(`\n🔄 Cycles: ${graph.cycles.length}`);
-  console.log(`\n🔄 Duplicate Steps: ${duplicateSteps.length}`);
-  console.log(`\n📝 Step Number Errors: ${stepNumberErrors.length}`);
-  console.log(`\n🔷 Geometric Object Errors: ${geometricObjectErrors.length}`);
+
+  return issues;
 };
 
 /**
  * Convenience API: accepts either already-parsed `ProofObj` or raw proof text.
- * Runs checker and logs result summary to console.
  */
 export const checkProof = (input: ProofObj | string): ProofCheckerResult => {
-  const result =
-    typeof input === "string"
-      ? runProofCheckerFromText(input)
-      : runProofChecker(input);
-  logProofCheckerResult(result);
-  return result;
+  return typeof input === "string"
+    ? runProofCheckerFromText(input)
+    : runProofChecker(input);
 };

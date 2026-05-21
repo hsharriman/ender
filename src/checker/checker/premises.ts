@@ -1,5 +1,5 @@
 import { Obj, ParseObj, ProofContent } from "../../geometry-object";
-import { createError, logError } from "../errors/errorConstants";
+import { createError } from "../errors/errorConstants";
 import { ProofObj, Stmt } from "../types/checkerTypes";
 
 export const buildPremises = (proof: ProofObj) => {
@@ -52,7 +52,6 @@ export const buildPremises = (proof: ProofObj) => {
         case "rectangle":
           break;
         default:
-          logError.parser.unknownStatementFunction(step.statement.function);
           throw createError.parser.unknownStatementFunction(
             step.statement.function,
           );
@@ -213,7 +212,6 @@ export const buildPremises = (proof: ProofObj) => {
         case "midpt":
           break;
         default:
-          logError.parser.unknownStatementFunction(step.statement.function);
           throw createError.parser.unknownStatementFunction(
             step.statement.function,
           );
@@ -253,9 +251,6 @@ export const buildPremises = (proof: ProofObj) => {
 
   ctx.checkAngleOverlaps();
 
-  ctx.ctx.angles.forEach((a) => {
-    console.log(a.label, [...Array.from(a.names)]);
-  });
   return ctx;
 };
 
@@ -269,7 +264,6 @@ const angBisect = (ctx: ProofContent, args: ParseObj[]) => {
       ? s.p1
       : undefined;
   if (!sharedPt) {
-    logError.parser.segmentAngleOverlapError(seg.v, ang.v);
     throw createError.parser.segmentAngleOverlapError(seg.v, ang.v);
   }
   ctx.addAngle({ center: a.center, start: a.start, end: sharedPt });
@@ -292,7 +286,6 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
 
   // Check if the intersection point exists in premises
   if (!proof.premises.points.some((pt) => pt.v === p.v)) {
-    logError.parser.pointNotDefinedInPremises(p.v);
     throw createError.parser.pointNotDefinedInPremises(p.v);
   }
 

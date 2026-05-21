@@ -1,6 +1,5 @@
 import { getGeometricObject } from "checker/utils/utils";
 import { Angle, ProofContent, Segment } from "../../geometry-object";
-import { logError } from "../errors/errorConstants";
 import {
   ParseDiagramStmt,
   ProofGraph,
@@ -76,7 +75,6 @@ export const checkReasonApplication = (
   const reason = currStep.reason!;
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
-    logError.parser.undefinedReason(reason.function);
     return false;
   }
 
@@ -265,7 +263,6 @@ export const checkReasonApplication = (
       }
       case "rectangle":
         const conSeg_rectangle = getDepStmt(reason.arguments[0], proofGraph)!;
-        console.log("conSeg_rectangle", conSeg_rectangle, stmt);
         return (
           rectangle(conSeg_rectangle, stmt, ctx) ||
           failStmtArgMismatch(currStep, reason.function, "RECTANGLE_MISMATCH")
@@ -286,7 +283,6 @@ export const checkReasonApplication = (
       case "intersect_seg":
         const intersect_on1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const intersect_on2 = getDepStmt(reason.arguments[1], proofGraph)!;
-        console.log("intersect_seg", intersect_on1, intersect_on2, stmt);
         return (
           intersect_seg(intersect_on1, intersect_on2, stmt, ctx) ||
           failStmtArgMismatch(
@@ -340,11 +336,7 @@ export const checkReasonApplication = (
         // For other reasons, we'll return true for now (syntax check passed)
         return true;
     }
-  } catch (error) {
-    console.error(
-      `Error checking reason application for ${reason.function}:`,
-      error,
-    );
+  } catch {
     return failStmtArgMismatch(
       currStep,
       reason.function,

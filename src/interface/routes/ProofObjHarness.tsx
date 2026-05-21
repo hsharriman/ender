@@ -18,11 +18,6 @@ import tutincUrl from "checker/proofs/tutinc.txt";
 import tutorialUrl from "checker/proofs/tutorial.txt";
 import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
-import {
-  parseLlmStepFeedbackList,
-  resolveOpenAiApiKey,
-  runLlmFeedback,
-} from "llm-feedback/llmFeedback";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -206,7 +201,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.proofParseTimeoutId = window.setTimeout(() => {
       this.proofParseTimeoutId = null;
       try {
-        const parsed = parser.parse(this.state.proofText) as unknown as ProofObj;
+        const parsed = parser.parse(
+          this.state.proofText,
+        ) as unknown as ProofObj;
         const result = runProofChecker(parsed);
 
         const nextIncorrectStepErrors = new Map<string, ErrorObj[]>();
@@ -299,54 +296,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       return;
     }
 
-    if (!resolveOpenAiApiKey()) {
-      clearLlm();
-      return;
-    }
-
     this.setState({ harnessLlmLoading: true, harnessLlmError: undefined });
-
-    void (async () => {
-      try {
-        const raw = await runLlmFeedback({ proof: lastGoodProof });
-        if (gen !== this.llmEffectGeneration) return;
-        const list = parseLlmStepFeedbackList(raw);
-        const next = new Map<string, LlmFeedbackEntry>();
-        const proofSteps = lastGoodProof.steps.filter((s) => s.type === "proof");
-        const lastCompleteStep = [...proofSteps]
-          .reverse()
-          .find((s) => Boolean(s.reason && s.statement));
-        const lastCompleteStepNumber = lastCompleteStep?.stepNumber;
-        for (const row of list) {
-          const entry = {
-            feedback: row.feedback ?? "",
-            nextHint: row.next_hint ?? "",
-          };
-          if (row.step == null) {
-            if (lastCompleteStepNumber && !next.has(lastCompleteStepNumber)) {
-              next.set(lastCompleteStepNumber, {
-                ...entry,
-                collapsed: true,
-              });
-            }
-            continue;
-          }
-          const key = String(parseInt(String(row.step), 10));
-          next.set(key, entry);
-        }
-        this.setState({ harnessLlmByStep: next });
-      } catch (e) {
-        if (gen !== this.llmEffectGeneration) return;
-        this.setState({
-          harnessLlmError: e instanceof Error ? e.message : String(e),
-          harnessLlmByStep: new Map(),
-        });
-      } finally {
-        if (gen === this.llmEffectGeneration) {
-          this.setState({ harnessLlmLoading: false });
-        }
-      }
-    })();
   }
 
   private fetchSelectedProof(selectedProofKey: string): void {
@@ -432,22 +382,20 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     return m;
   }
 
-  private getInteractiveProps(): (InteractiveAppPageProps & {
-    checkerStepByFrameKey: Map<string, string>;
-    harnessLlmFeedback: {
-      byStepNumber: Map<string, LlmFeedbackEntry>;
-      loading: boolean;
-      error: string | undefined;
-    };
-  }) | null {
+  private getInteractiveProps():
+    | (InteractiveAppPageProps & {
+        checkerStepByFrameKey: Map<string, string>;
+        harnessLlmFeedback: {
+          byStepNumber: Map<string, LlmFeedbackEntry>;
+          loading: boolean;
+          error: string | undefined;
+        };
+      })
+    | null {
     const layouts = this.getLayouts();
     if (!layouts) return null;
     const checkerStepByFrameKey = this.getCheckerStepByFrameKey();
-    const {
-      harnessLlmByStep,
-      harnessLlmLoading,
-      harnessLlmError,
-    } = this.state;
+    const { harnessLlmByStep, harnessLlmLoading, harnessLlmError } = this.state;
     return {
       ...layouts.interactive,
       checkerStepByFrameKey,
@@ -484,7 +432,11 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       <div className="h-screen">
         <div className="sticky top-0 left-0 bg-slate-100 shadow-sm w-full p-3 z-30 flex justify-between">
           <NavLink to={"/ender"} className="px-3 text-sm h-8">
-            <img src={ender} alt="Ender logo" className="h-12 w-auto shadow-sm" />
+            <img
+              src={ender}
+              alt="Ender logo"
+              className="h-12 w-auto shadow-sm"
+            />
           </NavLink>
           <div className="font-semibold">ProofObj Harness</div>
           <div ref={this.controlsRef} className="flex items-center gap-4">

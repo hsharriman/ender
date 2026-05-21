@@ -1,4 +1,3 @@
-import { logError } from "../../errors/errorConstants";
 import { ErrorObj, Stmt } from "../../types/checkerTypes";
 
 /** Canonical string for comparing statement structure (function + typed args). */
@@ -33,7 +32,6 @@ export const commonPt = (seg1: string, seg2: string): string => {
       return char;
     }
   }
-  logError.geometric.noCommonPoint(seg1, seg2);
   return "";
 };
 

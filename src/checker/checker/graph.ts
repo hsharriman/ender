@@ -1,5 +1,4 @@
 import { ProofContent } from "geometry-object";
-import { logDebug, logError } from "../errors/errorConstants";
 import {
   ProofGraph,
   ProofObj,
@@ -76,12 +75,8 @@ export const buildProofGraph = (
         isCorrect = stmtDefs.has(step.statement.function);
       }
     } else if (step.type === "proof" && step.reason && step.statement) {
-      logDebug(`\n🔍 Checking step ${stepNum}:`);
-      logDebug(JSON.stringify(step, null, 2));
-
       // Check reason dependencies
       isCorrect = checkReasonStructure(step, reasonDefs, groups, graph);
-      logDebug(`  Reason structure check: ${isCorrect}`);
 
       // Validate dependency statements (non-throwing version)
       if (isCorrect) {
@@ -92,7 +87,6 @@ export const buildProofGraph = (
           graph,
           step,
         );
-        logDebug(`  Dependency statements check: ${isCorrect}`);
       }
 
       // Proof steps may only cite earlier numbered proof steps (not self / future).
@@ -103,9 +97,6 @@ export const buildProofGraph = (
             if (/^\d+$/.test(depRef)) {
               const depN = parseInt(depRef, 10);
               if (!Number.isNaN(depN) && depN >= currN) {
-                logError.parser.dependencyMismatch(
-                  `Step [${stepNum}] cannot cite proof step [${depRef}] (must cite only earlier steps)`,
-                );
                 isCorrect = false;
                 break;
               }
@@ -129,9 +120,6 @@ export const buildProofGraph = (
                 ref: depRef,
               },
             });
-            logError.parser.dependencyMismatch(
-              `Step [${stepNum}] cannot cite given premise ${depRef} outside of given(...)`,
-            );
             isCorrect = false;
             break;
           }
@@ -140,21 +128,19 @@ export const buildProofGraph = (
 
       // Check statement
       if (isCorrect) {
-        logDebug(
-          `  Checking statement: ${
-            step.statement?.function
-          } with args: ${JSON.stringify(step.statement?.arguments)}`,
-        );
         isCorrect = checkStatementArguments(step.statement, stmtDefs);
-        logDebug(`  Statement arguments check: ${isCorrect}`);
 
         // Check if premises-only statement is used in proof step
         if (isCorrect && step.statement?.function) {
           const stmtDef = stmtDefs.get(step.statement.function);
           if (stmtDef?.isPremisesOnly && step.type === "proof") {
-            logError.parser.premisesOnlyStatementInProof(
-              step.statement.function,
-            );
+            step.errors.push({
+              type: "reason_stmt_mismatch",
+              data: {
+                reason: step.reason.function,
+                message: `Statement '${step.statement.function}' is only allowed in premises, not in proof steps`,
+              },
+            });
             isCorrect = false;
           }
         }
@@ -183,7 +169,6 @@ export const buildProofGraph = (
       // Check if reason is applied correctly using reason checker methods
       if (isCorrect) {
         isCorrect = checkReasonApplication(step, reasonDefs, graph, ctx);
-        logDebug(`  Reason application check: ${isCorrect}`);
       }
 
       // Add edges from dependencies to this step
