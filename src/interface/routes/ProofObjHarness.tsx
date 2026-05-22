@@ -29,7 +29,6 @@ import {
   StaticAppPage,
   StaticAppPageProps,
 } from "../components/ender/StaticAppPage";
-import type { LlmFeedbackEntry } from "../components/stepFeedback/types";
 import { AspectRatio } from "../core/diagramSvg/svgTypes";
 import {
   interactiveLayout,
@@ -109,9 +108,6 @@ type ProofObjHarnessState = {
   hoverTooltip: string;
   hoverPos: { x: number; y: number } | null;
   editorScrollTop: number;
-  harnessLlmByStep: Map<string, LlmFeedbackEntry>;
-  harnessLlmLoading: boolean;
-  harnessLlmError: string | undefined;
 };
 
 export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
@@ -120,7 +116,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
   editorOverlayRef = createRef<HTMLPreElement>();
 
   private proofParseTimeoutId: number | null = null;
-  private llmEffectGeneration = 0;
   private selectedProofFetchGen = 0;
   private editorOutsideMouseDownHandler: ((event: MouseEvent) => void) | null =
     null;
@@ -142,9 +137,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       hoverTooltip: "",
       hoverPos: null,
       editorScrollTop: 0,
-      harnessLlmByStep: new Map(),
-      harnessLlmLoading: false,
-      harnessLlmError: undefined,
     };
   }
 
@@ -152,7 +144,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.fetchSelectedProof(this.state.selectedProofKey);
     this.scheduleProofParseDebounce();
     this.setupEditorOutsideClick(this.state.isEditorOpen);
-    this.runHarnessLlmEffect();
   }
 
   componentDidUpdate(
@@ -168,12 +159,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     if (prevState.isEditorOpen !== this.state.isEditorOpen) {
       this.setupEditorOutsideClick(this.state.isEditorOpen);
     }
-    if (
-      prevState.lastGoodProof !== this.state.lastGoodProof ||
-      prevState.proofParseSucceeded !== this.state.proofParseSucceeded
-    ) {
-      this.runHarnessLlmEffect();
-    }
   }
 
   componentWillUnmount(): void {
@@ -188,7 +173,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       );
       this.editorOutsideMouseDownHandler = null;
     }
-    this.llmEffectGeneration += 1;
     this.selectedProofFetchGen += 1;
   }
 
@@ -272,33 +256,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     }, 500);
   }
 
-  private runHarnessLlmEffect(): void {
-    this.llmEffectGeneration += 1;
-    const gen = this.llmEffectGeneration;
-
-    const clearLlm = (): void => {
-      this.setState({
-        harnessLlmLoading: false,
-        harnessLlmError: undefined,
-        harnessLlmByStep: new Map(),
-      });
-    };
-
-    const { proofParseSucceeded, lastGoodProof } = this.state;
-
-    if (!proofParseSucceeded || !lastGoodProof) {
-      clearLlm();
-      return;
-    }
-
-    if (lastGoodProof.isCorrect === true) {
-      clearLlm();
-      return;
-    }
-
-    this.setState({ harnessLlmLoading: true, harnessLlmError: undefined });
-  }
-
   private fetchSelectedProof(selectedProofKey: string): void {
     this.selectedProofFetchGen += 1;
     const gen = this.selectedProofFetchGen;
@@ -366,45 +323,8 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     };
   }
 
-  private getCheckerStepByFrameKey(): Map<string, string> {
-    const m = new Map<string, string>();
-    const { lastGoodProof } = this.state;
-    if (!lastGoodProof) return m;
-    const proofSteps = lastGoodProof.steps.filter(
-      (s) =>
-        s.type === "proof" &&
-        s.stepNumber !== undefined &&
-        /^\d+$/.test(String(s.stepNumber)),
-    );
-    proofSteps.forEach((step, i) => {
-      m.set(`s${i + 1}`, String(step.stepNumber ?? ""));
-    });
-    return m;
-  }
-
-  private getInteractiveProps():
-    | (InteractiveAppPageProps & {
-        checkerStepByFrameKey: Map<string, string>;
-        harnessLlmFeedback: {
-          byStepNumber: Map<string, LlmFeedbackEntry>;
-          loading: boolean;
-          error: string | undefined;
-        };
-      })
-    | null {
-    const layouts = this.getLayouts();
-    if (!layouts) return null;
-    const checkerStepByFrameKey = this.getCheckerStepByFrameKey();
-    const { harnessLlmByStep, harnessLlmLoading, harnessLlmError } = this.state;
-    return {
-      ...layouts.interactive,
-      checkerStepByFrameKey,
-      harnessLlmFeedback: {
-        byStepNumber: harnessLlmByStep,
-        loading: harnessLlmLoading,
-        error: harnessLlmError,
-      },
-    };
+  private getInteractiveProps(): InteractiveAppPageProps | null {
+    return this.getLayouts()?.interactive ?? null;
   }
 
   render() {

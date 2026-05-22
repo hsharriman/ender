@@ -127,8 +127,8 @@ const anyDiagramDepMatch = (
         return false;
       }
     }
-    return true;
   }
+  return true;
 };
 
 // Check if reason dependencies match the expected number
