@@ -5,8 +5,6 @@ import { DiagramRenderCtx } from "../../core/types/diagramTypes";
 import { Reason } from "../../core/types/layoutTypes";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { getReasonFn } from "../../theorems/utils";
-import { StepFeedbackPanel } from "../stepFeedback/StepFeedbackPanel";
-import { LlmFeedbackEntry } from "../stepFeedback/types";
 import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
@@ -22,13 +20,6 @@ export interface InteractiveAppPageProps {
   isTutorial?: boolean;
   /** When true, proof rows show every step (no reveal animation); used by ProofObjHarness */
   proofHarnessMode?: boolean;
-  /** Maps layout frame keys (`s1`…) to checker step ids for optional harness tooling (e.g. LLM feedback). */
-  checkerStepByFrameKey?: Map<string, string>;
-  harnessLlmFeedback?: {
-    byStepNumber: Map<string, LlmFeedbackEntry>;
-    loading: boolean;
-    error?: string;
-  };
   highlightCtx: DiagramRenderCtx;
   additionCtx: DiagramRenderCtx;
   diagramAspect: AspectRatio;
@@ -105,15 +96,6 @@ export class InteractiveAppPage extends React.Component<
               miniReasonCtxMap={this.props.miniReasonCtxMap}
               diagramAspect={this.props.diagramAspect}
             />
-            {this.props.proofHarnessMode && this.props.harnessLlmFeedback ? (
-              <StepFeedbackPanel
-                activeFrame={this.state.activeFrame}
-                checkerStepByFrameKey={this.props.checkerStepByFrameKey}
-                llmByStepNumber={this.props.harnessLlmFeedback.byStepNumber}
-                llmLoading={this.props.harnessLlmFeedback.loading}
-                llmError={this.props.harnessLlmFeedback.error}
-              />
-            ) : null}
           </div>
           <div
             id="proof-steps"

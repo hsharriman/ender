@@ -1,6 +1,7 @@
 import { ParseObj, ProofContent } from "../../geometry-object";
 import {
   ProofGraph,
+  ProofObj,
   ProofStep,
   ReasonDefinition,
   StatementGroup,
@@ -9,8 +10,8 @@ import {
   WaysToProveSummary,
 } from "../types/checkerTypes";
 import { checkReasonApplication } from "./reasonApplication";
-import { ReasonTemplate } from "./reasonTemplates";
 import { stmtKey } from "./reasonChecks/utils";
+import { ReasonTemplate } from "./reasonTemplates";
 
 export interface ReasonApplicabilityIndex {
   statementRefsByFunction: Map<string, string[]>;
@@ -118,6 +119,7 @@ const getRefsForSlot = (
   source: "dependency" | "diagram",
   index: ReasonApplicabilityIndex,
   groups: Map<string, StatementGroup>,
+  proof?: ProofObj,
 ): string[] => {
   const types = pickExpectedTypes(expectedType, groups);
   const sourceMap =
@@ -149,7 +151,9 @@ const enumerateDependencyRefCombos = (
     const nextCombos: Array<Array<string | undefined>> = [];
     combos.forEach((partial) => {
       const used = new Set(
-        partial.filter((r): r is string => typeof r === "string" && r.length > 0),
+        partial.filter(
+          (r): r is string => typeof r === "string" && r.length > 0,
+        ),
       );
       const unusedRefs = refs.filter((ref) => !used.has(ref));
       const choices: Array<string | undefined> =
@@ -172,8 +176,7 @@ const homogeneousDependencySlots = (
 ): boolean =>
   dependencySlots.length <= 1 ||
   dependencySlots.every(
-    (slot) =>
-      slot.expectedType === dependencySlots[0]?.expectedType,
+    (slot) => slot.expectedType === dependencySlots[0]?.expectedType,
   );
 
 // Computes ways-to-prove for one step by enumerating candidate dependency combos,
@@ -295,8 +298,7 @@ export const computeWaysToProve = ({
     if (!isCorrect) {
       const completionGeomFail =
         dependencySlots.length > 0
-          ? (dependencySlots.length - 1) /
-            Math.max(template.slots.length, 1)
+          ? (dependencySlots.length - 1) / Math.max(template.slots.length, 1)
           : dependencyCompletion;
       partialCandidates.push({
         reasonFunction: reason.function,

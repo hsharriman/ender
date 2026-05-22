@@ -15,44 +15,13 @@ npm install
 
 ### Interface (React app)
 
-#### Run with LLM feedback enabled
-
-The browser harness expects `VITE_OPENAI_API_KEY` (Vite only exposes env variables whose names start with `VITE_` to client code).
-
-Option A (recommended for this repo): put your key in `src/llm-feedback/.env` (Vite is configured to load env files from that directory):
-
-```bash
-VITE_OPENAI_API_KEY=your_key_here
-```
-
-Then run:
-
-```bash
-npm start
-```
-
-The legacy script `npm run start:with-llm-env` is kept as an alias and does the same thing.
-
-Option B: set `VITE_OPENAI_API_KEY` in your shell, or add a project-root `.env` / `.env.local` with that variable, and run `npm start`.
-
-#### LLM feedback walkthrough (Harness)
-
-1. Start the app with LLM enabled (`npm start` with your key in `src/llm-feedback/.env` as above).
-2. Open [http://localhost:3000/ender/](http://localhost:3000/ender/) (Vite uses the `/ender/` base path to match GitHub Pages).
-3. Click the `Harness` button to open `ProofObjHarness`.
-4. Click the `Show Editor` button (top-right) to open the proof selector/editor.
-5. Use the proof dropdown to switch examples:
-   - files with an `inc` suffix include an intentional mistake
-   - files with an `incomplete` suffix are missing steps
-6. LLM feedback appears for incorrect/incomplete proofs in the step feedback panel.
-
-#### Run without LLM feedback
-
 ```bash
 npm start
 ```
 
 This starts the UI at [http://localhost:3000/ender/](http://localhost:3000/ender/) (the dev server redirects `/` to `/ender/`).
+
+Open **ProofObj Harness** from the app to edit proofs live; checker errors appear in the editor (red lines and hover tooltips) and in the proof-wide issues list.
 
 ### CLI proof checker
 
@@ -165,7 +134,7 @@ Reasons tie dependency step numbers to a conclusion statement. They are listed i
 
 ## Build tool (Vite)
 
-The web interface is built with [Vite](https://vitejs.dev/). `vite.config.ts` sets `base: "/ender/"` for GitHub Pages. Client env vars use the `VITE_` prefix; `envDir` points at `src/llm-feedback` so a local `.env` there is picked up automatically.
+The web interface is built with [Vite](https://vitejs.dev/). `vite.config.ts` sets `base: "/ender/"` for GitHub Pages.
 
 ## Available scripts
 

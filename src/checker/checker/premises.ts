@@ -1,5 +1,5 @@
 import { Obj, ParseObj, ProofContent } from "../../geometry-object";
-import { createError, logError } from "../errors/errorConstants";
+import { createError } from "../errors/errorConstants";
 import { ProofObj, Stmt } from "../types/checkerTypes";
 
 export const buildPremises = (proof: ProofObj) => {
@@ -12,14 +12,22 @@ export const buildPremises = (proof: ProofObj) => {
     ctx.addPoint({ pt: pointObj.pt, label });
   });
 
-  // loop through all pairs of points and create segments
-  for (let i = 0; i < proof.premises.points.length; i++) {
-    const point1 = ctx.getPoint(proof.premises.points[i].v);
-    for (let j = i + 1; j < proof.premises.points.length; j++) {
-      const point2 = ctx.getPoint(proof.premises.points[j].v);
-      ctx.addSegment({ p1: point1, p2: point2 });
-    }
-  }
+  // // loop through all pairs of points and create segments
+  // for (let i = 0; i < proof.premises.points.length; i++) {
+  //   const point1 = ctx.getPoint(proof.premises.points[i].v);
+  //   for (let j = i + 1; j < proof.premises.points.length; j++) {
+  //     const point2 = ctx.getPoint(proof.premises.points[j].v);
+  //     ctx.addSegment({ p1: point1, p2: point2 });
+  //   }
+  // }
+
+  ctx.ctx.segments.forEach((seg) => {
+    console.log(
+      seg.label,
+      Array.from(seg.getParentSegments()).map((s) => s.label),
+      Array.from(seg.getSubSegments()).map((s) => s.label),
+    );
+  });
 
   // Process given statements involving segments
   proof.steps.forEach((step) => {
@@ -52,7 +60,6 @@ export const buildPremises = (proof: ProofObj) => {
         case "rectangle":
           break;
         default:
-          logError.parser.unknownStatementFunction(step.statement.function);
           throw createError.parser.unknownStatementFunction(
             step.statement.function,
           );
@@ -91,14 +98,6 @@ export const buildPremises = (proof: ProofObj) => {
     }
   });
 
-  // ctx.ctx.segments.forEach((seg) => {
-  //   console.log(
-  //     seg.label,
-  //     Array.from(seg.getParentSegments()).map((s) => s.label),
-  //     Array.from(seg.getSubSegments()).map((s) => s.label)
-  //   );
-  // });
-
   // loop through points, create angles between all pairs of segments that contain that point
   proof.premises.points.forEach((pointObj) => {
     const pt = ctx.getPoint(pointObj.v);
@@ -128,48 +127,48 @@ export const buildPremises = (proof: ProofObj) => {
     }
   });
 
-  // loop through all sets of 3 points, create triangles
-  for (let i = 0; i < proof.premises.points.length; i++) {
-    const point1 = ctx.getPoint(proof.premises.points[i].v);
-    for (let j = i + 1; j < proof.premises.points.length; j++) {
-      const point2 = ctx.getPoint(proof.premises.points[j].v);
-      for (let k = j + 1; k < proof.premises.points.length; k++) {
-        const point3 = ctx.getPoint(proof.premises.points[k].v);
-        ctx.addTriangle({ pts: [point1, point2, point3] });
-      }
-    }
-  }
+  // // loop through all sets of 3 points, create triangles
+  // for (let i = 0; i < proof.premises.points.length; i++) {
+  //   const point1 = ctx.getPoint(proof.premises.points[i].v);
+  //   for (let j = i + 1; j < proof.premises.points.length; j++) {
+  //     const point2 = ctx.getPoint(proof.premises.points[j].v);
+  //     for (let k = j + 1; k < proof.premises.points.length; k++) {
+  //       const point3 = ctx.getPoint(proof.premises.points[k].v);
+  //       ctx.addTriangle({ pts: [point1, point2, point3] });
+  //     }
+  //   }
+  // }
 
-  // loop through all sets of 4 points, create quadrilaterals
-  for (let i = 0; i < proof.premises.points.length; i++) {
-    const point1 = ctx.getPoint(proof.premises.points[i].v);
-    for (let j = i + 1; j < proof.premises.points.length; j++) {
-      const point2 = ctx.getPoint(proof.premises.points[j].v);
-      for (let k = j + 1; k < proof.premises.points.length; k++) {
-        const point3 = ctx.getPoint(proof.premises.points[k].v);
-        for (let l = k + 1; l < proof.premises.points.length; l++) {
-          const point4 = ctx.getPoint(proof.premises.points[l].v);
-          ctx.addQuadrilateral({
-            pts: [point1, point2, point3, point4],
-          });
-        }
-      }
-    }
-  }
+  // // loop through all sets of 4 points, create quadrilaterals
+  // for (let i = 0; i < proof.premises.points.length; i++) {
+  //   const point1 = ctx.getPoint(proof.premises.points[i].v);
+  //   for (let j = i + 1; j < proof.premises.points.length; j++) {
+  //     const point2 = ctx.getPoint(proof.premises.points[j].v);
+  //     for (let k = j + 1; k < proof.premises.points.length; k++) {
+  //       const point3 = ctx.getPoint(proof.premises.points[k].v);
+  //       for (let l = k + 1; l < proof.premises.points.length; l++) {
+  //         const point4 = ctx.getPoint(proof.premises.points[l].v);
+  //         ctx.addQuadrilateral({
+  //           pts: [point1, point2, point3, point4],
+  //         });
+  //       }
+  //     }
+  //   }
+  // }
 
-  // // Add all triangles from premises (this will also create their segments and angles)
-  // proof.premises.triangles.forEach((triangleObj) => {
-  //   // Parse triangle label (e.g., "t_ABC")
-  //   const pointLabels = triangleObj.v;
-  //   ctx.addTriangleFromStr(pointLabels);
-  // });
+  // Add all triangles from premises (this will also create their segments and angles)
+  proof.premises.triangles.forEach((triangleObj) => {
+    // Parse triangle label (e.g., "t_ABC")
+    const pointLabels = triangleObj.v;
+    ctx.addTriangleFromStr(pointLabels);
+  });
 
-  // // Add all quadrilaterals from premises (this will also create their segments and angles)
-  // proof.premises.quadrilaterals.forEach((quadrilateralObj) => {
-  //   // Parse quadrilateral label (e.g., "q_ABCD")
-  //   const pointLabels = quadrilateralObj.v;
-  //   ctx.addQuadrilateralFromStr(pointLabels);
-  // });
+  // Add all quadrilaterals from premises (this will also create their segments and angles)
+  proof.premises.quadrilaterals.forEach((quadrilateralObj) => {
+    // Parse quadrilateral label (e.g., "q_ABCD")
+    const pointLabels = quadrilateralObj.v;
+    ctx.addQuadrilateralFromStr(pointLabels);
+  });
 
   // // Add all segments from premises
   // proof.premises.segments.forEach((segmentObj) => {
@@ -213,7 +212,6 @@ export const buildPremises = (proof: ProofObj) => {
         case "midpt":
           break;
         default:
-          logError.parser.unknownStatementFunction(step.statement.function);
           throw createError.parser.unknownStatementFunction(
             step.statement.function,
           );
@@ -253,9 +251,6 @@ export const buildPremises = (proof: ProofObj) => {
 
   ctx.checkAngleOverlaps();
 
-  ctx.ctx.angles.forEach((a) => {
-    console.log(a.label, [...Array.from(a.names)]);
-  });
   return ctx;
 };
 
@@ -269,7 +264,6 @@ const angBisect = (ctx: ProofContent, args: ParseObj[]) => {
       ? s.p1
       : undefined;
   if (!sharedPt) {
-    logError.parser.segmentAngleOverlapError(seg.v, ang.v);
     throw createError.parser.segmentAngleOverlapError(seg.v, ang.v);
   }
   ctx.addAngle({ center: a.center, start: a.start, end: sharedPt });
@@ -292,7 +286,6 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
 
   // Check if the intersection point exists in premises
   if (!proof.premises.points.some((pt) => pt.v === p.v)) {
-    logError.parser.pointNotDefinedInPremises(p.v);
     throw createError.parser.pointNotDefinedInPremises(p.v);
   }
 

@@ -1,5 +1,5 @@
 import { Obj } from "../../geometry-object";
-import { createError, logError } from "../errors/errorConstants";
+import { createError } from "../errors/errorConstants";
 import {
   ProofGraph,
   ProofObj,
@@ -18,14 +18,8 @@ export const checkStatementArguments = (
 ): boolean => {
   const definition = stmtDefs.get(stmt.function);
   if (!definition) {
-    logError.parser.undefinedStatement(stmt.function);
     return false;
   }
-
-  console.log(`    Statement definition:`, definition);
-  console.log(
-    `    Expected ${definition.parameters.length} args, got ${stmt.arguments.length}`,
-  );
 
   return stmt.arguments.length === definition.parameters.length;
 };
@@ -38,39 +32,23 @@ export const validateGivenProofStep = (
   const reason = step.reason;
   const stmt = step.statement;
   if (!reason || !stmt) {
-    logError.parser.missingReasonOrStatement();
     return false;
   }
   if (reason.arguments.length !== 1) {
-    logError.parser.dependencyMismatch(
-      `given expects exactly one premise ref, got ${reason.arguments.length}`,
-    );
     return false;
   }
   const ref = reason.arguments[0];
   if (/^g_\d+$/.test(ref)) {
     // ok
   } else if (/^d_\d+$/.test(ref)) {
-    logError.parser.dependencyMismatch(
-      `given(${reason.arguments[0]}) is invalid: use only given premises g_n, not diagram premises [d_nn]`,
-    );
     return false;
   } else if (/^\d+$/.test(ref)) {
-    logError.parser.dependencyMismatch(
-      `given(${reason.arguments[0]}) is invalid: cite the matching g_n given premise, not a proof step number`,
-    );
     return false;
   } else {
-    logError.parser.dependencyMismatch(
-      `given requires exactly one ref like g_1, got ${reason.arguments[0]}`,
-    );
     return false;
   }
   const depStep = proofGraph.nodes.get(ref);
   if (!depStep?.statement) {
-    logError.parser.dependencyMismatch(
-      `Missing given premise for ref ${reason.arguments[0]}`,
-    );
     return false;
   }
   const prem = depStep.statement;
@@ -84,9 +62,6 @@ export const validateGivenProofStep = (
         ref,
       },
     });
-    logError.parser.dependencyMismatch(
-      `given conclusion mismatch: premise is ${prem.function}, step concludes ${stmt.function}`,
-    );
     return false;
   }
   if (prem.arguments.length !== stmt.arguments.length) {
@@ -101,9 +76,6 @@ export const validateGivenProofStep = (
         actualArgCount: stmt.arguments.length,
       },
     });
-    logError.parser.dependencyMismatch(
-      `given conclusion arg count mismatch for ${ref}`,
-    );
     return false;
   }
   for (let i = 0; i < prem.arguments.length; i++) {
@@ -123,10 +95,37 @@ export const validateGivenProofStep = (
           actualArg: stmt.arguments[i].v,
         },
       });
-      logError.parser.dependencyMismatch(
-        `given conclusion arg ${i} mismatch vs premise ${ref}`,
-      );
       return false;
+    }
+  }
+  return true;
+};
+
+const anyDiagramDepMatch = (
+  definition: ReasonDefinition,
+  groups: Map<string, StatementGroup>,
+  proofGraph: ProofGraph,
+) => {
+  // Diagram dependencies are satisfied by diagram premises on the proof graph
+  // and are not passed as args.
+  if (definition.diagramDependencies?.length) {
+    for (const expected of definition.diagramDependencies) {
+      if (typeof expected !== "string") continue;
+      const group = groups.get(expected);
+      const anyMatch = Array.from(proofGraph.diagramPremises.values()).some(
+        (d) => {
+          const foundType = d.statement.function;
+          if (group) {
+            return (
+              group.base === foundType || group.extensions.includes(foundType)
+            );
+          }
+          return foundType === expected;
+        },
+      );
+      if (!anyMatch) {
+        return false;
+      }
     }
   }
   return true;
@@ -173,7 +172,6 @@ export const checkReasonStructure = (
 
     const definition = reasonDefs.get(reason?.function);
     if (!definition) {
-      logError.parser.undefinedReason(reason.function);
       return false;
     }
 
@@ -184,33 +182,10 @@ export const checkReasonStructure = (
         expectedLength: definition.dependencies.length,
         receivedLength: reason.arguments.length,
       });
-      logError.parser.dependencyMismatch(
-        `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`,
-      );
     }
 
-    // Diagram dependencies are satisfied by diagram premises on the proof graph
-    // and are not passed as args.
-    if (definition.diagramDependencies?.length) {
-      for (const expected of definition.diagramDependencies) {
-        if (typeof expected !== "string") continue;
-        const group = groups.get(expected);
-        const anyMatch = Array.from(proofGraph.diagramPremises.values()).some((d) => {
-          const foundType = d.statement.function;
-          if (group) {
-            return (
-              group.base === foundType || group.extensions.includes(foundType)
-            );
-          }
-          return foundType === expected;
-        });
-        if (!anyMatch) {
-          structureOk = false;
-          logError.parser.dependencyMismatch(
-            `Missing diagram dependency for ${reason.function}: expected ${expected}`,
-          );
-        }
-      }
+    if (!anyDiagramDepMatch(definition, groups, proofGraph)) {
+      structureOk = false;
     }
 
     for (let idx = 0; idx < reason.arguments.length; idx++) {
@@ -233,9 +208,6 @@ export const checkReasonStructure = (
             typeof expectedDep === "string" ? expectedDep : "__unknown__",
           receivedType: "__missing__",
         });
-        logError.parser.dependencyMismatch(
-          `Missing dependency for ${reason.function} at index ${idx} (ref ${stepNum})`,
-        );
       } else {
         const foundType = dependencyStmt.function;
 
@@ -261,15 +233,6 @@ export const checkReasonStructure = (
                 allowedTypes: group.extensions,
                 receivedType: foundType,
               });
-              logError.parser.dependencyMismatch(
-                `Dependency mismatch for ${
-                  reason.function
-                } at index ${idx}: expected ${
-                  group.base
-                } or one of [${group.extensions.join(
-                  ", ",
-                )}], found ${foundType} (ref ${stepNum})`,
-              );
             }
           } else {
             // Direct statement name match
@@ -282,9 +245,6 @@ export const checkReasonStructure = (
                 expectedType: expectedDep,
                 receivedType: foundType,
               });
-              logError.parser.dependencyMismatch(
-                `Dependency mismatch for ${reason.function} at index ${idx}: expected ${expectedDep}, found ${foundType} (ref ${stepNum})`,
-              );
             }
           }
         }
@@ -313,7 +273,6 @@ export const checkReasonStructure = (
 
     return structureOk && nameMatch && conclusionMatch;
   }
-  logError.parser.missingReasonOrStatement();
   return false;
 };
 
@@ -332,7 +291,6 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
   const checkPointsDefined = (object: string, points: string[]): void => {
     for (const point of points) {
       if (!definedPoints.has(point)) {
-        logError.parser.undefinedPointInObject(point, object);
         errors.push(
           `Point '${point}' in '${object}' is not defined in premises`,
         );
@@ -347,7 +305,6 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
         switch (arg.type) {
           case Obj.Segment:
             if (hasDuplicateChars(arg.v)) {
-              logError.parser.duplicatePointsInObject(arg.v);
               errors.push(`Segment '${arg.v}' contains duplicate points`);
               break;
             }
@@ -355,14 +312,12 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
             break;
           case Obj.Angle:
             if (arg.v.length !== 3) {
-              logError.parser.invalidAngleFormat(arg.v);
               errors.push(
                 `Invalid angle format: '${arg}' - angles must have exactly 3 points`,
               );
               break;
             }
             if (hasDuplicateChars(arg.v)) {
-              logError.parser.duplicatePointsInObject(arg.v);
               errors.push(`Angle '${arg.v}' contains duplicate points`);
               break;
             }
@@ -370,14 +325,12 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
             break;
           case Obj.Triangle:
             if (arg.v.length !== 3) {
-              logError.parser.invalidTriangleFormat(arg.v);
               errors.push(
                 `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`,
               );
               break;
             }
             if (hasDuplicateChars(arg.v)) {
-              logError.parser.duplicatePointsInObject(arg.v);
               errors.push(`Triangle '${arg.v}' contains duplicate points`);
               break;
             }
@@ -385,14 +338,12 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
             break;
           case Obj.Quadrilateral:
             if (arg.v.length !== 4) {
-              logError.parser.invalidQuadrilateralFormat(arg.v);
               errors.push(
                 `Invalid quadrilateral format: '${arg.v}' - quadrilaterals must have exactly 4 points`,
               );
               break;
             }
             if (hasDuplicateChars(arg.v)) {
-              logError.parser.duplicatePointsInObject(arg.v);
               errors.push(`Quadrilateral '${arg.v}' contains duplicate points`);
               break;
             }
@@ -400,7 +351,6 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
             break;
           case Obj.Point:
             if (!definedPoints.has(arg.v)) {
-              logError.parser.undefinedPointInObject(arg.v, "point");
               errors.push(`Point '${arg.v}' is not defined in premises`);
               continue;
             }
@@ -528,49 +478,22 @@ export const checkReasonDependencies = (
 ): boolean => {
   const definition = reasonDefs.get(reason.function);
   if (!definition) {
-    logError.parser.undefinedReason(reason.function);
     return false;
   }
 
   if (reason.function === "given") {
     if (!fullStep) {
-      logError.parser.dependencyMismatch(
-        "given step missing full step context",
-      );
       return false;
     }
     return validateGivenProofStep(fullStep, proofGraph);
   }
 
   if (reason.arguments.length !== definition.dependencies.length) {
-    logError.parser.dependencyMismatch(
-      `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`,
-    );
     return false;
   }
 
-  // Diagram dependencies are satisfied by diagram premises on the proof graph
-  // and are not passed as args.
-  if (definition.diagramDependencies?.length) {
-    for (const expected of definition.diagramDependencies) {
-      if (typeof expected !== "string") continue;
-      const group = groups.get(expected);
-      const anyMatch = Array.from(proofGraph.diagramPremises.values()).some((d) => {
-        const foundType = d.statement.function;
-        if (group) {
-          return (
-            group.base === foundType || group.extensions.includes(foundType)
-          );
-        }
-        return foundType === expected;
-      });
-      if (!anyMatch) {
-        logError.parser.dependencyMismatch(
-          `Missing diagram dependency for ${reason.function}: expected ${expected}`,
-        );
-        return false;
-      }
-    }
+  if (!anyDiagramDepMatch(definition, groups, proofGraph)) {
+    return false;
   }
 
   for (let i = 0; i < reason.arguments.length; i++) {
@@ -581,9 +504,6 @@ export const checkReasonDependencies = (
       proofGraph.diagramPremises.get(stepNum)?.statement;
 
     if (!dependencyStmt) {
-      logError.parser.dependencyMismatch(
-        `Missing dependency for ${reason.function} at index ${i} (ref ${stepNum})`,
-      );
       return false;
     }
     const foundType = dependencyStmt.function;
@@ -602,23 +522,11 @@ export const checkReasonDependencies = (
           continue;
         } else {
           // No valid substitution
-          logError.parser.dependencyMismatch(
-            `Dependency mismatch for ${
-              reason.function
-            } at index ${i}: expected ${
-              group.base
-            } or one of [${group.extensions.join(
-              ", ",
-            )}], found ${foundType} (ref ${stepNum})`,
-          );
           return false;
         }
       } else {
         // Direct statement name match
         if (foundType !== expectedDep) {
-          logError.parser.dependencyMismatch(
-            `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedDep}, found ${foundType} (ref ${stepNum})`,
-          );
           return false;
         }
       }
@@ -688,7 +596,6 @@ export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
 
   for (const step of numberedSteps) {
     if (seenStepNumbers.has(step.stepNumber!)) {
-      logError.parser.duplicateStepNumbers(step.stepNumber!);
       errors.push(`Duplicate step number: ${step.stepNumber}`);
     } else {
       seenStepNumbers.add(step.stepNumber!);
@@ -709,10 +616,6 @@ export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
   for (let k = 0; k < sortedNums.length; k++) {
     if (sortedNums[k].n !== start + k) {
       const msg = `Non-consecutive proof step numbers: expected integer ${start + k}, found ${sortedNums[k].label} (${sortedNums[k].n})`;
-      logError.parser.nonSequentialStepNumbers(
-        `[${String(start + k).padStart(2, "0")}]`,
-        sortedNums[k].label,
-      );
       errors.push(msg);
     }
   }
