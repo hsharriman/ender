@@ -1,3 +1,4 @@
+import { pointtoParseObj, segtoParseObj } from "checker/utils/utils";
 import { Obj, ParseObj, ProofContent } from "../../geometry-object";
 import { createError } from "../errors/errorConstants";
 import { ProofObj, Stmt } from "../types/checkerTypes";
@@ -48,7 +49,7 @@ export const buildPremises = (proof: ProofObj) => {
           intersectSeg(ctx, step.statement.arguments, proof);
           break;
         case "transversal":
-          transversal(ctx, step.statement.arguments);
+          transversal(ctx, step.statement.arguments, proof);
           break;
         case "midpt":
           midpt(ctx, step.statement.arguments);
@@ -81,7 +82,7 @@ export const buildPremises = (proof: ProofObj) => {
         intersectSeg(ctx, statement.arguments, proof);
         break;
       case "transversal":
-        transversal(ctx, statement.arguments);
+        transversal(ctx, statement.arguments, proof);
         break;
       case "midpt":
         midpt(ctx, statement.arguments);
@@ -305,17 +306,35 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
   });
 };
 
-const transversal = (ctx: ProofContent, args: ParseObj[]) => {
+const transversal = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
   const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = args.map((arg) =>
     ctx.getPoint(arg.v),
   );
   const seg1 = ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`);
   const seg2 = ctx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`);
-  const transSeg = ctx.addSegmentFromStr(`${t1.label}${t2.label}`);
-  i1.addOnLine(seg1);
-  i2.addOnLine(seg2);
-  i1.addOnLine(transSeg);
-  i2.addOnLine(transSeg);
+  const transversalSeg = ctx.addSegmentFromStr(`${t1.label}${t2.label}`);
+
+  const intersectionsAtTransversalEndpoints =
+    (i1.equals(t1) && i2.equals(t2)) || (i1.equals(t2) && i2.equals(t1));
+
+  if (!intersectionsAtTransversalEndpoints) {
+    intersectSeg(
+      ctx,
+      [segtoParseObj(seg1), segtoParseObj(transversalSeg), pointtoParseObj(i1)],
+      proof,
+    );
+    intersectSeg(
+      ctx,
+      [segtoParseObj(seg2), segtoParseObj(transversalSeg), pointtoParseObj(i2)],
+      proof,
+    );
+  } else {
+    // i1 and i2 are the same as t1 and t2, just add them to on_line
+    i1.addOnLine(seg1);
+    i1.addOnLine(transversalSeg);
+    i2.addOnLine(seg2);
+    i2.addOnLine(transversalSeg);
+  }
 };
 
 const midpt = (ctx: ProofContent, args: ParseObj[]) => {

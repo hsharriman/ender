@@ -3,8 +3,8 @@ import { SVGModes } from "../types/diagramTypes";
 import { StepProps } from "../types/stepTypes";
 
 /**
- * Diagram premise `transversal(s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2)`.
- * Highlights full lines `s1p1s1p2`, `s2p1s2p2`, and transversal `t1t2`.
+ * Diagram premise `transversal(s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2)` —
+ * highlights full lines `s1p1s1p2`, `s2p1s2p2`, and transversal `t1t2`.
  */
 export class Transversal {
   static highlight(props: StepProps, stmt: Stmt): void {

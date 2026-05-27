@@ -1,4 +1,4 @@
-import { Obj } from "../../geometry-object";
+import { Obj, ProofContent } from "../../geometry-object";
 import { createError } from "../errors/errorConstants";
 import {
   ProofGraph,
@@ -277,7 +277,10 @@ export const checkReasonStructure = (
 };
 
 // Check if geometric objects are well-formed
-export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
+export const checkGeometricObjects = (
+  proof: ProofObj,
+  ctx: ProofContent,
+): Array<string> => {
   const errors: Array<string> = [];
   const definedPoints = new Set(proof.premises.points.map((p) => p.v));
 
@@ -308,6 +311,11 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
               errors.push(`Segment '${arg.v}' contains duplicate points`);
               break;
             }
+            if (!ctx.getSegment(arg.v)) {
+              errors.push(
+                `Segment '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
+              );
+            }
             checkPointsDefined(arg.v, arg.v.split(""));
             break;
           case Obj.Angle:
@@ -316,6 +324,11 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
                 `Invalid angle format: '${arg}' - angles must have exactly 3 points`,
               );
               break;
+            }
+            if (!ctx.getAngle(arg.v)) {
+              errors.push(
+                `Angle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
+              );
             }
             if (hasDuplicateChars(arg.v)) {
               errors.push(`Angle '${arg.v}' contains duplicate points`);
@@ -328,6 +341,11 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
               errors.push(
                 `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`,
               );
+              if (!ctx.getTriangle(arg.v)) {
+                errors.push(
+                  `Triangle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
+                );
+              }
               break;
             }
             if (hasDuplicateChars(arg.v)) {
@@ -343,6 +361,11 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
               );
               break;
             }
+            if (!ctx.getQuadrilateral(arg.v)) {
+              errors.push(
+                `Quadrilateral '${arg.v}' in step ${step.statement} is not defined in checker context`,
+              );
+            }
             if (hasDuplicateChars(arg.v)) {
               errors.push(`Quadrilateral '${arg.v}' contains duplicate points`);
               break;
@@ -354,6 +377,11 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
               errors.push(`Point '${arg.v}' is not defined in premises`);
               continue;
             }
+            if (!ctx.getPoint(arg.v)) {
+              errors.push(
+                `Point '${arg.v}' in step ${step.statement} is not defined in checker context`,
+              );
+            }
             break;
           default:
             throw createError.geometric.cannotParseGeometricObject(arg.v);
@@ -361,7 +389,6 @@ export const checkGeometricObjects = (proof: ProofObj): Array<string> => {
       }
     }
   }
-
   return errors;
 };
 

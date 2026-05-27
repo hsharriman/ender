@@ -50,3 +50,23 @@ export const getGeometricObject = (
       throw createError.geometric.cannotParseGeometricObject(arg.v);
   }
 };
+
+export const pointtoParseObj = (p: Point): ParseObj => {
+  return { type: Obj.Point, v: p.label };
+};
+
+export const segtoParseObj = (s: Segment): ParseObj => {
+  return { type: Obj.Segment, v: s.label };
+};
+
+export const angParseObj = (a: Angle): ParseObj => {
+  return { type: Obj.Angle, v: a.label };
+};
+
+export const tritoParseObj = (t: Triangle): ParseObj => {
+  return { type: Obj.Triangle, v: t.label };
+};
+
+export const quadtoParseObj = (q: Quadrilateral): ParseObj => {
+  return { type: Obj.Quadrilateral, v: q.label };
+};

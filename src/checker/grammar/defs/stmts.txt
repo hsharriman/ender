@@ -4,18 +4,16 @@ premises
 // point p is on the segment s
 stmt on_line(Segment s, Point p)
 
-// `t1 -> t2` is the transversal segment endpoints.
-// `i1` is where that transversal intersects `s1p1 -> s1p2`.
-// `i2` is where that transversal intersects `s2p1 -> s2p2`.
+// the segment from s1p1 -> s1p2 is crossed at i1, and the segment from s2p1 -> s2p2
+// is crossed at i2. t1 -> t2 is the transversal.
 // NOTE: assumes that s1p1 -> s1p2 and s2p1 -> s2p2 are both chosen wrt the same direction (such as from left to right)
-//           i1
+//           t1
 //  x--------x-----x
-// s1p1    /      s1p2
+// s1p1     /     s1p2
 //        /
 //  x----x------------x
-// s2p1  i2          s2p2
-//      t1 -------- t2
-stmt transversal(Point s1p1, Point s1p2, Point t1, Point i1, Point s2p1, Point s2p2, Point t2, Point i2) // Point s1p1 -> s1p2 = seg1
+// s2p1 t2           s2p2
+stmt transversal(Point s1p1, Point s1p2, Point t1, Point i1, Point s2p1, Point s2p2, Point t2, Point i2)
 
 // segment s1 and s2 intersect at point p
 stmt intersect_seg(Segment s1, Segment s2, Point p)

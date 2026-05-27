@@ -15,15 +15,15 @@ export const altint = (
   const tempCtx = new ProofContent(ctx.getCtx());
   let [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg.v));
   if (a1.equals(a2)) return false;
-  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map((arg) =>
-    tempCtx.getPoint(arg.v),
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map(
+    (arg) => tempCtx.getPoint(arg.v),
   );
-  const [s1, s2, t] = [
+  const [s1, s2, innerT] = [
     tempCtx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
     tempCtx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`),
-    tempCtx.addSegmentFromStr(`${t1.label}${t2.label}`),
+    tempCtx.addSegmentFromStr(`${i1.label}${i2.label}`),
   ];
-  if (s1.equals(s2) || s1.equals(t) || s2.equals(t)) return false;
+  if (s1.equals(s2) || s1.equals(innerT) || s2.equals(innerT)) return false;
   let [pa1, pa2] = para.arguments.map((arg) =>
     tempCtx.addSegmentFromStr(arg.v),
   );
@@ -37,17 +37,22 @@ export const altint = (
   }
 
   //check that parallel lines are same as s1/s2
-  const segmentCheck = !pa1.equals(pa2) && !pa1.equals(t) && !pa2.equals(t);
+  const segmentCheck =
+    !pa1.equals(pa2) &&
+    !pa1.equals(innerT) &&
+    !pa2.equals(innerT) &&
+    i1.isOnLine(s1) &&
+    i2.isOnLine(s2);
 
   let angleCheck = false;
   // reaassign so that a1 is on s1 and a2 is on s2
-  if (a1.centerEquals(i2) && a2.centerEquals(i1)) {
+  if (a1.centerEquals(innerT.p1) && a2.centerEquals(innerT.p2)) {
     [a1, a2] = [a2, a1];
   }
   // the corner of each angle must be on transversal
-  if (a1.centerEquals(i1) && a2.centerEquals(i2)) {
+  if (a1.centerEquals(innerT.p1) && a2.centerEquals(innerT.p2)) {
     // one of the angle's points must be on the transversal
-    if (a1.contains(i2) && a2.contains(i1)) {
+    if (a1.contains(innerT.p2) && a2.contains(innerT.p1)) {
       // if a1 contains s1p1 as endpoint then a2 must contain s2p2
       if (a1.contains(s1p1) && a2.contains(s2p2)) {
         angleCheck = true;
@@ -56,14 +61,12 @@ export const altint = (
         angleCheck = true;
       }
     }
-  } else {
-    angleCheck = false;
   }
-  if (segmentCheck && angleCheck) {
-    conAng.arguments.map((arg) => ctx.addAngleFromStr(arg.v));
-    ctx.addSegmentFromStr(`${t1.label}${t2.label}`);
-    para.arguments.map((arg) => ctx.addSegmentFromStr(arg.v));
-  }
+  // if (segmentCheck && angleCheck) {
+  //   conAng.arguments.map((arg) => ctx.addAngleFromStr(arg.v));
+  //   ctx.addSegmentFromStr(`${i1.label}${i2.label}`);
+  //   para.arguments.map((arg) => ctx.addSegmentFromStr(arg.v));
+  // }
   return segmentCheck && angleCheck;
 };
 
@@ -76,8 +79,8 @@ export const altext = (
   const tempCtx = new ProofContent(ctx.getCtx());
   let [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg.v));
   if (a1.equals(a2)) return false;
-  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map((arg) =>
-    tempCtx.getPoint(arg.v),
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map(
+    (arg) => tempCtx.getPoint(arg.v),
   );
   const [s1, s2, t] = [
     tempCtx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
@@ -98,7 +101,14 @@ export const altext = (
   }
 
   //check that parallel lines are same as s1/s2
-  const segmentCheck = !pa1.equals(pa2) && !pa1.equals(t) && !pa2.equals(t);
+  const segmentCheck =
+    !pa1.equals(pa2) &&
+    !pa1.equals(t) &&
+    !pa2.equals(t) &&
+    i1.isOnLine(s1) &&
+    i2.isOnLine(s2) &&
+    i1.isOnLine(t) &&
+    i2.isOnLine(t);
 
   let angleCheck = false;
   // reaassign so that a1 is on s1 and a2 is on s2
@@ -140,8 +150,8 @@ export const sameside = (
     tempCtx.addAngleFromStr(arg.v),
   );
   if (a1.equals(a2)) return false;
-  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map((arg) =>
-    tempCtx.getPoint(arg.v),
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map(
+    (arg) => tempCtx.getPoint(arg.v),
   );
   const [s1, s2, t] = [
     tempCtx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
@@ -162,7 +172,14 @@ export const sameside = (
   }
 
   //check that parallel lines are same as s1/s2
-  const segmentCheck = !pa1.equals(pa2) && !pa1.equals(t) && !pa2.equals(t);
+  const segmentCheck =
+    !pa1.equals(pa2) &&
+    !pa1.equals(t) &&
+    !pa2.equals(t) &&
+    i1.isOnLine(s1) &&
+    i2.isOnLine(s2) &&
+    i1.isOnLine(t) &&
+    i2.isOnLine(t);
 
   let angleCheck = false;
   // reaassign so that a1 is on s1 and a2 is on s2
@@ -202,8 +219,8 @@ export const corresp_ang = (
   const tempCtx = new ProofContent(ctx.getCtx());
   let [a1, a2] = conAng.arguments.map((arg) => tempCtx.addAngleFromStr(arg.v));
   if (a1.equals(a2)) return false;
-  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map((arg) =>
-    tempCtx.getPoint(arg.v),
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map(
+    (arg) => tempCtx.getPoint(arg.v),
   );
   const [s1, s2, t] = [
     tempCtx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`),
@@ -224,7 +241,14 @@ export const corresp_ang = (
   }
 
   //check that parallel lines are same as s1/s2
-  const segmentCheck = !pa1.equals(pa2) && !pa1.equals(t) && !pa2.equals(t);
+  const segmentCheck =
+    !pa1.equals(pa2) &&
+    !pa1.equals(t) &&
+    !pa2.equals(t) &&
+    i1.isOnLine(s1) &&
+    i2.isOnLine(s2) &&
+    i1.isOnLine(t) &&
+    i2.isOnLine(t);
 
   let angleCheck = false;
   // reaassign so that a1 is on s1 and a2 is on s2
