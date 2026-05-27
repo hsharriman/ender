@@ -1,10 +1,7 @@
 import { readFileSync } from "fs";
 import { basename } from "path";
 import { ProofParser } from "./grammar/lezerParser";
-import {
-  collectProofCheckerIssues,
-  runProofChecker,
-} from "./proofChecker";
+import { collectProofCheckerIssues, runProofChecker } from "./proofChecker";
 import { ProofObj } from "./types/checkerTypes";
 
 const parseProof = (filePath: string): ProofObj => {

@@ -306,14 +306,16 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
 };
 
 const transversal = (ctx: ProofContent, args: ParseObj[]) => {
-  const [s1p1, s1p2, p1, s2p1, s2p2, p2] = args.map((arg) =>
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = args.map((arg) =>
     ctx.getPoint(arg.v),
   );
   const seg1 = ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`);
   const seg2 = ctx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`);
-  ctx.addSegmentFromStr(`${p1.label}${p2.label}`);
-  p1.addOnLine(seg1);
-  p2.addOnLine(seg2);
+  const transSeg = ctx.addSegmentFromStr(`${t1.label}${t2.label}`);
+  i1.addOnLine(seg1);
+  i2.addOnLine(seg2);
+  i1.addOnLine(transSeg);
+  i2.addOnLine(transSeg);
 };
 
 const midpt = (ctx: ProofContent, args: ParseObj[]) => {

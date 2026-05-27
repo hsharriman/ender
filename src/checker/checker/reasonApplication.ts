@@ -328,6 +328,12 @@ export const checkReasonApplication = (
           );
         currStep.diagramDeps = vertAngIntersectMatches;
         return true;
+      case "sameside_ang":
+      case "corresp_ang":
+      case "sameside_ang_conv":
+      case "corresp_ang_conv":
+      case "altext":
+      case "altext_conv":
 
       case "given":
         return validateGivenProofStep(currStep, proofGraph);
