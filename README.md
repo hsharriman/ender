@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- Node.js 18+ (recommended)
+- Node.js 23+
 - npm
 
 Install dependencies once:
@@ -29,12 +29,6 @@ Run the checker on one proof file:
 
 ```bash
 npm run checkProof -- src/checker/proofs/tutorial.txt
-```
-
-Run debug checker:
-
-```bash
-npm run debugProof -- src/checker/proofs/tutorial.txt
 ```
 
 The CLI checker does not require OpenAI/LLM configuration.
