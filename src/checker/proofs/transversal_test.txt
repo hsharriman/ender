@@ -1,0 +1,19 @@
+// pass
+title: "S1C1 - Prove Segments Parallel"
+premises:
+pt: A (2, 8, t), B (15, 8, t), C (2, 2, b), D (15, 2, b), E (12, 8, tl), F (6, 2, t), T (13, 9, tr), R (5, 1, l)
+[d_01] transversal(A, B, T, E, C, D, R, F)
+seg: AB CD EF TR
+ang: a_RFD a_TEA a_FEB a_EFD a_BEF a_TEB a_TFD a_CFE
+[g_1] con_ang(a_RFD,a_TEA) 
+[g_2] con_ang(a_RFD,a_FEB)
+[g_3] supplementary(a_EFD,a_BEF)
+-> para(AB,CD)
+
+steps:
+[01] given(g_1) ->  con_ang(a_RFD,a_TEA) 
+[02] given(g_2) ->  con_ang(a_RFD,a_FEB)
+[03] given(g_3) -> supplementary(a_EFD,a_BEF)
+[04] altext_conv(1) -> para(AB, CD)
+[05] sameside_ang_conv(3) -> para(AB, CD)
+[06] corresp_ang_conv(2) -> para(AB, CD)

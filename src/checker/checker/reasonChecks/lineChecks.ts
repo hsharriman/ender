@@ -52,7 +52,7 @@ export const altext = (
     return false;
   }
 
-  //check that parallel lines are same as s1/s2
+  //check that int points are on the transversal
   const segmentCheck = i1.isOnLine(t) && i2.isOnLine(t);
 
   let angleCheck = false;
@@ -74,20 +74,16 @@ export const altext = (
 };
 
 export const sameside = (
-  complementary: Stmt,
+  supplementary: Stmt,
   transversal: Stmt,
   para: Stmt,
   ctx: ProofContent,
 ): boolean => {
-  const res = transversalHelper(ctx, transversal, complementary, para);
+  const res = transversalHelper(ctx, transversal, supplementary, para);
   if (!res.ok) return false;
   const [s1p1, s1p2, , i1, s2p1, s2p2, , i2] = res.pts;
-  const [t] = res.segs;
   const [a1, a2] = res.angles;
 
-  //check that parallel lines are same as s1/s2
-  const segmentCheck = i1.isOnLine(t) && i2.isOnLine(t);
-  let angleCheck = false;
   // the corner of each angle must be on transversal
   if (a1.centerEquals(i1) && a2.centerEquals(i2)) {
     // each angle's endpoint must be the other intersection pt
@@ -97,11 +93,11 @@ export const sameside = (
         (a1.contains(s1p1) && a2.contains(s2p1)) ||
         (a1.contains(s1p2) && a2.contains(s2p2))
       ) {
-        angleCheck = true;
+        return true;
       }
     }
   }
-  return segmentCheck && angleCheck;
+  return false;
 };
 
 // TODO
@@ -117,7 +113,12 @@ export const corresp_ang = (
   const [t] = res.segs;
   const [a1, a2] = res.angles;
 
-  //check that parallel lines are same as s1/s2
+  // cannot work if the transversal's endpoints are the intersections with s1 and/or s2.
+  if (t1.equals(i1) || t2.equals(i2)) {
+    return false;
+  }
+
+  //check that intersection points are on the transversal
   const segmentCheck = i1.isOnLine(t) && i2.isOnLine(t);
 
   // the corner of each angle must be the intersection of transversal

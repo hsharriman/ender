@@ -14,11 +14,14 @@ import {
   vert_ang,
 } from "./reasonChecks/angleChecks";
 import {
+  altext,
   altint,
+  corresp_ang,
   intersect_seg,
   midpt,
   perp,
   reflex_s,
+  sameside,
 } from "./reasonChecks/lineChecks";
 import { parallelogram2, rectangle } from "./reasonChecks/polyChecks";
 import {
@@ -328,13 +331,96 @@ export const checkReasonApplication = (
           );
         currStep.diagramDeps = vertAngIntersectMatches;
         return true;
-      case "sameside_ang":
-      case "corresp_ang":
-      case "sameside_ang_conv":
-      case "corresp_ang_conv":
-      case "altext":
-      case "altext_conv":
-
+      case "sameside_ang": {
+        const para = getDepStmt(reason.arguments[0], proofGraph)!;
+        const samesideMatches = diagramPremisesByFunction(
+          proofGraph,
+          "transversal",
+        ).filter((d) => sameside(stmt, d.statement, para, ctx));
+        if (samesideMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "SAMESIDE_ANG_NO_MATCH",
+          );
+        currStep.diagramDeps = samesideMatches;
+        return true;
+      }
+      case "sameside_ang_conv": {
+        const sup_ang = getDepStmt(reason.arguments[0], proofGraph)!;
+        const samesideMatches = diagramPremisesByFunction(
+          proofGraph,
+          "transversal",
+        ).filter((d) => sameside(sup_ang, d.statement, stmt, ctx));
+        if (samesideMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "SAMESIDE_ANG_NO_MATCH",
+          );
+        currStep.diagramDeps = samesideMatches;
+        return true;
+      }
+      case "corresp_ang": {
+        const para = getDepStmt(reason.arguments[0], proofGraph)!;
+        const samesideMatches = diagramPremisesByFunction(
+          proofGraph,
+          "transversal",
+        ).filter((d) => corresp_ang(stmt, d.statement, para, ctx));
+        if (samesideMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "SAMESIDE_ANG_NO_MATCH",
+          );
+        currStep.diagramDeps = samesideMatches;
+        return true;
+      }
+      case "corresp_ang_conv": {
+        const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
+        const samesideMatches = diagramPremisesByFunction(
+          proofGraph,
+          "transversal",
+        ).filter((d) => corresp_ang(conAng, d.statement, stmt, ctx));
+        if (samesideMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "SAMESIDE_ANG_NO_MATCH",
+          );
+        currStep.diagramDeps = samesideMatches;
+        return true;
+      }
+      case "altext": {
+        const para = getDepStmt(reason.arguments[0], proofGraph)!;
+        const samesideMatches = diagramPremisesByFunction(
+          proofGraph,
+          "transversal",
+        ).filter((d) => altext(stmt, d.statement, para, ctx));
+        if (samesideMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "SAMESIDE_ANG_NO_MATCH",
+          );
+        currStep.diagramDeps = samesideMatches;
+        return true;
+      }
+      case "altext_conv": {
+        const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
+        const samesideMatches = diagramPremisesByFunction(
+          proofGraph,
+          "transversal",
+        ).filter((d) => altext(conAng, d.statement, stmt, ctx));
+        if (samesideMatches.length === 0)
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "SAMESIDE_ANG_NO_MATCH",
+          );
+        currStep.diagramDeps = samesideMatches;
+        return true;
+      }
       case "given":
         return validateGivenProofStep(currStep, proofGraph);
 

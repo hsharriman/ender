@@ -7,6 +7,7 @@ export interface ReasonItem {
   /** Checker-derived dependency expectations; shown below `body` in the UI. */
   expectedDependenciesDescription?: string;
 }
+// TODO combine this object with the map below
 export const Reasons: Record<string, ReasonItem> = {
   Empty: { title: "", body: "", src: "" },
   Given: { title: "Given", body: "", src: "" },
@@ -110,6 +111,36 @@ export const Reasons: Record<string, ReasonItem> = {
     body: "Any four-sided polygon.",
     src: "quadrilateral",
   },
+  AlternateExteriorAngles: {
+    title: "Alternate Exterior Angles Theorem",
+    body: "If two parallel lines are cut by a transversal (a line that crosses two or more lines), then the formed alternate exterior angles are congruent.",
+    src: "",
+  },
+  AlternateExteriorAnglesConverse: {
+    title: "Alternate Exterior Angles (Converse)",
+    body: "If a transversal (a line that crosses two or more lines) forms opposite exterior angles that are congruent, then the two lines it intersects with are parallel to each other.",
+    src: "",
+  },
+  SameSideInteriorAngles: {
+    title: "Same Side Interior Angles Theorem",
+    body: "If two parallel lines are cut by a transversal (a line that crosses two or more lines), then the formed same side interior angles are supplementary.",
+    src: "",
+  },
+  SameSideInteriorAnglesConverse: {
+    title: "Same Side Interior Angles (Converse)",
+    body: "If a transversal (a line that crosses two or more lines) forms same side interior angles that are supplementary, then the two lines it intersects with are parallel to each other.",
+    src: "",
+  },
+  CorrespondingAngles: {
+    title: "Corresponding Angles",
+    body: "If two parallel lines are cut by a transversal, then each pair of corresponding angles is congruent.",
+    src: "",
+  },
+  CorrespondingAnglesConverse: {
+    title: "Corresponding Angles (Converse)",
+    body: "If a transversal (a line that crosses two or more lines) forms corresponding angles that are congruent, then the two lines it intersects with are parallel to each other.",
+    src: "",
+  },
 };
 
 const reasonDefinitions = loadReasonDefinitions();
@@ -156,6 +187,12 @@ export const reasonFromFunction = (fn?: string): ReasonItem => {
     parallelogram2: Reasons.Parallelogram,
     def_ang_bisect: Reasons.Bisector,
     ang_bisect_conv: Reasons.Bisector,
+    altext: Reasons.AlternateExteriorAngles,
+    altext_conv: Reasons.AlternateExteriorAnglesConverse,
+    sameside_ang: Reasons.SameSideInteriorAngles,
+    sameside_ang_conv: Reasons.SameSideInteriorAnglesConverse,
+    corresp_ang: Reasons.CorrespondingAngles,
+    corresp_ang_conv: Reasons.CorrespondingAnglesConverse,
   };
   const base = map[key] ?? { title: fn, body: "", src: "" };
   const depsDescription = expectedDependenciesDescriptionFor(key);

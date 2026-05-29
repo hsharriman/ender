@@ -94,12 +94,12 @@ export const REASONS_DEFS = {
     name: "sameside_ang",
     diagramDependencies: ["transversal"],
     dependencies: ["para"],
-    conclusion: "complementary",
+    conclusion: "supplementary",
   },
   sameside_ang_conv: {
     name: "sameside_ang_conv",
     diagramDependencies: ["transversal"],
-    dependencies: ["complementary"],
+    dependencies: ["supplementary"],
     conclusion: "para",
   },
   corresp_ang: {
