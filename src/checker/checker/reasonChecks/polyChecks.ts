@@ -3,17 +3,16 @@ import { Stmt } from "../../types/checkerTypes";
 import { conAngMapper, conSegMapper } from "./argMappers";
 
 export const rectangle = (rect: Stmt, conclusion: Stmt, ctx: ProofContent) => {
-  const tempCtx = new ProofContent(ctx.getCtx());
-  const quad = tempCtx.addQuadrilateralFromStr(rect.arguments[0].v);
+  const quad = ctx.getQuadrilateral(rect.arguments[0].v);
   if (
     conclusion.function === "con_right" ||
     conclusion.function === "con_ang"
   ) {
-    const [a1, a2] = conAngMapper(conclusion, tempCtx);
+    const [a1, a2] = conAngMapper(conclusion, ctx);
     return quad.contains(a1) && quad.contains(a2);
   }
   if (conclusion.function === "con_seg") {
-    const [s1, s2] = conSegMapper(conclusion, tempCtx);
+    const [s1, s2] = conSegMapper(conclusion, ctx);
     return (
       !s1.equals(s2) &&
       quad.contains(s1) &&
@@ -27,9 +26,8 @@ export const rectangle = (rect: Stmt, conclusion: Stmt, ctx: ProofContent) => {
 };
 
 export const parallelogram2 = (para: Stmt, pgram: Stmt, ctx: ProofContent) => {
-  const tempCtx = new ProofContent(ctx.getCtx());
-  const quad = tempCtx.addQuadrilateralFromStr(para.arguments[0].v);
-  const [s1, s2] = conSegMapper(pgram, tempCtx);
+  const quad = ctx.getQuadrilateral(para.arguments[0].v);
+  const [s1, s2] = conSegMapper(pgram, ctx);
 
   return (
     quad.contains(s1) &&

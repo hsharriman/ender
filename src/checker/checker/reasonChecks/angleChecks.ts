@@ -7,23 +7,16 @@ export const reflex_a = (a1: Angle, a2: Angle) => {
 };
 
 export const right = (perp: Stmt, right: Stmt, ctx: ProofContent): boolean => {
-  const tempCtx = new ProofContent(ctx.getCtx());
-  const [s1, s2] = perp.arguments.map((arg) =>
-    tempCtx.addSegmentFromStr(arg.v),
-  );
-  const r = tempCtx.addAngleFromStr(right.arguments[0].v);
+  const [s1, s2] = perp.arguments.map((arg) => ctx.getSegment(arg.v));
+  const r = ctx.getAngle(right.arguments[0].v);
 
-  let valid = false;
   // angle includes one of the segments and a point from the other
   if (r.contains(s1)) {
-    valid = r.contains(s2.p1) || r.contains(s2.p2);
+    return r.contains(s2.p1) || r.contains(s2.p2);
   } else if (r.contains(s2)) {
-    valid = r.contains(s1.p1) || r.contains(s1.p2);
+    return r.contains(s1.p1) || r.contains(s1.p2);
   }
-  if (valid) {
-    ctx.addAngle(r);
-  }
-  return valid;
+  return false;
 };
 
 export const vert_ang = (
@@ -31,15 +24,12 @@ export const vert_ang = (
   conAng: Stmt,
   ctx: ProofContent,
 ): boolean => {
-  const tempCtx = new ProofContent(ctx.getCtx());
   const [s1, s2, pt]: [Segment, Segment, Point] = [
-    tempCtx.addSegmentFromStr(intersect_seg.arguments[0].v),
-    tempCtx.addSegmentFromStr(intersect_seg.arguments[1].v),
-    tempCtx.getPoint(intersect_seg.arguments[2].v),
+    ctx.getSegment(intersect_seg.arguments[0].v),
+    ctx.getSegment(intersect_seg.arguments[1].v),
+    ctx.getPoint(intersect_seg.arguments[2].v),
   ];
-  const [a1, a2] = conAng.arguments.map((arg) =>
-    tempCtx.addAngleFromStr(arg.v),
-  );
+  const [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
 
   // Check that angles don't include segment names (vertical angles must be across from each other)
   // also that the angles are not equal
@@ -52,14 +42,6 @@ export const vert_ang = (
 
   const centerValid = a1.centerEquals(pt) && a2.centerEquals(pt);
 
-  if (anglesValid && centerValid) {
-    ctx.addAngle(a1);
-    ctx.addAngle(a2);
-
-    // add intersecting lines if DNE yet
-    ctx.addSegmentFromStr(s1.label);
-    ctx.addSegmentFromStr(s2.label);
-  }
   return anglesValid && centerValid;
 };
 
@@ -75,8 +57,8 @@ export const defConRight = (
   // if (findDuplicateDependencyStatements([right1, right2])) return false;
   // if (right1.function !== "right" || right2.function !== "right") return false;
 
-  const a1 = ctx.addAngleFromStr(right1.arguments[0].v);
-  const a2 = ctx.addAngleFromStr(right2.arguments[0].v);
+  const a1 = ctx.getAngle(right1.arguments[0].v);
+  const a2 = ctx.getAngle(right2.arguments[0].v);
 
   if (a1.equals(a2)) return false;
   return true;
@@ -93,15 +75,14 @@ export const congAdjAngles = (
 ): boolean => {
   if (findDuplicateDependencyStatements([right1, right2])) return false;
 
-  const tempCtx = new ProofContent(ctx.getCtx());
-  const ang1 = tempCtx.addAngleFromStr(right1.arguments[0].v);
-  const ang2 = tempCtx.addAngleFromStr(right2.arguments[0].v);
+  const ang1 = ctx.getAngle(right1.arguments[0].v);
+  const ang2 = ctx.getAngle(right2.arguments[0].v);
 
   if (!ang1.center.equals(ang2.center)) return false;
 
   const legs = (a: Angle): [Segment, Segment] => [
-    tempCtx.addSegmentFromStr(a.center.label + a.start.label),
-    tempCtx.addSegmentFromStr(a.center.label + a.end.label),
+    ctx.getSegment(a.center.label + a.start.label),
+    ctx.getSegment(a.center.label + a.end.label),
   ];
   const [e1a, e1b] = legs(ang1);
   const [e2a, e2b] = legs(ang2);
@@ -115,8 +96,6 @@ export const congAdjAngles = (
   ].filter(Boolean).length;
   if (legPairMatches !== 1) return false;
 
-  ctx.addAngleFromStr(ang1.label);
-  ctx.addAngleFromStr(ang2.label);
   return true;
 };
 
@@ -125,14 +104,10 @@ export const def_ang_bisect = (
   bisect: Stmt,
   ctx: ProofContent,
 ) => {
-  const tempCtx = new ProofContent(ctx.getCtx());
-
-  const [a1, a2] = conAng.arguments.map((arg) =>
-    tempCtx.addAngleFromStr(arg.v),
-  );
+  const [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
   const [ang, seg] = [
-    tempCtx.addAngleFromStr(bisect.arguments[0].v),
-    tempCtx.addSegmentFromStr(bisect.arguments[1].v),
+    ctx.getAngle(bisect.arguments[0].v),
+    ctx.getSegment(bisect.arguments[1].v),
   ];
 
   // check if corner of a1/a2 is on seg + corner of ang
