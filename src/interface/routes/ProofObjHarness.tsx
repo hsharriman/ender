@@ -14,6 +14,7 @@ import s2c2Url from "checker/proofs/s2c2.txt";
 import s2c2incompleteUrl from "checker/proofs/s2c2incomplete.txt";
 import s2inc1Url from "checker/proofs/s2inc1.txt";
 import s2inc2Url from "checker/proofs/s2inc2.txt";
+import transversalTest from "checker/proofs/transversal_test.txt";
 import tutincUrl from "checker/proofs/tutinc.txt";
 import tutorialUrl from "checker/proofs/tutorial.txt";
 import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
@@ -62,6 +63,7 @@ const proofOptions: Array<{ key: string; label: string; url: string }> = [
   { key: "s2inc2", label: "s2inc2.txt", url: s2inc2Url },
   { key: "buggyproof", label: "buggyproof.txt", url: buggyProofUrl },
   { key: "overlap", label: "overlap.txt", url: overlapUrl },
+  { key: "transversal", label: "transversal_test.txt", url: transversalTest },
 ];
 
 function formatErrorList(errors: ErrorObj[] | undefined): string {

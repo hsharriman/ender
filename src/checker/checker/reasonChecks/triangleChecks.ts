@@ -17,14 +17,6 @@ type TriangleAssignResult =
   | { ok: true; left: string; right: string }
   | { ok: false; failure: TriangleReasonFailure };
 
-const congruentTrianglePair = (
-  conTri: Stmt,
-  ctx: ProofContent,
-): [Triangle, Triangle] => {
-  const tempCtx = new ProofContent(ctx.getCtx());
-  return conTriMapper(conTri, tempCtx) as [Triangle, Triangle];
-};
-
 const sortPairToTri = (
   pair: ParseObj[],
   [tri1, tri2]: [Triangle, Triangle],
@@ -114,7 +106,7 @@ export const checkSas = (
 ): TriangleReasonResult => {
   const dup = checkDistinctDependencyStmts("sas", [conSeg1, conAng, conSeg2]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = congruentTrianglePair(conTri, ctx);
+  const [tri1, tri2] = conTriMapper(conTri, ctx);
 
   const a1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2);
   if (!a1.ok) return triangleFail(a1.failure.code, a1.failure.details);
@@ -142,8 +134,8 @@ export const checkSas = (
     });
   }
 
-  const t1 = ctx.addTriangleFromStr(tri1.label);
-  const t2 = ctx.addTriangleFromStr(tri2.label);
+  const t1 = ctx.getTriangle(tri1.label);
+  const t2 = ctx.getTriangle(tri2.label);
 
   const t1cp2 = s11.replace(center1, "");
   const t1p3 = t1.getThirdPoint(center1, t1cp2);
@@ -166,7 +158,7 @@ export const checkSss = (
 ): TriangleReasonResult => {
   const dup = checkDistinctDependencyStmts("sss", [conSeg1, conSeg2, conSeg3]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
+  const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
   const r1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2);
   if (!r1.ok) return triangleFail(r1.failure.code, r1.failure.details);
@@ -182,8 +174,8 @@ export const checkSss = (
   const s13 = r3.left;
   const s23 = r3.right;
 
-  const t1 = ctx.addTriangleFromStr(tri1.label);
-  const t2 = ctx.addTriangleFromStr(tri2.label);
+  const t1 = ctx.getTriangle(tri1.label);
+  const t2 = ctx.getTriangle(tri2.label);
 
   t1.orderTriangle(
     [commonPt(s11, s12), commonPt(s12, s13), commonPt(s13, s11)],
@@ -217,7 +209,7 @@ export const checkAas = (
 ): TriangleReasonResult => {
   const dup = checkDistinctDependencyStmts("aas", [conAng1, conAng2, conSeg]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
+  const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
   const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
   if (!e1.ok) return triangleFail(e1.failure.code, e1.failure.details);
@@ -245,8 +237,8 @@ export const checkAas = (
     return triangleFail("AAS_PATTERN", { t1Valid, t2Valid });
   }
 
-  const t1 = ctx.addTriangleFromStr(tri1.label);
-  const t2 = ctx.addTriangleFromStr(tri2.label);
+  const t1 = ctx.getTriangle(tri1.label);
+  const t2 = ctx.getTriangle(tri2.label);
 
   t1.orderTriangle([a11c, a12c, s1.replace(a11c, "").replace(a12c, "")], ctx);
   t2.orderTriangle([a21c, a22c, s2.replace(a21c, "").replace(a22c, "")], ctx);
@@ -263,7 +255,7 @@ export const checkAsa = (
 ): TriangleReasonResult => {
   const dup = checkDistinctDependencyStmts("asa", [conAng1, conSeg, conAng2]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
+  const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
   const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
   if (!e1.ok) return triangleFail(e1.failure.code, e1.failure.details);
@@ -291,8 +283,8 @@ export const checkAsa = (
     return triangleFail("ASA_PATTERN", { t1Valid, t2Valid });
   }
 
-  const t1 = ctx.addTriangleFromStr(tri1.label);
-  const t2 = ctx.addTriangleFromStr(tri2.label);
+  const t1 = ctx.getTriangle(tri1.label);
+  const t2 = ctx.getTriangle(tri2.label);
 
   t1.orderTriangle([a11c, a12c, t1.getThirdPoint(a11c, a12c)], ctx);
   t2.orderTriangle([a21c, a22c, t2.getThirdPoint(a21c, a22c)], ctx);
@@ -309,7 +301,7 @@ export const checkRhl = (
 ): TriangleReasonResult => {
   const dup = checkDistinctDependencyStmts("rhl", [rightCon, conSeg1, conSeg2]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
+  const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
   const er = checkTriangleAssign(rightCon.arguments, tri1, tri2);
   if (!er.ok)
@@ -346,8 +338,8 @@ export const checkRhl = (
     });
   }
 
-  const t1 = ctx.addTriangleFromStr(tri1.label);
-  const t2 = ctx.addTriangleFromStr(tri2.label);
+  const t1 = ctx.getTriangle(tri1.label);
+  const t2 = ctx.getTriangle(tri2.label);
 
   // After RHL validation, the leg contains the right vertex; the other endpoint
   // is the corresponding vertex adjacent to the right angle.
@@ -391,9 +383,7 @@ const checkCpctcAngle = (
   if (!assign.ok) {
     return triangleFail(assign.failure.code, assign.failure.details);
   }
-  const t1 = ctx.addTriangleFromStr(tri1.label);
-  const t2 = ctx.addTriangleFromStr(tri2.label);
-  if (t1.getAngleIndex(assign.left) !== t2.getAngleIndex(assign.right)) {
+  if (tri1.getAngleIndex(assign.left) !== tri2.getAngleIndex(assign.right)) {
     return triangleFail("CPCTC_ANG_INDEX", {
       // angles are not corresponding
       ang1: assign.left,
@@ -408,7 +398,7 @@ export const checkCpctc = (
   conclusion: Stmt,
   ctx: ProofContent,
 ): TriangleReasonResult => {
-  const [tri1, tri2] = congruentTrianglePair(t_cong, ctx);
+  const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
   if (conclusion.function === "con_seg") {
     return checkCpctcSegment(tri1, tri2, conclusion);
@@ -424,13 +414,11 @@ export const checkIsosceles = (
   isoscelesStmt: Stmt,
   ctx: ProofContent,
 ): TriangleReasonResult => {
-  const tempCtx = new ProofContent(ctx.getCtx());
-  const [s1, s2] = conSegMapper(conSeg, tempCtx);
-  const [t] = conTriMapper(isoscelesStmt, tempCtx);
+  const [s1, s2] = conSegMapper(conSeg, ctx);
+  const [t] = conTriMapper(isoscelesStmt, ctx);
 
   if (!(t.contains(s1) && t.contains(s2) && !s1.equals(s2))) {
     return triangleFail("ISOSCELES_PATTERN");
   }
-  ctx.addTriangleFromStr(t.label);
   return triangleOk();
 };

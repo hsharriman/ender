@@ -78,6 +78,42 @@ export const REASONS_DEFS = {
     dependencies: ["para"],
     conclusion: "con_ang",
   },
+  altext: {
+    name: "altext",
+    diagramDependencies: ["transversal"],
+    dependencies: ["para"],
+    conclusion: "con_ang",
+  },
+  altext_conv: {
+    name: "altext_conv",
+    diagramDependencies: ["transversal"],
+    dependencies: ["con_ang"],
+    conclusion: "para",
+  },
+  sameside_ang: {
+    name: "sameside_ang",
+    diagramDependencies: ["transversal"],
+    dependencies: ["para"],
+    conclusion: "supplementary",
+  },
+  sameside_ang_conv: {
+    name: "sameside_ang_conv",
+    diagramDependencies: ["transversal"],
+    dependencies: ["supplementary"],
+    conclusion: "para",
+  },
+  corresp_ang: {
+    name: "corresp_ang",
+    diagramDependencies: ["transversal"],
+    dependencies: ["para"],
+    conclusion: "con_ang",
+  },
+  corresp_ang_conv: {
+    name: "corresp_ang_conv",
+    diagramDependencies: ["transversal"],
+    dependencies: ["con_ang"],
+    conclusion: "para",
+  },
   def_ang_bisect: {
     name: "def_ang_bisect",
     dependencies: ["ang_bisect"],

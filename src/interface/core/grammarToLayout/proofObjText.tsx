@@ -6,7 +6,9 @@ import { EqualSegments } from "../reasons/EqualSegments";
 import { EqualTriangles } from "../reasons/EqualTriangles";
 import { Midpoint } from "../reasons/Midpoint";
 import { ParallelLines } from "../reasons/ParallelLines";
+import { Perpendicular } from "../reasons/Perpendicular";
 import { RightAngle } from "../reasons/RightAngle";
+import { Supplementary } from "../reasons/Supplementary";
 
 export const stmtToText = (stmt?: Stmt) => (isActive: boolean) => {
   if (!stmt) return React.createElement("span", null, "");
@@ -31,6 +33,15 @@ export const stmtToText = (stmt?: Stmt) => (isActive: boolean) => {
   }
   if (stmt.function === "midpt" && args.length === 2) {
     return Midpoint.text(args[1], args[0])(isActive);
+  }
+  if (stmt.function === "perp" && args.length === 2) {
+    return Perpendicular.text(args[0], args[1])(isActive);
+  }
+  if (stmt.function === "supplementary" && args.length === 2) {
+    return Supplementary.text([args[0], args[1]])(isActive);
+  }
+  if (stmt.function === "complementary" && args.length === 2) {
+    return Supplementary.text([args[0], args[1]])(isActive);
   }
   return React.createElement(
     "span",
@@ -57,4 +68,3 @@ export const stmtListToText =
         return parts;
       }),
     );
-

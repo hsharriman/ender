@@ -4,7 +4,7 @@ premises:
 pt: X (9, 9, r), W (2, 9, l), Y (2, 1, bl), Z (9, 1, br), M (5.5, 5, r)
 tri: t_MWX t_MYZ
 [d_01] intersect_seg(XY, WZ, M) 
-[d_02] transversal(W, X, X, Y, Z, Y)
+[d_02] transversal(W, X, X, X, Y, Z, Y, Y)
 [g_1] con_seg(WM, MZ)
 [g_2] con_seg(MX, MY)  
 -> para(WX, YZ)

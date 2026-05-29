@@ -18,9 +18,11 @@ export const STMTS_DEFS = {
         point("s1p1"),
         point("s1p2"),
         point("t1"),
+        point("i1"),
         point("s2p1"),
         point("s2p2"),
         point("t2"),
+        point("i2"),
       ],
       isPremisesOnly: true,
     },
@@ -91,6 +93,14 @@ export const STMTS_DEFS = {
     equilateral: {
       name: "equilateral",
       parameters: [triangle("t")],
+    },
+    supplementary: {
+      name: "supplementary",
+      parameters: [angle("a1"), angle("a2")],
+    },
+    complementary: {
+      name: "complementary",
+      parameters: [angle("a1"), angle("a2")],
     },
   },
   groups: {

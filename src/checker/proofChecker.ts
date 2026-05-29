@@ -72,8 +72,10 @@ const isCorrect = (
 export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const goal = extractGoal(proof);
   proof.errors = [];
+  const ctx = buildPremises(proof);
+  ctx.checkAngleOverlaps();
 
-  const geometricObjectErrors = checkGeometricObjects(proof);
+  const geometricObjectErrors = checkGeometricObjects(proof, ctx);
   if (geometricObjectErrors.length > 0) {
     proof.isCorrect = false;
     return {
@@ -86,9 +88,6 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
       goalMatchResult: { matches: false, details: "skipped (geometry errors)" },
     };
   }
-
-  const ctx = buildPremises(proof);
-  ctx.checkAngleOverlaps();
 
   const reasonDefs = loadReasonDefinitions();
   const { statements: stmtDefs, groups } = loadStatementDefinitions();

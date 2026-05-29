@@ -1,3 +1,4 @@
+import { pointtoParseObj, segtoParseObj } from "checker/utils/utils";
 import { Obj, ParseObj, ProofContent } from "../../geometry-object";
 import { createError } from "../errors/errorConstants";
 import { ProofObj, Stmt } from "../types/checkerTypes";
@@ -21,57 +22,10 @@ export const buildPremises = (proof: ProofObj) => {
   //   }
   // }
 
-  ctx.ctx.segments.forEach((seg) => {
-    console.log(
-      seg.label,
-      Array.from(seg.getParentSegments()).map((s) => s.label),
-      Array.from(seg.getSubSegments()).map((s) => s.label),
-    );
-  });
-
-  // Process given statements involving segments
-  proof.steps.forEach((step) => {
-    if (
-      step.type === "given" &&
-      step.statement?.function &&
-      step.statement.arguments
-    ) {
-      switch (step.statement.function) {
-        case "con_seg":
-          // TODO specify that something is being visually represented in given w this
-          addAllObjects(ctx, step.statement);
-          break;
-        case "on_line":
-          onLine(ctx, step.statement.arguments);
-          break;
-        case "intersect_seg":
-          intersectSeg(ctx, step.statement.arguments, proof);
-          break;
-        case "transversal":
-          transversal(ctx, step.statement.arguments);
-          break;
-        case "midpt":
-          midpt(ctx, step.statement.arguments);
-          break;
-        case "con_ang":
-        case "right":
-        case "ang_bisect":
-        case "perp":
-        case "rectangle":
-          break;
-        default:
-          throw createError.parser.unknownStatementFunction(
-            step.statement.function,
-          );
-      }
-    }
-  });
-
-  // Process diagram-specific premises the same way (they also affect the diagram context).
-  proof.premises.diagramStatements.forEach(({ statement }) => {
-    if (!statement?.function || !statement.arguments) return;
+  const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
     switch (statement.function) {
       case "con_seg":
+        // TODO specify that something is being visually represented in given w this
         addAllObjects(ctx, statement);
         break;
       case "on_line":
@@ -81,7 +35,7 @@ export const buildPremises = (proof: ProofObj) => {
         intersectSeg(ctx, statement.arguments, proof);
         break;
       case "transversal":
-        transversal(ctx, statement.arguments);
+        transversal(ctx, statement.arguments, proof);
         break;
       case "midpt":
         midpt(ctx, statement.arguments);
@@ -89,13 +43,31 @@ export const buildPremises = (proof: ProofObj) => {
       case "con_ang":
       case "right":
       case "ang_bisect":
+      case "supplementary":
+      case "complementary":
       case "perp":
       case "rectangle":
         break;
       default:
-        // Ignore other statement types; they should be handled later if needed.
-        break;
+        throw createError.parser.unknownStatementFunction(statement.function);
     }
+  };
+
+  // Process given statements involving segments
+  proof.steps.forEach((step) => {
+    if (
+      step.type === "given" &&
+      step.statement?.function &&
+      step.statement.arguments
+    ) {
+      addVisibleObjects(ctx, step.statement);
+    }
+  });
+
+  // Process diagram-specific premises the same way (they also affect the diagram context).
+  proof.premises.diagramStatements.forEach(({ statement }) => {
+    if (!statement?.function || !statement.arguments) return;
+    addVisibleObjects(ctx, statement);
   });
 
   // loop through points, create angles between all pairs of segments that contain that point
@@ -182,59 +154,17 @@ export const buildPremises = (proof: ProofObj) => {
   //   ctx.addAngleFromStr(pointLabels);
   // });
 
-  // process all other given steps
-  proof.steps.forEach((step) => {
-    if (
-      step.type === "given" &&
-      step.statement?.function &&
-      step.statement.arguments
-    ) {
-      switch (step.statement.function) {
-        case "con_ang":
-          addAllObjects(ctx, step.statement);
-          break;
-        case "right":
-          addAllObjects(ctx, step.statement);
-          break;
-        case "ang_bisect":
-          angBisect(ctx, step.statement.arguments);
-          break;
-        case "perp":
-          addAllObjects(ctx, step.statement);
-          break;
-        case "rectangle":
-          addAllObjects(ctx, step.statement);
-          break;
-        case "con_seg":
-        case "on_line":
-        case "intersect_seg":
-        case "transversal":
-        case "midpt":
-          break;
-        default:
-          throw createError.parser.unknownStatementFunction(
-            step.statement.function,
-          );
-      }
-    }
-  });
-
-  // Process diagram-specific premises for the "other given" categories.
-  proof.premises.diagramStatements.forEach(({ statement }) => {
-    if (!statement?.function || !statement.arguments) return;
+  // objects that rely on creation of segments before they can be created
+  const addDependentObjects = (ctx: ProofContent, statement: Stmt) => {
     switch (statement.function) {
-      case "con_ang":
-        addAllObjects(ctx, statement);
-        break;
-      case "right":
-        addAllObjects(ctx, statement);
-        break;
       case "ang_bisect":
         angBisect(ctx, statement.arguments);
         break;
+      case "con_ang":
+      case "right":
+      case "complementary":
+      case "supplementary":
       case "perp":
-        addAllObjects(ctx, statement);
-        break;
       case "rectangle":
         addAllObjects(ctx, statement);
         break;
@@ -245,8 +175,25 @@ export const buildPremises = (proof: ProofObj) => {
       case "midpt":
         break;
       default:
-        break;
+        throw createError.parser.unknownStatementFunction(statement.function);
     }
+  };
+
+  // process all other given steps
+  proof.steps.forEach((step) => {
+    if (
+      step.type === "given" &&
+      step.statement?.function &&
+      step.statement.arguments
+    ) {
+      addDependentObjects(ctx, step.statement);
+    }
+  });
+
+  // Process diagram-specific premises for the "other given" categories.
+  proof.premises.diagramStatements.forEach(({ statement }) => {
+    if (!statement?.function || !statement.arguments) return;
+    addDependentObjects(ctx, statement);
   });
 
   ctx.checkAngleOverlaps();
@@ -293,6 +240,9 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
   const seg2 = ctx.addSegmentFromStr(s2.v);
   const ip = ctx.getPoint(p.v);
 
+  ip.addOnLine(seg1);
+  ip.addOnLine(seg2);
+
   s1.v.split("").forEach((pt) => {
     const subSeg = ctx.addSegmentFromStr(`${ip.label}${pt}`);
     seg1.addSubSegment(subSeg);
@@ -305,15 +255,37 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
   });
 };
 
-const transversal = (ctx: ProofContent, args: ParseObj[]) => {
-  const [s1p1, s1p2, p1, s2p1, s2p2, p2] = args.map((arg) =>
+const transversal = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = args.map((arg) =>
     ctx.getPoint(arg.v),
   );
   const seg1 = ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`);
   const seg2 = ctx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`);
-  ctx.addSegmentFromStr(`${p1.label}${p2.label}`);
-  p1.addOnLine(seg1);
-  p2.addOnLine(seg2);
+  const transversalSeg = ctx.addSegmentFromStr(`${t1.label}${t2.label}`);
+
+  const intersectionsAtTransversalEndpoints =
+    (i1.equals(t1) && i2.equals(t2)) || (i1.equals(t2) && i2.equals(t1));
+
+  if (!intersectionsAtTransversalEndpoints) {
+    intersectSeg(
+      ctx,
+      [segtoParseObj(seg1), segtoParseObj(transversalSeg), pointtoParseObj(i1)],
+      proof,
+    );
+    intersectSeg(
+      ctx,
+      [segtoParseObj(seg2), segtoParseObj(transversalSeg), pointtoParseObj(i2)],
+      proof,
+    );
+    const innerT = ctx.addSegmentFromStr(`${i1.label}${i2.label}`);
+    innerT.addParentSegment(transversalSeg);
+  } else {
+    // i1 and i2 are the same as t1 and t2, just add them to on_line
+    i1.addOnLine(seg1);
+    i1.addOnLine(transversalSeg);
+    i2.addOnLine(seg2);
+    i2.addOnLine(transversalSeg);
+  }
 };
 
 const midpt = (ctx: ProofContent, args: ParseObj[]) => {
