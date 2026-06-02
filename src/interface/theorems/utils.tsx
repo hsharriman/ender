@@ -2,7 +2,7 @@ import { DiagramContent } from "../core/builder/DiagramContent";
 import { SVGModes } from "../core/types/diagramTypes";
 import { Reason } from "../core/types/layoutTypes";
 import { StepFocusProps, StepMeta, StepProps } from "../core/types/stepTypes";
-import { Reasons } from "./reasons";
+import { reasonFromFunction } from "./reasons";
 
 export const GIVEN_ID = "given";
 export const PROVE_ID = "prove";
@@ -43,7 +43,7 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   };
 
   return {
-    reason: meta.reason || Reasons.Empty,
+    reason: meta.reason || reasonFromFunction(),
     waysToProve: meta.waysToProve,
     dependsOn: meta.dependsOn,
     isIncorrect: meta.isIncorrect,
@@ -55,4 +55,3 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
     highlight: meta.highlight,
   };
 };
-
