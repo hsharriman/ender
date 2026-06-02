@@ -215,22 +215,61 @@ export const perp = (
   return false;
 };
 
-// export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
-//   if (findDuplicateDependencyStatements([perp, conAng])) return false;
-//   const tempCtx = new ProofContent(ctx.getCtx());
-//   const [s1, s2] = perp.arguments.map((arg) =>
-//     tempCtx.addSegmentFromStr(arg.v),
-//   );
-//   const [a1, a2] = conAng.arguments.map((arg) =>
-//     tempCtx.addAngleFromStr(arg.v),
-//   );
-//   const [intersectPt, sharedSide] = getIntersectPt(s1, s2);
-//   if (intersectPt && sharedSide) {
-//     // TODO check for shared side AND angle made up of one point on the line
-//     return a1.centerEquals(intersectPt) && a2.centerEquals(intersectPt);
-//   }
-//   return false;
-// };
+export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
+  if (findDuplicateDependencyStatements([perp, conAng])) return false;
+  const [s1, s2] = perp.arguments.map((arg) => ctx.getSegment(arg.v));
+  const [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [intersectPt, sharedSide] = getIntersectPt(s1, s2);
+  if (intersectPt && sharedSide) {
+    // TODO check for shared side AND angle made up of one point on the line
+    const centerCheck =
+      a1.centerEquals(intersectPt) && a2.centerEquals(intersectPt);
+    const sharedSideTest = a1.sharedSide(a2);
+    if (!sharedSideTest) return false;
+    const sharedSideCheck = ctx
+      .getSegment(sharedSideTest?.shared)
+      .equals(sharedSide);
+    return (
+      a1.contains(ctx.getPoint(sharedSideTest.thisThird)) &&
+      a2.contains(ctx.getPoint(sharedSideTest.otherThird)) &&
+      centerCheck &&
+      sharedSideCheck
+    );
+  }
+  return false;
+};
+
+export const perp_bisector = (
+  perp: Stmt,
+  midpt: Stmt,
+  conSeg: Stmt,
+  ctx: ProofContent,
+) => {
+  if (findDuplicateDependencyStatements([perp, conSeg])) return false;
+  const [p1, p2] = perp.arguments.map((arg) => ctx.getSegment(arg.v));
+  const [m, p] = [
+    ctx.getSegment(midpt.arguments[0].v),
+    ctx.getPoint(midpt.arguments[1].v),
+  ];
+  const [s1, s2] = conSeg.arguments.map((arg) => ctx.getSegment(arg.v));
+
+  const [intersectPt, sharedSide] = getIntersectPt(p1, p2);
+  if (!intersectPt || !sharedSide) return false;
+
+  // p must be the intersection point
+  if (!p.equals(intersectPt)) return false;
+
+  // one of sharedSide's endpoints must equal p
+  if (!sharedSide.p1.equals(p) && !sharedSide.p2.equals(p)) return false;
+
+  // m divided by p must give exactly s1 and s2
+  const mDivided1 = ctx.getSegment(`${m.p1.label}${p.label}`);
+  const mDivided2 = ctx.getSegment(`${m.p2.label}${p.label}`);
+  return (
+    (s1.equals(mDivided1) && s2.equals(mDivided2)) ||
+    (s1.equals(mDivided2) && s2.equals(mDivided1))
+  );
+};
 
 // ----- Helper functions -----
 const getIntersectPt = (

@@ -40,6 +40,9 @@ export const buildPremises = (proof: ProofObj) => {
       case "midpt":
         midpt(ctx, statement.arguments);
         break;
+      case "linear_pair":
+        linearPair(ctx, statement.arguments);
+        break;
       case "con_ang":
       case "right":
       case "ang_bisect":
@@ -295,6 +298,20 @@ const midpt = (ctx: ProofContent, args: ParseObj[]) => {
   p.addOnLine(s);
   ctx.addSegment({ p1: p, p2: s.p2 }).addParentSegment(s);
   ctx.addSegment({ p1: s.p1, p2: p }).addParentSegment(s);
+};
+
+const linearPair = (ctx: ProofContent, args: ParseObj[]) => {
+  const [a1, a2] = args.map((arg) => ctx.addAngleFromStr(arg.v));
+  const p = ctx.getPoint(a1.center.label);
+  const sharedSide = a1.sharedSide(a2);
+  if (sharedSide) {
+    ctx.addSegmentFromStr(sharedSide.shared);
+    // remaining points form the other side of linear pair
+    const linearSide = ctx.addSegmentFromStr(
+      `${sharedSide.thisThird}${sharedSide.otherThird}`,
+    );
+    p.addOnLine(linearSide);
+  }
 };
 
 const addAllObjects = (ctx: ProofContent, stmt: Stmt) => {

@@ -129,11 +129,6 @@ export const REASONS_DEFS = {
     dependencies: ["right", "right"],
     conclusion: "con_ang, con_right",
   },
-  cong_adj_angles: {
-    name: "cong_adj_angles",
-    dependencies: ["right", "right"],
-    conclusion: "con_ang",
-  },
   perp_con_ang: {
     name: "perp_con_ang",
     dependencies: ["perp"],
@@ -163,6 +158,41 @@ export const REASONS_DEFS = {
     name: "aaa",
     dependencies: ["con_ang", "con_ang", "con_ang"],
     conclusion: "sim_tri",
+  },
+  def_linear_pair: {
+    name: "def_linear_pair",
+    dependencies: ["linear_pair"],
+    conclusion: "supplementary",
+  },
+  linear_pair_conv: {
+    name: "linear_pair_conv",
+    dependencies: ["supplementary"],
+    conclusion: "linear_pair",
+  },
+  con_supplements: {
+    name: "con_supplements",
+    dependencies: ["supplementary", "supplementary", "con_ang"],
+    conclusion: "con_ang",
+  },
+  con_supplements_same: {
+    name: "con_supplements",
+    dependencies: ["supplementary", "supplementary"],
+    conclusion: "con_ang",
+  },
+  con_complements: {
+    name: "con_complements",
+    dependencies: ["complementary", "complementary"],
+    conclusion: "con_ang",
+  },
+  con_complements_same: {
+    name: "con_complements",
+    dependencies: ["complementary", "complementary", "con_ang"],
+    conclusion: "con_ang",
+  },
+  perp_bisector: {
+    name: "perp_bisector",
+    dependencies: ["perp", "midpt"],
+    conclusion: "con_seg",
   },
   given: {
     name: "given",

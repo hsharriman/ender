@@ -19,6 +19,82 @@ export const right = (perp: Stmt, right: Stmt, ctx: ProofContent): boolean => {
   return false;
 };
 
+export const linear_pair = (
+  linearPair: Stmt,
+  supplementary: Stmt,
+  ctx: ProofContent,
+) => {
+  const [a1, a2] = supplementary.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [l1, l2] = linearPair.arguments.map((arg) => ctx.getAngle(arg.v));
+
+  // angles referenced by linear pair must be same as supplementary
+  return (a1.equals(l1) && a2.equals(l2)) || (a1.equals(l2) && a2.equals(l1));
+};
+
+// test for congruent supplements/complements where each pair of angles is supp/comp to the same angle
+export const con_supp_comp_same_angle = (
+  supp: Stmt,
+  supp2: Stmt,
+  conAng: Stmt,
+  ctx: ProofContent,
+) => {
+  if (findDuplicateDependencyStatements([supp, supp2, conAng])) return false;
+  const [a1, a2] = supp.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [b1, b2] = supp2.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [c1, c2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
+
+  // shared angle must appear exactly once in each supp statement
+  const shared = [a1, a2].find((a) => a.equals(b1) || a.equals(b2));
+  if (!shared) return false;
+  if ([a1, a2].filter((a) => a.equals(shared)).length !== 1) return false;
+  if ([b1, b2].filter((a) => a.equals(shared)).length !== 1) return false;
+
+  // c1 and c2 must be the non-shared angle from each supp
+  const remaining1 = [a1, a2].find((a) => !a.equals(shared))!;
+  const remaining2 = [b1, b2].find((a) => !a.equals(shared))!;
+  return (
+    (remaining1.equals(c1) && remaining2.equals(c2)) ||
+    (remaining1.equals(c2) && remaining2.equals(c1))
+  );
+};
+
+// test for con supplements/complements where the angles are supp/comp to 2 diff angs that are con to each other
+export const con_supp_comp_diff_angles = (
+  supp: Stmt,
+  supp2: Stmt,
+  sharedConAng: Stmt,
+  conAng: Stmt,
+  ctx: ProofContent,
+) => {
+  if (findDuplicateDependencyStatements([supp, supp2, conAng])) return false;
+  const [a1, a2] = supp.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [b1, b2] = supp2.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [s1, s2] = sharedConAng.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [c1, c2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
+
+  if (c1.equals(c2) || s1.equals(s2)) return false;
+
+  const s1InSupp = [a1, a2].filter((a) => a.equals(s1)).length === 1;
+  const s1InSupp2 = [b1, b2].filter((a) => a.equals(s1)).length === 1;
+  const s2InSupp = [a1, a2].filter((a) => a.equals(s2)).length === 1;
+  const s2InSupp2 = [b1, b2].filter((a) => a.equals(s2)).length === 1;
+
+  // each shared angle must be in exactly one of supp or supp2
+  if (s1InSupp === s1InSupp2 || s2InSupp === s2InSupp2) return false;
+  // s1 and s2 must be in different supp statements
+  if (s1InSupp === s2InSupp) return false;
+
+  // remaining angles (one from each supp) must be exactly c1 and c2
+  const [suppShared, supp2Shared] = s1InSupp ? [s1, s2] : [s2, s1];
+  const remaining1 = [a1, a2].find((a) => !a.equals(suppShared))!;
+  const remaining2 = [b1, b2].find((a) => !a.equals(supp2Shared))!;
+
+  return (
+    (remaining1.equals(c1) && remaining2.equals(c2)) ||
+    (remaining1.equals(c2) && remaining2.equals(c1))
+  );
+};
+
 export const vert_ang = (
   intersect_seg: Stmt,
   conAng: Stmt,
@@ -61,41 +137,6 @@ export const defConRight = (
   const a2 = ctx.getAngle(right2.arguments[0].v);
 
   if (a1.equals(a2)) return false;
-  return true;
-};
-
-/**
- * `cong_adj_angles` reason: two `right` deps with a **shared side** — same corner
- * and exactly one matching leg among e1a~e2a, e1a~e2b, e1b~e2a, e1b~e2b.
- */
-export const congAdjAngles = (
-  right1: Stmt,
-  right2: Stmt,
-  ctx: ProofContent,
-): boolean => {
-  if (findDuplicateDependencyStatements([right1, right2])) return false;
-
-  const ang1 = ctx.getAngle(right1.arguments[0].v);
-  const ang2 = ctx.getAngle(right2.arguments[0].v);
-
-  if (!ang1.center.equals(ang2.center)) return false;
-
-  const legs = (a: Angle): [Segment, Segment] => [
-    ctx.getSegment(a.center.label + a.start.label),
-    ctx.getSegment(a.center.label + a.end.label),
-  ];
-  const [e1a, e1b] = legs(ang1);
-  const [e2a, e2b] = legs(ang2);
-
-  // only one pair of
-  const legPairMatches = [
-    e1a.equals(e2a),
-    e1a.equals(e2b),
-    e1b.equals(e2a),
-    e1b.equals(e2b),
-  ].filter(Boolean).length;
-  if (legPairMatches !== 1) return false;
-
   return true;
 };
 

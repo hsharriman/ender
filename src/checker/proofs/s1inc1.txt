@@ -3,9 +3,9 @@ title: "S1INC1 - Prove Angles Congruent #1"
 premises:
 pt: A (1, 2, bl), B (10, 2, br), C (14, 9, r), D (5, 9, l)
 tri: t_ABD t_BCD
-[g_1] con_seg(AD,BC) [01]
-[g_2] con_seg(AB,DC) [02]
-[g_3] con_ang(a_ABD,a_CDB) [03]
+[g_1] con_seg(AD,BC)
+[g_2] con_seg(AB,DC)
+[g_3] con_ang(a_ABD,a_CDB)
 -> con_ang(a_BAD,a_DCB)
 
 steps:

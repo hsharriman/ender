@@ -7,9 +7,11 @@ import {
   ReasonDefinition,
 } from "../types/checkerTypes";
 import {
-  congAdjAngles,
+  con_supp_comp_diff_angles,
+  con_supp_comp_same_angle,
   def_ang_bisect,
   defConRight,
+  linear_pair,
   reflex_a,
   vert_ang,
 } from "./reasonChecks/angleChecks";
@@ -20,6 +22,8 @@ import {
   intersect_seg,
   midpt,
   perp,
+  perp_bisector,
+  perp_con_ang,
   reflex_s,
   sameside,
 } from "./reasonChecks/lineChecks";
@@ -306,18 +310,6 @@ export const checkReasonApplication = (
           )
         );
       }
-      case "cong_adj_angles": {
-        const right1 = getDepStmt(reason.arguments[0], proofGraph)!;
-        const right2 = getDepStmt(reason.arguments[1], proofGraph)!;
-        return (
-          congAdjAngles(right1, right2, ctx) ||
-          failStmtArgMismatch(
-            currStep,
-            reason.function,
-            "CONG_ADJ_ANGLES_MISMATCH",
-          )
-        );
-      }
       case "vert_ang":
         const vertAngIntersectMatches = diagramPremisesByFunction(
           proofGraph,
@@ -419,6 +411,93 @@ export const checkReasonApplication = (
             "SAMESIDE_ANG_NO_MATCH",
           );
         currStep.diagramDeps = samesideMatches;
+        return true;
+      }
+      case "perp_con_ang": {
+        const perp = getDepStmt(reason.arguments[0], proofGraph)!;
+        if (!perp_con_ang(perp, stmt, ctx))
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "PERP_CON_ANG_MISMATCH",
+          );
+        return true;
+      }
+      case "perp_bisector": {
+        const perp = getDepStmt(reason.arguments[0], proofGraph)!;
+        const midpt = getDepStmt(reason.arguments[1], proofGraph)!;
+        if (!perp_bisector(perp, midpt, stmt, ctx))
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "PERP_BISECTOR_MISMATCH",
+          );
+        return true;
+      }
+      case "con_supplements_same": {
+        const sup1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const sup2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        if (!con_supp_comp_same_angle(sup1, sup2, stmt, ctx))
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "CON_SUPPLEMENTS_MISMATCH",
+          );
+        return true;
+      }
+      case "con_complements_same": {
+        const comp1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const comp2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        if (!con_supp_comp_same_angle(comp1, comp2, stmt, ctx))
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "CON_COMPLEMENTS_MISMATCH",
+          );
+        return true;
+      }
+      case "con_supplements": {
+        const sup1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const sup2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const conAng = getDepStmt(reason.arguments[2], proofGraph)!;
+        if (!con_supp_comp_diff_angles(sup1, sup2, conAng, stmt, ctx))
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "CON_SUPPLEMENTS_MISMATCH",
+          );
+        return true;
+      }
+      case "con_complements": {
+        const comp1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const comp2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const conAng = getDepStmt(reason.arguments[2], proofGraph)!;
+        if (!con_supp_comp_diff_angles(comp1, comp2, conAng, stmt, ctx))
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "CON_COMPLEMENTS_MISMATCH",
+          );
+        return true;
+      }
+      case "def_linear_pair": {
+        const linearPair = getDepStmt(reason.arguments[0], proofGraph)!;
+        if (!linear_pair(linearPair, stmt, ctx))
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "DEF_LINEAR_PAIR_MISMATCH",
+          );
+        return true;
+      }
+      case "linear_pair_conv": {
+        const supplementary = getDepStmt(reason.arguments[0], proofGraph)!;
+        if (!linear_pair(supplementary, stmt, ctx))
+          return failStmtArgMismatch(
+            currStep,
+            reason.function,
+            "LINEAR_PAIR_CONV_MISMATCH",
+          );
         return true;
       }
       case "given":
