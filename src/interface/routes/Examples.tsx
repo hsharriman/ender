@@ -1,3 +1,4 @@
+import { reasonFromFunction } from "interface/theorems/reasons";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -15,18 +16,18 @@ import {
   staticLayout,
 } from "../core/grammarToLayout/setupLayout";
 import { LayoutProps } from "../core/types/layoutTypes";
-import { Reasons } from "../theorems/reasons";
-import { T1_S1_C1 } from "../theorems/testA/stage1/C1";
-import { T1_S1_C2 } from "../theorems/testA/stage1/C2";
-import { T1_S1_C3 } from "../theorems/testA/stage1/C3";
-import { T1_S1_IN1 } from "../theorems/testA/stage1/IN1";
-import { T1_S1_IN2 } from "../theorems/testA/stage1/IN2";
-import { T1_S1_IN3 } from "../theorems/testA/stage1/IN3";
-import { T1_S2_C1 } from "../theorems/testA/stage2/C1";
-import { T1_S2_C2 } from "../theorems/testA/stage2/C2";
-import { T1_S2_IN1 } from "../theorems/testA/stage2/IN1";
-import { T1_S2_IN2 } from "../theorems/testA/stage2/IN2";
-import { TutorialProof1, TutorialProof2 } from "../theorems/tutorial/tutorial1";
+// import { Reasons } from "../theorems/reasons";
+// import { T1_S1_C1 } from "../theorems/testA/stage1/C1";
+// import { T1_S1_C2 } from "../theorems/testA/stage1/C2";
+// import { T1_S1_C3 } from "../theorems/testA/stage1/C3";
+// import { T1_S1_IN1 } from "../theorems/testA/stage1/IN1";
+// import { T1_S1_IN2 } from "../theorems/testA/stage1/IN2";
+// import { T1_S1_IN3 } from "../theorems/testA/stage1/IN3";
+// import { T1_S2_C1 } from "../theorems/testA/stage2/C1";
+// import { T1_S2_C2 } from "../theorems/testA/stage2/C2";
+// import { T1_S2_IN1 } from "../theorems/testA/stage2/IN1";
+// import { T1_S2_IN2 } from "../theorems/testA/stage2/IN2";
+// import { TutorialProof1, TutorialProof2 } from "../theorems/tutorial/tutorial1";
 
 export interface ExamplesProps {}
 export interface ExamplesState {
@@ -40,18 +41,18 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
     // add other proofs to examples
     super(props);
     this.proofs = [
-      T1_S1_C1,
-      TutorialProof1,
-      TutorialProof2,
-      T1_S1_C2,
-      T1_S1_IN1,
-      T1_S1_C3,
-      T1_S1_IN2,
-      T1_S1_IN3,
-      T1_S2_C1,
-      T1_S2_C2,
-      T1_S2_IN1,
-      T1_S2_IN2,
+      // T1_S1_C1,
+      // TutorialProof1,
+      // TutorialProof2,
+      // T1_S1_C2,
+      // T1_S1_IN1,
+      // T1_S1_C3,
+      // T1_S1_IN2,
+      // T1_S1_IN3,
+      // T1_S2_C1,
+      // T1_S2_C2,
+      // T1_S2_IN1,
+      // T1_S2_IN2,
     ];
     this.state = {
       activePage: -1,
@@ -132,7 +133,9 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
 
   renderExampleTile = (proof: LayoutProps, idx: number) => {
     const layout = staticLayout(proof);
-    const givens = proof.steps.filter((s) => s.reason === Reasons.Given).length;
+    const givens = proof.steps.filter(
+      (s) => s.reason === reasonFromFunction("given"),
+    ).length;
     if (layout) {
       const diagramCtx = layout.props as StaticAppPageProps;
       return (

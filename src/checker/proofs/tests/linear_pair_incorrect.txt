@@ -1,0 +1,13 @@
+// fail on step 2
+title: "Test: def_linear_pair (incorrect - mixed angles from different pairs)"
+premises:
+pt: A (1, 5, l), B (10, 5, r), C (5, 5, b), D (5, 9, t), E (5, 2, b)
+seg: AC CD BC CE
+ang: a_ACD a_DCB a_ACE a_ECB
+[g_1] linear_pair(a_ACD, a_DCB)
+[g_2] linear_pair(a_ACE, a_ECB)
+-> supplementary(a_ACD, a_ECB)
+
+steps:
+[01] given(g_1) -> linear_pair(a_ACD, a_DCB)
+[02] def_linear_pair(1) -> supplementary(a_ACD, a_ECB)

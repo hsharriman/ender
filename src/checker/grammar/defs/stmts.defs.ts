@@ -102,6 +102,10 @@ export const STMTS_DEFS = {
       name: "complementary",
       parameters: [angle("a1"), angle("a2")],
     },
+    linear_pair: {
+      name: "linear_pair",
+      parameters: [angle("a1"), angle("a2")],
+    },
   },
   groups: {
     congruent_angs: {

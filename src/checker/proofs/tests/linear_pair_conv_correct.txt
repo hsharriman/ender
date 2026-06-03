@@ -1,0 +1,12 @@
+// pass
+title: "Test: linear_pair_conv (correct)"
+premises:
+pt: A (1, 5, l), B (10, 5, r), C (5, 5, b), D (5, 9, t)
+seg: AC CD BC
+ang: a_ACD a_DCB
+[g_1] supplementary(a_ACD, a_DCB)
+-> linear_pair(a_ACD, a_DCB)
+
+steps:
+[01] given(g_1) -> supplementary(a_ACD, a_DCB)
+[02] linear_pair_conv(1) -> linear_pair(a_ACD, a_DCB)

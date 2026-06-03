@@ -1,0 +1,13 @@
+// pass
+title: "Test: perp_bisector (correct)"
+premises:
+pt: A (1, 5, l), B (10, 5, r), M (5.5, 5, b), D (5.5, 9, t)
+tri: t_AMD t_BMD
+[g_1] perp(MD, AB)
+[g_2] midpt(AB, M)
+-> con_seg(AM, MB)
+
+steps:
+[01] given(g_1) -> perp(MD, AB)
+[02] given(g_2) -> midpt(AB, M)
+[03] perp_bisector(1, 2) -> con_seg(AM, MB)

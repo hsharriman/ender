@@ -1,5 +1,6 @@
 import { Stmt } from "checker/types/checkerTypes";
 import React from "react";
+import { Complementary } from "../reasons/Complementary";
 import { EqualAngles } from "../reasons/EqualAngles";
 import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
@@ -41,7 +42,7 @@ export const stmtToText = (stmt?: Stmt) => (isActive: boolean) => {
     return Supplementary.text([args[0], args[1]])(isActive);
   }
   if (stmt.function === "complementary" && args.length === 2) {
-    return Supplementary.text([args[0], args[1]])(isActive);
+    return Complementary.text([args[0], args[1]])(isActive);
   }
   return React.createElement(
     "span",

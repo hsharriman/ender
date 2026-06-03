@@ -174,6 +174,11 @@ export class ProofContent {
     const startToCenter = this.getSegment(`${s}${c}`);
     const endToCenter = this.getSegment(`${c}${e}`);
 
+    if (!startToCenter || !endToCenter)
+      throw new Error(
+        `Angle ${s}${c}${e}: segment ${s}${c} or ${c}${e} not found in context`,
+      );
+
     // check for overlaps with parent segments
     findOverlaps(startToCenter.getParentSegments(), e); // 3rd pt = end
     findOverlaps(endToCenter.getParentSegments(), s); // 3rd pt = start

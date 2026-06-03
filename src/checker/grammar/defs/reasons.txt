@@ -64,9 +64,6 @@ reason ang_bisect_conv(con_ang) -> ang_bisect
 // two angles already given as right → congruent (each 90°)
 reason def_con_right(right, right) -> con_ang
 
-// adjacent right angles that share a side (same corner, one common leg)
-reason cong_adj_angles(right, right) -> con_ang
-
 // the pair of congruent angles formed by perpendicular lines are right angles
 reason perp_con_ang(perp) -> con_ang, con_right
 

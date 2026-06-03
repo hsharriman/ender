@@ -13,6 +13,10 @@ export const buildPremises = (proof: ProofObj) => {
     ctx.addPoint({ pt: pointObj.pt, label });
   });
 
+  // Add all segments from premises
+  proof.premises.segments.forEach((segmentObj) => {
+    ctx.addSegmentFromStr(segmentObj.v);
+  });
   // // loop through all pairs of points and create segments
   // for (let i = 0; i < proof.premises.points.length; i++) {
   //   const point1 = ctx.getPoint(proof.premises.points[i].v);
@@ -39,6 +43,9 @@ export const buildPremises = (proof: ProofObj) => {
         break;
       case "midpt":
         midpt(ctx, statement.arguments);
+        break;
+      case "linear_pair":
+        linearPair(ctx, statement.arguments);
         break;
       case "con_ang":
       case "right":
@@ -142,11 +149,6 @@ export const buildPremises = (proof: ProofObj) => {
     ctx.addQuadrilateralFromStr(pointLabels);
   });
 
-  // // Add all segments from premises
-  // proof.premises.segments.forEach((segmentObj) => {
-  //   ctx.addSegmentFromStr(segmentObj.v);
-  // });
-
   // // Add all angles from premises
   // proof.premises.angles.forEach((angleObj) => {
   //   // Parse angle label (e.g., "a_BAC")
@@ -173,6 +175,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "intersect_seg":
       case "transversal":
       case "midpt":
+      case "linear_pair":
         break;
       default:
         throw createError.parser.unknownStatementFunction(statement.function);
@@ -295,6 +298,20 @@ const midpt = (ctx: ProofContent, args: ParseObj[]) => {
   p.addOnLine(s);
   ctx.addSegment({ p1: p, p2: s.p2 }).addParentSegment(s);
   ctx.addSegment({ p1: s.p1, p2: p }).addParentSegment(s);
+};
+
+const linearPair = (ctx: ProofContent, args: ParseObj[]) => {
+  const [a1, a2] = args.map((arg) => ctx.addAngleFromStr(arg.v));
+  const p = ctx.getPoint(a1.center.label);
+  const sharedSide = a1.sharedSide(a2);
+  if (sharedSide) {
+    ctx.addSegmentFromStr(sharedSide.shared);
+    // remaining points form the other side of linear pair
+    const linearSide = ctx.addSegmentFromStr(
+      `${sharedSide.thisThird}${sharedSide.otherThird}`,
+    );
+    p.addOnLine(linearSide);
+  }
 };
 
 const addAllObjects = (ctx: ProofContent, stmt: Stmt) => {

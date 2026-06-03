@@ -6,11 +6,12 @@ export class Perpendicular {
   static additions = (
     props: StepFocusProps,
     perp: string,
-    segs: [string, string],
+    // segs: [string, string],
+    s1: string,
   ) => {
     props.ctx.getSegment(perp)?.mode(props.frame, props.mode);
-    props.ctx.getSegment(segs[0])?.mode(props.frame, props.mode);
-    props.ctx.getSegment(segs[1])?.mode(props.frame, props.mode);
+    props.ctx.getSegment(s1)?.mode(props.frame, props.mode);
+    // props.ctx.getSegment(segs[1])?.mode(props.frame, props.mode);
   };
   static text = (label: string, perp: string) => (isActive: boolean) => {
     return (

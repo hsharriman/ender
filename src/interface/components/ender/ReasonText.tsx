@@ -1,6 +1,6 @@
+import { reasonFromFunction } from "interface/theorems/reasons";
 import React from "react";
 import { Reason } from "../../core/types/layoutTypes";
-import { Reasons } from "../../theorems/reasons";
 
 export interface ReasonTextProps {
   activeFrame: string;
@@ -8,11 +8,12 @@ export interface ReasonTextProps {
 }
 export class ReasonText extends React.Component<ReasonTextProps> {
   render() {
-    const { title, body, expectedDependenciesDescription } =
-      this.props.textFn(this.props.activeFrame);
+    const { title, body, expectedDependenciesDescription } = this.props.textFn(
+      this.props.activeFrame,
+    );
     if (
       this.props.activeFrame === "prove" ||
-      title === Reasons.Given.title ||
+      title === reasonFromFunction("given").title ||
       title.length === 0
     ) {
       return <></>;

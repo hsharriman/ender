@@ -70,4 +70,20 @@ export class Angle extends BaseGeometryObject {
     this.names.add(`${start}${this.center.label}${end}`);
     this.names.add(`${end}${this.center.label}${start}`);
   };
+
+  sharedSide = (other: Angle) => {
+    const thisPts = [this.start, this.center, this.end];
+    const sharedPts = thisPts.filter((pt) => other.contains(pt));
+    if (sharedPts.length !== 2) return undefined;
+
+    const thisThird = thisPts.find((pt) => !sharedPts.includes(pt))!;
+    const otherThird = [other.start, other.center, other.end].find(
+      (pt) => !sharedPts.includes(pt),
+    )!;
+    return {
+      shared: `${sharedPts[0].label}${sharedPts[1].label}`,
+      thisThird: thisThird.label,
+      otherThird: otherThird.label,
+    };
+  };
 }
