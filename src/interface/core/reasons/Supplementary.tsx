@@ -3,7 +3,7 @@ import { BaseAngle } from "./BaseAngle";
 // TODO how to visually represent supplementary angles
 export class Supplementary {
   private static addition = " + ";
-  private static equalNinety = " = 90°";
+  private static equalNinety = " = 180°";
   // static additions = (props: StepFocusProps, [a1, a2]: [string, string]) => {
   //   RightAngle.additions({ ...props }, a1);
   //   RightAngle.additions({ ...props, mode: props.mode }, a2);

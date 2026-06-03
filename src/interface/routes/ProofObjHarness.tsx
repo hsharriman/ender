@@ -1,22 +1,5 @@
 import { ProofParser } from "checker/grammar/lezerParser";
 import { runProofChecker } from "checker/proofChecker";
-import buggyProofUrl from "checker/proofs/buggyproof.txt";
-import overlapUrl from "checker/proofs/overlap.txt";
-import s1c1Url from "checker/proofs/s1c1.txt";
-import s1c1incompleteUrl from "checker/proofs/s1c1incomplete.txt";
-import s1c2Url from "checker/proofs/s1c2.txt";
-import s1c3Url from "checker/proofs/s1c3.txt";
-import s1inc1Url from "checker/proofs/s1inc1.txt";
-import s1inc2Url from "checker/proofs/s1inc2.txt";
-import s1inc3Url from "checker/proofs/s1inc3.txt";
-import s2c1Url from "checker/proofs/s2c1.txt";
-import s2c2Url from "checker/proofs/s2c2.txt";
-import s2c2incompleteUrl from "checker/proofs/s2c2incomplete.txt";
-import s2inc1Url from "checker/proofs/s2inc1.txt";
-import s2inc2Url from "checker/proofs/s2inc2.txt";
-import transversalTest from "checker/proofs/transversal_test.txt";
-import tutincUrl from "checker/proofs/tutinc.txt";
-import tutorialUrl from "checker/proofs/tutorial.txt";
 import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import { Component, createRef } from "react";
@@ -38,33 +21,19 @@ import {
 
 const parser = new ProofParser();
 
-const proofOptions: Array<{ key: string; label: string; url: string }> = [
-  { key: "tutorial", label: "tutorial.txt", url: tutorialUrl },
-  { key: "tutinc", label: "tutinc.txt", url: tutincUrl },
-  { key: "s1c1", label: "s1c1.txt", url: s1c1Url },
-  {
-    key: "s1c1incomplete",
-    label: "s1c1incomplete.txt",
-    url: s1c1incompleteUrl,
-  },
-  { key: "s1c2", label: "s1c2.txt", url: s1c2Url },
-  { key: "s1c3", label: "s1c3.txt", url: s1c3Url },
-  { key: "s1inc1", label: "s1inc1.txt", url: s1inc1Url },
-  { key: "s1inc2", label: "s1inc2.txt", url: s1inc2Url },
-  { key: "s1inc3", label: "s1inc3.txt", url: s1inc3Url },
-  { key: "s2c1", label: "s2c1.txt", url: s2c1Url },
-  {
-    key: "s2c2incomplete",
-    label: "s2c2incomplete.txt",
-    url: s2c2incompleteUrl,
-  },
-  { key: "s2c2", label: "s2c2.txt", url: s2c2Url },
-  { key: "s2inc1", label: "s2inc1.txt", url: s2inc1Url },
-  { key: "s2inc2", label: "s2inc2.txt", url: s2inc2Url },
-  { key: "buggyproof", label: "buggyproof.txt", url: buggyProofUrl },
-  { key: "overlap", label: "overlap.txt", url: overlapUrl },
-  { key: "transversal", label: "transversal_test.txt", url: transversalTest },
-];
+const allProofUrls = import.meta.glob("/src/checker/proofs/**/*.txt", {
+  query: "?url",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+
+const proofOptions: Array<{ key: string; label: string; url: string }> =
+  Object.entries(allProofUrls)
+    .map(([path, url]) => {
+      const relative = path.replace("/src/checker/proofs/", "");
+      return { key: relative, label: relative, url };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
 
 function formatErrorList(errors: ErrorObj[] | undefined): string {
   if (!errors?.length) return "Incorrect step (no step.errors payload)";
@@ -127,7 +96,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.state = {
       isEditorOpen: true,
       isInteractiveLayout: true,
-      selectedProofKey: "tutorial",
+      selectedProofKey: "tutorial.txt",
       proofText: "",
       lastGoodProof: null,
       parseVersion: 0,
@@ -408,11 +377,28 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                 this.setState({ selectedProofKey: e.target.value })
               }
             >
-              {proofOptions.map((proof) => (
-                <option key={proof.key} value={proof.key}>
-                  {proof.label}
-                </option>
-              ))}
+              {(() => {
+                const top = proofOptions.filter((p) => !p.key.startsWith("tests/"));
+                const tests = proofOptions.filter((p) => p.key.startsWith("tests/"));
+                return (
+                  <>
+                    {top.map((proof) => (
+                      <option key={proof.key} value={proof.key}>
+                        {proof.label}
+                      </option>
+                    ))}
+                    {tests.length > 0 && (
+                      <optgroup label="tests/">
+                        {tests.map((proof) => (
+                          <option key={proof.key} value={proof.key}>
+                            {proof.label.replace("tests/", "")}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </>
+                );
+              })()}
             </select>
             <div className="relative w-full h-full border border-slate-200 rounded font-mono text-xs overflow-hidden">
               <pre

@@ -1,0 +1,16 @@
+// pass
+title: "Test: con_complements (correct - angles complementary to congruent angles are congruent)"
+premises:
+pt: A (1, 5, l), B (10, 5, r), C (5, 5, b), D (5, 9, t), E (1, 1, l), F (10, 1, r), G (5, 1, b), H (5, 6, t)
+seg: AC CD BC EG HG GF
+ang: a_ACD a_DCB a_EGH a_HGF
+[g_1] complementary(a_ACD, a_DCB)
+[g_2] complementary(a_EGH, a_HGF)
+[g_3] con_ang(a_DCB, a_HGF)
+-> con_ang(a_ACD, a_EGH)
+
+steps:
+[01] given(g_1) -> complementary(a_ACD, a_DCB)
+[02] given(g_2) -> complementary(a_EGH, a_HGF)
+[03] given(g_3) -> con_ang(a_DCB, a_HGF)
+[04] con_complements(1, 2, 3) -> con_ang(a_ACD, a_EGH)

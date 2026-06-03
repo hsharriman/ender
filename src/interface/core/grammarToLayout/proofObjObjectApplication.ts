@@ -6,6 +6,7 @@ import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
 import { Midpoint } from "../reasons/Midpoint";
 import { ParallelLines } from "../reasons/ParallelLines";
+import { Perpendicular } from "../reasons/Perpendicular";
 import { RightAngle } from "../reasons/RightAngle";
 import { SVGModes } from "../types/diagramTypes";
 
@@ -47,7 +48,7 @@ export const buildCongruenceTickTracker = (
   return { segTickByKey, angTickByKey };
 };
 
-export const createStmtObjectApplier =
+export const applyStmtAdditions =
   (tracker: CongruenceTickTracker) =>
   (
     ctx: DiagramContent,
@@ -120,6 +121,13 @@ export const createStmtObjectApplier =
       const segment = stmt.arguments[0].v;
       const point = stmt.arguments[1].v;
       Midpoint.additions({ ctx, frame, mode }, point, segment);
+      return;
+    }
+    if (stmt.function === "perp" && stmt.arguments.length === 2) {
+      const s1 = stmt.arguments[0].v;
+      const s2 = stmt.arguments[1].v;
+      Perpendicular.additions({ ctx, frame, mode }, s1, s2);
+      return;
     }
   };
 

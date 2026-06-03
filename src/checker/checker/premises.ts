@@ -13,6 +13,10 @@ export const buildPremises = (proof: ProofObj) => {
     ctx.addPoint({ pt: pointObj.pt, label });
   });
 
+  // Add all segments from premises
+  proof.premises.segments.forEach((segmentObj) => {
+    ctx.addSegmentFromStr(segmentObj.v);
+  });
   // // loop through all pairs of points and create segments
   // for (let i = 0; i < proof.premises.points.length; i++) {
   //   const point1 = ctx.getPoint(proof.premises.points[i].v);
@@ -145,11 +149,6 @@ export const buildPremises = (proof: ProofObj) => {
     ctx.addQuadrilateralFromStr(pointLabels);
   });
 
-  // // Add all segments from premises
-  // proof.premises.segments.forEach((segmentObj) => {
-  //   ctx.addSegmentFromStr(segmentObj.v);
-  // });
-
   // // Add all angles from premises
   // proof.premises.angles.forEach((angleObj) => {
   //   // Parse angle label (e.g., "a_BAC")
@@ -176,6 +175,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "intersect_seg":
       case "transversal":
       case "midpt":
+      case "linear_pair":
         break;
       default:
         throw createError.parser.unknownStatementFunction(statement.function);

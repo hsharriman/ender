@@ -1,9 +1,7 @@
-import { loadReasonDefinitions } from "checker/grammar/defsParsers";
-
 export interface ReasonItem {
   title: string;
   body: string;
-  src?: string;
+  src?: string; // used to load static diagram image from public/reasons/<src>.png
   /** Checker-derived dependency expectations; shown below `body` in the UI. */
   // expectedDependenciesDescription?: string;
 }
@@ -178,7 +176,42 @@ export const reasonFromFunction = (fn?: string): ReasonItem => {
     quadrilateral: {
       title: "Def. Quadrilateral",
       body: "Any four-sided polygon.",
-      src: "quadrilateral",
+      src: "",
+    },
+    def_linear_pair: {
+      title: "Def. Linear Pair",
+      body: "Two adjacent angles that form a straight line are a linear pair. The angles in a linear pair are supplementary.",
+      src: "",
+    },
+    linear_pair_conv: {
+      title: "Def. Linear Pair (Converse)",
+      body: "If two adjacent angles are supplementary, then they form a linear pair.",
+      src: "",
+    },
+    con_supplements: {
+      title: "Congruent Supplements",
+      body: "If two angles are supplementary to congruent angles, then the two angles are congruent.",
+      src: "",
+    },
+    con_complements: {
+      title: "Congruent Complements",
+      body: "If two angles are complementary to congruent angles, then the two angles are congruent.",
+      src: "",
+    },
+    con_supplements_same: {
+      title: "Congruent Supplements",
+      body: "If two angles are supplementary to the same angle, then the two angles are congruent.",
+      src: "",
+    },
+    con_complements_same: {
+      title: "Congruent Complements",
+      body: "If two angles are complementary to the same angle, then the two angles are congruent.",
+      src: "",
+    },
+    perp_bisector: {
+      title: "Def. Perpendicular Bisector",
+      body: "A line that is perpendicular to a segment and passes through its midpoint.",
+      src: "perp-bisector",
     },
   };
   const base = map[key] ?? { title: fn, body: "", src: "" };

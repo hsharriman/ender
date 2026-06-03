@@ -1,0 +1,12 @@
+// fail on step 2
+title: "Test: linear_pair_conv (incorrect - conclusion references angle not in supplementary)"
+premises:
+pt: A (1, 5, l), B (10, 5, r), C (5, 5, b), D (5, 9, t), E (5, 2, b)
+seg: AC CD BC EC
+ang: a_ACD a_DCB a_ECB
+[g_1] supplementary(a_ACD, a_DCB)
+-> linear_pair(a_ACD, a_ECB)
+
+steps:
+[01] given(g_1) -> supplementary(a_ACD, a_DCB)
+[02] linear_pair_conv(1) -> linear_pair(a_ACD, a_ECB)

@@ -1,0 +1,13 @@
+// fail on step 3
+title: "Test: con_complements_same (incorrect - complementary pairs share no common angle)"
+premises:
+pt: A (1, 5, l), B (10, 5, r), C (5, 5, b), D (5, 9, t), E (8, 9, tr)
+tri: t_ACD t_BCD t_ACE
+[g_1] complementary(a_ACD, a_DCB)
+[g_2] complementary(a_ACE, a_ECB)
+-> con_ang(a_ACD, a_ACE)
+
+steps:
+[01] given(g_1) -> complementary(a_ACD, a_DCB)
+[02] given(g_2) -> complementary(a_ACE, a_ECB)
+[03] con_complements_same(1, 2) -> con_ang(a_ACD, a_ACE)

@@ -1,6 +1,6 @@
 import { ProofObj, ProofStep, Stmt } from "checker/types/checkerTypes";
 import React from "react";
-import { reasonFromFunction, Reasons } from "../../theorems/reasons";
+import { reasonFromFunction } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
 import { AspectRatio } from "../diagramSvg/svgTypes";
 import { Transversal } from "../reasons/Transversal";
@@ -11,8 +11,8 @@ import { StepMeta } from "../types/stepTypes";
 import { seedBaseContentFromPremises } from "./proofObjBaseContent";
 import {
   applyPremisesObjects,
+  applyStmtAdditions,
   buildCongruenceTickTracker,
-  createStmtObjectApplier,
 } from "./proofObjObjectApplication";
 import { stmtListToText, stmtToText } from "./proofObjText";
 
@@ -45,7 +45,7 @@ export const interactiveLayoutFromProofObj = (
     ),
     proveStmt,
   ]);
-  const applyStmtObjects = createStmtObjectApplier(tickTracker);
+  const applyStmtObjects = applyStmtAdditions(tickTracker);
 
   const premisesSummary = (isActive: boolean) => {
     const entries: Array<(active: boolean) => JSX.Element> = [];
@@ -64,7 +64,7 @@ export const interactiveLayoutFromProofObj = (
   };
 
   const givensMeta = makeStepMeta({
-    reason: Reasons.Given,
+    reason: reasonFromFunction("given"),
     text: premisesSummary,
     additions: ({ ctx, frame, mode }) => {
       applyPremisesObjects(ctx, frame, mode);
@@ -75,7 +75,7 @@ export const interactiveLayoutFromProofObj = (
   });
 
   const provesMeta = makeStepMeta({
-    reason: Reasons.Empty,
+    reason: reasonFromFunction(),
     prevStep: givensMeta,
     text: stmtToText(proveStmt),
     additions: ({ ctx, frame }) =>
@@ -141,8 +141,9 @@ export const interactiveLayoutFromProofObj = (
     //   intersectSegDep?.statement.arguments?.length === 3;
 
     const prevStep = idx === 0 ? givensMeta : stepMetas[idx - 1];
-    const isIncorrect =
-      Boolean(step.stepNumber && incorrectSteps?.has(step.stepNumber));
+    const isIncorrect = Boolean(
+      step.stepNumber && incorrectSteps?.has(step.stepNumber),
+    );
     const stepMeta = makeStepMeta({
       reason: reasonFromFunction(step.reason?.function),
       waysToProve: step.waysToProve,

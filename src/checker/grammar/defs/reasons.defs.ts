@@ -175,18 +175,18 @@ export const REASONS_DEFS = {
     conclusion: "con_ang",
   },
   con_supplements_same: {
-    name: "con_supplements",
+    name: "con_supplements_same",
     dependencies: ["supplementary", "supplementary"],
     conclusion: "con_ang",
   },
   con_complements: {
     name: "con_complements",
-    dependencies: ["complementary", "complementary"],
+    dependencies: ["complementary", "complementary", "con_ang"],
     conclusion: "con_ang",
   },
   con_complements_same: {
-    name: "con_complements",
-    dependencies: ["complementary", "complementary", "con_ang"],
+    name: "con_complements_same",
+    dependencies: ["complementary", "complementary"],
     conclusion: "con_ang",
   },
   perp_bisector: {

@@ -1,5 +1,5 @@
 import { WaysToProveCandidate } from "checker/types/checkerTypes";
-import { Reasons } from "../../theorems/reasons";
+import { reasonFromFunction } from "interface/theorems/reasons";
 import { GIVEN_ID, PROVE_ID } from "../../theorems/utils";
 import { DiagramRenderCtx, SVGModes } from "../types/diagramTypes";
 import { LayoutProps, ProofMeta, Reason } from "../types/layoutTypes";
@@ -68,7 +68,10 @@ export const staticLayout = (proofMeta: LayoutProps): ProofMeta => {
       stmt: step.staticText(),
       reason: step.reason.title,
     });
-    if (step.reason.body !== "" && step.reason.title !== Reasons.Given.title) {
+    if (
+      step.reason.body !== "" &&
+      step.reason.title !== reasonFromFunction("given").title
+    ) {
       reasons.push(step.reason);
     }
     const s = ctx.addFrame(`s${i + 1}`);

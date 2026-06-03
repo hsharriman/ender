@@ -1,0 +1,13 @@
+// pass
+title: "Test: con_supplements_same (correct - both angles supplementary to the same angle)"
+premises:
+pt: A (1, 5, l), B (10, 5, r), C (5, 5, b), D (5, 9, t), E (8, 9, tr)
+tri: t_ACD t_BCD t_ACE
+[g_1] supplementary(a_ACD, a_DCB)
+[g_2] supplementary(a_ACE, a_DCB)
+-> con_ang(a_ACD, a_ACE)
+
+steps:
+[01] given(g_1) -> supplementary(a_ACD, a_DCB)
+[02] given(g_2) -> supplementary(a_ACE, a_DCB)
+[03] con_supplements_same(1, 2) -> con_ang(a_ACD, a_ACE)
