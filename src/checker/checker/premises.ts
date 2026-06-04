@@ -28,6 +28,7 @@ export const buildPremises = (proof: ProofObj) => {
 
   const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
     switch (statement.function) {
+      case "para":
       case "con_seg":
         // TODO specify that something is being visually represented in given w this
         addAllObjects(ctx, statement);
@@ -54,6 +55,23 @@ export const buildPremises = (proof: ProofObj) => {
       case "complementary":
       case "perp":
       case "rectangle":
+      // TODO implement
+      case "con_tri":
+      case "con_right":
+      case "para":
+      case "isosceles":
+      case "parallelogram":
+      case "sim_seg":
+      case "sim_tri":
+      case "equilateral":
+      case "equilangular":
+      case "seg_bisect":
+      case "kite":
+      case "isos_trapezoid":
+      case "rhombus":
+      case "trapezoid":
+      case "circumcenter":
+      case "incenter":
         break;
       default:
         throw createError.parser.unknownStatementFunction(statement.function);
@@ -176,6 +194,23 @@ export const buildPremises = (proof: ProofObj) => {
       case "transversal":
       case "midpt":
       case "linear_pair":
+      case "para":
+      // TODO implement
+      case "con_tri":
+      case "con_right":
+      case "isosceles":
+      case "parallelogram":
+      case "sim_seg":
+      case "sim_tri":
+      case "equilateral":
+      case "equilangular":
+      case "seg_bisect":
+      case "kite":
+      case "isos_trapezoid":
+      case "rhombus":
+      case "trapezoid":
+      case "circumcenter":
+      case "incenter":
         break;
       default:
         throw createError.parser.unknownStatementFunction(statement.function);

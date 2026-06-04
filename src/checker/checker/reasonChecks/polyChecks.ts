@@ -25,10 +25,15 @@ export const rectangle = (rect: Stmt, conclusion: Stmt, ctx: ProofContent) => {
   return false;
 };
 
-export const parallelogram2 = (para: Stmt, pgram: Stmt, ctx: ProofContent) => {
+export const def_parallelogram = (
+  para: Stmt,
+  pgram: Stmt,
+  ctx: ProofContent,
+) => {
   const quad = ctx.getQuadrilateral(para.arguments[0].v);
   const [s1, s2] = conSegMapper(pgram, ctx);
 
+  // TODO revisit this logic?
   return (
     quad.contains(s1) &&
     quad.contains(s2) &&

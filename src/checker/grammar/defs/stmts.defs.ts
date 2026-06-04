@@ -106,6 +106,39 @@ export const STMTS_DEFS = {
       name: "linear_pair",
       parameters: [angle("a1"), angle("a2")],
     },
+    // unimplemented statements that will always return true for now
+    equilangular: {
+      name: "equilangular",
+      parameters: [triangle("t")],
+    },
+    seg_bisect: {
+      name: "seg_bisect",
+      parameters: [segment("s1"), segment("s2")],
+    },
+    kite: {
+      name: "kite",
+      parameters: [quadrilateral("q")],
+    },
+    isos_trapezoid: {
+      name: "isos_trapezoid",
+      parameters: [quadrilateral("q")],
+    },
+    rhombus: {
+      name: "rhombus",
+      parameters: [quadrilateral("q")],
+    },
+    trapezoid: {
+      name: "trapezoid",
+      parameters: [quadrilateral("q")],
+    },
+    circumcenter: {
+      name: "circumcenter",
+      parameters: [point("p"), triangle("t")],
+    },
+    incenter: {
+      name: "incenter",
+      parameters: [point("p"), triangle("t")],
+    },
   },
   groups: {
     congruent_angs: {

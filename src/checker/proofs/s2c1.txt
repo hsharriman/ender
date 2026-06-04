@@ -16,4 +16,4 @@ steps:
 [05] rectangle(1) -> con_seg(FE, GH)
 [06] sas(3, 4, 5) -> con_tri(t_FEJ, t_JGH)
 [07] cpctc(6) -> con_seg(FJ,GJ)
-[08] isosceles(7) -> isosceles(t_FGJ)
+[08] def_isosceles(7) -> isosceles(t_FGJ)
