@@ -46,6 +46,8 @@ export interface StatementGroup {
 
 export interface ReasonDefinition {
   name: string;
+  title: string;
+  body: string;
   dependencies: (string | StatementGroup)[]; // Can be statement name or group
   /** Dependencies satisfied via `premises.diagramStatements` (not passed as proof-step args). */
   diagramDependencies?: (string | StatementGroup)[];

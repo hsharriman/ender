@@ -27,7 +27,7 @@ import {
   reflex_s,
   sameside,
 } from "./reasonChecks/lineChecks";
-import { parallelogram2, rectangle } from "./reasonChecks/polyChecks";
+import { def_parallelogram, rectangle } from "./reasonChecks/polyChecks";
 import {
   checkAas,
   checkAsa,
@@ -228,7 +228,7 @@ export const checkReasonApplication = (
         }
         return true;
       }
-      case "isosceles": {
+      case "def_isosceles": {
         const conSeg_isos = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = checkIsosceles(conSeg_isos, stmt, ctx);
         if (!r.ok) {
@@ -274,17 +274,17 @@ export const checkReasonApplication = (
           rectangle(conSeg_rectangle, stmt, ctx) ||
           failStmtArgMismatch(currStep, reason.function, "RECTANGLE_MISMATCH")
         );
-      case "parallelogram1":
+      case "rectangle_pgram":
         // TODO implement
         return true;
-      case "parallelogram2":
+      case "def_parallelogram":
         const para_parallelogram = getDepStmt(reason.arguments[0], proofGraph)!;
         return (
-          parallelogram2(para_parallelogram, stmt, ctx) ||
+          def_parallelogram(para_parallelogram, stmt, ctx) ||
           failStmtArgMismatch(
             currStep,
             reason.function,
-            "PARALLELOGRAM2_MISMATCH",
+            "DEF_PARALLELOGRAM_MISMATCH",
           )
         );
       case "intersect_seg":
@@ -502,6 +502,32 @@ export const checkReasonApplication = (
       }
       case "given":
         return validateGivenProofStep(currStep, proofGraph);
+
+      // TODO implement
+      case "aaa":
+      case "paralellogram2":
+      case "third_angle":
+      case "base_angle":
+      case "base_angle_conv":
+      case "equilat_equilang":
+      case "equilang_equilat":
+      case "aa_sim":
+      case "sss_sim":
+      case "sas_sim":
+      case "def_equilangular":
+      case "def_equilateral":
+      case "pgram_opp_sides":
+      case "pgram_opp_sides_conv":
+      case "pgram_opp_angs":
+      case "pgram_opp_angs_conv":
+      case "pgram_consec_angs":
+      case "pgram_consec_angs_conv":
+      case "pgram_diag_bisect":
+      case "pgram_diag_bisect_conv":
+      case "pgram_opp_side_para":
+      case "rhombus_pgram":
+      case "rectangle_diag_con":
+        return true;
 
       default:
         // For other reasons, we'll return true for now (syntax check passed)
