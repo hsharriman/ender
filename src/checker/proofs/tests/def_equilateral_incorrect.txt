@@ -1,0 +1,15 @@
+// fail on step 4
+title: "Test: def_equilateral (incorrect - segment paired with itself)"
+premises:
+pt: A (5, 9, t), B (1, 1, bl), C (9, 1, br)
+tri: t_ABC
+[g_1] con_seg(AB, BC)
+[g_2] con_seg(BC, AC)
+[g_3] con_seg(AB, AB)
+-> equilateral(t_ABC)
+
+steps:
+[01] given(g_1) -> con_seg(AB, BC)
+[02] given(g_2) -> con_seg(BC, AC)
+[03] given(g_3) -> con_seg(AB, AB)
+[04] def_equilateral(1, 2, 3) -> equilateral(t_ABC)

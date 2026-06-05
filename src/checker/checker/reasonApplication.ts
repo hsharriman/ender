@@ -514,7 +514,7 @@ export const checkReasonApplication = (
         const a1 = getDepStmt(reason.arguments[3], proofGraph)!;
         const a2 = getDepStmt(reason.arguments[4], proofGraph)!;
         const a3 = getDepStmt(reason.arguments[5], proofGraph)!;
-        const r = checkConTri(s1, s2, s3, a1, a2, a3, stmt, ctx);
+        const r = checkConTri(stmt, s1, s2, s3, a1, a2, a3, ctx);
         if (!r.ok) {
           addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
@@ -542,7 +542,7 @@ export const checkReasonApplication = (
       }
       case "base_angle_conv": {
         const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = checkBaseAngle(conAng, stmt, ctx);
+        const r = checkBaseAngle(stmt, conAng, ctx);
         if (!r.ok) {
           addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
@@ -615,7 +615,7 @@ export const checkReasonApplication = (
       case "aa_sim": {
         const a1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const a2 = getDepStmt(reason.arguments[1], proofGraph)!;
-        const r = checkAa(a1, a2, stmt, ctx);
+        const r = checkAa(stmt, a1, a2, ctx);
         if (!r.ok) {
           addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;

@@ -294,14 +294,14 @@ export const REASONS_DEFS = {
     name: "sss_sim",
     title: "SSS Triangle Similarity",
     body: "If three sides of one triangle are proportional to three sides of another triangle, then the triangles are similar.",
-    dependencies: ["con_seg", "con_seg", "con_seg"],
+    dependencies: ["sim_seg", "sim_seg", "sim_seg"],
     conclusion: "sim_tri",
   },
   sas_sim: {
     name: "sas_sim",
     title: "SAS Triangle Similarity",
     body: "If two sides of one triangle are proportional to two sides of another triangle and their included angles are congruent, then the triangles are similar.",
-    dependencies: ["con_seg", "con_ang", "con_seg"],
+    dependencies: ["sim_seg", "con_ang", "sim_seg"],
     conclusion: "sim_tri",
   },
   def_equilangular: {

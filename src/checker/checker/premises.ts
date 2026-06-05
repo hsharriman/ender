@@ -54,7 +54,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "isosceles":
       case "sim_tri":
       case "equilateral":
-      case "equilangular":
+      case "equiangular":
       case "seg_bisect":
       // TODO implement
       case "parallelogram":
@@ -183,7 +183,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "sim_tri":
       case "con_tri":
       case "equilateral":
-      case "equilangular":
+      case "equiangular":
       case "rectangle":
         addAllObjects(ctx, statement);
         break;

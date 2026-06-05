@@ -555,6 +555,23 @@ export const checkBaseAngle = (
       angs: [a1.label, a2.label],
     });
   }
+  // Each angle's center (base vertex) must appear in exactly one of the
+  // congruent segments: s1 connects the apex to one base vertex, s2 to the other.
+  // If a center appears in both segments it is the apex angle, not a base angle.
+  const a1c = a1.center.label;
+  const a2c = a2.center.label;
+  const validPattern =
+    (s1.label.includes(a1c) && !s2.label.includes(a1c) &&
+     s2.label.includes(a2c) && !s1.label.includes(a2c)) ||
+    (s1.label.includes(a2c) && !s2.label.includes(a2c) &&
+     s2.label.includes(a1c) && !s1.label.includes(a1c));
+  if (!validPattern) {
+    return triangleFail("BASE_ANGLE_PATTERN", {
+      tri: t.label,
+      segs: [s1.label, s2.label],
+      angs: [a1.label, a2.label],
+    });
+  }
   return triangleOk();
 };
 

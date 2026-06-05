@@ -1,0 +1,12 @@
+// pass
+title: "Test: perp_con_ang (correct)"
+premises:
+pt: J (2, 9, bl), K (5.5, 1, b), L (9, 9, br), M (5.5, 9, t)
+tri: t_JMK t_LMK
+[g_1] perp(JL, KM)
+[d_1] on_line(JL, M)
+-> con_right(a_JMK, a_LMK)
+
+steps:
+[01] given(g_1) -> perp(JL, KM)
+[02] perp_con_ang(1) -> con_right(a_JMK, a_LMK)

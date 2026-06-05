@@ -1,0 +1,15 @@
+// pass
+title: "Test: sss_sim (correct - three proportional side pairs imply similarity)"
+premises:
+pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r)
+tri: t_ABC t_DEF
+[g_1] sim_seg(AB, DE)
+[g_2] sim_seg(BC, EF)
+[g_3] sim_seg(AC, DF)
+-> sim_tri(t_ABC, t_DEF)
+
+steps:
+[01] given(g_1) -> sim_seg(AB, DE)
+[02] given(g_2) -> sim_seg(BC, EF)
+[03] given(g_3) -> sim_seg(AC, DF)
+[04] sss_sim(1, 2, 3) -> sim_tri(t_ABC, t_DEF)

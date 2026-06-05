@@ -1,0 +1,11 @@
+// pass
+title: "Test: base_angle (correct - isosceles triangle base angles)"
+premises:
+pt: A (5, 9, t), B (1, 1, bl), C (9, 1, br)
+tri: t_ABC
+[g_1] con_seg(AB, AC)
+-> con_ang(a_ABC, a_ACB)
+
+steps:
+[01] given(g_1) -> con_seg(AB, AC)
+[02] base_angle(1) -> con_ang(a_ABC, a_ACB)
