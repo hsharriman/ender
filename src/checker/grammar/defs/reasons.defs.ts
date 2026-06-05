@@ -318,6 +318,20 @@ export const REASONS_DEFS = {
     dependencies: ["con_seg", "con_seg", "con_seg"],
     conclusion: "equilateral",
   },
+  def_con_tri: {
+    name: "def_con_tri",
+    title: "Def. Congruent Triangles",
+    body: "Two triangles are congruent if their corresponding sides and angles are congruent.",
+    dependencies: [
+      "con_seg",
+      "con_seg",
+      "con_seg",
+      "con_ang",
+      "con_ang",
+      "con_ang",
+    ],
+    conclusion: "con_tri",
+  },
   // parallelogram reasons
   def_parallelogram: {
     // TODO untested, maybe needs converse?
@@ -495,20 +509,6 @@ export const REASONS_DEFS = {
     body: "If a trapezoid has one pair of congruent base angles, then the trapezoid is isosceles.",
     dependencies: ["con_ang", "trapezoid"],
     conclusion: "isos_trapezoid",
-  },
-  def_con_tri: {
-    name: "def_con_tri",
-    title: "Def. Congruent Triangles",
-    body: "Two triangles are congruent if their corresponding sides and angles are congruent.",
-    dependencies: [
-      "con_seg",
-      "con_seg",
-      "con_seg",
-      "con_ang",
-      "con_ang",
-      "con_ang",
-    ],
-    conclusion: "con_tri",
   },
   circumcenter: {
     name: "circumcenter",

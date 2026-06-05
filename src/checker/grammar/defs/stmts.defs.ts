@@ -125,7 +125,7 @@ export const STMTS_DEFS = {
     },
     seg_bisect: {
       name: "seg_bisect",
-      parameters: [segment("s1"), segment("s2")],
+      parameters: [segment("s1"), segment("s2"), point("p")],
     },
     kite: {
       name: "kite",
