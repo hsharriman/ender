@@ -249,21 +249,21 @@ export const REASONS_DEFS = {
   },
   // unimplemented reasons that will always return true for now
   third_angle: {
-    name: "third_angle",
+    name: "third_angle", // TODO missing tri
     title: "Third Angle Theorem",
     body: "If two angles of one triangle are congruent to two angles of another triangle, then the third pair of angles are congruent.",
     dependencies: ["con_ang", "con_ang"],
     conclusion: "con_ang",
   },
   base_angle: {
-    name: "base_angle",
+    name: "base_angle", // TODO missing tri
     title: "Base Angle Theorem",
     body: "If two sides of a triangle are congruent, then the angles opposite the sides are congruent.",
     dependencies: ["con_seg"],
     conclusion: "con_ang",
   },
   base_angle_conv: {
-    name: "base_angle_conv",
+    name: "base_angle_conv", // TODO missing tri
     title: "Base Angle Theorem (Converse)",
     body: "If two angles of a triangle are congruent, then the sides opposite those angles are congruent.",
     dependencies: ["con_ang"],
@@ -294,14 +294,14 @@ export const REASONS_DEFS = {
     name: "sss_sim",
     title: "SSS Triangle Similarity",
     body: "If three sides of one triangle are proportional to three sides of another triangle, then the triangles are similar.",
-    dependencies: ["con_seg", "con_seg", "con_seg"],
+    dependencies: ["sim_seg", "sim_seg", "sim_seg"],
     conclusion: "sim_tri",
   },
   sas_sim: {
     name: "sas_sim",
     title: "SAS Triangle Similarity",
     body: "If two sides of one triangle are proportional to two sides of another triangle and their included angles are congruent, then the triangles are similar.",
-    dependencies: ["con_seg", "con_ang", "con_seg"],
+    dependencies: ["sim_seg", "con_ang", "sim_seg"],
     conclusion: "sim_tri",
   },
   def_equilangular: {
@@ -317,6 +317,20 @@ export const REASONS_DEFS = {
     body: "A triangle is equilateral if all its sides are congruent.",
     dependencies: ["con_seg", "con_seg", "con_seg"],
     conclusion: "equilateral",
+  },
+  def_con_tri: {
+    name: "def_con_tri",
+    title: "Def. Congruent Triangles",
+    body: "Two triangles are congruent if their corresponding sides and angles are congruent.",
+    dependencies: [
+      "con_seg",
+      "con_seg",
+      "con_seg",
+      "con_ang",
+      "con_ang",
+      "con_ang",
+    ],
+    conclusion: "con_tri",
   },
   // parallelogram reasons
   def_parallelogram: {
@@ -495,20 +509,6 @@ export const REASONS_DEFS = {
     body: "If a trapezoid has one pair of congruent base angles, then the trapezoid is isosceles.",
     dependencies: ["con_ang", "trapezoid"],
     conclusion: "isos_trapezoid",
-  },
-  def_con_tri: {
-    name: "def_con_tri",
-    title: "Def. Congruent Triangles",
-    body: "Two triangles are congruent if their corresponding sides and angles are congruent.",
-    dependencies: [
-      "con_seg",
-      "con_seg",
-      "con_seg",
-      "con_ang",
-      "con_ang",
-      "con_ang",
-    ],
-    conclusion: "con_tri",
   },
   circumcenter: {
     name: "circumcenter",

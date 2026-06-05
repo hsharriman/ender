@@ -4,7 +4,7 @@ premises:
 pt: E (2, 9, l), F (4.92, 5.5, bl), G (7, 3, b), H (9.08, 5.5, br), D (12, 9, r)
 tri: t_EHG t_DFG
 ang: a_EGD
-[d_1] on_line(ED, F)
+[d_1] on_line(EG, F)
 [d_2] on_line(DG, H)
 [g_1] con_seg(EG,DG) 
 [g_2] con_ang(a_GEH,a_FDG)

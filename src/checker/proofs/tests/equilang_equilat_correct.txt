@@ -1,0 +1,11 @@
+// pass
+title: "Test: equilang_equilat (correct - equiangular implies equilateral)"
+premises:
+pt: A (5, 9, t), B (1, 1, bl), C (9, 1, br)
+tri: t_ABC
+[g_1] equiangular(t_ABC)
+-> equilateral(t_ABC)
+
+steps:
+[01] given(g_1) -> equiangular(t_ABC)
+[02] equilang_equilat(1) -> equilateral(t_ABC)

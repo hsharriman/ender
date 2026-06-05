@@ -41,6 +41,17 @@ export class Angle extends BaseGeometryObject {
     return this.names.has(other.label);
   };
 
+  // Returns the first name in this angle's names set for which check passes,
+  // or null if none pass. Use this to resolve an angle label to one that a
+  // geometric object (triangle, quad, transversal) actually recognises when
+  // the raw label is an overlapping/containing variant.
+  resolveLabel = (check: (label: string) => boolean): string | null => {
+    for (const name of this.names) {
+      if (check(name)) return name;
+    }
+    return null;
+  };
+
   contains = (obj: Point | Segment) => {
     if (obj.tag === Obj.Point) {
       return Array.from(this.names).some((name) => name.includes(obj.label));

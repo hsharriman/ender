@@ -1,0 +1,11 @@
+// fail on step 2
+title: "Test: base_angle_conv (incorrect - angles not base angles of the same triangle)"
+premises:
+pt: A (5, 9, t), B (1, 1, bl), C (9, 1, br)
+tri: t_ABC
+[g_1] con_ang(a_BAC, a_ACB)
+-> con_seg(AB, AC)
+
+steps:
+[01] given(g_1) -> con_ang(a_BAC, a_ACB)
+[02] base_angle_conv(1) -> con_seg(AB, AC)

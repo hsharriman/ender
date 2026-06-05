@@ -17,25 +17,20 @@ export const buildPremises = (proof: ProofObj) => {
   proof.premises.segments.forEach((segmentObj) => {
     ctx.addSegmentFromStr(segmentObj.v);
   });
-  // // loop through all pairs of points and create segments
-  // for (let i = 0; i < proof.premises.points.length; i++) {
-  //   const point1 = ctx.getPoint(proof.premises.points[i].v);
-  //   for (let j = i + 1; j < proof.premises.points.length; j++) {
-  //     const point2 = ctx.getPoint(proof.premises.points[j].v);
-  //     ctx.addSegment({ p1: point1, p2: point2 });
-  //   }
-  // }
 
   const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
     switch (statement.function) {
       case "para":
+      case "sim_seg":
       case "con_seg":
-        // TODO specify that something is being visually represented in given w this
+      case "perp":
         addAllObjects(ctx, statement);
         break;
       case "on_line":
         onLine(ctx, statement.arguments);
         break;
+      case "perp_bisector": // all use (s1, s2, p)
+      case "seg_bisect":
       case "intersect_seg":
         intersectSeg(ctx, statement.arguments, proof);
         break;
@@ -53,20 +48,18 @@ export const buildPremises = (proof: ProofObj) => {
       case "ang_bisect":
       case "supplementary":
       case "complementary":
-      case "perp":
       case "rectangle":
-      // TODO implement
       case "con_tri":
       case "con_right":
-      case "para":
       case "isosceles":
-      case "parallelogram":
-      case "sim_seg":
       case "sim_tri":
       case "equilateral":
-      case "equilangular":
+      case "equiangular":
       case "seg_bisect":
+      // TODO implement
+      case "parallelogram":
       case "kite":
+      case "perp_bisector":
       case "isos_trapezoid":
       case "rhombus":
       case "trapezoid":
@@ -182,30 +175,32 @@ export const buildPremises = (proof: ProofObj) => {
         break;
       case "con_ang":
       case "right":
+      case "con_right":
       case "complementary":
       case "supplementary":
       case "perp":
+      case "isosceles":
+      case "sim_tri":
+      case "con_tri":
+      case "equilateral":
+      case "equiangular":
       case "rectangle":
         addAllObjects(ctx, statement);
         break;
+      // require no additional objects
       case "con_seg":
       case "on_line":
+      case "seg_bisect":
+      case "perp_bisector":
       case "intersect_seg":
       case "transversal":
       case "midpt":
       case "linear_pair":
       case "para":
-      // TODO implement
-      case "con_tri":
-      case "con_right":
-      case "isosceles":
-      case "parallelogram":
       case "sim_seg":
-      case "sim_tri":
-      case "equilateral":
-      case "equilangular":
-      case "seg_bisect":
+      // TODO implement
       case "kite":
+      case "parallelogram":
       case "isos_trapezoid":
       case "rhombus":
       case "trapezoid":

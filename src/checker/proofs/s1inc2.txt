@@ -4,7 +4,8 @@ premises:
 pt: J (2, 9, bl), K (5.5, 1, b), L (9, 9, br), M (5.5, 9, t)
 tri: t_JMK t_LMK
 [g_1] perp(JL,KM)
-[g_2] con_seg(JK,LK) [02]
+[g_2] con_seg(JK,LK)
+[d_1] on_line(JL, M)
 -> con_tri(t_JMK,t_LMK)
 
 steps:

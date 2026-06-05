@@ -1,3 +1,4 @@
+import { Angle, ProofContent, Triangle } from "geometry-object";
 import { ErrorObj, Stmt } from "../../types/checkerTypes";
 
 /** Canonical string for comparing statement structure (function + typed args). */
@@ -63,4 +64,17 @@ export const addReasonCheckError = (
     data: details,
   });
   return errors;
+};
+
+export const getTriFromAngs = (
+  a1: Angle,
+  a2: Angle,
+  ctx: ProofContent,
+): Triangle | null => {
+  for (const triangle of ctx.getTriangles()) {
+    if (triangle.contains(a1) && triangle.contains(a2)) {
+      return triangle;
+    }
+  }
+  return null;
 };

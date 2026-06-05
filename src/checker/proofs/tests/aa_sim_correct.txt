@@ -1,0 +1,13 @@
+// pass
+title: "Test: aa_sim (correct - two congruent angle pairs imply similarity)"
+premises:
+pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r)
+tri: t_ABC t_DEF
+[g_1] con_ang(a_BAC, a_EDF)
+[g_2] con_ang(a_ABC, a_DEF)
+-> sim_tri(t_ABC, t_DEF)
+
+steps:
+[01] given(g_1) -> con_ang(a_BAC, a_EDF)
+[02] given(g_2) -> con_ang(a_ABC, a_DEF)
+[03] aa_sim(1, 2) -> sim_tri(t_ABC, t_DEF)

@@ -84,7 +84,7 @@ export const STMTS_DEFS = {
     },
     sim_seg: {
       name: "sim_seg",
-      parameters: [segment("s1"), segment("s2"), segment("s3"), segment("s4")],
+      parameters: [segment("s1"), segment("s2")],
     },
     sim_tri: {
       name: "sim_tri",
@@ -107,13 +107,25 @@ export const STMTS_DEFS = {
       parameters: [angle("a1"), angle("a2")],
     },
     // unimplemented statements that will always return true for now
-    equilangular: {
-      name: "equilangular",
+    equiangular: {
+      name: "equiangular",
       parameters: [triangle("t")],
+    },
+    circumcenter: {
+      name: "circumcenter",
+      parameters: [point("p"), triangle("t")],
+    },
+    incenter: {
+      name: "incenter",
+      parameters: [point("p"), triangle("t")],
+    },
+    perp_bisector: {
+      name: "perp_bisector",
+      parameters: [segment("s1"), segment("s2"), point("p")],
     },
     seg_bisect: {
       name: "seg_bisect",
-      parameters: [segment("s1"), segment("s2")],
+      parameters: [segment("s1"), segment("s2"), point("p")],
     },
     kite: {
       name: "kite",
@@ -130,14 +142,6 @@ export const STMTS_DEFS = {
     trapezoid: {
       name: "trapezoid",
       parameters: [quadrilateral("q")],
-    },
-    circumcenter: {
-      name: "circumcenter",
-      parameters: [point("p"), triangle("t")],
-    },
-    incenter: {
-      name: "incenter",
-      parameters: [point("p"), triangle("t")],
     },
   },
   groups: {

@@ -1,0 +1,11 @@
+// fail on step 2
+title: "Test: altext (incorrect - interior angles are not alternate exterior)"
+premises:
+pt: A (2, 8, t), B (15, 8, t), C (2, 2, b), D (15, 2, b), E (12, 8, tl), F (6, 2, b), T (13, 9, tr), R (5, 1, l)
+[d_01] transversal(A, B, T, E, C, D, R, F)
+[g_1] para(AB, CD)
+-> con_ang(a_FEB, a_EFD)
+
+steps:
+[01] given(g_1) -> para(AB, CD)
+[02] altext(1) -> con_ang(a_FEB, a_EFD)

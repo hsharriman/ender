@@ -1,0 +1,21 @@
+// fail on step 7
+title: "Test: def_con_tri (incorrect - segment pair from same triangle)"
+premises:
+pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB, DE)
+[g_2] con_seg(BC, EF)
+[g_3] con_seg(AC, BC)
+[g_4] con_ang(a_BAC, a_EDF)
+[g_5] con_ang(a_ABC, a_DEF)
+[g_6] con_ang(a_ACB, a_DFE)
+-> con_tri(t_ABC, t_DEF)
+
+steps:
+[01] given(g_1) -> con_seg(AB, DE)
+[02] given(g_2) -> con_seg(BC, EF)
+[03] given(g_3) -> con_seg(AC, BC)
+[04] given(g_4) -> con_ang(a_BAC, a_EDF)
+[05] given(g_5) -> con_ang(a_ABC, a_DEF)
+[06] given(g_6) -> con_ang(a_ACB, a_DFE)
+[07] def_con_tri(1, 2, 3, 4, 5, 6) -> con_tri(t_ABC, t_DEF)

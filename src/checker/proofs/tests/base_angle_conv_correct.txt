@@ -1,0 +1,11 @@
+// pass
+title: "Test: base_angle_conv (correct - equal base angles imply equal sides)"
+premises:
+pt: A (5, 9, t), B (1, 1, bl), C (9, 1, br)
+tri: t_ABC
+[g_1] con_ang(a_ABC, a_ACB)
+-> con_seg(AB, AC)
+
+steps:
+[01] given(g_1) -> con_ang(a_ABC, a_ACB)
+[02] base_angle_conv(1) -> con_seg(AB, AC)

@@ -1,0 +1,11 @@
+// pass
+title: "Test: altext (correct - alternate exterior angles)"
+premises:
+pt: A (2, 8, t), B (15, 8, t), C (2, 2, b), D (15, 2, b), E (12, 8, tl), F (6, 2, b), T (13, 9, tr), R (5, 1, l)
+[d_01] transversal(A, B, T, E, C, D, R, F)
+[g_1] para(AB, CD)
+-> con_ang(a_TEA, a_RFD)
+
+steps:
+[01] given(g_1) -> para(AB, CD)
+[02] altext(1) -> con_ang(a_TEA, a_RFD)
