@@ -1,4 +1,4 @@
-import { ParseObj, ProofContent, Triangle } from "../../../geometry-object";
+import { Obj, ParseObj, ProofContent, Triangle } from "../../../geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 import { conAngMapper, conSegMapper, conTriMapper } from "./argMappers";
 import {
@@ -18,19 +18,34 @@ type TriangleAssignResult =
   | { ok: true; left: string; right: string }
   | { ok: false; failure: TriangleReasonFailure };
 
+// Returns the ParseObj form that the triangle actually recognises, resolving
+// through angle overlap names in ctx when the raw label isn't in the triangle.
+const resolveForTri = (obj: ParseObj, tri: Triangle, ctx: ProofContent): ParseObj | null => {
+  if (tri.containsParseObj(obj)) return obj;
+  if (obj.type === Obj.Angle) {
+    const resolved = ctx.getAngle(obj.v)?.resolveLabel(
+      (name) => tri.containsParseObj({ ...obj, v: name }),
+    );
+    if (resolved) return { ...obj, v: resolved };
+  }
+  return null;
+};
+
 const sortPairToTri = (
   pair: ParseObj[],
   [tri1, tri2]: [Triangle, Triangle],
+  ctx: ProofContent,
 ):
   | { ok: true; left: ParseObj; right: ParseObj }
   | { ok: false; failure: TriangleReasonFailure } => {
   const [l, r] = pair;
-  if (tri1.containsParseObj(l) && tri2.containsParseObj(r)) {
-    return { ok: true, left: l, right: r };
-  }
-  if (tri1.containsParseObj(r) && tri2.containsParseObj(l)) {
-    return { ok: true, left: r, right: l };
-  }
+  const l1 = resolveForTri(l, tri1, ctx);
+  const r2 = resolveForTri(r, tri2, ctx);
+  if (l1 && r2) return { ok: true, left: l1, right: r2 };
+
+  const r1 = resolveForTri(r, tri1, ctx);
+  const l2 = resolveForTri(l, tri2, ctx);
+  if (r1 && l2) return { ok: true, left: r1, right: l2 };
 
   return {
     ok: false,
@@ -45,8 +60,9 @@ const checkTriangleAssign = (
   pair: ParseObj[],
   tri1: Triangle,
   tri2: Triangle,
+  ctx: ProofContent,
 ): TriangleAssignResult => {
-  const sorted = sortPairToTri(pair, [tri1, tri2]);
+  const sorted = sortPairToTri(pair, [tri1, tri2], ctx);
   if (!sorted.ok) {
     return sorted;
   }
@@ -109,11 +125,11 @@ export const checkSas = (
   if (!dup.ok) return dup;
   const [tri1, tri2] = conTriMapper(conTri, ctx);
 
-  const a1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2);
+  const a1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2, ctx);
   if (!a1.ok) return triangleFail(a1.failure.code, a1.failure.details);
-  const a2 = checkTriangleAssign(conSeg2.arguments, tri1, tri2);
+  const a2 = checkTriangleAssign(conSeg2.arguments, tri1, tri2, ctx);
   if (!a2.ok) return triangleFail(a2.failure.code, a2.failure.details);
-  const ang = checkTriangleAssign(conAng.arguments, tri1, tri2);
+  const ang = checkTriangleAssign(conAng.arguments, tri1, tri2, ctx);
   if (!ang.ok) return triangleFail(ang.failure.code, ang.failure.details);
 
   const s11 = a1.left;
@@ -158,11 +174,11 @@ export const checkSss = (
   if (!dup.ok) return dup;
   const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
-  const r1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2);
+  const r1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2, ctx);
   if (!r1.ok) return triangleFail(r1.failure.code, r1.failure.details);
-  const r2 = checkTriangleAssign(conSeg2.arguments, tri1, tri2);
+  const r2 = checkTriangleAssign(conSeg2.arguments, tri1, tri2, ctx);
   if (!r2.ok) return triangleFail(r2.failure.code, r2.failure.details);
-  const r3 = checkTriangleAssign(conSeg3.arguments, tri1, tri2);
+  const r3 = checkTriangleAssign(conSeg3.arguments, tri1, tri2, ctx);
   if (!r3.ok) return triangleFail(r3.failure.code, r3.failure.details);
 
   const s11 = r1.left;
@@ -206,11 +222,11 @@ export const checkAas = (
   if (!dup.ok) return dup;
   const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
-  const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
+  const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2, ctx);
   if (!e1.ok) return triangleFail(e1.failure.code, e1.failure.details);
-  const e2 = checkTriangleAssign(conAng2.arguments, tri1, tri2);
+  const e2 = checkTriangleAssign(conAng2.arguments, tri1, tri2, ctx);
   if (!e2.ok) return triangleFail(e2.failure.code, e2.failure.details);
-  const es = checkTriangleAssign(conSeg.arguments, tri1, tri2);
+  const es = checkTriangleAssign(conSeg.arguments, tri1, tri2, ctx);
   if (!es.ok) return triangleFail(es.failure.code, es.failure.details);
 
   const a11 = e1.left;
@@ -249,11 +265,11 @@ export const checkAsa = (
   if (!dup.ok) return dup;
   const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
-  const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
+  const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2, ctx);
   if (!e1.ok) return triangleFail(e1.failure.code, e1.failure.details);
-  const e2 = checkTriangleAssign(conAng2.arguments, tri1, tri2);
+  const e2 = checkTriangleAssign(conAng2.arguments, tri1, tri2, ctx);
   if (!e2.ok) return triangleFail(e2.failure.code, e2.failure.details);
-  const es = checkTriangleAssign(conSeg.arguments, tri1, tri2);
+  const es = checkTriangleAssign(conSeg.arguments, tri1, tri2, ctx);
   if (!es.ok) return triangleFail(es.failure.code, es.failure.details);
 
   const a11 = e1.left;
@@ -292,11 +308,11 @@ export const checkRhl = (
   if (!dup.ok) return dup;
   const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
-  const er = checkTriangleAssign(rightCon.arguments, tri1, tri2);
+  const er = checkTriangleAssign(rightCon.arguments, tri1, tri2, ctx);
   if (!er.ok) return triangleFail(er.failure.code, er.failure.details);
-  const h1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2);
+  const h1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2, ctx);
   if (!h1.ok) return triangleFail(h1.failure.code, h1.failure.details);
-  const h2 = checkTriangleAssign(conSeg2.arguments, tri1, tri2);
+  const h2 = checkTriangleAssign(conSeg2.arguments, tri1, tri2, ctx);
   if (!h2.ok) return triangleFail(h2.failure.code, h2.failure.details);
 
   const r1 = er.left;
@@ -337,8 +353,9 @@ const checkCpctcSegment = (
   tri1: Triangle,
   tri2: Triangle,
   conclusion: Stmt,
+  ctx: ProofContent,
 ): TriangleReasonResult => {
-  const assign = checkTriangleAssign(conclusion.arguments, tri1, tri2);
+  const assign = checkTriangleAssign(conclusion.arguments, tri1, tri2, ctx);
   if (!assign.ok) {
     return triangleFail(assign.failure.code, assign.failure.details);
   }
@@ -360,7 +377,7 @@ const checkCpctcAngle = (
   conclusion: Stmt,
   ctx: ProofContent,
 ): TriangleReasonResult => {
-  const assign = checkTriangleAssign(conclusion.arguments, tri1, tri2);
+  const assign = checkTriangleAssign(conclusion.arguments, tri1, tri2, ctx);
   if (!assign.ok) {
     return triangleFail(assign.failure.code, assign.failure.details);
   }
@@ -382,7 +399,7 @@ export const checkCpctc = (
   const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
   if (conclusion.function === "con_seg") {
-    return checkCpctcSegment(tri1, tri2, conclusion);
+    return checkCpctcSegment(tri1, tri2, conclusion, ctx);
   }
   if (conclusion.function === "con_ang") {
     return checkCpctcAngle(tri1, tri2, conclusion, ctx);
@@ -408,7 +425,7 @@ export const checkConTri = (
   const [tri1, tri2] = conTriMapper(t_cong, ctx);
 
   const assign = (stmt: Stmt) =>
-    checkTriangleAssign(stmt.arguments, tri1, tri2);
+    checkTriangleAssign(stmt.arguments, tri1, tri2, ctx);
   const s1 = assign(cs1);
   if (!s1.ok) return triangleFail(s1.failure.code, s1.failure.details);
   const s2 = assign(cs2);
@@ -468,11 +485,11 @@ export const checkThirdAngle = (
   }
 
   // check all angles are either in t1 or t2
-  const a1 = checkTriangleAssign(conAng1.arguments, t1, t2);
+  const a1 = checkTriangleAssign(conAng1.arguments, t1, t2, ctx);
   if (!a1.ok) return triangleFail(a1.failure.code, a1.failure.details);
-  const a2 = checkTriangleAssign(conAng2.arguments, t1, t2);
+  const a2 = checkTriangleAssign(conAng2.arguments, t1, t2, ctx);
   if (!a2.ok) return triangleFail(a2.failure.code, a2.failure.details);
-  const a3 = checkTriangleAssign(conAng3.arguments, t1, t2);
+  const a3 = checkTriangleAssign(conAng3.arguments, t1, t2, ctx);
   if (!a3.ok) return triangleFail(a3.failure.code, a3.failure.details);
 
   // order the triangles if t1 and t2 each contain exactly 3 unique angles
@@ -633,9 +650,9 @@ export const checkAa = (
   if (!dup.ok) return dup;
   const [tri1, tri2] = conTriMapper(t_sim, ctx);
 
-  const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2);
+  const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2, ctx);
   if (!e1.ok) return triangleFail(e1.failure.code, e1.failure.details);
-  const e2 = checkTriangleAssign(conAng2.arguments, tri1, tri2);
+  const e2 = checkTriangleAssign(conAng2.arguments, tri1, tri2, ctx);
   if (!e2.ok) return triangleFail(e2.failure.code, e2.failure.details);
 
   const a11c = angCenter(e1.left);
