@@ -17,18 +17,11 @@ export const buildPremises = (proof: ProofObj) => {
   proof.premises.segments.forEach((segmentObj) => {
     ctx.addSegmentFromStr(segmentObj.v);
   });
-  // // loop through all pairs of points and create segments
-  // for (let i = 0; i < proof.premises.points.length; i++) {
-  //   const point1 = ctx.getPoint(proof.premises.points[i].v);
-  //   for (let j = i + 1; j < proof.premises.points.length; j++) {
-  //     const point2 = ctx.getPoint(proof.premises.points[j].v);
-  //     ctx.addSegment({ p1: point1, p2: point2 });
-  //   }
-  // }
 
   const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
     switch (statement.function) {
       case "para":
+      case "sim_seg":
       case "con_seg":
         // TODO specify that something is being visually represented in given w this
         addAllObjects(ctx, statement);
@@ -58,15 +51,14 @@ export const buildPremises = (proof: ProofObj) => {
       // TODO implement
       case "con_tri":
       case "con_right":
-      case "para":
       case "isosceles":
       case "parallelogram":
-      case "sim_seg":
       case "sim_tri":
       case "equilateral":
       case "equilangular":
       case "seg_bisect":
       case "kite":
+      case "perp_bisector":
       case "isos_trapezoid":
       case "rhombus":
       case "trapezoid":
@@ -206,6 +198,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "equilangular":
       case "seg_bisect":
       case "kite":
+      case "perp_bisector":
       case "isos_trapezoid":
       case "rhombus":
       case "trapezoid":

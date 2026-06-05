@@ -1,6 +1,7 @@
 import { ProofParser } from "checker/grammar/lezerParser";
 import { runProofChecker } from "checker/proofChecker";
 import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
+import { ProofContent } from "geometry-object";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
@@ -70,6 +71,7 @@ type ProofObjHarnessState = {
   selectedProofKey: string;
   proofText: string;
   lastGoodProof: ProofObj | null;
+  lastGoodCtx: ProofContent | null;
   parseVersion: number;
   statusMessage: string;
   incorrectSteps: Set<string>;
@@ -99,6 +101,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       selectedProofKey: "tutorial.txt",
       proofText: "",
       lastGoodProof: null,
+      lastGoodCtx: null,
       parseVersion: 0,
       statusMessage: "Loading proof...",
       incorrectSteps: new Set(),
@@ -211,6 +214,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           proofWideIssues: nextProofIssues,
           statusMessage: "Proof parsed successfully.",
           lastGoodProof: parsed,
+          lastGoodCtx: result.ctx,
           incorrectSteps: result.graph.incorrectSteps,
           proofParseSucceeded: true,
           parseVersion: prev.parseVersion + 1,
@@ -270,10 +274,11 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     interactive: InteractiveAppPageProps & { diagramAspect: AspectRatio };
     static: StaticAppPageProps & { diagramAspect: AspectRatio };
   } | null {
-    const { lastGoodProof, incorrectSteps } = this.state;
-    if (!lastGoodProof) return null;
+    const { lastGoodProof, lastGoodCtx, incorrectSteps } = this.state;
+    if (!lastGoodProof || !lastGoodCtx) return null;
     const layoutProps = interactiveLayoutFromProofObj(
       lastGoodProof,
+      lastGoodCtx,
       incorrectSteps,
     );
     const maxX = Math.max(

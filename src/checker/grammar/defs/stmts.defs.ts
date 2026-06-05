@@ -111,6 +111,18 @@ export const STMTS_DEFS = {
       name: "equilangular",
       parameters: [triangle("t")],
     },
+    circumcenter: {
+      name: "circumcenter",
+      parameters: [point("p"), triangle("t")],
+    },
+    incenter: {
+      name: "incenter",
+      parameters: [point("p"), triangle("t")],
+    },
+    perp_bisector: {
+      name: "perp_bisector",
+      parameters: [segment("s1"), segment("s2"), point("p")],
+    },
     seg_bisect: {
       name: "seg_bisect",
       parameters: [segment("s1"), segment("s2")],
@@ -130,14 +142,6 @@ export const STMTS_DEFS = {
     trapezoid: {
       name: "trapezoid",
       parameters: [quadrilateral("q")],
-    },
-    circumcenter: {
-      name: "circumcenter",
-      parameters: [point("p"), triangle("t")],
-    },
-    incenter: {
-      name: "incenter",
-      parameters: [point("p"), triangle("t")],
     },
   },
   groups: {

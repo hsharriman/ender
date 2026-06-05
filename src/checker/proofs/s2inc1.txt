@@ -6,6 +6,7 @@ tri: t_PSL t_PSU t_LNU t_UQL
 [g_1] perp(LU, PS) [01]
 [g_2] con_seg(LN, QU) [02]
 [g_3] con_ang(a_LPS, a_UPS) [03]
+[d_1] on_line(LU, S)
 -> con_tri(t_LNU, t_UQL)
 
 steps:

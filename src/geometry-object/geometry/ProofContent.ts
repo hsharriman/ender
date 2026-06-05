@@ -27,6 +27,8 @@ export class ProofContent {
     };
   }
 
+  getTriangles = () => this.ctx.triangles;
+
   reliesOn = (id: string, deps: string[]) => {
     // adds dependencies from one step to another
     // key is mode, value is array of modes that it depends on

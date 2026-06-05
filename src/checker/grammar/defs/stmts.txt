@@ -48,7 +48,7 @@ stmt para(Segment s1, Segment s2)
 // triangle t is isosceles (2 sides are equal length)
 stmt isosceles(Triangle t)
 
-// segment s1 and s2 are perpendicular
+// segment s1 and s2 are perpendicular, s2 intersects with s1
 stmt perp(Segment s1, Segment s2)
 
 // p is the midpoint of s

@@ -29,13 +29,20 @@ import {
 } from "./reasonChecks/lineChecks";
 import { def_parallelogram, rectangle } from "./reasonChecks/polyChecks";
 import {
+  checkAa,
   checkAas,
   checkAsa,
+  checkBaseAngle,
+  checkConTri,
   checkCpctc,
+  checkEquiangular,
+  checkEquilateral,
   checkIsosceles,
   checkRhl,
   checkSas,
   checkSss,
+  checkThirdAngle,
+  equilateralEquiangular,
 } from "./reasonChecks/triangleChecks";
 import { TriangleReasonFailure } from "./reasonChecks/triangleReasonResult";
 import { validateGivenProofStep } from "./validators";
@@ -500,22 +507,128 @@ export const checkReasonApplication = (
           );
         return true;
       }
+      case "def_con_tri": {
+        const s1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const s2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const s3 = getDepStmt(reason.arguments[2], proofGraph)!;
+        const a1 = getDepStmt(reason.arguments[3], proofGraph)!;
+        const a2 = getDepStmt(reason.arguments[4], proofGraph)!;
+        const a3 = getDepStmt(reason.arguments[5], proofGraph)!;
+        const r = checkConTri(s1, s2, s3, a1, a2, a3, stmt, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "third_angle": {
+        const a1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const a2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = checkThirdAngle(a1, a2, stmt, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "base_angle": {
+        const conSeg = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = checkBaseAngle(conSeg, stmt, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "base_angle_conv": {
+        const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = checkBaseAngle(conAng, stmt, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "equilat_equilang": {
+        const equilat = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = equilateralEquiangular(equilat, stmt, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "equilang_equilat": {
+        const equilang = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = equilateralEquiangular(stmt, equilang, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "def_equilangular": {
+        const a1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const a2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const a3 = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkEquiangular(a1, a2, a3, stmt, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "def_equilateral": {
+        const s1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const s2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const s3 = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkEquilateral(s1, s2, s3, stmt, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "sas_sim": {
+        const s1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const a = getDepStmt(reason.arguments[1], proofGraph)!;
+        const s2 = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkSas(stmt, s1, a, s2, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+
+      case "sss_sim": {
+        const s1_sss = getDepStmt(reason.arguments[0], proofGraph)!;
+        const s2_sss = getDepStmt(reason.arguments[1], proofGraph)!;
+        const s3_sss = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = checkSss(stmt, s1_sss, s2_sss, s3_sss, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
+      case "aa_sim": {
+        const a1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const a2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = checkAa(a1, a2, stmt, ctx);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
+      }
       case "given":
         return validateGivenProofStep(currStep, proofGraph);
 
       // TODO implement
-      case "aaa":
-      case "paralellogram2":
-      case "third_angle":
-      case "base_angle":
-      case "base_angle_conv":
-      case "equilat_equilang":
-      case "equilang_equilat":
-      case "aa_sim":
-      case "sss_sim":
-      case "sas_sim":
-      case "def_equilangular":
-      case "def_equilateral":
+      case "circumcenter":
+      case "incenter":
+      // TODO implement pgram reasons
       case "pgram_opp_sides":
       case "pgram_opp_sides_conv":
       case "pgram_opp_angs":

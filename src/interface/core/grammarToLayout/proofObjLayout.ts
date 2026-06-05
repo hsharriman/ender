@@ -1,4 +1,5 @@
 import { ProofObj, ProofStep, Stmt } from "checker/types/checkerTypes";
+import { ProofContent } from "geometry-object";
 import React from "react";
 import { reasonFromFunction } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
@@ -24,6 +25,7 @@ const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
 
 export const interactiveLayoutFromProofObj = (
   proof: ProofObj,
+  ctx: ProofContent,
   incorrectSteps?: Set<string>,
 ): LayoutProps => {
   const givenSteps = proof.steps.filter((s) => s.type === "given");
@@ -184,7 +186,7 @@ export const interactiveLayoutFromProofObj = (
   return {
     name: proof.title ?? "Imported proof",
     title: proof.title ?? "Imported proof",
-    baseContent: () => seedBaseContentFromPremises(proof),
+    baseContent: () => seedBaseContentFromPremises(proof, ctx),
     givens: givensMeta,
     proves: provesMeta,
     steps: stepMetas,

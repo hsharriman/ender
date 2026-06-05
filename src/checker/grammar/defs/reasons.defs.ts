@@ -249,21 +249,21 @@ export const REASONS_DEFS = {
   },
   // unimplemented reasons that will always return true for now
   third_angle: {
-    name: "third_angle",
+    name: "third_angle", // TODO missing tri
     title: "Third Angle Theorem",
     body: "If two angles of one triangle are congruent to two angles of another triangle, then the third pair of angles are congruent.",
     dependencies: ["con_ang", "con_ang"],
     conclusion: "con_ang",
   },
   base_angle: {
-    name: "base_angle",
+    name: "base_angle", // TODO missing tri
     title: "Base Angle Theorem",
     body: "If two sides of a triangle are congruent, then the angles opposite the sides are congruent.",
     dependencies: ["con_seg"],
     conclusion: "con_ang",
   },
   base_angle_conv: {
-    name: "base_angle_conv",
+    name: "base_angle_conv", // TODO missing tri
     title: "Base Angle Theorem (Converse)",
     body: "If two angles of a triangle are congruent, then the sides opposite those angles are congruent.",
     dependencies: ["con_ang"],

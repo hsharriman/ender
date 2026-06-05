@@ -7,6 +7,7 @@ tri: t_FAB t_BCG t_BAD t_BCD
 [g_2] con_seg(AD, DC)
 [g_3] con_ang(a_FAB, a_GCB)
 [g_4] con_seg(AF, CG)
+[d_1] on_line(AC, D)
 -> con_ang(a_AFB, a_CGB)
 
 steps:

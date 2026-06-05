@@ -75,7 +75,7 @@ export class Triangle extends BaseGeometryObject {
     return [aa, ab, ac];
   };
 
-  orderTriangle = (p: [string, string, string], ctx: ProofContent) => {
+  orderTri = (p: [string, string, string], ctx: ProofContent) => {
     this.p = [ctx.getPoint(p[0]), ctx.getPoint(p[1]), ctx.getPoint(p[2])];
     this.s = this.buildSegments(this.p);
     this.a = this.buildAngles(this.p);
@@ -123,5 +123,25 @@ export class Triangle extends BaseGeometryObject {
     } else {
       return this.a.some((ang) => ang.equals(obj as Angle));
     }
+  };
+
+  hasUniqueAngs = (a1: string, a2: string, a3: string) => {
+    const aArr = Array.from(this.a);
+    for (let ang of [a1, a2, a3]) {
+      const idx = aArr.findIndex((a) => a.names.has(ang));
+      if (idx < 0) return false;
+      aArr.splice(idx, 1);
+    }
+    return aArr.length === 0;
+  };
+
+  hasUniqueSegs = (s1: string, s2: string, s3: string) => {
+    const sArr = Array.from(this.s);
+    for (let seg of [s1, s2, s3]) {
+      const idx = sArr.findIndex((s) => s.names.has(seg));
+      if (idx < 0) return false;
+      sArr.splice(idx, 1);
+    }
+    return sArr.length === 0;
   };
 }

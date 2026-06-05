@@ -16,6 +16,7 @@ import {
 } from "./grammar/defsParsers";
 import { ProofParser } from "./grammar/lezerParser";
 import { ErrorObj, ProofGraph, ProofObj, Stmt } from "./types/checkerTypes";
+import { ProofContent } from "../geometry-object";
 
 export type ProofGoalMatchResult = { matches: boolean; details: string };
 
@@ -23,6 +24,7 @@ export type ProofCheckerResult = {
   proof: ProofObj;
   goal: Stmt | undefined;
   graph: ProofGraph;
+  ctx: ProofContent;
   duplicateSteps: Array<[string, string]>;
   stepNumberErrors: string[];
   geometricObjectErrors: string[];
@@ -82,6 +84,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
       proof,
       goal,
       graph: emptyProofGraph(),
+      ctx,
       duplicateSteps: [],
       stepNumberErrors: [],
       geometricObjectErrors,
@@ -119,6 +122,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
     proof,
     goal,
     graph,
+    ctx,
     duplicateSteps,
     stepNumberErrors,
     geometricObjectErrors,
