@@ -247,23 +247,22 @@ export const REASONS_DEFS = {
     dependencies: ["__given_premise__"],
     conclusion: "__any__",
   },
-  // unimplemented reasons that will always return true for now
   third_angle: {
-    name: "third_angle", // TODO missing tri
+    name: "third_angle",
     title: "Third Angle Theorem",
     body: "If two angles of one triangle are congruent to two angles of another triangle, then the third pair of angles are congruent.",
     dependencies: ["con_ang", "con_ang"],
     conclusion: "con_ang",
   },
   base_angle: {
-    name: "base_angle", // TODO missing tri
+    name: "base_angle",
     title: "Base Angle Theorem",
     body: "If two sides of a triangle are congruent, then the angles opposite the sides are congruent.",
     dependencies: ["con_seg"],
     conclusion: "con_ang",
   },
   base_angle_conv: {
-    name: "base_angle_conv", // TODO missing tri
+    name: "base_angle_conv",
     title: "Base Angle Theorem (Converse)",
     body: "If two angles of a triangle are congruent, then the sides opposite those angles are congruent.",
     dependencies: ["con_ang"],
@@ -332,6 +331,7 @@ export const REASONS_DEFS = {
     ],
     conclusion: "con_tri",
   },
+  // unimplemented reasons that will always return true for now
   // parallelogram reasons
   def_parallelogram: {
     // TODO untested, maybe needs converse?
