@@ -31,9 +31,26 @@ export const STMTS_DEFS = {
       parameters: [segment("s1"), segment("s2"), point("p")],
       isPremisesOnly: true,
     },
+    trapezoid_premise: {
+      name: "trapezoid_premise",
+      parameters: [quadrilateral("q"), segment("s1"), segment("s2")],
+      isPremisesOnly: true,
+    },
+    kite_premise: {
+      name: "kite_premise",
+      parameters: [quadrilateral("q"), angle("a1"), angle("a2")],
+      isPremisesOnly: true,
+    },
+    isos_trapezoid_premise: {
+      // same handling as trapezoid_premise
+      name: "isos_trapezoid_premise",
+      parameters: [quadrilateral("q"), segment("s1"), segment("s2")],
+      isPremisesOnly: true,
+    },
     right: {
       name: "right",
       parameters: [angle("a")],
+      isPremisesOnly: true,
     },
     con_seg: {
       name: "con_seg",
@@ -154,6 +171,11 @@ export const STMTS_DEFS = {
       name: "point_on_line",
       base: "on_line",
       extensions: ["midpt"],
+    },
+    pgram_obj: {
+      name: "pgram_obj",
+      base: "parallelogram",
+      extensions: ["rhombus", "rectangle"],
     },
   },
 } as const;

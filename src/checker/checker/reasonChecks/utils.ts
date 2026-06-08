@@ -1,10 +1,25 @@
 import { Angle, ProofContent, Triangle } from "geometry-object";
 import { ErrorObj, Stmt } from "../../types/checkerTypes";
+import {
+  ReasonApplicationResult,
+  reasonApplicationFail,
+  reasonApplicationOk,
+} from "./triangleReasonResult";
 
 /** Canonical string for comparing statement structure (function + typed args). */
 export const stmtKey = (stmt: Stmt): string => {
   const args = (stmt.arguments ?? []).map((a) => `${a.type}:${a.v}`).join("|");
   return `${stmt.function}:${args}`;
+};
+
+export const checkDistinctDependencyStmts = (
+  deps: Stmt[],
+): ReasonApplicationResult => {
+  const dup = findDuplicateDependencyStatements(deps);
+  if (dup) {
+    return reasonApplicationFail("DUP_DEP_STMT", { ...dup });
+  }
+  return reasonApplicationOk();
 };
 
 /**

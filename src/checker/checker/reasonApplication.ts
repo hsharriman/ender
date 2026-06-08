@@ -27,7 +27,7 @@ import {
   reflex_s,
   sameside,
 } from "./reasonChecks/lineChecks";
-import { def_parallelogram, rectangle } from "./reasonChecks/polyChecks";
+import { def_pgram_side_check, rectangle } from "./reasonChecks/polyChecks";
 import {
   checkAa,
   checkAas,
@@ -44,13 +44,13 @@ import {
   checkThirdAngle,
   equilateralEquiangular,
 } from "./reasonChecks/triangleChecks";
-import { TriangleReasonFailure } from "./reasonChecks/triangleReasonResult";
+import { ReasonApplicationFailure } from "./reasonChecks/triangleReasonResult";
 import { validateGivenProofStep } from "./validators";
 
 const addStmtArgMismatchError = (
   errors: ProofStep["errors"],
   reason: string,
-  failure: TriangleReasonFailure,
+  failure: ReasonApplicationFailure,
 ) => {
   errors.push({
     type: "stmt_arg_mismatch",
@@ -285,15 +285,14 @@ export const checkReasonApplication = (
         // TODO implement
         return true;
       case "def_parallelogram":
-        const para_parallelogram = getDepStmt(reason.arguments[0], proofGraph)!;
-        return (
-          def_parallelogram(para_parallelogram, stmt, ctx) ||
-          failStmtArgMismatch(
-            currStep,
-            reason.function,
-            "DEF_PARALLELOGRAM_MISMATCH",
-          )
-        );
+        const para1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const para2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = def_pgram_side_check(para1, stmt, ctx, para2);
+        if (!r.ok) {
+          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+          return false;
+        }
+        return true;
       case "intersect_seg":
         const intersect_on1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const intersect_on2 = getDepStmt(reason.arguments[1], proofGraph)!;

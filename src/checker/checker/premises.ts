@@ -43,6 +43,8 @@ export const buildPremises = (proof: ProofObj) => {
       case "linear_pair":
         linearPair(ctx, statement.arguments);
         break;
+      case "kite_premise":
+      case "trapezoid_premise":
       case "con_ang":
       case "right":
       case "ang_bisect":
@@ -173,6 +175,13 @@ export const buildPremises = (proof: ProofObj) => {
       case "ang_bisect":
         angBisect(ctx, statement.arguments);
         break;
+      case "kite_premise":
+        kitePremise(ctx, statement.arguments);
+        break;
+      case "isos_trapezoid_premise":
+      case "trapezoid_premise":
+        trapezoidPremise(ctx, statement.arguments);
+        break;
       case "con_ang":
       case "right":
       case "con_right":
@@ -185,6 +194,8 @@ export const buildPremises = (proof: ProofObj) => {
       case "equilateral":
       case "equiangular":
       case "rectangle":
+      case "rhombus":
+      case "parallelogram":
         addAllObjects(ctx, statement);
         break;
       // require no additional objects
@@ -199,14 +210,14 @@ export const buildPremises = (proof: ProofObj) => {
       case "para":
       case "sim_seg":
       // TODO implement
-      case "kite":
-      case "parallelogram":
-      case "isos_trapezoid":
-      case "rhombus":
-      case "trapezoid":
       case "circumcenter":
       case "incenter":
         break;
+      // during premises these reasons should use the premise counterpart
+      case "kite":
+      case "isos_trapezoid":
+      case "trapezoid":
+        throw createError.parser.premiseCounterpartRequired(statement.function);
       default:
         throw createError.parser.unknownStatementFunction(statement.function);
     }
@@ -232,6 +243,22 @@ export const buildPremises = (proof: ProofObj) => {
   ctx.checkAngleOverlaps();
 
   return ctx;
+};
+
+const trapezoidPremise = (ctx: ProofContent, args: ParseObj[]) => {
+  const [quad, seg1, seg2] = args;
+  const q = ctx.addQuadrilateralFromStr(quad.v, {
+    type: "trapezoid",
+    objs: [seg1.v, seg2.v],
+  });
+};
+
+const kitePremise = (ctx: ProofContent, args: ParseObj[]) => {
+  const [quad, ang1, ang2] = args;
+  const q = ctx.addQuadrilateralFromStr(quad.v, {
+    type: "kite",
+    objs: [ang1.v, ang2.v],
+  });
 };
 
 const angBisect = (ctx: ProofContent, args: ParseObj[]) => {

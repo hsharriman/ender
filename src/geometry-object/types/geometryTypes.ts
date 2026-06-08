@@ -33,6 +33,7 @@ export type TriangleProps = {
 
 export type QuadrilateralProps = {
   pts: [Point, Point, Point, Point];
+  typeOpts?: { type: "trapezoid" | "kite"; objs: [string, string] };
 } & BaseGeometryProps;
 
 export type SupportedObjects =

@@ -1,19 +1,19 @@
-export type TriangleReasonFailure = {
+export type ReasonApplicationFailure = {
   code: string;
   details?: Record<string, unknown>;
 };
 
-export type TriangleReasonResult =
+export type ReasonApplicationResult =
   | { ok: true }
-  | { ok: false; failure: TriangleReasonFailure };
+  | { ok: false; failure: ReasonApplicationFailure };
 
-export const triangleOk = (): TriangleReasonResult => {
+export const reasonApplicationOk = (): ReasonApplicationResult => {
   return { ok: true };
 };
 
-export const triangleFail = (
+export const reasonApplicationFail = (
   code: string,
   details?: Record<string, unknown>,
-): TriangleReasonResult => {
+): ReasonApplicationResult => {
   return { ok: false, failure: { code, details } };
 };
