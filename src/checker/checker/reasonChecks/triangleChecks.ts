@@ -1,4 +1,9 @@
-import { Obj, ParseObj, ProofContent, Triangle } from "../../../geometry-object";
+import {
+  Obj,
+  ParseObj,
+  ProofContent,
+  Triangle,
+} from "../../../geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 import { conAngMapper, conSegMapper, conTriMapper } from "./argMappers";
 import {
@@ -20,12 +25,16 @@ type TriangleAssignResult =
 
 // Returns the ParseObj form that the triangle actually recognises, resolving
 // through angle overlap names in ctx when the raw label isn't in the triangle.
-const resolveForTri = (obj: ParseObj, tri: Triangle, ctx: ProofContent): ParseObj | null => {
+const resolveForTri = (
+  obj: ParseObj,
+  tri: Triangle,
+  ctx: ProofContent,
+): ParseObj | null => {
   if (tri.containsParseObj(obj)) return obj;
   if (obj.type === Obj.Angle) {
-    const resolved = ctx.getAngle(obj.v)?.resolveLabel(
-      (name) => tri.containsParseObj({ ...obj, v: name }),
-    );
+    const resolved = ctx
+      .getAngle(obj.v)
+      ?.resolveLabel((name) => tri.containsParseObj({ ...obj, v: name }));
     if (resolved) return { ...obj, v: resolved };
   }
   return null;
@@ -561,10 +570,14 @@ export const checkBaseAngle = (
   const a1c = a1.center.label;
   const a2c = a2.center.label;
   const validPattern =
-    (s1.label.includes(a1c) && !s2.label.includes(a1c) &&
-     s2.label.includes(a2c) && !s1.label.includes(a2c)) ||
-    (s1.label.includes(a2c) && !s2.label.includes(a2c) &&
-     s2.label.includes(a1c) && !s1.label.includes(a1c));
+    (s1.label.includes(a1c) &&
+      !s2.label.includes(a1c) &&
+      s2.label.includes(a2c) &&
+      !s1.label.includes(a2c)) ||
+    (s1.label.includes(a2c) &&
+      !s2.label.includes(a2c) &&
+      s2.label.includes(a1c) &&
+      !s1.label.includes(a1c));
   if (!validPattern) {
     return triangleFail("BASE_ANGLE_PATTERN", {
       tri: t.label,
@@ -577,15 +590,15 @@ export const checkBaseAngle = (
 
 export const equilateralEquiangular = (
   t_equil: Stmt,
-  t_equilang: Stmt,
+  t_equiang: Stmt,
   ctx: ProofContent,
 ): TriangleReasonResult => {
   const [t1] = conTriMapper(t_equil, ctx);
-  const [t2] = conTriMapper(t_equilang, ctx);
+  const [t2] = conTriMapper(t_equiang, ctx);
   if (t1 && t2 && t1 === t2) {
     return triangleOk();
   }
-  return triangleFail("EQUIL_EQUILANG_SAME_TRIANGLE", {
+  return triangleFail("EQUIL_EQUIANG_SAME_TRIANGLE", {
     tri1: t1?.label,
     tri2: t2?.label,
   });

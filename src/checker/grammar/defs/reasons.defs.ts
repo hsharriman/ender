@@ -269,15 +269,15 @@ export const REASONS_DEFS = {
     dependencies: ["con_ang"],
     conclusion: "con_seg",
   },
-  equilat_equilang: {
-    name: "equilat_equilang",
+  equilat_equiang: {
+    name: "equilat_equiang",
     title: "Equilateral Triangle Theorem",
     body: "If a triangle is equilateral, then it is also equiangular.",
     dependencies: ["equilateral"],
     conclusion: "equiangular",
   },
-  equilang_equilat: {
-    name: "equilang_equilat",
+  equiang_equilat: {
+    name: "equiang_equilat",
     title: "Equilateral Triangle Theorem (Converse)",
     body: "If a triangle is equiangular, then it is also equilateral.",
     dependencies: ["equiangular"],
@@ -304,12 +304,12 @@ export const REASONS_DEFS = {
     dependencies: ["sim_seg", "con_ang", "sim_seg"],
     conclusion: "sim_tri",
   },
-  def_equilangular: {
-    name: "def_equilangular",
-    title: "Def. Equilangular",
-    body: "A triangle is equilangular if all its angles are congruent.",
+  def_equiangular: {
+    name: "def_equiangular",
+    title: "Def. Equiangular",
+    body: "A triangle is equiangular if all its angles are congruent.",
     dependencies: ["con_ang", "con_ang", "con_ang"],
-    conclusion: "equilangular",
+    conclusion: "equiangular",
   },
   def_equilateral: {
     name: "def_equilateral",

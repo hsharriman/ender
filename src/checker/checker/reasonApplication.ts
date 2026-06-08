@@ -549,7 +549,7 @@ export const checkReasonApplication = (
         }
         return true;
       }
-      case "equilat_equilang": {
+      case "equilat_equiang": {
         const equilat = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = equilateralEquiangular(equilat, stmt, ctx);
         if (!r.ok) {
@@ -558,16 +558,16 @@ export const checkReasonApplication = (
         }
         return true;
       }
-      case "equilang_equilat": {
-        const equilang = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = equilateralEquiangular(stmt, equilang, ctx);
+      case "equiang_equilat": {
+        const equiang = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = equilateralEquiangular(stmt, equiang, ctx);
         if (!r.ok) {
           addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
           return false;
         }
         return true;
       }
-      case "def_equilangular": {
+      case "def_equiangular": {
         const a1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const a2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const a3 = getDepStmt(reason.arguments[2], proofGraph)!;
