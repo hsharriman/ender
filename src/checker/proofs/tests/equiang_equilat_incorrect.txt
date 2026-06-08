@@ -1,5 +1,5 @@
 // fail on step 2
-title: "Test: equilang_equilat (incorrect - conclusion names a different triangle)"
+title: "Test: equiang_equilat (incorrect - conclusion names a different triangle)"
 premises:
 pt: A (5, 9, t), B (1, 1, bl), C (9, 1, br), D (12, 9, tl), E (16, 1, br), F (20, 9, tr)
 tri: t_ABC t_DEF
@@ -8,4 +8,4 @@ tri: t_ABC t_DEF
 
 steps:
 [01] given(g_1) -> equiangular(t_ABC)
-[02] equilang_equilat(1) -> equilateral(t_DEF)
+[02] equiang_equilat(1) -> equilateral(t_DEF)
