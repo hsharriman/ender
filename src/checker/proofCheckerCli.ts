@@ -6,6 +6,7 @@ import {
   runProofChecker,
 } from "./proofChecker";
 import { ProofObj } from "./types/checkerTypes";
+import { pathToFileURL } from "url";
 
 const parseProof = (filePath: string): ProofObj => {
   const content = readFileSync(filePath, "utf-8");
@@ -38,7 +39,7 @@ const checkProof = (filePath: string): void => {
 
 export { checkProof };
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const proofFile = process.argv[2];
   if (!proofFile) {
     console.log("Usage: npm run checkProof <proof-file>");
