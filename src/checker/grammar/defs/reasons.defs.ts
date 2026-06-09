@@ -424,12 +424,11 @@ export const REASONS_DEFS = {
     dependencies: ["rectangle"],
     conclusion: "con_seg",
   },
-  // still implementing cutoff
   rect_diag_con_conv: {
     name: "rect_diag_con_conv",
     title: "Rectangle Diagonal Congruence (Converse)",
     body: "If the diagonals of a parallelogram are congruent, then the parallelogram is a rectangle.",
-    dependencies: ["con_seg", "pgram_obj"], // todo does this need the pgram_obj?
+    dependencies: ["con_seg", "pgram_obj"],
     conclusion: "rectangle",
   },
   rect_pgram_ang: {
@@ -439,6 +438,7 @@ export const REASONS_DEFS = {
     dependencies: ["right", "pgram_obj"],
     conclusion: "rectangle",
   },
+  // still implementing cutoff
   rhombus_diag_perp: {
     name: "rhombus_diag_perp",
     title: "Rhombus Diagonal Perpendicularity",

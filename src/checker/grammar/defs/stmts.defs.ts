@@ -80,7 +80,7 @@ export const STMTS_DEFS = {
     },
     perp: {
       name: "perp",
-      parameters: [segment("s1"), segment("s2")],
+      parameters: [segment("s1"), segment("s2"), point("p")],
     },
     midpt: {
       name: "midpt",

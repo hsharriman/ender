@@ -23,8 +23,11 @@ export const buildPremises = (proof: ProofObj) => {
       case "para":
       case "sim_seg":
       case "con_seg":
-      case "perp":
         addAllObjects(ctx, statement);
+        break;
+      case "perp_bisector":
+      case "perp":
+        perpPremise(ctx, statement.arguments, proof);
         break;
       case "on_line":
         onLine(ctx, statement.arguments);
@@ -61,7 +64,6 @@ export const buildPremises = (proof: ProofObj) => {
       // TODO implement
       case "parallelogram":
       case "kite":
-      case "perp_bisector":
       case "isos_trapezoid":
       case "rhombus":
       case "trapezoid":
@@ -187,7 +189,6 @@ export const buildPremises = (proof: ProofObj) => {
       case "con_right":
       case "complementary":
       case "supplementary":
-      case "perp":
       case "isosceles":
       case "sim_tri":
       case "con_tri":
@@ -198,6 +199,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "parallelogram":
         addAllObjects(ctx, statement);
         break;
+      case "perp":
       // require no additional objects
       case "con_seg":
       case "on_line":
@@ -259,6 +261,22 @@ const kitePremise = (ctx: ProofContent, args: ParseObj[]) => {
     type: "kite",
     objs: [ang1.v, ang2.v],
   });
+};
+
+const perpPremise = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
+  const [seg1, seg2, pt] = args;
+  const s1 = ctx.addSegmentFromStr(seg1.v);
+  const s2 = ctx.addSegmentFromStr(seg2.v);
+  const p = ctx.getPoint(pt.v);
+  // case 1: p is one of the endpoints of either segment
+  if (s1.contains(p)) {
+    p.addOnLine(s2);
+  } else if (s2.contains(p)) {
+    p.addOnLine(s1);
+  } else {
+    // case 2: p is not an endpoint of either segment, so add p as intersection of the two segments
+    intersectSeg(ctx, [seg1, seg2, pt], proof);
+  }
 };
 
 const angBisect = (ctx: ProofContent, args: ParseObj[]) => {

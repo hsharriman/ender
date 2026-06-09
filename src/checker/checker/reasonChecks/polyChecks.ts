@@ -45,6 +45,28 @@ export const rectangle = (rect: Stmt, conclusion: Stmt, ctx: ProofContent) => {
   return false;
 };
 
+export const rect_pgram_ang_check = (
+  rect: Stmt,
+  pgram: Stmt,
+  right: Stmt,
+  ctx: ProofContent,
+) => {
+  const r = ctx.getQuadrilateral(rect.arguments[0].v);
+  const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
+  const [a] = conAngMapper(right, ctx);
+  if (!r.contains(a)) {
+    return reasonApplicationFail("NOT_RIGHT_ANGLE", {
+      angle: a.label,
+    });
+  }
+  if (!quad.equals(r)) {
+    return reasonApplicationFail("RECT_PGRAM_MISMATCH", {
+      rectangle: r.label,
+      parallelogram: quad.label,
+    });
+  }
+  return reasonApplicationOk();
+};
 // used for both def_parallelogram, pgram_opp_sides and pgram_opp_sides_conv
 // same check logic as the pgram angle check
 export const def_pgram_side_check = (
