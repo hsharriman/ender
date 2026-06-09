@@ -7,16 +7,21 @@ export const reflex_a = (a1: Angle, a2: Angle) => {
 };
 
 export const right = (perp: Stmt, right: Stmt, ctx: ProofContent): boolean => {
-  const [s1, s2] = perp.arguments.map((arg) => ctx.getSegment(arg.v));
+  const [s1, s2] = [
+    ctx.getSegment(perp.arguments[0].v),
+    ctx.getSegment(perp.arguments[1].v),
+  ];
+  const p = ctx.getPoint(perp.arguments[2].v);
   const r = ctx.getAngle(right.arguments[0].v);
+  if (!p) return false;
 
-  // angle includes one of the segments and a point from the other
-  if (r.contains(s1)) {
-    return r.contains(s2.p1) || r.contains(s2.p2);
-  } else if (r.contains(s2)) {
-    return r.contains(s1.p1) || r.contains(s1.p2);
-  }
-  return false;
+  const startLabel = r.start.label;
+  const endLabel = r.end.label;
+  return (
+    r.centerEquals(p) &&
+    ((s1.label.includes(startLabel) && s2.label.includes(endLabel)) ||
+      (s2.label.includes(startLabel) && s1.label.includes(endLabel)))
+  );
 };
 
 export const linear_pair = (

@@ -259,21 +259,10 @@ export const checkReasonApplication = (
 
       case "def_perp": {
         const right_perp = getDepStmt(reason.arguments[0], proofGraph)!;
-        const perpMatches = Array.from(proofGraph.diagramPremises.values())
-          .filter(
-            (d) =>
-              d.statement.function === "on_line" ||
-              d.statement.function === "midpt",
-          )
-          .filter((d) => perp(right_perp, d.statement, stmt, ctx));
-        if (perpMatches.length === 0)
-          return failStmtArgMismatch(
-            currStep,
-            reason.function,
-            "PERP_NO_MATCH",
-          );
-        currStep.diagramDeps = perpMatches;
-        return true;
+        return (
+          perp(right_perp, stmt, ctx) ||
+          failStmtArgMismatch(currStep, reason.function, "PERP_NO_MATCH")
+        );
       }
       case "rectangle":
         const conSeg_rectangle = getDepStmt(reason.arguments[0], proofGraph)!;

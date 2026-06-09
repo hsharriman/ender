@@ -59,7 +59,6 @@ export const REASONS_DEFS = {
     name: "def_perp",
     title: "Def. Perpendicular Lines",
     body: "If two lines meet at 90°, then they are perpendicular.",
-    diagramDependencies: ["point_on_line"],
     dependencies: ["right"],
     conclusion: "perp",
   },

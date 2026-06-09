@@ -25,7 +25,6 @@ export const buildPremises = (proof: ProofObj) => {
       case "con_seg":
         addAllObjects(ctx, statement);
         break;
-      case "perp_bisector":
       case "perp":
         perpPremise(ctx, statement.arguments, proof);
         break;
@@ -200,7 +199,6 @@ export const buildPremises = (proof: ProofObj) => {
         addAllObjects(ctx, statement);
         break;
       case "perp":
-      // require no additional objects
       case "con_seg":
       case "on_line":
       case "seg_bisect":
