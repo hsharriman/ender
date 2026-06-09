@@ -397,7 +397,6 @@ export const REASONS_DEFS = {
     conclusion: "seg_bisect",
   },
   pgram_diag_bisect_conv: {
-    // TODO how to represent this
     name: "pgram_diag_bisect_conv",
     title: "Parallelogram Diagonal Bisect (Converse)",
     body: "If the diagonals of a quadrilateral bisect each other, then the quadrilateral is a parallelogram.",
@@ -425,11 +424,12 @@ export const REASONS_DEFS = {
     dependencies: ["rectangle"],
     conclusion: "con_seg",
   },
+  // still implementing cutoff
   rect_diag_con_conv: {
     name: "rect_diag_con_conv",
     title: "Rectangle Diagonal Congruence (Converse)",
     body: "If the diagonals of a parallelogram are congruent, then the parallelogram is a rectangle.",
-    dependencies: ["con_seg", "con_seg", "pgram_obj"],
+    dependencies: ["con_seg", "pgram_obj"], // todo does this need the pgram_obj?
     conclusion: "rectangle",
   },
   rect_pgram_ang: {

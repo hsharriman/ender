@@ -1,4 +1,4 @@
-import { Angle, ProofContent } from "geometry-object";
+import { Angle, ProofContent, Segment } from "geometry-object";
 import { Quadrilateral } from "geometry-object/geometry/Quadrilateral";
 import { Stmt } from "../../types/checkerTypes";
 import { conAngMapper, conSegMapper } from "./argMappers";
@@ -9,6 +9,7 @@ import {
 import {
   anglePairsEqual,
   checkDistinctDependencyStmts,
+  failReflexStatements,
   segmentPairsEqual,
 } from "./utils";
 
@@ -114,11 +115,8 @@ export const def_pgram_angle_check = (
 
   const checkPair = (pairStmt: Stmt) => {
     const [p1, p2] = conAngMapper(pairStmt, ctx);
-    if (p1.equals(p2)) {
-      return reasonApplicationFail("REFLEX_STMT_DEP", {
-        pair: [p1.label, p2.label],
-      });
-    }
+    const reflexCheck = failReflexStatements(p1, p2);
+    if (!reflexCheck.ok) return reflexCheck;
     // check that p1 and p2 are opposite angles
     if (!quad.isOppositeAngles(p1, p2)) {
       return reasonApplicationFail("NOT_OPP_ANGLES", {
@@ -162,11 +160,11 @@ export const pgram_consec_angs_check = (
   // between the 4 angles there should be 1 overlap and the
   // other 2 angles should be consecutive
 
-  if (a1.equals(a2) || a3.equals(a4)) {
-    return reasonApplicationFail("REFLEX_STMT_DEP", {
-      pair: [a1.label, a2.label],
-    });
-  }
+  const reflexCheck1 = failReflexStatements(a1, a2);
+  if (!reflexCheck1.ok) return reflexCheck1;
+  const reflexCheck2 = failReflexStatements(a3, a4);
+  if (!reflexCheck2.ok) return reflexCheck2;
+
   if (anglePairsEqual([a1, a2], [a3, a4])) {
     return reasonApplicationFail("SAME_ANGLE_PAIR", {
       pair1: [a1.label, a2.label],
@@ -193,13 +191,50 @@ export const pgram_consec_angs_check = (
   return reasonApplicationOk();
 };
 
+export const quad_diag_con_check = (
+  rect: Stmt,
+  conSeg: Stmt,
+  ctx: ProofContent,
+  pgram_obj?: Stmt, // only required for the converse reason
+) => {
+  const dup = checkDistinctDependencyStmts(
+    pgram_obj ? [pgram_obj, rect, conSeg] : [rect, conSeg],
+  );
+  if (!dup.ok) return dup;
+  const r = ctx.getQuadrilateral(rect.arguments[0].v);
+  const [s1, s2] = conSegMapper(conSeg, ctx);
+
+  const reflexCheck = failReflexStatements(s1, s2);
+  if (!reflexCheck.ok) return reflexCheck;
+
+  if (!r.isDiagonal(s1) || !r.isDiagonal(s2)) {
+    return reasonApplicationFail("NOT_DIAGONALS", {
+      s1: s1.label,
+      s2: s2.label,
+    });
+  }
+
+  // if pgram_obj is provided, it must be the same quadrilateral as r
+  if (pgram_obj) {
+    const pgram = ctx.getQuadrilateral(pgram_obj.arguments[0].v);
+    if (!pgram.equals(r)) {
+      return reasonApplicationFail("NOT_SAME_QUADRILATERAL", {
+        quad1: pgram.label,
+        quad2: r.label,
+      });
+    }
+  }
+  return reasonApplicationOk();
+};
+
 export const pgram_diag_bisect_check = (
   pgram: Stmt,
   seg_b1: Stmt,
-  seg_b2: Stmt,
   ctx: ProofContent,
+  seg_b2?: Stmt,
 ) => {
-  const dup = checkDistinctDependencyStmts([pgram, seg_b1, seg_b2]);
+  const stmts = seg_b2 ? [pgram, seg_b1, seg_b2] : [pgram, seg_b1];
+  const dup = checkDistinctDependencyStmts(stmts);
   if (!dup.ok) return dup;
   const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
   const [b1, b2, p1] = [
@@ -207,41 +242,48 @@ export const pgram_diag_bisect_check = (
     ctx.getSegment(seg_b1.arguments[1].v),
     ctx.getPoint(seg_b1.arguments[2].v),
   ];
-  const [c1, c2, p2] = [
-    ctx.getSegment(seg_b2.arguments[0].v),
-    ctx.getSegment(seg_b2.arguments[1].v),
-    ctx.getPoint(seg_b2.arguments[2].v),
-  ];
-  // p1 and p2 should be the same,
-  if (!p1.equals(p2)) {
-    return reasonApplicationFail("NOT_SAME_POINT", {
-      point1: p1.label,
-      point2: p2.label,
-    });
+
+  const validQuadCheck = (s1: Segment, s2: Segment) => {
+    if (s1.equals(s2)) {
+      return reasonApplicationFail("REFLEX_STMT_DEP", {
+        pair: [s1.label, s2.label],
+      });
+    }
+    // s1,s2 should be equal to diagonals of the quadrilateral
+    if (!quad.isDiagonal(s1) || !quad.isDiagonal(s2)) {
+      return reasonApplicationFail("NOT_DIAGONAL", {
+        s1: s1.label,
+        s2: s2.label,
+      });
+    }
+    return reasonApplicationOk();
+  };
+
+  if (seg_b2) {
+    const [c1, c2, p2] = [
+      ctx.getSegment(seg_b2.arguments[0].v),
+      ctx.getSegment(seg_b2.arguments[1].v),
+      ctx.getPoint(seg_b2.arguments[2].v),
+    ];
+    // p1 and p2 should be the same,
+    if (!p1.equals(p2)) {
+      return reasonApplicationFail("NOT_SAME_POINT", {
+        point1: p1.label,
+        point2: p2.label,
+      });
+    }
+    // c1,c2 and b1,b2 should be the same.
+    if (!segmentPairsEqual([c1, c2], [b1, b2])) {
+      return reasonApplicationFail("NOT_SAME_SEGMENTS", {
+        s1: c1.label,
+        s2: b1.label,
+        s3: c2.label,
+        s4: b2.label,
+      });
+    }
+    return validQuadCheck(c1, c2);
   }
-  // c1,c2 and b1,b2 should be the same.
-  if (!segmentPairsEqual([c1, c2], [b1, b2])) {
-    return reasonApplicationFail("NOT_SAME_SEGMENTS", {
-      s1: c1.label,
-      s2: b1.label,
-      s3: c2.label,
-      s4: b2.label,
-    });
-  }
-  //c1 != c2 and b1 != b2
-  if (!c1.equals(c2) || b1.equals(b2)) {
-    return reasonApplicationFail("REFLEX_STMT_DEP", {
-      pair: [c1.label, c2.label],
-    });
-  }
-  // c1,c2 should be equal to diagonals of the quadrilateral
-  if (!quad.isDiagonal(c1) || !quad.isDiagonal(c2)) {
-    return reasonApplicationFail("NOT_DIAGONAL", {
-      s1: c1.label,
-      s2: c2.label,
-    });
-  }
-  return reasonApplicationOk();
+  return validQuadCheck(b1, b2);
 };
 
 // works for translating one quadrilateral to another, like pgram to rectangle etc.

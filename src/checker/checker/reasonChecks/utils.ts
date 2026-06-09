@@ -1,4 +1,10 @@
-import { Angle, ProofContent, Segment, Triangle } from "geometry-object";
+import {
+  Angle,
+  BaseGeometryObject,
+  ProofContent,
+  Segment,
+  Triangle,
+} from "geometry-object";
 import { ErrorObj, Stmt } from "../../types/checkerTypes";
 import {
   ReasonApplicationResult,
@@ -109,4 +115,20 @@ export const anglePairsEqual = (
   [a3, a4]: [Angle, Angle],
 ) => {
   return (a1.equals(a3) && a2.equals(a4)) || (a1.equals(a4) && a2.equals(a3));
+};
+
+/**
+ * Check if two objects are the same (reflexive property) and return a failure
+ * if they are.
+ */
+export const failReflexStatements = (
+  o1: BaseGeometryObject,
+  o2: BaseGeometryObject,
+) => {
+  if (o1.equals(o2)) {
+    return reasonApplicationFail("ILLEGAL_REFLEX_STMT", {
+      pair: [o1.label, o2.label],
+    });
+  }
+  return reasonApplicationOk();
 };
