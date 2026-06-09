@@ -31,10 +31,6 @@ export class Segment extends BaseGeometryObject {
     };
   };
 
-  equals = (other: Segment) => {
-    return this.names.has(other.label);
-  };
-
   contains = (pt: Point) => {
     return this.label.includes(pt.label);
   };

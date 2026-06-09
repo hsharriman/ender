@@ -1,4 +1,4 @@
-import { Angle, ProofContent, Triangle } from "geometry-object";
+import { Angle, ProofContent, Segment, Triangle } from "geometry-object";
 import { ErrorObj, Stmt } from "../../types/checkerTypes";
 import {
   ReasonApplicationResult,
@@ -92,4 +92,21 @@ export const getTriFromAngs = (
     }
   }
   return null;
+};
+
+/**
+ * Check if two pairs of segments are equal (regardless of order).
+ */
+export const segmentPairsEqual = (
+  [s1, s2]: [Segment, Segment],
+  [s3, s4]: [Segment, Segment],
+) => {
+  return (s1.equals(s3) && s2.equals(s4)) || (s1.equals(s4) && s2.equals(s3));
+};
+
+export const anglePairsEqual = (
+  [a1, a2]: [Angle, Angle],
+  [a3, a4]: [Angle, Angle],
+) => {
+  return (a1.equals(a3) && a2.equals(a4)) || (a1.equals(a4) && a2.equals(a3));
 };

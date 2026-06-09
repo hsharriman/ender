@@ -100,6 +100,10 @@ export class Quadrilateral extends BaseGeometryObject {
     ];
   };
 
+  isDiagonal = (s: Segment) => {
+    return this.diagonals().some((diag) => s.names.has(diag));
+  };
+
   isOppositeSides = (s1: Segment, s2: Segment) => {
     const opp1Set = new Set([this.s[0].label, this.s[2].label]);
     const opp2Set = new Set([this.s[1].label, this.s[3].label]);

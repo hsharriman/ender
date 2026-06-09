@@ -37,10 +37,6 @@ export class Angle extends BaseGeometryObject {
     return this.center.label;
   };
 
-  equals = (other: Angle) => {
-    return this.names.has(other.label);
-  };
-
   // Returns the first name in this angle's names set for which check passes,
   // or null if none pass. Use this to resolve an angle label to one that a
   // geometric object (triangle, quad, transversal) actually recognises when
@@ -65,7 +61,7 @@ export class Angle extends BaseGeometryObject {
   };
 
   centerEquals = (pt: Point) => {
-    return this.center.isEqualTo(pt);
+    return this.center.equals(pt);
   };
 
   addParentAngle = (a: Angle) => {

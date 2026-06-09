@@ -474,7 +474,7 @@ export const checkThirdAngle = (
     getTriFromAngs(a11, a21, ctx) ?? getTriFromAngs(a11, a22, ctx) ?? null;
   const t2 =
     getTriFromAngs(a12, a22, ctx) ?? getTriFromAngs(a21, a12, ctx) ?? null;
-  if (!t1 || !t2 || t1.isEqualTo(t2)) {
+  if (!t1 || !t2 || t1.equals(t2)) {
     return reasonApplicationFail("THIRD_ANGLE_TRIANGLE_NOT_FOUND", {
       angs1: [a11.label, a12.label],
       angs2: [a21.label, a22.label],
