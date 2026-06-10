@@ -4,6 +4,7 @@ import {
   ParseDiagramStmt,
   ProofGraph,
   ProofStep,
+  Reason,
   ReasonDefinition,
 } from "../types/checkerTypes";
 import {
@@ -27,7 +28,26 @@ import {
   reflex_s,
   sameside,
 } from "./reasonChecks/lineChecks";
-import { def_pgram_side_check, rectangle } from "./reasonChecks/polyChecks";
+import {
+  checkQuadrilateralCls,
+  def_pgram_angle_check,
+  def_pgram_side_check,
+  isos_trap_base_ang_check,
+  kite_opp_ang_check,
+  pgram_consec_angs_conv_check,
+  pgram_consec_check,
+  pgram_diag_bisect_check,
+  quad_diag_con_check,
+  rect_pgram_ang_check,
+  rectangle,
+  rhombus_consec_check,
+  rhombus_kite_diag_check,
+  rhombus_opp_bisect_check,
+} from "./reasonChecks/polyChecks";
+import {
+  ReasonApplicationFailure,
+  ReasonApplicationResult,
+} from "./reasonChecks/reasonResult";
 import {
   checkAa,
   checkAas,
@@ -44,7 +64,6 @@ import {
   checkThirdAngle,
   equilateralEquiangular,
 } from "./reasonChecks/triangleChecks";
-import { ReasonApplicationFailure } from "./reasonChecks/triangleReasonResult";
 import { validateGivenProofStep } from "./validators";
 
 const addStmtArgMismatchError = (
@@ -171,11 +190,7 @@ export const checkReasonApplication = (
         const a = getDepStmt(reason.arguments[1], proofGraph)!;
         const s2 = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkSas(stmt, s1, a, s2, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
 
       case "sss": {
@@ -183,21 +198,13 @@ export const checkReasonApplication = (
         const s2_sss = getDepStmt(reason.arguments[1], proofGraph)!;
         const s3_sss = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkSss(stmt, s1_sss, s2_sss, s3_sss, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
 
       case "cpctc": {
         const t_cong = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = checkCpctc(t_cong, stmt, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
 
       case "aas": {
@@ -205,11 +212,7 @@ export const checkReasonApplication = (
         const a2_aas = getDepStmt(reason.arguments[1], proofGraph)!;
         const s_aas = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkAas(stmt, a1_aas, a2_aas, s_aas, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
 
       case "asa": {
@@ -217,11 +220,7 @@ export const checkReasonApplication = (
         const s_asa = getDepStmt(reason.arguments[1], proofGraph)!;
         const a2_asa = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkAsa(stmt, a1_asa, s_asa, a2_asa, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
 
       case "rhl": {
@@ -229,20 +228,12 @@ export const checkReasonApplication = (
         const s1_rhl = getDepStmt(reason.arguments[1], proofGraph)!;
         const s2_rhl = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkRhl(stmt, right_rhl, s1_rhl, s2_rhl, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "def_isosceles": {
         const conSeg_isos = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = checkIsosceles(conSeg_isos, stmt, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
 
       case "def_midpt":
@@ -270,18 +261,11 @@ export const checkReasonApplication = (
           rectangle(conSeg_rectangle, stmt, ctx) ||
           failStmtArgMismatch(currStep, reason.function, "RECTANGLE_MISMATCH")
         );
-      case "rectangle_pgram":
-        // TODO implement
-        return true;
       case "def_parallelogram":
         const para1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const para2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = def_pgram_side_check(para1, stmt, ctx, para2);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       case "intersect_seg":
         const intersect_on1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const intersect_on2 = getDepStmt(reason.arguments[1], proofGraph)!;
@@ -503,90 +487,54 @@ export const checkReasonApplication = (
         const a2 = getDepStmt(reason.arguments[4], proofGraph)!;
         const a3 = getDepStmt(reason.arguments[5], proofGraph)!;
         const r = checkConTri(stmt, s1, s2, s3, a1, a2, a3, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "third_angle": {
         const a1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const a2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = checkThirdAngle(a1, a2, stmt, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "base_angle": {
         const conSeg = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = checkBaseAngle(conSeg, stmt, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "base_angle_conv": {
         const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = checkBaseAngle(stmt, conAng, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "equilat_equiang": {
         const equilat = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = equilateralEquiangular(equilat, stmt, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "equiang_equilat": {
         const equiang = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = equilateralEquiangular(stmt, equiang, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "def_equiangular": {
         const a1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const a2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const a3 = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkEquiangular(a1, a2, a3, stmt, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "def_equilateral": {
         const s1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const s2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const s3 = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkEquilateral(s1, s2, s3, stmt, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "sas_sim": {
         const s1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const a = getDepStmt(reason.arguments[1], proofGraph)!;
         const s2 = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkSas(stmt, s1, a, s2, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
 
       case "sss_sim": {
@@ -594,42 +542,158 @@ export const checkReasonApplication = (
         const s2_sss = getDepStmt(reason.arguments[1], proofGraph)!;
         const s3_sss = getDepStmt(reason.arguments[2], proofGraph)!;
         const r = checkSss(stmt, s1_sss, s2_sss, s3_sss, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
       case "aa_sim": {
         const a1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const a2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = checkAa(stmt, a1, a2, ctx);
-        if (!r.ok) {
-          addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
-          return false;
-        }
-        return true;
+        return floatReasonResult(r, currStep, reason);
       }
-      case "given":
+      case "given": {
         return validateGivenProofStep(currStep, proofGraph);
-
-      // TODO implement
+      }
+      case "pgram_opp_sides": {
+        const pgram = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = def_pgram_side_check(stmt, pgram, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "pgram_opp_sides_conv": {
+        const con1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const con2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = def_pgram_side_check(con1, stmt, ctx, con2);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "pgram_opp_angs": {
+        const pgram = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = def_pgram_angle_check(stmt, pgram, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "pgram_opp_angs_conv": {
+        const con1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const con2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = def_pgram_angle_check(con1, stmt, ctx, con2);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "pgram_consec_angs": {
+        const pgram = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = pgram_consec_check(pgram, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "pgram_consec_angs_conv": {
+        const sup1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const sup2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = pgram_consec_angs_conv_check(stmt, sup1, sup2, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "pgram_diag_bisect": {
+        const pgram = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = pgram_diag_bisect_check(pgram, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "pgram_diag_bisect_conv": {
+        const seg_b1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const seg_b2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = pgram_diag_bisect_check(stmt, seg_b1, ctx, seg_b2);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "pgram_opp_side_para": {
+        const conSeg = getDepStmt(reason.arguments[0], proofGraph)!;
+        const para = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = def_pgram_side_check(
+          stmt,
+          conSeg,
+          ctx,
+          para,
+          reason.function,
+        );
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rectangle_pgram": {
+        const rect = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = checkQuadrilateralCls(rect, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rhombus_pgram": {
+        const rhombus = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = checkQuadrilateralCls(rhombus, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rect_diag_con": {
+        const rect = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = quad_diag_con_check(rect, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rect_diag_con_conv": {
+        const conSeg = getDepStmt(reason.arguments[0], proofGraph)!;
+        const pgram = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = quad_diag_con_check(stmt, conSeg, ctx, pgram);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rect_pgram_ang": {
+        const right = getDepStmt(reason.arguments[0], proofGraph)!;
+        const pgram = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = rect_pgram_ang_check(stmt, pgram, right, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rhombus_diag_perp": {
+        const rhombus = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = rhombus_kite_diag_check(rhombus, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rhombus_diag_perp_conv": {
+        const perp = getDepStmt(reason.arguments[0], proofGraph)!;
+        const pgram = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = rhombus_kite_diag_check(stmt, perp, ctx, pgram);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rhombus_opp_bisect_conv": {
+        const bisect = getDepStmt(reason.arguments[0], proofGraph)!;
+        const bisect2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const pgram = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = rhombus_opp_bisect_check(stmt, bisect, ctx, bisect2, pgram);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rhombus_opp_bisect": {
+        const rhombus = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = rhombus_opp_bisect_check(rhombus, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "rhombus_consec_sides": {
+        const pgram = getDepStmt(reason.arguments[0], proofGraph)!;
+        const conSeg = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = rhombus_consec_check(stmt, pgram, conSeg, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "kite_diag_perp": {
+        const kite = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = rhombus_kite_diag_check(kite, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "kite_opp_con_ang": {
+        const kite = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = kite_opp_ang_check(kite, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "isos_trap_base_angs": {
+        const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
+        const trap = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = isos_trap_base_ang_check(stmt, conAng, ctx, trap);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "isos_trap_base_angs_conv": {
+        const isos = getDepStmt(reason.arguments[0], proofGraph)!;
+        const r = isos_trap_base_ang_check(isos, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "isos_trap_con_diags": {
+        const conSeg = getDepStmt(reason.arguments[0], proofGraph)!;
+        const trap = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = quad_diag_con_check(stmt, conSeg, ctx, trap);
+        return floatReasonResult(r, currStep, reason);
+      }
       case "circumcenter":
       case "incenter":
-      // TODO implement pgram reasons
-      case "pgram_opp_sides":
-      case "pgram_opp_sides_conv":
-      case "pgram_opp_angs":
-      case "pgram_opp_angs_conv":
-      case "pgram_consec_angs":
-      case "pgram_consec_angs_conv":
-      case "pgram_diag_bisect":
-      case "pgram_diag_bisect_conv":
-      case "pgram_opp_side_para":
-      case "rhombus_pgram":
-      case "rectangle_diag_con":
-        return true;
-
       default:
         // For other reasons, we'll return true for now (syntax check passed)
         return true;
@@ -656,4 +720,16 @@ const diagramPremisesByFunction = (
   return Array.from(proofGraph.diagramPremises.values()).filter(
     (d) => d.statement.function === fn,
   );
+};
+
+const floatReasonResult = (
+  r: ReasonApplicationResult,
+  currStep: ProofStep,
+  reason: Reason,
+): boolean => {
+  if (!r.ok) {
+    addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+    return false;
+  }
+  return true;
 };

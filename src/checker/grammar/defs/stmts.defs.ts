@@ -144,20 +144,12 @@ export const STMTS_DEFS = {
       name: "seg_bisect",
       parameters: [segment("s1"), segment("s2"), point("p")],
     },
-    kite: {
-      name: "kite",
-      parameters: [quadrilateral("q")],
-    },
     isos_trapezoid: {
       name: "isos_trapezoid",
       parameters: [quadrilateral("q")],
     },
     rhombus: {
       name: "rhombus",
-      parameters: [quadrilateral("q")],
-    },
-    trapezoid: {
-      name: "trapezoid",
       parameters: [quadrilateral("q")],
     },
   },
@@ -176,6 +168,16 @@ export const STMTS_DEFS = {
       name: "pgram_obj",
       base: "parallelogram",
       extensions: ["rhombus", "rectangle"],
+    },
+    trapez_prem_obj: {
+      name: "trapez_obj",
+      base: "trapezoid_premise",
+      extensions: ["isos_trapezoid_premise"],
+    },
+    isos_trap_obj: {
+      name: "isos_trap_obj",
+      base: "isos_trapezoid_premise",
+      extensions: ["isos_trapezoid"],
     },
   },
 } as const;

@@ -10,7 +10,7 @@ import {
   ReasonApplicationResult,
   reasonApplicationFail,
   reasonApplicationOk,
-} from "./triangleReasonResult";
+} from "./reasonResult";
 
 /** Canonical string for comparing statement structure (function + typed args). */
 export const stmtKey = (stmt: Stmt): string => {

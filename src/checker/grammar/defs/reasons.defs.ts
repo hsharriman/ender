@@ -437,7 +437,6 @@ export const REASONS_DEFS = {
     dependencies: ["right", "pgram_obj"],
     conclusion: "rectangle",
   },
-  // still implementing cutoff
   rhombus_diag_perp: {
     name: "rhombus_diag_perp",
     title: "Rhombus Diagonal Perpendicularity",
@@ -449,7 +448,7 @@ export const REASONS_DEFS = {
     name: "rhombus_diag_perp_conv",
     title: "Rhombus Diagonal Perpendicularity (Converse)",
     body: "If the diagonals of a parallelogram are perpendicular, then the quadrilateral is a rhombus.",
-    dependencies: ["perp", "perp", "pgram_obj"],
+    dependencies: ["perp", "pgram_obj"],
     conclusion: "rhombus",
   },
   rhombus_opp_bisect_conv: {
@@ -477,7 +476,7 @@ export const REASONS_DEFS = {
     name: "kite_diag_perp",
     title: "Kite Diagonal Perpendicularity",
     body: "If a quadrilateral is a kite, then its diagonals are perpendicular.",
-    dependencies: ["kite_premise"], // could be both kite_premise and kite but would probably never derive a kite?
+    dependencies: ["kite_premise"],
     conclusion: "perp",
   },
   kite_opp_con_ang: {
@@ -489,26 +488,26 @@ export const REASONS_DEFS = {
   },
   isos_trap_base_angs: {
     name: "isos_trap_base_angs",
+    title: "Trapezoid with Congruent Base Angle",
+    body: "If a trapezoid has one pair of congruent base angles, then the trapezoid is isosceles.",
+    dependencies: ["con_ang", "trapezoid_premise"], // should be both premise and regular
+    conclusion: "isos_trapezoid",
+  },
+  isos_trap_base_angs_conv: {
+    name: "isos_trap_base_angs_conv",
     title: "Isosceles Trapezoid Base Angles",
     body: "If a quadrilateral is an isosceles trapezoid, then each pair of base angles are congruent.",
-    dependencies: ["isos_trapezoid_premise"], // should be BOTH isos_trapezoid_premise and isos_trapezoid
+    dependencies: ["isos_trap_obj"], // should be BOTH isos_trapezoid_premise and isos_trapezoid
     conclusion: "con_ang",
   },
   isos_trap_con_diags: {
     name: "isos_trap_con_diags",
     title: "Isosceles Trapezoid Congruent Diagonals",
     body: "A trapezoid is isosceles if and only if its diagonals are congruent.",
-    dependencies: ["con_seg", "con_seg", "trapezoid_premise"], // should be both premise and regular
+    dependencies: ["con_seg", "trapezoid_premise"],
     conclusion: "isos_trapezoid",
   },
-  isos_trap_one_base_ang: {
-    // TODO maybe not needed?
-    name: "isos_trap_one_base_ang",
-    title: "Trapezoid with Congruent Base Angle",
-    body: "If a trapezoid has one pair of congruent base angles, then the trapezoid is isosceles.",
-    dependencies: ["con_ang", "trapezoid"], // should be both premise and regular
-    conclusion: "isos_trapezoid",
-  },
+  // still implementing cutoff
   circumcenter: {
     name: "circumcenter",
     title: "Circumcenter Theorem",
@@ -522,5 +521,12 @@ export const REASONS_DEFS = {
     body: "The incenter of a triangle is the point where the angle bisectors of the angles intersect. It is equidistant from the sides of the triangle.",
     dependencies: ["ang_bisect", "ang_bisect", "ang_bisect"],
     conclusion: "incenter",
+  },
+  con_transitive: {
+    name: "con_transitive",
+    title: "Transitive Property of Congruence",
+    body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
+    dependencies: ["con_seg, con_ang", "con_seg, con_ang"],
+    conclusion: "con_seg, con_ang",
   },
 } as const;

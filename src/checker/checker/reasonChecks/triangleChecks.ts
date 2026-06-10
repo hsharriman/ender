@@ -1,17 +1,19 @@
 import {
+  Angle,
   Obj,
   ParseObj,
   ProofContent,
+  Segment,
   Triangle,
 } from "../../../geometry-object";
 import { Stmt } from "../../types/checkerTypes";
-import { conAngMapper, conSegMapper, conTriMapper } from "./argMappers";
+import { stmtMapper } from "./argMappers";
 import {
   reasonApplicationFail,
   ReasonApplicationFailure,
   reasonApplicationOk,
   ReasonApplicationResult,
-} from "./triangleReasonResult";
+} from "./reasonResult";
 import {
   angCenter,
   checkDistinctDependencyStmts,
@@ -121,7 +123,7 @@ export const checkSas = (
 ): ReasonApplicationResult => {
   const dup = checkDistinctDependencyStmts([conSeg1, conAng, conSeg2]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = conTriMapper(conTri, ctx);
+  const [tri1, tri2] = stmtMapper(conTri, ctx) as [Triangle, Triangle];
 
   const a1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2, ctx);
   if (!a1.ok) return reasonApplicationFail(a1.failure.code, a1.failure.details);
@@ -171,7 +173,7 @@ export const checkSss = (
 ): ReasonApplicationResult => {
   const dup = checkDistinctDependencyStmts([conSeg1, conSeg2, conSeg3]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = conTriMapper(t_cong, ctx);
+  const [tri1, tri2] = stmtMapper(t_cong, ctx) as [Triangle, Triangle];
 
   const r1 = checkTriangleAssign(conSeg1.arguments, tri1, tri2, ctx);
   if (!r1.ok) return reasonApplicationFail(r1.failure.code, r1.failure.details);
@@ -219,7 +221,7 @@ export const checkAas = (
 ): ReasonApplicationResult => {
   const dup = checkDistinctDependencyStmts([conAng1, conAng2, conSeg]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = conTriMapper(t_cong, ctx);
+  const [tri1, tri2] = stmtMapper(t_cong, ctx) as [Triangle, Triangle];
 
   const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2, ctx);
   if (!e1.ok) return reasonApplicationFail(e1.failure.code, e1.failure.details);
@@ -262,7 +264,7 @@ export const checkAsa = (
 ): ReasonApplicationResult => {
   const dup = checkDistinctDependencyStmts([conAng1, conSeg, conAng2]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = conTriMapper(t_cong, ctx);
+  const [tri1, tri2] = stmtMapper(t_cong, ctx) as [Triangle, Triangle];
 
   const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2, ctx);
   if (!e1.ok) return reasonApplicationFail(e1.failure.code, e1.failure.details);
@@ -305,7 +307,7 @@ export const checkRhl = (
 ): ReasonApplicationResult => {
   const dup = checkDistinctDependencyStmts([rightCon, conSeg1, conSeg2]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = conTriMapper(t_cong, ctx);
+  const [tri1, tri2] = stmtMapper(t_cong, ctx) as [Triangle, Triangle];
 
   const er = checkTriangleAssign(rightCon.arguments, tri1, tri2, ctx);
   if (!er.ok) return reasonApplicationFail(er.failure.code, er.failure.details);
@@ -395,7 +397,7 @@ export const checkCpctc = (
   conclusion: Stmt,
   ctx: ProofContent,
 ): ReasonApplicationResult => {
-  const [tri1, tri2] = conTriMapper(t_cong, ctx);
+  const [tri1, tri2] = stmtMapper(t_cong, ctx) as [Triangle, Triangle];
 
   if (conclusion.function === "con_seg") {
     return checkCpctcSegment(tri1, tri2, conclusion, ctx);
@@ -423,7 +425,7 @@ export const checkConTri = (
   const dupAngs = checkDistinctDependencyStmts([ca1, ca2, ca3]);
   if (!dupAngs.ok) return dupAngs;
 
-  const [tri1, tri2] = conTriMapper(t_cong, ctx);
+  const [tri1, tri2] = stmtMapper(t_cong, ctx) as [Triangle, Triangle];
 
   const assign = (stmt: Stmt) =>
     checkTriangleAssign(stmt.arguments, tri1, tri2, ctx);
@@ -468,8 +470,8 @@ export const checkThirdAngle = (
   const dup = checkDistinctDependencyStmts([conAng1, conAng2, conAng3]);
   if (!dup.ok) return dup;
   // need to find t1 and t2 from ctx. try 2 possible arrangements and fail otherwise.
-  const [a11, a12] = conAngMapper(conAng1, ctx);
-  const [a21, a22] = conAngMapper(conAng2, ctx);
+  const [a11, a12] = stmtMapper(conAng1, ctx) as [Angle, Angle];
+  const [a21, a22] = stmtMapper(conAng2, ctx) as [Angle, Angle];
   const t1 =
     getTriFromAngs(a11, a21, ctx) ?? getTriFromAngs(a11, a22, ctx) ?? null;
   const t2 =
@@ -517,8 +519,8 @@ export const checkIsosceles = (
   isoscelesStmt: Stmt,
   ctx: ProofContent,
 ): ReasonApplicationResult => {
-  const [s1, s2] = conSegMapper(conSeg, ctx);
-  const [t] = conTriMapper(isoscelesStmt, ctx);
+  const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
+  const [t] = stmtMapper(isoscelesStmt, ctx) as [Triangle];
 
   if (!(t.contains(s1) && t.contains(s2) && !s1.equals(s2))) {
     return reasonApplicationFail("ISOSCELES_PATTERN");
@@ -531,7 +533,7 @@ export const checkBaseAngle = (
   conAng: Stmt,
   ctx: ProofContent,
 ): ReasonApplicationResult => {
-  const [a1, a2] = conAngMapper(conAng, ctx);
+  const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
   if (a1.equals(a2)) {
     return reasonApplicationFail("BASE_ANGLE_SAME_ANGLE", {
       ang: a1.label,
@@ -544,7 +546,7 @@ export const checkBaseAngle = (
       ang2: a2.label,
     });
   }
-  const [s1, s2] = conSegMapper(conSeg, ctx);
+  const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
   if (!t.contains(s1) || !t.contains(s2) || s1.equals(s2)) {
     return reasonApplicationFail("BASE_ANGLE_PATTERN", {
       tri: t.label,
@@ -581,8 +583,8 @@ export const equilateralEquiangular = (
   t_equiang: Stmt,
   ctx: ProofContent,
 ): ReasonApplicationResult => {
-  const [t1] = conTriMapper(t_equil, ctx);
-  const [t2] = conTriMapper(t_equiang, ctx);
+  const [t1] = stmtMapper(t_equil, ctx) as [Triangle];
+  const [t2] = stmtMapper(t_equiang, ctx) as [Triangle];
   if (t1 && t2 && t1 === t2) {
     return reasonApplicationOk();
   }
@@ -601,10 +603,10 @@ export const checkEquilateral = (
 ): ReasonApplicationResult => {
   const dup = checkDistinctDependencyStmts([cs1, cs2, cs3]);
   if (!dup.ok) return dup;
-  const [t] = conTriMapper(equil_t, ctx);
-  const [x1, x2] = conSegMapper(cs1, ctx);
-  const [y1, y2] = conSegMapper(cs2, ctx);
-  const [z1, z2] = conSegMapper(cs3, ctx);
+  const [t] = stmtMapper(equil_t, ctx) as [Triangle];
+  const [x1, x2] = stmtMapper(cs1, ctx) as [Segment, Segment];
+  const [y1, y2] = stmtMapper(cs2, ctx) as [Segment, Segment];
+  const [z1, z2] = stmtMapper(cs3, ctx) as [Segment, Segment];
   if (x1.equals(x2) || y1.equals(y2) || z1.equals(z2)) {
     return reasonApplicationFail("EQUILATERAL_SAME_SEG", {
       seg1: x1.equals(x2) ? x1.label : y1.equals(y2) ? y1.label : z1.label,
@@ -634,10 +636,10 @@ export const checkEquiangular = (
 ): ReasonApplicationResult => {
   const dup = checkDistinctDependencyStmts([ca1, ca2, ca3]);
   if (!dup.ok) return dup;
-  const [t] = conTriMapper(equil_t, ctx);
-  const [x1, x2] = conAngMapper(ca1, ctx);
-  const [y1, y2] = conAngMapper(ca2, ctx);
-  const [z1, z2] = conAngMapper(ca3, ctx);
+  const [t] = stmtMapper(equil_t, ctx) as [Triangle];
+  const [x1, x2] = stmtMapper(ca1, ctx) as [Angle, Angle];
+  const [y1, y2] = stmtMapper(ca2, ctx) as [Angle, Angle];
+  const [z1, z2] = stmtMapper(ca3, ctx) as [Angle, Angle];
   if (x1.equals(x2) || y1.equals(y2) || z1.equals(z2)) {
     return reasonApplicationFail("EQUIANGULAR_SAME_ANG", {
       ang1: x1.equals(x2) ? x1.label : y1.equals(y2) ? y1.label : z1.label,
@@ -666,7 +668,7 @@ export const checkAa = (
 ): ReasonApplicationResult => {
   const dup = checkDistinctDependencyStmts([conAng1, conAng2]);
   if (!dup.ok) return dup;
-  const [tri1, tri2] = conTriMapper(t_sim, ctx);
+  const [tri1, tri2] = stmtMapper(t_sim, ctx) as [Triangle, Triangle];
 
   const e1 = checkTriangleAssign(conAng1.arguments, tri1, tri2, ctx);
   if (!e1.ok) return reasonApplicationFail(e1.failure.code, e1.failure.details);

@@ -124,10 +124,19 @@ export class Quadrilateral extends BaseGeometryObject {
     );
   };
 
+  isConsecutive = (o1: Segment | Angle, o2: Segment | Angle) => {
+    const objArray = o1.tag === Obj.Segment ? this.s : this.a;
+    const idx = objArray.findIndex((s) => s.equals(o1));
+    if (idx === -1) return false;
+    return (
+      objArray[(idx + 1) % 4].equals(o2) || objArray[(idx + 3) % 4].equals(o2)
+    );
+  };
+
   consecutiveAngles = (ang: string): [Angle, Angle] | null => {
-    const idx = this.a.findIndex((a) => a.label === ang);
+    const idx = this.a.findIndex((a) => a.names.has(ang));
     if (idx === -1) return null;
-    return [this.a[idx], this.a[(idx + 1) % 4]];
+    return [this.a[(idx + 3) % 4], this.a[(idx + 1) % 4]]; // the angle before and after curr
   };
 
   trapezoidBases = (): [string, string] | null => {

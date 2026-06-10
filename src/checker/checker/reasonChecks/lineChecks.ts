@@ -1,5 +1,6 @@
-import { ProofContent, Segment } from "../../../geometry-object";
+import { Angle, Point, ProofContent, Segment } from "../../../geometry-object";
 import { Stmt } from "../../types/checkerTypes";
+import { stmtMapper } from "./argMappers";
 import { findDuplicateDependencyStatements } from "./utils";
 
 export const reflex_s = (s1: Segment, s2: Segment) => {
@@ -144,12 +145,9 @@ export const corresp_ang = (
 };
 
 export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: ProofContent) => {
-  const [s1, s2] = conSeg.arguments.map((arg) => ctx.getSegment(arg.v));
+  const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
   if (s1.equals(s2)) return false;
-  const [bigSeg, midpt] = [
-    ctx.getSegment(midPt.arguments[0].v),
-    ctx.getPoint(midPt.arguments[1].v),
-  ];
+  const [bigSeg, midpt] = stmtMapper(midPt, ctx) as [Segment, Point];
 
   // segments declared to be congruent and be part of the line declared to be bisected
   const segmentsEqual =
@@ -171,24 +169,16 @@ export const intersect_seg = (
   if (findDuplicateDependencyStatements([int_on1, int_on2, int_seg])) {
     return false;
   }
-  const p1 = ctx.getPoint(int_on1.arguments[1].v);
-  const p2 = ctx.getPoint(int_on2.arguments[1].v);
+  const [, p1] = stmtMapper(int_on1, ctx) as [Segment, Point];
+  const [, p2] = stmtMapper(int_on2, ctx) as [Segment, Point];
 
-  const [in1, in2, inpt] = [
-    ctx.getSegment(int_seg.arguments[0].v),
-    ctx.getSegment(int_seg.arguments[1].v),
-    ctx.getPoint(int_seg.arguments[2].v),
-  ];
+  const [in1, in2, inpt] = stmtMapper(int_seg, ctx) as [Segment, Segment, Point];
   return p1 === p2 && p1.isOnLine(in1) && p1.isOnLine(in2) && p1 === inpt;
 };
 
 export const perp = (right: Stmt, perp: Stmt, ctx: ProofContent): boolean => {
-  const angle = ctx.getAngle(right.arguments[0].v);
-  const [s1, s2] = [
-    ctx.getSegment(perp.arguments[0].v),
-    ctx.getSegment(perp.arguments[1].v),
-  ];
-  const intersectPt = ctx.getPoint(perp.arguments[2].v);
+  const [angle] = stmtMapper(right, ctx) as [Angle];
+  const [s1, s2, intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
   if (!intersectPt) return false;
 
   // angle vertex must be at the intersection; one ray on each segment
@@ -203,12 +193,8 @@ export const perp = (right: Stmt, perp: Stmt, ctx: ProofContent): boolean => {
 
 export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
   if (findDuplicateDependencyStatements([perp, conAng])) return false;
-  const [s1, s2] = [
-    ctx.getSegment(perp.arguments[0].v),
-    ctx.getSegment(perp.arguments[1].v),
-  ];
-  const [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
-  const intersectPt = ctx.getPoint(perp.arguments[2].v);
+  const [s1, s2, intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
+  const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
   if (!intersectPt) return false;
 
   if (!a1.centerEquals(intersectPt) || !a2.centerEquals(intersectPt))
@@ -233,12 +219,9 @@ export const perp_bisector = (
   ctx: ProofContent,
 ) => {
   if (findDuplicateDependencyStatements([perp, conSeg])) return false;
-  const intersectPt = ctx.getPoint(perp.arguments[2].v);
-  const [m, p] = [
-    ctx.getSegment(midpt.arguments[0].v),
-    ctx.getPoint(midpt.arguments[1].v),
-  ];
-  const [s1, s2] = conSeg.arguments.map((arg) => ctx.getSegment(arg.v));
+  const [, , intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
+  const [m, p] = stmtMapper(midpt, ctx) as [Segment, Point];
+  const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
 
   if (!intersectPt) return false;
 
@@ -261,13 +244,11 @@ const transversalHelper = (
   para: Stmt,
 ) => {
   let ok = true;
-  let [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
+  let [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
   if (a1.equals(a2)) {
     ok = false;
   }
-  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map(
-    (arg) => ctx.getPoint(arg.v),
-  );
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = stmtMapper(transversal, ctx) as Point[];
   const [s1, s2, t, innerT] = [
     ctx.getSegment(`${s1p1.label}${s1p2.label}`),
     ctx.getSegment(`${s2p1.label}${s2p2.label}`),
