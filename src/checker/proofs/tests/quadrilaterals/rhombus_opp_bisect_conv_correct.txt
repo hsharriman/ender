@@ -1,0 +1,17 @@
+// pass
+title: "Test: rhombus_opp_bisect_conv (correct - diagonal bisects both opposite angle pairs)"
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR
+ang: a_QPR a_SPR a_QPS
+[g_1] ang_bisect(a_QPS, PR)
+[g_2] ang_bisect(a_QRS, PR)
+[g_3] parallelogram(q_PQRS)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> ang_bisect(a_QPS, PR)
+[02] given(g_2) -> ang_bisect(a_QRS, PR)
+[03] given(g_3) -> parallelogram(q_PQRS)
+[04] rhombus_opp_bisect_conv(1, 2, 3) -> rhombus(q_PQRS)

@@ -1,0 +1,14 @@
+// pass
+title: "Test: rect_pgram_ang (correct - right angle in parallelogram implies rectangle)"
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+ang: a_EFG
+[g_1] right(a_EFG)
+[g_2] parallelogram(q_EFGH)
+-> rectangle(q_EFGH)
+
+steps:
+[01] given(g_1) -> right(a_EFG)
+[02] given(g_2) -> parallelogram(q_EFGH)
+[03] rect_pgram_ang(1, 2) -> rectangle(q_EFGH)

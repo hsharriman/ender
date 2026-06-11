@@ -75,10 +75,13 @@ export class ProofContent {
 
   addQuadrilateral = (props: QuadrilateralProps) => {
     const q = new Quadrilateral(props);
-    if (!this.getQuadrilateral(q.label)) {
+    const existing = this.getQuadrilateral(q.label);
+    if (!existing) {
       this.ctx.rectangles.push(q);
       this.addSegments(q.s);
       this.addAngles(q.a);
+    } else if (props.typeOpts && !existing.typeOpts) {
+      existing.typeOpts = props.typeOpts;
     }
     return this.getQuadrilateral(q.label) ?? q;
   };

@@ -51,7 +51,7 @@ export const rect_pgram_ang_check = (
   const r = ctx.getQuadrilateral(rect.arguments[0].v);
   const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
   const [a] = stmtMapper(right, ctx) as [Angle];
-  if (!r.contains(a)) {
+  if (!quadContainsAngle(r, a)) {
     return reasonApplicationFail("NOT_RIGHT_ANGLE", {
       angle: a.label,
     });
@@ -103,14 +103,14 @@ export const def_pgram_side_check = (
     if (!pair2Result.ok) return pair2Result;
     const [ps3, ps4] = stmtMapper(pair2, ctx) as [Segment, Segment];
     // special case: this reason expects the same pair of segments to be both congruent and para
-    if (
-      reasonName === "pgram_opp_side_para" &&
-      !segmentPairsEqual([ps1, ps2], [ps3, ps4])
-    ) {
-      return reasonApplicationFail("PGRAM_MISSING_STMT_PAIR", {
-        pair1: [ps1.label, ps2.label],
-        pair2: [ps3.label, ps4.label],
-      });
+    if (reasonName === "pgram_opp_side_para") {
+      if (!segmentPairsEqual([ps1, ps2], [ps3, ps4])) {
+        return reasonApplicationFail("PGRAM_MISSING_STMT_PAIR", {
+          pair1: [ps1.label, ps2.label],
+          pair2: [ps3.label, ps4.label],
+        });
+      }
+      return reasonApplicationOk();
       // otherwise, make sure that pair 1 and 2 are 2 diff sets of opposite sides
     } else if (segmentPairsEqual([ps1, ps2], [ps3, ps4])) {
       return reasonApplicationFail("SAME_SEGMENT_PAIR", {
@@ -194,18 +194,24 @@ export const pgram_consec_angs_conv_check = (
       pair2: [a3.label, a4.label],
     });
   }
-  const angleCheck = (a: Angle, o1: Angle, o2: Angle) => {
-    const sharedAngle = a.equals(o1) || a.equals(o2) ? a : null;
-    if (!sharedAngle) {
-      return false;
-    }
-    const consecutive = quad.consecutiveAngles(sharedAngle.label);
-    if (!consecutive) {
-      return false;
-    }
-    return consecutive.every((ang) => ang.equals(o1) || ang.equals(o2));
-  };
-  if (!angleCheck(a1, a3, a4) || !angleCheck(a2, a3, a4)) {
+  // Find the shared angle (appears in both supplementary statements)
+  const shared = [a1, a2].find((a) => a.equals(a3) || a.equals(a4));
+  if (!shared) {
+    return reasonApplicationFail("NOT_CONSEC_ANGLES", {
+      pair1: [a1.label, a2.label],
+      pair2: [a3.label, a4.label],
+    });
+  }
+  // The "other" angle from each supp (not the shared one)
+  const other1 = [a1, a2].find((a) => !a.equals(shared))!;
+  const other2 = [a3, a4].find((a) => !a.equals(shared))!;
+  // Consecutive angles of the shared angle must be exactly {other1, other2}
+  const consecutive = quad.consecutiveAngles(shared.label);
+  if (
+    !consecutive ||
+    !consecutive.some((a) => a.equals(other1)) ||
+    !consecutive.some((a) => a.equals(other2))
+  ) {
     return reasonApplicationFail("NOT_CONSEC_ANGLES", {
       pair1: [a1.label, a2.label],
       pair2: [a3.label, a4.label],

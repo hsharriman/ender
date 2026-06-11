@@ -1,0 +1,14 @@
+// fail on step 3
+title: "Test: isos_trap_base_angs (incorrect - angles are not base angles of the trapezoid)"
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (8, 5, tr), H (2, 5, tl)
+quad: q_EFGH
+ang: a_HEF a_FGH
+[g_1] con_ang(a_HEF, a_FGH)
+[g_2] trapezoid_premise(q_EFGH, EF, GH)
+-> isos_trapezoid(q_EFGH)
+
+steps:
+[01] given(g_1) -> con_ang(a_HEF, a_FGH)
+[02] given(g_2) -> trapezoid_premise(q_EFGH, EF, GH)
+[03] isos_trap_base_angs(1, 2) -> isos_trapezoid(q_EFGH)

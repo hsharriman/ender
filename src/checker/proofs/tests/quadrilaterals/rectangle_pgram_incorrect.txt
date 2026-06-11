@@ -1,0 +1,11 @@
+// fail on step 2
+title: "Test: rectangle_pgram (incorrect - conclusion names wrong quadrilateral)"
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl), A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_EFGH q_ABCD
+[g_1] rectangle(q_EFGH)
+-> parallelogram(q_ABCD)
+
+steps:
+[01] given(g_1) -> rectangle(q_EFGH)
+[02] rectangle_pgram(1) -> parallelogram(q_ABCD)

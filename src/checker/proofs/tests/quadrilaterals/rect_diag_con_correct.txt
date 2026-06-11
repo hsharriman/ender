@@ -1,0 +1,12 @@
+// pass
+title: "Test: rect_diag_con (correct - rectangle diagonals are congruent)"
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+seg: EG FH
+[g_1] rectangle(q_EFGH)
+-> con_seg(EG, FH)
+
+steps:
+[01] given(g_1) -> rectangle(q_EFGH)
+[02] rect_diag_con(1) -> con_seg(EG, FH)

@@ -1,0 +1,13 @@
+// fail on step 3
+title: "Test: pgram_opp_angs_conv (incorrect - consecutive angle pairs are not opposite)"
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] con_ang(a_ABC, a_BCD)
+[g_2] con_ang(a_CDA, a_DAB)
+-> parallelogram(q_ABCD)
+
+steps:
+[01] given(g_1) -> con_ang(a_ABC, a_BCD)
+[02] given(g_2) -> con_ang(a_CDA, a_DAB)
+[03] pgram_opp_angs_conv(1, 2) -> parallelogram(q_ABCD)

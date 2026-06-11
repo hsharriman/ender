@@ -601,8 +601,8 @@ export const checkReasonApplication = (
         const conSeg = getDepStmt(reason.arguments[0], proofGraph)!;
         const para = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = def_pgram_side_check(
-          stmt,
           conSeg,
+          stmt,
           ctx,
           para,
           reason.function,

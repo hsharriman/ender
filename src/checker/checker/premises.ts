@@ -64,6 +64,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "parallelogram":
       case "kite":
       case "isos_trapezoid":
+      case "isos_trapezoid_premise":
       case "rhombus":
       case "trapezoid":
       case "circumcenter":

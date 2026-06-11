@@ -1,0 +1,14 @@
+// pass
+title: "Test: pgram_diag_bisect_conv (correct - both diagonals bisect each other)"
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl), M (5, 4, b)
+quad: q_ABCD
+seg: AC BD
+[g_1] seg_bisect(AC, BD, M)
+[g_2] seg_bisect(BD, AC, M)
+-> parallelogram(q_ABCD)
+
+steps:
+[01] given(g_1) -> seg_bisect(AC, BD, M)
+[02] given(g_2) -> seg_bisect(BD, AC, M)
+[03] pgram_diag_bisect_conv(1, 2) -> parallelogram(q_ABCD)

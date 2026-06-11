@@ -10,6 +10,7 @@ export const STMTS_DEFS = {
       name: "on_line",
       parameters: [segment("s"), point("p")],
       isPremisesOnly: true,
+      isDiagramOnly: true,
       group: "point_on_line",
     },
     transversal: {
@@ -25,11 +26,13 @@ export const STMTS_DEFS = {
         point("i2"),
       ],
       isPremisesOnly: true,
+      isDiagramOnly: true,
     },
     intersect_seg: {
       name: "intersect_seg",
       parameters: [segment("s1"), segment("s2"), point("p")],
       isPremisesOnly: true,
+      isDiagramOnly: true,
     },
     trapezoid_premise: {
       name: "trapezoid_premise",

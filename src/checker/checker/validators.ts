@@ -649,3 +649,28 @@ export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
 
   return errors;
 };
+
+/**
+ * Validates that every diagram premise (`[d_xx]`) uses a statement that is
+ * explicitly marked `isDiagramOnly`.  Non-diagram statements (e.g. `right`,
+ * `perp`, `parallelogram`) may only appear as given steps or derived proof
+ * steps, not as diagram premises.
+ */
+export const checkDiagramPremiseTypes = (
+  proof: ProofObj,
+  stmtDefs: Map<string, StatementDefinition>,
+): Array<string> => {
+  const errors: Array<string> = [];
+  proof.premises.diagramStatements.forEach((d) => {
+    const fn = d.statement?.function;
+    if (!fn) return;
+    const def = stmtDefs.get(fn);
+    if (!def?.isDiagramOnly) {
+      errors.push(
+        `Diagram premise [${d.stepNumber}] uses statement '${fn}' which is not a diagram-only statement. ` +
+          `Use a given step or proof step instead.`,
+      );
+    }
+  });
+  return errors;
+};

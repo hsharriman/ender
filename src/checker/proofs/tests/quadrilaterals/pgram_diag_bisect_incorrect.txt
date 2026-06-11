@@ -1,0 +1,12 @@
+// fail on step 2
+title: "Test: pgram_diag_bisect (incorrect - sides are not diagonals)"
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl), M (5, 4, b)
+quad: q_ABCD
+seg: AB CD
+[g_1] parallelogram(q_ABCD)
+-> seg_bisect(AB, CD, M)
+
+steps:
+[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_diag_bisect(1) -> seg_bisect(AB, CD, M)

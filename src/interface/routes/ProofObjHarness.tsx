@@ -36,6 +36,12 @@ const proofOptions: Array<{ key: string; label: string; url: string }> =
     })
     .sort((a, b) => a.label.localeCompare(b.label));
 
+const TEST_GROUPS: Array<{ dir: string; label: string }> = [
+  { dir: "tests/lines_angles/", label: "Lines & Angles" },
+  { dir: "tests/triangles/",    label: "Triangles" },
+  { dir: "tests/quadrilaterals/", label: "Quadrilaterals" },
+];
+
 function formatErrorList(errors: ErrorObj[] | undefined): string {
   if (!errors?.length) return "Incorrect step (no step.errors payload)";
   return errors
@@ -384,7 +390,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             >
               {(() => {
                 const top = proofOptions.filter((p) => !p.key.startsWith("tests/"));
-                const tests = proofOptions.filter((p) => p.key.startsWith("tests/"));
                 return (
                   <>
                     {top.map((proof) => (
@@ -392,15 +397,19 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                         {proof.label}
                       </option>
                     ))}
-                    {tests.length > 0 && (
-                      <optgroup label="tests/">
-                        {tests.map((proof) => (
-                          <option key={proof.key} value={proof.key}>
-                            {proof.label.replace("tests/", "")}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
+                    {TEST_GROUPS.map(({ dir, label }) => {
+                      const group = proofOptions.filter((p) => p.key.startsWith(dir));
+                      if (group.length === 0) return null;
+                      return (
+                        <optgroup key={dir} label={`Tests — ${label}`}>
+                          {group.map((proof) => (
+                            <option key={proof.key} value={proof.key}>
+                              {proof.key.slice(dir.length)}
+                            </option>
+                          ))}
+                        </optgroup>
+                      );
+                    })}
                   </>
                 );
               })()}

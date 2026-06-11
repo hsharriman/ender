@@ -5,6 +5,7 @@ import {
 } from "./checker/graph";
 import { buildPremises } from "./checker/premises";
 import {
+  checkDiagramPremiseTypes,
   checkGeometricObjects,
   checkGoalMatch,
   checkSequentialStepNumbers,
@@ -94,6 +95,21 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
 
   const reasonDefs = loadReasonDefinitions();
   const { statements: stmtDefs, groups } = loadStatementDefinitions();
+
+  const diagramPremiseErrors = checkDiagramPremiseTypes(proof, stmtDefs);
+  if (diagramPremiseErrors.length > 0) {
+    proof.isCorrect = false;
+    return {
+      proof,
+      goal,
+      graph: emptyProofGraph(),
+      ctx,
+      duplicateSteps: [],
+      stepNumberErrors: [],
+      geometricObjectErrors: diagramPremiseErrors,
+      goalMatchResult: { matches: false, details: "skipped (diagram premise errors)" },
+    };
+  }
 
   const graph = buildProofGraph(proof, reasonDefs, stmtDefs, groups, ctx);
 

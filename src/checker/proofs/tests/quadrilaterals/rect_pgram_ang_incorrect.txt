@@ -1,0 +1,14 @@
+// fail on step 3
+title: "Test: rect_pgram_ang (incorrect - right angle and parallelogram from different quads)"
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl), A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_EFGH q_ABCD
+ang: a_EFG
+[g_1] right(a_EFG)
+[g_2] parallelogram(q_ABCD)
+-> rectangle(q_EFGH)
+
+steps:
+[01] given(g_1) -> right(a_EFG)
+[02] given(g_2) -> parallelogram(q_ABCD)
+[03] rect_pgram_ang(1, 2) -> rectangle(q_EFGH)

@@ -1,0 +1,12 @@
+// fail on step 2
+title: "Test: kite_diag_perp (incorrect - using sides instead of diagonals)"
+premises:
+pt: A (5, 1, b), B (9, 5, r), C (5, 9, t), D (1, 5, l), M (5, 5, b)
+quad: q_ABCD
+ang: a_DAB a_BCD
+[g_1] kite_premise(q_ABCD, a_DAB, a_BCD)
+-> perp(AB, BC, B)
+
+steps:
+[01] given(g_1) -> kite_premise(q_ABCD, a_DAB, a_BCD)
+[02] kite_diag_perp(1) -> perp(AB, BC, B)
