@@ -1,0 +1,11 @@
+// fail on step 2
+title: "Test: pgram_consec_angs (incorrect - opposite angles are not consecutive)"
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] parallelogram(q_ABCD)
+-> supplementary(a_ABC, a_ADC)
+
+steps:
+[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_consec_angs(1) -> supplementary(a_ABC, a_ADC)

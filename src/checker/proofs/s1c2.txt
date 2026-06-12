@@ -14,7 +14,7 @@ steps:
 [01] given(g_1) -> right(a_ADB)
 [02] given(g_2) -> ang_bisect(a_ABC, BD)
 [03] def_ang_bisect(2) -> con_ang(a_ABD, a_DBC)
-[04] def_perp(1) -> perp(BD, AC)
+[04] def_perp(1) -> perp(BD, AC, D)
 [05] perp_con_ang(4) -> con_right(a_ADB, a_BDC) // angles on perp are both 90
 [06] reflex_s() -> con_seg(BD, BD)
 [07] asa(5, 6, 3) -> con_tri(t_ABD, t_CBD)

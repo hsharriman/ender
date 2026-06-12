@@ -21,6 +21,8 @@ export const ErrorMessages = {
       `Segment '${segment}' is used in ang_bisect but does not overlap with angle ${angle}`,
     POINT_NOT_DEFINED_IN_PREMISES: (point: string) =>
       `Point '${point}' is used in intersect_seg but not defined in premises`,
+    PREMISE_COUNTERPART_REQUIRED: (stmt: string) =>
+      `Statement '${stmt}' cannot be used in premises. Try ${stmt}_premise instead.`,
   },
 } as const;
 
@@ -48,5 +50,7 @@ export const createError = {
       ),
     pointNotDefinedInPremises: (point: string) =>
       new Error(ErrorMessages.PARSER.POINT_NOT_DEFINED_IN_PREMISES(point)),
+    premiseCounterpartRequired: (reason: string) =>
+      new Error(ErrorMessages.PARSER.PREMISE_COUNTERPART_REQUIRED(reason)),
   },
 } as const;

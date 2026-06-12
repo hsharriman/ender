@@ -1,0 +1,11 @@
+// pass
+title: "Test: pgram_opp_sides (correct - opposite sides are congruent)"
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] parallelogram(q_ABCD)
+-> con_seg(AB, CD)
+
+steps:
+[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_opp_sides(1) -> con_seg(AB, CD)

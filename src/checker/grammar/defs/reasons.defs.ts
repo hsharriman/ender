@@ -59,7 +59,6 @@ export const REASONS_DEFS = {
     name: "def_perp",
     title: "Def. Perpendicular Lines",
     body: "If two lines meet at 90°, then they are perpendicular.",
-    diagramDependencies: ["point_on_line"],
     dependencies: ["right"],
     conclusion: "perp",
   },
@@ -331,10 +330,8 @@ export const REASONS_DEFS = {
     ],
     conclusion: "con_tri",
   },
-  // unimplemented reasons that will always return true for now
   // parallelogram reasons
   def_parallelogram: {
-    // TODO untested, maybe needs converse?
     name: "def_parallelogram",
     title: "Def. Parallelogram",
     body: "A parallelogram is a quadrilateral with opposite sides that are parallel.",
@@ -345,7 +342,7 @@ export const REASONS_DEFS = {
     name: "pgram_opp_sides",
     title: "Parallelogram Opposite Sides",
     body: "A parallelogram has opposite sides that are congruent.",
-    dependencies: ["parallelogram"],
+    dependencies: ["pgram_obj"],
     conclusion: "con_seg",
   },
   pgram_opp_sides_conv: {
@@ -359,7 +356,7 @@ export const REASONS_DEFS = {
     name: "pgram_opp_angs",
     title: "Parallelogram Opposite Angles",
     body: "A parallelogram has opposite angles that are congruent.",
-    dependencies: ["parallelogram"],
+    dependencies: ["pgram_obj"],
     conclusion: "con_ang",
   },
   pgram_opp_angs_conv: {
@@ -369,11 +366,19 @@ export const REASONS_DEFS = {
     dependencies: ["con_ang", "con_ang"],
     conclusion: "parallelogram",
   },
+  pgram_opp_side_para: {
+    name: "pgram_opp_side_para",
+    title: "Parallelogram Opposite Side Parallel",
+    body: "If one pair of opposite sides of a quadrilateral are both parallel and congruent, then the quadrilateral is a parallelogram.",
+    dependencies: ["con_seg", "para"],
+    conclusion: "parallelogram",
+  },
+  // unimplemented reasons that will always return true for now
   pgram_consec_angs: {
     name: "pgram_consec_angs",
     title: "Parallelogram Consecutive Angles",
     body: "The consectutive angles of a parallelogram are supplementary.",
-    dependencies: ["parallelogram"],
+    dependencies: ["pgram_obj"],
     conclusion: "supplementary",
   },
   pgram_consec_angs_conv: {
@@ -387,7 +392,7 @@ export const REASONS_DEFS = {
     name: "pgram_diag_bisect",
     title: "Parallelogram Diagonal Bisect",
     body: "The diagonals of a parallelogram bisect each other.",
-    dependencies: ["parallelogram"],
+    dependencies: ["pgram_obj"],
     conclusion: "seg_bisect",
   },
   pgram_diag_bisect_conv: {
@@ -395,13 +400,6 @@ export const REASONS_DEFS = {
     title: "Parallelogram Diagonal Bisect (Converse)",
     body: "If the diagonals of a quadrilateral bisect each other, then the quadrilateral is a parallelogram.",
     dependencies: ["seg_bisect", "seg_bisect"],
-    conclusion: "parallelogram",
-  },
-  pgram_opp_side_para: {
-    name: "pgram_opp_side_para",
-    title: "Parallelogram Opposite Side Parallel",
-    body: "If one pair of opposite sides of a quadrilateral are both parallel and congruent, then the quadrilateral is a parallelogram.",
-    dependencies: ["con_seg", "para"],
     conclusion: "parallelogram",
   },
   rectangle_pgram: {
@@ -429,14 +427,14 @@ export const REASONS_DEFS = {
     name: "rect_diag_con_conv",
     title: "Rectangle Diagonal Congruence (Converse)",
     body: "If the diagonals of a parallelogram are congruent, then the parallelogram is a rectangle.",
-    dependencies: ["con_seg", "con_seg", "parallelogram"],
+    dependencies: ["con_seg", "pgram_obj"],
     conclusion: "rectangle",
   },
   rect_pgram_ang: {
     name: "rect_pgram_ang",
     title: "Rectangle Parallelogram Angle",
     body: "If one angle of a parallelogram is a right angle, then the parallelogram is a rectangle.",
-    dependencies: ["right", "parallelogram"],
+    dependencies: ["right", "pgram_obj"],
     conclusion: "rectangle",
   },
   rhombus_diag_perp: {
@@ -450,14 +448,14 @@ export const REASONS_DEFS = {
     name: "rhombus_diag_perp_conv",
     title: "Rhombus Diagonal Perpendicularity (Converse)",
     body: "If the diagonals of a parallelogram are perpendicular, then the quadrilateral is a rhombus.",
-    dependencies: ["perp", "perp", "parallelogram"],
+    dependencies: ["perp", "pgram_obj"],
     conclusion: "rhombus",
   },
   rhombus_opp_bisect_conv: {
     name: "rhombus_opp_bisect_conv",
     title: "Rhombus Opposite Diagonal Bisect (Converse)",
     body: "If one diagonal of a parallelogram bisects a pair of opposite angles, then the parallelogram is a rhombus.",
-    dependencies: ["ang_bisect", "ang_bisect", "parallelogram"],
+    dependencies: ["ang_bisect", "ang_bisect", "pgram_obj"],
     conclusion: "rhombus",
   },
   rhombus_opp_bisect: {
@@ -471,45 +469,45 @@ export const REASONS_DEFS = {
     name: "rhombus_consec_sides",
     title: "Rhombus Consecutive Sides",
     body: "If one pair of consecutive sides of a parallelogram are congruent, then the parallelogram is a rhombus.",
-    dependencies: ["parallelogram", "con_seg"],
+    dependencies: ["pgram_obj", "con_seg"],
     conclusion: "rhombus",
   },
   kite_diag_perp: {
     name: "kite_diag_perp",
     title: "Kite Diagonal Perpendicularity",
     body: "If a quadrilateral is a kite, then its diagonals are perpendicular.",
-    dependencies: ["kite"],
+    dependencies: ["kite_premise"],
     conclusion: "perp",
   },
   kite_opp_con_ang: {
     name: "kite_opp_con_ang",
     title: "Kite Opposite Congruent Angles",
     body: "If a quadrilateral is a kite, then exactly one pair of opposite angles are congruent. The congruent angles are the ones between the pairs of congruent sides.",
-    dependencies: ["kite"],
+    dependencies: ["kite_premise"], // requires knowing what angles of the kite are congruent
     conclusion: "con_ang",
   },
   isos_trap_base_angs: {
     name: "isos_trap_base_angs",
+    title: "Trapezoid with Congruent Base Angle",
+    body: "If a trapezoid has one pair of congruent base angles, then the trapezoid is isosceles.",
+    dependencies: ["con_ang", "trapezoid_premise"], // should be both premise and regular
+    conclusion: "isos_trapezoid",
+  },
+  isos_trap_base_angs_conv: {
+    name: "isos_trap_base_angs_conv",
     title: "Isosceles Trapezoid Base Angles",
     body: "If a quadrilateral is an isosceles trapezoid, then each pair of base angles are congruent.",
-    dependencies: ["isos_trapezoid"],
+    dependencies: ["isos_trap_obj"], // should be BOTH isos_trapezoid_premise and isos_trapezoid
     conclusion: "con_ang",
   },
   isos_trap_con_diags: {
     name: "isos_trap_con_diags",
     title: "Isosceles Trapezoid Congruent Diagonals",
     body: "A trapezoid is isosceles if and only if its diagonals are congruent.",
-    dependencies: ["con_seg", "con_seg", "trapezoid"],
+    dependencies: ["con_seg", "trapezoid_premise"],
     conclusion: "isos_trapezoid",
   },
-  isos_trap_one_base_ang: {
-    // TODO maybe not needed?
-    name: "isos_trap_one_base_ang",
-    title: "Trapezoid with Congruent Base Angle",
-    body: "If a trapezoid has one pair of congruent base angles, then the trapezoid is isosceles.",
-    dependencies: ["con_ang", "trapezoid"],
-    conclusion: "isos_trapezoid",
-  },
+  // still implementing cutoff
   circumcenter: {
     name: "circumcenter",
     title: "Circumcenter Theorem",
@@ -523,5 +521,12 @@ export const REASONS_DEFS = {
     body: "The incenter of a triangle is the point where the angle bisectors of the angles intersect. It is equidistant from the sides of the triangle.",
     dependencies: ["ang_bisect", "ang_bisect", "ang_bisect"],
     conclusion: "incenter",
+  },
+  con_transitive: {
+    name: "con_transitive",
+    title: "Transitive Property of Congruence",
+    body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
+    dependencies: ["con_seg, con_ang", "con_seg, con_ang"],
+    conclusion: "con_seg, con_ang",
   },
 } as const;

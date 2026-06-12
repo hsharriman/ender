@@ -41,7 +41,7 @@ export class BaseGeometryObject {
     return tickNumber ? `${id}.${tickNumber}` : id;
   };
 
-  isEqualTo = (other: BaseGeometryObject) => {
+  equals = (other: BaseGeometryObject) => {
     return this.matches(other.label);
   };
 

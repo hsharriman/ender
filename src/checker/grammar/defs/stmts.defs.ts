@@ -10,6 +10,7 @@ export const STMTS_DEFS = {
       name: "on_line",
       parameters: [segment("s"), point("p")],
       isPremisesOnly: true,
+      isDiagramOnly: true,
       group: "point_on_line",
     },
     transversal: {
@@ -25,15 +26,34 @@ export const STMTS_DEFS = {
         point("i2"),
       ],
       isPremisesOnly: true,
+      isDiagramOnly: true,
     },
     intersect_seg: {
       name: "intersect_seg",
       parameters: [segment("s1"), segment("s2"), point("p")],
       isPremisesOnly: true,
+      isDiagramOnly: true,
+    },
+    trapezoid_premise: {
+      name: "trapezoid_premise",
+      parameters: [quadrilateral("q"), segment("s1"), segment("s2")],
+      isPremisesOnly: true,
+    },
+    kite_premise: {
+      name: "kite_premise",
+      parameters: [quadrilateral("q"), angle("a1"), angle("a2")],
+      isPremisesOnly: true,
+    },
+    isos_trapezoid_premise: {
+      // same handling as trapezoid_premise
+      name: "isos_trapezoid_premise",
+      parameters: [quadrilateral("q"), segment("s1"), segment("s2")],
+      isPremisesOnly: true,
     },
     right: {
       name: "right",
       parameters: [angle("a")],
+      isPremisesOnly: true,
     },
     con_seg: {
       name: "con_seg",
@@ -63,7 +83,7 @@ export const STMTS_DEFS = {
     },
     perp: {
       name: "perp",
-      parameters: [segment("s1"), segment("s2")],
+      parameters: [segment("s1"), segment("s2"), point("p")],
     },
     midpt: {
       name: "midpt",
@@ -127,20 +147,12 @@ export const STMTS_DEFS = {
       name: "seg_bisect",
       parameters: [segment("s1"), segment("s2"), point("p")],
     },
-    kite: {
-      name: "kite",
-      parameters: [quadrilateral("q")],
-    },
     isos_trapezoid: {
       name: "isos_trapezoid",
       parameters: [quadrilateral("q")],
     },
     rhombus: {
       name: "rhombus",
-      parameters: [quadrilateral("q")],
-    },
-    trapezoid: {
-      name: "trapezoid",
       parameters: [quadrilateral("q")],
     },
   },
@@ -154,6 +166,21 @@ export const STMTS_DEFS = {
       name: "point_on_line",
       base: "on_line",
       extensions: ["midpt"],
+    },
+    pgram_obj: {
+      name: "pgram_obj",
+      base: "parallelogram",
+      extensions: ["rhombus", "rectangle"],
+    },
+    trapez_prem_obj: {
+      name: "trapez_obj",
+      base: "trapezoid_premise",
+      extensions: ["isos_trapezoid_premise"],
+    },
+    isos_trap_obj: {
+      name: "isos_trap_obj",
+      base: "isos_trapezoid_premise",
+      extensions: ["isos_trapezoid"],
     },
   },
 } as const;

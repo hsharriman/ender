@@ -1,5 +1,6 @@
 import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
+import { stmtMapper } from "./argMappers";
 import { findDuplicateDependencyStatements } from "./utils";
 
 export const reflex_a = (a1: Angle, a2: Angle) => {
@@ -7,16 +8,17 @@ export const reflex_a = (a1: Angle, a2: Angle) => {
 };
 
 export const right = (perp: Stmt, right: Stmt, ctx: ProofContent): boolean => {
-  const [s1, s2] = perp.arguments.map((arg) => ctx.getSegment(arg.v));
-  const r = ctx.getAngle(right.arguments[0].v);
+  const [s1, s2, p] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
+  const [r] = stmtMapper(right, ctx) as [Angle];
+  if (!p) return false;
 
-  // angle includes one of the segments and a point from the other
-  if (r.contains(s1)) {
-    return r.contains(s2.p1) || r.contains(s2.p2);
-  } else if (r.contains(s2)) {
-    return r.contains(s1.p1) || r.contains(s1.p2);
-  }
-  return false;
+  const startLabel = r.start.label;
+  const endLabel = r.end.label;
+  return (
+    r.centerEquals(p) &&
+    ((s1.label.includes(startLabel) && s2.label.includes(endLabel)) ||
+      (s2.label.includes(startLabel) && s1.label.includes(endLabel)))
+  );
 };
 
 export const linear_pair = (
@@ -24,8 +26,8 @@ export const linear_pair = (
   supplementary: Stmt,
   ctx: ProofContent,
 ) => {
-  const [a1, a2] = supplementary.arguments.map((arg) => ctx.getAngle(arg.v));
-  const [l1, l2] = linearPair.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [a1, a2] = stmtMapper(supplementary, ctx) as [Angle, Angle];
+  const [l1, l2] = stmtMapper(linearPair, ctx) as [Angle, Angle];
 
   // angles referenced by linear pair must be same as supplementary
   return (a1.equals(l1) && a2.equals(l2)) || (a1.equals(l2) && a2.equals(l1));
@@ -39,9 +41,9 @@ export const con_supp_comp_same_angle = (
   ctx: ProofContent,
 ) => {
   if (findDuplicateDependencyStatements([supp, supp2, conAng])) return false;
-  const [a1, a2] = supp.arguments.map((arg) => ctx.getAngle(arg.v));
-  const [b1, b2] = supp2.arguments.map((arg) => ctx.getAngle(arg.v));
-  const [c1, c2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [a1, a2] = stmtMapper(supp, ctx) as [Angle, Angle];
+  const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
+  const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
   // shared angle must appear exactly once in each supp statement
   const shared = [a1, a2].find((a) => a.equals(b1) || a.equals(b2));
@@ -67,10 +69,10 @@ export const con_supp_comp_diff_angles = (
   ctx: ProofContent,
 ) => {
   if (findDuplicateDependencyStatements([supp, supp2, conAng])) return false;
-  const [a1, a2] = supp.arguments.map((arg) => ctx.getAngle(arg.v));
-  const [b1, b2] = supp2.arguments.map((arg) => ctx.getAngle(arg.v));
-  const [s1, s2] = sharedConAng.arguments.map((arg) => ctx.getAngle(arg.v));
-  const [c1, c2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [a1, a2] = stmtMapper(supp, ctx) as [Angle, Angle];
+  const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
+  const [s1, s2] = stmtMapper(sharedConAng, ctx) as [Angle, Angle];
+  const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
   if (c1.equals(c2) || s1.equals(s2)) return false;
 
@@ -100,12 +102,8 @@ export const vert_ang = (
   conAng: Stmt,
   ctx: ProofContent,
 ): boolean => {
-  const [s1, s2, pt]: [Segment, Segment, Point] = [
-    ctx.getSegment(intersect_seg.arguments[0].v),
-    ctx.getSegment(intersect_seg.arguments[1].v),
-    ctx.getPoint(intersect_seg.arguments[2].v),
-  ];
-  const [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
+  const [s1, s2, pt] = stmtMapper(intersect_seg, ctx) as [Segment, Segment, Point];
+  const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
   // Check that angles don't include segment names (vertical angles must be across from each other)
   // also that the angles are not equal
@@ -133,8 +131,8 @@ export const defConRight = (
   // if (findDuplicateDependencyStatements([right1, right2])) return false;
   // if (right1.function !== "right" || right2.function !== "right") return false;
 
-  const a1 = ctx.getAngle(right1.arguments[0].v);
-  const a2 = ctx.getAngle(right2.arguments[0].v);
+  const [a1] = stmtMapper(right1, ctx) as [Angle];
+  const [a2] = stmtMapper(right2, ctx) as [Angle];
 
   if (a1.equals(a2)) return false;
   return true;
@@ -145,11 +143,8 @@ export const def_ang_bisect = (
   bisect: Stmt,
   ctx: ProofContent,
 ) => {
-  const [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
-  const [ang, seg] = [
-    ctx.getAngle(bisect.arguments[0].v),
-    ctx.getSegment(bisect.arguments[1].v),
-  ];
+  const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
+  const [ang, seg] = stmtMapper(bisect, ctx) as [Angle, Segment];
 
   // check if corner of a1/a2 is on seg + corner of ang
   // and if both small angles contain the bisecting segment

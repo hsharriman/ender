@@ -1,0 +1,11 @@
+// fail on step 2
+title: "Test: rhombus_pgram (incorrect - conclusion names wrong quadrilateral)"
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_PQRS q_ABCD
+[g_1] rhombus(q_PQRS)
+-> parallelogram(q_ABCD)
+
+steps:
+[01] given(g_1) -> rhombus(q_PQRS)
+[02] rhombus_pgram(1) -> parallelogram(q_ABCD)

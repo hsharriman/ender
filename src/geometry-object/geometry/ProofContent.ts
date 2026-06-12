@@ -75,10 +75,13 @@ export class ProofContent {
 
   addQuadrilateral = (props: QuadrilateralProps) => {
     const q = new Quadrilateral(props);
-    if (!this.getQuadrilateral(q.label)) {
+    const existing = this.getQuadrilateral(q.label);
+    if (!existing) {
       this.ctx.rectangles.push(q);
       this.addSegments(q.s);
       this.addAngles(q.a);
+    } else if (props.typeOpts && !existing.typeOpts) {
+      existing.typeOpts = props.typeOpts;
     }
     return this.getQuadrilateral(q.label) ?? q;
   };
@@ -116,12 +119,15 @@ export class ProofContent {
     return this.addTriangle({ pts: [a, b, c] });
   };
 
-  addQuadrilateralFromStr = (str: string) => {
+  addQuadrilateralFromStr = (
+    str: string,
+    typeOpts?: { type: "trapezoid" | "kite"; objs: [string, string] },
+  ) => {
     if (str.startsWith("q_")) {
       str = str.slice(2);
     }
     const [a, b, c, d] = str.split("").map((c) => this.getPoint(c));
-    return this.addQuadrilateral({ pts: [a, b, c, d] });
+    return this.addQuadrilateral({ pts: [a, b, c, d], typeOpts });
   };
 
   addAngleFromStr = (str: string) => {

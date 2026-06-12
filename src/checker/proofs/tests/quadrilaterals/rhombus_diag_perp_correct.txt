@@ -1,0 +1,12 @@
+// pass
+title: "Test: rhombus_diag_perp (correct - rhombus diagonals are perpendicular)"
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR QS
+[g_1] rhombus(q_PQRS)
+-> perp(PR, QS, N)
+
+steps:
+[01] given(g_1) -> rhombus(q_PQRS)
+[02] rhombus_diag_perp(1) -> perp(PR, QS, N)

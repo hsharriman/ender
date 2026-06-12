@@ -1,0 +1,11 @@
+// fail on step 2
+title: "Test: rhombus_diag_perp (incorrect - using sides instead of diagonals)"
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+[g_1] rhombus(q_PQRS)
+-> perp(PQ, QR, Q)
+
+steps:
+[01] given(g_1) -> rhombus(q_PQRS)
+[02] rhombus_diag_perp(1) -> perp(PQ, QR, Q)

@@ -1,0 +1,12 @@
+// fail on step 2
+title: "Test: kite_opp_con_ang (incorrect - wrong angle pair not matching kite premise)"
+premises:
+pt: A (5, 1, b), B (9, 5, r), C (5, 9, t), D (1, 5, l), M (5, 5, b)
+quad: q_ABCD
+ang: a_DAB a_BCD a_ABC
+[g_1] kite_premise(q_ABCD, a_DAB, a_BCD)
+-> con_ang(a_ABC, a_BCD)
+
+steps:
+[01] given(g_1) -> kite_premise(q_ABCD, a_DAB, a_BCD)
+[02] kite_opp_con_ang(1) -> con_ang(a_ABC, a_BCD)

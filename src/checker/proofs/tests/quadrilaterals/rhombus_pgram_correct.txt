@@ -1,0 +1,11 @@
+// pass
+title: "Test: rhombus_pgram (correct - rhombus is a parallelogram)"
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l)
+quad: q_PQRS
+[g_1] rhombus(q_PQRS)
+-> parallelogram(q_PQRS)
+
+steps:
+[01] given(g_1) -> rhombus(q_PQRS)
+[02] rhombus_pgram(1) -> parallelogram(q_PQRS)

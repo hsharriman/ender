@@ -29,8 +29,4 @@ export class Point extends BaseGeometryObject {
   isOnLine = (s: Segment) => {
     return this.onLine.has(s);
   };
-
-  equals = (p: Point) => {
-    return this.names.has(p.label);
-  };
 }

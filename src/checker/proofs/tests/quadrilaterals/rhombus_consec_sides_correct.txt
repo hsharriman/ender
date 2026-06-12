@@ -1,0 +1,13 @@
+// pass
+title: "Test: rhombus_consec_sides (correct - consecutive congruent sides in parallelogram)"
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l)
+quad: q_PQRS
+[g_1] parallelogram(q_PQRS)
+[g_2] con_seg(PQ, QR)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> parallelogram(q_PQRS)
+[02] given(g_2) -> con_seg(PQ, QR)
+[03] rhombus_consec_sides(1, 2) -> rhombus(q_PQRS)

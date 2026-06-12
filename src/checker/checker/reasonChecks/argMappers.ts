@@ -1,14 +1,8 @@
+import { getGeometricObject } from "checker/utils/utils";
 import { ProofContent } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 
-export const conTriMapper = (conTri: Stmt, ctx: ProofContent) => {
-  return conTri.arguments.map((arg) => ctx.getTriangle(arg.v));
-};
-
-export const conSegMapper = (conSeg: Stmt, ctx: ProofContent) => {
-  return conSeg.arguments.map((arg) => ctx.getSegment(arg.v));
-};
-
-export const conAngMapper = (conAng: Stmt, ctx: ProofContent) => {
-  return conAng.arguments.map((arg) => ctx.getAngle(arg.v));
-};
+// Resolves every argument of a statement through getGeometricObject,
+// returning an ordered list matching the statement's argument positions.
+export const stmtMapper = (stmt: Stmt, ctx: ProofContent) =>
+  stmt.arguments.map((arg) => getGeometricObject(arg, ctx));

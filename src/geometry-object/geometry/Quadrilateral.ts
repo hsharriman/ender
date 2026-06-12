@@ -8,15 +8,23 @@ export class Quadrilateral extends BaseGeometryObject {
   readonly s: [Segment, Segment, Segment, Segment];
   readonly a: [Angle, Angle, Angle, Angle];
   readonly p: [Point, Point, Point, Point];
+  typeOpts?: { type: "trapezoid" | "kite"; objs: [string, string] };
 
   constructor(props: QuadrilateralProps) {
     super(Obj.Quadrilateral, props);
     this.p = props.pts;
 
+    this.label = Array.from(props.pts.map((pt) => pt.label))
+      .sort()
+      .join("");
     this.s = this.buildSegments(props.pts, props.parentFrame);
     this.p = props.pts;
     this.a = this.buildAngles(props.pts, props.parentFrame);
     this.names = this.permutator(props.pts.map((pt) => pt.label));
+    if (props.typeOpts) {
+      const { type, objs } = props.typeOpts;
+      this.typeOpts = { type, objs };
+    }
   }
 
   private buildSegments = (
@@ -50,30 +58,33 @@ export class Quadrilateral extends BaseGeometryObject {
     pts: Point[],
     parentFrame?: string,
   ): [Angle, Angle, Angle, Angle] => {
+    // Angles in cyclic vertex order [pts[0], pts[1], pts[2], pts[3]] so that
+    // positions (0,2) and (1,3) are geometric opposites and adjacent positions
+    // are consecutive — required for isOppositeAngles and isConsecutive.
     const aa = new Angle({
-      start: pts[0],
-      center: pts[1],
-      end: pts[2],
-      parentFrame,
-    });
-    const ab = new Angle({
-      start: pts[1],
-      center: pts[2],
-      end: pts[3],
-      parentFrame,
-    });
-    const ac = new Angle({
       start: pts[3],
       center: pts[0],
       end: pts[1],
       parentFrame,
-    });
+    }); // angle at pts[0]
+    const ab = new Angle({
+      start: pts[0],
+      center: pts[1],
+      end: pts[2],
+      parentFrame,
+    }); // angle at pts[1]
+    const ac = new Angle({
+      start: pts[1],
+      center: pts[2],
+      end: pts[3],
+      parentFrame,
+    }); // angle at pts[2]
     const ad = new Angle({
       start: pts[2],
       center: pts[3],
       end: pts[0],
       parentFrame,
-    });
+    }); // angle at pts[3]
     return [aa, ab, ac, ad];
   };
 
@@ -86,5 +97,76 @@ export class Quadrilateral extends BaseGeometryObject {
       return this.p.some((pt) => pt.equals(s as Point));
     }
     return false;
+  };
+
+  diagonals = (): [string, string] => {
+    return [
+      `${this.p[0].label}${this.p[2].label}`,
+      `${this.p[1].label}${this.p[3].label}`,
+    ];
+  };
+
+  isDiagonal = (s: Segment) => {
+    return this.diagonals().some((diag) => s.names.has(diag));
+  };
+
+  isOppositeSides = (s1: Segment, s2: Segment) => {
+    const opp1Set = new Set([this.s[0].label, this.s[2].label]);
+    const opp2Set = new Set([this.s[1].label, this.s[3].label]);
+    return (
+      !s1.equals(s2) &&
+      ((opp1Set.has(s1.label) && opp1Set.has(s2.label)) ||
+        (opp2Set.has(s1.label) && opp2Set.has(s2.label)))
+    );
+  };
+
+  isOppositeAngles = (a1: Angle, a2: Angle) => {
+    const opp1Set = new Set([this.a[0].label, this.a[2].label]);
+    const opp2Set = new Set([this.a[1].label, this.a[3].label]);
+    return (
+      !a1.equals(a2) &&
+      ((opp1Set.has(a1.label) && opp1Set.has(a2.label)) ||
+        (opp2Set.has(a1.label) && opp2Set.has(a2.label)))
+    );
+  };
+
+  isConsecutive = (o1: Segment | Angle, o2: Segment | Angle) => {
+    const objArray = o1.tag === Obj.Segment ? this.s : this.a;
+    const idx = objArray.findIndex((s) => s.equals(o1));
+    if (idx === -1) return false;
+    return (
+      objArray[(idx + 1) % 4].equals(o2) || objArray[(idx + 3) % 4].equals(o2)
+    );
+  };
+
+  consecutiveAngles = (ang: string): [Angle, Angle] | null => {
+    const idx = this.a.findIndex((a) => a.names.has(ang));
+    if (idx === -1) return null;
+    return [this.a[(idx + 3) % 4], this.a[(idx + 1) % 4]]; // the angle before and after curr
+  };
+
+  trapezoidBases = (): [string, string] | null => {
+    if (this.typeOpts?.type !== "trapezoid") return null;
+    const [base1, base2] = this.typeOpts.objs;
+    return [base1, base2];
+  };
+
+  kiteAngles = (): [string, string] | null => {
+    if (this.typeOpts?.type !== "kite") return null;
+    const [ang1, ang2] = this.typeOpts.objs;
+    return [ang1, ang2];
+  };
+
+  isBaseAnglePair = (a1: Angle, a2: Angle) => {
+    const consecutive = this.consecutiveAngles(a1.label);
+    const trapBases = this.trapezoidBases();
+    if (!consecutive || !trapBases) return false;
+    const [b1, b2] = trapBases;
+    // base angles must have a shared side that is one of the 2 base segments
+    const sharedSide = a1.sharedSide(a2);
+    if (!sharedSide || (sharedSide.shared !== b1 && sharedSide.shared !== b2)) {
+      return false;
+    }
+    return true;
   };
 }

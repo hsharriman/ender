@@ -85,10 +85,6 @@ export class Triangle extends BaseGeometryObject {
 
   getThirdPoint = (p1: string, p2: string) => {
     const remaining = this.label.replace(p1, "").replace(p2, "");
-    // TODO import error
-    // if (remaining.length !== 1) {
-    //   logError.geometric.incorrectGetThirdPointArgs(this.label, p1, p2);
-    // }
     return remaining;
   };
 

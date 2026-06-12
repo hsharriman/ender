@@ -1,10 +1,31 @@
-import { Angle, ProofContent, Triangle } from "geometry-object";
+import {
+  Angle,
+  BaseGeometryObject,
+  ProofContent,
+  Segment,
+  Triangle,
+} from "geometry-object";
 import { ErrorObj, Stmt } from "../../types/checkerTypes";
+import {
+  ReasonApplicationResult,
+  reasonApplicationFail,
+  reasonApplicationOk,
+} from "./reasonResult";
 
 /** Canonical string for comparing statement structure (function + typed args). */
 export const stmtKey = (stmt: Stmt): string => {
   const args = (stmt.arguments ?? []).map((a) => `${a.type}:${a.v}`).join("|");
   return `${stmt.function}:${args}`;
+};
+
+export const checkDistinctDependencyStmts = (
+  deps: Stmt[],
+): ReasonApplicationResult => {
+  const dup = findDuplicateDependencyStatements(deps);
+  if (dup) {
+    return reasonApplicationFail("DUP_DEP_STMT", { ...dup });
+  }
+  return reasonApplicationOk();
 };
 
 /**
@@ -77,4 +98,37 @@ export const getTriFromAngs = (
     }
   }
   return null;
+};
+
+/**
+ * Check if two pairs of segments are equal (regardless of order).
+ */
+export const segmentPairsEqual = (
+  [s1, s2]: [Segment, Segment],
+  [s3, s4]: [Segment, Segment],
+) => {
+  return (s1.equals(s3) && s2.equals(s4)) || (s1.equals(s4) && s2.equals(s3));
+};
+
+export const anglePairsEqual = (
+  [a1, a2]: [Angle, Angle],
+  [a3, a4]: [Angle, Angle],
+) => {
+  return (a1.equals(a3) && a2.equals(a4)) || (a1.equals(a4) && a2.equals(a3));
+};
+
+/**
+ * Check if two objects are the same (reflexive property) and return a failure
+ * if they are.
+ */
+export const failReflexStatements = (
+  o1: BaseGeometryObject,
+  o2: BaseGeometryObject,
+) => {
+  if (o1.equals(o2)) {
+    return reasonApplicationFail("ILLEGAL_REFLEX_STMT", {
+      pair: [o1.label, o2.label],
+    });
+  }
+  return reasonApplicationOk();
 };

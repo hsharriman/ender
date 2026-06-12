@@ -130,15 +130,28 @@ export const buildProofGraph = (
       if (isCorrect) {
         isCorrect = checkStatementArguments(step.statement, stmtDefs);
 
-        // Check if premises-only statement is used in proof step
+        // Enforce premise-statement restrictions:
+        //   isDiagramOnly  → only valid in [d_xx] diagram premises; blocked in all
+        //                    proof steps including given(g_n) restatements.
+        //   isPremisesOnly → allowed in given(g_n) steps (restating a declared
+        //                    premise) but blocked in derived proof steps.
         if (isCorrect && step.statement?.function) {
           const stmtDef = stmtDefs.get(step.statement.function);
-          if (stmtDef?.isPremisesOnly && step.type === "proof") {
+          if (stmtDef?.isDiagramOnly) {
             step.errors.push({
               type: "reason_stmt_mismatch",
               data: {
                 reason: step.reason.function,
-                message: `Statement '${step.statement.function}' is only allowed in premises, not in proof steps`,
+                message: `Statement '${step.statement.function}' is a diagram-only premise and cannot appear in proof steps`,
+              },
+            });
+            isCorrect = false;
+          } else if (stmtDef?.isPremisesOnly && step.reason?.function !== "given") {
+            step.errors.push({
+              type: "reason_stmt_mismatch",
+              data: {
+                reason: step.reason.function,
+                message: `Statement '${step.statement.function}' is only allowed in premises or given steps, not in derived proof steps`,
               },
             });
             isCorrect = false;

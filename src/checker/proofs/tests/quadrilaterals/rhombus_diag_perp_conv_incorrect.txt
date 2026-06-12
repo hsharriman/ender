@@ -1,0 +1,14 @@
+// fail on step 3
+title: "Test: rhombus_diag_perp_conv (incorrect - wrong quadrilateral for parallelogram)"
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b), A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_PQRS q_ABCD
+seg: PR QS
+[g_1] perp(PR, QS, N)
+[g_2] parallelogram(q_ABCD)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> perp(PR, QS, N)
+[02] given(g_2) -> parallelogram(q_ABCD)
+[03] rhombus_diag_perp_conv(1, 2) -> rhombus(q_PQRS)

@@ -55,6 +55,7 @@ export interface ReasonDefinition {
 }
 
 export interface StatementDefinition {
+  isDiagramOnly?: boolean; // can only be used as diagram premises [d_xx], never as proof steps
   name: string;
   parameters: string[];
   isPremisesOnly?: boolean;

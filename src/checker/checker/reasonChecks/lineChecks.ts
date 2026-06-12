@@ -1,5 +1,6 @@
-import { Point, ProofContent, Segment } from "../../../geometry-object";
+import { Angle, Point, ProofContent, Segment } from "../../../geometry-object";
 import { Stmt } from "../../types/checkerTypes";
+import { stmtMapper } from "./argMappers";
 import { findDuplicateDependencyStatements } from "./utils";
 
 export const reflex_s = (s1: Segment, s2: Segment) => {
@@ -144,12 +145,9 @@ export const corresp_ang = (
 };
 
 export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: ProofContent) => {
-  const [s1, s2] = conSeg.arguments.map((arg) => ctx.getSegment(arg.v));
+  const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
   if (s1.equals(s2)) return false;
-  const [bigSeg, midpt] = [
-    ctx.getSegment(midPt.arguments[0].v),
-    ctx.getPoint(midPt.arguments[1].v),
-  ];
+  const [bigSeg, midpt] = stmtMapper(midPt, ctx) as [Segment, Point];
 
   // segments declared to be congruent and be part of the line declared to be bisected
   const segmentsEqual =
@@ -171,72 +169,47 @@ export const intersect_seg = (
   if (findDuplicateDependencyStatements([int_on1, int_on2, int_seg])) {
     return false;
   }
-  const p1 = ctx.getPoint(int_on1.arguments[1].v);
-  const p2 = ctx.getPoint(int_on2.arguments[1].v);
+  const [, p1] = stmtMapper(int_on1, ctx) as [Segment, Point];
+  const [, p2] = stmtMapper(int_on2, ctx) as [Segment, Point];
 
-  const [in1, in2, inpt] = [
-    ctx.getSegment(int_seg.arguments[0].v),
-    ctx.getSegment(int_seg.arguments[1].v),
-    ctx.getPoint(int_seg.arguments[2].v),
-  ];
+  const [in1, in2, inpt] = stmtMapper(int_seg, ctx) as [Segment, Segment, Point];
   return p1 === p2 && p1.isOnLine(in1) && p1.isOnLine(in2) && p1 === inpt;
 };
 
-export const perp = (
-  right: Stmt,
-  onLine: Stmt,
-  perp: Stmt,
-  ctx: ProofContent,
-): boolean => {
-  const angle = ctx.getAngle(right.arguments[0].v);
+export const perp = (right: Stmt, perp: Stmt, ctx: ProofContent): boolean => {
+  const [angle] = stmtMapper(right, ctx) as [Angle];
+  const [s1, s2, intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
+  if (!intersectPt) return false;
 
-  let [sharedSide, s2] = [
-    ctx.getSegment(perp.arguments[0].v),
-    ctx.getSegment(perp.arguments[1].v),
-  ];
-  // segment is the line that is on the point
-  const [onLineSeg, onLinePt] = [
-    ctx.getSegment(onLine.arguments[0].v),
-    ctx.getPoint(onLine.arguments[1].v),
-  ];
-
-  if (onLineSeg && onLinePt) {
-    // reassign so that s1 is the shared side
-    if (onLineSeg.equals(sharedSide)) {
-      [sharedSide, s2] = [s2, sharedSide];
-    }
-    // check if angle has corner at intersectPt and 1 pt on each line
-    return (
-      angle.centerEquals(onLinePt) &&
-      angle.contains(sharedSide) &&
-      (angle.contains(s2.p1) || angle.contains(s2.p2))
-    );
-  }
-  return false;
+  // angle vertex must be at the intersection; one ray on each segment
+  const startLabel = angle.start.label;
+  const endLabel = angle.end.label;
+  return (
+    angle.centerEquals(intersectPt) &&
+    ((s1.label.includes(startLabel) && s2.label.includes(endLabel)) ||
+      (s2.label.includes(startLabel) && s1.label.includes(endLabel)))
+  );
 };
 
 export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
   if (findDuplicateDependencyStatements([perp, conAng])) return false;
-  const [s1, s2] = perp.arguments.map((arg) => ctx.getSegment(arg.v));
-  const [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
-  const [intersectPt, sharedSide] = getIntersectPt(s1, s2);
-  if (intersectPt && sharedSide) {
-    // TODO check for shared side AND angle made up of one point on the line
-    const centerCheck =
-      a1.centerEquals(intersectPt) && a2.centerEquals(intersectPt);
-    const sharedSideTest = a1.sharedSide(a2);
-    if (!sharedSideTest) return false;
-    const sharedSideCheck = ctx
-      .getSegment(sharedSideTest?.shared)
-      .equals(sharedSide);
-    return (
-      a1.contains(ctx.getPoint(sharedSideTest.thisThird)) &&
-      a2.contains(ctx.getPoint(sharedSideTest.otherThird)) &&
-      centerCheck &&
-      sharedSideCheck
-    );
-  }
-  return false;
+  const [s1, s2, intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
+  const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
+  if (!intersectPt) return false;
+
+  if (!a1.centerEquals(intersectPt) || !a2.centerEquals(intersectPt))
+    return false;
+
+  const sharedSideTest = a1.sharedSide(a2);
+  if (!sharedSideTest) return false;
+  const sharedSeg = ctx.getSegment(sharedSideTest.shared);
+  if (!sharedSeg || (!sharedSeg.equals(s1) && !sharedSeg.equals(s2)))
+    return false;
+
+  return (
+    a1.contains(ctx.getPoint(sharedSideTest.thisThird)) &&
+    a2.contains(ctx.getPoint(sharedSideTest.otherThird))
+  );
 };
 
 export const perp_bisector = (
@@ -246,21 +219,14 @@ export const perp_bisector = (
   ctx: ProofContent,
 ) => {
   if (findDuplicateDependencyStatements([perp, conSeg])) return false;
-  const [p1, p2] = perp.arguments.map((arg) => ctx.getSegment(arg.v));
-  const [m, p] = [
-    ctx.getSegment(midpt.arguments[0].v),
-    ctx.getPoint(midpt.arguments[1].v),
-  ];
-  const [s1, s2] = conSeg.arguments.map((arg) => ctx.getSegment(arg.v));
+  const [, , intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
+  const [m, p] = stmtMapper(midpt, ctx) as [Segment, Point];
+  const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
 
-  const [intersectPt, sharedSide] = getIntersectPt(p1, p2);
-  if (!intersectPt || !sharedSide) return false;
+  if (!intersectPt) return false;
 
-  // p must be the intersection point
+  // p must equal the intersection point stated in the perp premise
   if (!p.equals(intersectPt)) return false;
-
-  // one of sharedSide's endpoints must equal p
-  if (!sharedSide.p1.equals(p) && !sharedSide.p2.equals(p)) return false;
 
   // m divided by p must give exactly s1 and s2
   const mDivided1 = ctx.getSegment(`${m.p1.label}${p.label}`);
@@ -271,31 +237,6 @@ export const perp_bisector = (
   );
 };
 
-// ----- Helper functions -----
-const getIntersectPt = (
-  s1: Segment,
-  s2: Segment,
-): [Point | undefined, Segment | undefined] => {
-  // Check if s1.p1 is on s2
-  if (s1.p1.isOnLine(s2)) {
-    return [s1.p1, s1];
-  }
-  // Check if s1.p2 is on s2
-  if (s1.p2.isOnLine(s2)) {
-    return [s1.p2, s1];
-  }
-  // Check if s2.p1 is on s1
-  if (s2.p1.isOnLine(s1)) {
-    return [s2.p1, s2];
-  }
-  // Check if s2.p2 is on s1
-  if (s2.p2.isOnLine(s1)) {
-    return [s2.p2, s2];
-  }
-  // No intersection found
-  return [undefined, undefined];
-};
-
 const transversalHelper = (
   ctx: ProofContent,
   transversal: Stmt,
@@ -303,13 +244,11 @@ const transversalHelper = (
   para: Stmt,
 ) => {
   let ok = true;
-  let [a1, a2] = conAng.arguments.map((arg) => ctx.getAngle(arg.v));
+  let [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
   if (a1.equals(a2)) {
     ok = false;
   }
-  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = transversal.arguments.map(
-    (arg) => ctx.getPoint(arg.v),
-  );
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = stmtMapper(transversal, ctx) as Point[];
   const [s1, s2, t, innerT] = [
     ctx.getSegment(`${s1p1.label}${s1p2.label}`),
     ctx.getSegment(`${s2p1.label}${s2p2.label}`),

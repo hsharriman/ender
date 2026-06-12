@@ -1,0 +1,13 @@
+// fail on step 3
+title: "Test: pgram_opp_sides_conv (incorrect - non-opposite side pairs)"
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] con_seg(AB, BC)
+[g_2] con_seg(CD, DA)
+-> parallelogram(q_ABCD)
+
+steps:
+[01] given(g_1) -> con_seg(AB, BC)
+[02] given(g_2) -> con_seg(CD, DA)
+[03] pgram_opp_sides_conv(1, 2) -> parallelogram(q_ABCD)

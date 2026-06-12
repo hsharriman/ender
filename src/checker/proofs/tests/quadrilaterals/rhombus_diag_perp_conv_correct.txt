@@ -1,0 +1,14 @@
+// pass
+title: "Test: rhombus_diag_perp_conv (correct - perpendicular diagonals in parallelogram → rhombus)"
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR QS
+[g_1] perp(PR, QS, N)
+[g_2] parallelogram(q_PQRS)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> perp(PR, QS, N)
+[02] given(g_2) -> parallelogram(q_PQRS)
+[03] rhombus_diag_perp_conv(1, 2) -> rhombus(q_PQRS)

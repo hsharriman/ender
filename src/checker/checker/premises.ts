@@ -23,8 +23,10 @@ export const buildPremises = (proof: ProofObj) => {
       case "para":
       case "sim_seg":
       case "con_seg":
-      case "perp":
         addAllObjects(ctx, statement);
+        break;
+      case "perp":
+        perpPremise(ctx, statement.arguments, proof);
         break;
       case "on_line":
         onLine(ctx, statement.arguments);
@@ -43,6 +45,8 @@ export const buildPremises = (proof: ProofObj) => {
       case "linear_pair":
         linearPair(ctx, statement.arguments);
         break;
+      case "kite_premise":
+      case "trapezoid_premise":
       case "con_ang":
       case "right":
       case "ang_bisect":
@@ -59,8 +63,8 @@ export const buildPremises = (proof: ProofObj) => {
       // TODO implement
       case "parallelogram":
       case "kite":
-      case "perp_bisector":
       case "isos_trapezoid":
+      case "isos_trapezoid_premise":
       case "rhombus":
       case "trapezoid":
       case "circumcenter":
@@ -173,21 +177,29 @@ export const buildPremises = (proof: ProofObj) => {
       case "ang_bisect":
         angBisect(ctx, statement.arguments);
         break;
+      case "kite_premise":
+        kitePremise(ctx, statement.arguments);
+        break;
+      case "isos_trapezoid_premise":
+      case "trapezoid_premise":
+        trapezoidPremise(ctx, statement.arguments);
+        break;
       case "con_ang":
       case "right":
       case "con_right":
       case "complementary":
       case "supplementary":
-      case "perp":
       case "isosceles":
       case "sim_tri":
       case "con_tri":
       case "equilateral":
       case "equiangular":
       case "rectangle":
+      case "rhombus":
+      case "parallelogram":
         addAllObjects(ctx, statement);
         break;
-      // require no additional objects
+      case "perp":
       case "con_seg":
       case "on_line":
       case "seg_bisect":
@@ -199,14 +211,14 @@ export const buildPremises = (proof: ProofObj) => {
       case "para":
       case "sim_seg":
       // TODO implement
-      case "kite":
-      case "parallelogram":
-      case "isos_trapezoid":
-      case "rhombus":
-      case "trapezoid":
       case "circumcenter":
       case "incenter":
         break;
+      // during premises these reasons should use the premise counterpart
+      case "kite":
+      case "isos_trapezoid":
+      case "trapezoid":
+        throw createError.parser.premiseCounterpartRequired(statement.function);
       default:
         throw createError.parser.unknownStatementFunction(statement.function);
     }
@@ -232,6 +244,38 @@ export const buildPremises = (proof: ProofObj) => {
   ctx.checkAngleOverlaps();
 
   return ctx;
+};
+
+const trapezoidPremise = (ctx: ProofContent, args: ParseObj[]) => {
+  const [quad, seg1, seg2] = args;
+  const q = ctx.addQuadrilateralFromStr(quad.v, {
+    type: "trapezoid",
+    objs: [seg1.v, seg2.v],
+  });
+};
+
+const kitePremise = (ctx: ProofContent, args: ParseObj[]) => {
+  const [quad, ang1, ang2] = args;
+  const q = ctx.addQuadrilateralFromStr(quad.v, {
+    type: "kite",
+    objs: [ang1.v, ang2.v],
+  });
+};
+
+const perpPremise = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
+  const [seg1, seg2, pt] = args;
+  const s1 = ctx.addSegmentFromStr(seg1.v);
+  const s2 = ctx.addSegmentFromStr(seg2.v);
+  const p = ctx.getPoint(pt.v);
+  // case 1: p is one of the endpoints of either segment
+  if (s1.contains(p)) {
+    p.addOnLine(s2);
+  } else if (s2.contains(p)) {
+    p.addOnLine(s1);
+  } else {
+    // case 2: p is not an endpoint of either segment, so add p as intersection of the two segments
+    intersectSeg(ctx, [seg1, seg2, pt], proof);
+  }
 };
 
 const angBisect = (ctx: ProofContent, args: ParseObj[]) => {

@@ -1,0 +1,13 @@
+// fail on step 3
+title: "Test: pgram_consec_angs_conv (incorrect - same angle pair in both supplementary statements)"
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] supplementary(a_ABC, a_BCD)
+[g_2] supplementary(a_ABC, a_BCD)
+-> parallelogram(q_ABCD)
+
+steps:
+[01] given(g_1) -> supplementary(a_ABC, a_BCD)
+[02] given(g_2) -> supplementary(a_ABC, a_BCD)
+[03] pgram_consec_angs_conv(1, 2) -> parallelogram(q_ABCD)
