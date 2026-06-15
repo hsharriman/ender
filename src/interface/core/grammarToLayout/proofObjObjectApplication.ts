@@ -140,6 +140,6 @@ export const applyPremisesObjects = (
   base.segments.forEach((s) => s.mode(frame, mode));
   base.angles.forEach((a) => a.mode(frame, mode));
   base.triangles.forEach((t) => t.mode(frame, mode));
-  base.rectangles.forEach((q) => q.mode(frame, mode));
-  base.points.forEach((p) => p.mode(frame, mode));
+  base.quads.forEach((q) => q.mode(frame, mode));
+  base.circles.forEach((c) => c.mode(frame, mode));
 };

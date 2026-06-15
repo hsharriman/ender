@@ -1,5 +1,6 @@
 import {
   Angle,
+  Circle,
   Point,
   Quadrilateral,
   Segment,
@@ -88,6 +89,22 @@ export class AngleBuilder {
     this.ticks.set(frame, { type, num });
     return this;
   };
+
+  mode = (frameKey: string, mode: SVGModes) => {
+    this.modes.set(frameKey, mode);
+    return this;
+  };
+}
+
+export class CircleBuilder {
+  readonly obj: Circle;
+  readonly modes: Map<string, SVGModes>;
+  readonly center: PointBuilder;
+  constructor(obj: Circle) {
+    this.obj = obj;
+    this.modes = new Map<string, SVGModes>();
+    this.center = new PointBuilder(obj.center);
+  }
 
   mode = (frameKey: string, mode: SVGModes) => {
     this.modes.set(frameKey, mode);

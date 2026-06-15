@@ -1,6 +1,7 @@
 import { Obj } from "geometry-object";
 import {
   AngleBuilder,
+  CircleBuilder,
   PointBuilder,
   QuadrilateralBuilder,
   SegmentBuilder,
@@ -48,7 +49,8 @@ export type DiagramRenderCtx = {
   segments: SegmentBuilder[];
   angles: AngleBuilder[];
   triangles: TriangleBuilder[];
-  rectangles: QuadrilateralBuilder[];
+  quads: QuadrilateralBuilder[];
+  circles: CircleBuilder[];
   frames: string[];
   deps: Map<string, Set<string>>;
 };
@@ -58,6 +60,7 @@ export type GeoBuilderObject =
   | SegmentBuilder
   | AngleBuilder
   | TriangleBuilder
-  | QuadrilateralBuilder;
+  | QuadrilateralBuilder
+  | CircleBuilder;
 
 export type TickedGeoObject = SegmentBuilder | AngleBuilder;

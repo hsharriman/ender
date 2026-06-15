@@ -23,7 +23,7 @@ export class ProofContent {
       segments: [],
       angles: [],
       triangles: [],
-      rectangles: [],
+      quads: [],
       circles: [],
       frames: [],
       deps: new Map(),
@@ -87,7 +87,7 @@ export class ProofContent {
     const q = new Quadrilateral(props);
     const existing = this.getQuadrilateral(q.label);
     if (!existing) {
-      this.ctx.rectangles.push(q);
+      this.ctx.quads.push(q);
       this.addSegments(q.s);
       this.addAngles(q.a);
     } else if (props.typeOpts && !existing.typeOpts) {
@@ -165,7 +165,7 @@ export class ProofContent {
   getTriangle = (label: string) =>
     this.ctx.triangles.filter((t) => t.matches(label))[0];
   getQuadrilateral = (label: string) =>
-    this.ctx.rectangles.filter((r) => r.matches(label))[0];
+    this.ctx.quads.filter((r) => r.matches(label))[0];
   getCircle = (label: string) =>
     this.ctx.circles.filter((c) => c.matches(label))[0];
 
@@ -241,7 +241,7 @@ export class ProofContent {
     );
     console.log(
       "quads",
-      this.ctx.rectangles.map((q) => q.label),
+      this.ctx.quads.map((q) => q.label),
     );
   };
 }

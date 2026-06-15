@@ -54,7 +54,7 @@ export type ProofCtx = {
   segments: Segment[]; // every segment tracks its own mode during build
   angles: Angle[];
   triangles: Triangle[];
-  rectangles: Quadrilateral[];
+  quads: Quadrilateral[];
   circles: Circle[];
   frames: string[];
   deps: Map<string, Set<string>>;
