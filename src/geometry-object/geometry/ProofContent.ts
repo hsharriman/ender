@@ -1,5 +1,6 @@
 import {
   AngleProps,
+  CircleProps,
   PointProps,
   ProofCtx,
   QuadrilateralProps,
@@ -7,6 +8,7 @@ import {
   TriangleProps,
 } from "../types/geometryTypes";
 import { Angle } from "./Angle";
+import { Circle } from "./Circle";
 import { Point } from "./Point";
 import { Quadrilateral } from "./Quadrilateral";
 import { Segment } from "./Segment";
@@ -22,6 +24,7 @@ export class ProofContent {
       angles: [],
       triangles: [],
       rectangles: [],
+      circles: [],
       frames: [],
       deps: new Map(),
     };
@@ -71,6 +74,13 @@ export class ProofContent {
       this.addAngles(t.a);
     }
     return this.getTriangle(t.label) ?? t;
+  };
+
+  addCircle = (props: CircleProps) => {
+    // TODO add checks for overlapping circles
+    const c = new Circle(props);
+    if (!this.getCircle(c.label)) this.ctx.circles.push(c);
+    return this.getCircle(c.label) ?? c;
   };
 
   addQuadrilateral = (props: QuadrilateralProps) => {
@@ -138,6 +148,14 @@ export class ProofContent {
     return this.addAngle({ start: a, center: b, end: c });
   };
 
+  addCircleFromStr = (str: string) => {
+    if (str.startsWith("c_")) {
+      str = str.slice(2);
+    }
+    const [center, radius] = str.split("").map((c) => this.getPoint(c));
+    return this.addCircle({ center, radius });
+  };
+
   getPoint = (label: string) =>
     this.ctx.points.filter((p) => p.matches(label))[0];
   getSegment = (label: string) =>
@@ -148,6 +166,8 @@ export class ProofContent {
     this.ctx.triangles.filter((t) => t.matches(label))[0];
   getQuadrilateral = (label: string) =>
     this.ctx.rectangles.filter((r) => r.matches(label))[0];
+  getCircle = (label: string) =>
+    this.ctx.circles.filter((c) => c.matches(label))[0];
 
   checkAngleOverlaps = () => {
     this.ctx.angles.forEach((a) => this.overlap(a));

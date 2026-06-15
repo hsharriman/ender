@@ -15,6 +15,7 @@ const stripPremiseObjPrefix = (type: Obj, v: string): string => {
   if (type === Obj.Triangle && v.startsWith("t_")) return v.slice(2);
   if (type === Obj.Angle && v.startsWith("a_")) return v.slice(2);
   if (type === Obj.Quadrilateral && v.startsWith("q_")) return v.slice(2);
+  if (type === Obj.Circle && v.startsWith("c_")) return v.slice(2);
   return v;
 };
 
@@ -61,6 +62,9 @@ const normalizeParseObjArg = (arg: ParseObj): ParseObj => {
     return { ...arg, v: arg.v.slice(2) };
   }
   if (arg.type === Obj.Quadrilateral && arg.v.startsWith("q_")) {
+    return { ...arg, v: arg.v.slice(2) };
+  }
+  if (arg.type === Obj.Circle && arg.v.startsWith("c_")) {
     return { ...arg, v: arg.v.slice(2) };
   }
   return arg;
@@ -142,6 +146,10 @@ export const normalizeProofObj = (proof: ProofObj): ProofObj => {
   premises.quadrilaterals = premises.quadrilaterals.map((o) => ({
     ...o,
     v: stripPremiseObjPrefix(Obj.Quadrilateral, o.v),
+  }));
+  premises.circles = premises.circles.map((o) => ({
+    ...o,
+    v: stripPremiseObjPrefix(Obj.Circle, o.v),
   }));
 
   premises.diagramStatements =

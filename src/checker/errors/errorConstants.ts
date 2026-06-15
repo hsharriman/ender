@@ -7,6 +7,7 @@ export const ErrorMessages = {
     QUADRILATERAL_NOT_FOUND: (arg: string) =>
       `Quadrilateral ${arg} not found in context`,
     SEGMENT_NOT_FOUND: (arg: string) => `Segment ${arg} not found in context`,
+    CIRCLE_NOT_FOUND: (arg: string) => `Circle ${arg} not found in context`,
     POINT_NOT_FOUND: (arg: string) => `Point ${arg} not found in context`,
     CANNOT_PARSE_GEOMETRIC_OBJECT: (arg: string) =>
       `Cannot parse geometric object from argument: ${arg}`,
@@ -36,6 +37,8 @@ export const createError = {
       new Error(ErrorMessages.GEOMETRIC.QUADRILATERAL_NOT_FOUND(arg)),
     segmentNotFound: (arg: string) =>
       new Error(ErrorMessages.GEOMETRIC.SEGMENT_NOT_FOUND(arg)),
+    circleNotFound: (arg: string) =>
+      new Error(ErrorMessages.GEOMETRIC.CIRCLE_NOT_FOUND(arg)),
     pointNotFound: (arg: string) =>
       new Error(ErrorMessages.GEOMETRIC.POINT_NOT_FOUND(arg)),
     cannotParseGeometricObject: (arg: string) =>

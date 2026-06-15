@@ -3,6 +3,7 @@
 // Core geometry objects
 export * from "./geometry/Angle";
 export * from "./geometry/BaseGeometryObject";
+export * from "./geometry/Circle";
 export * from "./geometry/Point";
 export * from "./geometry/ProofContent";
 export * from "./geometry/Quadrilateral";

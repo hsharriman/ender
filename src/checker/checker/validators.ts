@@ -10,6 +10,12 @@ import {
   StatementGroup,
   Stmt,
 } from "../types/checkerTypes";
+// import {
+//   collectCircleShapeErrorMessages,
+//   formatCircleToken,
+//   getCirclePointLabels,
+//   stripCirclePrefix,
+// } from "../utils/circleValidation";
 
 // Check if statement arguments match the expected parameters
 export const checkStatementArguments = (
@@ -382,6 +388,18 @@ export const checkGeometricObjects = (
                 `Point '${arg.v}' in step ${step.statement} is not defined in checker context`,
               );
             }
+            break;
+          case Obj.Circle:
+            if (!ctx.getCircle(arg.v)) {
+              errors.push(
+                `Circle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
+              );
+            }
+            if (hasDuplicateChars(arg.v)) {
+              errors.push(`Circle '${arg.v}' contains duplicate points`);
+              break;
+            }
+            checkPointsDefined(arg.v, arg.v.split(""));
             break;
           default:
             throw createError.geometric.cannotParseGeometricObject(arg.v);

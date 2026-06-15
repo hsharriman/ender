@@ -115,6 +115,7 @@ export interface ProofObj {
     quadrilaterals: ParseObj[];
     segments: ParseObj[];
     angles: ParseObj[];
+    circles: ParseObj[];
     diagramStatements: ParseDiagramStmt[];
   };
   steps: ProofStep[];

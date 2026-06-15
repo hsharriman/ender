@@ -1,6 +1,7 @@
 import { createError } from "checker/errors/errorConstants";
 import {
   Angle,
+  Circle,
   Obj,
   ParseObj,
   Point,
@@ -14,7 +15,7 @@ import {
 export const getGeometricObject = (
   arg: ParseObj,
   ctx: ProofContent,
-): Point | Segment | Angle | Triangle | Quadrilateral => {
+): Point | Segment | Angle | Triangle | Quadrilateral | Circle => {
   switch (arg.type) {
     case Obj.Angle:
       const angle = ctx.getAngle(arg.v);
@@ -46,6 +47,12 @@ export const getGeometricObject = (
         throw createError.geometric.pointNotFound(arg.v);
       }
       return point;
+    case Obj.Circle:
+      const circle = ctx.getCircle(arg.v);
+      if (!circle) {
+        throw createError.geometric.circleNotFound(arg.v);
+      }
+      return circle;
     default:
       throw createError.geometric.cannotParseGeometricObject(arg.v);
   }

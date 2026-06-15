@@ -59,14 +59,13 @@ export const buildPremises = (proof: ProofObj) => {
       case "sim_tri":
       case "equilateral":
       case "equiangular":
-      case "seg_bisect":
-      // TODO implement
       case "parallelogram":
       case "kite":
       case "isos_trapezoid":
       case "isos_trapezoid_premise":
       case "rhombus":
       case "trapezoid":
+      // TODO implement
       case "circumcenter":
       case "incenter":
         break;
@@ -121,47 +120,35 @@ export const buildPremises = (proof: ProofObj) => {
     }
   });
 
-  // // loop through all sets of 3 points, create triangles
-  // for (let i = 0; i < proof.premises.points.length; i++) {
-  //   const point1 = ctx.getPoint(proof.premises.points[i].v);
-  //   for (let j = i + 1; j < proof.premises.points.length; j++) {
-  //     const point2 = ctx.getPoint(proof.premises.points[j].v);
-  //     for (let k = j + 1; k < proof.premises.points.length; k++) {
-  //       const point3 = ctx.getPoint(proof.premises.points[k].v);
-  //       ctx.addTriangle({ pts: [point1, point2, point3] });
-  //     }
-  //   }
-  // }
-
-  // // loop through all sets of 4 points, create quadrilaterals
-  // for (let i = 0; i < proof.premises.points.length; i++) {
-  //   const point1 = ctx.getPoint(proof.premises.points[i].v);
-  //   for (let j = i + 1; j < proof.premises.points.length; j++) {
-  //     const point2 = ctx.getPoint(proof.premises.points[j].v);
-  //     for (let k = j + 1; k < proof.premises.points.length; k++) {
-  //       const point3 = ctx.getPoint(proof.premises.points[k].v);
-  //       for (let l = k + 1; l < proof.premises.points.length; l++) {
-  //         const point4 = ctx.getPoint(proof.premises.points[l].v);
-  //         ctx.addQuadrilateral({
-  //           pts: [point1, point2, point3, point4],
-  //         });
-  //       }
-  //     }
-  //   }
-  // }
-
+  const definedPtLabels = new Set(proof.premises.points.map((pt) => pt.v));
   // Add all triangles from premises (this will also create their segments and angles)
   proof.premises.triangles.forEach((triangleObj) => {
-    // Parse triangle label (e.g., "t_ABC")
-    const pointLabels = triangleObj.v;
-    ctx.addTriangleFromStr(pointLabels);
+    for (const point of triangleObj.v.split("")) {
+      if (!definedPtLabels.has(point)) {
+        throw createError.parser.pointNotDefinedInPremises(point);
+      }
+    }
+    ctx.addTriangleFromStr(triangleObj.v);
   });
 
   // Add all quadrilaterals from premises (this will also create their segments and angles)
   proof.premises.quadrilaterals.forEach((quadrilateralObj) => {
-    // Parse quadrilateral label (e.g., "q_ABCD")
-    const pointLabels = quadrilateralObj.v;
-    ctx.addQuadrilateralFromStr(pointLabels);
+    for (const point of quadrilateralObj.v.split("")) {
+      if (!definedPtLabels.has(point)) {
+        throw createError.parser.pointNotDefinedInPremises(point);
+      }
+    }
+    ctx.addQuadrilateralFromStr(quadrilateralObj.v);
+  });
+
+  // Add all circles from premises
+  proof.premises.circles.forEach((circleObj) => {
+    for (const point of circleObj.v.split("")) {
+      if (!definedPtLabels.has(point)) {
+        throw createError.parser.pointNotDefinedInPremises(point);
+      }
+    }
+    ctx.addCircleFromStr(circleObj.v);
   });
 
   // // Add all angles from premises
@@ -402,6 +389,9 @@ const addAllObjects = (ctx: ProofContent, stmt: Stmt) => {
         break;
       case Obj.Quadrilateral:
         ctx.addQuadrilateralFromStr(arg.v);
+        break;
+      case Obj.Circle:
+        ctx.addCircleFromStr(arg.v);
         break;
       default:
         break;

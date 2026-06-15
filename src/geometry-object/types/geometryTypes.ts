@@ -1,3 +1,4 @@
+import { Circle } from "geometry-object/geometry/Circle";
 import { Angle } from "../geometry/Angle";
 import { Point } from "../geometry/Point";
 import { Quadrilateral } from "../geometry/Quadrilateral";
@@ -36,11 +37,17 @@ export type QuadrilateralProps = {
   typeOpts?: { type: "trapezoid" | "kite"; objs: [string, string] };
 } & BaseGeometryProps;
 
+export type CircleProps = {
+  center: Point;
+  radius: Point;
+} & BaseGeometryProps;
+
 export type SupportedObjects =
   | Obj.Point
   | Obj.Segment
   | Obj.Angle
-  | Obj.Triangle;
+  | Obj.Triangle
+  | Obj.Circle;
 
 export type ProofCtx = {
   points: Point[];
@@ -48,6 +55,7 @@ export type ProofCtx = {
   angles: Angle[];
   triangles: Triangle[];
   rectangles: Quadrilateral[];
+  circles: Circle[];
   frames: string[];
   deps: Map<string, Set<string>>;
 };
