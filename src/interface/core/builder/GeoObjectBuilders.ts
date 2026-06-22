@@ -9,30 +9,6 @@ import {
 } from "geometry-object";
 import { ShowPoint, SVGModes, TickType } from "../types/diagramTypes";
 
-// const defaultMode = (
-//   frameKey: string,
-//   mode: SVGModes,
-//   obj: GeoBuilderObject,
-// ) => {
-//   obj.modes.set(frameKey, mode);
-// };
-
-// const defaultAddTick = (
-//   frame: string,
-//   type: TickType,
-//   obj: TickedGeoObject,
-//   num: number = 1,
-// ) => {
-//   obj.ticks.set(frame, { type, num });
-// };
-// export interface PointBuilder {
-//   obj: Point;
-//   offset: Vector;
-//   modes: Map<string, SVGModes>;
-//   showPoint?: ShowPoint;
-//   mode: (frameKey: string, mode: SVGModes, obj: GeoBuilderObject) => void;
-// }
-
 export class PointBuilder {
   readonly obj: Point;
   readonly offset: Vector;

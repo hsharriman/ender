@@ -17,6 +17,13 @@ import {
   vert_ang,
 } from "./reasonChecks/angleChecks";
 import {
+  checkTangentPerpRelationship,
+  con_inscribed_angs_check,
+  con_tangents_ext_check,
+  radius_chord_bisect_check,
+  radius_chord_bisect_conv_check,
+} from "./reasonChecks/circleChecks";
+import {
   altext,
   altint,
   corresp_ang,
@@ -690,6 +697,59 @@ export const checkReasonApplication = (
         const conSeg = getDepStmt(reason.arguments[0], proofGraph)!;
         const trap = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = quad_diag_con_check(stmt, conSeg, ctx, trap);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "tangent_perp": {
+        const tanStmt = getDepStmt(reason.arguments[0], proofGraph)!;
+        const radStmt = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = checkTangentPerpRelationship(tanStmt, radStmt, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "tangent_perp_conv": {
+        const perpStmt_conv = getDepStmt(reason.arguments[0], proofGraph)!;
+        const radStmt_conv = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = checkTangentPerpRelationship(
+          stmt,
+          radStmt_conv,
+          perpStmt_conv,
+          ctx,
+        );
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "con_tangents_ext": {
+        const tan1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const tan2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = con_tangents_ext_check(tan1, tan2, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "radius_chord_bisect": {
+        const perp_rcb = getDepStmt(reason.arguments[0], proofGraph)!;
+        const rad_rcb = getDepStmt(reason.arguments[1], proofGraph)!;
+        const chord_rcb = getDepStmt(reason.arguments[2], proofGraph)!;
+        const r = radius_chord_bisect_check(
+          perp_rcb,
+          rad_rcb,
+          chord_rcb,
+          stmt,
+          ctx,
+        );
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "radius_chord_bisect_conv": {
+        const perpBis = getDepStmt(reason.arguments[0], proofGraph)!;
+        const chord_conv = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = radius_chord_bisect_conv_check(
+          perpBis,
+          chord_conv,
+          stmt,
+          ctx,
+        );
+        return floatReasonResult(r, currStep, reason);
+      }
+      case "con_inscribed_angs": {
+        const ins1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const ins2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = con_inscribed_angs_check(ins1, ins2, stmt, ctx);
         return floatReasonResult(r, currStep, reason);
       }
       case "circumcenter":

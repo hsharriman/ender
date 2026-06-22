@@ -123,7 +123,7 @@ export const applyStmtAdditions =
       Midpoint.additions({ ctx, frame, mode }, point, segment);
       return;
     }
-    if (stmt.function === "perp" && stmt.arguments.length === 2) {
+    if (stmt.function === "perp" && stmt.arguments.length === 3) {
       const s1 = stmt.arguments[0].v;
       const s2 = stmt.arguments[1].v;
       Perpendicular.additions({ ctx, frame, mode }, s1, s2);

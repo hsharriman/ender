@@ -69,6 +69,16 @@ export const buildPremises = (proof: ProofObj) => {
       case "circumcenter":
       case "incenter":
         break;
+      // circle-related statements: add segment/angle objects they reference
+      case "tangent":
+      case "chord":
+      case "diameter":
+      case "inscribed_angle":
+        addAllObjects(ctx, statement);
+        break;
+      case "radius":
+      case "arc":
+        break;
       default:
         throw createError.parser.unknownStatementFunction(statement.function);
     }
@@ -200,6 +210,13 @@ export const buildPremises = (proof: ProofObj) => {
       // TODO implement
       case "circumcenter":
       case "incenter":
+      // circle-related statements (segment/angle objects already added in addVisibleObjects)
+      case "tangent":
+      case "chord":
+      case "diameter":
+      case "inscribed_angle":
+      case "radius":
+      case "arc":
         break;
       // during premises these reasons should use the premise counterpart
       case "kite":

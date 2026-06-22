@@ -1,0 +1,16 @@
+// fail on step 4
+title: "Test: radius_chord_bisect (incorrect - conclusion uses wrong segments)"
+premises:
+pt: O (5, 5, c), R (5, 0, b), A (1, 8, tl), B (9, 8, tr), M (5, 8, t), C (9, 5, r)
+circ: c_OR
+seg: OM OC
+[g_1] perp(OM, AB, M)
+[g_2] radius(c_OR, R)
+[g_3] chord(c_OR, AB)
+-> seg_bisect(OM, OC, M)
+
+steps:
+[01] given(g_1) -> perp(OM, AB, M)
+[02] given(g_2) -> radius(c_OR, R)
+[03] given(g_3) -> chord(c_OR, AB)
+[04] radius_chord_bisect(1, 2, 3) -> seg_bisect(OM, OC, M)

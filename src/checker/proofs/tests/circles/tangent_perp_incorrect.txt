@@ -1,0 +1,14 @@
+// fail on step 3
+title: "Test: tangent_perp (incorrect - wrong segment, not a radius through center)"
+premises:
+pt: O (5, 5, c), A (5, 9, t), B (9, 9, tr), C (1, 9, tl)
+circ: c_OA
+seg: OA BA BC
+[g_1] tangent(c_OA, BA, A)
+[g_2] radius(c_OA, A)
+-> perp(BA, BC, A)
+
+steps:
+[01] given(g_1) -> tangent(c_OA, BA, A)
+[02] given(g_2) -> radius(c_OA, A)
+[03] tangent_perp(1, 2) -> perp(BA, BC, A)

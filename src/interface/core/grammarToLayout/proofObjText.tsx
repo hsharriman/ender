@@ -35,7 +35,7 @@ export const stmtToText = (stmt?: Stmt) => (isActive: boolean) => {
   if (stmt.function === "midpt" && args.length === 2) {
     return Midpoint.text(args[1], args[0])(isActive);
   }
-  if (stmt.function === "perp" && args.length === 2) {
+  if (stmt.function === "perp" && args.length === 3) {
     return Perpendicular.text(args[0], args[1])(isActive);
   }
   if (stmt.function === "supplementary" && args.length === 2) {

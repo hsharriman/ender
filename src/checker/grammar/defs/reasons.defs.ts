@@ -508,13 +508,57 @@ export const REASONS_DEFS = {
     conclusion: "isos_trapezoid",
   },
   // still implementing cutoff
-  circumcenter: {
-    name: "circumcenter",
-    title: "Circumcenter Theorem",
-    body: "The circumcenter of a triangle is the point where the perpendicular bisectors of the sides intersect. It is equidistant from the vertices of the triangle.",
-    dependencies: ["perp_bisector", "perp_bisector", "perp_bisector"],
-    conclusion: "circumcenter",
+  // circle reasons:
+  tangent_perp: {
+    name: "tangent_perp",
+    title: "Tangent Perpendicularity",
+    body: "A tangent to a circle is perpendicular to the radius at the point of tangency.",
+    dependencies: ["tangent", "radius"],
+    conclusion: "perp",
   },
+  tangent_perp_conv: {
+    name: "tangent_perp_conv",
+    title: "Tangent Perpendicularity (Converse)",
+    body: "If a line is perpendicular to a radius at the point of tangency, then the line is a tangent to the circle.",
+    dependencies: ["perp", "radius"],
+    conclusion: "tangent",
+  },
+  con_tangents_ext: {
+    name: "con_tangents_ext",
+    title: "Congruent Tangents from External Point",
+    body: "If two segments are tangent to a circle from the same external point, then the segments are congruent.",
+    dependencies: ["tangent", "tangent"],
+    conclusion: "con_seg",
+  },
+  radius_chord_bisect: {
+    name: "radius_chord_bisect",
+    title: "Radius Chord Bisect",
+    body: "If a radius of a circle is perpendicular to a chord, then it bisects the chord and its arc.",
+    dependencies: ["perp", "radius", "chord"],
+    conclusion: "seg_bisect", // todo arc bisect?
+  },
+  radius_chord_bisect_conv: {
+    name: "radius_chord_bisect_conv",
+    title: "Radius Chord Bisect (Converse)",
+    body: "The perpendicular bisector of a chord is a radius of the circle.",
+    dependencies: ["perp_bisector", "chord"],
+    conclusion: "radius",
+  },
+  con_inscribed_angs: {
+    name: "con_inscribed_angs",
+    title: "Congruent Inscribed Angles",
+    body: "If inscribed angles of a circle are subtended by the same chord or arc, then the angles are congruent.",
+    dependencies: ["inscribed_angle", "inscribed_angle"],
+    conclusion: "con_ang",
+  },
+  // inscribed_quad: {
+  //   // todo need a quadrilateral and circle statement to work with this
+  //   name: "inscribed_quad",
+  //   title: "Inscribed Quadrilateral",
+  //   body: "If a quadrilateral is inscribed in a circle, then its opposite angles are supplementary.",
+  //   dependencies: [""],
+  //   conclusion: "supplementary",
+  // },
   incenter: {
     name: "incenter",
     title: "Incenter Theorem",

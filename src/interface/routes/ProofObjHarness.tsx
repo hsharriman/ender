@@ -40,6 +40,7 @@ const TEST_GROUPS: Array<{ dir: string; label: string }> = [
   { dir: "tests/lines_angles/", label: "Lines & Angles" },
   { dir: "tests/triangles/",    label: "Triangles" },
   { dir: "tests/quadrilaterals/", label: "Quadrilaterals" },
+  { dir: "tests/circles/",      label: "Circles" },
 ];
 
 function formatErrorList(errors: ErrorObj[] | undefined): string {
