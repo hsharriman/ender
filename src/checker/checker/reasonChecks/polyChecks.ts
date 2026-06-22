@@ -2,7 +2,11 @@ import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { Quadrilateral } from "geometry-object/geometry/Quadrilateral";
 import { Stmt } from "../../types/checkerTypes";
 import { stmtMapper } from "./argMappers";
-import { reasonApplicationFail, reasonApplicationOk } from "./reasonResult";
+import {
+  ReasonApplicationResult,
+  reasonApplicationFail,
+  reasonApplicationOk,
+} from "./reasonResult";
 import {
   anglePairsEqual,
   checkDistinctDependencyStmts,
@@ -19,27 +23,35 @@ const quadContainsAngle = (quad: Quadrilateral, a: Angle): boolean => {
   );
 };
 
-export const rectangle = (rect: Stmt, conclusion: Stmt, ctx: ProofContent) => {
+export const rectangle = (
+  rect: Stmt,
+  conclusion: Stmt,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
   const quad = ctx.getQuadrilateral(rect.arguments[0].v);
   if (
     conclusion.function === "con_right" ||
     conclusion.function === "con_ang"
   ) {
     const [a1, a2] = stmtMapper(conclusion, ctx) as [Angle, Angle];
-    return quadContainsAngle(quad, a1) && quadContainsAngle(quad, a2);
+    if (quadContainsAngle(quad, a1) && quadContainsAngle(quad, a2))
+      return reasonApplicationOk();
+    return reasonApplicationFail("RECTANGLE_MISMATCH");
   }
   if (conclusion.function === "con_seg") {
     const [s1, s2] = stmtMapper(conclusion, ctx) as [Segment, Segment];
-    return (
+    if (
       !s1.equals(s2) &&
       quad.contains(s1) &&
       quad.contains(s2) &&
       !s1.contains(s2.p1) &&
       !s1.contains(s2.p2)
-    );
+    )
+      return reasonApplicationOk();
+    return reasonApplicationFail("RECTANGLE_MISMATCH");
   }
 
-  return false;
+  return reasonApplicationFail("RECTANGLE_MISMATCH");
 };
 
 export const rect_pgram_ang_check = (
