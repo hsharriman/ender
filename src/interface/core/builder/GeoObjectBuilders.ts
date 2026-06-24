@@ -95,6 +95,7 @@ export class TriangleBuilder {
   readonly a: [AngleBuilder, AngleBuilder, AngleBuilder];
   rotatePattern: boolean;
   readonly congruent: Set<string> = new Set();
+  readonly similar: Set<string> = new Set();
   constructor(obj: Triangle, rotatePattern?: boolean) {
     this.obj = obj;
     this.modes = new Map<string, SVGModes>();
@@ -130,6 +131,11 @@ export class TriangleBuilder {
 
   setRotatePattern = (rotate: boolean) => {
     this.rotatePattern = rotate;
+    return this;
+  };
+
+  setSimilar = (frame: string) => {
+    this.similar.add(frame);
     return this;
   };
 }

@@ -120,6 +120,7 @@ export class Diagram extends React.Component<DiagramProps> {
           key={this.keyId(tri.obj.id, layer, i)}
           mode={mode}
           rotate={tri.rotatePattern}
+          similar={!this.props.isStatic && tri.similar.has(frame)}
           congruent={!this.props.isStatic && tri.congruent.has(frame)}
           isHighlight={layer === 1}
         />

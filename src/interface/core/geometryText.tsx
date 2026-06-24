@@ -22,6 +22,24 @@ export const segmentStr = (s: string, active: boolean) => (
     {s}
   </span>
 );
+// for static text — curved overline matches the arc notation students write above endpoint labels
+export const arcStr = (a: string, active: boolean) => (
+  <span
+    className={`font-notoSerif border-t-2 ${
+      active ? "border-black" : "border-slate-400"
+    }`}
+    style={{ display: "inline-block", borderRadius: "50% 50% 0 0 / 6px 6px 0 0" }}
+  >
+    {a}
+  </span>
+);
+// for static text
+export const circleStr = (c: string) => (
+  <span className="font-notoSerif">
+    <span className="text-l leading-4 font-semibold">{`⊙`}</span>
+    {c}
+  </span>
+);
 // for static text
 export const triangleStr = (t: string) => (
   <span className="font-notoSerif">
@@ -40,6 +58,7 @@ export const angleStr = (a: string) => (
 export const strs = {
   angle: "\u2220",
   congruent: "\u2245",
+  similar: "\u223c",
   parallel: "\u2225",
   comma: ",\t",
   triangle: "\u25B3",

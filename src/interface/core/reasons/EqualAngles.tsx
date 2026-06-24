@@ -1,9 +1,7 @@
 import { Obj } from "geometry-object";
-import { makeStepMeta } from "../../theorems/utils";
 import { angleStr, resizedStrs } from "../geometryText";
 import { SVGModes } from "../types/diagramTypes";
-import { Reason } from "../types/layoutTypes";
-import { StepFocusProps, StepMeta, StepProps } from "../types/stepTypes";
+import { StepFocusProps, StepProps } from "../types/stepTypes";
 
 export class EqualAngles {
   static additions = (
@@ -39,31 +37,7 @@ export class EqualAngles {
     num: number = 1,
   ) => {
     const { ctx, frame } = props;
-    ctx
-      .getAngle(a1)
-      ?.addTick(frame, Obj.EqualAngleTick, num)
-      .mode(frame, mode);
-    ctx
-      .getAngle(a2)
-      ?.addTick(frame, Obj.EqualAngleTick, num)
-      .mode(frame, mode);
+    ctx.getAngle(a1)?.addTick(frame, Obj.EqualAngleTick, num).mode(frame, mode);
+    ctx.getAngle(a2)?.addTick(frame, Obj.EqualAngleTick, num).mode(frame, mode);
   };
 }
-
-export const EqualAngleStep = (
-  [a1, a2]: [string, string],
-  reason: Reason,
-  step: StepMeta,
-  num?: number,
-  dependsOn?: string[],
-) => {
-  return makeStepMeta({
-    reason,
-    dependsOn,
-    prevStep: step,
-    additions: (props: StepFocusProps) =>
-      EqualAngles.additions(props, [a1, a2], num),
-    text: EqualAngles.text([a1, a2]),
-    staticText: () => EqualAngles.text([a1, a2])(true),
-  });
-};

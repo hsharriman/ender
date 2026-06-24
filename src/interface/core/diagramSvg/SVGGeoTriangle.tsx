@@ -11,6 +11,7 @@ import { coordsToSvg, permutator, updateStyle } from "./svgUtils";
 export type SVGTriangleProps = {
   t: Triangle;
   congruent: boolean;
+  similar: boolean;
   rotate: boolean;
 } & BaseSVGProps;
 
@@ -99,7 +100,7 @@ export class SVGGeoTriangle extends React.Component<
     const triIncenter = this.triangleInCenter();
     return (
       <>
-        {this.props.congruent && (
+        {(this.props.congruent || this.props.similar) && (
           <>
             <text
               x={triIncenter[0]}
@@ -110,7 +111,7 @@ export class SVGGeoTriangle extends React.Component<
               fill="black"
               textAnchor="middle"
             >
-              {strs.congruent}
+              {this.props.congruent ? strs.congruent : strs.similar}
             </text>
             <path
               d={this.triangleBbox()}

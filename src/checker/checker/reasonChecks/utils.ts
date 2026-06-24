@@ -23,7 +23,7 @@ export const checkDistinctDependencyStmts = (
 ): ReasonApplicationResult => {
   const dup = findDuplicateDependencyStatements(deps);
   if (dup) {
-    return reasonApplicationFail("DUP_DEP_STMT", { ...dup });
+    return reasonApplicationFail("dupe_stmt_supplied", { ...dup });
   }
   return reasonApplicationOk();
 };
@@ -126,7 +126,7 @@ export const failReflexStatements = (
   o2: BaseGeometryObject,
 ) => {
   if (o1.equals(o2)) {
-    return reasonApplicationFail("ILLEGAL_REFLEX_STMT", {
+    return reasonApplicationFail("both_stmts_are_the_same_object", {
       pair: [o1.label, o2.label],
     });
   }

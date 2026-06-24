@@ -4,6 +4,26 @@ import { stmtMapper } from "./argMappers";
 import { reasonApplicationFail, reasonApplicationOk } from "./reasonResult";
 import { checkDistinctDependencyStmts, failReflexStatements } from "./utils";
 
+const DIFF_CIRCLES = "tangent_and_radius_on_diff_circles";
+const DIFF_TAN_PTS = "tangent_and_radius_have_diff_tangency_pts";
+const BAD_INT_PT = "perp_intersect_pt_doesnt_match_tangency_pt";
+const TAN_NOT_PERP = "tangent_seg_not_in_perp_stmt";
+const NOT_RADIUS = "other_perp_seg_not_a_radius_to_tangency_pt";
+const TAN_DIFF_CIRCLES = "tangent_stmts_on_diff_circles";
+const SAME_TAN_PT = "tangent_stmts_share_same_tangency_pt";
+const SEG_NO_MATCH = "con_segs_dont_match_tangent_segs";
+const NO_EXT_PT = "tangent_segs_have_no_common_ext_pt";
+const RAD_CHORD_DIFF = "radius_and_chord_on_diff_circles";
+const NO_CHORD_IN_PERP = "neither_perp_seg_matches_the_chord";
+const NO_CENTER = "radius_dir_seg_doesnt_contain_circle_center";
+const BAD_BISECT_SEGS = "conclusion_segs_dont_match_chord_and_radius_dir_segs";
+const BAD_BISECT_MIDPT = "conclusion_midpt_doesnt_match_perp_intersect_pt";
+const CONC_DIFF_CIRCLES = "conclusion_and_chord_on_diff_circles";
+const NOT_CHORD = "bisected_seg_not_the_chord";
+const PT_NOT_ENDPOINT = "conclusion_pt_not_endpoint_of_perp_bisector";
+const DIFF_CHORDS = "inscribed_angles_subtended_by_diff_chords";
+const ANG_NO_MATCH = "inscribed_angles_dont_match_con_ang_conclusion";
+
 // Returns true if seg goes between the circle center and the tangency point
 // (i.e., it's the radius segment from center to p).
 const isRadiusSegment = (seg: Segment, circle: Circle, p: Point): boolean =>
@@ -34,19 +54,19 @@ export const checkTangentPerpRelationship = (
   ];
 
   if (!circle_tan.equals(circle_rad)) {
-    return reasonApplicationFail("TANGENT_PERP_CIRCLE_MISMATCH", {
+    return reasonApplicationFail(DIFF_CIRCLES, {
       circle1: circle_tan.label,
       circle2: circle_rad.label,
     });
   }
   if (!p_tan.equals(p_rad)) {
-    return reasonApplicationFail("TANGENT_PERP_POINT_MISMATCH", {
+    return reasonApplicationFail(DIFF_TAN_PTS, {
       p_tan: p_tan.label,
       p_rad: p_rad.label,
     });
   }
   if (!p_int || !p_int.equals(p_tan)) {
-    return reasonApplicationFail("TANGENT_PERP_INT_POINT_MISMATCH", {
+    return reasonApplicationFail(BAD_INT_PT, {
       p_int: p_int?.label,
       p_tan: p_tan.label,
     });
@@ -54,13 +74,11 @@ export const checkTangentPerpRelationship = (
   const tanIsS1 = s1.equals(s_tan);
   const tanIsS2 = s2.equals(s_tan);
   if (!tanIsS1 && !tanIsS2) {
-    return reasonApplicationFail("TANGENT_SEG_NOT_IN_PERP", {
-      tangent: s_tan.label,
-    });
+    return reasonApplicationFail(TAN_NOT_PERP, { tangent: s_tan.label });
   }
   const s_radius = tanIsS1 ? s2 : s1;
   if (!isRadiusSegment(s_radius, circle_tan, p_tan)) {
-    return reasonApplicationFail("TANGENT_PERP_RADIUS_MISMATCH", {
+    return reasonApplicationFail(NOT_RADIUS, {
       segment: s_radius.label,
       center: circle_tan.center.label,
     });
@@ -84,29 +102,24 @@ export const con_tangents_ext_check = (
   const [cs1, cs2] = stmtMapper(conclusion, ctx) as [Segment, Segment];
 
   if (!c1.equals(c2)) {
-    return reasonApplicationFail("CON_TANGENTS_CIRCLE_MISMATCH", {
+    return reasonApplicationFail(TAN_DIFF_CIRCLES, {
       c1: c1.label,
       c2: c2.label,
     });
   }
   if (p1.equals(p2)) {
-    return reasonApplicationFail("CON_TANGENTS_SAME_TANGENCY_POINT", {
-      p: p1.label,
-    });
+    return reasonApplicationFail(SAME_TAN_PT, { p: p1.label });
   }
   const segPairMatches =
     (cs1.equals(s1) && cs2.equals(s2)) || (cs1.equals(s2) && cs2.equals(s1));
   if (!segPairMatches) {
-    return reasonApplicationFail("CON_TANGENTS_SEG_MISMATCH", {
-      s1: s1.label,
-      s2: s2.label,
-    });
+    return reasonApplicationFail(SEG_NO_MATCH, { s1: s1.label, s2: s2.label });
   }
   // Find the non-tangency endpoint of each segment (the shared external point)
   const ext1 = s1.p1.equals(p1) ? s1.p2 : s1.p1;
   const ext2 = s2.p1.equals(p2) ? s2.p2 : s2.p1;
   if (!ext1.equals(ext2)) {
-    return reasonApplicationFail("CON_TANGENTS_NO_COMMON_EXT_POINT", {
+    return reasonApplicationFail(NO_EXT_PT, {
       ext1: ext1.label,
       ext2: ext2.label,
     });
@@ -141,7 +154,7 @@ export const radius_chord_bisect_check = (
   ];
 
   if (!c_rad.equals(c_chord)) {
-    return reasonApplicationFail("RADIUS_CHORD_CIRCLE_MISMATCH", {
+    return reasonApplicationFail(RAD_CHORD_DIFF, {
       c_rad: c_rad.label,
       c_chord: c_chord.label,
     });
@@ -150,15 +163,13 @@ export const radius_chord_bisect_check = (
   const chordIsFirst = s_rad.equals(s_chord);
   const chordIsSecond = s_ch.equals(s_chord);
   if (!chordIsFirst && !chordIsSecond) {
-    return reasonApplicationFail("RADIUS_CHORD_NOT_PERP_TO_CHORD", {
-      chord: s_chord.label,
-    });
+    return reasonApplicationFail(NO_CHORD_IN_PERP, { chord: s_chord.label });
   }
   const s_perpRad = chordIsFirst ? s_ch : s_rad;
   const s_perpChord = chordIsFirst ? s_rad : s_ch;
   // The non-chord perp segment must contain the circle center
   if (!s_perpRad.contains(c_rad.center)) {
-    return reasonApplicationFail("RADIUS_CHORD_NO_CENTER", {
+    return reasonApplicationFail(NO_CENTER, {
       segment: s_perpRad.label,
       center: c_rad.center.label,
     });
@@ -167,13 +178,13 @@ export const radius_chord_bisect_check = (
   const hasChord = cs1.equals(s_perpChord) || cs2.equals(s_perpChord);
   const hasRad = cs1.equals(s_perpRad) || cs2.equals(s_perpRad);
   if (!hasChord || !hasRad) {
-    return reasonApplicationFail("RADIUS_CHORD_BISECT_SEG_MISMATCH", {
+    return reasonApplicationFail(BAD_BISECT_SEGS, {
       chord: s_perpChord.label,
       radius: s_perpRad.label,
     });
   }
   if (!cp.equals(p_int)) {
-    return reasonApplicationFail("RADIUS_CHORD_BISECT_MIDPOINT_MISMATCH", {
+    return reasonApplicationFail(BAD_BISECT_MIDPT, {
       expected: p_int.label,
       got: cp.label,
     });
@@ -202,20 +213,20 @@ export const radius_chord_bisect_conv_check = (
   const [c_conc, p_conc] = stmtMapper(conclusion, ctx) as [Circle, Point];
 
   if (!c_conc.equals(c_chord)) {
-    return reasonApplicationFail("RADIUS_CHORD_CONV_CIRCLE_MISMATCH", {
+    return reasonApplicationFail(CONC_DIFF_CIRCLES, {
       c_conc: c_conc.label,
       c_chord: c_chord.label,
     });
   }
   if (!s_bisected.equals(s_chord)) {
-    return reasonApplicationFail("RADIUS_CHORD_CONV_CHORD_MISMATCH", {
+    return reasonApplicationFail(NOT_CHORD, {
       bisected: s_bisected.label,
       chord: s_chord.label,
     });
   }
   // The conclusion point must be an endpoint of the perpendicular bisector
   if (!s_perp.p1.equals(p_conc) && !s_perp.p2.equals(p_conc)) {
-    return reasonApplicationFail("RADIUS_CHORD_CONV_POINT_NOT_ENDPOINT", {
+    return reasonApplicationFail(PT_NOT_ENDPOINT, {
       point: p_conc.label,
       bisector: s_perp.label,
     });
@@ -239,7 +250,7 @@ export const con_inscribed_angs_check = (
   const [ca1, ca2] = stmtMapper(conclusion, ctx) as [Angle, Angle];
 
   if (!s1.equals(s2)) {
-    return reasonApplicationFail("CON_INSCRIBED_ANGS_CHORD_MISMATCH", {
+    return reasonApplicationFail(DIFF_CHORDS, {
       chord1: s1.label,
       chord2: s2.label,
     });
@@ -247,10 +258,7 @@ export const con_inscribed_angs_check = (
   const anglesMatch =
     (ca1.equals(a1) && ca2.equals(a2)) || (ca1.equals(a2) && ca2.equals(a1));
   if (!anglesMatch) {
-    return reasonApplicationFail("CON_INSCRIBED_ANGS_MISMATCH", {
-      a1: a1.label,
-      a2: a2.label,
-    });
+    return reasonApplicationFail(ANG_NO_MATCH, { a1: a1.label, a2: a2.label });
   }
   const reflexCheck = failReflexStatements(a1, a2);
   if (!reflexCheck.ok) return reflexCheck;

@@ -13,7 +13,8 @@ export type TickType =
   | Obj.EqualLengthTick
   | Obj.EqualAngleTick
   | Obj.HiddenTick
-  | Obj.RightTick;
+  | Obj.RightTick
+  | Obj.SimilarTick;
 
 export enum SVGModes {
   Hidden = "hidden",

@@ -25,13 +25,9 @@ import {
 } from "./reasonChecks/circleChecks";
 import {
   check_altint,
-  check_altint_conv,
   check_altext,
-  check_altext_conv,
   check_corresp_ang,
-  check_corresp_ang_conv,
   check_sameside,
-  check_sameside_conv,
   intersect_seg,
   midpt,
   perp,
@@ -156,7 +152,7 @@ export const checkReasonApplication = (
 
       case "altint_conv": {
         const conAng_conv = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_altint_conv(
+        const r = check_altint(
           conAng_conv,
           stmt,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -296,7 +292,7 @@ export const checkReasonApplication = (
 
       case "sameside_ang_conv": {
         const sup_ang = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_sameside_conv(
+        const r = check_sameside(
           sup_ang,
           stmt,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -318,7 +314,7 @@ export const checkReasonApplication = (
 
       case "corresp_ang_conv": {
         const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_corresp_ang_conv(
+        const r = check_corresp_ang(
           conAng,
           stmt,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -340,7 +336,7 @@ export const checkReasonApplication = (
 
       case "altext_conv": {
         const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_altext_conv(
+        const r = check_altext(
           conAng,
           stmt,
           diagramPremisesByFunction(proofGraph, "transversal"),

@@ -8,13 +8,27 @@ import {
 } from "./reasonResult";
 import { findDuplicateDependencyStatements } from "./utils";
 
+const ANG_NOT_EQUAL = "angles_are_not_equal";
+const NO_LINEAR_PAIR = "angles_do_not_match_linear_pair";
+const DUPE_STMT = "dupe_stmt_supplied";
+const NO_SHARED_ANG = "no_shared_angle_bw_supp_pairs";
+const SHARED_MULTI_1 = "shared_angle_appears_multiple_times_in_first_pair";
+const SHARED_MULTI_2 = "shared_angle_appears_multiple_times_in_second_pair";
+const REMAINDERS_NO_MATCH = "non_shared_angles_dont_match_con_ang_conclusion";
+const REFLEX_ANG = "conclusion_or_shared_ang_is_reflexive";
+const SAME_SUPP = "con_angles_appear_in_same_supp_pair";
+const NOT_DISTRIBUTED = "con_angles_not_distributed_across_pairs";
+const NO_VERT_ANG = "no_intersecting_seg_produces_vert_angles";
+const SAME_RIGHT = "both_right_angles_are_the_same_angle";
+const BAD_BISECT = "bisector_not_contained_in_both_half_angles";
+
 type DiagramResult =
   | { ok: true; diagramDeps: ParseDiagramStmt[] }
   | { ok: false; failure: { code: string; details?: Record<string, unknown> } };
 
 export const reflex_a = (a1: Angle, a2: Angle): ReasonApplicationResult => {
   if (a1.equals(a2)) return reasonApplicationOk();
-  return reasonApplicationFail("REFLEX_A_MISMATCH", {
+  return reasonApplicationFail(ANG_NOT_EQUAL, {
     ang1: a1.label,
     ang2: a2.label,
   });
@@ -47,7 +61,7 @@ export const linear_pair = (
     (a1.equals(l2) && a2.equals(l1))
   )
     return reasonApplicationOk();
-  return reasonApplicationFail("LINEAR_PAIR_MISMATCH");
+  return reasonApplicationFail(NO_LINEAR_PAIR);
 };
 
 export const con_supp_comp_same_angle = (
@@ -57,17 +71,17 @@ export const con_supp_comp_same_angle = (
   ctx: ProofContent,
 ): ReasonApplicationResult => {
   if (findDuplicateDependencyStatements([supp, supp2, conAng]))
-    return reasonApplicationFail("CON_SUPP_COMP_SAME_MISMATCH");
+    return reasonApplicationFail(DUPE_STMT);
   const [a1, a2] = stmtMapper(supp, ctx) as [Angle, Angle];
   const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
   const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
   const shared = [a1, a2].find((a) => a.equals(b1) || a.equals(b2));
-  if (!shared) return reasonApplicationFail("CON_SUPP_COMP_SAME_MISMATCH");
+  if (!shared) return reasonApplicationFail(NO_SHARED_ANG);
   if ([a1, a2].filter((a) => a.equals(shared)).length !== 1)
-    return reasonApplicationFail("CON_SUPP_COMP_SAME_MISMATCH");
+    return reasonApplicationFail(SHARED_MULTI_1);
   if ([b1, b2].filter((a) => a.equals(shared)).length !== 1)
-    return reasonApplicationFail("CON_SUPP_COMP_SAME_MISMATCH");
+    return reasonApplicationFail(SHARED_MULTI_2);
 
   const remaining1 = [a1, a2].find((a) => !a.equals(shared))!;
   const remaining2 = [b1, b2].find((a) => !a.equals(shared))!;
@@ -76,7 +90,7 @@ export const con_supp_comp_same_angle = (
     (remaining1.equals(c2) && remaining2.equals(c1))
   )
     return reasonApplicationOk();
-  return reasonApplicationFail("CON_SUPP_COMP_SAME_MISMATCH");
+  return reasonApplicationFail(REMAINDERS_NO_MATCH);
 };
 
 export const con_supp_comp_diff_angles = (
@@ -87,14 +101,14 @@ export const con_supp_comp_diff_angles = (
   ctx: ProofContent,
 ): ReasonApplicationResult => {
   if (findDuplicateDependencyStatements([supp, supp2, conAng]))
-    return reasonApplicationFail("CON_SUPP_COMP_DIFF_MISMATCH");
+    return reasonApplicationFail(DUPE_STMT);
   const [a1, a2] = stmtMapper(supp, ctx) as [Angle, Angle];
   const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
   const [s1, s2] = stmtMapper(sharedConAng, ctx) as [Angle, Angle];
   const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
   if (c1.equals(c2) || s1.equals(s2))
-    return reasonApplicationFail("CON_SUPP_COMP_DIFF_MISMATCH");
+    return reasonApplicationFail(REFLEX_ANG);
 
   const s1InSupp = [a1, a2].filter((a) => a.equals(s1)).length === 1;
   const s1InSupp2 = [b1, b2].filter((a) => a.equals(s1)).length === 1;
@@ -102,9 +116,9 @@ export const con_supp_comp_diff_angles = (
   const s2InSupp2 = [b1, b2].filter((a) => a.equals(s2)).length === 1;
 
   if (s1InSupp === s1InSupp2 || s2InSupp === s2InSupp2)
-    return reasonApplicationFail("CON_SUPP_COMP_DIFF_MISMATCH");
+    return reasonApplicationFail(SAME_SUPP);
   if (s1InSupp === s2InSupp)
-    return reasonApplicationFail("CON_SUPP_COMP_DIFF_MISMATCH");
+    return reasonApplicationFail(NOT_DISTRIBUTED);
 
   const [suppShared, supp2Shared] = s1InSupp ? [s1, s2] : [s2, s1];
   const remaining1 = [a1, a2].find((a) => !a.equals(suppShared))!;
@@ -115,7 +129,7 @@ export const con_supp_comp_diff_angles = (
     (remaining1.equals(c2) && remaining2.equals(c1))
   )
     return reasonApplicationOk();
-  return reasonApplicationFail("CON_SUPP_COMP_DIFF_MISMATCH");
+  return reasonApplicationFail(REMAINDERS_NO_MATCH);
 };
 
 export const vert_ang = (
@@ -145,7 +159,7 @@ export const check_vert_ang = (
 ): DiagramResult => {
   const matches = intersects.filter((d) => vert_ang(d.statement, stmt, ctx));
   if (matches.length === 0)
-    return { ok: false, failure: { code: "VERT_ANG_NO_MATCH" } };
+    return { ok: false, failure: { code: NO_VERT_ANG } };
   return { ok: true, diagramDeps: matches };
 };
 
@@ -158,9 +172,7 @@ export const defConRight = (
   const [a2] = stmtMapper(right2, ctx) as [Angle];
 
   if (a1.equals(a2))
-    return reasonApplicationFail("DEF_CON_RIGHT_MISMATCH", {
-      angle: a1.label,
-    });
+    return reasonApplicationFail(SAME_RIGHT, { angle: a1.label });
   return reasonApplicationOk();
 };
 
@@ -179,5 +191,5 @@ export const def_ang_bisect = (
     a1.centerEquals(ang.center)
   )
     return reasonApplicationOk();
-  return reasonApplicationFail("ANG_BISECT_MISMATCH");
+  return reasonApplicationFail(BAD_BISECT);
 };

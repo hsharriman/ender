@@ -140,10 +140,12 @@ export const STMTS_DEFS = {
       parameters: [point("p"), triangle("t")],
     },
     perp_bisector: {
+      // s1 bisects s2 at p
       name: "perp_bisector",
       parameters: [segment("s1"), segment("s2"), point("p")],
     },
     seg_bisect: {
+      // s1 bisects s2 at p
       name: "seg_bisect",
       parameters: [segment("s1"), segment("s2"), point("p")],
     },

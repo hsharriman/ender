@@ -29,6 +29,7 @@ export enum Obj {
   RightTick = "righttick",
   Quadrilateral = "rectangle",
   Circle = "circle",
+  SimilarTick = "similartick",
 }
 
 export interface ParseObj {

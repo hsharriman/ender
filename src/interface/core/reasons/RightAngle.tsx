@@ -1,7 +1,5 @@
 import { Obj } from "geometry-object";
-import { makeStepMeta } from "../../theorems/utils";
-import { Reason } from "../types/layoutTypes";
-import { StepFocusProps, StepMeta } from "../types/stepTypes";
+import { StepFocusProps } from "../types/stepTypes";
 import { BaseAngle } from "./BaseAngle";
 
 export class RightAngle {
@@ -21,19 +19,3 @@ export class RightAngle {
     );
   };
 }
-
-export const RightAngleStep = (
-  a: string,
-  reason: Reason,
-  step: StepMeta,
-  dependsOn?: string[],
-) => {
-  return makeStepMeta({
-    reason,
-    dependsOn,
-    prevStep: step,
-    additions: (props: StepFocusProps) => RightAngle.additions(props, a),
-    text: RightAngle.text(a),
-    staticText: () => RightAngle.text(a)(true),
-  });
-};

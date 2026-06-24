@@ -1,11 +1,21 @@
 import { Stmt } from "checker/types/checkerTypes";
 import { DiagramContent } from "../builder/DiagramContent";
+import { AngleBisector } from "../reasons/AngleBisector";
 import { CongruentTriangles } from "../reasons/CongruentTriangles";
 import { EqualAngles } from "../reasons/EqualAngles";
+import { InscribedAngle } from "../reasons/InscribedAngle";
+import { PerpBisector } from "../reasons/PerpBisector";
+import { SegmentBisector } from "../reasons/SegmentBisector";
+import { SimilarSegments } from "../reasons/SimilarSegments";
+import { SimilarTriangles } from "../reasons/SimilarTriangles";
+import { Tangent } from "../reasons/Tangent";
 import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
 import { Midpoint } from "../reasons/Midpoint";
 import { ParallelLines } from "../reasons/ParallelLines";
+import { QuadClassification } from "../reasons/QuadClassification";
+import { SegmentCircleClassification } from "../reasons/SegmentCircleClassification";
+import { TriangleClassification } from "../reasons/TriangleClassification";
 import { Perpendicular } from "../reasons/Perpendicular";
 import { RightAngle } from "../reasons/RightAngle";
 import { SVGModes } from "../types/diagramTypes";
@@ -127,6 +137,96 @@ export const applyStmtAdditions =
       const s1 = stmt.arguments[0].v;
       const s2 = stmt.arguments[1].v;
       Perpendicular.additions({ ctx, frame, mode }, s1, s2);
+      return;
+    }
+    if (stmt.function === "ang_bisect" && stmt.arguments.length === 2) {
+      AngleBisector.additions(
+        { ctx, frame, mode },
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      );
+      return;
+    }
+    if (stmt.function === "sim_seg" && stmt.arguments.length === 2) {
+      SimilarSegments.additions(
+        { ctx, frame, mode },
+        [stmt.arguments[0].v, stmt.arguments[1].v],
+      );
+      return;
+    }
+    if (stmt.function === "sim_tri" && stmt.arguments.length === 2) {
+      SimilarTriangles.additions(
+        { ctx, frame, mode },
+        [stmt.arguments[0].v, stmt.arguments[1].v],
+      );
+      return;
+    }
+    if (stmt.function === "seg_bisect" && stmt.arguments.length === 3) {
+      SegmentBisector.additions(
+        { ctx, frame, mode },
+        [stmt.arguments[0].v, stmt.arguments[1].v],
+        stmt.arguments[2].v,
+      );
+      return;
+    }
+    if (stmt.function === "perp_bisector" && stmt.arguments.length === 3) {
+      PerpBisector.additions(
+        { ctx, frame, mode },
+        [stmt.arguments[0].v, stmt.arguments[1].v],
+        stmt.arguments[2].v,
+      );
+      return;
+    }
+    if (stmt.function === "inscribed_angle" && stmt.arguments.length === 2) {
+      InscribedAngle.additions(
+        { ctx, frame, mode },
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      );
+      return;
+    }
+    if (stmt.function === "tangent" && stmt.arguments.length === 3) {
+      Tangent.additions(
+        { ctx, frame, mode },
+        stmt.arguments[2].v,
+        stmt.arguments[1].v,
+        stmt.arguments[0].v,
+      );
+      return;
+    }
+    if (
+      (stmt.function === "chord" ||
+        stmt.function === "diameter" ||
+        stmt.function === "radius") &&
+      stmt.arguments.length === 2
+    ) {
+      SegmentCircleClassification.additions(
+        { ctx, frame, mode },
+        stmt.arguments[1].v,
+        stmt.arguments[0].v,
+      );
+      return;
+    }
+    if (
+      (stmt.function === "isosceles" ||
+        stmt.function === "equilateral" ||
+        stmt.function === "equiangular") &&
+      stmt.arguments.length === 1
+    ) {
+      TriangleClassification.additions(
+        { ctx, frame, mode },
+        stmt.arguments[0].v,
+      );
+      return;
+    }
+    if (
+      (stmt.function === "rectangle" ||
+        stmt.function === "parallelogram" ||
+        stmt.function === "rhombus" ||
+        stmt.function === "isos_trapezoid") &&
+      stmt.arguments.length === 1
+    ) {
+      QuadClassification.additions({ ctx, frame, mode }, stmt.arguments[0].v);
       return;
     }
   };
