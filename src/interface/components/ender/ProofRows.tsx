@@ -292,7 +292,7 @@ class ProofRow extends React.Component<ProofRowProps> {
 
     return (
       <div
-        className={`flex flex-row justify-start ${h} ${incorrectBg}`}
+        className={`flex flex-row justify-start ${h}`}
         id={this.props.isTutorial ? `${this.props.item.k}-tutorial` : ""}
       >
         {this.props.revealed ? (

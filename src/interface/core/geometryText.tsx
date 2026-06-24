@@ -28,7 +28,10 @@ export const arcStr = (a: string, active: boolean) => (
     className={`font-notoSerif border-t-2 ${
       active ? "border-black" : "border-slate-400"
     }`}
-    style={{ display: "inline-block", borderRadius: "50% 50% 0 0 / 6px 6px 0 0" }}
+    style={{
+      display: "inline-block",
+      borderRadius: "50% 50% 0 0 / 6px 6px 0 0",
+    }}
   >
     {a}
   </span>
@@ -111,6 +114,22 @@ export const resizedStrs = {
       }
     >
       {"\u22A5"}
+    </span>
+  ),
+  similar: (
+    <span
+      style={
+        navigator.userAgent.includes("Mac")
+          ? {
+              fontSize: "2rem",
+              verticalAlign: "baseline",
+              lineHeight: "24px",
+              flex: "inline",
+            }
+          : {}
+      }
+    >
+      {strs.similar}
     </span>
   ),
 };

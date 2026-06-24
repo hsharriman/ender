@@ -115,6 +115,9 @@ export const stmtToText =
   ) {
     return QuadClassification.text(args[0], stmt.function)(isActive);
   }
+  if (stmt.function === "isos_trapezoid_premise" && args.length === 3) {
+    return QuadClassification.text(args[0], "isos_trapezoid")(isActive);
+  }
   return React.createElement(
     "span",
     null,

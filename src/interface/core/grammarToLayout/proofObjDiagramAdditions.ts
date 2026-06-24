@@ -3,59 +3,79 @@ import { DiagramContent } from "../builder/DiagramContent";
 import { AngleBisector } from "../reasons/AngleBisector";
 import { CongruentTriangles } from "../reasons/CongruentTriangles";
 import { EqualAngles } from "../reasons/EqualAngles";
+import { EqualRightAngles } from "../reasons/EqualRightAngles";
+import { EqualSegments } from "../reasons/EqualSegments";
 import { InscribedAngle } from "../reasons/InscribedAngle";
+import { Midpoint } from "../reasons/Midpoint";
+import { ParallelLines } from "../reasons/ParallelLines";
 import { PerpBisector } from "../reasons/PerpBisector";
+import { Perpendicular } from "../reasons/Perpendicular";
+import { QuadClassification } from "../reasons/QuadClassification";
+import { RightAngle } from "../reasons/RightAngle";
 import { SegmentBisector } from "../reasons/SegmentBisector";
+import { SegmentCircleClassification } from "../reasons/SegmentCircleClassification";
 import { SimilarSegments } from "../reasons/SimilarSegments";
 import { SimilarTriangles } from "../reasons/SimilarTriangles";
 import { Tangent } from "../reasons/Tangent";
-import { EqualRightAngles } from "../reasons/EqualRightAngles";
-import { EqualSegments } from "../reasons/EqualSegments";
-import { Midpoint } from "../reasons/Midpoint";
-import { ParallelLines } from "../reasons/ParallelLines";
-import { QuadClassification } from "../reasons/QuadClassification";
-import { SegmentCircleClassification } from "../reasons/SegmentCircleClassification";
 import { TriangleClassification } from "../reasons/TriangleClassification";
-import { Perpendicular } from "../reasons/Perpendicular";
-import { RightAngle } from "../reasons/RightAngle";
 import { SVGModes } from "../types/diagramTypes";
 
-const normalizeCongruentPairKey = (a: string, b: string): string =>
-  [a, b].sort().join("|");
-
 export type CongruenceTickTracker = {
-  segTickByKey: Map<string, number>;
-  angTickByKey: Map<string, number>;
+  segTickByObj: Map<string, number>;
+  angTickByObj: Map<string, number>;
+  simSegTickByObj: Map<string, number>;
+  paraTickByObj: Map<string, number>;
 };
+
+const assignTick = (
+  map: Map<string, number>,
+  a: string,
+  b: string,
+  nextTick: { value: number },
+) => {
+  const tick = map.get(a) ?? map.get(b) ?? nextTick.value++;
+  map.set(a, tick);
+  map.set(b, tick);
+};
+const canonSeg = (ctx: DiagramContent, l: string) =>
+  ctx.getSegment(l)?.obj.label ?? l;
+const canonAng = (ctx: DiagramContent, l: string) =>
+  ctx.getAngle(l)?.obj.label ?? l;
 
 export const buildCongruenceTickTracker = (
   stmts: Array<Stmt | undefined>,
+  ctx: DiagramContent,
 ): CongruenceTickTracker => {
-  const segTickByKey = new Map<string, number>();
-  const angTickByKey = new Map<string, number>();
-  let nextSegTick = 1;
-  let nextAngTick = 1;
+  const segTickByObj = new Map<string, number>();
+  const angTickByObj = new Map<string, number>();
+  const simSegTickByObj = new Map<string, number>();
+  const paraTickByObj = new Map<string, number>();
+  const nextSeg = { value: 1 };
+  const nextAng = { value: 1 };
+  const nextSimSeg = { value: 1 };
+  const nextPara = { value: 1 };
 
   stmts.forEach((stmt) => {
     if (!stmt || stmt.arguments.length !== 2) return;
+    const a = stmt.arguments[0].v;
+    const b = stmt.arguments[1].v;
     if (stmt.function === "con_seg") {
-      const key = normalizeCongruentPairKey(
-        stmt.arguments[0].v,
-        stmt.arguments[1].v,
+      assignTick(segTickByObj, canonSeg(ctx, a), canonSeg(ctx, b), nextSeg);
+    } else if (stmt.function === "con_ang") {
+      assignTick(angTickByObj, canonAng(ctx, a), canonAng(ctx, b), nextAng);
+    } else if (stmt.function === "sim_seg") {
+      assignTick(
+        simSegTickByObj,
+        canonSeg(ctx, a),
+        canonSeg(ctx, b),
+        nextSimSeg,
       );
-      if (!segTickByKey.has(key)) segTickByKey.set(key, nextSegTick++);
-      return;
-    }
-    if (stmt.function === "con_ang") {
-      const key = normalizeCongruentPairKey(
-        stmt.arguments[0].v,
-        stmt.arguments[1].v,
-      );
-      if (!angTickByKey.has(key)) angTickByKey.set(key, nextAngTick++);
+    } else if (stmt.function === "para") {
+      assignTick(paraTickByObj, canonSeg(ctx, a), canonSeg(ctx, b), nextPara);
     }
   });
 
-  return { segTickByKey, angTickByKey };
+  return { segTickByObj, angTickByObj, simSegTickByObj, paraTickByObj };
 };
 
 export const applyStmtAdditions =
@@ -67,13 +87,19 @@ export const applyStmtAdditions =
     stmt?: Stmt,
     options?: { isRightAngleEquality?: boolean },
   ) => {
+    const getNumTicks = (
+      trackerMap: Map<string, number>,
+      stmt: Stmt,
+      type: "s" | "a",
+    ) => {
+      const label = stmt.arguments[0].v;
+      return trackerMap.get(
+        type === "s" ? canonSeg(ctx, label) : canonAng(ctx, label),
+      );
+    };
     if (!stmt) return;
     if (stmt.function === "con_seg" && stmt.arguments.length === 2) {
-      const key = normalizeCongruentPairKey(
-        stmt.arguments[0].v,
-        stmt.arguments[1].v,
-      );
-      const numTicks = tracker.segTickByKey.get(key) ?? 1;
+      const numTicks = getNumTicks(tracker.segTickByObj, stmt, "s");
       EqualSegments.additions(
         { ctx, frame, mode },
         [stmt.arguments[0].v, stmt.arguments[1].v],
@@ -89,11 +115,7 @@ export const applyStmtAdditions =
         ]);
         return;
       }
-      const key = normalizeCongruentPairKey(
-        stmt.arguments[0].v,
-        stmt.arguments[1].v,
-      );
-      const numTicks = tracker.angTickByKey.get(key) ?? 1;
+      const numTicks = getNumTicks(tracker.angTickByObj, stmt, "a");
       EqualAngles.additions(
         { ctx, frame, mode },
         [stmt.arguments[0].v, stmt.arguments[1].v],
@@ -102,18 +124,19 @@ export const applyStmtAdditions =
       return;
     }
     if (stmt.function === "con_tri" && stmt.arguments.length === 2) {
-      CongruentTriangles.congruentLabel(
-        { ctx, frame },
-        [stmt.arguments[0].v, stmt.arguments[1].v],
-        mode,
-      );
-      return;
-    }
-    if (stmt.function === "para" && stmt.arguments.length === 2) {
-      ParallelLines.additions({ ctx, frame, mode }, [
+      CongruentTriangles.congruentLabel({ ctx, frame, mode }, [
         stmt.arguments[0].v,
         stmt.arguments[1].v,
       ]);
+      return;
+    }
+    if (stmt.function === "para" && stmt.arguments.length === 2) {
+      const numTicks = getNumTicks(tracker.paraTickByObj, stmt, "s");
+      ParallelLines.additions(
+        { ctx, frame, mode },
+        [stmt.arguments[0].v, stmt.arguments[1].v],
+        numTicks,
+      );
       return;
     }
     if (stmt.function === "right" && stmt.arguments.length === 1) {
@@ -148,17 +171,19 @@ export const applyStmtAdditions =
       return;
     }
     if (stmt.function === "sim_seg" && stmt.arguments.length === 2) {
+      const numTicks = getNumTicks(tracker.simSegTickByObj, stmt, "s");
       SimilarSegments.additions(
         { ctx, frame, mode },
         [stmt.arguments[0].v, stmt.arguments[1].v],
+        numTicks,
       );
       return;
     }
     if (stmt.function === "sim_tri" && stmt.arguments.length === 2) {
-      SimilarTriangles.additions(
-        { ctx, frame, mode },
-        [stmt.arguments[0].v, stmt.arguments[1].v],
-      );
+      SimilarTriangles.similarLabel({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
       return;
     }
     if (stmt.function === "seg_bisect" && stmt.arguments.length === 3) {
@@ -225,6 +250,13 @@ export const applyStmtAdditions =
         stmt.function === "rhombus" ||
         stmt.function === "isos_trapezoid") &&
       stmt.arguments.length === 1
+    ) {
+      QuadClassification.additions({ ctx, frame, mode }, stmt.arguments[0].v);
+      return;
+    }
+    if (
+      stmt.function === "isos_trapezoid_premise" &&
+      stmt.arguments.length === 3
     ) {
       QuadClassification.additions({ ctx, frame, mode }, stmt.arguments[0].v);
       return;

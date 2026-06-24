@@ -1,5 +1,7 @@
 import { ProofObj, ProofStep, Stmt } from "checker/types/checkerTypes";
 import { ProofContent } from "geometry-object";
+import { DiagramContent } from "../builder/DiagramContent";
+import { seedBaseContentFromPremises } from "./proofObjBaseContent";
 import React from "react";
 import { reasonFromFunction } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
@@ -9,7 +11,6 @@ import { VerticalAngles } from "../reasons/VerticalAngles";
 import { SVGModes } from "../types/diagramTypes";
 import { LayoutProps } from "../types/layoutTypes";
 import { StepMeta } from "../types/stepTypes";
-import { seedBaseContentFromPremises } from "./proofObjBaseContent";
 import {
   applyPremisesObjects,
   applyStmtAdditions,
@@ -26,6 +27,7 @@ const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
 export const interactiveLayoutFromProofObj = (
   proof: ProofObj,
   ctx: ProofContent,
+  diagramCtx: DiagramContent,
   incorrectSteps?: Set<string>,
 ): LayoutProps => {
   const givenSteps = proof.steps.filter((s) => s.type === "given");
@@ -38,15 +40,18 @@ export const interactiveLayoutFromProofObj = (
   // const isVertAngReason = (reasonFunction?: string): boolean =>
   //   (reasonFunction ?? "").toLowerCase() === "vert_ang";
 
-  const tickTracker = buildCongruenceTickTracker([
-    ...givenSteps.map((s) => s.statement),
-    ...proofSteps.map((s) =>
-      s.statement?.function === "con_ang" && isConRightStmt(s.statement)
-        ? undefined
-        : s.statement,
-    ),
-    proveStmt,
-  ]);
+  const tickTracker = buildCongruenceTickTracker(
+    [
+      ...givenSteps.map((s) => s.statement),
+      ...proofSteps.map((s) =>
+        s.statement?.function === "con_ang" && isConRightStmt(s.statement)
+          ? undefined
+          : s.statement,
+      ),
+      proveStmt,
+    ],
+    diagramCtx,
+  );
   const applyStmtObjects = applyStmtAdditions(tickTracker);
 
   const premisesSummary = (isActive: boolean) => {

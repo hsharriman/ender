@@ -1,5 +1,5 @@
 import { Obj } from "geometry-object";
-import { segmentStr, strs } from "../geometryText";
+import { resizedStrs, segmentStr } from "../geometryText";
 import { SVGModes } from "../types/diagramTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
 
@@ -24,7 +24,7 @@ export class SimilarSegments {
       return (
         <span>
           {segmentStr(s1, isActive)}
-          {strs.similar}
+          {resizedStrs.similar}
           {segmentStr(s2, isActive)}
         </span>
       );

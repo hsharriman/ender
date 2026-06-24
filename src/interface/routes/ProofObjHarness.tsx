@@ -2,6 +2,7 @@ import { ProofParser } from "checker/grammar/lezerParser";
 import { runProofChecker } from "checker/proofChecker";
 import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
 import { ProofContent } from "geometry-object";
+import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
@@ -283,9 +284,11 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
   } | null {
     const { lastGoodProof, lastGoodCtx, incorrectSteps } = this.state;
     if (!lastGoodProof || !lastGoodCtx) return null;
+    const diagramCtx = seedBaseContentFromPremises(lastGoodProof, lastGoodCtx);
     const layoutProps = interactiveLayoutFromProofObj(
       lastGoodProof,
       lastGoodCtx,
+      diagramCtx,
       incorrectSteps,
     );
     const maxX = Math.max(

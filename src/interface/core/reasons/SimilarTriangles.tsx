@@ -1,6 +1,5 @@
-import { strs, triangleStr } from "../geometryText";
-import { SVGModes } from "../types/diagramTypes";
-import { StepFocusProps, StepProps } from "../types/stepTypes";
+import { resizedStrs, triangleStr } from "../geometryText";
+import { StepFocusProps } from "../types/stepTypes";
 
 export class SimilarTriangles {
   static text =
@@ -9,7 +8,7 @@ export class SimilarTriangles {
       return (
         <span>
           {triangleStr(t1)}
-          {strs.similar}
+          {resizedStrs.similar}
           {triangleStr(t2)}
         </span>
       );
@@ -19,16 +18,12 @@ export class SimilarTriangles {
     props.ctx.getTriangle(t2)?.mode(props.frame, props.mode);
   };
 
-  static congruentLabel = (
-    props: StepProps,
-    labels: [string, string],
-    mode: SVGModes,
-  ) => {
+  static similarLabel = (props: StepFocusProps, labels: [string, string]) => {
     const { ctx, frame } = props;
-    ctx.getTriangle(labels[0])?.setSimilar(frame).labelMode(frame, mode);
+    ctx.getTriangle(labels[0])?.setSimilar(frame).labelMode(frame, props.mode);
     const t2 = ctx.getTriangle(labels[1]);
     if (!t2) return;
     t2.setRotatePattern(true);
-    t2.setSimilar(frame).labelMode(frame, mode);
+    t2.setSimilar(frame).labelMode(frame, props.mode);
   };
 }

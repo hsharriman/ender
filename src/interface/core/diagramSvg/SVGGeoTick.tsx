@@ -120,7 +120,7 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     return dStr;
   };
 
-  similarityMark = (s: LSegment) => {
+  similarityMark = (s: LSegment, num: number) => {
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
     const unit = vops.unit(vops.sub(s.p2, s.p1));
     const perp = vops.rot(
@@ -129,25 +129,29 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     );
     const waveAmp = this.props.miniScale ? 0.18 : 0.12;
 
-    const startGeo = vops.add(midpoint, perp);
-    const endGeo = vops.add(midpoint, vops.smul(perp, -1));
+    const tickVectors = this.tickPlacement(unit, num, this.props.miniScale);
+    let dStr = "";
+    tickVectors.forEach((shift) => {
+      const center = vops.add(midpoint, shift);
+      const startGeo = vops.add(center, perp);
+      const endGeo = vops.add(center, vops.smul(perp, -1));
+      const ctrl1Geo = vops.add(
+        vops.add(center, vops.smul(perp, 1 / 3)),
+        vops.smul(unit, waveAmp),
+      );
+      const ctrl2Geo = vops.add(
+        vops.add(center, vops.smul(perp, -1 / 3)),
+        vops.smul(unit, -waveAmp),
+      );
 
-    // Control points at ±1/3 height, offset along the segment for the S-curve
-    const ctrl1Geo = vops.add(
-      vops.add(midpoint, vops.smul(perp, 1 / 3)),
-      vops.smul(unit, waveAmp),
-    );
-    const ctrl2Geo = vops.add(
-      vops.add(midpoint, vops.smul(perp, -1 / 3)),
-      vops.smul(unit, -waveAmp),
-    );
+      const start = coordsToSvg(startGeo, this.props.miniScale);
+      const ctrl1 = coordsToSvg(ctrl1Geo, this.props.miniScale);
+      const ctrl2 = coordsToSvg(ctrl2Geo, this.props.miniScale);
+      const end = coordsToSvg(endGeo, this.props.miniScale);
 
-    const start = coordsToSvg(startGeo, this.props.miniScale);
-    const ctrl1 = coordsToSvg(ctrl1Geo, this.props.miniScale);
-    const ctrl2 = coordsToSvg(ctrl2Geo, this.props.miniScale);
-    const end = coordsToSvg(endGeo, this.props.miniScale);
-
-    return pops.moveTo(start) + pops.curveTo(ctrl1, ctrl2, end);
+      dStr += pops.moveTo(start) + pops.curveTo(ctrl1, ctrl2, end);
+    });
+    return dStr;
   };
 
   rightAngle = (a: LAngle) => {
@@ -215,7 +219,10 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
       } else if (this.props.tick.type === Obj.RightTick) {
         pathStr = this.rightAngle(this.props.parent as LAngle);
       } else if (this.props.tick.type === Obj.SimilarTick) {
-        pathStr = this.similarityMark(this.props.parent as LSegment);
+        pathStr = this.similarityMark(
+          this.props.parent as LSegment,
+          this.props.tick.num,
+        );
       }
     }
     return pathStr !== "" ? (
