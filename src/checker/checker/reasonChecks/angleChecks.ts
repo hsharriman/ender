@@ -1,100 +1,138 @@
 import { Angle, Point, ProofContent, Segment } from "geometry-object";
-import { Stmt } from "../../types/checkerTypes";
+import { ParseDiagramStmt, Stmt } from "../../types/checkerTypes";
 import { stmtMapper } from "./argMappers";
-import { findDuplicateDependencyStatements } from "./utils";
+import {
+  DiagramResult,
+  ReasonApplicationResult,
+  diagramFail,
+  diagramOk,
+  reasonApplicationFail,
+  reasonApplicationOk,
+} from "./reasonResult";
+import {
+  failReflexStatements,
+  findDuplicateDependencyStatements,
+  resolveAngleForProp,
+  resolveSegmentForProp,
+  rightAngleOnPerp,
+} from "./utils";
 
-export const reflex_a = (a1: Angle, a2: Angle) => {
-  return a1.equals(a2);
+const ANG_NOT_EQUAL = "angles_are_not_equal";
+const NO_LINEAR_PAIR = "angles_are_not_linear_pair";
+const DUPE_STMT = "dupe_stmt_supplied";
+const NO_SHARED_ANG = "no_shared_angle_bw_supp_pairs";
+const REMAINDERS_NO_MATCH = "non_shared_angles_dont_match_con_ang_conclusion";
+const SAME_SUPP = "con_angles_appear_in_same_supp_pair";
+const NOT_DISTRIBUTED = "con_angles_not_distributed_across_pairs";
+const NO_VERT_ANG = "no_intersecting_seg_produces_vert_angles";
+const BAD_BISECT_ANG = "angle_centers_dont_match";
+const BAD_BISECT = "bisector_not_in_both_half_angles";
+
+export const reflex_a = (a1: Angle, a2: Angle): ReasonApplicationResult => {
+  if (a1.equals(a2)) return reasonApplicationOk();
+  return reasonApplicationFail(ANG_NOT_EQUAL, {
+    ang1: a1.label,
+    ang2: a2.label,
+  });
 };
 
-export const right = (perp: Stmt, right: Stmt, ctx: ProofContent): boolean => {
+export const right = (
+  perp: Stmt,
+  right: Stmt,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
   const [s1, s2, p] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
   const [r] = stmtMapper(right, ctx) as [Angle];
-  if (!p) return false;
-
-  const startLabel = r.start.label;
-  const endLabel = r.end.label;
-  return (
-    r.centerEquals(p) &&
-    ((s1.label.includes(startLabel) && s2.label.includes(endLabel)) ||
-      (s2.label.includes(startLabel) && s1.label.includes(endLabel)))
-  );
+  return rightAngleOnPerp(r, s1, s2, p, ctx);
 };
 
 export const linear_pair = (
   linearPair: Stmt,
   supplementary: Stmt,
   ctx: ProofContent,
-) => {
+): ReasonApplicationResult => {
   const [a1, a2] = stmtMapper(supplementary, ctx) as [Angle, Angle];
   const [l1, l2] = stmtMapper(linearPair, ctx) as [Angle, Angle];
 
-  // angles referenced by linear pair must be same as supplementary
-  return (a1.equals(l1) && a2.equals(l2)) || (a1.equals(l2) && a2.equals(l1));
+  if ((a1.equals(l1) && a2.equals(l2)) || (a1.equals(l2) && a2.equals(l1)))
+    return reasonApplicationOk();
+  return reasonApplicationFail(NO_LINEAR_PAIR);
 };
 
-// test for congruent supplements/complements where each pair of angles is supp/comp to the same angle
 export const con_supp_comp_same_angle = (
   supp: Stmt,
   supp2: Stmt,
   conAng: Stmt,
   ctx: ProofContent,
-) => {
-  if (findDuplicateDependencyStatements([supp, supp2, conAng])) return false;
+): ReasonApplicationResult => {
+  if (findDuplicateDependencyStatements([supp, supp2, conAng]))
+    return reasonApplicationFail(DUPE_STMT);
   const [a1, a2] = stmtMapper(supp, ctx) as [Angle, Angle];
   const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
   const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
-  // shared angle must appear exactly once in each supp statement
-  const shared = [a1, a2].find((a) => a.equals(b1) || a.equals(b2));
-  if (!shared) return false;
-  if ([a1, a2].filter((a) => a.equals(shared)).length !== 1) return false;
-  if ([b1, b2].filter((a) => a.equals(shared)).length !== 1) return false;
+  let ref = failReflexStatements(a1, a2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(b1, b2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(c1, c2);
+  if (!ref.ok) return ref;
 
-  // c1 and c2 must be the non-shared angle from each supp
+  const shared = [a1, a2].find((a) => a.equals(b1) || a.equals(b2));
+  if (!shared) return reasonApplicationFail(NO_SHARED_ANG);
+
   const remaining1 = [a1, a2].find((a) => !a.equals(shared))!;
   const remaining2 = [b1, b2].find((a) => !a.equals(shared))!;
-  return (
+  if (
     (remaining1.equals(c1) && remaining2.equals(c2)) ||
     (remaining1.equals(c2) && remaining2.equals(c1))
-  );
+  )
+    return reasonApplicationOk();
+  return reasonApplicationFail(REMAINDERS_NO_MATCH);
 };
 
-// test for con supplements/complements where the angles are supp/comp to 2 diff angs that are con to each other
 export const con_supp_comp_diff_angles = (
   supp: Stmt,
   supp2: Stmt,
   sharedConAng: Stmt,
   conAng: Stmt,
   ctx: ProofContent,
-) => {
-  if (findDuplicateDependencyStatements([supp, supp2, conAng])) return false;
+): ReasonApplicationResult => {
+  if (findDuplicateDependencyStatements([supp, supp2, conAng]))
+    return reasonApplicationFail(DUPE_STMT);
   const [a1, a2] = stmtMapper(supp, ctx) as [Angle, Angle];
   const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
   const [s1, s2] = stmtMapper(sharedConAng, ctx) as [Angle, Angle];
   const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
-  if (c1.equals(c2) || s1.equals(s2)) return false;
+  let ref = failReflexStatements(c1, c2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(s1, s2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(a1, a2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(b1, b2);
+  if (!ref.ok) return ref;
 
   const s1InSupp = [a1, a2].filter((a) => a.equals(s1)).length === 1;
   const s1InSupp2 = [b1, b2].filter((a) => a.equals(s1)).length === 1;
   const s2InSupp = [a1, a2].filter((a) => a.equals(s2)).length === 1;
   const s2InSupp2 = [b1, b2].filter((a) => a.equals(s2)).length === 1;
 
-  // each shared angle must be in exactly one of supp or supp2
-  if (s1InSupp === s1InSupp2 || s2InSupp === s2InSupp2) return false;
-  // s1 and s2 must be in different supp statements
-  if (s1InSupp === s2InSupp) return false;
+  if (s1InSupp === s1InSupp2 || s2InSupp === s2InSupp2)
+    return reasonApplicationFail(SAME_SUPP);
+  if (s1InSupp === s2InSupp) return reasonApplicationFail(NOT_DISTRIBUTED);
 
-  // remaining angles (one from each supp) must be exactly c1 and c2
   const [suppShared, supp2Shared] = s1InSupp ? [s1, s2] : [s2, s1];
   const remaining1 = [a1, a2].find((a) => !a.equals(suppShared))!;
   const remaining2 = [b1, b2].find((a) => !a.equals(supp2Shared))!;
 
-  return (
+  if (
     (remaining1.equals(c1) && remaining2.equals(c2)) ||
     (remaining1.equals(c2) && remaining2.equals(c1))
-  );
+  )
+    return reasonApplicationOk();
+  return reasonApplicationFail(REMAINDERS_NO_MATCH);
 };
 
 export const vert_ang = (
@@ -102,16 +140,23 @@ export const vert_ang = (
   conAng: Stmt,
   ctx: ProofContent,
 ): boolean => {
-  const [s1, s2, pt] = stmtMapper(intersect_seg, ctx) as [Segment, Segment, Point];
+  const [s1, s2, pt] = stmtMapper(intersect_seg, ctx) as [
+    Segment,
+    Segment,
+    Point,
+  ];
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
-  // Check that angles don't include segment names (vertical angles must be across from each other)
-  // also that the angles are not equal
+  // Check via subsegments: when the intersection is interior (not an endpoint),
+  // ang.contains(seg) returns false for the full segment; subsegments fix this.
+  const hasRayAlongSeg = (ang: Angle, seg: Segment) =>
+    resolveSegmentForProp(seg, (s) => ang.contains(s)) !== null;
+
   const anglesValid =
-    !a1.contains(s1) &&
-    !a1.contains(s2) &&
-    !a2.contains(s1) &&
-    !a2.contains(s2) &&
+    hasRayAlongSeg(a1, s1) &&
+    hasRayAlongSeg(a1, s2) &&
+    hasRayAlongSeg(a2, s1) &&
+    hasRayAlongSeg(a2, s2) &&
     !a1.equals(a2);
 
   const centerValid = a1.centerEquals(pt) && a2.centerEquals(pt);
@@ -119,39 +164,50 @@ export const vert_ang = (
   return anglesValid && centerValid;
 };
 
-/**
- * `def_con_right` reason: both dependency statements must be `right` (angles
- * already shown to be right); then the conclusion `con_ang` is allowed. No shared-side requirement.
- */
+export const check_vert_ang = (
+  stmt: Stmt,
+  intersects: ParseDiagramStmt[],
+  ctx: ProofContent,
+): DiagramResult => {
+  const matches = intersects.filter((d) => vert_ang(d.statement, stmt, ctx));
+  if (matches.length === 0) return diagramFail(NO_VERT_ANG);
+  return diagramOk(matches);
+};
+
 export const defConRight = (
   right1: Stmt,
   right2: Stmt,
   ctx: ProofContent,
-): boolean => {
-  // if (findDuplicateDependencyStatements([right1, right2])) return false;
-  // if (right1.function !== "right" || right2.function !== "right") return false;
-
+): ReasonApplicationResult => {
   const [a1] = stmtMapper(right1, ctx) as [Angle];
   const [a2] = stmtMapper(right2, ctx) as [Angle];
 
-  if (a1.equals(a2)) return false;
-  return true;
+  const ref = failReflexStatements(a1, a2);
+  if (!ref.ok) return ref;
+  return reasonApplicationOk();
 };
 
 export const def_ang_bisect = (
   conAng: Stmt,
   bisect: Stmt,
   ctx: ProofContent,
-) => {
+): ReasonApplicationResult => {
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
   const [ang, seg] = stmtMapper(bisect, ctx) as [Angle, Segment];
 
-  // check if corner of a1/a2 is on seg + corner of ang
-  // and if both small angles contain the bisecting segment
-  return (
-    a1.contains(seg) &&
-    a2.contains(seg) &&
-    a1.centerEquals(a2.center) &&
-    a1.centerEquals(ang.center)
-  );
+  const containsSeg = (a: Angle) => {
+    const segSet = new Set(seg.label.split(""));
+    return (
+      resolveAngleForProp(
+        a,
+        (n) => (segSet.has(n[0]) || segSet.has(n[2])) && segSet.has(n[1]),
+      ) !== null
+    );
+  };
+  if (!a1.centerEquals(a2.center) || !a1.centerEquals(ang.center)) {
+    return reasonApplicationFail(BAD_BISECT_ANG);
+  }
+  if (!containsSeg(a1) || !containsSeg(a2))
+    return reasonApplicationFail(BAD_BISECT);
+  return reasonApplicationOk();
 };

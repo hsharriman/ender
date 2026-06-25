@@ -111,10 +111,12 @@ const proofKeywords: moo.Rules = {
   seg: "seg",
   ang: "ang",
   quad: "quad",
+  circ: "circ",
   // Geometric objects (order matters - longer patterns first)
   quadrilateral: /q_[A-Z]{4}/,
   triangle: /t_[A-Z]{3}/,
   angle: /a_[A-Z]{3}/,
+  circle: /c_[A-Z]{2}/,
   segment: /[A-Z]{2}/,
   point: /[A-Z]/,
   // Coordinates: (-1.5, 2.0) format
@@ -150,6 +152,7 @@ const lexer = moo.compile({
       triangles: "tri",
       segments: "seg",
       angles: "ang",
+      circles: "circ",
     }),
   },
 });

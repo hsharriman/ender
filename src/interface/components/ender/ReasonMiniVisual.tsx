@@ -64,7 +64,8 @@ export class ReasonMiniVisual extends React.Component<ReasonMiniVisualProps> {
       segments: ctx.segments.filter((seg) => fulfilled.has(seg.obj.label)),
       angles: ctx.angles.filter((ang) => fulfilled.has(ang.obj.label)),
       triangles: ctx.triangles.filter((tri) => fulfilled.has(tri.obj.label)),
-      rectangles: [],
+      quads: [],
+      circles: [],
       frames: [frame],
       deps: new Map<string, Set<string>>(),
     };

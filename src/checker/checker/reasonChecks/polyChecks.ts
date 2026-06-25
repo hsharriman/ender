@@ -2,44 +2,77 @@ import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { Quadrilateral } from "geometry-object/geometry/Quadrilateral";
 import { Stmt } from "../../types/checkerTypes";
 import { stmtMapper } from "./argMappers";
-import { reasonApplicationFail, reasonApplicationOk } from "./reasonResult";
+import {
+  ReasonApplicationResult,
+  reasonApplicationFail,
+  reasonApplicationOk,
+} from "./reasonResult";
 import {
   anglePairsEqual,
   checkDistinctDependencyStmts,
   failReflexStatements,
+  resolveAngleForProp,
+  resolveSegmentForProp,
   segmentPairsEqual,
 } from "./utils";
 
-// Checks whether the quad contains the angle, retrying with all of the
-// angle's overlap-merged names when the direct label match fails.
-const quadContainsAngle = (quad: Quadrilateral, a: Angle): boolean => {
-  if (quad.contains(a)) return true;
-  return (
-    a.resolveLabel((name) => quad.a.some((qa) => qa.names.has(name))) !== null
-  );
-};
+const CONC_NOT_IN_QUAD = "conclusion_elements_not_in_quad";
+const ANG_NOT_IN_RECT = "angle_not_contained_in_rect";
+const RECT_PGRAM_DIFF = "rect_and_pgram_are_diff_quads";
+const NOT_OPP_SIDES = "segs_not_opp_sides_of_quad";
+const OPP_PAIR_MISMATCH = "opp_side_pair_must_match_in_both_stmts";
+const SAME_OPP_PAIR = "both_pairs_are_the_same_opp_side_pair";
+const NOT_OPP_ANGS = "angles_not_opp_angles_of_quad";
+const SAME_ANG_PAIR = "both_pairs_are_the_same_angle_pair";
+const NOT_CONSEC = "angles_not_consecutive_in_quad";
+const NOT_BOTH_DIAG = "segs_not_both_diagonals_of_quad";
+const NOT_DIAGONAL = "seg_not_a_diagonal_of_quad";
+const DIFF_MIDPTS = "bisect_stmts_have_diff_midpts";
+const DIFF_SEG_PAIRS = "bisect_stmts_have_diff_seg_pairs";
+const DIFF_DIAGONAL = "segs_are_not_the_same_diagonal";
+const NOT_IN_QUAD = "angle_or_seg_not_within_quad";
+const NOT_CONSEC_SIDES = "segs_not_consecutive_sides_of_quad";
+const NOT_BASE_ANGS = "angles_not_base_angle_pair_of_trap";
+const TRAP_DIFF = "trap_and_isos_trap_are_diff_quads";
+const DIFF_QUADS = "quad_stmts_refer_to_diff_quads";
 
-export const rectangle = (rect: Stmt, conclusion: Stmt, ctx: ProofContent) => {
+const quadContainsAngle = (quad: Quadrilateral, a: Angle): boolean =>
+  resolveAngleForProp(a, (name) => quad.a.some((qa) => qa.names.has(name))) !==
+  null;
+
+export const rectangle = (
+  rect: Stmt,
+  conclusion: Stmt,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
   const quad = ctx.getQuadrilateral(rect.arguments[0].v);
   if (
     conclusion.function === "con_right" ||
     conclusion.function === "con_ang"
   ) {
     const [a1, a2] = stmtMapper(conclusion, ctx) as [Angle, Angle];
-    return quadContainsAngle(quad, a1) && quadContainsAngle(quad, a2);
+    const ref = failReflexStatements(a1, a2);
+    if (!ref.ok) return ref;
+
+    if (quadContainsAngle(quad, a1) && quadContainsAngle(quad, a2))
+      return reasonApplicationOk();
+    return reasonApplicationFail(CONC_NOT_IN_QUAD);
   }
   if (conclusion.function === "con_seg") {
     const [s1, s2] = stmtMapper(conclusion, ctx) as [Segment, Segment];
-    return (
-      !s1.equals(s2) &&
-      quad.contains(s1) &&
-      quad.contains(s2) &&
-      !s1.contains(s2.p1) &&
-      !s1.contains(s2.p2)
-    );
+    const ref = failReflexStatements(s1, s2);
+    if (!ref.ok) return ref;
+    if (!quad.contains(s1) && !quad.contains(s2)) {
+      return reasonApplicationFail(CONC_NOT_IN_QUAD);
+    }
+    if (!quad.isOppositeSides(s1, s2)) {
+      return reasonApplicationFail(NOT_OPP_SIDES, {
+        pair: [s1.label, s2.label],
+      });
+    }
+    return reasonApplicationOk();
   }
-
-  return false;
+  return reasonApplicationFail(CONC_NOT_IN_QUAD);
 };
 
 export const rect_pgram_ang_check = (
@@ -52,18 +85,17 @@ export const rect_pgram_ang_check = (
   const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
   const [a] = stmtMapper(right, ctx) as [Angle];
   if (!quadContainsAngle(r, a)) {
-    return reasonApplicationFail("NOT_RIGHT_ANGLE", {
-      angle: a.label,
-    });
+    return reasonApplicationFail(ANG_NOT_IN_RECT, { angle: a.label });
   }
   if (!quad.equals(r)) {
-    return reasonApplicationFail("RECT_PGRAM_MISMATCH", {
+    return reasonApplicationFail(RECT_PGRAM_DIFF, {
       rectangle: r.label,
       parallelogram: quad.label,
     });
   }
   return reasonApplicationOk();
 };
+
 // used for both def_parallelogram, pgram_opp_sides and pgram_opp_sides_conv
 // same check logic as the pgram angle check
 export const def_pgram_side_check = (
@@ -81,14 +113,12 @@ export const def_pgram_side_check = (
 
   const checkPair = (pairStmt: Stmt) => {
     const [p1, p2] = stmtMapper(pairStmt, ctx) as [Segment, Segment];
-    if (p1.equals(p2)) {
-      return reasonApplicationFail("REFLEX_STMT_DEP", {
-        pair: [p1.label, p2.label],
-      });
-    }
+    const ref = failReflexStatements(p1, p2);
+    if (!ref.ok) return ref;
+
     // check that p1 and p2 are opposite sides, and p1/p2 are not the same segments
     if (!quad.isOppositeSides(p1, p2)) {
-      return reasonApplicationFail("NOT_OPP_SIDES", {
+      return reasonApplicationFail(NOT_OPP_SIDES, {
         pair: [p1.label, p2.label],
       });
     }
@@ -105,7 +135,7 @@ export const def_pgram_side_check = (
     // special case: this reason expects the same pair of segments to be both congruent and para
     if (reasonName === "pgram_opp_side_para") {
       if (!segmentPairsEqual([ps1, ps2], [ps3, ps4])) {
-        return reasonApplicationFail("PGRAM_MISSING_STMT_PAIR", {
+        return reasonApplicationFail(OPP_PAIR_MISMATCH, {
           pair1: [ps1.label, ps2.label],
           pair2: [ps3.label, ps4.label],
         });
@@ -113,7 +143,7 @@ export const def_pgram_side_check = (
       return reasonApplicationOk();
       // otherwise, make sure that pair 1 and 2 are 2 diff sets of opposite sides
     } else if (segmentPairsEqual([ps1, ps2], [ps3, ps4])) {
-      return reasonApplicationFail("SAME_SEGMENT_PAIR", {
+      return reasonApplicationFail(SAME_OPP_PAIR, {
         pair1: [ps1.label, ps2.label],
         pair2: [ps3.label, ps4.label],
       });
@@ -142,7 +172,7 @@ export const def_pgram_angle_check = (
     if (!reflexCheck.ok) return reflexCheck;
     // check that p1 and p2 are opposite angles
     if (!quad.isOppositeAngles(p1, p2)) {
-      return reasonApplicationFail("NOT_OPP_ANGLES", {
+      return reasonApplicationFail(NOT_OPP_ANGS, {
         pair: [p1.label, p2.label],
       });
     }
@@ -157,7 +187,7 @@ export const def_pgram_angle_check = (
     const [ap1, ap2] = stmtMapper(pair, ctx) as [Angle, Angle];
     const [ap3, ap4] = stmtMapper(pair2, ctx) as [Angle, Angle];
     if (anglePairsEqual([ap1, ap2], [ap3, ap4])) {
-      return reasonApplicationFail("SAME_ANGLE_PAIR", {
+      return reasonApplicationFail(SAME_ANG_PAIR, {
         pair1: [ap1.label, ap2.label],
         pair2: [ap3.label, ap4.label],
       });
@@ -189,7 +219,7 @@ export const pgram_consec_angs_conv_check = (
   if (!reflexCheck2.ok) return reflexCheck2;
 
   if (anglePairsEqual([a1, a2], [a3, a4])) {
-    return reasonApplicationFail("SAME_ANGLE_PAIR", {
+    return reasonApplicationFail(SAME_ANG_PAIR, {
       pair1: [a1.label, a2.label],
       pair2: [a3.label, a4.label],
     });
@@ -197,7 +227,7 @@ export const pgram_consec_angs_conv_check = (
   // Find the shared angle (appears in both supplementary statements)
   const shared = [a1, a2].find((a) => a.equals(a3) || a.equals(a4));
   if (!shared) {
-    return reasonApplicationFail("NOT_CONSEC_ANGLES", {
+    return reasonApplicationFail(NOT_CONSEC, {
       pair1: [a1.label, a2.label],
       pair2: [a3.label, a4.label],
     });
@@ -212,7 +242,7 @@ export const pgram_consec_angs_conv_check = (
     !consecutive.some((a) => a.equals(other1)) ||
     !consecutive.some((a) => a.equals(other2))
   ) {
-    return reasonApplicationFail("NOT_CONSEC_ANGLES", {
+    return reasonApplicationFail(NOT_CONSEC, {
       pair1: [a1.label, a2.label],
       pair2: [a3.label, a4.label],
     });
@@ -235,7 +265,7 @@ export const pgram_consec_check = (
 
   // s1 and s2 must be consecutive sides on the rhombus
   if (!r.isConsecutive(a1, a2)) {
-    return reasonApplicationFail("NOT_CONSEC_ANGS", {
+    return reasonApplicationFail(NOT_CONSEC, {
       a1: a1.label,
       a2: a2.label,
     });
@@ -261,8 +291,11 @@ export const quad_diag_con_check = (
   const reflexCheck = failReflexStatements(s1, s2);
   if (!reflexCheck.ok) return reflexCheck;
 
-  if (!r.isDiagonal(s1) || !r.isDiagonal(s2)) {
-    return reasonApplicationFail("NOT_DIAGONALS", {
+  if (
+    !resolveSegmentForProp(s1, (s) => r.isDiagonal(s)) ||
+    !resolveSegmentForProp(s2, (s) => r.isDiagonal(s))
+  ) {
+    return reasonApplicationFail(NOT_BOTH_DIAG, {
       s1: s1.label,
       s2: s2.label,
     });
@@ -287,14 +320,11 @@ export const pgram_diag_bisect_check = (
   const [b1, b2, p1] = stmtMapper(seg_b1, ctx) as [Segment, Segment, Point];
 
   const validQuadCheck = (s1: Segment, s2: Segment) => {
-    if (s1.equals(s2)) {
-      return reasonApplicationFail("REFLEX_STMT_DEP", {
-        pair: [s1.label, s2.label],
-      });
-    }
-    // s1,s2 should be equal to diagonals of the quadrilateral
+    const ref = failReflexStatements(s1, s2);
+    if (!ref.ok) return ref;
+    // s1,s2 must be exactly the diagonals — no parent/child substitutions
     if (!quad.isDiagonal(s1) || !quad.isDiagonal(s2)) {
-      return reasonApplicationFail("NOT_DIAGONAL", {
+      return reasonApplicationFail(NOT_DIAGONAL, {
         s1: s1.label,
         s2: s2.label,
       });
@@ -310,14 +340,14 @@ export const pgram_diag_bisect_check = (
     ];
     // p1 and p2 should be the same,
     if (!p1.equals(p2)) {
-      return reasonApplicationFail("NOT_SAME_POINT", {
+      return reasonApplicationFail(DIFF_MIDPTS, {
         point1: p1.label,
         point2: p2.label,
       });
     }
     // c1,c2 and b1,b2 should be the same.
     if (!segmentPairsEqual([c1, c2], [b1, b2])) {
-      return reasonApplicationFail("NOT_SAME_SEGMENTS", {
+      return reasonApplicationFail(DIFF_SEG_PAIRS, {
         s1: c1.label,
         s2: b1.label,
         s3: c2.label,
@@ -346,8 +376,11 @@ export const rhombus_kite_diag_check = (
   if (!reflexCheck.ok) return reflexCheck;
 
   // s1, s2 should be diagonals of the quadrilateral
-  if (!r.isDiagonal(s1) || !r.isDiagonal(s2)) {
-    return reasonApplicationFail("NOT_DIAGONAL", {
+  if (
+    !resolveSegmentForProp(s1, (s) => r.isDiagonal(s)) ||
+    !resolveSegmentForProp(s2, (s) => r.isDiagonal(s))
+  ) {
+    return reasonApplicationFail(NOT_DIAGONAL, {
       s1: s1.label,
       s2: s2.label,
     });
@@ -375,12 +408,12 @@ export const rhombus_opp_bisect_check = (
     const [a2, s2] = stmtMapper(ang_b2, ctx) as [Angle, Segment];
     const pg = ctx.getQuadrilateral(pgram.arguments[0].v);
     if (!r.isOppositeAngles(a1, a2)) {
-      return reasonApplicationFail("NOT_OPP_ANGLES", {
+      return reasonApplicationFail(NOT_OPP_ANGS, {
         pair: [a1.label, a2.label],
       });
     }
-    if (!s1.equals(s2) || !r.isDiagonal(s2)) {
-      return reasonApplicationFail("NOT_SAME_DIAGONAL", {
+    if (!s1.equals(s2) || !resolveSegmentForProp(s2, (s) => r.isDiagonal(s))) {
+      return reasonApplicationFail(DIFF_DIAGONAL, {
         s1: s1.label,
         s2: s2.label,
       });
@@ -389,8 +422,8 @@ export const rhombus_opp_bisect_check = (
     return checkQuadrilateralCls(pgram, q, ctx);
   } else {
     // if only one angle/segment pair, just check that they are valid opposite angle and diagonal
-    if (!r.contains(a1) || !r.isDiagonal(s1)) {
-      return reasonApplicationFail("BISECT_NOT_WITHIN_QUAD", {
+    if (!r.contains(a1) || !resolveSegmentForProp(s1, (s) => r.isDiagonal(s))) {
+      return reasonApplicationFail(NOT_IN_QUAD, {
         angle: a1.label,
         segment: s1.label,
       });
@@ -415,7 +448,7 @@ export const rhombus_consec_check = (
 
   // s1 and s2 must be consecutive sides on the rhombus
   if (!r.isConsecutive(s1, s2)) {
-    return reasonApplicationFail("NOT_CONSEC_SIDES", {
+    return reasonApplicationFail(NOT_CONSEC_SIDES, {
       s1: s1.label,
       s2: s2.label,
     });
@@ -446,7 +479,7 @@ export const kite_opp_ang_check = (
   // a1,a2 should equal c1,c2
   // a1,a2 represent the opposite congruent angles of the kite
   if (!anglePairsEqual([a1, a2], [c1, c2]) || !kite.isOppositeAngles(c1, c2)) {
-    return reasonApplicationFail("NOT_OPP_ANGLES", {
+    return reasonApplicationFail(NOT_OPP_ANGS, {
       pair1: [a1.label, a2.label],
       pair2: [c1.label, c2.label],
     });
@@ -472,14 +505,14 @@ export const isos_trap_base_ang_check = (
 
   // a1 and a2 should be a pair of base angles of the trapezoid
   if (!isTrap.isBaseAnglePair(a1, a2)) {
-    return reasonApplicationFail("NOT_BASE_ANGLE_PAIR", {
+    return reasonApplicationFail(NOT_BASE_ANGS, {
       pair: [a1.label, a2.label],
     });
   }
   if (trapPrem) {
     const [tr] = stmtMapper(trapPrem, ctx) as [Quadrilateral];
     if (!tr.equals(isTrap)) {
-      return reasonApplicationFail("TRAP_ISOS_MISMATCH", {
+      return reasonApplicationFail(TRAP_DIFF, {
         trap: tr.label,
         isos_trap: isTrap.label,
       });
@@ -497,7 +530,7 @@ export const checkQuadrilateralCls = (
   const q1 = ctx.getQuadrilateral(quad.arguments[0].v);
   const q2 = ctx.getQuadrilateral(quad2.arguments[0].v);
   if (!q1.equals(q2)) {
-    return reasonApplicationFail("NOT_SAME_QUADRILATERAL", {
+    return reasonApplicationFail(DIFF_QUADS, {
       quad1: q1.label,
       quad2: q2.label,
     });

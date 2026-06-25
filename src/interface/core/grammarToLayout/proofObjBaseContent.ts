@@ -43,10 +43,17 @@ export const seedBaseContentFromPremises = (
     if (p1 && p2 && p3) ctx.addTriangle({ pts: [p1.obj, p2.obj, p3.obj] });
   });
 
-  pcCtx.rectangles.forEach((quad) => {
+  pcCtx.quads.forEach((quad) => {
     const [p1, p2, p3, p4] = quad.p.map((p) => ctx.getPoint(p.label));
     if (p1 && p2 && p3 && p4)
       ctx.addQuadrilateral({ pts: [p1.obj, p2.obj, p3.obj, p4.obj] });
+  });
+
+  pcCtx.circles.forEach((circle) => {
+    const center = ctx.getPoint(circle.center.label);
+    const radius = ctx.getPoint(circle.radius.label);
+    if (center && radius)
+      ctx.addCircle({ center: center.obj, radius: radius.obj });
   });
 
   return ctx;

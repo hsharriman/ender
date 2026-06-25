@@ -17,9 +17,6 @@ const createMiniCtxForCandidate = (
       ...(slot.visualRef ? [slot.visualRef] : []),
     ]),
   ]);
-  const miniSegments = baseCtx.segments;
-  const miniAngles = baseCtx.angles;
-  const miniTriangles = baseCtx.triangles;
 
   const matchesAny = (obj: {
     matches: (label: string) => boolean;
@@ -27,29 +24,27 @@ const createMiniCtxForCandidate = (
     return Array.from(miniRefs).some((ref) => obj.matches(ref));
   };
 
-  miniSegments.forEach((segment) => {
-    const relevant = matchesAny(segment.obj);
-    segment.mode(frame, relevant ? SVGModes.ReliesOn : SVGModes.Unfocused);
-  });
-  miniAngles.forEach((angle) => {
-    const relevant = matchesAny(angle.obj);
-    angle.mode(frame, relevant ? SVGModes.ReliesOn : SVGModes.Unfocused);
-  });
-  miniTriangles.forEach((triangle) => {
-    const relevant = matchesAny(triangle.obj);
-    triangle.mode(frame, relevant ? SVGModes.ReliesOn : SVGModes.Unfocused);
-  });
-  baseCtx.points.forEach((point) => {
-    const relevant = matchesAny(point.obj);
-    point.mode(frame, relevant ? SVGModes.ReliesOn : SVGModes.Unfocused);
+  [
+    baseCtx.segments,
+    baseCtx.angles,
+    baseCtx.triangles,
+    baseCtx.circles,
+    baseCtx.quads,
+    baseCtx.points,
+  ].forEach((collection) => {
+    collection.forEach((obj) => {
+      const relevant = matchesAny(obj.obj);
+      obj.mode(frame, relevant ? SVGModes.ReliesOn : SVGModes.Unfocused);
+    });
   });
 
   return {
     points: baseCtx.points,
-    segments: miniSegments,
-    angles: miniAngles,
-    triangles: miniTriangles,
-    rectangles: [],
+    segments: baseCtx.segments,
+    angles: baseCtx.angles,
+    triangles: baseCtx.triangles,
+    quads: baseCtx.quads,
+    circles: baseCtx.circles,
     frames: [frame],
     deps: new Map<string, Set<string>>(),
   };

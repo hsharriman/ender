@@ -1,10 +1,57 @@
 import { Angle, Point, ProofContent, Segment } from "../../../geometry-object";
-import { Stmt } from "../../types/checkerTypes";
+import { ParseDiagramStmt, Stmt } from "../../types/checkerTypes";
 import { stmtMapper } from "./argMappers";
-import { findDuplicateDependencyStatements } from "./utils";
+import {
+  DiagramResult,
+  ReasonApplicationResult,
+  diagramFail,
+  diagramOk,
+  reasonApplicationFail,
+  reasonApplicationOk,
+} from "./reasonResult";
+import {
+  failReflexStatements,
+  findDuplicateDependencyStatements,
+  rightAngleOnPerp,
+} from "./utils";
 
-export const reflex_s = (s1: Segment, s2: Segment) => {
-  return s1.equals(s2);
+const SEG_NOT_EQUAL = "segs_are_not_equal";
+const NO_ALT_INT = "no_transversal_produces_alt_int_angles";
+const NO_ALT_EXT = "no_transversal_produces_alt_ext_angles";
+const NO_SAMESIDE = "no_transversal_produces_same_side_int_angles";
+const NO_CORRESP = "no_transversal_produces_corresp_angles";
+const NO_MIDPT = "segs_not_subsegments_meeting_at_midpt";
+const DUPE_STMT = "dupe_stmt_supplied";
+const NO_INTERSECT = "points_do_not_share_intersection_on_both_segs";
+const NO_PERP_PT = "no_intersect_pt_in_perp_stmt";
+
+const NOT_ADJ_PERP = "angles_not_adj_at_perp";
+const MIDPT_NOT_PERP = "midpt_not_at_perp_intersection";
+const BAD_BISECT = "bisected_halves_dont_match_con_segs";
+const TRANSVERSAL_BAD =
+  "transversal_angles_or_parallel_segs_dont_form_valid_config";
+const ALT_INT_CTR = "alt_int_angle_ctrs_not_at_inner_intersections";
+const ALT_INT_INWARD = "alt_int_angles_not_directed_inward";
+const ALT_INT_SIDES = "alt_int_angles_not_on_alternating_sides";
+const ALT_EXT_ENDPT = "alt_ext_transversal_endpt_at_intersection";
+const ALT_EXT_LINE = "alt_ext_intersections_not_on_transversal_line";
+const ALT_EXT_OUTER = "alt_ext_angle_ctrs_or_rays_not_at_outer_pts";
+const ALT_EXT_SIDES = "alt_ext_angles_not_on_alternating_sides";
+const SS_CTR = "same_side_angle_ctrs_not_at_intersections";
+const SS_INWARD = "same_side_angles_not_directed_inward";
+const SS_SIDE = "same_side_angles_not_on_same_side";
+const CORRESP_ENDPT = "corresp_transversal_endpt_at_intersection";
+const CORRESP_LINE = "corresp_intersections_not_on_transversal_line";
+const CORRESP_CTR = "corresp_angle_ctrs_not_at_intersections";
+const CORRESP_DIR = "corresp_angles_not_in_corresponding_directions";
+const CORRESP_SIDE = "corresp_angles_not_on_same_side";
+
+export const reflex_s = (s1: Segment, s2: Segment): ReasonApplicationResult => {
+  if (s1.equals(s2)) return reasonApplicationOk();
+  return reasonApplicationFail(SEG_NOT_EQUAL, {
+    seg1: s1.label,
+    seg2: s2.label,
+  });
 };
 
 export const altint = (
@@ -12,28 +59,43 @@ export const altint = (
   transversal: Stmt,
   para: Stmt,
   ctx: ProofContent,
-): boolean => {
+): DiagramResult => {
   const res = transversalHelper(ctx, transversal, conAng, para);
-  if (!res.ok) return false;
-  const [s1p1, s1p2, , , s2p1, s2p2, ,] = res.pts;
+  if (!res.ok) return diagramFail(TRANSVERSAL_BAD);
+
+  const [s1p1, s1p2, , , s2p1, s2p2] = res.pts;
   const [, innerT] = res.segs;
   const [a1, a2] = res.angles;
 
-  // the corner of each angle must be on transversal
-  if (a1.centerEquals(innerT.p1) && a2.centerEquals(innerT.p2)) {
-    // one of the angle's points must be on the transversal
-    if (a1.contains(innerT.p2) && a2.contains(innerT.p1)) {
-      // if a1 contains s1p1 as endpoint then a2 must contain s2p2
-      // opposite angles check
-      if (
-        (a1.contains(s1p1) && a2.contains(s2p2)) ||
-        (a1.contains(s1p2) && a2.contains(s2p1))
-      ) {
-        return true;
-      }
-    }
+  if (!a1.centerEquals(innerT.p1) || !a2.centerEquals(innerT.p2))
+    return diagramFail(ALT_INT_CTR);
+
+  if (!a1.contains(innerT.p2) || !a2.contains(innerT.p1))
+    return diagramFail(ALT_INT_INWARD);
+
+  if (
+    (a1.contains(s1p1) && a2.contains(s2p2)) ||
+    (a1.contains(s1p2) && a2.contains(s2p1))
+  )
+    return diagramOk();
+
+  return diagramFail(ALT_INT_SIDES);
+};
+
+export const check_altint = (
+  conAng: Stmt,
+  para: Stmt,
+  transversals: ParseDiagramStmt[],
+  ctx: ProofContent,
+): DiagramResult => {
+  const matches: ParseDiagramStmt[] = [];
+  let lastFailure: DiagramResult = diagramFail(NO_ALT_INT);
+  for (const d of transversals) {
+    const r = altint(conAng, d.statement, para, ctx);
+    if (r.ok) matches.push(d);
+    else lastFailure = r;
   }
-  return false;
+  return matches.length > 0 ? diagramOk(matches) : lastFailure;
 };
 
 export const altext = (
@@ -41,37 +103,49 @@ export const altext = (
   transversal: Stmt,
   para: Stmt,
   ctx: ProofContent,
-): boolean => {
+): DiagramResult => {
   const res = transversalHelper(ctx, transversal, conAng, para);
-  if (!res.ok) return false;
+  if (!res.ok) return diagramFail(TRANSVERSAL_BAD);
+
   const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = res.pts;
   const [t] = res.segs;
   const [a1, a2] = res.angles;
 
-  // cannot work if the transversal's endpoints are the intersections with s1 and/or s2.
-  if (t1.equals(i1) || t2.equals(i2)) {
-    return false;
-  }
+  if (t1.equals(i1) || t2.equals(i2)) return diagramFail(ALT_EXT_ENDPT);
 
-  //check that int points are on the transversal
-  const segmentCheck = i1.isOnLine(t) && i2.isOnLine(t);
+  if (!i1.isOnLine(t) || !i2.isOnLine(t)) return diagramFail(ALT_EXT_LINE);
 
-  let angleCheck = false;
-  // the corner of each angle must be intersections of transversal
-  if (a1.centerEquals(i1) && a2.centerEquals(i2)) {
-    // each angle's endpoint must be the transversal's endpoint
-    if (a1.contains(t1) && a2.contains(t2)) {
-      // if a1 contains s1p1 as endpoint then a2 must contain s2p2, vice versa
-      // opposite angles check
-      if (
-        (a1.contains(s1p1) && a2.contains(s2p2)) ||
-        (a1.contains(s1p2) && a2.contains(s2p1))
-      ) {
-        angleCheck = true;
-      }
-    }
+  if (
+    !a1.centerEquals(i1) ||
+    !a2.centerEquals(i2) ||
+    !a1.contains(t1) ||
+    !a2.contains(t2)
+  )
+    return diagramFail(ALT_EXT_OUTER);
+
+  if (
+    (a1.contains(s1p1) && a2.contains(s2p2)) ||
+    (a1.contains(s1p2) && a2.contains(s2p1))
+  )
+    return diagramOk();
+
+  return diagramFail(ALT_EXT_SIDES);
+};
+
+export const check_altext = (
+  conAng: Stmt,
+  para: Stmt,
+  transversals: ParseDiagramStmt[],
+  ctx: ProofContent,
+): DiagramResult => {
+  const matches: ParseDiagramStmt[] = [];
+  let lastFailure: DiagramResult = diagramFail(NO_ALT_EXT);
+  for (const d of transversals) {
+    const r = altext(conAng, d.statement, para, ctx);
+    if (r.ok) matches.push(d);
+    else lastFailure = r;
   }
-  return segmentCheck && angleCheck;
+  return matches.length > 0 ? diagramOk(matches) : lastFailure;
 };
 
 export const sameside = (
@@ -79,85 +153,112 @@ export const sameside = (
   transversal: Stmt,
   para: Stmt,
   ctx: ProofContent,
-): boolean => {
+): DiagramResult => {
   const res = transversalHelper(ctx, transversal, supplementary, para);
-  if (!res.ok) return false;
+  if (!res.ok) return diagramFail(TRANSVERSAL_BAD);
+
   const [s1p1, s1p2, , i1, s2p1, s2p2, , i2] = res.pts;
   const [a1, a2] = res.angles;
 
-  // the corner of each angle must be on transversal
-  if (a1.centerEquals(i1) && a2.centerEquals(i2)) {
-    // each angle's endpoint must be the other intersection pt
-    if (a1.contains(i2) && a2.contains(i1)) {
-      // same-side check: if a1 contains s1p1 as endpoint then a2 must contain s2p1, vice versa
-      if (
-        (a1.contains(s1p1) && a2.contains(s2p1)) ||
-        (a1.contains(s1p2) && a2.contains(s2p2))
-      ) {
-        return true;
-      }
-    }
-  }
-  return false;
+  if (!a1.centerEquals(i1) || !a2.centerEquals(i2)) return diagramFail(SS_CTR);
+
+  if (!a1.contains(i2) || !a2.contains(i1)) return diagramFail(SS_INWARD);
+
+  if (
+    (a1.contains(s1p1) && a2.contains(s2p1)) ||
+    (a1.contains(s1p2) && a2.contains(s2p2))
+  )
+    return diagramOk();
+
+  return diagramFail(SS_SIDE);
 };
 
-// TODO
+export const check_sameside = (
+  supAng: Stmt,
+  para: Stmt,
+  transversals: ParseDiagramStmt[],
+  ctx: ProofContent,
+): DiagramResult => {
+  const matches: ParseDiagramStmt[] = [];
+  let lastFailure: DiagramResult = diagramFail(NO_SAMESIDE);
+  for (const d of transversals) {
+    const r = sameside(supAng, d.statement, para, ctx);
+    if (r.ok) matches.push(d);
+    else lastFailure = r;
+  }
+  return matches.length > 0 ? diagramOk(matches) : lastFailure;
+};
+
 export const corresp_ang = (
   conAng: Stmt,
   transversal: Stmt,
   para: Stmt,
   ctx: ProofContent,
-): boolean => {
+): DiagramResult => {
   const res = transversalHelper(ctx, transversal, conAng, para);
-  if (!res.ok) return false;
+  if (!res.ok) return diagramFail(TRANSVERSAL_BAD);
+
   const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = res.pts;
   const [t] = res.segs;
   const [a1, a2] = res.angles;
 
-  // cannot work if the transversal's endpoints are the intersections with s1 and/or s2.
-  if (t1.equals(i1) || t2.equals(i2)) {
-    return false;
-  }
+  if (t1.equals(i1) || t2.equals(i2)) return diagramFail(CORRESP_ENDPT);
 
-  //check that intersection points are on the transversal
-  const segmentCheck = i1.isOnLine(t) && i2.isOnLine(t);
+  if (!i1.isOnLine(t) || !i2.isOnLine(t)) return diagramFail(CORRESP_LINE);
 
-  // the corner of each angle must be the intersection of transversal
-  let angleCheck = a1.centerEquals(i1) && a2.centerEquals(i2);
+  if (!a1.centerEquals(i1) || !a2.centerEquals(i2))
+    return diagramFail(CORRESP_CTR);
 
-  // one angle always has the other angle as an endpoint, and the other has the closest transversal endpoint as endpt
-  // both angle's 3rd endpoint must face the same direction
-
-  // case 1: a1 contains i2; case 2: a2 contains i1
   if (
-    (a1.contains(i2) && a2.contains(t2)) ||
-    (a2.contains(i1) && a1.contains(t1))
-  ) {
-    // if a1 contains s1p1 as endpoint then a2 must contain s2p1 or vice versa
-    if (
-      (a1.contains(s1p1) && a2.contains(s2p1)) ||
-      (a1.contains(s1p2) && a2.contains(s2p2))
-    ) {
-      angleCheck = true;
-    }
-  }
-  return segmentCheck && angleCheck;
+    !(
+      (a1.contains(i2) && a2.contains(t2)) ||
+      (a2.contains(i1) && a1.contains(t1))
+    )
+  )
+    return diagramFail(CORRESP_DIR);
+
+  if (
+    (a1.contains(s1p1) && a2.contains(s2p1)) ||
+    (a1.contains(s1p2) && a2.contains(s2p2))
+  )
+    return diagramOk();
+
+  return diagramFail(CORRESP_SIDE);
 };
 
-export const midpt = (conSeg: Stmt, midPt: Stmt, ctx: ProofContent) => {
-  const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
-  if (s1.equals(s2)) return false;
-  const [bigSeg, midpt] = stmtMapper(midPt, ctx) as [Segment, Point];
+export const check_corresp_ang = (
+  conAng: Stmt,
+  para: Stmt,
+  transversals: ParseDiagramStmt[],
+  ctx: ProofContent,
+): DiagramResult => {
+  const matches: ParseDiagramStmt[] = [];
+  let lastFailure: DiagramResult = diagramFail(NO_CORRESP);
+  for (const d of transversals) {
+    const r = corresp_ang(conAng, d.statement, para, ctx);
+    if (r.ok) matches.push(d);
+    else lastFailure = r;
+  }
+  return matches.length > 0 ? diagramOk(matches) : lastFailure;
+};
 
-  // segments declared to be congruent and be part of the line declared to be bisected
+export const midpt = (
+  conSeg: Stmt,
+  midPt: Stmt,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
+  const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
+  const ref = failReflexStatements(s1, s2);
+  if (!ref.ok) return ref;
+  const [bigSeg, midPtObj] = stmtMapper(midPt, ctx) as [Segment, Point];
+
   const segmentsEqual =
     s1.getParentSegments().has(bigSeg) && s2.getParentSegments().has(bigSeg);
-
-  // segments must contain midpoint, not be equal
   const segmentCheck =
-    s1.contains(midpt) && s2.contains(midpt) && !s1.equals(s2);
+    s1.contains(midPtObj) && s2.contains(midPtObj) && !s1.equals(s2);
 
-  return segmentsEqual && segmentCheck;
+  if (segmentsEqual && segmentCheck) return reasonApplicationOk();
+  return reasonApplicationFail(NO_MIDPT);
 };
 
 export const intersect_seg = (
@@ -165,76 +266,94 @@ export const intersect_seg = (
   int_on2: Stmt,
   int_seg: Stmt,
   ctx: ProofContent,
-): boolean => {
+): ReasonApplicationResult => {
   if (findDuplicateDependencyStatements([int_on1, int_on2, int_seg])) {
-    return false;
+    return reasonApplicationFail(DUPE_STMT);
   }
   const [, p1] = stmtMapper(int_on1, ctx) as [Segment, Point];
   const [, p2] = stmtMapper(int_on2, ctx) as [Segment, Point];
-
-  const [in1, in2, inpt] = stmtMapper(int_seg, ctx) as [Segment, Segment, Point];
-  return p1 === p2 && p1.isOnLine(in1) && p1.isOnLine(in2) && p1 === inpt;
+  const [in1, in2, inpt] = stmtMapper(int_seg, ctx) as [
+    Segment,
+    Segment,
+    Point,
+  ];
+  if (p1 === p2 && p1.isOnLine(in1) && p1.isOnLine(in2) && p1 === inpt)
+    return reasonApplicationOk();
+  return reasonApplicationFail(NO_INTERSECT);
 };
 
-export const perp = (right: Stmt, perp: Stmt, ctx: ProofContent): boolean => {
-  const [angle] = stmtMapper(right, ctx) as [Angle];
-  const [s1, s2, intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
-  if (!intersectPt) return false;
-
-  // angle vertex must be at the intersection; one ray on each segment
-  const startLabel = angle.start.label;
-  const endLabel = angle.end.label;
-  return (
-    angle.centerEquals(intersectPt) &&
-    ((s1.label.includes(startLabel) && s2.label.includes(endLabel)) ||
-      (s2.label.includes(startLabel) && s1.label.includes(endLabel)))
-  );
+export const perp = (
+  rightStmt: Stmt,
+  perpStmt: Stmt,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
+  const [angle] = stmtMapper(rightStmt, ctx) as [Angle];
+  const [s1, s2, intersectPt] = stmtMapper(perpStmt, ctx) as [
+    Segment,
+    Segment,
+    Point,
+  ];
+  if (!intersectPt) return reasonApplicationFail(NO_PERP_PT);
+  return rightAngleOnPerp(angle, s1, s2, intersectPt, ctx);
 };
 
-export const perp_con_ang = (perp: Stmt, conAng: Stmt, ctx: ProofContent) => {
-  if (findDuplicateDependencyStatements([perp, conAng])) return false;
-  const [s1, s2, intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
+export const perp_con_ang = (
+  perpStmt: Stmt,
+  conAng: Stmt,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
+  if (findDuplicateDependencyStatements([perpStmt, conAng]))
+    return reasonApplicationFail(DUPE_STMT);
+  const [s1, s2, intersectPt] = stmtMapper(perpStmt, ctx) as [
+    Segment,
+    Segment,
+    Point,
+  ];
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
-  if (!intersectPt) return false;
 
-  if (!a1.centerEquals(intersectPt) || !a2.centerEquals(intersectPt))
-    return false;
+  const r1 = rightAngleOnPerp(a1, s1, s2, intersectPt, ctx);
+  if (!r1.ok) return r1;
+  const r2 = rightAngleOnPerp(a2, s1, s2, intersectPt, ctx);
+  if (!r2.ok) return r2;
 
-  const sharedSideTest = a1.sharedSide(a2);
-  if (!sharedSideTest) return false;
-  const sharedSeg = ctx.getSegment(sharedSideTest.shared);
-  if (!sharedSeg || (!sharedSeg.equals(s1) && !sharedSeg.equals(s2)))
-    return false;
-
-  return (
-    a1.contains(ctx.getPoint(sharedSideTest.thisThird)) &&
-    a2.contains(ctx.getPoint(sharedSideTest.otherThird))
-  );
+  // Angles must be adjacent: they share a common outer-ray endpoint
+  // (distinguishes adjacent right angles from vertical right angles).
+  for (const n1 of a1.names) {
+    for (const n2 of a2.names) {
+      const outer1 = new Set([n1[0], n1[2]]);
+      if (outer1.has(n2[0]) || outer1.has(n2[2])) return reasonApplicationOk();
+    }
+  }
+  return reasonApplicationFail(NOT_ADJ_PERP);
 };
 
 export const perp_bisector = (
-  perp: Stmt,
-  midpt: Stmt,
+  perpStmt: Stmt,
+  midptStmt: Stmt,
   conSeg: Stmt,
   ctx: ProofContent,
-) => {
-  if (findDuplicateDependencyStatements([perp, conSeg])) return false;
-  const [, , intersectPt] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
-  const [m, p] = stmtMapper(midpt, ctx) as [Segment, Point];
+): ReasonApplicationResult => {
+  if (findDuplicateDependencyStatements([perpStmt, conSeg]))
+    return reasonApplicationFail(DUPE_STMT);
+  const [, , intersectPt] = stmtMapper(perpStmt, ctx) as [
+    Segment,
+    Segment,
+    Point,
+  ];
+  const [m, p] = stmtMapper(midptStmt, ctx) as [Segment, Point];
   const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
 
-  if (!intersectPt) return false;
+  if (!intersectPt) return reasonApplicationFail(NO_PERP_PT);
+  if (!p.equals(intersectPt)) return reasonApplicationFail(MIDPT_NOT_PERP);
 
-  // p must equal the intersection point stated in the perp premise
-  if (!p.equals(intersectPt)) return false;
-
-  // m divided by p must give exactly s1 and s2
   const mDivided1 = ctx.getSegment(`${m.p1.label}${p.label}`);
   const mDivided2 = ctx.getSegment(`${m.p2.label}${p.label}`);
-  return (
+  if (
     (s1.equals(mDivided1) && s2.equals(mDivided2)) ||
     (s1.equals(mDivided2) && s2.equals(mDivided1))
-  );
+  )
+    return reasonApplicationOk();
+  return reasonApplicationFail(BAD_BISECT);
 };
 
 const transversalHelper = (
@@ -248,7 +367,10 @@ const transversalHelper = (
   if (a1.equals(a2)) {
     ok = false;
   }
-  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = stmtMapper(transversal, ctx) as Point[];
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = stmtMapper(
+    transversal,
+    ctx,
+  ) as Point[];
   const [s1, s2, t, innerT] = [
     ctx.getSegment(`${s1p1.label}${s1p2.label}`),
     ctx.getSegment(`${s2p1.label}${s2p2.label}`),
@@ -261,18 +383,14 @@ const transversalHelper = (
   let [pa1, pa2] = para.arguments.map((arg) => ctx.getSegment(arg.v));
 
   if (pa1.equals(s2) && pa2.equals(s1)) {
-    // reassign so p1 and p2 correspond to s1 and s2
     [pa1, pa2] = [pa2, pa1];
   }
   if (!pa1.equals(s1) && !pa2.equals(s2)) {
     ok = false;
   }
-  // reaassign so that a1 is on s1 and a2 is on s2
   if (a1.centerEquals(i2) && a2.centerEquals(i1)) {
     [a1, a2] = [a2, a1];
   }
-  // parallel lines must not be equal, or equal to transversal.
-  // intersection pts must be on the parallel lines
   if (
     pa1.equals(pa2) ||
     pa1.equals(t) ||

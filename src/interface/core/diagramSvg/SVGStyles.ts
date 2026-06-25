@@ -2,9 +2,9 @@ export const ModeCSS = {
   HIDDEN: "opacity-0",
   DEFAULT: "stroke-black stroke-2 fill-none opacity-1",
   UNFOCUSED: "opacity-50 stroke-black stroke-1 fill-none",
-  DERIVED: "stroke-blue-500 stroke-[3px]",
-  RELIES: "stroke-black stroke-[3px]",
-  INCONSISTENT: "stroke-red-500 stroke-[3px]",
+  DERIVED: "stroke-blue-500 stroke-[3px] fill-none",
+  RELIES: "stroke-black stroke-[3px] fill-none",
+  INCONSISTENT: "stroke-red-500 stroke-[3px] fill-none",
 
   // for text/fills in single-diagram
   UNFOCUSEDFILL: "opacity-30 fill-black",

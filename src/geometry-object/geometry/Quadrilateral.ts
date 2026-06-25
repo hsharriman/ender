@@ -111,22 +111,20 @@ export class Quadrilateral extends BaseGeometryObject {
   };
 
   isOppositeSides = (s1: Segment, s2: Segment) => {
-    const opp1Set = new Set([this.s[0].label, this.s[2].label]);
-    const opp2Set = new Set([this.s[1].label, this.s[3].label]);
+    const inOpp1 = (s: Segment) => this.s[0].equals(s) || this.s[2].equals(s);
+    const inOpp2 = (s: Segment) => this.s[1].equals(s) || this.s[3].equals(s);
     return (
       !s1.equals(s2) &&
-      ((opp1Set.has(s1.label) && opp1Set.has(s2.label)) ||
-        (opp2Set.has(s1.label) && opp2Set.has(s2.label)))
+      ((inOpp1(s1) && inOpp1(s2)) || (inOpp2(s1) && inOpp2(s2)))
     );
   };
 
   isOppositeAngles = (a1: Angle, a2: Angle) => {
-    const opp1Set = new Set([this.a[0].label, this.a[2].label]);
-    const opp2Set = new Set([this.a[1].label, this.a[3].label]);
+    const inOpp1 = (a: Angle) => this.a[0].equals(a) || this.a[2].equals(a);
+    const inOpp2 = (a: Angle) => this.a[1].equals(a) || this.a[3].equals(a);
     return (
       !a1.equals(a2) &&
-      ((opp1Set.has(a1.label) && opp1Set.has(a2.label)) ||
-        (opp2Set.has(a1.label) && opp2Set.has(a2.label)))
+      ((inOpp1(a1) && inOpp1(a2)) || (inOpp2(a1) && inOpp2(a2)))
     );
   };
 
@@ -158,15 +156,17 @@ export class Quadrilateral extends BaseGeometryObject {
   };
 
   isBaseAnglePair = (a1: Angle, a2: Angle) => {
-    const consecutive = this.consecutiveAngles(a1.label);
-    const trapBases = this.trapezoidBases();
-    if (!consecutive || !trapBases) return false;
-    const [b1, b2] = trapBases;
-    // base angles must have a shared side that is one of the 2 base segments
-    const sharedSide = a1.sharedSide(a2);
-    if (!sharedSide || (sharedSide.shared !== b1 && sharedSide.shared !== b2)) {
+    if (!this.a.some((a) => a.equals(a1)) || !this.a.some((a) => a.equals(a2)))
       return false;
-    }
-    return true;
+    const trapBases = this.trapezoidBases();
+    if (!trapBases) return false;
+    const [b1, b2] = trapBases;
+    const sharedSide = a1.sharedSide(a2);
+    if (!sharedSide) return false;
+    const rev = (s: string) => s.split("").reverse().join("");
+    return (
+      sharedSide.shared === b1 || sharedSide.shared === rev(b1) ||
+      sharedSide.shared === b2 || sharedSide.shared === rev(b2)
+    );
   };
 }

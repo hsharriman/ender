@@ -1,5 +1,7 @@
 import { ProofObj, ProofStep, Stmt } from "checker/types/checkerTypes";
 import { ProofContent } from "geometry-object";
+import { DiagramContent } from "../builder/DiagramContent";
+import { seedBaseContentFromPremises } from "./proofObjBaseContent";
 import React from "react";
 import { reasonFromFunction } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
@@ -9,12 +11,11 @@ import { VerticalAngles } from "../reasons/VerticalAngles";
 import { SVGModes } from "../types/diagramTypes";
 import { LayoutProps } from "../types/layoutTypes";
 import { StepMeta } from "../types/stepTypes";
-import { seedBaseContentFromPremises } from "./proofObjBaseContent";
 import {
   applyPremisesObjects,
   applyStmtAdditions,
   buildCongruenceTickTracker,
-} from "./proofObjObjectApplication";
+} from "./proofObjDiagramAdditions";
 import { stmtListToText, stmtToText } from "./proofObjText";
 
 const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
@@ -26,6 +27,7 @@ const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
 export const interactiveLayoutFromProofObj = (
   proof: ProofObj,
   ctx: ProofContent,
+  diagramCtx: DiagramContent,
   incorrectSteps?: Set<string>,
 ): LayoutProps => {
   const givenSteps = proof.steps.filter((s) => s.type === "given");
@@ -38,21 +40,29 @@ export const interactiveLayoutFromProofObj = (
   // const isVertAngReason = (reasonFunction?: string): boolean =>
   //   (reasonFunction ?? "").toLowerCase() === "vert_ang";
 
-  const tickTracker = buildCongruenceTickTracker([
-    ...givenSteps.map((s) => s.statement),
-    ...proofSteps.map((s) =>
-      s.statement?.function === "con_ang" && isConRightStmt(s.statement)
-        ? undefined
-        : s.statement,
-    ),
-    proveStmt,
-  ]);
+  const tickTracker = buildCongruenceTickTracker(
+    [
+      ...givenSteps.map((s) => s.statement),
+      ...proofSteps.map((s) =>
+        s.statement?.function === "con_ang" && isConRightStmt(s.statement)
+          ? undefined
+          : s.statement,
+      ),
+      proveStmt,
+    ],
+    diagramCtx,
+  );
   const applyStmtObjects = applyStmtAdditions(tickTracker);
 
   const premisesSummary = (isActive: boolean) => {
     const entries: Array<(active: boolean) => JSX.Element> = [];
     if (givenSteps.length > 0) {
-      entries.push(stmtListToText(givenSteps.map((s) => s.statement)));
+      entries.push(
+        stmtListToText(
+          givenSteps.map((s) => s.statement),
+          ctx,
+        ),
+      );
     }
     if (entries.length === 0) return React.createElement("span", null, "");
     return React.createElement(
@@ -79,7 +89,7 @@ export const interactiveLayoutFromProofObj = (
   const provesMeta = makeStepMeta({
     reason: reasonFromFunction(),
     prevStep: givensMeta,
-    text: stmtToText(proveStmt),
+    text: stmtToText(proveStmt, ctx),
     additions: ({ ctx, frame }) =>
       applyStmtObjects(ctx, frame, SVGModes.Derived, proveStmt),
   });
@@ -132,7 +142,7 @@ export const interactiveLayoutFromProofObj = (
     const isRightAngleEqualityStep = isConRightStmt(step.statement);
     // Diagram premises for reasons with `diagramDependencies` are attached only
     // after `checkReasonApplication` in `runProofChecker`.
-    const intersectSegDep = step.diagramDeps?.find(
+    const intSegDep = step.diagramDeps?.find(
       (d) => d.statement.function === "intersect_seg",
     );
     const transversalDeps =
@@ -152,7 +162,7 @@ export const interactiveLayoutFromProofObj = (
       isIncorrect,
       prevStep,
       dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
-      text: stmtToText(step.statement),
+      text: stmtToText(step.statement, ctx),
       additions: ({ ctx, frame, mode }) => {
         applyStmtObjects(ctx, frame, mode, step.statement, {
           isRightAngleEquality: isRightAngleEqualityStep,
@@ -168,8 +178,8 @@ export const interactiveLayoutFromProofObj = (
                 }),
               );
 
-              if (intersectSegDep) {
-                const [s1, s2, p] = intersectSegDep.statement.arguments.map(
+              if (intSegDep) {
+                const [s1, s2, p] = intSegDep.statement.arguments.map(
                   (a) => a.v,
                 );
                 VerticalAngles.highlight({ ctx, frame }, s1, s2, p);

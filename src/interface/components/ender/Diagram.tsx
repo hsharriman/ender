@@ -1,3 +1,4 @@
+import { SVGGeoCircle } from "interface/core/diagramSvg/SVGGeoCircle";
 import React from "react";
 import { LinePatternDefs } from "../../core/diagramSvg/LinePattern";
 import { SVGGeoAngle } from "../../core/diagramSvg/SVGGeoAngle";
@@ -29,6 +30,10 @@ export class Diagram extends React.Component<DiagramProps> {
     this.svgId = `svg-object-${props.svgIdSuffix}`;
   }
 
+  private geoId = (objId: string, layer: number) => `${objId}.${layer}`;
+  private keyId = (objId: string, layer: number, idx: number) =>
+    `${objId}-${idx}-${layer}`;
+
   renderPoints = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
     return ctx.points.flatMap((p, i) => {
       let setMode = p.modes.get(frame);
@@ -38,10 +43,10 @@ export class Diagram extends React.Component<DiagramProps> {
         : (setMode ?? SVGModes.Hidden);
       return (
         <SVGGeoPoint
-          geoId={`${p.obj.id}.${layer}`}
+          geoId={this.geoId(p.obj.id, layer)}
           mode={mode}
           hoverable={false}
-          key={`${p.obj.id}-${i}.${layer}`}
+          key={this.keyId(p.obj.id, layer, i)}
           {...{
             p: p.obj.labeled(),
             offset: p.offset,
@@ -62,7 +67,7 @@ export class Diagram extends React.Component<DiagramProps> {
         : (seg.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoSegment
-          geoId={`${seg.obj.id}.${layer}`}
+          geoId={this.geoId(seg.obj.id, layer)}
           mode={mode}
           hoverable={false}
           {...{
@@ -70,7 +75,7 @@ export class Diagram extends React.Component<DiagramProps> {
             s: seg.obj.labeled(),
             tick: seg.ticks.get(frame),
           }}
-          key={`${seg.obj.id}-${i}.${layer}`}
+          key={this.keyId(seg.obj.id, layer, i)}
           isHighlight={layer === 1}
         />
       );
@@ -85,14 +90,14 @@ export class Diagram extends React.Component<DiagramProps> {
       return (
         <SVGGeoAngle
           mode={mode}
-          geoId={`${ang.obj.id}.${layer}`}
+          geoId={this.geoId(ang.obj.id, layer)}
           hoverable={false}
           {...{
             a: ang.obj.labeled(),
             miniScale: this.props.miniScale,
             tick: ang.ticks.get(frame),
           }}
-          key={`${ang.obj.id}-${i}.${layer}`}
+          key={this.keyId(ang.obj.id, layer, i)}
           isHighlight={layer === 1}
         />
       );
@@ -106,16 +111,35 @@ export class Diagram extends React.Component<DiagramProps> {
         : (tri.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoTriangle
-          geoId={`${tri.obj.id}.${layer}`}
+          geoId={this.geoId(tri.obj.id, layer)}
           hoverable={false}
           {...{
             miniScale: this.props.miniScale,
             t: tri.obj,
           }}
-          key={`${tri.obj.id}-${i}.${layer}`}
+          key={this.keyId(tri.obj.id, layer, i)}
           mode={mode}
           rotate={tri.rotatePattern}
+          similar={!this.props.isStatic && tri.similar.has(frame)}
           congruent={!this.props.isStatic && tri.congruent.has(frame)}
+          isHighlight={layer === 1}
+        />
+      );
+    });
+  };
+
+  renderCircles = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
+    return ctx.circles.flatMap((circle, i) => {
+      const mode = this.props.isStatic
+        ? SVGModes.Default
+        : (circle.modes.get(frame) ?? SVGModes.Hidden);
+      return (
+        <SVGGeoCircle
+          geoId={this.geoId(circle.obj.id, layer)}
+          mode={mode}
+          hoverable={false}
+          {...{ c: circle.obj.labeled(), miniScale: this.props.miniScale }}
+          key={this.keyId(circle.obj.id, layer, i)}
           isHighlight={layer === 1}
         />
       );
@@ -128,6 +152,7 @@ export class Diagram extends React.Component<DiagramProps> {
         {this.renderSegments(ctx, this.props.activeFrame, layer)}
         {this.renderTriangles(ctx, this.props.activeFrame, layer)}
         {this.renderAngles(ctx, this.props.activeFrame, layer)}
+        {this.renderCircles(ctx, this.props.activeFrame, layer)}
       </>
     );
   };

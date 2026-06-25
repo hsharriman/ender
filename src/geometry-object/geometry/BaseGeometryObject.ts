@@ -42,6 +42,7 @@ export class BaseGeometryObject {
   };
 
   equals = (other: BaseGeometryObject) => {
+    if (!other) return false;
     return this.matches(other.label);
   };
 

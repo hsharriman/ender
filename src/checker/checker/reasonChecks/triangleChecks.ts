@@ -18,8 +18,31 @@ import {
   angCenter,
   checkDistinctDependencyStmts,
   commonPt,
+  failReflexStatements,
   getTriFromAngs,
+  resolveAngleForProp,
 } from "./utils";
+
+const NOT_ASSIGNABLE = "element_not_assignable_to_either_triangle";
+const NOT_EXCLUSIVE = "con_pair_not_assigned_to_separate_triangles";
+const SAS_BAD = "angle_center_not_bw_both_con_segs";
+const AAS_BAD = "seg_touches_both_or_neither_con_angle";
+const ASA_BAD = "seg_not_bw_both_con_angles";
+const RHL_BAD = "rhl_first_seg_must_be_hypotenuse_and_second_must_be_leg";
+const SEG_NOT_CORRESP = "segs_not_corresponding_in_triangles";
+const ANG_NOT_CORRESP = "angles_not_corresponding_in_triangles";
+const BAD_CONC_TYPE = "conclusion_must_be_con_seg_or_con_ang";
+const NOT_UNIQUE_DIST =
+  "con_pairs_dont_cover_each_side_and_angle_of_both_triangles_exactly_once";
+const TRI_NOT_FOUND = "triangle_not_found_from_con_angles";
+const ANGS_NOT_UNIQUE =
+  "con_angle_pairs_dont_cover_each_angle_of_both_triangles_exactly_once";
+const NOT_ISOS_SIDES = "con_segs_not_two_distinct_sides_of_isosceles_triangle";
+const BASE_ANG_BAD = "base_angle_vertex_not_at_endpoint_of_exactly_one_leg";
+const DIFF_TRIANGLES = "equilateral_and_equiangular_not_the_same_triangle";
+const SAME_CON_SEG = "con_seg_has_same_seg_on_both_sides";
+const NOT_TWO_SIDES = "not_all_sides_appear_exactly_twice_in_con_segs";
+const NOT_TWO_ANGS = "not_all_angles_appear_exactly_twice_in_con_angs";
 
 type TriangleAssignResult =
   | { ok: true; left: string; right: string }
@@ -33,13 +56,14 @@ const resolveForTri = (
   ctx: ProofContent,
 ): ParseObj | null => {
   if (tri.containsParseObj(obj)) return obj;
-  if (obj.type === Obj.Angle) {
-    const resolved = ctx
-      .getAngle(obj.v)
-      ?.resolveLabel((name) => tri.containsParseObj({ ...obj, v: name }));
-    if (resolved) return { ...obj, v: resolved };
-  }
-  return null;
+  if (obj.type !== Obj.Angle) return null;
+  const ang = ctx.getAngle(obj.v);
+  const resolved =
+    ang &&
+    resolveAngleForProp(ang, (name) =>
+      tri.containsParseObj({ ...obj, v: name }),
+    );
+  return resolved ? { ...obj, v: resolved } : null;
 };
 
 const sortPairToTri = (
@@ -61,7 +85,7 @@ const sortPairToTri = (
   return {
     ok: false,
     failure: {
-      code: "TRI_ASSIGN_SORT",
+      code: NOT_ASSIGNABLE,
       details: { left: l.v, right: r.v, tri1: tri1.label, tri2: tri2.label },
     },
   };
@@ -97,7 +121,7 @@ const checkTriangleAssign = (
     return {
       ok: false,
       failure: {
-        code: "TRI_ASSIGN_CONTAINMENT",
+        code: NOT_EXCLUSIVE,
         details: { left: left.v, right: right.v },
       },
     };
@@ -144,7 +168,7 @@ export const checkSas = (
   const triangle2SAS = sasSideAnglePattern(s21, s22, center2);
 
   if (!(triangle1SAS && triangle2SAS)) {
-    return reasonApplicationFail("SAS_PATTERN", {
+    return reasonApplicationFail(SAS_BAD, {
       center1,
       center2,
       triangle1SAS,
@@ -246,7 +270,7 @@ export const checkAas = (
   const t2Valid = aasSideTouchesOneAngleEach(s2, a21c, a22c);
 
   if (!(t1Valid && t2Valid)) {
-    return reasonApplicationFail("AAS_PATTERN", { t1Valid, t2Valid });
+    return reasonApplicationFail(AAS_BAD, { t1Valid, t2Valid });
   }
 
   tri1.orderTri([a11c, a12c, s1.replace(a11c, "").replace(a12c, "")], ctx);
@@ -289,7 +313,7 @@ export const checkAsa = (
   const t2Valid = s2.includes(a21c) && s2.includes(a22c);
 
   if (!(t1Valid && t2Valid)) {
-    return reasonApplicationFail("ASA_PATTERN", { t1Valid, t2Valid });
+    return reasonApplicationFail(ASA_BAD, { t1Valid, t2Valid });
   }
 
   tri1.orderTri([a11c, a12c, tri1.getThirdPoint(a11c, a12c)], ctx);
@@ -331,12 +355,7 @@ export const checkRhl = (
   const legValid = s21.includes(r1c) && s22.includes(r2c);
 
   if (!(hypoValid && legValid)) {
-    return reasonApplicationFail("RHL_PATTERN", {
-      hypoValid,
-      legValid,
-      r1c,
-      r2c,
-    });
+    return reasonApplicationFail(RHL_BAD, { hypoValid, legValid, r1c, r2c });
   }
 
   // After RHL validation, the leg contains the right vertex; the other endpoint
@@ -363,8 +382,7 @@ const checkCpctcSegment = (
   if (
     tri1.getSegmentIndex(assign.left) !== tri2.getSegmentIndex(assign.right)
   ) {
-    return reasonApplicationFail("CPCTC_SEG_INDEX", {
-      // segments are not corresponding
+    return reasonApplicationFail(SEG_NOT_CORRESP, {
       seg1: assign.left,
       seg2: assign.right,
     });
@@ -383,8 +401,7 @@ const checkCpctcAngle = (
     return reasonApplicationFail(assign.failure.code, assign.failure.details);
   }
   if (tri1.getAngleIndex(assign.left) !== tri2.getAngleIndex(assign.right)) {
-    return reasonApplicationFail("CPCTC_ANG_INDEX", {
-      // angles are not corresponding
+    return reasonApplicationFail(ANG_NOT_CORRESP, {
       ang1: assign.left,
       ang2: assign.right,
     });
@@ -405,7 +422,7 @@ export const checkCpctc = (
   if (conclusion.function === "con_ang") {
     return checkCpctcAngle(tri1, tri2, conclusion, ctx);
   }
-  return reasonApplicationFail("CPCTC_CONCLUSION", {
+  return reasonApplicationFail(BAD_CONC_TYPE, {
     function: conclusion.function,
   });
 };
@@ -449,7 +466,7 @@ export const checkConTri = (
     tri2.hasUniqueAngs(a1.right, a2.right, a3.right);
 
   if (!valid) {
-    return reasonApplicationFail("DEF_CON_TRI_PATTERN", {
+    return reasonApplicationFail(NOT_UNIQUE_DIST, {
       tri1: tri1.label,
       tri2: tri2.label,
       segs1: [s1.left, s2.left, s3.left],
@@ -477,7 +494,7 @@ export const checkThirdAngle = (
   const t2 =
     getTriFromAngs(a12, a22, ctx) ?? getTriFromAngs(a21, a12, ctx) ?? null;
   if (!t1 || !t2 || t1.equals(t2)) {
-    return reasonApplicationFail("THIRD_ANGLE_TRIANGLE_NOT_FOUND", {
+    return reasonApplicationFail(TRI_NOT_FOUND, {
       angs1: [a11.label, a12.label],
       angs2: [a21.label, a22.label],
     });
@@ -506,7 +523,7 @@ export const checkThirdAngle = (
     );
     return reasonApplicationOk();
   }
-  return reasonApplicationFail("THIRD_ANGLE_PATTERN", {
+  return reasonApplicationFail(ANGS_NOT_UNIQUE, {
     tri1: t1.label,
     tri2: t2.label,
     angs1: [a1.left, a2.left, a3.left],
@@ -523,7 +540,7 @@ export const checkIsosceles = (
   const [t] = stmtMapper(isoscelesStmt, ctx) as [Triangle];
 
   if (!(t.contains(s1) && t.contains(s2) && !s1.equals(s2))) {
-    return reasonApplicationFail("ISOSCELES_PATTERN");
+    return reasonApplicationFail(NOT_ISOS_SIDES);
   }
   return reasonApplicationOk();
 };
@@ -534,21 +551,20 @@ export const checkBaseAngle = (
   ctx: ProofContent,
 ): ReasonApplicationResult => {
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
-  if (a1.equals(a2)) {
-    return reasonApplicationFail("BASE_ANGLE_SAME_ANGLE", {
-      ang: a1.label,
-    });
-  }
+  let ref = failReflexStatements(a1, a2);
+  if (!ref.ok) return ref;
   const t = getTriFromAngs(a1, a2, ctx);
   if (!t) {
-    return reasonApplicationFail("BASE_ANGLE_TRIANGLE_NOT_FOUND", {
+    return reasonApplicationFail(TRI_NOT_FOUND, {
       ang1: a1.label,
       ang2: a2.label,
     });
   }
   const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
-  if (!t.contains(s1) || !t.contains(s2) || s1.equals(s2)) {
-    return reasonApplicationFail("BASE_ANGLE_PATTERN", {
+  ref = failReflexStatements(s1, s2);
+  if (!ref.ok) return ref;
+  if (!t.contains(s1) || !t.contains(s2)) {
+    return reasonApplicationFail(BASE_ANG_BAD, {
       tri: t.label,
       segs: [s1.label, s2.label],
       angs: [a1.label, a2.label],
@@ -569,7 +585,7 @@ export const checkBaseAngle = (
       s2.label.includes(a1c) &&
       !s1.label.includes(a1c));
   if (!validPattern) {
-    return reasonApplicationFail("BASE_ANGLE_PATTERN", {
+    return reasonApplicationFail(BASE_ANG_BAD, {
       tri: t.label,
       segs: [s1.label, s2.label],
       angs: [a1.label, a2.label],
@@ -588,7 +604,7 @@ export const equilateralEquiangular = (
   if (t1 && t2 && t1 === t2) {
     return reasonApplicationOk();
   }
-  return reasonApplicationFail("EQUIL_EQUIANG_SAME_TRIANGLE", {
+  return reasonApplicationFail(DIFF_TRIANGLES, {
     tri1: t1?.label,
     tri2: t2?.label,
   });
@@ -608,7 +624,7 @@ export const checkEquilateral = (
   const [y1, y2] = stmtMapper(cs2, ctx) as [Segment, Segment];
   const [z1, z2] = stmtMapper(cs3, ctx) as [Segment, Segment];
   if (x1.equals(x2) || y1.equals(y2) || z1.equals(z2)) {
-    return reasonApplicationFail("EQUILATERAL_SAME_SEG", {
+    return reasonApplicationFail(SAME_CON_SEG, {
       seg1: x1.equals(x2) ? x1.label : y1.equals(y2) ? y1.label : z1.label,
     });
   }
@@ -619,7 +635,7 @@ export const checkEquilateral = (
     return collisions.length !== 2;
   });
   if (invalidSides.length > 0) {
-    return reasonApplicationFail("EQUILATERAL_SIDES_WITH_NOT_TWO_COLLISIONS", {
+    return reasonApplicationFail(NOT_TWO_SIDES, {
       tri: t.label,
       sides: invalidSides.map((side) => side.label),
     });
@@ -640,11 +656,13 @@ export const checkEquiangular = (
   const [x1, x2] = stmtMapper(ca1, ctx) as [Angle, Angle];
   const [y1, y2] = stmtMapper(ca2, ctx) as [Angle, Angle];
   const [z1, z2] = stmtMapper(ca3, ctx) as [Angle, Angle];
-  if (x1.equals(x2) || y1.equals(y2) || z1.equals(z2)) {
-    return reasonApplicationFail("EQUIANGULAR_SAME_ANG", {
-      ang1: x1.equals(x2) ? x1.label : y1.equals(y2) ? y1.label : z1.label,
-    });
-  }
+  let ref = failReflexStatements(x1, x2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(y1, y2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(z1, z2);
+  if (!ref.ok) return ref;
+
   // make a list of all 6 angles and check that each angle of t has 2 collisions
   const angs = [x1, x2, y1, y2, z1, z2];
   const invalidAngles = t.a.filter((angle) => {
@@ -652,7 +670,7 @@ export const checkEquiangular = (
     return collisions.length !== 2;
   });
   if (invalidAngles.length > 0) {
-    return reasonApplicationFail("EQUIANGULAR_ANGLES_WITH_NOT_TWO_COLLISIONS", {
+    return reasonApplicationFail(NOT_TWO_ANGS, {
       tri: t.label,
       angles: invalidAngles.map((angle) => angle.label),
     });

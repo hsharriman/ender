@@ -1,6 +1,8 @@
 import {
   Angle,
   AngleProps,
+  Circle,
+  CircleProps,
   Point,
   PointProps,
   Quadrilateral,
@@ -14,6 +16,7 @@ import {
 import { DiagramRenderCtx, ShowPoint } from "../types/diagramTypes";
 import {
   AngleBuilder,
+  CircleBuilder,
   PointBuilder,
   QuadrilateralBuilder,
   SegmentBuilder,
@@ -30,7 +33,8 @@ export class DiagramContent {
       segments: [],
       angles: [],
       triangles: [],
-      rectangles: [],
+      quads: [],
+      circles: [],
       frames: [],
       deps: new Map(),
     };
@@ -103,12 +107,22 @@ export class DiagramContent {
     const q = new Quadrilateral(props);
     const qBuilder = new QuadrilateralBuilder(q);
     if (!this.findQuadrilateral(q.label)) {
-      this.ctx.rectangles.push(qBuilder);
+      this.ctx.quads.push(qBuilder);
       this.addSegments(qBuilder.s.map((s) => s.obj));
       this.addAngles(qBuilder.a.map((a) => a.obj));
       return qBuilder;
     }
     return this.findQuadrilateral(q.label);
+  };
+
+  addCircle = (props: CircleProps) => {
+    const c = new Circle(props);
+    const cBuilder = new CircleBuilder(c);
+    if (!this.findCircle(c.label)) {
+      this.ctx.circles.push(cBuilder);
+      return cBuilder;
+    }
+    return this.findCircle(c.label);
   };
 
   addPoints = (propsArr: PointProps[]) => {
@@ -124,7 +138,7 @@ export class DiagramContent {
   };
 
   private warnMissing = (
-    kind: "segment" | "angle" | "triangle" | "quadrilateral",
+    kind: "segment" | "angle" | "triangle" | "quadrilateral" | "circle",
     label: string,
   ) => {
     const key = `${kind}:${label}`;
@@ -142,7 +156,9 @@ export class DiagramContent {
   private findTriangle = (label: string) =>
     this.ctx.triangles.filter((t) => t.obj.matches(label))[0];
   private findQuadrilateral = (label: string) =>
-    this.ctx.rectangles.filter((r) => r.obj.matches(label))[0];
+    this.ctx.quads.filter((r) => r.obj.matches(label))[0];
+  private findCircle = (label: string) =>
+    this.ctx.circles.filter((c) => c.obj.matches(label))[0];
 
   getPoint = (label: string) => this.findPoint(label);
   getSegment = (label: string) => {
@@ -164,5 +180,10 @@ export class DiagramContent {
     const quad = this.findQuadrilateral(label);
     if (!quad) this.warnMissing("quadrilateral", label);
     return quad;
+  };
+  getCircle = (label: string) => {
+    const circle = this.findCircle(label);
+    if (!circle) this.warnMissing("circle", label);
+    return circle;
   };
 }

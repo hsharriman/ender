@@ -1,0 +1,14 @@
+// pass
+title: "Test: radius_chord_bisect_conv (correct - perp bisector of chord gives radius endpoint)"
+premises:
+pt: O (5, 5, c), R (5, 0, b), A (1, 8, tl), B (9, 8, tr), M (5, 8, tc), T (5, 10, tc)
+circ: c_OR
+seg: OT
+[g_1] perp_bisector(OT, AB, M)
+[g_2] chord(c_OR, AB)
+-> radius(c_OR, T)
+
+steps:
+[01] given(g_1) -> perp_bisector(OT, AB, M)
+[02] given(g_2) -> chord(c_OR, AB)
+[03] radius_chord_bisect_conv(1, 2) -> radius(c_OR, T)

@@ -1,6 +1,7 @@
 import { Obj } from "geometry-object";
 import {
   AngleBuilder,
+  CircleBuilder,
   PointBuilder,
   QuadrilateralBuilder,
   SegmentBuilder,
@@ -12,7 +13,8 @@ export type TickType =
   | Obj.EqualLengthTick
   | Obj.EqualAngleTick
   | Obj.HiddenTick
-  | Obj.RightTick;
+  | Obj.RightTick
+  | Obj.SimilarTick;
 
 export enum SVGModes {
   Hidden = "hidden",
@@ -48,7 +50,8 @@ export type DiagramRenderCtx = {
   segments: SegmentBuilder[];
   angles: AngleBuilder[];
   triangles: TriangleBuilder[];
-  rectangles: QuadrilateralBuilder[];
+  quads: QuadrilateralBuilder[];
+  circles: CircleBuilder[];
   frames: string[];
   deps: Map<string, Set<string>>;
 };
@@ -58,6 +61,7 @@ export type GeoBuilderObject =
   | SegmentBuilder
   | AngleBuilder
   | TriangleBuilder
-  | QuadrilateralBuilder;
+  | QuadrilateralBuilder
+  | CircleBuilder;
 
 export type TickedGeoObject = SegmentBuilder | AngleBuilder;

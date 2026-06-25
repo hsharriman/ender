@@ -1,9 +1,7 @@
 import { Obj } from "geometry-object";
-import { makeStepMeta } from "../../theorems/utils";
 import { resizedStrs, segmentStr } from "../geometryText";
 import { SVGModes } from "../types/diagramTypes";
-import { Reason } from "../types/layoutTypes";
-import { StepFocusProps, StepMeta, StepProps } from "../types/stepTypes";
+import { StepFocusProps, StepProps } from "../types/stepTypes";
 
 export class EqualSegments {
   static additions = (
@@ -48,21 +46,3 @@ export class EqualSegments {
       .mode(frame, mode);
   };
 }
-
-export const EqualSegmentStep = (
-  s: [string, string],
-  reason: Reason,
-  step: StepMeta,
-  num?: number,
-  dependsOn?: string[],
-) =>
-  makeStepMeta({
-    reason,
-    dependsOn,
-    prevStep: step,
-    additions: (props: StepFocusProps) => {
-      EqualSegments.additions(props, s, num);
-    },
-    text: EqualSegments.text(s),
-    staticText: () => EqualSegments.text(s)(true),
-  });

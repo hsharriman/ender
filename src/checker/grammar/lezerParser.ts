@@ -19,6 +19,7 @@ export class ProofParser {
     "angle",
     "triangle",
     "quadrilateral",
+    "circle",
   ]);
 
   private lexer: any;
@@ -89,6 +90,21 @@ export class ProofParser {
     }
   };
 
+  private validateCircleToken = (full: string): string => {
+    const v = full.startsWith("c_") ? full.slice(2) : full;
+    if (v.length !== 2) {
+      throw new Error(
+        `Invalid circle '${full}': expected exactly 2 point labels after 'c_'`,
+      );
+    }
+    if (new Set(v).size !== 2) {
+      throw new Error(
+        `Invalid circle '${full}': center and intersection point must be two distinct points`,
+      );
+    }
+    return v;
+  };
+
   // Helper function to parse objects
   private parseObj = (arg: string): ParseObj => {
     if (arg.startsWith("a_")) {
@@ -109,6 +125,12 @@ export class ProofParser {
         v: this.validateQuadrilateralToken(arg),
       };
     }
+    if (arg.startsWith("c_")) {
+      return {
+        type: Obj.Circle,
+        v: this.validateCircleToken(arg),
+      };
+    }
     if (arg.length === 2) {
       this.validateSegmentLabel(arg);
       return {
@@ -124,7 +146,7 @@ export class ProofParser {
     }
     if (arg.length > 2) {
       throw new Error(
-        `Malformed object '${arg}': names longer than 2 characters must use a prefix ('a_', 't_', or 'q_')`,
+        `Malformed object '${arg}': names longer than 2 characters must use a prefix ('a_', 't_', 'q_', or 'c_')`,
       );
     }
     throw new Error(`Cannot parse geometric object: ${arg}`);
@@ -143,7 +165,13 @@ export class ProofParser {
     tokens: any[],
     i: number,
     sectionLabel: string,
-    expected: "point" | "segment" | "angle" | "triangle" | "quadrilateral",
+    expected:
+      | "point"
+      | "segment"
+      | "angle"
+      | "triangle"
+      | "quadrilateral"
+      | "circle",
     humanReadable: string,
   ): void => {
     if (i >= tokens.length) return;
@@ -165,7 +193,7 @@ export class ProofParser {
       return null;
     }
     const v = token.value as string;
-    if (/^[atq]_/.test(v)) return v;
+    if (/^[atqc]_/.test(v)) return v;
     return null;
   };
 
@@ -176,7 +204,7 @@ export class ProofParser {
     const malformed = this.asMalformedObjectIdentifier(token);
     if (!malformed) return;
     throw new Error(
-      `Malformed object '${malformed}' in ${context}: use 'a_' with 3 points, 't_' with 3 points, or 'q_' with 4 points`,
+      `Malformed object '${malformed}' in ${context}: use 'a_' with 3 points, 't_' with 3 points, 'q_' with 4 points, or 'c_' with 2 points`,
     );
   };
 
@@ -255,6 +283,7 @@ export class ProofParser {
         quadrilaterals: [],
         segments: [],
         angles: [],
+        circles: [],
         diagramStatements: [],
       },
       steps: [],
@@ -397,6 +426,26 @@ export class ProofParser {
                   i++;
                 }
               }
+            } else if (tokens[i].type === "circ") {
+              i++;
+              if (i < tokens.length && tokens[i].type === "colon") {
+                i++;
+                this.assertPremiseListHead(
+                  tokens,
+                  i,
+                  "circ",
+                  "circle",
+                  "circles (c_XY)",
+                );
+                while (i < tokens.length && tokens[i].type === "circle") {
+                  this.validateCircleToken(tokens[i].value as string);
+                  result.premises.circles.push({
+                    type: Obj.Circle,
+                    v: tokens[i].value,
+                  });
+                  i++;
+                }
+              }
             } else if (tokens[i].type === "diagramPremiseRef") {
               const diagramLabel = tokens[i].value as string;
               i++;
@@ -522,6 +571,7 @@ export class ProofParser {
             tokens[i].type === "angle" ||
             tokens[i].type === "triangle" ||
             tokens[i].type === "quadrilateral" ||
+            tokens[i].type === "circle" ||
             tokens[i].type === "stepNumber"
           ) {
             statement.arguments.push(this.parseObj(tokens[i].value));

@@ -1,5 +1,6 @@
 import {
   Angle,
+  Circle,
   Point,
   Quadrilateral,
   Segment,
@@ -7,30 +8,6 @@ import {
   Vector,
 } from "geometry-object";
 import { ShowPoint, SVGModes, TickType } from "../types/diagramTypes";
-
-// const defaultMode = (
-//   frameKey: string,
-//   mode: SVGModes,
-//   obj: GeoBuilderObject,
-// ) => {
-//   obj.modes.set(frameKey, mode);
-// };
-
-// const defaultAddTick = (
-//   frame: string,
-//   type: TickType,
-//   obj: TickedGeoObject,
-//   num: number = 1,
-// ) => {
-//   obj.ticks.set(frame, { type, num });
-// };
-// export interface PointBuilder {
-//   obj: Point;
-//   offset: Vector;
-//   modes: Map<string, SVGModes>;
-//   showPoint?: ShowPoint;
-//   mode: (frameKey: string, mode: SVGModes, obj: GeoBuilderObject) => void;
-// }
 
 export class PointBuilder {
   readonly obj: Point;
@@ -95,6 +72,22 @@ export class AngleBuilder {
   };
 }
 
+export class CircleBuilder {
+  readonly obj: Circle;
+  readonly modes: Map<string, SVGModes>;
+  readonly center: PointBuilder;
+  constructor(obj: Circle) {
+    this.obj = obj;
+    this.modes = new Map<string, SVGModes>();
+    this.center = new PointBuilder(obj.center);
+  }
+
+  mode = (frameKey: string, mode: SVGModes) => {
+    this.modes.set(frameKey, mode);
+    return this;
+  };
+}
+
 export class TriangleBuilder {
   readonly obj: Triangle;
   readonly modes: Map<string, SVGModes>;
@@ -102,6 +95,7 @@ export class TriangleBuilder {
   readonly a: [AngleBuilder, AngleBuilder, AngleBuilder];
   rotatePattern: boolean;
   readonly congruent: Set<string> = new Set();
+  readonly similar: Set<string> = new Set();
   constructor(obj: Triangle, rotatePattern?: boolean) {
     this.obj = obj;
     this.modes = new Map<string, SVGModes>();
@@ -137,6 +131,11 @@ export class TriangleBuilder {
 
   setRotatePattern = (rotate: boolean) => {
     this.rotatePattern = rotate;
+    return this;
+  };
+
+  setSimilar = (frame: string) => {
+    this.similar.add(frame);
     return this;
   };
 }

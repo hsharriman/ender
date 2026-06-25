@@ -1,5 +1,4 @@
-import { SVGModes } from "../types/diagramTypes";
-import { StepFocusProps, StepProps } from "../types/stepTypes";
+import { StepFocusProps } from "../types/stepTypes";
 import { EqualAngles } from "./EqualAngles";
 import { EqualSegments } from "./EqualSegments";
 
@@ -25,16 +24,15 @@ export class CongruentTriangles {
     EqualAngles.additions(props, labels.a3s, 3);
   };
 
-  static congruentLabel = (
-    props: StepProps,
-    labels: [string, string],
-    mode: SVGModes,
-  ) => {
+  static congruentLabel = (props: StepFocusProps, labels: [string, string]) => {
     const { ctx, frame } = props;
-    ctx.getTriangle(labels[0])?.setCongruent(frame).labelMode(frame, mode);
+    ctx
+      .getTriangle(labels[0])
+      ?.setCongruent(frame)
+      .labelMode(frame, props.mode);
     const t2 = ctx.getTriangle(labels[1]);
     if (!t2) return;
     t2.setRotatePattern(true);
-    t2.setCongruent(frame).labelMode(frame, mode);
+    t2.setCongruent(frame).labelMode(frame, props.mode);
   };
 }

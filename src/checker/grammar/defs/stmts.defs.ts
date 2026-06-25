@@ -3,6 +3,7 @@ const angle = (a: string) => `Angle ${a}`;
 const triangle = (t: string) => `Triangle ${t}`;
 const point = (p: string) => `Point ${p}`;
 const quadrilateral = (q: string) => `Quadrilateral ${q}`;
+const circle = (c: string) => `Circle ${c}`;
 
 export const STMTS_DEFS = {
   statements: {
@@ -126,7 +127,6 @@ export const STMTS_DEFS = {
       name: "linear_pair",
       parameters: [angle("a1"), angle("a2")],
     },
-    // unimplemented statements that will always return true for now
     equiangular: {
       name: "equiangular",
       parameters: [triangle("t")],
@@ -140,10 +140,12 @@ export const STMTS_DEFS = {
       parameters: [point("p"), triangle("t")],
     },
     perp_bisector: {
+      // s1 bisects s2 at p
       name: "perp_bisector",
       parameters: [segment("s1"), segment("s2"), point("p")],
     },
     seg_bisect: {
+      // s1 bisects s2 at p
       name: "seg_bisect",
       parameters: [segment("s1"), segment("s2"), point("p")],
     },
@@ -155,6 +157,40 @@ export const STMTS_DEFS = {
       name: "rhombus",
       parameters: [quadrilateral("q")],
     },
+    // circle objects:
+    tangent: {
+      name: "tangent",
+      parameters: [circle("c"), segment("s"), point("p")],
+    },
+    chord: {
+      name: "chord",
+      parameters: [circle("c"), segment("s")],
+    },
+    arc: {
+      name: "arc",
+      parameters: [circle("c"), point("p1"), point("p2")],
+    },
+    // secant: {
+    //   name: "secant",
+    //   // first segment is the chord, second segment is the secant
+    //   parameters: [circle("c"), segment("s"), segment("s2")],
+    // },
+    radius: {
+      name: "radius",
+      parameters: [circle("c"), point("p")],
+    },
+    diameter: {
+      name: "diameter",
+      parameters: [circle("c"), segment("s")],
+    },
+    inscribed_angle: {
+      name: "inscribed_angle",
+      parameters: [angle("a"), segment("s")],
+    },
+    // arc_bisect: {
+    //   name: "arc_bisect",
+    //   parameters: [arc("a"), segment("s"), point("p")],
+    // },
   },
   groups: {
     congruent_angs: {
