@@ -507,8 +507,6 @@ export const REASONS_DEFS = {
     dependencies: ["con_seg", "trapezoid_premise"],
     conclusion: "isos_trapezoid",
   },
-  // still implementing cutoff
-  // circle reasons:
   tangent_perp: {
     name: "tangent_perp",
     title: "Tangent Perpendicularity",
@@ -551,6 +549,7 @@ export const REASONS_DEFS = {
     dependencies: ["inscribed_angle", "inscribed_angle"],
     conclusion: "con_ang",
   },
+  // still implementing cutoff
   // inscribed_quad: {
   //   // todo need a quadrilateral and circle statement to work with this
   //   name: "inscribed_quad",

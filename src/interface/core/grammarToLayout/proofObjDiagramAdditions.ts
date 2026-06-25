@@ -255,8 +255,9 @@ export const applyStmtAdditions =
       return;
     }
     if (
-      stmt.function === "isos_trapezoid_premise" &&
-      stmt.arguments.length === 3
+      stmt.function === "isos_trapezoid_premise" ||
+      stmt.function === "kite_premise" ||
+      (stmt.function === "trapezoid_premise" && stmt.arguments.length === 3)
     ) {
       QuadClassification.additions({ ctx, frame, mode }, stmt.arguments[0].v);
       return;
