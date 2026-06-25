@@ -9,14 +9,17 @@ import {
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
-import { findDuplicateDependencyStatements, rightAngleOnPerp } from "./utils";
+import {
+  failReflexStatements,
+  findDuplicateDependencyStatements,
+  rightAngleOnPerp,
+} from "./utils";
 
 const SEG_NOT_EQUAL = "segs_are_not_equal";
 const NO_ALT_INT = "no_transversal_produces_alt_int_angles";
 const NO_ALT_EXT = "no_transversal_produces_alt_ext_angles";
 const NO_SAMESIDE = "no_transversal_produces_same_side_int_angles";
 const NO_CORRESP = "no_transversal_produces_corresp_angles";
-const SAME_SEG = "con_segs_are_the_same_seg";
 const NO_MIDPT = "segs_not_subsegments_meeting_at_midpt";
 const DUPE_STMT = "dupe_stmt_supplied";
 const NO_INTERSECT = "points_do_not_share_intersection_on_both_segs";
@@ -25,7 +28,8 @@ const NO_PERP_PT = "no_intersect_pt_in_perp_stmt";
 const NOT_ADJ_PERP = "angles_not_adj_at_perp";
 const MIDPT_NOT_PERP = "midpt_not_at_perp_intersection";
 const BAD_BISECT = "bisected_halves_dont_match_con_segs";
-const TRANSVERSAL_BAD = "transversal_segs_dont_form_valid_config";
+const TRANSVERSAL_BAD =
+  "transversal_angles_or_parallel_segs_dont_form_valid_config";
 const ALT_INT_CTR = "alt_int_angle_ctrs_not_at_inner_intersections";
 const ALT_INT_INWARD = "alt_int_angles_not_directed_inward";
 const ALT_INT_SIDES = "alt_int_angles_not_on_alternating_sides";
@@ -41,7 +45,6 @@ const CORRESP_LINE = "corresp_intersections_not_on_transversal_line";
 const CORRESP_CTR = "corresp_angle_ctrs_not_at_intersections";
 const CORRESP_DIR = "corresp_angles_not_in_corresponding_directions";
 const CORRESP_SIDE = "corresp_angles_not_on_same_side";
-
 
 export const reflex_s = (s1: Segment, s2: Segment): ReasonApplicationResult => {
   if (s1.equals(s2)) return reasonApplicationOk();
@@ -108,11 +111,9 @@ export const altext = (
   const [t] = res.segs;
   const [a1, a2] = res.angles;
 
-  if (t1.equals(i1) || t2.equals(i2))
-    return diagramFail(ALT_EXT_ENDPT);
+  if (t1.equals(i1) || t2.equals(i2)) return diagramFail(ALT_EXT_ENDPT);
 
-  if (!i1.isOnLine(t) || !i2.isOnLine(t))
-    return diagramFail(ALT_EXT_LINE);
+  if (!i1.isOnLine(t) || !i2.isOnLine(t)) return diagramFail(ALT_EXT_LINE);
 
   if (
     !a1.centerEquals(i1) ||
@@ -159,11 +160,9 @@ export const sameside = (
   const [s1p1, s1p2, , i1, s2p1, s2p2, , i2] = res.pts;
   const [a1, a2] = res.angles;
 
-  if (!a1.centerEquals(i1) || !a2.centerEquals(i2))
-    return diagramFail(SS_CTR);
+  if (!a1.centerEquals(i1) || !a2.centerEquals(i2)) return diagramFail(SS_CTR);
 
-  if (!a1.contains(i2) || !a2.contains(i1))
-    return diagramFail(SS_INWARD);
+  if (!a1.contains(i2) || !a2.contains(i1)) return diagramFail(SS_INWARD);
 
   if (
     (a1.contains(s1p1) && a2.contains(s2p1)) ||
@@ -203,11 +202,9 @@ export const corresp_ang = (
   const [t] = res.segs;
   const [a1, a2] = res.angles;
 
-  if (t1.equals(i1) || t2.equals(i2))
-    return diagramFail(CORRESP_ENDPT);
+  if (t1.equals(i1) || t2.equals(i2)) return diagramFail(CORRESP_ENDPT);
 
-  if (!i1.isOnLine(t) || !i2.isOnLine(t))
-    return diagramFail(CORRESP_LINE);
+  if (!i1.isOnLine(t) || !i2.isOnLine(t)) return diagramFail(CORRESP_LINE);
 
   if (!a1.centerEquals(i1) || !a2.centerEquals(i2))
     return diagramFail(CORRESP_CTR);
@@ -251,7 +248,8 @@ export const midpt = (
   ctx: ProofContent,
 ): ReasonApplicationResult => {
   const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
-  if (s1.equals(s2)) return reasonApplicationFail(SAME_SEG);
+  const ref = failReflexStatements(s1, s2);
+  if (!ref.ok) return ref;
   const [bigSeg, midPtObj] = stmtMapper(midPt, ctx) as [Segment, Point];
 
   const segmentsEqual =

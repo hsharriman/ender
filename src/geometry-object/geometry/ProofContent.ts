@@ -207,6 +207,7 @@ export class ProofContent {
         `Angle ${s}${c}${e}: segment ${s}${c} or ${c}${e} not found in context`,
       );
 
+    // first check if overlaps while holding one side fixed
     // check for overlaps with parent segments
     findOverlaps(startToCenter.getParentSegments(), e); // 3rd pt = end
     findOverlaps(endToCenter.getParentSegments(), s); // 3rd pt = start
@@ -214,6 +215,49 @@ export class ProofContent {
     // check for overlaps with sub segments
     findOverlaps(startToCenter.getSubSegments(), e); // 3rd pt = end
     findOverlaps(endToCenter.getSubSegments(), s); // 3rd pt = start
+
+    // Two-sided overlap: detect angles equivalent via sub-ray on BOTH sides
+    const addTwoSidedOverlaps = (
+      firstSegs: Set<Segment>,
+      secondSegs: Set<Segment>,
+    ) => {
+      firstSegs.forEach((seg1) => {
+        if (!seg1.label.includes(c) || seg1.label.replace(c, "").length !== 1)
+          return;
+        const pt1 = seg1.label.replace(c, "");
+        secondSegs.forEach((seg2) => {
+          if (!seg2.label.includes(c) || seg2.label.replace(c, "").length !== 1)
+            return;
+          const pt2 = seg2.label.replace(c, "");
+          if (pt1 === pt2 || pt1 === s || pt2 === e) return;
+          const twoSided = this.getAngle(`${pt1}${c}${pt2}`);
+          if (twoSided && twoSided !== a) {
+            a.addNames(pt1, pt2);
+            twoSided.addNames(s, e);
+          }
+        });
+      });
+    };
+    // Case 1: start-ray is subray (has parent) + end-ray has a subray (has sub)
+    addTwoSidedOverlaps(
+      startToCenter.getParentSegments(),
+      endToCenter.getSubSegments(),
+    );
+    // Case 2: start-ray has a subray + end-ray is subray (symmetric of case 1)
+    addTwoSidedOverlaps(
+      startToCenter.getSubSegments(),
+      endToCenter.getParentSegments(),
+    );
+    // Case 3: both rays are subrays (this angle is a "zoom-in" of the other)
+    addTwoSidedOverlaps(
+      startToCenter.getParentSegments(),
+      endToCenter.getParentSegments(),
+    );
+    // Case 4: both rays have subrays (this angle is a "zoom-out" of the other)
+    addTwoSidedOverlaps(
+      startToCenter.getSubSegments(),
+      endToCenter.getSubSegments(),
+    );
 
     // if doesn't overlap with existing angles, add the angle to the ctx
     if (!overlapsExisting) {

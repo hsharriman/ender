@@ -286,13 +286,22 @@ const perpPremise = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
   const s1 = ctx.addSegmentFromStr(seg1.v);
   const s2 = ctx.addSegmentFromStr(seg2.v);
   const p = ctx.getPoint(pt.v);
-  // case 1: p is one of the endpoints of either segment
   if (s1.contains(p)) {
+    // p is an endpoint of s1 — T-intersection into s2, so split s2 at p
     p.addOnLine(s2);
+    seg2.v.split("").forEach((endPt) => {
+      const subSeg = ctx.addSegmentFromStr(`${pt.v}${endPt}`);
+      s2.addSubSegment(subSeg);
+    });
   } else if (s2.contains(p)) {
+    // p is an endpoint of s2 — T-intersection into s1, so split s1 at p
     p.addOnLine(s1);
+    seg1.v.split("").forEach((endPt) => {
+      const subSeg = ctx.addSegmentFromStr(`${pt.v}${endPt}`);
+      s1.addSubSegment(subSeg);
+    });
   } else {
-    // case 2: p is not an endpoint of either segment, so add p as intersection of the two segments
+    // p is interior to both segments — full cross-intersection
     intersectSeg(ctx, [seg1, seg2, pt], proof);
   }
 };

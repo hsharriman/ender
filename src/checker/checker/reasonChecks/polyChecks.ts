@@ -19,7 +19,6 @@ import {
 const CONC_NOT_IN_QUAD = "conclusion_elements_not_in_quad";
 const ANG_NOT_IN_RECT = "angle_not_contained_in_rect";
 const RECT_PGRAM_DIFF = "rect_and_pgram_are_diff_quads";
-const SAME_OBJECT = "both_stmts_are_the_same_object";
 const NOT_OPP_SIDES = "segs_not_opp_sides_of_quad";
 const OPP_PAIR_MISMATCH = "opp_side_pair_must_match_in_both_stmts";
 const SAME_OPP_PAIR = "both_pairs_are_the_same_opp_side_pair";
@@ -38,7 +37,8 @@ const TRAP_DIFF = "trap_and_isos_trap_are_diff_quads";
 const DIFF_QUADS = "quad_stmts_refer_to_diff_quads";
 
 const quadContainsAngle = (quad: Quadrilateral, a: Angle): boolean =>
-  resolveAngleForProp(a, (name) => quad.a.some((qa) => qa.names.has(name))) !== null;
+  resolveAngleForProp(a, (name) => quad.a.some((qa) => qa.names.has(name))) !==
+  null;
 
 export const rectangle = (
   rect: Stmt,
@@ -51,23 +51,27 @@ export const rectangle = (
     conclusion.function === "con_ang"
   ) {
     const [a1, a2] = stmtMapper(conclusion, ctx) as [Angle, Angle];
+    const ref = failReflexStatements(a1, a2);
+    if (!ref.ok) return ref;
+
     if (quadContainsAngle(quad, a1) && quadContainsAngle(quad, a2))
       return reasonApplicationOk();
     return reasonApplicationFail(CONC_NOT_IN_QUAD);
   }
   if (conclusion.function === "con_seg") {
     const [s1, s2] = stmtMapper(conclusion, ctx) as [Segment, Segment];
-    if (
-      !s1.equals(s2) &&
-      quad.contains(s1) &&
-      quad.contains(s2) &&
-      !s1.contains(s2.p1) &&
-      !s1.contains(s2.p2)
-    )
-      return reasonApplicationOk();
-    return reasonApplicationFail(CONC_NOT_IN_QUAD);
+    const ref = failReflexStatements(s1, s2);
+    if (!ref.ok) return ref;
+    if (!quad.contains(s1) && !quad.contains(s2)) {
+      return reasonApplicationFail(CONC_NOT_IN_QUAD);
+    }
+    if (!quad.isOppositeSides(s1, s2)) {
+      return reasonApplicationFail(NOT_OPP_SIDES, {
+        pair: [s1.label, s2.label],
+      });
+    }
+    return reasonApplicationOk();
   }
-
   return reasonApplicationFail(CONC_NOT_IN_QUAD);
 };
 
@@ -109,11 +113,9 @@ export const def_pgram_side_check = (
 
   const checkPair = (pairStmt: Stmt) => {
     const [p1, p2] = stmtMapper(pairStmt, ctx) as [Segment, Segment];
-    if (p1.equals(p2)) {
-      return reasonApplicationFail(SAME_OBJECT, {
-        pair: [p1.label, p2.label],
-      });
-    }
+    const ref = failReflexStatements(p1, p2);
+    if (!ref.ok) return ref;
+
     // check that p1 and p2 are opposite sides, and p1/p2 are not the same segments
     if (!quad.isOppositeSides(p1, p2)) {
       return reasonApplicationFail(NOT_OPP_SIDES, {
@@ -318,11 +320,8 @@ export const pgram_diag_bisect_check = (
   const [b1, b2, p1] = stmtMapper(seg_b1, ctx) as [Segment, Segment, Point];
 
   const validQuadCheck = (s1: Segment, s2: Segment) => {
-    if (s1.equals(s2)) {
-      return reasonApplicationFail(SAME_OBJECT, {
-        pair: [s1.label, s2.label],
-      });
-    }
+    const ref = failReflexStatements(s1, s2);
+    if (!ref.ok) return ref;
     // s1,s2 must be exactly the diagonals — no parent/child substitutions
     if (!quad.isDiagonal(s1) || !quad.isDiagonal(s2)) {
       return reasonApplicationFail(NOT_DIAGONAL, {

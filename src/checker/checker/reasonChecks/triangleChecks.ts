@@ -18,29 +18,30 @@ import {
   angCenter,
   checkDistinctDependencyStmts,
   commonPt,
+  failReflexStatements,
   getTriFromAngs,
   resolveAngleForProp,
 } from "./utils";
 
 const NOT_ASSIGNABLE = "element_not_assignable_to_either_triangle";
-const NOT_EXCLUSIVE = "element_not_exclusively_in_one_triangle";
+const NOT_EXCLUSIVE = "con_pair_not_assigned_to_separate_triangles";
 const SAS_BAD = "angle_center_not_bw_both_con_segs";
 const AAS_BAD = "seg_touches_both_or_neither_con_angle";
 const ASA_BAD = "seg_not_bw_both_con_angles";
-const RHL_BAD = "hypo_or_leg_not_matching_right_angle_vertex";
+const RHL_BAD = "rhl_first_seg_must_be_hypotenuse_and_second_must_be_leg";
 const SEG_NOT_CORRESP = "segs_not_corresponding_in_triangles";
 const ANG_NOT_CORRESP = "angles_not_corresponding_in_triangles";
 const BAD_CONC_TYPE = "conclusion_must_be_con_seg_or_con_ang";
-const NOT_UNIQUE_DIST = "segs_or_angles_not_uniquely_distributed_across_triangles";
+const NOT_UNIQUE_DIST =
+  "con_pairs_dont_cover_each_side_and_angle_of_both_triangles_exactly_once";
 const TRI_NOT_FOUND = "triangle_not_found_from_con_angles";
-const ANGS_NOT_UNIQUE = "angles_not_uniquely_distributed_across_triangles";
-const NOT_ISOS_SIDES = "segs_not_distinct_sides_of_same_triangle";
-const SAME_ANG = "both_con_angles_are_the_same_angle";
-const BASE_ANG_BAD = "base_angles_not_matching_legs_of_triangle";
+const ANGS_NOT_UNIQUE =
+  "con_angle_pairs_dont_cover_each_angle_of_both_triangles_exactly_once";
+const NOT_ISOS_SIDES = "con_segs_not_two_distinct_sides_of_isosceles_triangle";
+const BASE_ANG_BAD = "base_angle_vertex_not_at_endpoint_of_exactly_one_leg";
 const DIFF_TRIANGLES = "equilateral_and_equiangular_not_the_same_triangle";
 const SAME_CON_SEG = "con_seg_has_same_seg_on_both_sides";
 const NOT_TWO_SIDES = "not_all_sides_appear_exactly_twice_in_con_segs";
-const SAME_CON_ANG = "con_ang_has_same_angle_on_both_sides";
 const NOT_TWO_ANGS = "not_all_angles_appear_exactly_twice_in_con_angs";
 
 type TriangleAssignResult =
@@ -57,7 +58,11 @@ const resolveForTri = (
   if (tri.containsParseObj(obj)) return obj;
   if (obj.type !== Obj.Angle) return null;
   const ang = ctx.getAngle(obj.v);
-  const resolved = ang && resolveAngleForProp(ang, (name) => tri.containsParseObj({ ...obj, v: name }));
+  const resolved =
+    ang &&
+    resolveAngleForProp(ang, (name) =>
+      tri.containsParseObj({ ...obj, v: name }),
+    );
   return resolved ? { ...obj, v: resolved } : null;
 };
 
@@ -417,7 +422,9 @@ export const checkCpctc = (
   if (conclusion.function === "con_ang") {
     return checkCpctcAngle(tri1, tri2, conclusion, ctx);
   }
-  return reasonApplicationFail(BAD_CONC_TYPE, { function: conclusion.function });
+  return reasonApplicationFail(BAD_CONC_TYPE, {
+    function: conclusion.function,
+  });
 };
 
 export const checkConTri = (
@@ -544,9 +551,8 @@ export const checkBaseAngle = (
   ctx: ProofContent,
 ): ReasonApplicationResult => {
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
-  if (a1.equals(a2)) {
-    return reasonApplicationFail(SAME_ANG, { ang: a1.label });
-  }
+  let ref = failReflexStatements(a1, a2);
+  if (!ref.ok) return ref;
   const t = getTriFromAngs(a1, a2, ctx);
   if (!t) {
     return reasonApplicationFail(TRI_NOT_FOUND, {
@@ -555,7 +561,9 @@ export const checkBaseAngle = (
     });
   }
   const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
-  if (!t.contains(s1) || !t.contains(s2) || s1.equals(s2)) {
+  ref = failReflexStatements(s1, s2);
+  if (!ref.ok) return ref;
+  if (!t.contains(s1) || !t.contains(s2)) {
     return reasonApplicationFail(BASE_ANG_BAD, {
       tri: t.label,
       segs: [s1.label, s2.label],
@@ -648,11 +656,13 @@ export const checkEquiangular = (
   const [x1, x2] = stmtMapper(ca1, ctx) as [Angle, Angle];
   const [y1, y2] = stmtMapper(ca2, ctx) as [Angle, Angle];
   const [z1, z2] = stmtMapper(ca3, ctx) as [Angle, Angle];
-  if (x1.equals(x2) || y1.equals(y2) || z1.equals(z2)) {
-    return reasonApplicationFail(SAME_CON_ANG, {
-      ang1: x1.equals(x2) ? x1.label : y1.equals(y2) ? y1.label : z1.label,
-    });
-  }
+  let ref = failReflexStatements(x1, x2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(y1, y2);
+  if (!ref.ok) return ref;
+  ref = failReflexStatements(z1, z2);
+  if (!ref.ok) return ref;
+
   // make a list of all 6 angles and check that each angle of t has 2 collisions
   const angs = [x1, x2, y1, y2, z1, z2];
   const invalidAngles = t.a.filter((angle) => {
