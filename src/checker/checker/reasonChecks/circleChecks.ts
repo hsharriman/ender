@@ -2,7 +2,7 @@ import { Angle, Circle, Point, ProofContent, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 import { stmtMapper } from "./argMappers";
 import { reasonApplicationFail, reasonApplicationOk } from "./reasonResult";
-import { checkDistinctDependencyStmts, failReflexStatements } from "./utils";
+import { checkDistinctDependencyStmts, failReflexStatements, resolveSegmentForProp } from "./utils";
 
 const DIFF_CIRCLES = "tangent_and_radius_on_diff_circles";
 const DIFF_TAN_PTS = "tangent_and_radius_have_diff_tangency_pts";
@@ -71,8 +71,8 @@ export const checkTangentPerpRelationship = (
       p_tan: p_tan.label,
     });
   }
-  const tanIsS1 = s1.equals(s_tan);
-  const tanIsS2 = s2.equals(s_tan);
+  const tanIsS1 = resolveSegmentForProp(s_tan, (s) => s1.equals(s)) !== null;
+  const tanIsS2 = resolveSegmentForProp(s_tan, (s) => s2.equals(s)) !== null;
   if (!tanIsS1 && !tanIsS2) {
     return reasonApplicationFail(TAN_NOT_PERP, { tangent: s_tan.label });
   }

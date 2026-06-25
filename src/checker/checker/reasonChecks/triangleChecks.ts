@@ -19,6 +19,7 @@ import {
   checkDistinctDependencyStmts,
   commonPt,
   getTriFromAngs,
+  resolveAngleForProp,
 } from "./utils";
 
 const NOT_ASSIGNABLE = "element_not_assignable_to_either_triangle";
@@ -54,13 +55,10 @@ const resolveForTri = (
   ctx: ProofContent,
 ): ParseObj | null => {
   if (tri.containsParseObj(obj)) return obj;
-  if (obj.type === Obj.Angle) {
-    const resolved = ctx
-      .getAngle(obj.v)
-      ?.resolveLabel((name) => tri.containsParseObj({ ...obj, v: name }));
-    if (resolved) return { ...obj, v: resolved };
-  }
-  return null;
+  if (obj.type !== Obj.Angle) return null;
+  const ang = ctx.getAngle(obj.v);
+  const resolved = ang && resolveAngleForProp(ang, (name) => tri.containsParseObj({ ...obj, v: name }));
+  return resolved ? { ...obj, v: resolved } : null;
 };
 
 const sortPairToTri = (

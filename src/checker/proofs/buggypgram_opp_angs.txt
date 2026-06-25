@@ -1,0 +1,11 @@
+title: "pgram_opp_angs test"
+premises:
+pt: A (0, 0, t), B (0, 0, t), C (0, 0, t), D (0, 0, t)
+seg: AB BC CD DA AC BD
+quad: q_ABCD
+[g_1] parallelogram(q_BCAD)
+-> con_ang(a_BAD,a_BCD)
+
+steps:
+[01] given(g_1) -> parallelogram(q_BCAD)
+[02] pgram_opp_angs(1) -> con_ang(a_BAD,a_BCD)

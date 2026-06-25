@@ -11,6 +11,8 @@ import {
   anglePairsEqual,
   checkDistinctDependencyStmts,
   failReflexStatements,
+  resolveAngleForProp,
+  resolveSegmentForProp,
   segmentPairsEqual,
 } from "./utils";
 
@@ -35,14 +37,8 @@ const NOT_BASE_ANGS = "angles_not_base_angle_pair_of_trap";
 const TRAP_DIFF = "trap_and_isos_trap_are_diff_quads";
 const DIFF_QUADS = "quad_stmts_refer_to_diff_quads";
 
-// Checks whether the quad contains the angle, retrying with all of the
-// angle's overlap-merged names when the direct label match fails.
-const quadContainsAngle = (quad: Quadrilateral, a: Angle): boolean => {
-  if (quad.contains(a)) return true;
-  return (
-    a.resolveLabel((name) => quad.a.some((qa) => qa.names.has(name))) !== null
-  );
-};
+const quadContainsAngle = (quad: Quadrilateral, a: Angle): boolean =>
+  resolveAngleForProp(a, (name) => quad.a.some((qa) => qa.names.has(name))) !== null;
 
 export const rectangle = (
   rect: Stmt,
@@ -293,7 +289,10 @@ export const quad_diag_con_check = (
   const reflexCheck = failReflexStatements(s1, s2);
   if (!reflexCheck.ok) return reflexCheck;
 
-  if (!r.isDiagonal(s1) || !r.isDiagonal(s2)) {
+  if (
+    !resolveSegmentForProp(s1, (s) => r.isDiagonal(s)) ||
+    !resolveSegmentForProp(s2, (s) => r.isDiagonal(s))
+  ) {
     return reasonApplicationFail(NOT_BOTH_DIAG, {
       s1: s1.label,
       s2: s2.label,
@@ -324,7 +323,7 @@ export const pgram_diag_bisect_check = (
         pair: [s1.label, s2.label],
       });
     }
-    // s1,s2 should be equal to diagonals of the quadrilateral
+    // s1,s2 must be exactly the diagonals — no parent/child substitutions
     if (!quad.isDiagonal(s1) || !quad.isDiagonal(s2)) {
       return reasonApplicationFail(NOT_DIAGONAL, {
         s1: s1.label,
@@ -378,7 +377,10 @@ export const rhombus_kite_diag_check = (
   if (!reflexCheck.ok) return reflexCheck;
 
   // s1, s2 should be diagonals of the quadrilateral
-  if (!r.isDiagonal(s1) || !r.isDiagonal(s2)) {
+  if (
+    !resolveSegmentForProp(s1, (s) => r.isDiagonal(s)) ||
+    !resolveSegmentForProp(s2, (s) => r.isDiagonal(s))
+  ) {
     return reasonApplicationFail(NOT_DIAGONAL, {
       s1: s1.label,
       s2: s2.label,
@@ -411,7 +413,7 @@ export const rhombus_opp_bisect_check = (
         pair: [a1.label, a2.label],
       });
     }
-    if (!s1.equals(s2) || !r.isDiagonal(s2)) {
+    if (!s1.equals(s2) || !resolveSegmentForProp(s2, (s) => r.isDiagonal(s))) {
       return reasonApplicationFail(DIFF_DIAGONAL, {
         s1: s1.label,
         s2: s2.label,
@@ -421,7 +423,7 @@ export const rhombus_opp_bisect_check = (
     return checkQuadrilateralCls(pgram, q, ctx);
   } else {
     // if only one angle/segment pair, just check that they are valid opposite angle and diagonal
-    if (!r.contains(a1) || !r.isDiagonal(s1)) {
+    if (!r.contains(a1) || !resolveSegmentForProp(s1, (s) => r.isDiagonal(s))) {
       return reasonApplicationFail(NOT_IN_QUAD, {
         angle: a1.label,
         segment: s1.label,

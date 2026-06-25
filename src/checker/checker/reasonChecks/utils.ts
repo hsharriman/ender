@@ -1,6 +1,7 @@
 import {
   Angle,
   BaseGeometryObject,
+  Point,
   ProofContent,
   Segment,
   Triangle,
@@ -11,6 +12,76 @@ import {
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
+
+/**
+ * Returns the first segment from {seg, its subsegments, its parent segments}
+ * that satisfies check, or null if none do.
+ *
+ * Use for property checks (diagonal membership, perpendicularity, bisection,
+ * etc.) where a proof may reference a parent or subsegment of the geometrically
+ * valid segment. Do NOT use for congruence / similarity / parallel equality
+ * checks where segment identity matters.
+ */
+export const resolveSegmentForProp = (
+  seg: Segment,
+  check: (s: Segment) => boolean,
+): Segment | null => {
+  if (check(seg)) return seg;
+  for (const sub of seg.getSubSegments()) {
+    if (check(sub)) return sub;
+  }
+  for (const par of seg.getParentSegments()) {
+    if (check(par)) return par;
+  }
+  return null;
+};
+
+/**
+ * Returns the first name in ang.names for which check passes, or null.
+ *
+ * ang.names is populated with all overlap-merged variants during premises
+ * setup (e.g., QPR also has QPT when T is interior to PR), so iterating names
+ * is the angle-side equivalent of traversing segment parent/sub relationships.
+ */
+export const resolveAngleForProp = (
+  ang: Angle,
+  check: (name: string) => boolean,
+): string | null => {
+  return ang.resolveLabel(check);
+};
+
+export const segContainsPt = (seg: Segment, pt: Point): boolean =>
+  seg.contains(pt) || pt.isOnLine(seg);
+
+/**
+ * Returns ok if angle ang is a right angle at p with its two rays lying
+ * along s1 and s2.  Handles angle-overlap name variants and parent/child
+ * segments: any name of ang whose non-center endpoints land on s1 and s2
+ * (one each) satisfies the check.
+ */
+export const rightAngleOnPerp = (
+  ang: Angle,
+  s1: Segment,
+  s2: Segment,
+  p: Point,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
+  if (!ang.centerEquals(p))
+    return reasonApplicationFail("angles_dont_share_centerpt");
+  if (
+    resolveAngleForProp(ang, (name) => {
+      const startPt = ctx.getPoint(name[0]);
+      const endPt = ctx.getPoint(name[2]);
+      if (!startPt || !endPt) return false;
+      return (
+        (segContainsPt(s1, startPt) && segContainsPt(s2, endPt)) ||
+        (segContainsPt(s2, startPt) && segContainsPt(s1, endPt))
+      );
+    }) === null
+  )
+    return reasonApplicationFail("shared_side_not_on_perp_segs");
+  return reasonApplicationOk();
+};
 
 /** Canonical string for comparing statement structure (function + typed args). */
 export const stmtKey = (stmt: Stmt): string => {

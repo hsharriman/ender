@@ -2,11 +2,14 @@ import { Angle, Point, ProofContent, Segment } from "../../../geometry-object";
 import { ParseDiagramStmt, Stmt } from "../../types/checkerTypes";
 import { stmtMapper } from "./argMappers";
 import {
+  DiagramResult,
   ReasonApplicationResult,
+  diagramFail,
+  diagramOk,
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
-import { findDuplicateDependencyStatements } from "./utils";
+import { findDuplicateDependencyStatements, rightAngleOnPerp } from "./utils";
 
 const SEG_NOT_EQUAL = "segs_are_not_equal";
 const NO_ALT_INT = "no_transversal_produces_alt_int_angles";
@@ -18,10 +21,7 @@ const NO_MIDPT = "segs_not_subsegments_meeting_at_midpt";
 const DUPE_STMT = "dupe_stmt_supplied";
 const NO_INTERSECT = "points_do_not_share_intersection_on_both_segs";
 const NO_PERP_PT = "no_intersect_pt_in_perp_stmt";
-const BAD_PERP_ANG = "angle_vertex_not_at_intersection";
-const NO_SHARED_CTR = "angles_dont_share_centerpt";
-const NO_SHARED_SIDE = "angles_dont_share_side";
-const SIDE_NOT_PERP = "shared_side_not_on_perp_segs";
+
 const NOT_ADJ_PERP = "angles_not_adj_at_perp";
 const MIDPT_NOT_PERP = "midpt_not_at_perp_intersection";
 const BAD_BISECT = "bisected_halves_dont_match_con_segs";
@@ -42,9 +42,6 @@ const CORRESP_CTR = "corresp_angle_ctrs_not_at_intersections";
 const CORRESP_DIR = "corresp_angles_not_in_corresponding_directions";
 const CORRESP_SIDE = "corresp_angles_not_on_same_side";
 
-type DiagramResult =
-  | { ok: true; diagramDeps: ParseDiagramStmt[] }
-  | { ok: false; failure: { code: string; details?: Record<string, unknown> } };
 
 export const reflex_s = (s1: Segment, s2: Segment): ReasonApplicationResult => {
   if (s1.equals(s2)) return reasonApplicationOk();
@@ -61,25 +58,25 @@ export const altint = (
   ctx: ProofContent,
 ): DiagramResult => {
   const res = transversalHelper(ctx, transversal, conAng, para);
-  if (!res.ok) return { ok: false, failure: { code: TRANSVERSAL_BAD } };
+  if (!res.ok) return diagramFail(TRANSVERSAL_BAD);
 
   const [s1p1, s1p2, , , s2p1, s2p2] = res.pts;
   const [, innerT] = res.segs;
   const [a1, a2] = res.angles;
 
   if (!a1.centerEquals(innerT.p1) || !a2.centerEquals(innerT.p2))
-    return { ok: false, failure: { code: ALT_INT_CTR } };
+    return diagramFail(ALT_INT_CTR);
 
   if (!a1.contains(innerT.p2) || !a2.contains(innerT.p1))
-    return { ok: false, failure: { code: ALT_INT_INWARD } };
+    return diagramFail(ALT_INT_INWARD);
 
   if (
     (a1.contains(s1p1) && a2.contains(s2p2)) ||
     (a1.contains(s1p2) && a2.contains(s2p1))
   )
-    return { ok: true, diagramDeps: [] };
+    return diagramOk();
 
-  return { ok: false, failure: { code: ALT_INT_SIDES } };
+  return diagramFail(ALT_INT_SIDES);
 };
 
 export const check_altint = (
@@ -89,13 +86,13 @@ export const check_altint = (
   ctx: ProofContent,
 ): DiagramResult => {
   const matches: ParseDiagramStmt[] = [];
-  let lastFailure: DiagramResult = { ok: false, failure: { code: NO_ALT_INT } };
+  let lastFailure: DiagramResult = diagramFail(NO_ALT_INT);
   for (const d of transversals) {
     const r = altint(conAng, d.statement, para, ctx);
     if (r.ok) matches.push(d);
     else lastFailure = r;
   }
-  return matches.length > 0 ? { ok: true, diagramDeps: matches } : lastFailure;
+  return matches.length > 0 ? diagramOk(matches) : lastFailure;
 };
 
 export const altext = (
@@ -105,17 +102,17 @@ export const altext = (
   ctx: ProofContent,
 ): DiagramResult => {
   const res = transversalHelper(ctx, transversal, conAng, para);
-  if (!res.ok) return { ok: false, failure: { code: TRANSVERSAL_BAD } };
+  if (!res.ok) return diagramFail(TRANSVERSAL_BAD);
 
   const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = res.pts;
   const [t] = res.segs;
   const [a1, a2] = res.angles;
 
   if (t1.equals(i1) || t2.equals(i2))
-    return { ok: false, failure: { code: ALT_EXT_ENDPT } };
+    return diagramFail(ALT_EXT_ENDPT);
 
   if (!i1.isOnLine(t) || !i2.isOnLine(t))
-    return { ok: false, failure: { code: ALT_EXT_LINE } };
+    return diagramFail(ALT_EXT_LINE);
 
   if (
     !a1.centerEquals(i1) ||
@@ -123,15 +120,15 @@ export const altext = (
     !a1.contains(t1) ||
     !a2.contains(t2)
   )
-    return { ok: false, failure: { code: ALT_EXT_OUTER } };
+    return diagramFail(ALT_EXT_OUTER);
 
   if (
     (a1.contains(s1p1) && a2.contains(s2p2)) ||
     (a1.contains(s1p2) && a2.contains(s2p1))
   )
-    return { ok: true, diagramDeps: [] };
+    return diagramOk();
 
-  return { ok: false, failure: { code: ALT_EXT_SIDES } };
+  return diagramFail(ALT_EXT_SIDES);
 };
 
 export const check_altext = (
@@ -141,13 +138,13 @@ export const check_altext = (
   ctx: ProofContent,
 ): DiagramResult => {
   const matches: ParseDiagramStmt[] = [];
-  let lastFailure: DiagramResult = { ok: false, failure: { code: NO_ALT_EXT } };
+  let lastFailure: DiagramResult = diagramFail(NO_ALT_EXT);
   for (const d of transversals) {
     const r = altext(conAng, d.statement, para, ctx);
     if (r.ok) matches.push(d);
     else lastFailure = r;
   }
-  return matches.length > 0 ? { ok: true, diagramDeps: matches } : lastFailure;
+  return matches.length > 0 ? diagramOk(matches) : lastFailure;
 };
 
 export const sameside = (
@@ -157,24 +154,24 @@ export const sameside = (
   ctx: ProofContent,
 ): DiagramResult => {
   const res = transversalHelper(ctx, transversal, supplementary, para);
-  if (!res.ok) return { ok: false, failure: { code: TRANSVERSAL_BAD } };
+  if (!res.ok) return diagramFail(TRANSVERSAL_BAD);
 
   const [s1p1, s1p2, , i1, s2p1, s2p2, , i2] = res.pts;
   const [a1, a2] = res.angles;
 
   if (!a1.centerEquals(i1) || !a2.centerEquals(i2))
-    return { ok: false, failure: { code: SS_CTR } };
+    return diagramFail(SS_CTR);
 
   if (!a1.contains(i2) || !a2.contains(i1))
-    return { ok: false, failure: { code: SS_INWARD } };
+    return diagramFail(SS_INWARD);
 
   if (
     (a1.contains(s1p1) && a2.contains(s2p1)) ||
     (a1.contains(s1p2) && a2.contains(s2p2))
   )
-    return { ok: true, diagramDeps: [] };
+    return diagramOk();
 
-  return { ok: false, failure: { code: SS_SIDE } };
+  return diagramFail(SS_SIDE);
 };
 
 export const check_sameside = (
@@ -184,13 +181,13 @@ export const check_sameside = (
   ctx: ProofContent,
 ): DiagramResult => {
   const matches: ParseDiagramStmt[] = [];
-  let lastFailure: DiagramResult = { ok: false, failure: { code: NO_SAMESIDE } };
+  let lastFailure: DiagramResult = diagramFail(NO_SAMESIDE);
   for (const d of transversals) {
     const r = sameside(supAng, d.statement, para, ctx);
     if (r.ok) matches.push(d);
     else lastFailure = r;
   }
-  return matches.length > 0 ? { ok: true, diagramDeps: matches } : lastFailure;
+  return matches.length > 0 ? diagramOk(matches) : lastFailure;
 };
 
 export const corresp_ang = (
@@ -200,34 +197,36 @@ export const corresp_ang = (
   ctx: ProofContent,
 ): DiagramResult => {
   const res = transversalHelper(ctx, transversal, conAng, para);
-  if (!res.ok) return { ok: false, failure: { code: TRANSVERSAL_BAD } };
+  if (!res.ok) return diagramFail(TRANSVERSAL_BAD);
 
   const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = res.pts;
   const [t] = res.segs;
   const [a1, a2] = res.angles;
 
   if (t1.equals(i1) || t2.equals(i2))
-    return { ok: false, failure: { code: CORRESP_ENDPT } };
+    return diagramFail(CORRESP_ENDPT);
 
   if (!i1.isOnLine(t) || !i2.isOnLine(t))
-    return { ok: false, failure: { code: CORRESP_LINE } };
+    return diagramFail(CORRESP_LINE);
 
   if (!a1.centerEquals(i1) || !a2.centerEquals(i2))
-    return { ok: false, failure: { code: CORRESP_CTR } };
+    return diagramFail(CORRESP_CTR);
 
   if (
-    !((a1.contains(i2) && a2.contains(t2)) ||
-      (a2.contains(i1) && a1.contains(t1)))
+    !(
+      (a1.contains(i2) && a2.contains(t2)) ||
+      (a2.contains(i1) && a1.contains(t1))
+    )
   )
-    return { ok: false, failure: { code: CORRESP_DIR } };
+    return diagramFail(CORRESP_DIR);
 
   if (
     (a1.contains(s1p1) && a2.contains(s2p1)) ||
     (a1.contains(s1p2) && a2.contains(s2p2))
   )
-    return { ok: true, diagramDeps: [] };
+    return diagramOk();
 
-  return { ok: false, failure: { code: CORRESP_SIDE } };
+  return diagramFail(CORRESP_SIDE);
 };
 
 export const check_corresp_ang = (
@@ -237,13 +236,13 @@ export const check_corresp_ang = (
   ctx: ProofContent,
 ): DiagramResult => {
   const matches: ParseDiagramStmt[] = [];
-  let lastFailure: DiagramResult = { ok: false, failure: { code: NO_CORRESP } };
+  let lastFailure: DiagramResult = diagramFail(NO_CORRESP);
   for (const d of transversals) {
     const r = corresp_ang(conAng, d.statement, para, ctx);
     if (r.ok) matches.push(d);
     else lastFailure = r;
   }
-  return matches.length > 0 ? { ok: true, diagramDeps: matches } : lastFailure;
+  return matches.length > 0 ? diagramOk(matches) : lastFailure;
 };
 
 export const midpt = (
@@ -297,15 +296,7 @@ export const perp = (
     Point,
   ];
   if (!intersectPt) return reasonApplicationFail(NO_PERP_PT);
-  const startLabel = angle.start.label;
-  const endLabel = angle.end.label;
-  if (
-    angle.centerEquals(intersectPt) &&
-    ((s1.label.includes(startLabel) && s2.label.includes(endLabel)) ||
-      (s2.label.includes(startLabel) && s1.label.includes(endLabel)))
-  )
-    return reasonApplicationOk();
-  return reasonApplicationFail(BAD_PERP_ANG);
+  return rightAngleOnPerp(angle, s1, s2, intersectPt, ctx);
 };
 
 export const perp_con_ang = (
@@ -321,22 +312,20 @@ export const perp_con_ang = (
     Point,
   ];
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
-  if (!intersectPt) return reasonApplicationFail(NO_PERP_PT);
 
-  if (!a1.centerEquals(intersectPt) || !a2.centerEquals(intersectPt))
-    return reasonApplicationFail(NO_SHARED_CTR);
+  const r1 = rightAngleOnPerp(a1, s1, s2, intersectPt, ctx);
+  if (!r1.ok) return r1;
+  const r2 = rightAngleOnPerp(a2, s1, s2, intersectPt, ctx);
+  if (!r2.ok) return r2;
 
-  const sharedSideTest = a1.sharedSide(a2);
-  if (!sharedSideTest) return reasonApplicationFail(NO_SHARED_SIDE);
-  const sharedSeg = ctx.getSegment(sharedSideTest.shared);
-  if (!sharedSeg || (!sharedSeg.equals(s1) && !sharedSeg.equals(s2)))
-    return reasonApplicationFail(SIDE_NOT_PERP);
-
-  if (
-    a1.contains(ctx.getPoint(sharedSideTest.thisThird)) &&
-    a2.contains(ctx.getPoint(sharedSideTest.otherThird))
-  )
-    return reasonApplicationOk();
+  // Angles must be adjacent: they share a common outer-ray endpoint
+  // (distinguishes adjacent right angles from vertical right angles).
+  for (const n1 of a1.names) {
+    for (const n2 of a2.names) {
+      const outer1 = new Set([n1[0], n1[2]]);
+      if (outer1.has(n2[0]) || outer1.has(n2[2])) return reasonApplicationOk();
+    }
+  }
   return reasonApplicationFail(NOT_ADJ_PERP);
 };
 

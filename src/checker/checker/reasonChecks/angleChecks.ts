@@ -2,11 +2,19 @@ import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { ParseDiagramStmt, Stmt } from "../../types/checkerTypes";
 import { stmtMapper } from "./argMappers";
 import {
+  DiagramResult,
   ReasonApplicationResult,
+  diagramFail,
+  diagramOk,
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
-import { findDuplicateDependencyStatements } from "./utils";
+import {
+  findDuplicateDependencyStatements,
+  resolveAngleForProp,
+  resolveSegmentForProp,
+  rightAngleOnPerp,
+} from "./utils";
 
 const ANG_NOT_EQUAL = "angles_are_not_equal";
 const NO_LINEAR_PAIR = "angles_do_not_match_linear_pair";
@@ -22,9 +30,6 @@ const NO_VERT_ANG = "no_intersecting_seg_produces_vert_angles";
 const SAME_RIGHT = "both_right_angles_are_the_same_angle";
 const BAD_BISECT = "bisector_not_contained_in_both_half_angles";
 
-type DiagramResult =
-  | { ok: true; diagramDeps: ParseDiagramStmt[] }
-  | { ok: false; failure: { code: string; details?: Record<string, unknown> } };
 
 export const reflex_a = (a1: Angle, a2: Angle): ReasonApplicationResult => {
   if (a1.equals(a2)) return reasonApplicationOk();
@@ -34,18 +39,14 @@ export const reflex_a = (a1: Angle, a2: Angle): ReasonApplicationResult => {
   });
 };
 
-export const right = (perp: Stmt, right: Stmt, ctx: ProofContent): boolean => {
+export const right = (
+  perp: Stmt,
+  right: Stmt,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
   const [s1, s2, p] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
   const [r] = stmtMapper(right, ctx) as [Angle];
-  if (!p) return false;
-
-  const startLabel = r.start.label;
-  const endLabel = r.end.label;
-  return (
-    r.centerEquals(p) &&
-    ((s1.label.includes(startLabel) && s2.label.includes(endLabel)) ||
-      (s2.label.includes(startLabel) && s1.label.includes(endLabel)))
-  );
+  return rightAngleOnPerp(r, s1, s2, p, ctx);
 };
 
 export const linear_pair = (
@@ -56,10 +57,7 @@ export const linear_pair = (
   const [a1, a2] = stmtMapper(supplementary, ctx) as [Angle, Angle];
   const [l1, l2] = stmtMapper(linearPair, ctx) as [Angle, Angle];
 
-  if (
-    (a1.equals(l1) && a2.equals(l2)) ||
-    (a1.equals(l2) && a2.equals(l1))
-  )
+  if ((a1.equals(l1) && a2.equals(l2)) || (a1.equals(l2) && a2.equals(l1)))
     return reasonApplicationOk();
   return reasonApplicationFail(NO_LINEAR_PAIR);
 };
@@ -107,8 +105,7 @@ export const con_supp_comp_diff_angles = (
   const [s1, s2] = stmtMapper(sharedConAng, ctx) as [Angle, Angle];
   const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
-  if (c1.equals(c2) || s1.equals(s2))
-    return reasonApplicationFail(REFLEX_ANG);
+  if (c1.equals(c2) || s1.equals(s2)) return reasonApplicationFail(REFLEX_ANG);
 
   const s1InSupp = [a1, a2].filter((a) => a.equals(s1)).length === 1;
   const s1InSupp2 = [b1, b2].filter((a) => a.equals(s1)).length === 1;
@@ -117,8 +114,7 @@ export const con_supp_comp_diff_angles = (
 
   if (s1InSupp === s1InSupp2 || s2InSupp === s2InSupp2)
     return reasonApplicationFail(SAME_SUPP);
-  if (s1InSupp === s2InSupp)
-    return reasonApplicationFail(NOT_DISTRIBUTED);
+  if (s1InSupp === s2InSupp) return reasonApplicationFail(NOT_DISTRIBUTED);
 
   const [suppShared, supp2Shared] = s1InSupp ? [s1, s2] : [s2, s1];
   const remaining1 = [a1, a2].find((a) => !a.equals(suppShared))!;
@@ -137,14 +133,23 @@ export const vert_ang = (
   conAng: Stmt,
   ctx: ProofContent,
 ): boolean => {
-  const [s1, s2, pt] = stmtMapper(intersect_seg, ctx) as [Segment, Segment, Point];
+  const [s1, s2, pt] = stmtMapper(intersect_seg, ctx) as [
+    Segment,
+    Segment,
+    Point,
+  ];
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
+  // Check via subsegments: when the intersection is interior (not an endpoint),
+  // ang.contains(seg) returns false for the full segment; subsegments fix this.
+  const hasRayAlongSeg = (ang: Angle, seg: Segment) =>
+    resolveSegmentForProp(seg, (s) => ang.contains(s)) !== null;
+
   const anglesValid =
-    !a1.contains(s1) &&
-    !a1.contains(s2) &&
-    !a2.contains(s1) &&
-    !a2.contains(s2) &&
+    hasRayAlongSeg(a1, s1) &&
+    hasRayAlongSeg(a1, s2) &&
+    hasRayAlongSeg(a2, s1) &&
+    hasRayAlongSeg(a2, s2) &&
     !a1.equals(a2);
 
   const centerValid = a1.centerEquals(pt) && a2.centerEquals(pt);
@@ -159,8 +164,8 @@ export const check_vert_ang = (
 ): DiagramResult => {
   const matches = intersects.filter((d) => vert_ang(d.statement, stmt, ctx));
   if (matches.length === 0)
-    return { ok: false, failure: { code: NO_VERT_ANG } };
-  return { ok: true, diagramDeps: matches };
+    return diagramFail(NO_VERT_ANG);
+  return diagramOk(matches);
 };
 
 export const defConRight = (
@@ -184,9 +189,18 @@ export const def_ang_bisect = (
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
   const [ang, seg] = stmtMapper(bisect, ctx) as [Angle, Segment];
 
+  const containsSeg = (a: Angle) => {
+    const segSet = new Set(seg.label.split(""));
+    return (
+      resolveAngleForProp(
+        a,
+        (n) => (segSet.has(n[0]) || segSet.has(n[2])) && segSet.has(n[1]),
+      ) !== null
+    );
+  };
   if (
-    a1.contains(seg) &&
-    a2.contains(seg) &&
+    containsSeg(a1) &&
+    containsSeg(a2) &&
     a1.centerEquals(a2.center) &&
     a1.centerEquals(ang.center)
   )

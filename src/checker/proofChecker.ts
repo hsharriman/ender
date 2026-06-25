@@ -75,10 +75,13 @@ const isCorrect = (
 export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const goal = extractGoal(proof);
   proof.errors = [];
-  const ctx = buildPremises(proof);
+  const { ctx, premiseErrors } = buildPremises(proof);
   ctx.checkAngleOverlaps();
 
-  const geometricObjectErrors = checkGeometricObjects(proof, ctx);
+  const geometricObjectErrors = [
+    ...checkGeometricObjects(proof, ctx),
+    ...premiseErrors,
+  ];
   if (geometricObjectErrors.length > 0) {
     proof.isCorrect = false;
     return {
