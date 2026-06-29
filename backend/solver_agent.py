@@ -105,13 +105,25 @@ def get_fixed_proof(proof_name, str_output):
 
 
 def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
+    # Get system prompt
     with open("backend/prompt/" + PROMPT + ".txt", encoding="utf-8") as f:
         system_prompt = f.read()
+
+    # Append valid reasons and statements to the system prompt
+    with open("src/checker/grammar/defs/reasons.defs.ts", "r", encoding="utf-8") as f:
+        valid_reasons = f.read()
+    with open("src/checker/grammar/defs/stmts.defs.ts", "r", encoding="utf-8") as f:
+        valid_statements = f.read()
+    system_prompt = f"{system_prompt}\nValid reasons: {valid_reasons}\n\
+        Valid statements: {valid_statements}"
+
+    # Get checker output
     checker_output = save_checker_output(PROOF)
     with open("src/checker/proofs/" + PROOF + ".txt", encoding="utf-8") as f:
         student_proof = f.read()
     # _, _, checker_result = split_output(result)
 
+    # Run solution loop
     is_solution_correct = False
     loop_times = 0
     while not is_solution_correct and loop_times <= LOOP_TIMES:
@@ -141,7 +153,7 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
 
 if __name__ == "__main__":
     PROOF = "s2inc1"
-    PROMPT = "solver_with_valid_reasons"
+    PROMPT = "solver_with_valid_reasons_and_explanation"
     try:
         solution = run_solver_agent(PROOF, PROMPT)
     except ValueError as error:
