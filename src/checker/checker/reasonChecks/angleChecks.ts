@@ -16,7 +16,6 @@ import {
   rightAngleOnPerp,
 } from "./utils";
 
-const ANG_NOT_EQUAL = "angles_not_equal";
 const NO_LINEAR_PAIR = "angles_not_linear_pair";
 const DUPE_STMT = "dupe_stmt_supplied";
 const NO_SHARED_ANG = "no_shared_angle_bw_supp_pairs";
@@ -26,14 +25,6 @@ const NOT_DISTRIBUTED = "con_angles_not_distributed_across_pairs";
 const NO_VERT_ANG = "no_intersecting_seg_produces_vert_angles";
 const BAD_BISECT_ANG = "angle_centers_dont_match";
 const BAD_BISECT = "bisector_not_in_both_half_angles";
-
-export const reflex_a = (a1: Angle, a2: Angle): ReasonApplicationResult => {
-  if (a1.equals(a2)) return reasonApplicationOk();
-  return reasonApplicationFail(ANG_NOT_EQUAL, {
-    ang1: a1.label,
-    ang2: a2.label,
-  });
-};
 
 export const right = (
   perp: Stmt,

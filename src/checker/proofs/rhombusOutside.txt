@@ -15,6 +15,6 @@ steps:
 [02] rhombus_opp_bisect(1) -> ang_bisect(a_QPS,PR)
 [03] def_ang_bisect(2) -> con_ang(a_QPR,a_SPR)
 [04] given(g_2) -> con_seg(PQ,PS)
-[05] reflex_s() -> ref_seg(PR,PR)
+[05] reflex() -> ref_seg(PR,PR)
 [06] sas(4,3,5) -> con_tri(t_QPR,t_SPR)
 [07] cpctc(6) -> con_seg(RQ,RS)

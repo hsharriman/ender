@@ -64,12 +64,12 @@ export const REASONS_DEFS = {
     dependencies: ["con_tri"],
     conclusion: "con_seg, con_ang",
   },
-  reflex_s: {
-    name: "reflex_s",
+  reflex: {
+    name: "reflex",
     title: "Reflexive Property",
     body: "Any geometric figure is congruent with itself.",
     dependencies: [],
-    conclusion: "ref_seg",
+    conclusion: "ref_seg, ref_ang",
   },
   def_perp: {
     name: "def_perp",
@@ -91,13 +91,6 @@ export const REASONS_DEFS = {
     body: "If two subsections of a line are congruent, then the point dividing those subsections is the midpoint.",
     dependencies: ["con_seg"],
     conclusion: "midpt",
-  },
-  reflex_a: {
-    name: "reflex_a",
-    title: "Reflexive Property",
-    body: "Any geometric figure is congruent with itself.",
-    dependencies: [],
-    conclusion: "ref_ang",
   },
   vert_ang: {
     name: "vert_ang",

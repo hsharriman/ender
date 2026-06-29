@@ -9,12 +9,8 @@ import {
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
-import {
-  findDuplicateDependencyStatements,
-  rightAngleOnPerp,
-} from "./utils";
+import { findDuplicateDependencyStatements, rightAngleOnPerp } from "./utils";
 
-const SEG_NOT_EQUAL = "segs_are_not_equal";
 const NO_ALT_INT = "no_transversal_produces_alt_int_angles";
 const NO_ALT_EXT = "no_transversal_produces_alt_ext_angles";
 const NO_SAMESIDE = "no_transversal_produces_same_side_int_angles";
@@ -44,14 +40,6 @@ const CORRESP_LINE = "corresp_intersections_not_on_transversal_line";
 const CORRESP_CTR = "corresp_angle_ctrs_not_at_intersections";
 const CORRESP_DIR = "corresp_angles_not_in_corresponding_directions";
 const CORRESP_SIDE = "corresp_angles_not_on_same_side";
-
-export const reflex_s = (s1: Segment, s2: Segment): ReasonApplicationResult => {
-  if (s1.equals(s2)) return reasonApplicationOk();
-  return reasonApplicationFail(SEG_NOT_EQUAL, {
-    seg1: s1.label,
-    seg2: s2.label,
-  });
-};
 
 export const altint = (
   conAng: Stmt,
