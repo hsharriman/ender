@@ -18,7 +18,6 @@ import {
   angCenter,
   checkDistinctDependencyStmts,
   commonPt,
-  failReflexStatements,
   getTriFromAngs,
   resolveAngleForProp,
 } from "./utils";
@@ -40,7 +39,6 @@ const ANGS_NOT_UNIQUE =
 const NOT_ISOS_SIDES = "con_segs_not_two_distinct_sides_of_isosceles_triangle";
 const BASE_ANG_BAD = "base_angle_vertex_not_at_endpoint_of_exactly_one_leg";
 const DIFF_TRIANGLES = "equilateral_and_equiangular_not_the_same_triangle";
-const SAME_CON_SEG = "con_seg_has_same_seg_on_both_sides";
 const NOT_TWO_SIDES = "not_all_sides_appear_exactly_twice_in_con_segs";
 const NOT_TWO_ANGS = "not_all_angles_appear_exactly_twice_in_con_angs";
 
@@ -551,8 +549,6 @@ export const checkBaseAngle = (
   ctx: ProofContent,
 ): ReasonApplicationResult => {
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
-  let ref = failReflexStatements(a1, a2);
-  if (!ref.ok) return ref;
   const t = getTriFromAngs(a1, a2, ctx);
   if (!t) {
     return reasonApplicationFail(TRI_NOT_FOUND, {
@@ -561,8 +557,6 @@ export const checkBaseAngle = (
     });
   }
   const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
-  ref = failReflexStatements(s1, s2);
-  if (!ref.ok) return ref;
   if (!t.contains(s1) || !t.contains(s2)) {
     return reasonApplicationFail(BASE_ANG_BAD, {
       tri: t.label,
@@ -623,11 +617,6 @@ export const checkEquilateral = (
   const [x1, x2] = stmtMapper(cs1, ctx) as [Segment, Segment];
   const [y1, y2] = stmtMapper(cs2, ctx) as [Segment, Segment];
   const [z1, z2] = stmtMapper(cs3, ctx) as [Segment, Segment];
-  if (x1.equals(x2) || y1.equals(y2) || z1.equals(z2)) {
-    return reasonApplicationFail(SAME_CON_SEG, {
-      seg1: x1.equals(x2) ? x1.label : y1.equals(y2) ? y1.label : z1.label,
-    });
-  }
   // make a list of all 6 segments and check that each side of t has 2 collisions
   const segs = [x1, x2, y1, y2, z1, z2];
   const invalidSides = t.s.filter((side) => {
@@ -656,13 +645,6 @@ export const checkEquiangular = (
   const [x1, x2] = stmtMapper(ca1, ctx) as [Angle, Angle];
   const [y1, y2] = stmtMapper(ca2, ctx) as [Angle, Angle];
   const [z1, z2] = stmtMapper(ca3, ctx) as [Angle, Angle];
-  let ref = failReflexStatements(x1, x2);
-  if (!ref.ok) return ref;
-  ref = failReflexStatements(y1, y2);
-  if (!ref.ok) return ref;
-  ref = failReflexStatements(z1, z2);
-  if (!ref.ok) return ref;
-
   // make a list of all 6 angles and check that each angle of t has 2 collisions
   const angs = [x1, x2, y1, y2, z1, z2];
   const invalidAngles = t.a.filter((angle) => {

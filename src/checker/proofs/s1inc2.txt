@@ -11,5 +11,5 @@ steps:
 [01] given(g_1) -> perp(JL,KM,M)
 [02] given(g_2) -> con_seg(JK,LK)
 [03] perp_con_ang(1) -> con_right(a_JMK,a_LMK)
-[04] reflex_s() -> con_seg(MK, MK)
+[04] reflex_s() -> ref_seg(MK, MK)
 [05] aas(2, 3, 4) -> con_tri(t_JMK,t_LMK)  // Missing dependency for AAS on invalid reason

@@ -60,6 +60,7 @@ export interface StatementDefinition {
   parameters: string[];
   isPremisesOnly?: boolean;
   group?: string; // Optional group membership
+  allowDupeArgs?: boolean; // when true, duplicate geometric arguments within the statement are valid (e.g. ref_seg, ref_ang)
 }
 
 export type ErrorType =

@@ -10,7 +10,6 @@ import {
   reasonApplicationOk,
 } from "./reasonResult";
 import {
-  failReflexStatements,
   findDuplicateDependencyStatements,
   rightAngleOnPerp,
 } from "./utils";
@@ -248,8 +247,6 @@ export const midpt = (
   ctx: ProofContent,
 ): ReasonApplicationResult => {
   const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
-  const ref = failReflexStatements(s1, s2);
-  if (!ref.ok) return ref;
   const [bigSeg, midPtObj] = stmtMapper(midPt, ctx) as [Segment, Point];
 
   const segmentsEqual =

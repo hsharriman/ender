@@ -47,7 +47,6 @@ The proof checker evaluates the correctness of geometric proofs by:
 If you're on an Apple Silicon Mac, follow these additional steps:
 
 1. **Install Node.js for Apple Silicon**:
-
    - Download the ARM64 version from [nodejs.org](https://nodejs.org/)
    - Or use Homebrew: `brew install node`
 
@@ -76,7 +75,10 @@ npm run checkProof src/checker/proofs/yourProof.txt
 ### Programmatic Usage
 
 ```typescript
-import { collectProofCheckerIssues, runProofCheckerFromText } from "./proofChecker";
+import {
+  collectProofCheckerIssues,
+  runProofCheckerFromText,
+} from "./proofChecker";
 
 const result = runProofCheckerFromText(proofText);
 const issues = collectProofCheckerIssues(result);
@@ -133,7 +135,7 @@ con_ang(a_BAC,a_DAC) [02]
 -> con_tri(t_ABC,t_ADC)
 
 steps:
-reflex_s() -> con_seg(AC, AC) [03]
+reflex_s() -> ref_seg(AC, AC) [03]
 sas([01], [02], [03]) -> con_tri(t_ABC,t_ADC) [04]
 ```
 

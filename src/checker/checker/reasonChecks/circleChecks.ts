@@ -5,7 +5,6 @@ import { reasonApplicationFail, reasonApplicationOk } from "./reasonResult";
 import {
   checkDistinctDependencyStmts,
   checkEqual,
-  failReflexStatements,
   resolveSegmentForProp,
 } from "./utils";
 
@@ -59,24 +58,13 @@ export const checkTangentPerpRelationship = (
     Point,
   ];
 
-  if (!circle_tan.equals(circle_rad)) {
-    return reasonApplicationFail(DIFF_CIRCLES, {
-      circle1: circle_tan.label,
-      circle2: circle_rad.label,
-    });
-  }
-  if (!p_tan.equals(p_rad)) {
-    return reasonApplicationFail(DIFF_TAN_PTS, {
-      p_tan: p_tan.label,
-      p_rad: p_rad.label,
-    });
-  }
-  if (!p_int || !p_int.equals(p_tan)) {
-    return reasonApplicationFail(BAD_INT_PT, {
-      p_int: p_int?.label,
-      p_tan: p_tan.label,
-    });
-  }
+  let eq = checkEqual(circle_tan, circle_rad);
+  if (!eq.ok) return { ...eq, reason: DIFF_CIRCLES };
+  eq = checkEqual(p_tan, p_rad);
+  if (!eq.ok) return { ...eq, reason: DIFF_TAN_PTS };
+  eq = checkEqual(p_int, p_tan);
+  if (!eq.ok) return { ...eq, reason: BAD_INT_PT };
+
   const tanIsS1 = resolveSegmentForProp(s_tan, (s) => s1.equals(s)) !== null;
   const tanIsS2 = resolveSegmentForProp(s_tan, (s) => s2.equals(s)) !== null;
   if (!tanIsS1 && !tanIsS2) {
@@ -107,12 +95,9 @@ export const con_tangents_ext_check = (
   const [c2, s2, p2] = stmtMapper(tan2, ctx) as [Circle, Segment, Point];
   const [cs1, cs2] = stmtMapper(conclusion, ctx) as [Segment, Segment];
 
-  if (!c1.equals(c2)) {
-    return reasonApplicationFail(TAN_DIFF_CIRCLES, {
-      c1: c1.label,
-      c2: c2.label,
-    });
-  }
+  let eq = checkEqual(c1, c2);
+  if (!eq.ok) return { ...eq, reason: TAN_DIFF_CIRCLES };
+
   if (p1.equals(p2)) {
     return reasonApplicationFail(SAME_TAN_PT, { p: p1.label });
   }
@@ -124,12 +109,10 @@ export const con_tangents_ext_check = (
   // Find the non-tangency endpoint of each segment (the shared external point)
   const ext1 = s1.p1.equals(p1) ? s1.p2 : s1.p1;
   const ext2 = s2.p1.equals(p2) ? s2.p2 : s2.p1;
-  if (!ext1.equals(ext2)) {
-    return reasonApplicationFail(NO_EXT_PT, {
-      ext1: ext1.label,
-      ext2: ext2.label,
-    });
-  }
+
+  eq = checkEqual(ext1, ext2);
+  if (!eq.ok) return { ...eq, reason: NO_EXT_PT };
+
   return reasonApplicationOk();
 };
 
@@ -159,12 +142,9 @@ export const radius_chord_bisect_check = (
     Point,
   ];
 
-  if (!c_rad.equals(c_chord)) {
-    return reasonApplicationFail(RAD_CHORD_DIFF, {
-      c_rad: c_rad.label,
-      c_chord: c_chord.label,
-    });
-  }
+  let eq = checkEqual(c_rad, c_chord);
+  if (!eq.ok) return { ...eq, reason: RAD_CHORD_DIFF };
+
   // One of the perp segments must be the chord
   const chordIsFirst = s_rad.equals(s_chord);
   const chordIsSecond = s_ch.equals(s_chord);
@@ -189,11 +169,9 @@ export const radius_chord_bisect_check = (
       radius: s_perpRad.label,
     });
   }
-  if (!cp.equals(p_int)) {
-    return reasonApplicationFail(BAD_BISECT_MIDPT, {
-      expected: p_int.label,
-      got: cp.label,
-    });
+  eq = checkEqual(cp, p_int);
+  if (!eq.ok) {
+    return { ...eq, reason: BAD_BISECT_MIDPT };
   }
   return reasonApplicationOk();
 };
@@ -218,17 +196,13 @@ export const radius_chord_bisect_conv_check = (
   const [c_chord, s_chord] = stmtMapper(chordStmt, ctx) as [Circle, Segment];
   const [c_conc, p_conc] = stmtMapper(conclusion, ctx) as [Circle, Point];
 
-  if (!c_conc.equals(c_chord)) {
-    return reasonApplicationFail(CONC_DIFF_CIRCLES, {
-      c_conc: c_conc.label,
-      c_chord: c_chord.label,
-    });
+  let eq = checkEqual(c_conc, c_chord);
+  if (!eq.ok) {
+    return { ...eq, reason: CONC_DIFF_CIRCLES };
   }
-  if (!s_bisected.equals(s_chord)) {
-    return reasonApplicationFail(NOT_CHORD, {
-      bisected: s_bisected.label,
-      chord: s_chord.label,
-    });
+  eq = checkEqual(s_bisected, s_chord);
+  if (!eq.ok) {
+    return { ...eq, reason: NOT_CHORD };
   }
   // The conclusion point must be an endpoint of the perpendicular bisector
   if (!s_perp.p1.equals(p_conc) && !s_perp.p2.equals(p_conc)) {
@@ -263,9 +237,6 @@ export const con_inscribed_angs_check = (
   if (!anglesMatch) {
     return reasonApplicationFail(ANG_NO_MATCH, { a1: a1.label, a2: a2.label });
   }
-  const reflexCheck = failReflexStatements(a1, a2);
-  if (!reflexCheck.ok) return reflexCheck;
-
   if (!ca1.endpointsEqual(ca2)) {
     return reasonApplicationFail(ANG_NO_SHARED_ENDPT, {
       a1: ca1.label,

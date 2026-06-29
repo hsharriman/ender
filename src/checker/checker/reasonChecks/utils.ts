@@ -188,25 +188,9 @@ export const anglePairsEqual = (
   return (a1.equals(a3) && a2.equals(a4)) || (a1.equals(a4) && a2.equals(a3));
 };
 
-/**
- * Check if two objects are the same (reflexive property) and return a failure
- * if they are.
- */
-export const failReflexStatements = (
-  o1: BaseGeometryObject,
-  o2: BaseGeometryObject,
-) => {
-  if (o1.equals(o2)) {
-    return reasonApplicationFail("both_stmts_are_the_same_object", {
-      pair: [o1.label, o2.label],
-    });
-  }
-  return reasonApplicationOk();
-};
-
 export const checkEqual = (o1: BaseGeometryObject, o2: BaseGeometryObject) => {
   if (!o1.equals(o2)) {
-    return reasonApplicationFail("both_objs_not_equal", {
+    return reasonApplicationFail("objs_not_equal", {
       pair: [o1.label, o2.label],
     });
   }

@@ -12,7 +12,6 @@ export const STMTS_DEFS = {
       parameters: [segment("s"), point("p")],
       isPremisesOnly: true,
       isDiagramOnly: true,
-      group: "point_on_line",
     },
     transversal: {
       name: "transversal",
@@ -28,6 +27,7 @@ export const STMTS_DEFS = {
       ],
       isPremisesOnly: true,
       isDiagramOnly: true,
+      allowDupeArgs: true,
     },
     intersect_seg: {
       name: "intersect_seg",
@@ -89,7 +89,6 @@ export const STMTS_DEFS = {
     midpt: {
       name: "midpt",
       parameters: [segment("s"), point("p")],
-      group: "point_on_line",
     },
     ang_bisect: {
       name: "ang_bisect",
@@ -193,7 +192,13 @@ export const STMTS_DEFS = {
     // },
     ref_seg: {
       name: "ref_seg",
-      parameters: [segment("s")],
+      parameters: [segment("s1"), segment("s2")],
+      allowDupeArgs: true,
+    },
+    ref_ang: {
+      name: "ref_ang",
+      parameters: [angle("a1"), angle("a2")],
+      allowDupeArgs: true,
     },
   },
   groups: {
@@ -202,10 +207,15 @@ export const STMTS_DEFS = {
       base: "con_ang",
       extensions: ["con_right"],
     },
-    point_on_line: {
-      name: "point_on_line",
-      base: "on_line",
-      extensions: ["midpt"],
+    con_seg_ref_allow: {
+      name: "con_seg_ref_allow",
+      base: "con_seg",
+      extensions: ["ref_seg"],
+    },
+    con_ang_ref_allow: {
+      name: "con_ang_ref_allow",
+      base: "con_ang",
+      extensions: ["ref_ang", "con_right"],
     },
     pgram_obj: {
       name: "pgram_obj",

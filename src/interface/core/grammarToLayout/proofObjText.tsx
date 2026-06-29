@@ -27,10 +27,16 @@ export const stmtToText =
   (stmt?: Stmt, ctx?: ProofContent) => (isActive: boolean) => {
     if (!stmt) return React.createElement("span", null, "");
     const args = stmt.arguments.map((a) => a.v);
-    if (stmt.function === "con_seg" && args.length === 2) {
+    if (
+      (stmt.function === "con_seg" || stmt.function === "ref_seg") &&
+      args.length === 2
+    ) {
       return EqualSegments.text([args[0], args[1]])(isActive);
     }
-    if (stmt.function === "con_ang" && args.length === 2) {
+    if (
+      (stmt.function === "con_ang" || stmt.function === "ref_ang") &&
+      args.length === 2
+    ) {
       return EqualAngles.text([args[0], args[1]])(isActive);
     }
     if (stmt.function === "con_tri" && args.length === 2) {
