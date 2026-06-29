@@ -127,8 +127,8 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
     is_solution_correct = False
     loop_times = 0
     while not is_solution_correct and loop_times <= LOOP_TIMES:
-        print(f"-----------------loop {loop_times}----------------")
         loop_times += 1
+        print(f"-----------------loop {loop_times}----------------")
         # Get LLM solution
         llm_solution = run_solver(system_prompt, student_proof + checker_output)
         fixed_proof = get_fixed_proof(PROOF, llm_solution)
@@ -142,8 +142,10 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
 
         if "proof is correct" in checker_output:
             is_solution_correct = True
-            print("Solution is correct and complete")
-            return checker_output
+            print(
+                f"Correct solution found in {loop_times} trial(s). Solution loop completed"
+            )
+            return fixed_proof
         else:
             # run llm again
             print("Solution is incorrect, running the loop again ")
