@@ -1,17 +1,17 @@
-import { angleStr, circleStr } from "../geometryText";
+import { angleStr, segmentStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
 
 export class InscribedAngle {
-  static additions = (props: StepFocusProps, a: string, c: string) => {
-    props.ctx.getAngle(a).mode(props.frame, props.mode);
-    props.ctx.getCircle(c).mode(props.frame, props.mode);
+  static additions = (props: StepFocusProps, s: string, a: string) => {
+    props.ctx.getSegment(s)?.mode(props.frame, props.mode);
+    props.ctx.getAngle(a)?.mode(props.frame, props.mode);
   };
-  static text = (a: string, c: string) => (isActive: boolean) => {
+  static text = (s: string, a: string) => (isActive: boolean) => {
     return (
       <span>
         {angleStr(a)}
         {" inscribes "}
-        {circleStr(c)}
+        {segmentStr(s, isActive)}
       </span>
     );
   };

@@ -2,7 +2,12 @@ import { Angle, Circle, Point, ProofContent, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
 import { stmtMapper } from "./argMappers";
 import { reasonApplicationFail, reasonApplicationOk } from "./reasonResult";
-import { checkDistinctDependencyStmts, failReflexStatements, resolveSegmentForProp } from "./utils";
+import {
+  checkDistinctDependencyStmts,
+  checkEqual,
+  failReflexStatements,
+  resolveSegmentForProp,
+} from "./utils";
 
 const DIFF_CIRCLES = "tangent_and_radius_on_diff_circles";
 const DIFF_TAN_PTS = "tangent_and_radius_have_diff_tangency_pts";
@@ -21,8 +26,9 @@ const BAD_BISECT_MIDPT = "conclusion_midpt_doesnt_match_perp_intersect_pt";
 const CONC_DIFF_CIRCLES = "conclusion_and_chord_on_diff_circles";
 const NOT_CHORD = "bisected_seg_not_the_chord";
 const PT_NOT_ENDPOINT = "conclusion_pt_not_endpoint_of_perp_bisector";
-const DIFF_CHORDS = "inscribed_angles_subtended_by_diff_chords";
 const ANG_NO_MATCH = "inscribed_angles_dont_match_con_ang_conclusion";
+const ANG_NO_SHARED_ENDPT = "inscribed_angles_dont_have_same_endpoints";
+const ANG_NOT_ON_CIRC = "angle_not_inscribed_in_circle";
 
 // Returns true if seg goes between the circle center and the tangency point
 // (i.e., it's the radius segment from center to p).
@@ -234,8 +240,8 @@ export const radius_chord_bisect_conv_check = (
   return reasonApplicationOk();
 };
 
-// con_inscribed_angs: inscribed_angle(a1, s) + inscribed_angle(a2, s) → con_ang(a1, a2)
-// Both angles must be subtended by the same chord s.
+// con_inscribed_angs: inscribed_angle(a1, c) + inscribed_angle(a2, c) → con_ang(a1, a2)
+// Both angles must be contained in the same circle and share the same endpoints.
 export const con_inscribed_angs_check = (
   ins1: Stmt,
   ins2: Stmt,
@@ -245,16 +251,13 @@ export const con_inscribed_angs_check = (
   const dup = checkDistinctDependencyStmts([ins1, ins2]);
   if (!dup.ok) return dup;
 
-  const [a1, s1] = stmtMapper(ins1, ctx) as [Angle, Segment];
-  const [a2, s2] = stmtMapper(ins2, ctx) as [Angle, Segment];
+  const [c1, a1] = stmtMapper(ins1, ctx) as [Circle, Angle];
+  const [c2, a2] = stmtMapper(ins2, ctx) as [Circle, Angle];
   const [ca1, ca2] = stmtMapper(conclusion, ctx) as [Angle, Angle];
 
-  if (!s1.equals(s2)) {
-    return reasonApplicationFail(DIFF_CHORDS, {
-      chord1: s1.label,
-      chord2: s2.label,
-    });
-  }
+  const eq = checkEqual(c1, c2);
+  if (!eq.ok) return eq;
+
   const anglesMatch =
     (ca1.equals(a1) && ca2.equals(a2)) || (ca1.equals(a2) && ca2.equals(a1));
   if (!anglesMatch) {
@@ -262,5 +265,22 @@ export const con_inscribed_angs_check = (
   }
   const reflexCheck = failReflexStatements(a1, a2);
   if (!reflexCheck.ok) return reflexCheck;
+
+  if (!ca1.endpointsEqual(ca2)) {
+    return reasonApplicationFail(ANG_NO_SHARED_ENDPT, {
+      a1: ca1.label,
+      a2: ca2.label,
+    });
+  }
+
+  [ca1, ca2].forEach((angle) => {
+    const onCircleCheck = angle.getPts().every((pt) => pt.isOnCircle(c1));
+    if (!onCircleCheck) {
+      return reasonApplicationFail(ANG_NOT_ON_CIRC, {
+        circle: c1.label,
+        ang: angle.label,
+      });
+    }
+  });
   return reasonApplicationOk();
 };

@@ -185,12 +185,16 @@ export const STMTS_DEFS = {
     },
     inscribed_angle: {
       name: "inscribed_angle",
-      parameters: [angle("a"), segment("s")],
+      parameters: [circle("c"), angle("a")],
     },
     // arc_bisect: {
     //   name: "arc_bisect",
     //   parameters: [arc("a"), segment("s"), point("p")],
     // },
+    ref_seg: {
+      name: "ref_seg",
+      parameters: [segment("s")],
+    },
   },
   groups: {
     congruent_angs: {

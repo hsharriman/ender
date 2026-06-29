@@ -203,3 +203,12 @@ export const failReflexStatements = (
   }
   return reasonApplicationOk();
 };
+
+export const checkEqual = (o1: BaseGeometryObject, o2: BaseGeometryObject) => {
+  if (!o1.equals(o2)) {
+    return reasonApplicationFail("both_objs_not_equal", {
+      pair: [o1.label, o2.label],
+    });
+  }
+  return reasonApplicationOk();
+};

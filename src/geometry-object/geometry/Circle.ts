@@ -24,5 +24,9 @@ export class Circle extends BaseGeometryObject {
     };
   };
 
+  addPt = (pt: Point) => {
+    this.names.add(`${this.center.label}${pt.label}`);
+    this.names.add(`${pt.label}${this.center.label}`);
+  };
   // TODO every time on_line is called, need to add the circle to the this.names set
 }
