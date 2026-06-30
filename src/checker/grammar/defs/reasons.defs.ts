@@ -294,7 +294,7 @@ export const REASONS_DEFS = {
     name: "aa_sim",
     title: "AA Triangle Similarity",
     body: "If two angles of one triangle are congruent to two angles of another triangle, then the triangles are similar.",
-    dependencies: ["con_ang", "con_ang"],
+    dependencies: ["con_ang_ref_allow", "con_ang_ref_allow"],
     conclusion: "sim_tri",
   },
   sss_sim: {
@@ -308,7 +308,7 @@ export const REASONS_DEFS = {
     name: "sas_sim",
     title: "SAS Triangle Similarity",
     body: "If two sides of one triangle are proportional to two sides of another triangle and their included angles are congruent, then the triangles are similar.",
-    dependencies: ["sim_seg", "con_ang", "sim_seg"],
+    dependencies: ["sim_seg", "con_ang_ref_allow", "sim_seg"],
     conclusion: "sim_tri",
   },
   def_equiangular: {
