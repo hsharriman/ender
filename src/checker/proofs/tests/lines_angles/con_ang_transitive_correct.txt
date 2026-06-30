@@ -1,0 +1,13 @@
+// pass
+title: "Test: con_ang_transitive (correct - ∠BAC≅∠EDF, ∠EDF≅∠HGI → ∠BAC≅∠HGI)"
+premises:
+pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r), G (25, 9, l), H (29, 1, b), I (33, 9, r)
+tri: t_ABC t_DEF t_GHI
+[g_1] con_ang(a_BAC, a_EDF)
+[g_2] con_ang(a_EDF, a_HGI)
+-> con_ang(a_BAC, a_HGI)
+
+steps:
+[01] given(g_1) -> con_ang(a_BAC, a_EDF)
+[02] given(g_2) -> con_ang(a_EDF, a_HGI)
+[03] con_ang_transitive(1, 2) -> con_ang(a_BAC, a_HGI)

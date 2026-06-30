@@ -6,6 +6,7 @@ export interface ReasonItem {
   src?: string; // used to load static diagram image from public/reasons/<src>.png
 }
 
+// used for linking reasons to images of their definitions.
 const SRC_MAP: Partial<Record<string, string>> = {
   sas: "SAS",
   sss: "SSS",
@@ -18,7 +19,6 @@ const SRC_MAP: Partial<Record<string, string>> = {
   altint_conv: "alt-interior-angles",
   perpendicular: "perpendicular",
   def_perp: "perpendicular",
-  reflex: "reflexive",
   reflex: "reflexive",
   def_midpt: "midpoint",
   midpt_conv: "midpoint",

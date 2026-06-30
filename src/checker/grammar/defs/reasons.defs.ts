@@ -574,11 +574,32 @@ export const REASONS_DEFS = {
     dependencies: ["ang_bisect", "ang_bisect", "ang_bisect"],
     conclusion: "incenter",
   },
-  con_transitive: {
-    name: "con_transitive",
+  con_seg_transitive: {
+    name: "con_seg_transitive",
     title: "Transitive Property of Congruence",
     body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
-    dependencies: ["con_seg, con_ang", "con_seg, con_ang"],
-    conclusion: "con_seg, con_ang",
+    dependencies: ["con_seg", "con_seg"],
+    conclusion: "con_seg",
   },
+  con_ang_transitive: {
+    name: "con_ang_transitive",
+    title: "Transitive Property of Congruence",
+    body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
+    dependencies: ["con_ang", "con_ang"],
+    conclusion: "con_ang",
+  },
+  con_tri_transitive: {
+    name: "con_tri_transitive",
+    title: "Transitive Property of Congruence",
+    body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
+    dependencies: ["con_tri", "con_tri"],
+    conclusion: "con_tri",
+  },
+  // con_arc_transitive: {
+  //   name: "con_arc_transitive",
+  //   title: "Transitive Property of Congruence",
+  //   body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
+  //   dependencies: ["con_arc", "con_arc"],
+  //   conclusion: "con_arc",
+  // },
 } as const;

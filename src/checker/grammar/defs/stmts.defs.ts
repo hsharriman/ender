@@ -4,6 +4,7 @@ const triangle = (t: string) => `Triangle ${t}`;
 const point = (p: string) => `Point ${p}`;
 const quadrilateral = (q: string) => `Quadrilateral ${q}`;
 const circle = (c: string) => `Circle ${c}`;
+// const arc = (a: string) => `Arc ${a}`;
 
 export const STMTS_DEFS = {
   statements: {
@@ -169,11 +170,6 @@ export const STMTS_DEFS = {
       name: "arc",
       parameters: [circle("c"), point("p1"), point("p2")],
     },
-    // secant: {
-    //   name: "secant",
-    //   // first segment is the chord, second segment is the secant
-    //   parameters: [circle("c"), segment("s"), segment("s2")],
-    // },
     radius: {
       name: "radius",
       parameters: [circle("c"), point("p")],
@@ -200,6 +196,10 @@ export const STMTS_DEFS = {
       parameters: [angle("a1"), angle("a2")],
       allowDupeArgs: true,
     },
+    // con_arc: {
+    //   name: "con_arc",
+    //   parameters: [arc("a1"), arc("a2")],
+    // },
   },
   groups: {
     congruent_angs: {

@@ -1,0 +1,13 @@
+// fail on step 3
+title: "Test: con_ang_transitive (incorrect - no shared angle between deps)"
+premises:
+pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r), G (25, 9, l), H (29, 1, b), I (33, 9, r), J (37, 9, l), K (41, 1, b), L (45, 9, r)
+tri: t_ABC t_DEF t_GHI t_JKL
+[g_1] con_ang(a_BAC, a_EDF)
+[g_2] con_ang(a_HGI, a_KJL)
+-> con_ang(a_BAC, a_HGI)
+
+steps:
+[01] given(g_1) -> con_ang(a_BAC, a_EDF)
+[02] given(g_2) -> con_ang(a_HGI, a_KJL)
+[03] con_ang_transitive(1, 2) -> con_ang(a_BAC, a_HGI)

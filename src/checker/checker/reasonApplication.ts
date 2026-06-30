@@ -69,7 +69,7 @@ import {
   checkThirdAngle,
   equilateralEquiangular,
 } from "./reasonChecks/triangleChecks";
-import { checkEqual } from "./reasonChecks/utils";
+import { checkEqual, checkTransitive } from "./reasonChecks/utils";
 import { validateGivenProofStep } from "./validators";
 
 const addStmtArgMismatchError = (
@@ -694,6 +694,15 @@ export const checkReasonApplication = (
         const ins1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const ins2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = con_inscribed_angs_check(ins1, ins2, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+
+      case "con_seg_transitive":
+      case "con_ang_transitive":
+      case "con_tri_transitive": {
+        const dep1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const dep2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = checkTransitive(dep1, dep2, stmt, ctx);
         return floatReasonResult(r, currStep, reason);
       }
 
