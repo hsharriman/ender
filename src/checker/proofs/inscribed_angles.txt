@@ -1,0 +1,14 @@
+// pass
+title: "S11-4 - Exercise 32: Prove Corollary 11-4-2"
+premises:
+pt: A (0, 0, t), B (0, 0, t), C (0, 0, t), D (0, 0, t), O (0, 0, c)
+seg: AB AC CB AD DB
+circ: c_OA
+[g_1] inscribed_angle(c_OA, a_ACB)
+[g_2] inscribed_angle(c_OA, a_ADB)
+-> con_ang(a_ACB,a_ADB)
+
+steps:
+[01] given(g_1) -> inscribed_angle(c_OA, a_ACB)
+[02] given(g_2) -> inscribed_angle(c_OA, a_ADB)
+[03] con_inscribed_angs(1,2) -> con_ang(a_ACB,a_ADB)

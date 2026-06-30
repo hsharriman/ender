@@ -13,5 +13,5 @@ steps:
 [01] given(g_2) -> con_seg(LM,NK)
 [02] given(g_1) -> right(a_KLM) 
 [03] rectangle(2) -> con_right(a_KLM,a_MNK)
-[04] reflex_s() -> con_seg(MK, MK)
+[04] reflex() -> ref_seg(MK, MK)
 [05] rhl(3, 1, 4) -> con_tri(t_KLM,t_MNK)  // Missing dependency for AAS on invalid reason

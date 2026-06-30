@@ -18,8 +18,8 @@
 
 For the full list of supported reasons including their abbreviations, check `grammar/defs/reasons.txt`. The proof checker supports the following reason functions:
 
-- `reflex_s()` - Reflexive property for segments
-- `reflex_a()` - Reflexive property for angles
+- `reflex()` - Reflexive property for segments
+- `reflex()` - Reflexive property for angles
 - `sas(con_seg, con_ang, con_seg)` - Side-Angle-Side congruence
 - `sss(con_seg, con_seg, con_seg)` - Side-Side-Side congruence
 - `asa(con_ang, con_seg, con_ang)` - Angle-Side-Angle congruence

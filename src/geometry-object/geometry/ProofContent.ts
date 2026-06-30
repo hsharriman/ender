@@ -189,6 +189,9 @@ export class ProofContent {
               // add new angle to existing angle's list of names instead of creating new angle
               overlapsExisting = true;
               existingAngle.addNames(angleEnd, s.label.replace(c, ""));
+              // also register the new angle's own label on the existing angle so it's
+              // reachable by name (e.g. EGD must be findable even though only FGD is in ctx.angles)
+              existingAngle.addNames(a.start.label, a.end.label);
             } else {
               // overlapping angle isn't tracked, add it to original angle
               a.addNames(angleEnd, s.label.replace(c, ""));

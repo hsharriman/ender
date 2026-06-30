@@ -10,35 +10,51 @@ export const REASONS_DEFS = {
     name: "sas",
     title: "SAS Triangle Congruence",
     body: "Side-Angle-Side (SAS) Congruence. If two sides and the included angle of each triangle are congruent to each other, then the triangles are congruent.",
-    dependencies: ["con_seg", "congruent_angs", "con_seg"],
+    dependencies: [
+      "con_seg_ref_allow",
+      "con_ang_ref_allow",
+      "con_seg_ref_allow",
+    ],
     conclusion: "con_tri",
   },
   sss: {
     name: "sss",
     title: "SSS Triangle Congruence",
     body: "Side-Side-Side (SSS) Triangle Congruence. If two triangles have three sides that are congruent to each other, then the triangles are congruent.",
-    dependencies: ["con_seg", "con_seg", "con_seg"],
+    dependencies: [
+      "con_seg_ref_allow",
+      "con_seg_ref_allow",
+      "con_seg_ref_allow",
+    ],
     conclusion: "con_tri",
   },
   asa: {
     name: "asa",
     title: "ASA Triangle Congruence",
     body: "Angle-Side-Angle (ASA) Triangle Congruence. If two triangles have two congruent angles and one included congruent side, then the triangles are congruent.",
-    dependencies: ["congruent_angs", "con_seg", "congruent_angs"],
+    dependencies: [
+      "con_ang_ref_allow",
+      "con_seg_ref_allow",
+      "con_ang_ref_allow",
+    ],
     conclusion: "con_tri",
   },
   aas: {
     name: "aas",
     title: "AAS Triangle Congruence",
     body: "Angle-Angle-Side (AAS) Triangle Congruence. If a pair of triangles have two angles and one adjacent side that are congruent to each other, then the triangles are congruent.",
-    dependencies: ["congruent_angs", "congruent_angs", "con_seg"],
+    dependencies: [
+      "con_ang_ref_allow",
+      "con_ang_ref_allow",
+      "con_seg_ref_allow",
+    ],
     conclusion: "con_tri",
   },
   rhl: {
     name: "rhl",
     title: "RHL Triangle Congruence",
     body: "Right-Hypotenuse-Leg (RHL) Triangle Congruence. If two right triangles have a hypotenuse and a leg that are congruent to each other, then the triangles are congruent.",
-    dependencies: ["con_right", "con_seg", "con_seg"],
+    dependencies: ["con_right", "con_seg_ref_allow", "con_seg_ref_allow"],
     conclusion: "con_tri",
   },
   cpctc: {
@@ -48,12 +64,12 @@ export const REASONS_DEFS = {
     dependencies: ["con_tri"],
     conclusion: "con_seg, con_ang",
   },
-  reflex_s: {
-    name: "reflex_s",
+  reflex: {
+    name: "reflex",
     title: "Reflexive Property",
     body: "Any geometric figure is congruent with itself.",
     dependencies: [],
-    conclusion: "con_seg",
+    conclusion: "ref_seg, ref_ang",
   },
   def_perp: {
     name: "def_perp",
@@ -75,13 +91,6 @@ export const REASONS_DEFS = {
     body: "If two subsections of a line are congruent, then the point dividing those subsections is the midpoint.",
     dependencies: ["con_seg"],
     conclusion: "midpt",
-  },
-  reflex_a: {
-    name: "reflex_a",
-    title: "Reflexive Property",
-    body: "Any geometric figure is congruent with itself.",
-    dependencies: [],
-    conclusion: "con_ang",
   },
   vert_ang: {
     name: "vert_ang",
@@ -285,7 +294,7 @@ export const REASONS_DEFS = {
     name: "aa_sim",
     title: "AA Triangle Similarity",
     body: "If two angles of one triangle are congruent to two angles of another triangle, then the triangles are similar.",
-    dependencies: ["con_ang", "con_ang"],
+    dependencies: ["con_ang_ref_allow", "con_ang_ref_allow"],
     conclusion: "sim_tri",
   },
   sss_sim: {
@@ -299,7 +308,7 @@ export const REASONS_DEFS = {
     name: "sas_sim",
     title: "SAS Triangle Similarity",
     body: "If two sides of one triangle are proportional to two sides of another triangle and their included angles are congruent, then the triangles are similar.",
-    dependencies: ["sim_seg", "con_ang", "sim_seg"],
+    dependencies: ["sim_seg", "con_ang_ref_allow", "sim_seg"],
     conclusion: "sim_tri",
   },
   def_equiangular: {
@@ -565,11 +574,32 @@ export const REASONS_DEFS = {
     dependencies: ["ang_bisect", "ang_bisect", "ang_bisect"],
     conclusion: "incenter",
   },
-  con_transitive: {
-    name: "con_transitive",
+  con_seg_transitive: {
+    name: "con_seg_transitive",
     title: "Transitive Property of Congruence",
     body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
-    dependencies: ["con_seg, con_ang", "con_seg, con_ang"],
-    conclusion: "con_seg, con_ang",
+    dependencies: ["con_seg", "con_seg"],
+    conclusion: "con_seg",
   },
+  con_ang_transitive: {
+    name: "con_ang_transitive",
+    title: "Transitive Property of Congruence",
+    body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
+    dependencies: ["con_ang", "con_ang"],
+    conclusion: "con_ang",
+  },
+  con_tri_transitive: {
+    name: "con_tri_transitive",
+    title: "Transitive Property of Congruence",
+    body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
+    dependencies: ["con_tri", "con_tri"],
+    conclusion: "con_tri",
+  },
+  // con_arc_transitive: {
+  //   name: "con_arc_transitive",
+  //   title: "Transitive Property of Congruence",
+  //   body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
+  //   dependencies: ["con_arc", "con_arc"],
+  //   conclusion: "con_arc",
+  // },
 } as const;

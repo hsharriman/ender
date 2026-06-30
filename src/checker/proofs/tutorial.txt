@@ -10,6 +10,6 @@ tri: t_ABC t_ADC
 steps:
 [01] given(g_1) -> con_seg(AB,AD)
 [02] given(g_2) -> con_ang(a_BAC,a_DAC) 
-[03] reflex_s() -> con_seg(AC, AC)
+[03] reflex() -> ref_seg(AC, AC)
 [04] sas(1, 2, 3) -> con_tri(t_ABC,t_ADC) 
 

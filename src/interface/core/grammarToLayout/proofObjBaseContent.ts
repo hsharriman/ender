@@ -24,37 +24,11 @@ export const seedBaseContentFromPremises = (
   // DiagramContent by looking up points by label to get the diagram-side instances.
   const pcCtx = checkerCtx.getCtx();
 
-  pcCtx.segments.forEach((seg) => {
-    const p1 = ctx.getPoint(seg.p1.label);
-    const p2 = ctx.getPoint(seg.p2.label);
-    if (p1 && p2) ctx.addSegment({ p1: p1.obj, p2: p2.obj });
-  });
-
-  pcCtx.angles.forEach((ang) => {
-    const start = ctx.getPoint(ang.start.label);
-    const center = ctx.getPoint(ang.center.label);
-    const end = ctx.getPoint(ang.end.label);
-    if (start && center && end)
-      ctx.addAngle({ start: start.obj, center: center.obj, end: end.obj });
-  });
-
-  pcCtx.triangles.forEach((tri) => {
-    const [p1, p2, p3] = tri.p.map((p) => ctx.getPoint(p.label));
-    if (p1 && p2 && p3) ctx.addTriangle({ pts: [p1.obj, p2.obj, p3.obj] });
-  });
-
-  pcCtx.quads.forEach((quad) => {
-    const [p1, p2, p3, p4] = quad.p.map((p) => ctx.getPoint(p.label));
-    if (p1 && p2 && p3 && p4)
-      ctx.addQuadrilateral({ pts: [p1.obj, p2.obj, p3.obj, p4.obj] });
-  });
-
-  pcCtx.circles.forEach((circle) => {
-    const center = ctx.getPoint(circle.center.label);
-    const radius = ctx.getPoint(circle.radius.label);
-    if (center && radius)
-      ctx.addCircle({ center: center.obj, radius: radius.obj });
-  });
+  pcCtx.segments.forEach((seg) => ctx.addSegment(seg));
+  pcCtx.angles.forEach((ang) => ctx.addAngle(ang));
+  pcCtx.triangles.forEach((tri) => ctx.addTriangle(tri));
+  pcCtx.quads.forEach((quad) => ctx.addQuadrilateral(quad));
+  pcCtx.circles.forEach((circle) => ctx.addCircle(circle));
 
   return ctx;
 };

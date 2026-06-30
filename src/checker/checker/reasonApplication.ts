@@ -1,5 +1,4 @@
-import { getGeometricObject } from "checker/utils/utils";
-import { Angle, ProofContent, Segment } from "../../geometry-object";
+import { ProofContent } from "../../geometry-object";
 import {
   ParseDiagramStmt,
   ProofGraph,
@@ -7,6 +6,7 @@ import {
   Reason,
   ReasonDefinition,
 } from "../types/checkerTypes";
+import { getGeometricObject } from "../utils/utils";
 import {
   check_vert_ang,
   con_supp_comp_diff_angles,
@@ -14,7 +14,6 @@ import {
   def_ang_bisect,
   defConRight,
   linear_pair,
-  reflex_a,
 } from "./reasonChecks/angleChecks";
 import {
   checkTangentPerpRelationship,
@@ -24,8 +23,8 @@ import {
   radius_chord_bisect_conv_check,
 } from "./reasonChecks/circleChecks";
 import {
-  check_altint,
   check_altext,
+  check_altint,
   check_corresp_ang,
   check_sameside,
   intersect_seg,
@@ -33,7 +32,6 @@ import {
   perp,
   perp_bisector,
   perp_con_ang,
-  reflex_s,
 } from "./reasonChecks/lineChecks";
 import {
   checkQuadrilateralCls,
@@ -71,6 +69,7 @@ import {
   checkThirdAngle,
   equilateralEquiangular,
 } from "./reasonChecks/triangleChecks";
+import { checkEqual, checkTransitive } from "./reasonChecks/utils";
 import { validateGivenProofStep } from "./validators";
 
 const addStmtArgMismatchError = (
@@ -123,22 +122,13 @@ export const checkReasonApplication = (
 
     // Call the appropriate reason checker method
     switch (reason.function) {
-      case "reflex_s": {
-        const r = reflex_s(
-          getGeometricObject(stmt.arguments[0], ctx) as Segment,
-          getGeometricObject(stmt.arguments[1], ctx) as Segment,
+      case "reflex": {
+        const r = checkEqual(
+          getGeometricObject(stmt.arguments[0], ctx),
+          getGeometricObject(stmt.arguments[1], ctx),
         );
         return floatReasonResult(r, currStep, reason);
       }
-
-      case "reflex_a": {
-        const r = reflex_a(
-          getGeometricObject(stmt.arguments[0], ctx) as Angle,
-          getGeometricObject(stmt.arguments[1], ctx) as Angle,
-        );
-        return floatReasonResult(r, currStep, reason);
-      }
-
       case "altint": {
         const para_alt = getDepStmt(reason.arguments[0], proofGraph)!;
         const r = check_altint(
@@ -540,7 +530,13 @@ export const checkReasonApplication = (
       case "pgram_opp_side_para": {
         const conSeg = getDepStmt(reason.arguments[0], proofGraph)!;
         const para = getDepStmt(reason.arguments[1], proofGraph)!;
-        const r = def_pgram_side_check(conSeg, stmt, ctx, para, reason.function);
+        const r = def_pgram_side_check(
+          conSeg,
+          stmt,
+          ctx,
+          para,
+          reason.function,
+        );
         return floatReasonResult(r, currStep, reason);
       }
 
@@ -672,14 +668,25 @@ export const checkReasonApplication = (
         const perp_rcb = getDepStmt(reason.arguments[0], proofGraph)!;
         const rad_rcb = getDepStmt(reason.arguments[1], proofGraph)!;
         const chord_rcb = getDepStmt(reason.arguments[2], proofGraph)!;
-        const r = radius_chord_bisect_check(perp_rcb, rad_rcb, chord_rcb, stmt, ctx);
+        const r = radius_chord_bisect_check(
+          perp_rcb,
+          rad_rcb,
+          chord_rcb,
+          stmt,
+          ctx,
+        );
         return floatReasonResult(r, currStep, reason);
       }
 
       case "radius_chord_bisect_conv": {
         const perpBis = getDepStmt(reason.arguments[0], proofGraph)!;
         const chord_conv = getDepStmt(reason.arguments[1], proofGraph)!;
-        const r = radius_chord_bisect_conv_check(perpBis, chord_conv, stmt, ctx);
+        const r = radius_chord_bisect_conv_check(
+          perpBis,
+          chord_conv,
+          stmt,
+          ctx,
+        );
         return floatReasonResult(r, currStep, reason);
       }
 
@@ -687,6 +694,15 @@ export const checkReasonApplication = (
         const ins1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const ins2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = con_inscribed_angs_check(ins1, ins2, stmt, ctx);
+        return floatReasonResult(r, currStep, reason);
+      }
+
+      case "con_seg_transitive":
+      case "con_ang_transitive":
+      case "con_tri_transitive": {
+        const dep1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const dep2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = checkTransitive(dep1, dep2, stmt, ctx);
         return floatReasonResult(r, currStep, reason);
       }
 

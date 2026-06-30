@@ -1,16 +1,11 @@
 import {
   Angle,
-  AngleProps,
   Circle,
-  CircleProps,
   Point,
   PointProps,
   Quadrilateral,
-  QuadrilateralProps,
   Segment,
-  SegmentProps,
   Triangle,
-  TriangleProps,
   Vector,
 } from "geometry-object";
 import { DiagramRenderCtx, ShowPoint } from "../types/diagramTypes";
@@ -71,8 +66,7 @@ export class DiagramContent {
     return this.findPoint(pt.label);
   };
 
-  addSegment = (props: SegmentProps) => {
-    const s = new Segment(props);
+  addSegment = (s: Segment) => {
     const sBuilder = new SegmentBuilder(s);
     if (!this.findSegment(s.label)) {
       this.ctx.segments.push(sBuilder);
@@ -81,8 +75,7 @@ export class DiagramContent {
     return this.findSegment(s.label);
   };
 
-  addAngle = (props: AngleProps) => {
-    const a = new Angle(props);
+  addAngle = (a: Angle) => {
     const aBuilder = new AngleBuilder(a);
     if (!this.findAngle(a.label)) {
       this.ctx.angles.push(aBuilder);
@@ -91,32 +84,29 @@ export class DiagramContent {
     return this.findAngle(a.label);
   };
 
-  addTriangle = (props: TriangleProps, rotatePattern?: boolean) => {
-    const t = new Triangle(props);
+  addTriangle = (t: Triangle, rotatePattern?: boolean) => {
     const tBuilder = new TriangleBuilder(t, rotatePattern);
     if (!this.findTriangle(t.label)) {
       this.ctx.triangles.push(tBuilder);
-      this.addSegments(tBuilder.s.map((s) => s.obj));
-      this.addAngles(tBuilder.a.map((a) => a.obj));
+      this.addSegments(t.s.map((s) => s));
+      this.addAngles(t.a.map((a) => a));
       return tBuilder;
     }
     return this.findTriangle(t.label);
   };
 
-  addQuadrilateral = (props: QuadrilateralProps) => {
-    const q = new Quadrilateral(props);
+  addQuadrilateral = (q: Quadrilateral) => {
     const qBuilder = new QuadrilateralBuilder(q);
     if (!this.findQuadrilateral(q.label)) {
       this.ctx.quads.push(qBuilder);
-      this.addSegments(qBuilder.s.map((s) => s.obj));
-      this.addAngles(qBuilder.a.map((a) => a.obj));
+      this.addSegments(q.s.map((s) => s));
+      this.addAngles(q.a.map((a) => a));
       return qBuilder;
     }
     return this.findQuadrilateral(q.label);
   };
 
-  addCircle = (props: CircleProps) => {
-    const c = new Circle(props);
+  addCircle = (c: Circle) => {
     const cBuilder = new CircleBuilder(c);
     if (!this.findCircle(c.label)) {
       this.ctx.circles.push(cBuilder);
@@ -125,15 +115,11 @@ export class DiagramContent {
     return this.findCircle(c.label);
   };
 
-  addPoints = (propsArr: PointProps[]) => {
-    return propsArr.map((pt) => this.addPoint(pt));
-  };
-
-  addSegments = (propsArr: SegmentProps[]) => {
+  addSegments = (propsArr: Segment[]) => {
     return propsArr.map((s) => this.addSegment(s));
   };
 
-  addAngles = (propsArr: AngleProps[]) => {
+  addAngles = (propsArr: Angle[]) => {
     return propsArr.map((a) => this.addAngle(a));
   };
 

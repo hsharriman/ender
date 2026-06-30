@@ -14,7 +14,7 @@ steps:
 [02] given(g_2) -> con_seg(AD, DC)
 [03] given(g_3) -> con_ang(a_FAB, a_GCB)
 [04] given(g_4) -> con_seg(AF, CG)
-[05] reflex_s() -> con_seg(BD, BD)
+[05] reflex() -> ref_seg(BD, BD)
 [06] perp_con_ang(1) -> con_right(a_ADB,a_BDC)
 [07] sas(2, 6, 5) -> con_tri(t_ABD, t_BCD)
 [08] cpctc(7) -> con_seg(AB, BC)

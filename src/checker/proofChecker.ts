@@ -78,8 +78,10 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const { ctx, premiseErrors } = buildPremises(proof);
   ctx.checkAngleOverlaps();
 
+  const { statements: stmtDefs, groups } = loadStatementDefinitions();
+
   const geometricObjectErrors = [
-    ...checkGeometricObjects(proof, ctx),
+    ...checkGeometricObjects(proof, ctx, stmtDefs),
     ...premiseErrors,
   ];
   if (geometricObjectErrors.length > 0) {
@@ -97,7 +99,6 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   }
 
   const reasonDefs = loadReasonDefinitions();
-  const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
   const diagramPremiseErrors = checkDiagramPremiseTypes(proof, stmtDefs);
   if (diagramPremiseErrors.length > 0) {

@@ -282,10 +282,26 @@ export const checkReasonStructure = (
   return false;
 };
 
+const resolveArgToGeomObj = (
+  ctx: ProofContent,
+  arg: { type: string; v: string },
+) => {
+  switch (arg.type) {
+    case Obj.Segment: return ctx.getSegment(arg.v);
+    case Obj.Angle: return ctx.getAngle(arg.v);
+    case Obj.Triangle: return ctx.getTriangle(arg.v);
+    case Obj.Quadrilateral: return ctx.getQuadrilateral(arg.v);
+    case Obj.Circle: return ctx.getCircle(arg.v);
+    case Obj.Point: return ctx.getPoint(arg.v);
+    default: return undefined;
+  }
+};
+
 // Check if geometric objects are well-formed
 export const checkGeometricObjects = (
   proof: ProofObj,
   ctx: ProofContent,
+  stmtDefs: Map<string, StatementDefinition>,
 ): Array<string> => {
   const errors: Array<string> = [];
   const definedPoints = new Set(proof.premises.points.map((p) => p.v));
@@ -403,6 +419,24 @@ export const checkGeometricObjects = (
             break;
           default:
             throw createError.geometric.cannotParseGeometricObject(arg.v);
+        }
+      }
+
+      // Duplicate argument check: reject statements where two args resolve to the same object
+      const stmtDef = stmtDefs.get(step.statement.function);
+      if (stmtDef && !stmtDef.allowDupeArgs) {
+        const args = step.statement.arguments;
+        for (let i = 0; i < args.length; i++) {
+          for (let j = i + 1; j < args.length; j++) {
+            if (args[i].type !== args[j].type) continue;
+            const obj1 = resolveArgToGeomObj(ctx, args[i]);
+            const obj2 = resolveArgToGeomObj(ctx, args[j]);
+            if (obj1 && obj2 && obj1 === obj2) {
+              errors.push(
+                `Statement '${step.statement.function}' in step ${step.stepNumber} has duplicate argument '${args[i].v}'`,
+              );
+            }
+          }
         }
       }
     }

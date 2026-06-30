@@ -10,15 +10,13 @@ import {
   reasonApplicationOk,
 } from "./reasonResult";
 import {
-  failReflexStatements,
   findDuplicateDependencyStatements,
   resolveAngleForProp,
   resolveSegmentForProp,
   rightAngleOnPerp,
 } from "./utils";
 
-const ANG_NOT_EQUAL = "angles_are_not_equal";
-const NO_LINEAR_PAIR = "angles_are_not_linear_pair";
+const NO_LINEAR_PAIR = "angles_not_linear_pair";
 const DUPE_STMT = "dupe_stmt_supplied";
 const NO_SHARED_ANG = "no_shared_angle_bw_supp_pairs";
 const REMAINDERS_NO_MATCH = "non_shared_angles_dont_match_con_ang_conclusion";
@@ -27,14 +25,6 @@ const NOT_DISTRIBUTED = "con_angles_not_distributed_across_pairs";
 const NO_VERT_ANG = "no_intersecting_seg_produces_vert_angles";
 const BAD_BISECT_ANG = "angle_centers_dont_match";
 const BAD_BISECT = "bisector_not_in_both_half_angles";
-
-export const reflex_a = (a1: Angle, a2: Angle): ReasonApplicationResult => {
-  if (a1.equals(a2)) return reasonApplicationOk();
-  return reasonApplicationFail(ANG_NOT_EQUAL, {
-    ang1: a1.label,
-    ang2: a2.label,
-  });
-};
 
 export const right = (
   perp: Stmt,
@@ -71,13 +61,6 @@ export const con_supp_comp_same_angle = (
   const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
   const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
-  let ref = failReflexStatements(a1, a2);
-  if (!ref.ok) return ref;
-  ref = failReflexStatements(b1, b2);
-  if (!ref.ok) return ref;
-  ref = failReflexStatements(c1, c2);
-  if (!ref.ok) return ref;
-
   const shared = [a1, a2].find((a) => a.equals(b1) || a.equals(b2));
   if (!shared) return reasonApplicationFail(NO_SHARED_ANG);
 
@@ -104,15 +87,6 @@ export const con_supp_comp_diff_angles = (
   const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
   const [s1, s2] = stmtMapper(sharedConAng, ctx) as [Angle, Angle];
   const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
-
-  let ref = failReflexStatements(c1, c2);
-  if (!ref.ok) return ref;
-  ref = failReflexStatements(s1, s2);
-  if (!ref.ok) return ref;
-  ref = failReflexStatements(a1, a2);
-  if (!ref.ok) return ref;
-  ref = failReflexStatements(b1, b2);
-  if (!ref.ok) return ref;
 
   const s1InSupp = [a1, a2].filter((a) => a.equals(s1)).length === 1;
   const s1InSupp2 = [b1, b2].filter((a) => a.equals(s1)).length === 1;
@@ -175,15 +149,10 @@ export const check_vert_ang = (
 };
 
 export const defConRight = (
-  right1: Stmt,
-  right2: Stmt,
-  ctx: ProofContent,
+  _right1: Stmt,
+  _right2: Stmt,
+  _ctx: ProofContent,
 ): ReasonApplicationResult => {
-  const [a1] = stmtMapper(right1, ctx) as [Angle];
-  const [a2] = stmtMapper(right2, ctx) as [Angle];
-
-  const ref = failReflexStatements(a1, a2);
-  if (!ref.ok) return ref;
   return reasonApplicationOk();
 };
 

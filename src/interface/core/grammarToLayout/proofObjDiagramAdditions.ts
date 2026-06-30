@@ -59,9 +59,9 @@ export const buildCongruenceTickTracker = (
     if (!stmt || stmt.arguments.length !== 2) return;
     const a = stmt.arguments[0].v;
     const b = stmt.arguments[1].v;
-    if (stmt.function === "con_seg") {
+    if (stmt.function === "con_seg" || stmt.function === "ref_seg") {
       assignTick(segTickByObj, canonSeg(ctx, a), canonSeg(ctx, b), nextSeg);
-    } else if (stmt.function === "con_ang") {
+    } else if (stmt.function === "con_ang" || stmt.function === "ref_ang") {
       assignTick(angTickByObj, canonAng(ctx, a), canonAng(ctx, b), nextAng);
     } else if (stmt.function === "sim_seg") {
       assignTick(
@@ -92,13 +92,22 @@ export const applyStmtAdditions =
       stmt: Stmt,
       type: "s" | "a",
     ) => {
-      const label = stmt.arguments[0].v;
+      const stmtStr = stmt.arguments[0].v;
+      const label =
+        stmtStr === "ref_seg"
+          ? "con_seg"
+          : stmtStr === "ref_ang"
+            ? "con_ang"
+            : stmtStr;
       return trackerMap.get(
         type === "s" ? canonSeg(ctx, label) : canonAng(ctx, label),
       );
     };
     if (!stmt) return;
-    if (stmt.function === "con_seg" && stmt.arguments.length === 2) {
+    if (
+      (stmt.function === "con_seg" || stmt.function === "ref_seg") &&
+      stmt.arguments.length === 2
+    ) {
       const numTicks = getNumTicks(tracker.segTickByObj, stmt, "s");
       EqualSegments.additions(
         { ctx, frame, mode },
@@ -107,7 +116,10 @@ export const applyStmtAdditions =
       );
       return;
     }
-    if (stmt.function === "con_ang" && stmt.arguments.length === 2) {
+    if (
+      (stmt.function === "con_ang" || stmt.function === "ref_ang") &&
+      stmt.arguments.length === 2
+    ) {
       if (options?.isRightAngleEquality) {
         EqualRightAngles.additions({ ctx, frame, mode }, [
           stmt.arguments[0].v,

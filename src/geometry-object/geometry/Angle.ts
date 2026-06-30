@@ -93,4 +93,13 @@ export class Angle extends BaseGeometryObject {
       otherThird: otherThird.label,
     };
   };
+
+  getPts = () => [this.start, this.center, this.end];
+
+  endpointsEqual = (other: Angle) => {
+    return (
+      (this.start.equals(other.start) && this.end.equals(other.end)) ||
+      (this.start.equals(other.end) && this.end.equals(other.start))
+    );
+  };
 }

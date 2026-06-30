@@ -1,7 +1,7 @@
-import { pointtoParseObj, segtoParseObj } from "checker/utils/utils";
 import { Obj, ParseObj, ProofContent } from "../../geometry-object";
 import { createError } from "../errors/errorConstants";
 import { ProofObj, Stmt } from "../types/checkerTypes";
+import { pointtoParseObj, segtoParseObj } from "../utils/utils";
 
 export const buildPremises = (proof: ProofObj) => {
   // Create DiagramContent context and populate it with all geometric objects from premises
@@ -39,6 +39,15 @@ export const buildPremises = (proof: ProofObj) => {
     ctx.addCircleFromStr(circleObj.v);
   });
 
+  // 4. Explicitly declared segments — idempotent for any already created by tris/quads/addVisibleObjects.
+  proof.premises.segments.forEach((segmentObj) => {
+    for (const point of segmentObj.v.split("")) {
+      if (!definedPtLabels.has(point))
+        throw createError.parser.pointNotDefinedInPremises(point);
+    }
+    ctx.addSegmentFromStr(segmentObj.v);
+  });
+
   // 3. addVisibleObjects — creates segments for perp, intersect, transversal, etc.
   const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
     switch (statement.function) {
@@ -67,6 +76,19 @@ export const buildPremises = (proof: ProofObj) => {
       case "linear_pair":
         linearPair(ctx, statement.arguments);
         break;
+      // circle-related statements: add segment/angle objects they reference
+      case "chord":
+      case "diameter":
+      case "inscribed_angle":
+      case "radius":
+        circlePremises(ctx, statement);
+        break;
+      case "tangent":
+        tangentPremise(ctx, statement);
+        break;
+      case "arc":
+        arcPremise(ctx, statement);
+        break;
       case "kite_premise":
       case "trapezoid_premise":
       case "con_ang":
@@ -91,16 +113,6 @@ export const buildPremises = (proof: ProofObj) => {
       case "circumcenter":
       case "incenter":
         break;
-      // circle-related statements: add segment/angle objects they reference
-      case "tangent":
-      case "chord":
-      case "diameter":
-      case "inscribed_angle":
-        addAllObjects(ctx, statement);
-        break;
-      case "radius":
-      case "arc":
-        break;
       default:
         throw createError.parser.unknownStatementFunction(statement.function);
     }
@@ -121,11 +133,6 @@ export const buildPremises = (proof: ProofObj) => {
   proof.premises.diagramStatements.forEach(({ statement }) => {
     if (!statement?.function || !statement.arguments) return;
     addVisibleObjects(ctx, statement);
-  });
-
-  // 4. Explicitly declared segments — idempotent for any already created by tris/quads/addVisibleObjects.
-  proof.premises.segments.forEach((segmentObj) => {
-    ctx.addSegmentFromStr(segmentObj.v);
   });
 
   // 5. Angle loop — runs after all segment creation so every possible angle is captured.
@@ -231,7 +238,9 @@ export const buildPremises = (proof: ProofObj) => {
       step.statement?.function &&
       step.statement.arguments
     ) {
-      premiseErrors.push(...addDependentObjects(ctx, step.statement, step.stepNumber));
+      premiseErrors.push(
+        ...addDependentObjects(ctx, step.statement, step.stepNumber),
+      );
     }
   });
 
@@ -244,6 +253,51 @@ export const buildPremises = (proof: ProofObj) => {
   ctx.checkAngleOverlaps();
 
   return { ctx, premiseErrors };
+};
+
+const circlePremises = (ctx: ProofContent, stmt: Stmt) => {
+  const [circ, obj] = stmt.arguments;
+
+  addAllObjects(ctx, stmt);
+  const c = ctx.getCircle(circ.v);
+
+  obj.v.split("").forEach((p) => {
+    const pt = ctx.getPoint(p);
+    if (!pt) {
+      throw createError.parser.pointNotDefinedInPremises(p);
+    }
+    c.addPt(pt);
+    pt.addOnCircle(c);
+  });
+};
+
+const tangentPremise = (ctx: ProofContent, stmt: Stmt) => {
+  addAllObjects(ctx, stmt);
+  const [circ, seg, point] = stmt.arguments;
+  const c = ctx.getCircle(circ.v);
+  const s = ctx.getSegment(seg.v);
+
+  const pt = ctx.getPoint(point.v);
+  if (!pt) {
+    throw createError.parser.pointNotDefinedInPremises(point.v);
+  }
+  c.addPt(pt);
+  pt.addOnLine(s);
+  pt.addOnCircle(c);
+};
+
+const arcPremise = (ctx: ProofContent, stmt: Stmt) => {
+  addAllObjects(ctx, stmt);
+  const [circ, start, end] = stmt.arguments;
+  const c = ctx.getCircle(circ.v);
+  [start.v, end.v].forEach((p) => {
+    const pt = ctx.getPoint(p);
+    if (!pt) {
+      throw createError.parser.pointNotDefinedInPremises(p);
+    }
+    c.addPt(pt);
+    pt.addOnCircle(c);
+  });
 };
 
 const trapezoidPremise = (
@@ -263,13 +317,21 @@ const trapezoidPremise = (
   const s1 = q.s.find((s) => s.names.has(b1));
   const s2 = q.s.find((s) => s.names.has(b2));
   if (!s1)
-    return [`${prefix}Trapezoid base '${b1}' is not a side of quadrilateral '${ql}'`];
+    return [
+      `${prefix}Trapezoid base '${b1}' is not a side of quadrilateral '${ql}'`,
+    ];
   if (!s2)
-    return [`${prefix}Trapezoid base '${b2}' is not a side of quadrilateral '${ql}'`];
+    return [
+      `${prefix}Trapezoid base '${b2}' is not a side of quadrilateral '${ql}'`,
+    ];
   if (s1.equals(s2))
-    return [`${prefix}Trapezoid bases '${b1}' and '${b2}' must be two distinct sides of '${ql}'`];
+    return [
+      `${prefix}Trapezoid bases '${b1}' and '${b2}' must be two distinct sides of '${ql}'`,
+    ];
   if (!q.isOppositeSides(s1, s2))
-    return [`${prefix}Trapezoid bases '${b1}' and '${b2}' are consecutive sides of '${ql}' — bases must be the opposite (parallel) sides`];
+    return [
+      `${prefix}Trapezoid bases '${b1}' and '${b2}' are consecutive sides of '${ql}' — bases must be the opposite (parallel) sides`,
+    ];
   return [];
 };
 

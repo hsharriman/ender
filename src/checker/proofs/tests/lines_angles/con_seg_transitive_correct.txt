@@ -1,0 +1,13 @@
+// pass
+title: "Test: con_seg_transitive (correct - AB≅CD, CD≅EF → AB≅EF)"
+premises:
+pt: A (1, 5, l), B (5, 5, b), C (9, 5, b), D (13, 5, b), E (17, 5, b), F (21, 5, r)
+seg: AB CD EF
+[g_1] con_seg(AB, CD)
+[g_2] con_seg(CD, EF)
+-> con_seg(AB, EF)
+
+steps:
+[01] given(g_1) -> con_seg(AB, CD)
+[02] given(g_2) -> con_seg(CD, EF)
+[03] con_seg_transitive(1, 2) -> con_seg(AB, EF)

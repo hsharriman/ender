@@ -1,6 +1,7 @@
 import { PointProps } from "../types/geometryTypes";
 import { LPoint, Obj, Vector } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
+import { Circle } from "./Circle";
 import { Segment } from "./Segment";
 
 export class Point extends BaseGeometryObject {
@@ -9,6 +10,7 @@ export class Point extends BaseGeometryObject {
   public readonly id: string;
 
   private onLine: Set<Segment> = new Set();
+  private onCircle: Set<Circle> = new Set();
   constructor(props: PointProps) {
     super(Obj.Point, props);
     this.pt = props.pt;
@@ -28,5 +30,13 @@ export class Point extends BaseGeometryObject {
 
   isOnLine = (s: Segment) => {
     return this.onLine.has(s);
+  };
+
+  addOnCircle = (c: Circle) => {
+    this.onCircle.add(c);
+  };
+
+  isOnCircle = (c: Circle) => {
+    return this.onCircle.has(c);
   };
 }

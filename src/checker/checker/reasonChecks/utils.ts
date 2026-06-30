@@ -7,6 +7,7 @@ import {
   Triangle,
 } from "geometry-object";
 import { ErrorObj, Stmt } from "../../types/checkerTypes";
+import { stmtMapper } from "./argMappers";
 import {
   ReasonApplicationResult,
   reasonApplicationFail,
@@ -188,18 +189,43 @@ export const anglePairsEqual = (
   return (a1.equals(a3) && a2.equals(a4)) || (a1.equals(a4) && a2.equals(a3));
 };
 
-/**
- * Check if two objects are the same (reflexive property) and return a failure
- * if they are.
- */
-export const failReflexStatements = (
-  o1: BaseGeometryObject,
-  o2: BaseGeometryObject,
-) => {
-  if (o1.equals(o2)) {
-    return reasonApplicationFail("both_stmts_are_the_same_object", {
+export const checkEqual = (o1: BaseGeometryObject, o2: BaseGeometryObject) => {
+  if (!o1.equals(o2)) {
+    return reasonApplicationFail("objs_not_equal", {
       pair: [o1.label, o2.label],
     });
   }
   return reasonApplicationOk();
+};
+
+/**
+ * Transitivity check: given dep1 (A ≅ X) and dep2 (X ≅ B), verify the
+ * conclusion stmt (A ≅ B). Works for segments, angles, triangles, or any
+ * two-argument congruence statement whose objects support `.equals()`.
+ */
+export const checkTransitive = (
+  dep1: Stmt,
+  dep2: Stmt,
+  stmt: Stmt,
+  ctx: ProofContent,
+): ReasonApplicationResult => {
+  const [d1a, d1b] = stmtMapper(dep1, ctx);
+  const [d2a, d2b] = stmtMapper(dep2, ctx);
+  const [sa, sb] = stmtMapper(stmt, ctx);
+
+  const concludes = (left: BaseGeometryObject, right: BaseGeometryObject) =>
+    (left.equals(sa) && right.equals(sb)) ||
+    (left.equals(sb) && right.equals(sa));
+
+  // Try every pairing of shared / non-shared elements across the two deps.
+  if (
+    (d1a.equals(d2a) && concludes(d1b, d2b)) ||
+    (d1a.equals(d2b) && concludes(d1b, d2a)) ||
+    (d1b.equals(d2a) && concludes(d1a, d2b)) ||
+    (d1b.equals(d2b) && concludes(d1a, d2a))
+  ) {
+    return reasonApplicationOk();
+  }
+
+  return reasonApplicationFail("no_shared_congruent_element");
 };

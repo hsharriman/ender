@@ -1,0 +1,13 @@
+// pass
+title: "Test: con_tri_transitive (correct - △ABC≅△DEF, △DEF≅△GHI → △ABC≅△GHI)"
+premises:
+pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r), G (25, 9, l), H (29, 1, b), I (33, 9, r)
+tri: t_ABC t_DEF t_GHI
+[g_1] con_tri(t_ABC, t_DEF)
+[g_2] con_tri(t_DEF, t_GHI)
+-> con_tri(t_ABC, t_GHI)
+
+steps:
+[01] given(g_1) -> con_tri(t_ABC, t_DEF)
+[02] given(g_2) -> con_tri(t_DEF, t_GHI)
+[03] con_tri_transitive(1, 2) -> con_tri(t_ABC, t_GHI)
