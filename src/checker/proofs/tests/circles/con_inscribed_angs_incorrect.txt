@@ -3,12 +3,13 @@ title: "Test: con_inscribed_angs (incorrect - conclusion angles don't match insc
 premises:
 pt: O (5, 5, c), A (1, 5, l), B (9, 5, r), P (2, 9, tl), Q (8, 9, tr)
 circ: c_OA
-seg: PA PB QA QB AB
+seg: PA PB QA QB AB AO PO
+ang: a_APO
 [g_1] inscribed_angle(c_OA, a_APB)
 [g_2] inscribed_angle(c_OA, a_AQB)
--> con_ang(a_APB, a_APB)
+-> con_ang(a_APB, a_APO)
 
 steps:
 [01] given(g_1) -> inscribed_angle(c_OA, a_APB)
 [02] given(g_2) -> inscribed_angle(c_OA, a_AQB)
-[03] con_inscribed_angs(1, 2) -> con_ang(a_APB, a_APB)
+[03] con_inscribed_angs(1, 2) -> con_ang(a_APB, a_APO)

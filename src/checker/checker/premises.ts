@@ -1,7 +1,7 @@
-import { pointtoParseObj, segtoParseObj } from "checker/utils/utils";
 import { Obj, ParseObj, ProofContent } from "../../geometry-object";
 import { createError } from "../errors/errorConstants";
 import { ProofObj, Stmt } from "../types/checkerTypes";
+import { pointtoParseObj, segtoParseObj } from "../utils/utils";
 
 export const buildPremises = (proof: ProofObj) => {
   // Create DiagramContent context and populate it with all geometric objects from premises

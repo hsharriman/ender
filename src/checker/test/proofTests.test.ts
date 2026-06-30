@@ -1,6 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
-import { collectProofCheckerIssues, runProofCheckerFromText } from "../proofChecker";
+import {
+  collectProofCheckerIssues,
+  runProofCheckerFromText,
+} from "../proofChecker";
 
 const TESTS_DIR = join(__dirname, "../proofs/tests");
 

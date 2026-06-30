@@ -1,5 +1,5 @@
-import { CircleProps } from "geometry-object/types/geometryTypes";
-import { LCircle, Obj } from "geometry-object/types/types";
+import { CircleProps } from "../types/geometryTypes";
+import { LCircle, Obj } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
 

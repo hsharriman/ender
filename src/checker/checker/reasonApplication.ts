@@ -1,4 +1,3 @@
-import { getGeometricObject } from "checker/utils/utils";
 import { ProofContent } from "../../geometry-object";
 import {
   ParseDiagramStmt,
@@ -7,6 +6,7 @@ import {
   Reason,
   ReasonDefinition,
 } from "../types/checkerTypes";
+import { getGeometricObject } from "../utils/utils";
 import {
   check_vert_ang,
   con_supp_comp_diff_angles,
