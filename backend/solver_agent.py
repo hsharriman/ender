@@ -105,18 +105,30 @@ def get_fixed_proof(proof_name, str_output):
 
 
 def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
+    # Get system prompt
     with open("backend/prompt/" + PROMPT + ".txt", encoding="utf-8") as f:
         system_prompt = f.read()
+
+    # Append valid reasons and statements to the system prompt
+    with open("src/checker/grammar/defs/reasons.defs.ts", "r", encoding="utf-8") as f:
+        valid_reasons = f.read()
+    with open("src/checker/grammar/defs/stmts.defs.ts", "r", encoding="utf-8") as f:
+        valid_statements = f.read()
+    system_prompt = f"{system_prompt}\nValid reasons: {valid_reasons}\n\
+        Valid statements: {valid_statements}"
+
+    # Get checker output
     checker_output = save_checker_output(PROOF)
     with open("src/checker/proofs/" + PROOF + ".txt", encoding="utf-8") as f:
         student_proof = f.read()
     # _, _, checker_result = split_output(result)
 
+    # Run solution loop
     is_solution_correct = False
     loop_times = 0
     while not is_solution_correct and loop_times <= LOOP_TIMES:
-        print(f"-----------------loop {loop_times}----------------")
         loop_times += 1
+        print(f"-----------------loop {loop_times}----------------")
         # Get LLM solution
         llm_solution = run_solver(system_prompt, student_proof + checker_output)
         fixed_proof = get_fixed_proof(PROOF, llm_solution)
@@ -130,8 +142,10 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
 
         if "proof is correct" in checker_output:
             is_solution_correct = True
-            print("Solution is correct and complete")
-            return checker_output
+            print(
+                f"Correct solution found in {loop_times} trial(s). Solution loop completed"
+            )
+            return fixed_proof
         else:
             # run llm again
             print("Solution is incorrect, running the loop again ")
@@ -141,7 +155,7 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
 
 if __name__ == "__main__":
     PROOF = "s2inc1"
-    PROMPT = "solver_with_valid_reasons"
+    PROMPT = "solver_with_valid_reasons_and_explanation"
     try:
         solution = run_solver_agent(PROOF, PROMPT)
     except ValueError as error:
