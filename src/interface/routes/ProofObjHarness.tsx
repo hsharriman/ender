@@ -1,5 +1,4 @@
-import { ProofParser } from "checker/grammar/lezerParser";
-import { runProofChecker } from "checker/proofChecker";
+import { runProofCheckerFromText } from "checker/proofChecker";
 import { ErrorDetails, ProofObj } from "checker/types/checkerTypes";
 import { ProofContent } from "geometry-object";
 import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
@@ -20,8 +19,6 @@ import {
   interactiveLayout,
   staticLayout,
 } from "../core/grammarToLayout/setupLayout";
-
-const parser = new ProofParser();
 
 const allProofUrls = import.meta.glob("/src/checker/proofs/**/*.txt", {
   query: "?url",
@@ -167,10 +164,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.proofParseTimeoutId = window.setTimeout(() => {
       this.proofParseTimeoutId = null;
       try {
-        const parsed = parser.parse(
-          this.state.proofText,
-        ) as unknown as ProofObj;
-        const result = runProofChecker(parsed);
+        const result = runProofCheckerFromText(this.state.proofText);
 
         const nextIncorrectStepErrors = new Map<string, ErrorDetails[]>();
         result.graph.incorrectSteps.forEach((stepNum) => {
@@ -221,7 +215,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           incorrectStepErrors: nextIncorrectStepErrors,
           proofWideIssues: nextProofIssues,
           statusMessage: "Proof parsed successfully.",
-          lastGoodProof: parsed,
+          lastGoodProof: result.proof,
           lastGoodCtx: result.ctx,
           incorrectSteps: result.graph.incorrectSteps,
           proofParseSucceeded: true,

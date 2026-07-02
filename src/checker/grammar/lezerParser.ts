@@ -62,7 +62,9 @@ export class ProofParser {
         return this.parserError(code, obj.v);
       }
     };
-    if (obj.type === Obj.Angle) {
+    if (obj.type === Obj.Point) {
+      return undefined;
+    } else if (obj.type === Obj.Angle) {
       return validate("invalid_angle", 3);
     } else if (obj.type === Obj.Triangle) {
       return validate("invalid_triangle", 3);
