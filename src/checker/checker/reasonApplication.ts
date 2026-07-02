@@ -1,5 +1,6 @@
 import { ProofContent } from "../../geometry-object";
 import {
+  ErrorType,
   ParseDiagramStmt,
   ProofGraph,
   ProofStep,
@@ -73,36 +74,16 @@ import {
 import { checkEqual, checkTransitive } from "./reasonChecks/utils";
 import { validateGivenProofStep } from "./validators";
 
-const addStmtArgMismatchError = (
+const addReasonCheckFail = (
   errors: ProofStep["errors"],
   reason: string,
   failure: ErrorDetails,
 ) => {
   errors.push({
-    type: "stmt_arg_mismatch",
-    data: {
-      reason,
-      code: failure.code,
-      ...(failure.details ?? {}),
-    },
+    type: ErrorType.ReasonApplicationFail,
+    code: failure.code,
+    details: { reason, ...(failure.details ?? {}) },
   });
-};
-
-const failStmtArgMismatch = (
-  currStep: ProofStep,
-  reason: string,
-  code: string,
-  details?: Record<string, unknown>,
-): false => {
-  currStep.errors.push({
-    type: "stmt_arg_mismatch",
-    data: {
-      reason,
-      code,
-      ...(details ?? {}),
-    },
-  });
-  return false;
 };
 
 // Check if reason is applied correctly using reason checker methods
@@ -713,11 +694,18 @@ export const checkReasonApplication = (
         return true;
     }
   } catch {
-    return failStmtArgMismatch(
+    floatReasonResult(
+      {
+        ok: false,
+        failure: {
+          type: ErrorType.ReasonApplicationFail,
+          code: "reason_application_error",
+        },
+      },
       currStep,
-      reason.function,
-      "REASON_APPLICATION_EXCEPTION",
+      reason,
     );
+    return false;
   }
 };
 
@@ -742,7 +730,7 @@ const floatReasonResult = (
   reason: Reason,
 ): boolean => {
   if (!r.ok) {
-    addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+    addReasonCheckFail(currStep.errors, reason.function, r.failure);
     return false;
   }
   return true;
@@ -754,7 +742,7 @@ const floatDiagramResult = (
   reason: Reason,
 ): boolean => {
   if (!r.res.ok) {
-    addStmtArgMismatchError(currStep.errors, reason.function, r.res.failure);
+    addReasonCheckFail(currStep.errors, reason.function, r.res.failure);
     return false;
   }
   currStep.diagramDeps = r.diagramDeps;

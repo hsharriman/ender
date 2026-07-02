@@ -1,23 +1,15 @@
 import { readFileSync } from "fs";
 import { basename } from "path";
-import { ProofParser } from "./grammar/lezerParser";
 import {
   collectProofCheckerIssues,
-  runProofChecker,
+  runProofCheckerFromText,
 } from "./proofChecker";
-import { ProofObj } from "./types/checkerTypes";
 import { pathToFileURL } from "url";
-
-const parseProof = (filePath: string): ProofObj => {
-  const content = readFileSync(filePath, "utf-8");
-  const parser = new ProofParser();
-  return parser.parse(content) as unknown as ProofObj;
-};
 
 const checkProof = (filePath: string): void => {
   try {
-    const proof = parseProof(filePath);
-    const result = runProofChecker(proof);
+    const content = readFileSync(filePath, "utf-8");
+    const result = runProofCheckerFromText(content);
     const issues = collectProofCheckerIssues(result);
 
     if (issues.length === 0) {

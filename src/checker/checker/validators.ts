@@ -1,6 +1,7 @@
-import { Obj, ProofContent } from "../../geometry-object";
-import { createError } from "../errors/errorConstants";
+import { getGeometricObject } from "checker/utils/utils";
+import { ProofContent } from "../../geometry-object";
 import {
+  ErrorType,
   ProofGraph,
   ProofObj,
   ProofStep,
@@ -60,8 +61,9 @@ export const validateGivenProofStep = (
   const prem = depStep.statement;
   if (prem.function !== stmt.function) {
     step.errors.push({
-      type: "reason_stmt_mismatch",
-      data: {
+      type: ErrorType.ReasonStmtMismatch,
+      code: "reason_stmt_mismatch",
+      details: {
         reason: "given",
         legalStatements: [prem.function],
         actualStatement: stmt.function,
@@ -72,8 +74,9 @@ export const validateGivenProofStep = (
   }
   if (prem.arguments.length !== stmt.arguments.length) {
     step.errors.push({
-      type: "reason_stmt_mismatch",
-      data: {
+      type: ErrorType.StmtArgNumArgsIncorrect,
+      code: "stmt_arg_num_args_incorrect",
+      details: {
         reason: "given",
         legalStatements: [prem.function],
         actualStatement: stmt.function,
@@ -90,8 +93,9 @@ export const validateGivenProofStep = (
       prem.arguments[i].v !== stmt.arguments[i].v
     ) {
       step.errors.push({
-        type: "reason_stmt_mismatch",
-        data: {
+        type: ErrorType.StmtArgTypeInvalid,
+        code: "stmt_arg_type_invalid",
+        details: {
           reason: "given",
           legalStatements: [prem.function],
           actualStatement: stmt.function,
@@ -161,9 +165,13 @@ export const checkReasonStructure = (
     step.errors.push({
       type:
         isCountMismatch || isMissingDependencyRef
+          ? ErrorType.MissingReasonArg
+          : ErrorType.InvalidReasonArg,
+      code:
+        isCountMismatch || isMissingDependencyRef
           ? "reason_dep_missing"
           : "reason_dep_type_mismatch",
-      data,
+      details: data,
     });
   };
 
@@ -268,8 +276,9 @@ export const checkReasonStructure = (
     if (!conclusionMatch) {
       structureOk = false;
       step.errors.push({
-        type: "reason_stmt_mismatch",
-        data: {
+        type: ErrorType.ReasonStmtMismatch,
+        code: "reason_stmt_mismatch",
+        details: {
           reason: reason.function,
           legalStatements: possibleConclusions,
           actualStatement: stmt.function,
@@ -280,21 +289,6 @@ export const checkReasonStructure = (
     return structureOk && nameMatch && conclusionMatch;
   }
   return false;
-};
-
-const resolveArgToGeomObj = (
-  ctx: ProofContent,
-  arg: { type: string; v: string },
-) => {
-  switch (arg.type) {
-    case Obj.Segment: return ctx.getSegment(arg.v);
-    case Obj.Angle: return ctx.getAngle(arg.v);
-    case Obj.Triangle: return ctx.getTriangle(arg.v);
-    case Obj.Quadrilateral: return ctx.getQuadrilateral(arg.v);
-    case Obj.Circle: return ctx.getCircle(arg.v);
-    case Obj.Point: return ctx.getPoint(arg.v);
-    default: return undefined;
-  }
 };
 
 // Check if geometric objects are well-formed
@@ -326,101 +320,101 @@ export const checkGeometricObjects = (
   // Check geometric objects in all statements
   for (const step of proof.steps) {
     if (step.statement?.arguments) {
-      for (const arg of step.statement.arguments) {
-        switch (arg.type) {
-          case Obj.Segment:
-            if (hasDuplicateChars(arg.v)) {
-              errors.push(`Segment '${arg.v}' contains duplicate points`);
-              break;
-            }
-            if (!ctx.getSegment(arg.v)) {
-              errors.push(
-                `Segment '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
-              );
-            }
-            checkPointsDefined(arg.v, arg.v.split(""));
-            break;
-          case Obj.Angle:
-            if (arg.v.length !== 3) {
-              errors.push(
-                `Invalid angle format: '${arg}' - angles must have exactly 3 points`,
-              );
-              break;
-            }
-            if (!ctx.getAngle(arg.v)) {
-              errors.push(
-                `Angle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
-              );
-            }
-            if (hasDuplicateChars(arg.v)) {
-              errors.push(`Angle '${arg.v}' contains duplicate points`);
-              break;
-            }
-            checkPointsDefined(arg.v, arg.v.split(""));
-            break;
-          case Obj.Triangle:
-            if (arg.v.length !== 3) {
-              errors.push(
-                `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`,
-              );
-              if (!ctx.getTriangle(arg.v)) {
-                errors.push(
-                  `Triangle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
-                );
-              }
-              break;
-            }
-            if (hasDuplicateChars(arg.v)) {
-              errors.push(`Triangle '${arg.v}' contains duplicate points`);
-              break;
-            }
-            checkPointsDefined(arg.v, arg.v.split(""));
-            break;
-          case Obj.Quadrilateral:
-            if (arg.v.length !== 4) {
-              errors.push(
-                `Invalid quadrilateral format: '${arg.v}' - quadrilaterals must have exactly 4 points`,
-              );
-              break;
-            }
-            if (!ctx.getQuadrilateral(arg.v)) {
-              errors.push(
-                `Quadrilateral '${arg.v}' in step ${step.statement} is not defined in checker context`,
-              );
-            }
-            if (hasDuplicateChars(arg.v)) {
-              errors.push(`Quadrilateral '${arg.v}' contains duplicate points`);
-              break;
-            }
-            checkPointsDefined(arg.v, arg.v.split(""));
-            break;
-          case Obj.Point:
-            if (!definedPoints.has(arg.v)) {
-              errors.push(`Point '${arg.v}' is not defined in premises`);
-              continue;
-            }
-            if (!ctx.getPoint(arg.v)) {
-              errors.push(
-                `Point '${arg.v}' in step ${step.statement} is not defined in checker context`,
-              );
-            }
-            break;
-          case Obj.Circle:
-            if (!ctx.getCircle(arg.v)) {
-              errors.push(
-                `Circle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
-              );
-            }
-            if (hasDuplicateChars(arg.v)) {
-              errors.push(`Circle '${arg.v}' contains duplicate points`);
-              break;
-            }
-            checkPointsDefined(arg.v, arg.v.split(""));
-            break;
-          default:
-            throw createError.geometric.cannotParseGeometricObject(arg.v);
-        }
-      }
+      // for (const arg of step.statement.arguments) {
+      //   switch (arg.type) {
+      //     case Obj.Segment:
+      //       if (hasDuplicateChars(arg.v)) {
+      //         errors.push(`Segment '${arg.v}' contains duplicate points`);
+      //         break;
+      //       }
+      //       if (!ctx.getSegment(arg.v)) {
+      //         errors.push(
+      //           `Segment '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
+      //         );
+      //       }
+      //       checkPointsDefined(arg.v, arg.v.split(""));
+      //       break;
+      //     case Obj.Angle:
+      //       if (arg.v.length !== 3) {
+      //         errors.push(
+      //           `Invalid angle format: '${arg}' - angles must have exactly 3 points`,
+      //         );
+      //         break;
+      //       }
+      //       if (!ctx.getAngle(arg.v)) {
+      //         errors.push(
+      //           `Angle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
+      //         );
+      //       }
+      //       if (hasDuplicateChars(arg.v)) {
+      //         errors.push(`Angle '${arg.v}' contains duplicate points`);
+      //         break;
+      //       }
+      //       checkPointsDefined(arg.v, arg.v.split(""));
+      //       break;
+      //     case Obj.Triangle:
+      //       if (arg.v.length !== 3) {
+      //         errors.push(
+      //           `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`,
+      //         );
+      //         if (!ctx.getTriangle(arg.v)) {
+      //           errors.push(
+      //             `Triangle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
+      //           );
+      //         }
+      //         break;
+      //       }
+      //       if (hasDuplicateChars(arg.v)) {
+      //         errors.push(`Triangle '${arg.v}' contains duplicate points`);
+      //         break;
+      //       }
+      //       checkPointsDefined(arg.v, arg.v.split(""));
+      //       break;
+      //     case Obj.Quadrilateral:
+      //       if (arg.v.length !== 4) {
+      //         errors.push(
+      //           `Invalid quadrilateral format: '${arg.v}' - quadrilaterals must have exactly 4 points`,
+      //         );
+      //         break;
+      //       }
+      //       if (!ctx.getQuadrilateral(arg.v)) {
+      //         errors.push(
+      //           `Quadrilateral '${arg.v}' in step ${step.statement} is not defined in checker context`,
+      //         );
+      //       }
+      //       if (hasDuplicateChars(arg.v)) {
+      //         errors.push(`Quadrilateral '${arg.v}' contains duplicate points`);
+      //         break;
+      //       }
+      //       checkPointsDefined(arg.v, arg.v.split(""));
+      //       break;
+      //     case Obj.Point:
+      //       if (!definedPoints.has(arg.v)) {
+      //         errors.push(`Point '${arg.v}' is not defined in premises`);
+      //         continue;
+      //       }
+      //       if (!ctx.getPoint(arg.v)) {
+      //         errors.push(
+      //           `Point '${arg.v}' in step ${step.statement} is not defined in checker context`,
+      //         );
+      //       }
+      //       break;
+      //     case Obj.Circle:
+      //       if (!ctx.getCircle(arg.v)) {
+      //         errors.push(
+      //           `Circle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
+      //         );
+      //       }
+      //       if (hasDuplicateChars(arg.v)) {
+      //         errors.push(`Circle '${arg.v}' contains duplicate points`);
+      //         break;
+      //       }
+      //       checkPointsDefined(arg.v, arg.v.split(""));
+      //       break;
+      //     default:
+      //       throw createError.geometric.cannotParseGeometricObject(arg.v);
+      //   }
+      // }
 
       // Duplicate argument check: reject statements where two args resolve to the same object
       const stmtDef = stmtDefs.get(step.statement.function);
@@ -429,8 +423,8 @@ export const checkGeometricObjects = (
         for (let i = 0; i < args.length; i++) {
           for (let j = i + 1; j < args.length; j++) {
             if (args[i].type !== args[j].type) continue;
-            const obj1 = resolveArgToGeomObj(ctx, args[i]);
-            const obj2 = resolveArgToGeomObj(ctx, args[j]);
+            const obj1 = getGeometricObject(args[i], ctx);
+            const obj2 = getGeometricObject(args[j], ctx);
             if (obj1 && obj2 && obj1 === obj2) {
               errors.push(
                 `Statement '${step.statement.function}' in step ${step.stepNumber} has duplicate argument '${args[i].v}'`,
@@ -646,10 +640,9 @@ export const findDuplicateSteps = (
 
   if (duplicates.length > 0) {
     proof.errors.push({
-      type: "duplicate_step",
-      data: {
-        steps: duplicates,
-      },
+      type: ErrorType.DupeStmtSupplied,
+      code: "duplicate_step",
+      details: { steps: duplicates },
     });
   }
 

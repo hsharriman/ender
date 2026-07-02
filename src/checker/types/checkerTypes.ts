@@ -63,7 +63,7 @@ export interface StatementDefinition {
   allowDupeArgs?: boolean; // when true, duplicate geometric arguments within the statement are valid (e.g. ref_seg, ref_ang)
 }
 
-export type ErrorType =
+export type ErrorCode =
   | "stmt_arg_mismatch"
   | "reason_dep_missing"
   | "reason_dep_type_mismatch"
@@ -79,15 +79,33 @@ export type ErrorType =
   | "duplicate_step"
   | "goal_not_reached";
 
-export type ErrorObj = {
+export enum ErrorType {
+  ReasonApplicationFail = 1,
+  NoDiagramDepMatch = 2,
+  ParserError = 3,
+  GoalNotFound = 4,
+  UnusedStep = 5,
+  UpstreamDependencyError = 6,
+  InvalidStmtArg = 7,
+  InvalidReasonArg = 8,
+  ForwardReference = 9,
+  Cycle = 10,
+  MissingReasonArg = 11,
+  ReasonStmtMismatch = 12,
+  IllegalGivenDep = 13,
+  DupeStmtSupplied = 14,
+  StmtArgNumArgsIncorrect = 15,
+  StmtArgTypeInvalid = 16,
+  ReasonArgTypeInvalid = 17,
+}
+
+export type ErrorDetails = {
   type: ErrorType;
-  data?: any;
+  code: string;
+  details?: Record<string, unknown>;
 };
 
-export type ReasonCheckResult = {
-  ok: boolean;
-  errors: ErrorObj[];
-};
+export type CheckerResult = { ok: true } | { ok: false; failure: ErrorDetails };
 
 // Types for the proof checker
 // errors here:
@@ -98,7 +116,7 @@ export interface ProofStep {
   stepNumber?: string;
   diagramDeps?: ParseDiagramStmt[];
   waysToProve?: WaysToProveSummary;
-  errors: ErrorObj[];
+  errors: ErrorDetails[];
 }
 
 // errors here: invalid diagram statement (can't find objects in premises)
@@ -106,7 +124,7 @@ export interface ParseDiagramStmt {
   type: "diagram";
   statement: Stmt;
   stepNumber: string;
-  errors: ErrorObj[];
+  errors: ErrorDetails[];
 }
 
 // errors here: cycles, unused steps, duplicate steps, goal not reached
@@ -123,7 +141,7 @@ export interface ProofObj {
   };
   steps: ProofStep[];
   goal?: Stmt;
-  errors: ErrorObj[];
+  errors: ErrorDetails[];
   isCorrect: boolean;
 }
 
@@ -143,3 +161,9 @@ export interface ProofGraph {
   unusedSteps: Set<string>;
   cycles: string[][];
 }
+
+export type ParseError = { ok: false; failure: ErrorDetails };
+
+export type ParseResult =
+  | { ok: true; value: ProofObj }
+  | { ok: false; failure: ErrorDetails[] };

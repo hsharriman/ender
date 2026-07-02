@@ -7,7 +7,7 @@ import {
   Segment,
   Triangle,
 } from "geometry-object";
-import { ErrorObj, Stmt } from "../../types/checkerTypes";
+import { ErrorDetails, ErrorType, Stmt } from "../../types/checkerTypes";
 import {
   CheckerResult,
   reasonApplicationFail,
@@ -134,24 +134,6 @@ export const stripAngPrefix = (angles: string[]) => {
 
 export const stripTriPrefix = (triangles: string[]) => {
   return triangles.map((triangle) => triangle.replace("t_", ""));
-};
-
-export const addError = (errors: ErrorObj[], error: ErrorObj) => {
-  if (!errors) {
-    return [error];
-  }
-  return [...errors, error];
-};
-
-export const addReasonCheckError = (
-  errors: ErrorObj[],
-  details: Record<string, unknown>,
-) => {
-  errors.push({
-    type: "reason_dep_type_mismatch",
-    data: details,
-  });
-  return errors;
 };
 
 export const getTriFromAngs = (

@@ -1,3 +1,4 @@
+import { ProofContent } from "../geometry-object";
 import {
   buildProofGraph,
   detectCycles,
@@ -16,8 +17,13 @@ import {
   loadStatementDefinitions,
 } from "./grammar/defsParsers";
 import { ProofParser } from "./grammar/lezerParser";
-import { ErrorObj, ProofGraph, ProofObj, Stmt } from "./types/checkerTypes";
-import { ProofContent } from "../geometry-object";
+import {
+  ErrorDetails,
+  ProofGraph,
+  ProofObj,
+  ProofStep,
+  Stmt,
+} from "./types/checkerTypes";
 
 export type ProofGoalMatchResult = { matches: boolean; details: string };
 
@@ -30,6 +36,7 @@ export type ProofCheckerResult = {
   stepNumberErrors: string[];
   geometricObjectErrors: string[];
   goalMatchResult: ProofGoalMatchResult;
+  errors: ErrorDetails[];
 };
 
 const extractGoal = (proof: ProofObj) => {
@@ -85,6 +92,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
     ...premiseErrors,
   ];
   if (geometricObjectErrors.length > 0) {
+    // TODO move to errors object
     proof.isCorrect = false;
     return {
       proof,
@@ -93,6 +101,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
       ctx,
       duplicateSteps: [],
       stepNumberErrors: [],
+      errors: [],
       geometricObjectErrors,
       goalMatchResult: { matches: false, details: "skipped (geometry errors)" },
     };
@@ -102,6 +111,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
 
   const diagramPremiseErrors = checkDiagramPremiseTypes(proof, stmtDefs);
   if (diagramPremiseErrors.length > 0) {
+    // TODO move to errors object
     proof.isCorrect = false;
     return {
       proof,
@@ -110,8 +120,12 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
       ctx,
       duplicateSteps: [],
       stepNumberErrors: [],
+      errors: [],
       geometricObjectErrors: diagramPremiseErrors,
-      goalMatchResult: { matches: false, details: "skipped (diagram premise errors)" },
+      goalMatchResult: {
+        matches: false,
+        details: "skipped (diagram premise errors)",
+      },
     };
   }
 
@@ -147,6 +161,7 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
     stepNumberErrors,
     geometricObjectErrors,
     goalMatchResult,
+    errors: [], // TODO move other errors to errors object
   };
 };
 
@@ -156,17 +171,46 @@ const parser = new ProofParser();
 export const runProofCheckerFromText = (
   proofText: string,
 ): ProofCheckerResult => {
-  const proof = parser.parse(proofText) as unknown as ProofObj;
-  return runProofChecker(proof);
+  const parseResult = parser.parse(proofText);
+  if (!parseResult.ok) {
+    // TODO this should all just return false and or a shallow error object
+    const emptyProof: ProofObj = {
+      title: null,
+      premises: {
+        points: [],
+        triangles: [],
+        quadrilaterals: [],
+        segments: [],
+        angles: [],
+        circles: [],
+        diagramStatements: [],
+      },
+      steps: [],
+      errors: [],
+      isCorrect: false,
+    };
+    return {
+      proof: emptyProof,
+      goal: undefined,
+      graph: emptyProofGraph(),
+      ctx: new ProofContent(),
+      duplicateSteps: [],
+      stepNumberErrors: [],
+      geometricObjectErrors: [],
+      goalMatchResult: { matches: false, details: "skipped (parse error)" },
+      errors: parseResult.failure,
+    };
+  }
+  return runProofChecker(parseResult.value);
 };
 
-const formatStepErrors = (errors: ErrorObj[] | undefined): string => {
+const formatStepErrors = (errors: ProofStep["errors"] | undefined): string => {
   if (!errors?.length) return "(no step.errors payload)";
   return errors
     .map((e, i) => {
       const suffix =
-        e.data === undefined ? "" : `: ${JSON.stringify(e.data)}`;
-      return `  ${i + 1}. ${e.type}${suffix}`;
+        e.details === undefined ? "" : `: ${JSON.stringify(e.details)}`;
+      return `  ${i + 1}. ${e.code}${suffix}`;
     })
     .join("\n");
 };

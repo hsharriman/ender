@@ -1,9 +1,15 @@
+import {
+  CheckerResult,
+  ErrorType,
+  ParseDiagramStmt,
+} from "checker/types/checkerTypes";
+
+export type { CheckerResult, ErrorDetails } from "checker/types/checkerTypes";
+
 export type DiagramResult = {
   res: CheckerResult;
   diagramDeps: ParseDiagramStmt[];
 };
-
-import { ParseDiagramStmt } from "checker/types/checkerTypes";
 
 export const diagramOk = (deps: ParseDiagramStmt[] = []): DiagramResult => ({
   res: { ok: true },
@@ -16,26 +22,13 @@ export const diagramFail = (
 ): DiagramResult => ({
   res: {
     ok: false,
-    failure: { type: ErrorCode.NoDiagramDepMatch, code, details },
+    failure: { type: ErrorType.NoDiagramDepMatch, code, details },
   },
   diagramDeps: [],
 });
 
-export enum ErrorCode {
-  ReasonApplicationFail = 1,
-  NoDiagramDepMatch = 2,
-}
-
-export type CheckerResult = { ok: true } | { ok: false; failure: ErrorDetails };
-
 export const reasonApplicationOk = (): CheckerResult => {
   return { ok: true };
-};
-
-export type ErrorDetails = {
-  type: ErrorCode;
-  code: string;
-  details?: Record<string, unknown>;
 };
 
 export const reasonApplicationFail = (
@@ -44,6 +37,6 @@ export const reasonApplicationFail = (
 ): CheckerResult => {
   return {
     ok: false,
-    failure: { type: ErrorCode.ReasonApplicationFail, code, details },
+    failure: { type: ErrorType.ReasonApplicationFail, code, details },
   };
 };
