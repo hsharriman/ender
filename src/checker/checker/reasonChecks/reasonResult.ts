@@ -1,11 +1,12 @@
-import { ParseDiagramStmt } from "../../types/checkerTypes";
+export type DiagramResult = {
+  res: CheckerResult;
+  diagramDeps: ParseDiagramStmt[];
+};
 
-export type DiagramResult =
-  | { ok: true; diagramDeps: ParseDiagramStmt[] }
-  | { ok: false; failure: { code: string; details?: Record<string, unknown> } };
+import { ParseDiagramStmt } from "checker/types/checkerTypes";
 
 export const diagramOk = (deps: ParseDiagramStmt[] = []): DiagramResult => ({
-  ok: true,
+  res: { ok: true },
   diagramDeps: deps,
 });
 
@@ -13,26 +14,36 @@ export const diagramFail = (
   code: string,
   details?: Record<string, unknown>,
 ): DiagramResult => ({
-  ok: false,
-  failure: { code, details },
+  res: {
+    ok: false,
+    failure: { type: ErrorCode.NoDiagramDepMatch, code, details },
+  },
+  diagramDeps: [],
 });
 
-export type ReasonApplicationFailure = {
-  code: string;
-  details?: Record<string, unknown>;
+export enum ErrorCode {
+  ReasonApplicationFail = 1,
+  NoDiagramDepMatch = 2,
+}
+
+export type CheckerResult = { ok: true } | { ok: false; failure: ErrorDetails };
+
+export const reasonApplicationOk = (): CheckerResult => {
+  return { ok: true };
 };
 
-export type ReasonApplicationResult =
-  | { ok: true }
-  | { ok: false; failure: ReasonApplicationFailure };
-
-export const reasonApplicationOk = (): ReasonApplicationResult => {
-  return { ok: true };
+export type ErrorDetails = {
+  type: ErrorCode;
+  code: string;
+  details?: Record<string, unknown>;
 };
 
 export const reasonApplicationFail = (
   code: string,
   details?: Record<string, unknown>,
-): ReasonApplicationResult => {
-  return { ok: false, failure: { code, details } };
+): CheckerResult => {
+  return {
+    ok: false,
+    failure: { type: ErrorCode.ReasonApplicationFail, code, details },
+  };
 };

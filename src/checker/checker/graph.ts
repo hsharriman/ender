@@ -5,7 +5,9 @@ import {
   ReasonDefinition,
   StatementDefinition,
   StatementGroup,
+  Stmt,
 } from "../types/checkerTypes";
+import { findDuplicateDependencyStatements } from "./reasonChecks/utils";
 import {
   createReasonApplicabilityIndex,
   indexProofStepForReasons,
@@ -97,6 +99,10 @@ export const buildProofGraph = (
             if (/^\d+$/.test(depRef)) {
               const depN = parseInt(depRef, 10);
               if (!Number.isNaN(depN) && depN >= currN) {
+                step.errors.push({
+                  type: "forward_reference",
+                  data: { reason: step.reason.function, ref: depRef },
+                });
                 isCorrect = false;
                 break;
               }
@@ -156,6 +162,25 @@ export const buildProofGraph = (
             });
             isCorrect = false;
           }
+        }
+      }
+
+      // Reject steps that cite the same statement twice as two different dependency slots
+      if (isCorrect && step.reason.arguments && step.reason.arguments.length > 1) {
+        const depStmts = step.reason.arguments
+          .map((ref) => {
+            const diag = graph.diagramPremises.get(ref);
+            if (diag) return diag.statement;
+            return graph.nodes.get(ref)?.statement;
+          })
+          .filter((s): s is Stmt => s !== undefined);
+        const dup = findDuplicateDependencyStatements(depStmts);
+        if (dup) {
+          step.errors.push({
+            type: "dupe_stmt_supplied",
+            data: { reason: step.reason.function, firstIndex: dup.firstIndex, secondIndex: dup.secondIndex },
+          });
+          isCorrect = false;
         }
       }
 

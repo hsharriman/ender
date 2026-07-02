@@ -71,6 +71,8 @@ export type ErrorType =
   | "upstream_dep_error"
   | "reason_objs_not_in_stmt_obj"
   | "illegal_given_dep"
+  | "forward_reference"
+  | "dupe_stmt_supplied"
   | "object_not_in_premises"
   | "cycle"
   | "unused_step"

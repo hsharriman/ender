@@ -23,15 +23,15 @@ import {
   radius_chord_bisect_conv_check,
 } from "./reasonChecks/circleChecks";
 import {
-  check_altext,
-  check_altint,
-  check_corresp_ang,
-  check_sameside,
+  altext,
+  altint,
+  corresp_ang,
   intersect_seg,
   midpt,
   perp,
   perp_bisector,
   perp_con_ang,
+  sameside,
 } from "./reasonChecks/lineChecks";
 import {
   checkQuadrilateralCls,
@@ -50,8 +50,9 @@ import {
   rhombus_opp_bisect_check,
 } from "./reasonChecks/polyChecks";
 import {
-  ReasonApplicationFailure,
-  ReasonApplicationResult,
+  CheckerResult,
+  DiagramResult,
+  ErrorDetails,
 } from "./reasonChecks/reasonResult";
 import {
   checkAa,
@@ -75,7 +76,7 @@ import { validateGivenProofStep } from "./validators";
 const addStmtArgMismatchError = (
   errors: ProofStep["errors"],
   reason: string,
-  failure: ReasonApplicationFailure,
+  failure: ErrorDetails,
 ) => {
   errors.push({
     type: "stmt_arg_mismatch",
@@ -131,7 +132,7 @@ export const checkReasonApplication = (
       }
       case "altint": {
         const para_alt = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_altint(
+        const r = altint(
           stmt,
           para_alt,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -142,7 +143,7 @@ export const checkReasonApplication = (
 
       case "altint_conv": {
         const conAng_conv = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_altint(
+        const r = altint(
           conAng_conv,
           stmt,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -271,7 +272,7 @@ export const checkReasonApplication = (
 
       case "sameside_ang": {
         const para = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_sameside(
+        const r = sameside(
           stmt,
           para,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -282,7 +283,7 @@ export const checkReasonApplication = (
 
       case "sameside_ang_conv": {
         const sup_ang = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_sameside(
+        const r = sameside(
           sup_ang,
           stmt,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -293,7 +294,7 @@ export const checkReasonApplication = (
 
       case "corresp_ang": {
         const para = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_corresp_ang(
+        const r = corresp_ang(
           stmt,
           para,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -304,7 +305,7 @@ export const checkReasonApplication = (
 
       case "corresp_ang_conv": {
         const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_corresp_ang(
+        const r = corresp_ang(
           conAng,
           stmt,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -315,7 +316,7 @@ export const checkReasonApplication = (
 
       case "altext": {
         const para = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_altext(
+        const r = altext(
           stmt,
           para,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -326,7 +327,7 @@ export const checkReasonApplication = (
 
       case "altext_conv": {
         const conAng = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = check_altext(
+        const r = altext(
           conAng,
           stmt,
           diagramPremisesByFunction(proofGraph, "transversal"),
@@ -736,7 +737,7 @@ const diagramPremisesByFunction = (
 };
 
 const floatReasonResult = (
-  r: ReasonApplicationResult,
+  r: CheckerResult,
   currStep: ProofStep,
   reason: Reason,
 ): boolean => {
@@ -748,14 +749,12 @@ const floatReasonResult = (
 };
 
 const floatDiagramResult = (
-  r:
-    | { ok: true; diagramDeps: ParseDiagramStmt[] }
-    | { ok: false; failure: ReasonApplicationFailure },
+  r: DiagramResult,
   currStep: ProofStep,
   reason: Reason,
 ): boolean => {
-  if (!r.ok) {
-    addStmtArgMismatchError(currStep.errors, reason.function, r.failure);
+  if (!r.res.ok) {
+    addStmtArgMismatchError(currStep.errors, reason.function, r.res.failure);
     return false;
   }
   currStep.diagramDeps = r.diagramDeps;

@@ -1,3 +1,4 @@
+import { getGeometricObject } from "checker/utils/utils";
 import {
   Angle,
   BaseGeometryObject,
@@ -7,12 +8,16 @@ import {
   Triangle,
 } from "geometry-object";
 import { ErrorObj, Stmt } from "../../types/checkerTypes";
-import { stmtMapper } from "./argMappers";
 import {
-  ReasonApplicationResult,
+  CheckerResult,
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
+
+// Resolves every argument of a statement through getGeometricObject,
+// returning an ordered list matching the statement's argument positions.
+export const stmtMapper = (stmt: Stmt, ctx: ProofContent) =>
+  stmt.arguments.map((arg) => getGeometricObject(arg, ctx));
 
 /**
  * Returns the first segment from {seg, its subsegments, its parent segments}
@@ -66,7 +71,7 @@ export const rightAngleOnPerp = (
   s2: Segment,
   p: Point,
   ctx: ProofContent,
-): ReasonApplicationResult => {
+): CheckerResult => {
   if (!ang.centerEquals(p))
     return reasonApplicationFail("angles_dont_share_centerpt");
   if (
@@ -88,16 +93,6 @@ export const rightAngleOnPerp = (
 export const stmtKey = (stmt: Stmt): string => {
   const args = (stmt.arguments ?? []).map((a) => `${a.type}:${a.v}`).join("|");
   return `${stmt.function}:${args}`;
-};
-
-export const checkDistinctDependencyStmts = (
-  deps: Stmt[],
-): ReasonApplicationResult => {
-  const dup = findDuplicateDependencyStatements(deps);
-  if (dup) {
-    return reasonApplicationFail("dupe_stmt_supplied", { ...dup });
-  }
-  return reasonApplicationOk();
 };
 
 /**
@@ -208,7 +203,7 @@ export const checkTransitive = (
   dep2: Stmt,
   stmt: Stmt,
   ctx: ProofContent,
-): ReasonApplicationResult => {
+): CheckerResult => {
   const [d1a, d1b] = stmtMapper(dep1, ctx);
   const [d2a, d2b] = stmtMapper(dep2, ctx);
   const [sa, sb] = stmtMapper(stmt, ctx);

@@ -1,23 +1,22 @@
 import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { ParseDiagramStmt, Stmt } from "../../types/checkerTypes";
-import { stmtMapper } from "./argMappers";
+
 import {
-  DiagramResult,
-  ReasonApplicationResult,
+  CheckerResult,
   diagramFail,
   diagramOk,
+  DiagramResult,
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
 import {
-  findDuplicateDependencyStatements,
   resolveAngleForProp,
   resolveSegmentForProp,
   rightAngleOnPerp,
+  stmtMapper,
 } from "./utils";
 
 const NO_LINEAR_PAIR = "angles_not_linear_pair";
-const DUPE_STMT = "dupe_stmt_supplied";
 const NO_SHARED_ANG = "no_shared_angle_bw_supp_pairs";
 const REMAINDERS_NO_MATCH = "non_shared_angles_dont_match_con_ang_conclusion";
 const SAME_SUPP = "con_angles_appear_in_same_supp_pair";
@@ -30,7 +29,7 @@ export const right = (
   perp: Stmt,
   right: Stmt,
   ctx: ProofContent,
-): ReasonApplicationResult => {
+): CheckerResult => {
   const [s1, s2, p] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
   const [r] = stmtMapper(right, ctx) as [Angle];
   return rightAngleOnPerp(r, s1, s2, p, ctx);
@@ -40,7 +39,7 @@ export const linear_pair = (
   linearPair: Stmt,
   supplementary: Stmt,
   ctx: ProofContent,
-): ReasonApplicationResult => {
+): CheckerResult => {
   const [a1, a2] = stmtMapper(supplementary, ctx) as [Angle, Angle];
   const [l1, l2] = stmtMapper(linearPair, ctx) as [Angle, Angle];
 
@@ -54,9 +53,7 @@ export const con_supp_comp_same_angle = (
   supp2: Stmt,
   conAng: Stmt,
   ctx: ProofContent,
-): ReasonApplicationResult => {
-  if (findDuplicateDependencyStatements([supp, supp2, conAng]))
-    return reasonApplicationFail(DUPE_STMT);
+): CheckerResult => {
   const [a1, a2] = stmtMapper(supp, ctx) as [Angle, Angle];
   const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
   const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
@@ -80,9 +77,7 @@ export const con_supp_comp_diff_angles = (
   sharedConAng: Stmt,
   conAng: Stmt,
   ctx: ProofContent,
-): ReasonApplicationResult => {
-  if (findDuplicateDependencyStatements([supp, supp2, conAng]))
-    return reasonApplicationFail(DUPE_STMT);
+): CheckerResult => {
   const [a1, a2] = stmtMapper(supp, ctx) as [Angle, Angle];
   const [b1, b2] = stmtMapper(supp2, ctx) as [Angle, Angle];
   const [s1, s2] = stmtMapper(sharedConAng, ctx) as [Angle, Angle];
@@ -152,7 +147,7 @@ export const defConRight = (
   _right1: Stmt,
   _right2: Stmt,
   _ctx: ProofContent,
-): ReasonApplicationResult => {
+): CheckerResult => {
   return reasonApplicationOk();
 };
 
@@ -160,7 +155,7 @@ export const def_ang_bisect = (
   conAng: Stmt,
   bisect: Stmt,
   ctx: ProofContent,
-): ReasonApplicationResult => {
+): CheckerResult => {
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
   const [ang, seg] = stmtMapper(bisect, ctx) as [Angle, Segment];
 

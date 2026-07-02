@@ -1,19 +1,18 @@
 import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { Quadrilateral } from "geometry-object/geometry/Quadrilateral";
 import { Stmt } from "../../types/checkerTypes";
-import { stmtMapper } from "./argMappers";
 import {
-  ReasonApplicationResult,
+  CheckerResult,
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
 import {
   anglePairsEqual,
-  checkDistinctDependencyStmts,
   checkEqual,
   resolveAngleForProp,
   resolveSegmentForProp,
   segmentPairsEqual,
+  stmtMapper,
 } from "./utils";
 
 const CONC_NOT_IN_QUAD = "conclusion_elements_not_in_quad";
@@ -44,7 +43,7 @@ export const rectangle = (
   rect: Stmt,
   conclusion: Stmt,
   ctx: ProofContent,
-): ReasonApplicationResult => {
+): CheckerResult => {
   const quad = ctx.getQuadrilateral(rect.arguments[0].v);
   if (
     conclusion.function === "con_right" ||
@@ -96,9 +95,6 @@ export const def_pgram_side_check = (
   pair2?: Stmt, // only the converse requires both pairs of segments
   reasonName?: string, // for specific pgram_opp_side_para check
 ) => {
-  const stmts = pair2 ? [pair, pair2, pgram] : [pair, pgram];
-  const dup = checkDistinctDependencyStmts(stmts);
-  if (!dup.ok) return dup;
   const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
   const [ps1, ps2] = stmtMapper(pair, ctx) as [Segment, Segment];
 
@@ -150,9 +146,6 @@ export const def_pgram_angle_check = (
   ctx: ProofContent,
   pair2?: Stmt, // only converse requires both pairs of angles
 ) => {
-  const stmts = pair2 ? [pair, pair2, pgram] : [pair, pgram];
-  const dup = checkDistinctDependencyStmts(stmts);
-  if (!dup.ok) return dup;
   const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
 
   const checkPair = (pairStmt: Stmt) => {
@@ -191,8 +184,6 @@ export const pgram_consec_angs_conv_check = (
   sup2: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([pgram, sup1, sup2]);
-  if (!dup.ok) return dup;
   const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
   const [a1, a2] = stmtMapper(sup1, ctx) as [Angle, Angle];
   const [a3, a4] = stmtMapper(sup2, ctx) as [Angle, Angle];
@@ -237,8 +228,6 @@ export const pgram_consec_check = (
   sup: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([pgram, sup]);
-  if (!dup.ok) return dup;
   const r = ctx.getQuadrilateral(pgram.arguments[0].v);
   const [a1, a2] = stmtMapper(sup, ctx) as [Angle, Angle];
 
@@ -260,10 +249,6 @@ export const quad_diag_con_check = (
   ctx: ProofContent,
   quad_obj?: Stmt, // only required for the converse reason
 ) => {
-  const dup = checkDistinctDependencyStmts(
-    quad_obj ? [quad_obj, rect, conSeg] : [rect, conSeg],
-  );
-  if (!dup.ok) return dup;
   const r = ctx.getQuadrilateral(rect.arguments[0].v);
   const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
 
@@ -289,9 +274,6 @@ export const pgram_diag_bisect_check = (
   ctx: ProofContent,
   seg_b2?: Stmt,
 ) => {
-  const stmts = seg_b2 ? [pgram, seg_b1, seg_b2] : [pgram, seg_b1];
-  const dup = checkDistinctDependencyStmts(stmts);
-  if (!dup.ok) return dup;
   const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
   const [b1, b2, p1] = stmtMapper(seg_b1, ctx) as [Segment, Segment, Point];
 
@@ -338,9 +320,6 @@ export const rhombus_kite_diag_check = (
   ctx: ProofContent,
   pgram?: Stmt,
 ) => {
-  const stmts = pgram ? [pgram, q, perp] : [q, perp];
-  const dup = checkDistinctDependencyStmts(stmts);
-  if (!dup.ok) return dup;
   const r = ctx.getQuadrilateral(q.arguments[0].v);
   const [s1, s2] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
 
@@ -365,10 +344,6 @@ export const rhombus_opp_bisect_check = (
   ang_b2?: Stmt,
   pgram?: Stmt,
 ) => {
-  const stmts = ang_b2 && pgram ? [pgram, q, ang_b1, ang_b2] : [q, ang_b1];
-  const dup = checkDistinctDependencyStmts(stmts);
-  if (!dup.ok) return dup;
-
   const r = ctx.getQuadrilateral(q.arguments[0].v);
   const [a1, s1] = stmtMapper(ang_b1, ctx) as [Angle, Segment];
 
@@ -407,8 +382,6 @@ export const rhombus_consec_check = (
   conSeg: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([q, pgram, conSeg]);
-  if (!dup.ok) return dup;
   const r = ctx.getQuadrilateral(q.arguments[0].v);
   const [s1, s2] = stmtMapper(conSeg, ctx) as [Segment, Segment];
 
@@ -428,8 +401,6 @@ export const kite_opp_ang_check = (
   conAng: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([kitePrem, conAng]);
-  if (!dup.ok) return dup;
   const [kite, a1, a2] = stmtMapper(kitePrem, ctx) as [
     Quadrilateral,
     Angle,
@@ -455,9 +426,6 @@ export const isos_trap_base_ang_check = (
   ctx: ProofContent,
   trapPrem?: Stmt,
 ) => {
-  const stmts = trapPrem ? [trapPrem, conAng, isos] : [isos, conAng];
-  const dup = checkDistinctDependencyStmts(stmts);
-  if (!dup.ok) return dup;
   const [isTrap] = stmtMapper(isos, ctx) as [Quadrilateral];
   const [a1, a2] = stmtMapper(conAng, ctx) as [Angle, Angle];
 
