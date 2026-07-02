@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
+from visualize_solver import visualize_changes
 
 
 def run_solver(proof: str, checker_output: str, system_prompt: str) -> str:
@@ -22,7 +23,6 @@ def run_solver(proof: str, checker_output: str, system_prompt: str) -> str:
     )
 
     print("Successfully got LLM response")
-    print(response.choices[0].message.content)
     return response.choices[0].message.content
 
 
@@ -40,7 +40,6 @@ def run_checker(proof_path: str) -> str:
     # Check the return code to determine if it actually succeeded or failed
     if output.returncode == 0:
         print("Successfully got checker output")
-        print(output.stdout)
     else:
         print("Proof checker encountered an issue or validation failed")
     return output.stdout
@@ -71,15 +70,14 @@ def get_fixed_steps(solver_output: str) -> str:
     return fixed_steps
 
 
-def get_fixed_proof(previous_solution_path: str, fixed_steps: str) -> str:
+def get_fixed_proof(proof: str, fixed_steps: str, solution_path: str) -> str:
     """Save and return fixed proof that combine original proof's correct steps and fixed steps"""
-    with open(previous_solution_path, "r", encoding="utf-8") as f:
-        proof = f.read()
     incorrect_step_number = fixed_steps[:4]
-    print(f"Incorrect step number: {incorrect_step_number}")
     original_proof = proof.split(incorrect_step_number)[0].strip()
     fixed_proof = original_proof + "\n" + fixed_steps
-
+    # save solution
+    with open(solution_path, "w", encoding="utf-8") as f:
+        f.write(fixed_proof)
     return fixed_proof
 
 
@@ -112,6 +110,8 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
         "max_iterations": max_iterations,
         "iterations": [
             {
+                "iteration": 0,
+                "changed_steps": "",
                 "solution": student_proof,
                 "checker_output": checker_output,
                 "is_correct": False,
@@ -127,40 +127,40 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
     ):
         solver_metadata["total_iterations"] += 1
         solver_data = {
+            "iteration": solver_metadata["total_iterations"],
             "changed_steps": "",
             "solution": "",
             "checker_output": "",
             "is_correct": False,
         }
-        print(f"{'-'*20} Iteration {solver_metadata['total_iterations']} {'-'*20} ")
         # Get LLM solution
         llm_solution = run_solver(student_proof, checker_output, system_prompt)
 
         fixed_steps = get_fixed_steps(llm_solution)
-        fixed_proof = get_fixed_proof(solution_path, fixed_steps)
+        fixed_proof = get_fixed_proof(
+            solver_metadata["iterations"][-1]["solution"], fixed_steps, solution_path
+        )
         solver_data["changed_steps"] = llm_solution
         solver_data["solution"] = fixed_proof
 
         # Validate solution
-        print("---------Checker output---------")
         checker_output = run_checker(solution_path)
         solver_data["checker_output"] = checker_output
 
         if "proof is correct" in checker_output:
             solver_data["is_correct"] = True
             solver_metadata["iterations"].append(solver_data)
+            visualize_changes(json.dumps(solver_metadata))
             solver_metadata["solution_reached"] = True
             print(
                 f"Correct solution found in {solver_metadata['total_iterations']} trial(s). Solution loop completed"
             )
-            # save solution
-            with open(solution_path, "w", encoding="utf-8") as f:
-                f.write(fixed_proof)
             print(f"Solution saved to {solution_path}")
             return fixed_proof, solver_metadata
         else:
             # run llm again
             solver_metadata["iterations"].append(solver_data)
+            visualize_changes(json.dumps(solver_metadata))
             print("Solution is incorrect, running the loop again.")
             student_proof = fixed_proof
     error = ValueError("The correct solution was never reached.")
@@ -169,11 +169,10 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
 
 
 if __name__ == "__main__":
-    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s4-4_exer13_1corrs_inc2"
+    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s4-4_exer13_1corrs_inc5"
     PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
     try:
         solution, metadata = run_solver_agent(PROOF_DIR, PROMPT_PATH)
-        print(f"Final solution: {solution}")
     except ValueError as error:
         print(f"Solver failed: {error}")
         metadata = getattr(error, "metadata", None)
