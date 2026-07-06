@@ -507,7 +507,7 @@ export const findDuplicateSteps = (
 
   if (duplicates.length > 0) {
     proof.errors.push({
-      type: ErrorType.DupeStmtSupplied,
+      type: ErrorType.InvalidDupeStmt,
       code: "duplicate_step",
       details: { steps: duplicates },
     });
