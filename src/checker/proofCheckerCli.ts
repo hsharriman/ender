@@ -35,7 +35,7 @@ const checkProof = (filePath: string): void => {
           isCorrect: false,
           errors: [
             {
-              type: ErrorType.ParserError,
+              type: ErrorType.UnclassifiedError,
               code: "unexpected_error",
               details: { msg },
             },

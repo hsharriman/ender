@@ -122,8 +122,8 @@ export const buildProofGraph = (
         for (const depRef of step.reason.arguments) {
           if (/^g_\d+$/.test(depRef)) {
             step.errors.push({
-              type: ErrorType.IllegalGivenDep,
-              code: "illegal_given_dep",
+              type: ErrorType.InvalidGivenDep,
+              code: "invalid_given_dep",
               details: { reason: step.reason.function, ref: depRef },
             });
             isCorrect = false;
@@ -186,8 +186,8 @@ export const buildProofGraph = (
         const dup = findDuplicateDependencyStatements(depStmts);
         if (dup) {
           step.errors.push({
-            type: ErrorType.DupeStmtSupplied,
-            code: "dupe_stmt_supplied",
+            type: ErrorType.InvalidDupeStmt,
+            code: "invalid_duplicate_stmt",
             details: {
               reason: step.reason.function,
               firstIndex: dup.firstIndex,

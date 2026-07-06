@@ -307,7 +307,7 @@ export const collectProofCheckerErrors = (
   }
   for (const [a, b] of duplicateSteps) {
     errors.push({
-      type: ErrorType.DupeStmtSupplied,
+      type: ErrorType.InvalidDupeStmt,
       code: "duplicate_step",
       details: { steps: [a, b] },
     });

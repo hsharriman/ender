@@ -75,7 +75,7 @@ export const validateGivenProofStep = (
   }
   if (prem.arguments.length !== stmt.arguments.length) {
     step.errors.push({
-      type: ErrorType.StmtArgNumArgsIncorrect,
+      type: ErrorType.InvalidStmtArg,
       code: "stmt_arg_num_args_incorrect",
       details: {
         reason: "given",
@@ -94,7 +94,7 @@ export const validateGivenProofStep = (
       prem.arguments[i].v !== stmt.arguments[i].v
     ) {
       step.errors.push({
-        type: ErrorType.StmtArgTypeInvalid,
+        type: ErrorType.InvalidStmtArg,
         code: "stmt_arg_type_invalid",
         details: {
           reason: "given",
@@ -359,8 +359,8 @@ export const checkGeometricObjects = (
             getGeometricObject(args[j], ctx)
           ) {
             errors.push({
-              type: ErrorType.DupeStmtSupplied,
-              code: "duplicate_argument",
+              type: ErrorType.InvalidDupeStmt,
+              code: "invalid_duplicate_stmt",
               details: {
                 statement: step.statement.function,
                 stepNumber: step.stepNumber,
@@ -393,7 +393,8 @@ export const checkGoalMatch = (
     const stmt = step.statement;
     if (!stmt) continue;
     if (stmt.function !== goal.function) continue;
-    if (!stmt.arguments || stmt.arguments.length !== expectedArgs.length) continue;
+    if (!stmt.arguments || stmt.arguments.length !== expectedArgs.length)
+      continue;
     if (expectedArgs.every((v, i) => stmt.arguments[i].v === v)) {
       return {
         matches: true,
@@ -537,7 +538,7 @@ export const checkSequentialStepNumbers = (
   for (const step of numberedSteps) {
     if (seenStepNumbers.has(step.stepNumber!)) {
       errors.push({
-        type: ErrorType.StepNumberError,
+        type: ErrorType.ParserError,
         code: "duplicate_step_number",
         details: { stepNumber: step.stepNumber },
       });
@@ -548,7 +549,7 @@ export const checkSequentialStepNumbers = (
 
   if (sortedNums.length !== numberedSteps.length) {
     errors.push({
-      type: ErrorType.StepNumberError,
+      type: ErrorType.ParserError,
       code: "invalid_step_number_labels",
       details: {},
     });
@@ -557,7 +558,7 @@ export const checkSequentialStepNumbers = (
 
   if (sortedNums.length === 0) {
     errors.push({
-      type: ErrorType.StepNumberError,
+      type: ErrorType.ParserError,
       code: "no_step_numbers",
       details: {},
     });
@@ -568,7 +569,7 @@ export const checkSequentialStepNumbers = (
   for (let k = 0; k < sortedNums.length; k++) {
     if (sortedNums[k].n !== start + k) {
       errors.push({
-        type: ErrorType.StepNumberError,
+        type: ErrorType.ParserError,
         code: "non_consecutive_step_numbers",
         details: {
           expected: start + k,
