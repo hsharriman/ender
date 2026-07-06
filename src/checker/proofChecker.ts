@@ -26,7 +26,11 @@ import {
   Stmt,
 } from "./types/checkerTypes";
 
-export type ProofGoalMatchResult = { matches: boolean; details: string };
+export type ProofGoalMatchResult = {
+  matches: boolean;
+  details: string;
+  matchedStepNumber?: string;
+};
 
 export type ProofCheckerResult = {
   proof: ProofObj;
@@ -62,7 +66,6 @@ const isCorrect = (
   duplicateSteps: Array<[string, string]>,
 ): boolean =>
   goalMatchResult.matches &&
-  graph.unusedSteps.size === 0 &&
   graph.cycles.length === 0 &&
   duplicateSteps.length === 0 &&
   graph.incorrectSteps.size === 0;
@@ -139,7 +142,11 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
     .find((step) => step.type === "proof");
   const lastStepNum = lastProofStep?.stepNumber;
 
-  graph.unusedSteps = findUnusedSteps(graph, lastStepNum);
+  const goalMatchResult = checkGoalMatch(proof, goal);
+  graph.unusedSteps = findUnusedSteps(
+    graph,
+    goalMatchResult.matchedStepNumber ?? lastStepNum,
+  );
 
   const duplicateSteps = findDuplicateSteps(proof);
   const stepNumberErrors = checkSequentialStepNumbers(proof);
@@ -151,7 +158,6 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
       errors: stepNumberErrors,
     };
   }
-  const goalMatchResult = checkGoalMatch(proof, goal);
 
   proof.isCorrect = isCorrect(goalMatchResult, graph, duplicateSteps);
 
@@ -268,11 +274,36 @@ export const collectProofCheckerErrors = (
     });
   }
   if (graph.unusedSteps.size > 0) {
-    errors.push({
+    const unusedError = {
       type: ErrorType.UnusedStep,
       code: "unused_step",
-      details: { steps: Array.from(graph.unusedSteps).sort() },
-    });
+      details: { steps: [] },
+    };
+    const goalStepIdx = goalMatchResult.matchedStepNumber
+      ? proof.steps.findIndex(
+          (s) => s.stepNumber === goalMatchResult.matchedStepNumber,
+        )
+      : -1;
+    const afterGoal: string[] = [];
+    const other: string[] = [];
+    for (const stepNum of graph.unusedSteps) {
+      const idx = proof.steps.findIndex((s) => s.stepNumber === stepNum);
+      if (goalStepIdx >= 0 && idx > goalStepIdx) {
+        afterGoal.push(stepNum);
+      } else {
+        other.push(stepNum);
+      }
+    }
+    if (afterGoal.length > 0) {
+      errors.push({
+        ...unusedError,
+        code: "unused_step_goal_already_met",
+        details: { steps: afterGoal.sort() },
+      });
+    }
+    if (other.length > 0) {
+      errors.push({ ...unusedError, details: { steps: other.sort() } });
+    }
   }
   for (const [a, b] of duplicateSteps) {
     errors.push({

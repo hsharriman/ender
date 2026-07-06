@@ -1,8 +1,8 @@
 import { Obj, ParseObj } from "../../geometry-object";
 import { normalizeProofObj } from "../normalizeProofObj";
+import { ErrorType } from "../errors/errorConstants";
 import {
   ErrorDetails,
-  ErrorType,
   ParseError,
   ParseResult,
   ProofObj,

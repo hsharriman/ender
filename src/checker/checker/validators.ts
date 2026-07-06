@@ -162,7 +162,9 @@ export const checkReasonStructure = (
     const isCountMismatch =
       typeof data.expectedLength === "number" &&
       typeof data.receivedLength === "number";
-    const isMissingDependencyRef = data.receivedType === "__missing__";
+    const isMissingDependencyRef =
+      data.receivedType === "__step_not_found__" ||
+      data.receivedType === "__step_has_no_statement__";
     step.errors.push({
       type:
         isCountMismatch || isMissingDependencyRef
@@ -215,13 +217,18 @@ export const checkReasonStructure = (
 
       if (!dependencyStmt) {
         structureOk = false;
+        const stepExists =
+          proofGraph.nodes.has(stepNum) ||
+          proofGraph.diagramPremises.has(stepNum);
         addDependencyError({
           reason: reason.function,
           index: idx,
           ref: stepNum,
           expectedType:
             typeof expectedDep === "string" ? expectedDep : "__unknown__",
-          receivedType: "__missing__",
+          receivedType: stepExists
+            ? "__step_has_no_statement__"
+            : "__step_not_found__",
         });
       } else {
         const foundType = dependencyStmt.function;
@@ -368,70 +375,35 @@ export const checkGeometricObjects = (
   return errors;
 };
 
-// Check if final statement matches the goal
+// Check if any proof step matches the goal; returns the first matching step number.
 export const checkGoalMatch = (
   proof: ProofObj,
   goal?: Stmt,
-): { matches: boolean; details: string } => {
+): { matches: boolean; details: string; matchedStepNumber?: string } => {
   if (!goal) return { matches: true, details: "No goal specified" };
 
-  // Find the last proof step (not goal step)
-  const lastProofStep = proof.steps
-    .slice()
-    .reverse()
-    .find((step) => step.type === "proof");
-
-  if (!lastProofStep) {
+  const proofSteps = proof.steps.filter((s) => s.type === "proof");
+  if (proofSteps.length === 0) {
     return { matches: false, details: "No proof steps found" };
   }
 
-  const finalStatement = lastProofStep.statement;
-  if (!finalStatement) {
-    return { matches: false, details: "Last proof step has no statement" };
-  }
-
-  const expectedFunction = goal.function;
   const expectedArgs = goal.arguments.map((a) => a.v);
 
-  // Check function match
-  if (finalStatement.function !== expectedFunction) {
-    return {
-      matches: false,
-      details: `Function mismatch: expected '${expectedFunction}', got '${finalStatement.function}'`,
-    };
-  }
-
-  // Check arguments match
-  if (
-    !finalStatement.arguments ||
-    finalStatement.arguments.length !== expectedArgs.length
-  ) {
-    return {
-      matches: false,
-      details: `Argument count mismatch: expected ${expectedArgs.length}, got ${
-        finalStatement.arguments?.length || 0
-      }`,
-    };
-  }
-
-  // Check each argument
-  for (let i = 0; i < expectedArgs.length; i++) {
-    if (finalStatement.arguments[i].v !== expectedArgs[i]) {
+  for (const step of proofSteps) {
+    const stmt = step.statement;
+    if (!stmt) continue;
+    if (stmt.function !== goal.function) continue;
+    if (!stmt.arguments || stmt.arguments.length !== expectedArgs.length) continue;
+    if (expectedArgs.every((v, i) => stmt.arguments[i].v === v)) {
       return {
-        matches: false,
-        details: `Argument ${i + 1} mismatch: expected '${
-          expectedArgs[i]
-        }', got '${finalStatement.arguments[i]}'`,
+        matches: true,
+        details: `Goal matched at step ${step.stepNumber}`,
+        matchedStepNumber: step.stepNumber,
       };
     }
   }
 
-  return {
-    matches: true,
-    details: `Goal matched: ${
-      finalStatement.function
-    }(${finalStatement.arguments.map((arg) => arg.v).join(", ")})`,
-  };
+  return { matches: false, details: "Goal not reached in any proof step" };
 };
 
 // Non-throwing version that returns boolean and logs errors
