@@ -1,3 +1,4 @@
+import { ErrorType } from "checker/errors/errorConstants";
 import { ProofContent } from "geometry-object";
 import {
   ProofGraph,
@@ -5,18 +6,20 @@ import {
   ReasonDefinition,
   StatementDefinition,
   StatementGroup,
+  Stmt,
 } from "../types/checkerTypes";
+import { checkReasonApplication } from "./reasonApplication";
+import { findDuplicateDependencyStatements } from "./reasonChecks/utils";
 import {
   createReasonApplicabilityIndex,
   indexProofStepForReasons,
 } from "./reasonFulfillment";
-import { checkReasonApplication } from "./reasonApplication";
-import { waysToProve } from "./waysToProve";
 import {
   checkReasonDependencies,
   checkReasonStructure,
   checkStatementArguments,
 } from "./validators";
+import { waysToProve } from "./waysToProve";
 
 // Build proof graph and check each step
 export const buildProofGraph = (
@@ -97,6 +100,11 @@ export const buildProofGraph = (
             if (/^\d+$/.test(depRef)) {
               const depN = parseInt(depRef, 10);
               if (!Number.isNaN(depN) && depN >= currN) {
+                step.errors.push({
+                  type: ErrorType.ForwardReference,
+                  code: "forward_reference",
+                  details: { reason: step.reason.function, ref: depRef },
+                });
                 isCorrect = false;
                 break;
               }
@@ -114,11 +122,9 @@ export const buildProofGraph = (
         for (const depRef of step.reason.arguments) {
           if (/^g_\d+$/.test(depRef)) {
             step.errors.push({
-              type: "illegal_given_dep",
-              data: {
-                reason: step.reason.function,
-                ref: depRef,
-              },
+              type: ErrorType.InvalidGivenDep,
+              code: "invalid_given_dep",
+              details: { reason: step.reason.function, ref: depRef },
             });
             isCorrect = false;
             break;
@@ -139,23 +145,56 @@ export const buildProofGraph = (
           const stmtDef = stmtDefs.get(step.statement.function);
           if (stmtDef?.isDiagramOnly) {
             step.errors.push({
-              type: "reason_stmt_mismatch",
-              data: {
+              type: ErrorType.ReasonStmtMismatch,
+              code: "reason_stmt_mismatch",
+              details: {
                 reason: step.reason.function,
                 message: `Statement '${step.statement.function}' is a diagram-only premise and cannot appear in proof steps`,
               },
             });
             isCorrect = false;
-          } else if (stmtDef?.isPremisesOnly && step.reason?.function !== "given") {
+          } else if (
+            stmtDef?.isPremisesOnly &&
+            step.reason?.function !== "given"
+          ) {
             step.errors.push({
-              type: "reason_stmt_mismatch",
-              data: {
+              type: ErrorType.ReasonStmtMismatch,
+              code: "reason_stmt_mismatch",
+              details: {
                 reason: step.reason.function,
                 message: `Statement '${step.statement.function}' is only allowed in premises or given steps, not in derived proof steps`,
               },
             });
             isCorrect = false;
           }
+        }
+      }
+
+      // Reject steps that cite the same statement twice as two different dependency slots
+      if (
+        isCorrect &&
+        step.reason.arguments &&
+        step.reason.arguments.length > 1
+      ) {
+        const depStmts = step.reason.arguments
+          .map((ref) => {
+            const diag = graph.diagramPremises.get(ref);
+            if (diag) return diag.statement;
+            return graph.nodes.get(ref)?.statement;
+          })
+          .filter((s): s is Stmt => s !== undefined);
+        const dup = findDuplicateDependencyStatements(depStmts);
+        if (dup) {
+          step.errors.push({
+            type: ErrorType.InvalidDupeStmt,
+            code: "invalid_duplicate_stmt",
+            details: {
+              reason: step.reason.function,
+              firstIndex: dup.firstIndex,
+              secondIndex: dup.secondIndex,
+            },
+          });
+          isCorrect = false;
         }
       }
 
@@ -170,8 +209,9 @@ export const buildProofGraph = (
           isCorrect = false;
           graph.dependencyFailureSteps.add(stepNum);
           step.errors.push({
-            type: "upstream_dep_error",
-            data: {
+            type: ErrorType.UpstreamDependencyError,
+            code: "upstream_dep_error",
+            details: {
               reason: step.reason.function,
               dependsOn: incorrectDeps,
             },

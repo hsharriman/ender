@@ -1,6 +1,5 @@
-import { ProofParser } from "checker/grammar/lezerParser";
-import { runProofChecker } from "checker/proofChecker";
-import { ErrorObj, ProofObj } from "checker/types/checkerTypes";
+import { runProofCheckerFromText } from "checker/proofChecker";
+import { ErrorDetails, ProofObj } from "checker/types/checkerTypes";
 import { ProofContent } from "geometry-object";
 import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
@@ -20,8 +19,6 @@ import {
   interactiveLayout,
   staticLayout,
 } from "../core/grammarToLayout/setupLayout";
-
-const parser = new ProofParser();
 
 const allProofUrls = import.meta.glob("/src/checker/proofs/**/*.txt", {
   query: "?url",
@@ -44,20 +41,20 @@ const TEST_GROUPS: Array<{ dir: string; label: string }> = [
   { dir: "tests/circles/",      label: "Circles" },
 ];
 
-function formatErrorList(errors: ErrorObj[] | undefined): string {
+function formatErrorList(errors: ErrorDetails[] | undefined): string {
   if (!errors?.length) return "Incorrect step (no step.errors payload)";
   return errors
     .map((e, i) => {
       const suffix =
-        e.data === undefined ? "" : `: ${JSON.stringify(e.data, null, 2)}`;
-      return `${i + 1}. ${e.type}${suffix}`;
+        e.details === undefined ? "" : `: ${JSON.stringify(e.details, null, 2)}`;
+      return `${i + 1}. ${e.code}${suffix}`;
     })
     .join("\n");
 }
 
 function buildAnnotatedLines(
   text: string,
-  stepErrorsByStep: Map<string, ErrorObj[]>,
+  stepErrorsByStep: Map<string, ErrorDetails[]>,
 ): Array<{ text: string; tooltip?: string; isIncorrect: boolean }> {
   return text.split("\n").map((line) => {
     const m = line.match(/^\s*\[(\d+)\]/);
@@ -84,7 +81,7 @@ type ProofObjHarnessState = {
   statusMessage: string;
   incorrectSteps: Set<string>;
   proofWideIssues: string[];
-  incorrectStepErrors: Map<string, ErrorObj[]>;
+  incorrectStepErrors: Map<string, ErrorDetails[]>;
   proofParseSucceeded: boolean;
   hoverTooltip: string;
   hoverPos: { x: number; y: number } | null;
@@ -167,12 +164,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.proofParseTimeoutId = window.setTimeout(() => {
       this.proofParseTimeoutId = null;
       try {
-        const parsed = parser.parse(
-          this.state.proofText,
-        ) as unknown as ProofObj;
-        const result = runProofChecker(parsed);
+        const result = runProofCheckerFromText(this.state.proofText);
 
-        const nextIncorrectStepErrors = new Map<string, ErrorObj[]>();
+        const nextIncorrectStepErrors = new Map<string, ErrorDetails[]>();
         result.graph.incorrectSteps.forEach((stepNum) => {
           const step = result.proof.steps.find((s) => s.stepNumber === stepNum);
           nextIncorrectStepErrors.set(stepNum, step?.errors ?? []);
@@ -201,15 +195,12 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
               .join(", ")}`,
           );
         }
-        if (result.stepNumberErrors.length > 0) {
-          nextProofIssues.push(
-            `Step numbering issues: ${result.stepNumberErrors.join(" | ")}`,
-          );
-        }
-        if (result.geometricObjectErrors.length > 0) {
-          nextProofIssues.push(
-            `Geometric object issues: ${result.geometricObjectErrors.join(" | ")}`,
-          );
+        if (result.errors.length > 0) {
+          result.errors.forEach((e) => {
+            nextProofIssues.push(
+              `${e.code}${e.details ? `: ${JSON.stringify(e.details)}` : ""}`,
+            );
+          });
         }
         if (result.graph.incorrectSteps.size > 0) {
           nextProofIssues.push(
@@ -221,7 +212,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           incorrectStepErrors: nextIncorrectStepErrors,
           proofWideIssues: nextProofIssues,
           statusMessage: "Proof parsed successfully.",
-          lastGoodProof: parsed,
+          lastGoodProof: result.proof,
           lastGoodCtx: result.ctx,
           incorrectSteps: result.graph.incorrectSteps,
           proofParseSucceeded: true,

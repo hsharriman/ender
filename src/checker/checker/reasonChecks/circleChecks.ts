@@ -1,12 +1,7 @@
 import { Angle, Circle, Point, ProofContent, Segment } from "geometry-object";
 import { Stmt } from "../../types/checkerTypes";
-import { stmtMapper } from "./argMappers";
 import { reasonApplicationFail, reasonApplicationOk } from "./reasonResult";
-import {
-  checkDistinctDependencyStmts,
-  checkEqual,
-  resolveSegmentForProp,
-} from "./utils";
+import { checkEqual, resolveSegmentForProp, stmtMapper } from "./utils";
 
 const DIFF_CIRCLES = "tangent_and_radius_on_diff_circles";
 const DIFF_TAN_PTS = "tangent_and_radius_have_diff_tangency_pts";
@@ -43,9 +38,6 @@ export const checkTangentPerpRelationship = (
   perpStmt: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([tangentStmt, radiusStmt]);
-  if (!dup.ok) return dup;
-
   const [circle_tan, s_tan, p_tan] = stmtMapper(tangentStmt, ctx) as [
     Circle,
     Segment,
@@ -88,9 +80,6 @@ export const con_tangents_ext_check = (
   conclusion: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([tan1, tan2]);
-  if (!dup.ok) return dup;
-
   const [c1, s1, p1] = stmtMapper(tan1, ctx) as [Circle, Segment, Point];
   const [c2, s2, p2] = stmtMapper(tan2, ctx) as [Circle, Segment, Point];
   const [cs1, cs2] = stmtMapper(conclusion, ctx) as [Segment, Segment];
@@ -126,9 +115,6 @@ export const radius_chord_bisect_check = (
   conclusion: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([perpStmt, radiusStmt, chordStmt]);
-  if (!dup.ok) return dup;
-
   const [s_rad, s_ch, p_int] = stmtMapper(perpStmt, ctx) as [
     Segment,
     Segment,
@@ -185,9 +171,6 @@ export const radius_chord_bisect_conv_check = (
   conclusion: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([perpBisectorStmt, chordStmt]);
-  if (!dup.ok) return dup;
-
   const [s_perp, s_bisected] = stmtMapper(perpBisectorStmt, ctx) as [
     Segment,
     Segment,
@@ -222,9 +205,6 @@ export const con_inscribed_angs_check = (
   conclusion: Stmt,
   ctx: ProofContent,
 ) => {
-  const dup = checkDistinctDependencyStmts([ins1, ins2]);
-  if (!dup.ok) return dup;
-
   const [c1, a1] = stmtMapper(ins1, ctx) as [Circle, Angle];
   const [c2, a2] = stmtMapper(ins2, ctx) as [Circle, Angle];
   const [ca1, ca2] = stmtMapper(conclusion, ctx) as [Angle, Angle];

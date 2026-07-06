@@ -1,12 +1,28 @@
 import { Obj, ParseObj, ProofContent } from "../../geometry-object";
-import { createError } from "../errors/errorConstants";
-import { ProofObj, Stmt } from "../types/checkerTypes";
+import { ErrorMessages, ErrorType } from "../errors/errorConstants";
+import { ErrorDetails, ProofObj, Stmt } from "../types/checkerTypes";
 import { pointtoParseObj, segtoParseObj } from "../utils/utils";
 
 export const buildPremises = (proof: ProofObj) => {
   // Create DiagramContent context and populate it with all geometric objects from premises
   const ctx = new ProofContent();
   const definedPtLabels = new Set(proof.premises.points.map((pt) => pt.v));
+  const premiseErrors: ErrorDetails[] = [];
+
+  const checkArgPointsDefined = (
+    arg: ParseObj,
+    stepNum?: string,
+  ): ErrorDetails | undefined => {
+    for (const pt of arg.v.split("")) {
+      if (!definedPtLabels.has(pt)) {
+        return parserError(
+          ErrorMessages.PARSER.POINT_NOT_DEFINED_IN_PREMISES(pt),
+          stepNum,
+        );
+      }
+    }
+    return undefined;
+  };
 
   // 1. Points
   proof.premises.points.forEach((pointObj) => {
@@ -16,37 +32,33 @@ export const buildPremises = (proof: ProofObj) => {
   // 2. Triangles, quadrilaterals, and circles — their sides/angles are created as a side-effect,
   // so proofs don't need to separately declare segments that are already sides of these shapes.
   proof.premises.triangles.forEach((triangleObj) => {
-    for (const point of triangleObj.v.split("")) {
-      if (!definedPtLabels.has(point))
-        throw createError.parser.pointNotDefinedInPremises(point);
-    }
+    const err = checkArgPointsDefined(triangleObj);
+    if (err) premiseErrors.push(err);
     ctx.addTriangleFromStr(triangleObj.v);
   });
+  if (premiseErrors.length > 0) return { ctx, premiseErrors };
 
   proof.premises.quadrilaterals.forEach((quadrilateralObj) => {
-    for (const point of quadrilateralObj.v.split("")) {
-      if (!definedPtLabels.has(point))
-        throw createError.parser.pointNotDefinedInPremises(point);
-    }
+    const err = checkArgPointsDefined(quadrilateralObj);
+    if (err) premiseErrors.push(err);
     ctx.addQuadrilateralFromStr(quadrilateralObj.v);
   });
+  if (premiseErrors.length > 0) return { ctx, premiseErrors };
 
   proof.premises.circles.forEach((circleObj) => {
-    for (const point of circleObj.v.split("")) {
-      if (!definedPtLabels.has(point))
-        throw createError.parser.pointNotDefinedInPremises(point);
-    }
+    const err = checkArgPointsDefined(circleObj);
+    if (err) premiseErrors.push(err);
     ctx.addCircleFromStr(circleObj.v);
   });
+  if (premiseErrors.length > 0) return { ctx, premiseErrors };
 
   // 4. Explicitly declared segments — idempotent for any already created by tris/quads/addVisibleObjects.
   proof.premises.segments.forEach((segmentObj) => {
-    for (const point of segmentObj.v.split("")) {
-      if (!definedPtLabels.has(point))
-        throw createError.parser.pointNotDefinedInPremises(point);
-    }
+    const err = checkArgPointsDefined(segmentObj);
+    if (err) premiseErrors.push(err);
     ctx.addSegmentFromStr(segmentObj.v);
   });
+  if (premiseErrors.length > 0) return { ctx, premiseErrors };
 
   // 3. addVisibleObjects — creates segments for perp, intersect, transversal, etc.
   const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
@@ -57,7 +69,7 @@ export const buildPremises = (proof: ProofObj) => {
         addAllObjects(ctx, statement);
         break;
       case "perp":
-        perpPremise(ctx, statement.arguments, proof);
+        perpPremise(ctx, statement.arguments);
         break;
       case "on_line":
         onLine(ctx, statement.arguments);
@@ -65,10 +77,10 @@ export const buildPremises = (proof: ProofObj) => {
       case "perp_bisector": // all use (s1, s2, p)
       case "seg_bisect":
       case "intersect_seg":
-        intersectSeg(ctx, statement.arguments, proof);
+        intersectSeg(ctx, statement.arguments);
         break;
       case "transversal":
-        transversal(ctx, statement.arguments, proof);
+        transversal(ctx, statement.arguments);
         break;
       case "midpt":
         midpt(ctx, statement.arguments);
@@ -114,7 +126,12 @@ export const buildPremises = (proof: ProofObj) => {
       case "incenter":
         break;
       default:
-        throw createError.parser.unknownStatementFunction(statement.function);
+        premiseErrors.push(
+          parserError(
+            ErrorMessages.PARSER.UNKNOWN_STATEMENT_FUNCTION(statement.function),
+          ),
+        );
+        return;
     }
   };
 
@@ -125,15 +142,31 @@ export const buildPremises = (proof: ProofObj) => {
       step.statement?.function &&
       step.statement.arguments
     ) {
+      for (const arg of step.statement.arguments) {
+        const err = checkArgPointsDefined(arg, step.stepNumber);
+        if (err) {
+          premiseErrors.push(err);
+          return;
+        }
+      }
       addVisibleObjects(ctx, step.statement);
     }
   });
+  if (premiseErrors.length > 0) return { ctx, premiseErrors };
 
   // Process diagram-specific premises the same way (they also affect the diagram context).
-  proof.premises.diagramStatements.forEach(({ statement }) => {
+  proof.premises.diagramStatements.forEach(({ statement, stepNumber }) => {
     if (!statement?.function || !statement.arguments) return;
+    for (const arg of statement.arguments) {
+      const err = checkArgPointsDefined(arg, stepNumber);
+      if (err) {
+        premiseErrors.push(err);
+        return;
+      }
+    }
     addVisibleObjects(ctx, statement);
   });
+  if (premiseErrors.length > 0) return { ctx, premiseErrors };
 
   // 5. Angle loop — runs after all segment creation so every possible angle is captured.
   // loop through points, create angles between all pairs of segments that contain that point
@@ -170,7 +203,7 @@ export const buildPremises = (proof: ProofObj) => {
     ctx: ProofContent,
     statement: Stmt,
     stepNum?: string,
-  ): string[] => {
+  ): ErrorDetails | undefined => {
     switch (statement.function) {
       case "ang_bisect":
         angBisect(ctx, statement.arguments);
@@ -222,14 +255,18 @@ export const buildPremises = (proof: ProofObj) => {
       case "kite":
       case "isos_trapezoid":
       case "trapezoid":
-        throw createError.parser.premiseCounterpartRequired(statement.function);
+        return parserError(
+          ErrorMessages.PARSER.PREMISE_COUNTERPART_REQUIRED(statement.function),
+          stepNum,
+        );
       default:
-        throw createError.parser.unknownStatementFunction(statement.function);
+        return parserError(
+          ErrorMessages.PARSER.UNKNOWN_STATEMENT_FUNCTION(statement.function),
+          stepNum,
+        );
     }
-    return [];
+    return;
   };
-
-  const premiseErrors: string[] = [];
 
   // process all other given steps
   proof.steps.forEach((step) => {
@@ -238,16 +275,24 @@ export const buildPremises = (proof: ProofObj) => {
       step.statement?.function &&
       step.statement.arguments
     ) {
-      premiseErrors.push(
-        ...addDependentObjects(ctx, step.statement, step.stepNumber),
-      );
+      for (const arg of step.statement.arguments) {
+        const err = checkArgPointsDefined(arg, step.stepNumber);
+        if (err) return { ctx, premiseErrors: [...premiseErrors, err] };
+      }
+      const error = addDependentObjects(ctx, step.statement, step.stepNumber);
+      if (error) return { ctx, premiseErrors: [...premiseErrors, error] };
     }
   });
 
   // Process diagram-specific premises for the "other given" categories.
   proof.premises.diagramStatements.forEach((d) => {
     if (!d.statement?.function || !d.statement.arguments) return;
-    premiseErrors.push(...addDependentObjects(ctx, d.statement, d.stepNumber));
+    for (const arg of d.statement.arguments) {
+      const err = checkArgPointsDefined(arg, d.stepNumber);
+      if (err) return { ctx, premiseErrors: [...premiseErrors, err] };
+    }
+    const error = addDependentObjects(ctx, d.statement, d.stepNumber);
+    if (error) return { ctx, premiseErrors: [...premiseErrors, error] };
   });
 
   ctx.checkAngleOverlaps();
@@ -257,15 +302,10 @@ export const buildPremises = (proof: ProofObj) => {
 
 const circlePremises = (ctx: ProofContent, stmt: Stmt) => {
   const [circ, obj] = stmt.arguments;
-
   addAllObjects(ctx, stmt);
   const c = ctx.getCircle(circ.v);
-
   obj.v.split("").forEach((p) => {
     const pt = ctx.getPoint(p);
-    if (!pt) {
-      throw createError.parser.pointNotDefinedInPremises(p);
-    }
     c.addPt(pt);
     pt.addOnCircle(c);
   });
@@ -276,11 +316,7 @@ const tangentPremise = (ctx: ProofContent, stmt: Stmt) => {
   const [circ, seg, point] = stmt.arguments;
   const c = ctx.getCircle(circ.v);
   const s = ctx.getSegment(seg.v);
-
   const pt = ctx.getPoint(point.v);
-  if (!pt) {
-    throw createError.parser.pointNotDefinedInPremises(point.v);
-  }
   c.addPt(pt);
   pt.addOnLine(s);
   pt.addOnCircle(c);
@@ -292,9 +328,6 @@ const arcPremise = (ctx: ProofContent, stmt: Stmt) => {
   const c = ctx.getCircle(circ.v);
   [start.v, end.v].forEach((p) => {
     const pt = ctx.getPoint(p);
-    if (!pt) {
-      throw createError.parser.pointNotDefinedInPremises(p);
-    }
     c.addPt(pt);
     pt.addOnCircle(c);
   });
@@ -304,7 +337,7 @@ const trapezoidPremise = (
   ctx: ProofContent,
   args: ParseObj[],
   stepNum?: string,
-): string[] => {
+): ErrorDetails | undefined => {
   const [quad, seg1, seg2] = args;
   const q = ctx.addQuadrilateralFromStr(quad.v, {
     type: "trapezoid",
@@ -316,34 +349,38 @@ const trapezoidPremise = (
   const ql = quad.v;
   const s1 = q.s.find((s) => s.names.has(b1));
   const s2 = q.s.find((s) => s.names.has(b2));
-  if (!s1)
-    return [
-      `${prefix}Trapezoid base '${b1}' is not a side of quadrilateral '${ql}'`,
-    ];
-  if (!s2)
-    return [
-      `${prefix}Trapezoid base '${b2}' is not a side of quadrilateral '${ql}'`,
-    ];
-  if (s1.equals(s2))
-    return [
-      `${prefix}Trapezoid bases '${b1}' and '${b2}' must be two distinct sides of '${ql}'`,
-    ];
-  if (!q.isOppositeSides(s1, s2))
-    return [
-      `${prefix}Trapezoid bases '${b1}' and '${b2}' are consecutive sides of '${ql}' — bases must be the opposite (parallel) sides`,
-    ];
-  return [];
+  if (!s1) return;
+  parserError(
+    `Trapezoid base '${b1}' is not a side of quadrilateral '${ql}'`,
+    stepNum,
+  );
+  if (!s2) return;
+  parserError(
+    `Trapezoid base '${b2}' is not a side of quadrilateral '${ql}'`,
+    stepNum,
+  );
+  if (s1.equals(s2)) return;
+  parserError(
+    `Trapezoid bases '${b1}' and '${b2}' must be two distinct sides of '${ql}'`,
+    stepNum,
+  );
+  if (!q.isOppositeSides(s1, s2)) return;
+  parserError(
+    `Trapezoid bases '${b1}' and '${b2}' are consecutive sides of '${ql}' — bases must be the opposite (parallel) sides`,
+    stepNum,
+  );
+  return;
 };
 
 const kitePremise = (ctx: ProofContent, args: ParseObj[]) => {
   const [quad, ang1, ang2] = args;
-  const q = ctx.addQuadrilateralFromStr(quad.v, {
+  ctx.addQuadrilateralFromStr(quad.v, {
     type: "kite",
     objs: [ang1.v, ang2.v],
   });
 };
 
-const perpPremise = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
+const perpPremise = (ctx: ProofContent, args: ParseObj[]) => {
   const [seg1, seg2, pt] = args;
   const s1 = ctx.addSegmentFromStr(seg1.v);
   const s2 = ctx.addSegmentFromStr(seg2.v);
@@ -364,11 +401,14 @@ const perpPremise = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
     });
   } else {
     // p is interior to both segments — full cross-intersection
-    intersectSeg(ctx, [seg1, seg2, pt], proof);
+    intersectSeg(ctx, [seg1, seg2, pt]);
   }
 };
 
-const angBisect = (ctx: ProofContent, args: ParseObj[]) => {
+const angBisect = (
+  ctx: ProofContent,
+  args: ParseObj[],
+): ErrorDetails | undefined => {
   const [ang, seg] = args;
   const a = ctx.addAngleFromStr(ang.v);
   const s = ctx.addSegmentFromStr(seg.v);
@@ -378,10 +418,13 @@ const angBisect = (ctx: ProofContent, args: ParseObj[]) => {
       ? s.p1
       : undefined;
   if (!sharedPt) {
-    throw createError.parser.segmentAngleOverlapError(seg.v, ang.v);
+    return parserError(
+      ErrorMessages.PARSER.SEGMENT_ANGLE_OVERLAP_ERROR(seg.v, ang.v),
+    );
   }
   ctx.addAngle({ center: a.center, start: a.start, end: sharedPt });
   ctx.addAngle({ center: a.center, start: a.end, end: sharedPt });
+  return undefined;
 };
 
 const onLine = (ctx: ProofContent, args: ParseObj[]) => {
@@ -395,13 +438,8 @@ const onLine = (ctx: ProofContent, args: ParseObj[]) => {
   ps2.addParentSegment(s);
 };
 
-const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
+const intersectSeg = (ctx: ProofContent, args: ParseObj[]) => {
   const [s1, s2, p] = args;
-
-  // Check if the intersection point exists in premises
-  if (!proof.premises.points.some((pt) => pt.v === p.v)) {
-    throw createError.parser.pointNotDefinedInPremises(p.v);
-  }
 
   const seg1 = ctx.addSegmentFromStr(s1.v);
   const seg2 = ctx.addSegmentFromStr(s2.v);
@@ -422,7 +460,7 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
   });
 };
 
-const transversal = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
+const transversal = (ctx: ProofContent, args: ParseObj[]) => {
   const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = args.map((arg) =>
     ctx.getPoint(arg.v),
   );
@@ -434,16 +472,16 @@ const transversal = (ctx: ProofContent, args: ParseObj[], proof: ProofObj) => {
     (i1.equals(t1) && i2.equals(t2)) || (i1.equals(t2) && i2.equals(t1));
 
   if (!intersectionsAtTransversalEndpoints) {
-    intersectSeg(
-      ctx,
-      [segtoParseObj(seg1), segtoParseObj(transversalSeg), pointtoParseObj(i1)],
-      proof,
-    );
-    intersectSeg(
-      ctx,
-      [segtoParseObj(seg2), segtoParseObj(transversalSeg), pointtoParseObj(i2)],
-      proof,
-    );
+    intersectSeg(ctx, [
+      segtoParseObj(seg1),
+      segtoParseObj(transversalSeg),
+      pointtoParseObj(i1),
+    ]);
+    intersectSeg(ctx, [
+      segtoParseObj(seg2),
+      segtoParseObj(transversalSeg),
+      pointtoParseObj(i2),
+    ]);
     const innerT = ctx.addSegmentFromStr(`${i1.label}${i2.label}`);
     innerT.addParentSegment(transversalSeg);
   } else {
@@ -500,4 +538,18 @@ const addAllObjects = (ctx: ProofContent, stmt: Stmt) => {
         break;
     }
   });
+};
+
+const parserError = (message: string, stepNum?: string): ErrorDetails => {
+  const prefix = stepNum ? `[${stepNum}] ` : "";
+  return {
+    type: ErrorType.ParserError,
+    code: "parser_error",
+    details: {
+      message: `${prefix}${message}`,
+      stepNumber:
+        stepNum ??
+        "Error is not within a proof step (it is most likely in premises)",
+    },
+  };
 };

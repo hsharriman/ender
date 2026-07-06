@@ -1,3 +1,4 @@
+import { ProofContent } from "../geometry-object";
 import {
   buildProofGraph,
   detectCycles,
@@ -11,15 +12,25 @@ import {
   checkSequentialStepNumbers,
   findDuplicateSteps,
 } from "./checker/validators";
+import { ErrorType } from "./errors/errorConstants";
 import {
   loadReasonDefinitions,
   loadStatementDefinitions,
 } from "./grammar/defsParsers";
 import { ProofParser } from "./grammar/lezerParser";
-import { ErrorObj, ProofGraph, ProofObj, Stmt } from "./types/checkerTypes";
-import { ProofContent } from "../geometry-object";
+import {
+  ErrorDetails,
+  ProofGraph,
+  ProofObj,
+  ProofStep,
+  Stmt,
+} from "./types/checkerTypes";
 
-export type ProofGoalMatchResult = { matches: boolean; details: string };
+export type ProofGoalMatchResult = {
+  matches: boolean;
+  details: string;
+  matchedStepNumber?: string;
+};
 
 export type ProofCheckerResult = {
   proof: ProofObj;
@@ -27,9 +38,8 @@ export type ProofCheckerResult = {
   graph: ProofGraph;
   ctx: ProofContent;
   duplicateSteps: Array<[string, string]>;
-  stepNumberErrors: string[];
-  geometricObjectErrors: string[];
   goalMatchResult: ProofGoalMatchResult;
+  errors: ErrorDetails[];
 };
 
 const extractGoal = (proof: ProofObj) => {
@@ -54,47 +64,59 @@ const isCorrect = (
   goalMatchResult: ProofGoalMatchResult,
   graph: ProofGraph,
   duplicateSteps: Array<[string, string]>,
-  stepNumberErrors: string[],
-  geometricObjectErrors: string[],
 ): boolean =>
   goalMatchResult.matches &&
-  graph.unusedSteps.size === 0 &&
   graph.cycles.length === 0 &&
   duplicateSteps.length === 0 &&
-  stepNumberErrors.length === 0 &&
-  geometricObjectErrors.length === 0 &&
   graph.incorrectSteps.size === 0;
 
-/**
- * Single checker workflow on an already-parsed proof (after `normalizeProofObj`).
- * Steps: geometric premises → premise geometry context → **build proof graph**
- * (reason structure, deps, statement args, **reason application** — this is where
- * `ProofStep.diagramDeps` is set) → cycles → unused steps → duplicate / step-number
- * checks → goal match.
- */
+const emptyProofObj = (): ProofObj => ({
+  title: null,
+  premises: {
+    points: [],
+    triangles: [],
+    quadrilaterals: [],
+    segments: [],
+    angles: [],
+    circles: [],
+    diagramStatements: [],
+  },
+  steps: [],
+  errors: [],
+  isCorrect: false,
+});
+
+const emptyResult = (): ProofCheckerResult => {
+  return {
+    proof: emptyProofObj(),
+    goal: undefined,
+    graph: emptyProofGraph(),
+    ctx: new ProofContent(),
+    duplicateSteps: [],
+    goalMatchResult: { matches: false, details: "" },
+    errors: [],
+  };
+};
+
 export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   const goal = extractGoal(proof);
   proof.errors = [];
+
+  const defaultResult: ProofCheckerResult = { ...emptyResult(), goal };
+
   const { ctx, premiseErrors } = buildPremises(proof);
   ctx.checkAngleOverlaps();
 
   const { statements: stmtDefs, groups } = loadStatementDefinitions();
 
-  const geometricObjectErrors = [
-    ...checkGeometricObjects(proof, ctx, stmtDefs),
-    ...premiseErrors,
-  ];
-  if (geometricObjectErrors.length > 0) {
+  const dupeStmtErrors = checkGeometricObjects(proof, ctx, stmtDefs);
+
+  if (premiseErrors.length > 0 || dupeStmtErrors.length > 0) {
     proof.isCorrect = false;
     return {
-      proof,
-      goal,
-      graph: emptyProofGraph(),
+      ...defaultResult,
       ctx,
-      duplicateSteps: [],
-      stepNumberErrors: [],
-      geometricObjectErrors,
-      goalMatchResult: { matches: false, details: "skipped (geometry errors)" },
+      errors: [...dupeStmtErrors, ...premiseErrors],
     };
   }
 
@@ -104,14 +126,9 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   if (diagramPremiseErrors.length > 0) {
     proof.isCorrect = false;
     return {
-      proof,
-      goal,
-      graph: emptyProofGraph(),
+      ...defaultResult,
       ctx,
-      duplicateSteps: [],
-      stepNumberErrors: [],
-      geometricObjectErrors: diagramPremiseErrors,
-      goalMatchResult: { matches: false, details: "skipped (diagram premise errors)" },
+      errors: diagramPremiseErrors,
     };
   }
 
@@ -124,19 +141,25 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
     .reverse()
     .find((step) => step.type === "proof");
   const lastStepNum = lastProofStep?.stepNumber;
-  graph.unusedSteps = findUnusedSteps(graph, lastStepNum);
+
+  const goalMatchResult = checkGoalMatch(proof, goal);
+  graph.unusedSteps = findUnusedSteps(
+    graph,
+    goalMatchResult.matchedStepNumber ?? lastStepNum,
+  );
 
   const duplicateSteps = findDuplicateSteps(proof);
   const stepNumberErrors = checkSequentialStepNumbers(proof);
-  const goalMatchResult = checkGoalMatch(proof, goal);
+  if (stepNumberErrors.length > 0) {
+    proof.isCorrect = false;
+    return {
+      ...defaultResult,
+      ctx,
+      errors: stepNumberErrors,
+    };
+  }
 
-  proof.isCorrect = isCorrect(
-    goalMatchResult,
-    graph,
-    duplicateSteps,
-    stepNumberErrors,
-    geometricObjectErrors,
-  );
+  proof.isCorrect = isCorrect(goalMatchResult, graph, duplicateSteps);
 
   return {
     proof,
@@ -144,9 +167,8 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
     graph,
     ctx,
     duplicateSteps,
-    stepNumberErrors,
-    geometricObjectErrors,
     goalMatchResult,
+    errors: [], // TODO move other errors to errors object
   };
 };
 
@@ -156,17 +178,28 @@ const parser = new ProofParser();
 export const runProofCheckerFromText = (
   proofText: string,
 ): ProofCheckerResult => {
-  const proof = parser.parse(proofText) as unknown as ProofObj;
-  return runProofChecker(proof);
+  const parseResult = parser.parse(proofText);
+  if (!parseResult.ok) {
+    const empty = emptyResult();
+    return {
+      ...empty,
+      errors: parseResult.failure,
+      goalMatchResult: {
+        ...empty.goalMatchResult,
+        details: "parsing failure prevented goal check",
+      },
+    };
+  }
+  return runProofChecker(parseResult.value);
 };
 
-const formatStepErrors = (errors: ErrorObj[] | undefined): string => {
+const formatStepErrors = (errors: ProofStep["errors"] | undefined): string => {
   if (!errors?.length) return "(no step.errors payload)";
   return errors
     .map((e, i) => {
       const suffix =
-        e.data === undefined ? "" : `: ${JSON.stringify(e.data)}`;
-      return `  ${i + 1}. ${e.type}${suffix}`;
+        e.details === undefined ? "" : `: ${JSON.stringify(e.details)}`;
+      return `  ${i + 1}. ${e.code}${suffix}`;
     })
     .join("\n");
 };
@@ -176,14 +209,7 @@ export const collectProofCheckerIssues = (
   result: ProofCheckerResult,
 ): string[] => {
   const issues: string[] = [];
-  const {
-    graph,
-    duplicateSteps,
-    stepNumberErrors,
-    geometricObjectErrors,
-    goalMatchResult,
-    proof,
-  } = result;
+  const { graph, duplicateSteps, goalMatchResult, proof, errors } = result;
 
   if (!goalMatchResult.matches) {
     issues.push(`Goal not reached: ${goalMatchResult.details}`);
@@ -205,14 +231,6 @@ export const collectProofCheckerIssues = (
         .join(", ")}`,
     );
   }
-  if (stepNumberErrors.length > 0) {
-    issues.push(`Step numbering issues: ${stepNumberErrors.join(" | ")}`);
-  }
-  if (geometricObjectErrors.length > 0) {
-    issues.push(
-      `Geometric object issues: ${geometricObjectErrors.join(" | ")}`,
-    );
-  }
   if (graph.incorrectSteps.size > 0) {
     const sorted = Array.from(graph.incorrectSteps).sort();
     issues.push(`Incorrect steps: ${sorted.join(", ")}`);
@@ -221,8 +239,90 @@ export const collectProofCheckerIssues = (
       issues.push(`Step ${stepNum}:\n${formatStepErrors(step?.errors)}`);
     }
   }
+  if (errors.length > 0) {
+    issues.push(
+      `Checker errors: ${errors
+        .map(
+          (e) =>
+            `${e.code}${e.details ? `: ${JSON.stringify(e.details)}` : ""}`,
+        )
+        .join(", ")}`,
+    );
+  }
 
   return issues;
+};
+
+/** Proof-wide and per-step issues as structured ErrorDetails, suitable for machine consumption. */
+export const collectProofCheckerErrors = (
+  result: ProofCheckerResult,
+): ErrorDetails[] => {
+  const { graph, duplicateSteps, goalMatchResult, proof, errors } = result;
+
+  if (!goalMatchResult.matches) {
+    errors.push({
+      type: ErrorType.GoalNotFound,
+      code: "goal_not_reached",
+      details: { reason: goalMatchResult.details },
+    });
+  }
+  for (const cycle of graph.cycles) {
+    errors.push({
+      type: ErrorType.Cycle,
+      code: "cycle",
+      details: { steps: cycle },
+    });
+  }
+  if (graph.unusedSteps.size > 0) {
+    const unusedError = {
+      type: ErrorType.UnusedStep,
+      code: "unused_step",
+      details: { steps: [] },
+    };
+    const goalStepIdx = goalMatchResult.matchedStepNumber
+      ? proof.steps.findIndex(
+          (s) => s.stepNumber === goalMatchResult.matchedStepNumber,
+        )
+      : -1;
+    const afterGoal: string[] = [];
+    const other: string[] = [];
+    for (const stepNum of graph.unusedSteps) {
+      const idx = proof.steps.findIndex((s) => s.stepNumber === stepNum);
+      if (goalStepIdx >= 0 && idx > goalStepIdx) {
+        afterGoal.push(stepNum);
+      } else {
+        other.push(stepNum);
+      }
+    }
+    if (afterGoal.length > 0) {
+      errors.push({
+        ...unusedError,
+        code: "unused_step_goal_already_met",
+        details: { steps: afterGoal.sort() },
+      });
+    }
+    if (other.length > 0) {
+      errors.push({ ...unusedError, details: { steps: other.sort() } });
+    }
+  }
+  for (const [a, b] of duplicateSteps) {
+    errors.push({
+      type: ErrorType.InvalidDupeStmt,
+      code: "duplicate_step",
+      details: { steps: [a, b] },
+    });
+  }
+  for (const stepNum of Array.from(graph.incorrectSteps).sort()) {
+    const step = proof.steps.find((s) => s.stepNumber === stepNum);
+    if (step?.errors?.length) {
+      for (const error of step.errors) {
+        error.details = { ...error.details, steps: [stepNum] };
+        errors.push(error);
+      }
+    }
+  }
+
+  return errors;
 };
 
 /**

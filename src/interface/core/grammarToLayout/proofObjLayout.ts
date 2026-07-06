@@ -1,16 +1,16 @@
 import { ProofObj, ProofStep, Stmt } from "checker/types/checkerTypes";
 import { ProofContent } from "geometry-object";
-import { DiagramContent } from "../builder/DiagramContent";
-import { seedBaseContentFromPremises } from "./proofObjBaseContent";
 import React from "react";
 import { reasonFromFunction } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
+import { DiagramContent } from "../builder/DiagramContent";
 import { AspectRatio } from "../diagramSvg/svgTypes";
 import { Transversal } from "../reasons/Transversal";
 import { VerticalAngles } from "../reasons/VerticalAngles";
 import { SVGModes } from "../types/diagramTypes";
 import { LayoutProps } from "../types/layoutTypes";
 import { StepMeta } from "../types/stepTypes";
+import { seedBaseContentFromPremises } from "./proofObjBaseContent";
 import {
   applyPremisesObjects,
   applyStmtAdditions,
@@ -104,14 +104,15 @@ export const interactiveLayoutFromProofObj = (
   const stepMetas: StepMeta[] = [];
   proofSteps.forEach((step, idx) => {
     const currStep = idx + 1;
+    // TODO WHY IS THIS DONE THIS WAY
     const dependencyErrorIndices = new Set(
       step.errors
         .filter(
           (e) =>
-            e.type === "reason_dep_missing" ||
-            e.type === "reason_dep_type_mismatch",
+            e.code === "reason_dep_missing" ||
+            e.code === "reason_dep_type_mismatch",
         )
-        .map((e) => e.data?.index)
+        .map((e) => e.details?.index)
         .filter((index): index is number => typeof index === "number"),
     );
     const dependsOn =

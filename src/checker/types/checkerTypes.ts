@@ -1,3 +1,4 @@
+import { ErrorType } from "checker/errors/errorConstants";
 import { ParseObj } from "../../geometry-object";
 
 export interface Stmt {
@@ -63,29 +64,13 @@ export interface StatementDefinition {
   allowDupeArgs?: boolean; // when true, duplicate geometric arguments within the statement are valid (e.g. ref_seg, ref_ang)
 }
 
-export type ErrorType =
-  | "stmt_arg_mismatch"
-  | "reason_dep_missing"
-  | "reason_dep_type_mismatch"
-  | "reason_stmt_mismatch"
-  | "upstream_dep_error"
-  | "reason_objs_not_in_stmt_obj"
-  | "illegal_given_dep"
-  | "object_not_in_premises"
-  | "cycle"
-  | "unused_step"
-  | "duplicate_step"
-  | "goal_not_reached";
-
-export type ErrorObj = {
+export type ErrorDetails = {
   type: ErrorType;
-  data?: any;
+  code: string;
+  details?: Record<string, unknown>;
 };
 
-export type ReasonCheckResult = {
-  ok: boolean;
-  errors: ErrorObj[];
-};
+export type CheckerResult = { ok: true } | { ok: false; failure: ErrorDetails };
 
 // Types for the proof checker
 // errors here:
@@ -96,7 +81,7 @@ export interface ProofStep {
   stepNumber?: string;
   diagramDeps?: ParseDiagramStmt[];
   waysToProve?: WaysToProveSummary;
-  errors: ErrorObj[];
+  errors: ErrorDetails[];
 }
 
 // errors here: invalid diagram statement (can't find objects in premises)
@@ -104,7 +89,7 @@ export interface ParseDiagramStmt {
   type: "diagram";
   statement: Stmt;
   stepNumber: string;
-  errors: ErrorObj[];
+  errors: ErrorDetails[];
 }
 
 // errors here: cycles, unused steps, duplicate steps, goal not reached
@@ -121,7 +106,7 @@ export interface ProofObj {
   };
   steps: ProofStep[];
   goal?: Stmt;
-  errors: ErrorObj[];
+  errors: ErrorDetails[];
   isCorrect: boolean;
 }
 
@@ -141,3 +126,9 @@ export interface ProofGraph {
   unusedSteps: Set<string>;
   cycles: string[][];
 }
+
+export type ParseError = { ok: false; failure: ErrorDetails };
+
+export type ParseResult =
+  | { ok: true; value: ProofObj }
+  | { ok: false; failure: ErrorDetails[] };
