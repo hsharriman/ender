@@ -540,7 +540,7 @@ export const checkSequentialStepNumbers = (
       errors.push({
         type: ErrorType.ParserError,
         code: "duplicate_step_number",
-        details: { stepNumber: step.stepNumber },
+        details: { steps: [step.stepNumber] },
       });
     } else {
       seenStepNumbers.add(step.stepNumber!);
@@ -574,6 +574,7 @@ export const checkSequentialStepNumbers = (
         details: {
           expected: start + k,
           found: sortedNums[k].label,
+          step: sortedNums[k].label,
         },
       });
     }
@@ -602,7 +603,7 @@ export const checkDiagramPremiseTypes = (
         type: ErrorType.UnexpectedDiagramDep,
         code: "illegal_diagram_dep",
         details: {
-          stepNumber: d.stepNumber,
+          step: d.stepNumber,
           statement: fn,
         },
       });

@@ -270,7 +270,7 @@ export const collectProofCheckerErrors = (
     errors.push({
       type: ErrorType.Cycle,
       code: "cycle",
-      details: { cycle },
+      details: { steps: cycle },
     });
   }
   if (graph.unusedSteps.size > 0) {
@@ -316,7 +316,7 @@ export const collectProofCheckerErrors = (
     const step = proof.steps.find((s) => s.stepNumber === stepNum);
     if (step?.errors?.length) {
       for (const error of step.errors) {
-        error.details = { ...error.details, step: stepNum };
+        error.details = { ...error.details, steps: [stepNum] };
         errors.push(error);
       }
     }

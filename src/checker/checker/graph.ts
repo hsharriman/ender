@@ -214,7 +214,6 @@ export const buildProofGraph = (
             details: {
               reason: step.reason.function,
               dependsOn: incorrectDeps,
-              step: stepNum,
             },
           });
         }
