@@ -1,4 +1,3 @@
-import { createError } from "checker/errors/errorConstants";
 import {
   Angle,
   Circle,
@@ -19,42 +18,22 @@ export const getGeometricObject = (
   switch (arg.type) {
     case Obj.Angle:
       const angle = ctx.getAngle(arg.v);
-      if (!angle) {
-        throw createError.geometric.angleNotFound(arg.v);
-      }
       return angle;
     case Obj.Triangle:
       const triangle = ctx.getTriangle(arg.v);
-      if (!triangle) {
-        throw createError.geometric.triangleNotFound(arg.v);
-      }
       return triangle;
     case Obj.Quadrilateral:
       const quadrilateral = ctx.getQuadrilateral(arg.v);
-      if (!quadrilateral) {
-        throw createError.geometric.quadrilateralNotFound(arg.v);
-      }
       return quadrilateral;
     case Obj.Segment:
       const segment = ctx.getSegment(arg.v);
-      if (!segment) {
-        throw createError.geometric.segmentNotFound(arg.v);
-      }
       return segment;
     case Obj.Point:
       const point = ctx.getPoint(arg.v);
-      if (!point) {
-        throw createError.geometric.pointNotFound(arg.v);
-      }
       return point;
     case Obj.Circle:
       const circle = ctx.getCircle(arg.v);
-      if (!circle) {
-        throw createError.geometric.circleNotFound(arg.v);
-      }
       return circle;
-    default:
-      throw createError.geometric.cannotParseGeometricObject(arg.v);
   }
 };
 
@@ -77,3 +56,4 @@ export const tritoParseObj = (t: Triangle): ParseObj => {
 export const quadtoParseObj = (q: Quadrilateral): ParseObj => {
   return { type: Obj.Quadrilateral, v: q.label };
 };
+

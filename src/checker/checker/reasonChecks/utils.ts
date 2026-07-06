@@ -7,7 +7,7 @@ import {
   Segment,
   Triangle,
 } from "geometry-object";
-import { ErrorDetails, ErrorType, Stmt } from "../../types/checkerTypes";
+import { Stmt } from "../../types/checkerTypes";
 import {
   CheckerResult,
   reasonApplicationFail,

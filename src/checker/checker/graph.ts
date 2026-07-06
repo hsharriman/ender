@@ -1,6 +1,6 @@
+import { ErrorType } from "checker/errors/errorConstants";
 import { ProofContent } from "geometry-object";
 import {
-  ErrorType,
   ProofGraph,
   ProofObj,
   ReasonDefinition,
@@ -211,7 +211,11 @@ export const buildProofGraph = (
           step.errors.push({
             type: ErrorType.UpstreamDependencyError,
             code: "upstream_dep_error",
-            details: { reason: step.reason.function, dependsOn: incorrectDeps },
+            details: {
+              reason: step.reason.function,
+              dependsOn: incorrectDeps,
+              step: stepNum,
+            },
           });
         }
       }

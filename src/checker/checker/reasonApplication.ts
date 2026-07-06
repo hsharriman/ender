@@ -1,6 +1,6 @@
+import { ErrorType } from "checker/errors/errorConstants";
 import { ProofContent } from "../../geometry-object";
 import {
-  ErrorType,
   ParseDiagramStmt,
   ProofGraph,
   ProofStep,
@@ -167,7 +167,7 @@ export const checkReasonApplication = (
         return floatReasonResult(r, currStep, reason);
       }
 
-      case "aas": {
+      case "aas": { 
         const a1_aas = getDepStmt(reason.arguments[0], proofGraph)!;
         const a2_aas = getDepStmt(reason.arguments[1], proofGraph)!;
         const s_aas = getDepStmt(reason.arguments[2], proofGraph)!;
@@ -693,13 +693,14 @@ export const checkReasonApplication = (
       default:
         return true;
     }
-  } catch {
+  } catch (e) {
     floatReasonResult(
       {
         ok: false,
         failure: {
           type: ErrorType.ReasonApplicationFail,
           code: "reason_application_error",
+          details: { error: e },
         },
       },
       currStep,

@@ -1,8 +1,5 @@
-import {
-  CheckerResult,
-  ErrorType,
-  ParseDiagramStmt,
-} from "checker/types/checkerTypes";
+import { ErrorType } from "checker/errors/errorConstants";
+import { CheckerResult, ParseDiagramStmt } from "checker/types/checkerTypes";
 
 export type { CheckerResult, ErrorDetails } from "checker/types/checkerTypes";
 

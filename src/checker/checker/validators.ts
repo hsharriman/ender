@@ -1,7 +1,8 @@
+import { ErrorType } from "checker/errors/errorConstants";
 import { getGeometricObject } from "checker/utils/utils";
-import { ProofContent } from "../../geometry-object";
+import { Obj, ParseObj, ProofContent } from "../../geometry-object";
 import {
-  ErrorType,
+  ErrorDetails,
   ProofGraph,
   ProofObj,
   ProofStep,
@@ -291,145 +292,74 @@ export const checkReasonStructure = (
   return false;
 };
 
+const argExistsInCtx = (arg: ParseObj, ctx: ProofContent): boolean => {
+  switch (arg.type) {
+    case Obj.Angle:
+      return !!ctx.getAngle(arg.v);
+    case Obj.Triangle:
+      return !!ctx.getTriangle(arg.v);
+    case Obj.Quadrilateral:
+      return !!ctx.getQuadrilateral(arg.v);
+    case Obj.Segment:
+      return !!ctx.getSegment(arg.v);
+    case Obj.Point:
+      return !!ctx.getPoint(arg.v);
+    case Obj.Circle:
+      return !!ctx.getCircle(arg.v);
+    default:
+      return false;
+  }
+};
+
 // Check if geometric objects are well-formed
 export const checkGeometricObjects = (
   proof: ProofObj,
   ctx: ProofContent,
   stmtDefs: Map<string, StatementDefinition>,
-): Array<string> => {
-  const errors: Array<string> = [];
-  const definedPoints = new Set(proof.premises.points.map((p) => p.v));
+): Array<ErrorDetails> => {
+  const errors: Array<ErrorDetails> = [];
 
-  // Helper function to check for duplicate characters
-  const hasDuplicateChars = (str: string): boolean => {
-    const chars = str.split("");
-    return chars.length !== new Set(chars).size;
-  };
+  for (const step of proof.steps) {
+    if (!step.statement?.arguments) continue;
+    const args = step.statement.arguments;
 
-  // Helper function to check if all points in an object are defined
-  const checkPointsDefined = (object: string, points: string[]): void => {
-    for (const point of points) {
-      if (!definedPoints.has(point)) {
-        errors.push(
-          `Point '${point}' in '${object}' is not defined in premises`,
-        );
+    // Validate every arg exists in ctx before touching it further.
+    let allExist = true;
+    for (const arg of args) {
+      if (!argExistsInCtx(arg, ctx)) {
+        allExist = false;
+        errors.push({
+          type: ErrorType.InvalidStmtArg,
+          code: "object_not_in_premises",
+          details: {
+            stepNumber: step.stepNumber,
+            statement: step.statement.function,
+            arg: arg.v,
+          },
+        });
       }
     }
-  };
+    if (!allExist) continue;
 
-  // Check geometric objects in all statements
-  for (const step of proof.steps) {
-    if (step.statement?.arguments) {
-      // for (const arg of step.statement.arguments) {
-      //   switch (arg.type) {
-      //     case Obj.Segment:
-      //       if (hasDuplicateChars(arg.v)) {
-      //         errors.push(`Segment '${arg.v}' contains duplicate points`);
-      //         break;
-      //       }
-      //       if (!ctx.getSegment(arg.v)) {
-      //         errors.push(
-      //           `Segment '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
-      //         );
-      //       }
-      //       checkPointsDefined(arg.v, arg.v.split(""));
-      //       break;
-      //     case Obj.Angle:
-      //       if (arg.v.length !== 3) {
-      //         errors.push(
-      //           `Invalid angle format: '${arg}' - angles must have exactly 3 points`,
-      //         );
-      //         break;
-      //       }
-      //       if (!ctx.getAngle(arg.v)) {
-      //         errors.push(
-      //           `Angle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
-      //         );
-      //       }
-      //       if (hasDuplicateChars(arg.v)) {
-      //         errors.push(`Angle '${arg.v}' contains duplicate points`);
-      //         break;
-      //       }
-      //       checkPointsDefined(arg.v, arg.v.split(""));
-      //       break;
-      //     case Obj.Triangle:
-      //       if (arg.v.length !== 3) {
-      //         errors.push(
-      //           `Invalid triangle format: '${arg}' - triangles must have exactly 3 points`,
-      //         );
-      //         if (!ctx.getTriangle(arg.v)) {
-      //           errors.push(
-      //             `Triangle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
-      //           );
-      //         }
-      //         break;
-      //       }
-      //       if (hasDuplicateChars(arg.v)) {
-      //         errors.push(`Triangle '${arg.v}' contains duplicate points`);
-      //         break;
-      //       }
-      //       checkPointsDefined(arg.v, arg.v.split(""));
-      //       break;
-      //     case Obj.Quadrilateral:
-      //       if (arg.v.length !== 4) {
-      //         errors.push(
-      //           `Invalid quadrilateral format: '${arg.v}' - quadrilaterals must have exactly 4 points`,
-      //         );
-      //         break;
-      //       }
-      //       if (!ctx.getQuadrilateral(arg.v)) {
-      //         errors.push(
-      //           `Quadrilateral '${arg.v}' in step ${step.statement} is not defined in checker context`,
-      //         );
-      //       }
-      //       if (hasDuplicateChars(arg.v)) {
-      //         errors.push(`Quadrilateral '${arg.v}' contains duplicate points`);
-      //         break;
-      //       }
-      //       checkPointsDefined(arg.v, arg.v.split(""));
-      //       break;
-      //     case Obj.Point:
-      //       if (!definedPoints.has(arg.v)) {
-      //         errors.push(`Point '${arg.v}' is not defined in premises`);
-      //         continue;
-      //       }
-      //       if (!ctx.getPoint(arg.v)) {
-      //         errors.push(
-      //           `Point '${arg.v}' in step ${step.statement} is not defined in checker context`,
-      //         );
-      //       }
-      //       break;
-      //     case Obj.Circle:
-      //       if (!ctx.getCircle(arg.v)) {
-      //         errors.push(
-      //           `Circle '${arg.v}' in step ${step.stepNumber} is not defined in checker context`,
-      //         );
-      //       }
-      //       if (hasDuplicateChars(arg.v)) {
-      //         errors.push(`Circle '${arg.v}' contains duplicate points`);
-      //         break;
-      //       }
-      //       checkPointsDefined(arg.v, arg.v.split(""));
-      //       break;
-      //     default:
-      //       throw createError.geometric.cannotParseGeometricObject(arg.v);
-      //   }
-      // }
-
-      // Duplicate argument check: reject statements where two args resolve to the same object
-      const stmtDef = stmtDefs.get(step.statement.function);
-      if (stmtDef && !stmtDef.allowDupeArgs) {
-        const args = step.statement.arguments;
-        for (let i = 0; i < args.length; i++) {
-          for (let j = i + 1; j < args.length; j++) {
-            if (args[i].type !== args[j].type) continue;
-            const obj1 = getGeometricObject(args[i], ctx);
-            const obj2 = getGeometricObject(args[j], ctx);
-            if (obj1 && obj2 && obj1 === obj2) {
-              errors.push(
-                `Statement '${step.statement.function}' in step ${step.stepNumber} has duplicate argument '${args[i].v}'`,
-              );
-            }
+    // Duplicate argument check: reject statements where two args resolve to the same object.
+    const stmtDef = stmtDefs.get(step.statement.function);
+    if (stmtDef && !stmtDef.allowDupeArgs) {
+      for (let i = 0; i < args.length; i++) {
+        for (let j = i + 1; j < args.length; j++) {
+          if (args[i].type !== args[j].type) continue;
+          if (
+            getGeometricObject(args[i], ctx) ===
+            getGeometricObject(args[j], ctx)
+          ) {
+            errors.push({
+              type: ErrorType.DupeStmtSupplied,
+              code: "duplicate_argument",
+              details: {
+                statement: step.statement.function,
+                stepNumber: step.stepNumber,
+                argument: args[i].v,
+              },
+            });
           }
         }
       }
@@ -502,42 +432,6 @@ export const checkGoalMatch = (
       finalStatement.function
     }(${finalStatement.arguments.map((arg) => arg.v).join(", ")})`,
   };
-};
-
-// Generic validator for reason dependencies. Throws on mismatch for all steps.
-export const validateReasonDependencies = (
-  reason: Reason,
-  reasonDefs: Map<string, ReasonDefinition>,
-  proofGraph: ProofGraph,
-): void => {
-  const definition = reasonDefs.get(reason.function);
-  if (!definition) {
-    throw new Error(`Undefined reason: ${reason.function}`);
-  }
-
-  if (reason.arguments.length !== definition.dependencies.length) {
-    throw new Error(
-      `Dependency count mismatch for ${reason.function}: expected ${definition.dependencies.length}, got ${reason.arguments.length}`,
-    );
-  }
-
-  for (let i = 0; i < reason.arguments.length; i++) {
-    const depRef = reason.arguments[i];
-    const expectedType = definition.dependencies[i];
-    const stepNum = depRef;
-    const dependencyStep = proofGraph.nodes.get(stepNum);
-    if (!dependencyStep || !dependencyStep.statement) {
-      throw new Error(
-        `Missing dependency for ${reason.function} at index ${i} (ref ${depRef})`,
-      );
-    }
-    const foundType = dependencyStep.statement.function;
-    if (foundType !== expectedType) {
-      throw new Error(
-        `Dependency mismatch for ${reason.function} at index ${i}: expected ${expectedType}, found ${foundType} (ref ${depRef})`,
-      );
-    }
-  }
 };
 
 // Non-throwing version that returns boolean and logs errors
@@ -651,8 +545,10 @@ export const findDuplicateSteps = (
 
 // Proof-step numbers must be unique and consecutive (e.g. [01]–[04] or legacy [04]–[10]).
 // Given (`g_n`) and diagram (`[d_nn]`) premises use separate namespaces and are excluded here.
-export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
-  const errors: Array<string> = [];
+export const checkSequentialStepNumbers = (
+  proof: ProofObj,
+): Array<ErrorDetails> => {
+  const errors: Array<ErrorDetails> = [];
   const seenStepNumbers = new Set<string>();
 
   const numberedSteps = proof.steps.filter(
@@ -668,27 +564,45 @@ export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
 
   for (const step of numberedSteps) {
     if (seenStepNumbers.has(step.stepNumber!)) {
-      errors.push(`Duplicate step number: ${step.stepNumber}`);
+      errors.push({
+        type: ErrorType.StepNumberError,
+        code: "duplicate_step_number",
+        details: { stepNumber: step.stepNumber },
+      });
     } else {
       seenStepNumbers.add(step.stepNumber!);
     }
   }
 
   if (sortedNums.length !== numberedSteps.length) {
-    errors.push("Proof steps have invalid step number labels");
+    errors.push({
+      type: ErrorType.StepNumberError,
+      code: "invalid_step_number_labels",
+      details: {},
+    });
     return errors;
   }
 
   if (sortedNums.length === 0) {
-    errors.push("No proof steps parsed with leading [nn] step numbers");
+    errors.push({
+      type: ErrorType.StepNumberError,
+      code: "no_step_numbers",
+      details: {},
+    });
     return errors;
   }
 
   const start = sortedNums[0].n;
   for (let k = 0; k < sortedNums.length; k++) {
     if (sortedNums[k].n !== start + k) {
-      const msg = `Non-consecutive proof step numbers: expected integer ${start + k}, found ${sortedNums[k].label} (${sortedNums[k].n})`;
-      errors.push(msg);
+      errors.push({
+        type: ErrorType.StepNumberError,
+        code: "non_consecutive_step_numbers",
+        details: {
+          expected: start + k,
+          found: sortedNums[k].label,
+        },
+      });
     }
   }
 
@@ -704,17 +618,21 @@ export const checkSequentialStepNumbers = (proof: ProofObj): Array<string> => {
 export const checkDiagramPremiseTypes = (
   proof: ProofObj,
   stmtDefs: Map<string, StatementDefinition>,
-): Array<string> => {
-  const errors: Array<string> = [];
+): Array<ErrorDetails> => {
+  const errors: Array<ErrorDetails> = [];
   proof.premises.diagramStatements.forEach((d) => {
     const fn = d.statement?.function;
     if (!fn) return;
     const def = stmtDefs.get(fn);
     if (!def?.isDiagramOnly) {
-      errors.push(
-        `Diagram premise [${d.stepNumber}] uses statement '${fn}' which is not a diagram-only statement. ` +
-          `Use a given step or proof step instead.`,
-      );
+      errors.push({
+        type: ErrorType.UnexpectedDiagramDep,
+        code: "illegal_diagram_dep",
+        details: {
+          stepNumber: d.stepNumber,
+          statement: fn,
+        },
+      });
     }
   });
   return errors;

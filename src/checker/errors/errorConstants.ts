@@ -1,20 +1,45 @@
 // Centralized error messages for thrown errors during premise building.
+export type ErrorCode =
+  | "stmt_arg_mismatch"
+  | "reason_dep_missing"
+  | "reason_dep_type_mismatch"
+  | "reason_stmt_mismatch"
+  | "upstream_dep_error"
+  | "reason_objs_not_in_stmt_obj"
+  | "illegal_given_dep"
+  | "illegal_diagram_dep"
+  | "forward_reference"
+  | "dupe_stmt_supplied"
+  | "object_not_in_premises"
+  | "cycle"
+  | "unused_step"
+  | "duplicate_step"
+  | "goal_not_reached";
+
+export enum ErrorType {
+  ReasonApplicationFail = 1,
+  NoDiagramDepMatch = 2,
+  ParserError = 3,
+  GoalNotFound = 4,
+  UnusedStep = 5,
+  UpstreamDependencyError = 6,
+  InvalidStmtArg = 7,
+  InvalidReasonArg = 8,
+  ForwardReference = 9,
+  Cycle = 10,
+  MissingReasonArg = 11,
+  ReasonStmtMismatch = 12,
+  IllegalGivenDep = 13,
+  DupeStmtSupplied = 14,
+  StmtArgNumArgsIncorrect = 15,
+  StmtArgTypeInvalid = 16,
+  ReasonArgTypeInvalid = 17,
+  UnexpectedDiagramDep = 18,
+  UnclassifiedError = 19,
+  StepNumberError = 20,
+}
 
 export const ErrorMessages = {
-  GEOMETRIC: {
-    ANGLE_NOT_FOUND: (arg: string) => `Angle ${arg} not found in context`,
-    TRIANGLE_NOT_FOUND: (arg: string) => `Triangle ${arg} not found in context`,
-    QUADRILATERAL_NOT_FOUND: (arg: string) =>
-      `Quadrilateral ${arg} not found in context`,
-    SEGMENT_NOT_FOUND: (arg: string) => `Segment ${arg} not found in context`,
-    CIRCLE_NOT_FOUND: (arg: string) => `Circle ${arg} not found in context`,
-    POINT_NOT_FOUND: (arg: string) => `Point ${arg} not found in context`,
-    CANNOT_PARSE_GEOMETRIC_OBJECT: (arg: string) =>
-      `Cannot parse geometric object from argument: ${arg}`,
-    NO_COMMON_POINT: (seg1: string, seg2: string) =>
-      `no common point found for ${seg1} and ${seg2}`,
-  },
-
   PARSER: {
     UNKNOWN_STATEMENT_FUNCTION: (stmtFunction: string) =>
       `Unknown statement function: ${stmtFunction}`,
@@ -24,36 +49,5 @@ export const ErrorMessages = {
       `Point '${point}' is used in intersect_seg but not defined in premises`,
     PREMISE_COUNTERPART_REQUIRED: (stmt: string) =>
       `Statement '${stmt}' cannot be used in premises. Try ${stmt}_premise instead.`,
-  },
-} as const;
-
-export const createError = {
-  geometric: {
-    angleNotFound: (arg: string) =>
-      new Error(ErrorMessages.GEOMETRIC.ANGLE_NOT_FOUND(arg)),
-    triangleNotFound: (arg: string) =>
-      new Error(ErrorMessages.GEOMETRIC.TRIANGLE_NOT_FOUND(arg)),
-    quadrilateralNotFound: (arg: string) =>
-      new Error(ErrorMessages.GEOMETRIC.QUADRILATERAL_NOT_FOUND(arg)),
-    segmentNotFound: (arg: string) =>
-      new Error(ErrorMessages.GEOMETRIC.SEGMENT_NOT_FOUND(arg)),
-    circleNotFound: (arg: string) =>
-      new Error(ErrorMessages.GEOMETRIC.CIRCLE_NOT_FOUND(arg)),
-    pointNotFound: (arg: string) =>
-      new Error(ErrorMessages.GEOMETRIC.POINT_NOT_FOUND(arg)),
-    cannotParseGeometricObject: (arg: string) =>
-      new Error(ErrorMessages.GEOMETRIC.CANNOT_PARSE_GEOMETRIC_OBJECT(arg)),
-  },
-  parser: {
-    unknownStatementFunction: (stmtFunction: string) =>
-      new Error(ErrorMessages.PARSER.UNKNOWN_STATEMENT_FUNCTION(stmtFunction)),
-    segmentAngleOverlapError: (segment: string, angle: string) =>
-      new Error(
-        ErrorMessages.PARSER.SEGMENT_ANGLE_OVERLAP_ERROR(segment, angle),
-      ),
-    pointNotDefinedInPremises: (point: string) =>
-      new Error(ErrorMessages.PARSER.POINT_NOT_DEFINED_IN_PREMISES(point)),
-    premiseCounterpartRequired: (reason: string) =>
-      new Error(ErrorMessages.PARSER.PREMISE_COUNTERPART_REQUIRED(reason)),
   },
 } as const;

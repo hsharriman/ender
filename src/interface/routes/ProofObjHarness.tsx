@@ -195,15 +195,12 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
               .join(", ")}`,
           );
         }
-        if (result.stepNumberErrors.length > 0) {
-          nextProofIssues.push(
-            `Step numbering issues: ${result.stepNumberErrors.join(" | ")}`,
-          );
-        }
-        if (result.geometricObjectErrors.length > 0) {
-          nextProofIssues.push(
-            `Geometric object issues: ${result.geometricObjectErrors.join(" | ")}`,
-          );
+        if (result.errors.length > 0) {
+          result.errors.forEach((e) => {
+            nextProofIssues.push(
+              `${e.code}${e.details ? `: ${JSON.stringify(e.details)}` : ""}`,
+            );
+          });
         }
         if (result.graph.incorrectSteps.size > 0) {
           nextProofIssues.push(

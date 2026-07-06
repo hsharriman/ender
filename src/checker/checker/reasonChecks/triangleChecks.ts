@@ -1,3 +1,4 @@
+import { ErrorType } from "checker/errors/errorConstants";
 import {
   Angle,
   Obj,
@@ -6,7 +7,7 @@ import {
   Segment,
   Triangle,
 } from "../../../geometry-object";
-import { ErrorType, Stmt } from "../../types/checkerTypes";
+import { Stmt } from "../../types/checkerTypes";
 import {
   CheckerResult,
   ErrorDetails,
