@@ -238,7 +238,7 @@ export const checkReasonApplication = (
       case "def_con_right": {
         const right1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const right2 = getDepStmt(reason.arguments[1], proofGraph)!;
-        const r = defConRight(right1, right2, ctx);
+        const r = defConRight(right1, right2, stmt, ctx);
         return floatReasonResult(r, currStep, reason);
       }
 

@@ -143,12 +143,23 @@ export const check_vert_ang = (
   return diagramOk(matches);
 };
 
+const RIGHT_MISMATCH = "right_angles_dont_match_conclusion";
+
 export const defConRight = (
-  _right1: Stmt,
-  _right2: Stmt,
-  _ctx: ProofContent,
+  right1: Stmt,
+  right2: Stmt,
+  conAng: Stmt,
+  ctx: ProofContent,
 ): CheckerResult => {
-  return reasonApplicationOk();
+  const [r1] = stmtMapper(right1, ctx) as [Angle];
+  const [r2] = stmtMapper(right2, ctx) as [Angle];
+  const [c1, c2] = stmtMapper(conAng, ctx) as [Angle, Angle];
+  if (
+    (r1.equals(c1) && r2.equals(c2)) ||
+    (r1.equals(c2) && r2.equals(c1))
+  )
+    return reasonApplicationOk();
+  return reasonApplicationFail(RIGHT_MISMATCH);
 };
 
 export const def_ang_bisect = (

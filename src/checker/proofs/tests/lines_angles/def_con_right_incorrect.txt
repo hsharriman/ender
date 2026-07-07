@@ -1,0 +1,19 @@
+// fail on step 3
+title: "Holt S4-5 Exercise 13 C1 - Prove Triangles Congruent"
+premises:
+pt: A (0, 0, t), B (0, 0, t), C (0, 0, t), D (0, 0, t), E (0, 0, t), F (0, 0, t)
+seg: AB DE
+tri: t_ABC t_DEF
+[g_1] right(a_CAB)
+[g_2] right(a_FDE)
+[g_3] con_seg(AB,DE)
+[g_4] con_ang(a_ACB,a_DFE)
+-> con_tri(t_ABC,t_DEF)
+
+steps:
+[01] given(g_1) -> right(a_CAB)
+[02] given(g_2) -> right(a_FDE)
+[03] def_con_right(1,2) -> con_ang(a_ABC,a_FDE)
+[04] given(g_3) -> con_seg(AB,DE)
+[05] given(g_4) -> con_ang(a_ACB,a_DFE)
+[06] aas(3,5,4) -> con_tri(t_ABC,t_DEF)

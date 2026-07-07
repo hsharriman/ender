@@ -48,6 +48,16 @@ export class Angle extends BaseGeometryObject {
     return null;
   };
 
+  // Returns true if pt's label appears as the start or end (not center) in
+  // any name variant. Handles intermediate-point angle references like
+  // a_EGM where M is on ray GD: addNames populates overlap-merged variants
+  // into this.names during premises setup so M appears at position 0 or 2.
+  angleRayContains = (pt: Point): boolean => {
+    return Array.from(this.names).some(
+      (name) => name[0] === pt.label || name[2] === pt.label,
+    );
+  };
+
   contains = (obj: Point | Segment) => {
     if (obj.tag === Obj.Point) {
       return Array.from(this.names).some((name) => name.includes(obj.label));
