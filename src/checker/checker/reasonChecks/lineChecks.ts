@@ -68,11 +68,11 @@ export const altint = (
     const [a1, a2] = res.angles;
     if (!a1.centerEquals(innerT.p1) || !a2.centerEquals(innerT.p2))
       return reasonApplicationFail(ALT_INT_CTR);
-    if (!a1.containsEndpoint(innerT.p2) || !a2.containsEndpoint(innerT.p1))
+    if (!a1.angleRayContains(innerT.p2) || !a2.angleRayContains(innerT.p1))
       return reasonApplicationFail(ALT_INT_INWARD);
     if (
-      (a1.containsEndpoint(s1p1) && a2.containsEndpoint(s2p2)) ||
-      (a1.containsEndpoint(s1p2) && a2.containsEndpoint(s2p1))
+      (a1.angleRayContains(s1p1) && a2.angleRayContains(s2p2)) ||
+      (a1.angleRayContains(s1p2) && a2.angleRayContains(s2p1))
     )
       return reasonApplicationOk();
     return reasonApplicationFail(ALT_INT_SIDES);
@@ -103,14 +103,14 @@ export const altext = (
     if (
       !a1.centerEquals(i1) ||
       !a2.centerEquals(i2) ||
-      !a1.containsEndpoint(t1) ||
-      !a2.containsEndpoint(t2)
+      !a1.angleRayContains(t1) ||
+      !a2.angleRayContains(t2)
     )
       return reasonApplicationFail(ALT_EXT_OUTER);
 
     if (
-      (a1.containsEndpoint(s1p1) && a2.containsEndpoint(s2p2)) ||
-      (a1.containsEndpoint(s1p2) && a2.containsEndpoint(s2p1))
+      (a1.angleRayContains(s1p1) && a2.angleRayContains(s2p2)) ||
+      (a1.angleRayContains(s1p2) && a2.angleRayContains(s2p1))
     )
       return reasonApplicationOk();
 
@@ -132,11 +132,11 @@ export const sameside = (
     const [a1, a2] = res.angles;
     if (!a1.centerEquals(i1) || !a2.centerEquals(i2))
       return reasonApplicationFail(SS_CTR);
-    if (!a1.contains(i2) || !a2.contains(i1))
+    if (!a1.angleRayContains(i2) || !a2.angleRayContains(i1))
       return reasonApplicationFail(SS_INWARD);
     if (
-      (a1.contains(s1p1) && a2.contains(s2p1)) ||
-      (a1.contains(s1p2) && a2.contains(s2p2))
+      (a1.angleRayContains(s1p1) && a2.contains(s2p1)) ||
+      (a1.contains(s1p2) && a2.angleRayContains(s2p2))
     )
       return reasonApplicationOk();
     return reasonApplicationFail(SS_SIDE);
@@ -164,14 +164,14 @@ export const corresp_ang = (
       return reasonApplicationFail(CORRESP_CTR);
     if (
       !(
-        (a1.contains(i2) && a2.contains(t2)) ||
-        (a2.contains(i1) && a1.contains(t1))
+        (a1.angleRayContains(i2) && a2.angleRayContains(t2)) ||
+        (a2.angleRayContains(i1) && a1.angleRayContains(t1))
       )
     )
       return reasonApplicationFail(CORRESP_DIR);
     if (
-      (a1.contains(s1p1) && a2.contains(s2p1)) ||
-      (a1.contains(s1p2) && a2.contains(s2p2))
+      (a1.angleRayContains(s1p1) && a2.contains(s2p1)) ||
+      (a1.contains(s1p2) && a2.angleRayContains(s2p2))
     )
       return reasonApplicationOk();
     return reasonApplicationFail(CORRESP_SIDE);
