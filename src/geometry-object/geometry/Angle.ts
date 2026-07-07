@@ -48,6 +48,10 @@ export class Angle extends BaseGeometryObject {
     return null;
   };
 
+  containsEndpoint = (pt: Point) => {
+    return this.start.equals(pt) || this.end.equals(pt);
+  };
+
   contains = (obj: Point | Segment) => {
     if (obj.tag === Obj.Point) {
       return Array.from(this.names).some((name) => name.includes(obj.label));

@@ -1,0 +1,20 @@
+// fail on step 7
+title: "S4-6C1 - Example 3: Prove Segments Parallel"
+premises:
+pt: E (0, 0, t), G (0, 0, t), D (0, 0, t), F (0, 0, t)
+seg: EG DF GD ED GF
+tri: t_EGD t_FDG
+[d_01] transversal(E,G,D,G,D,F,G,D)
+[d_02] transversal(F,G,D,G,D,E,G,D)
+[g_1] con_seg(EG,DF)
+[g_2] para(EG,DF)
+-> para(ED,GF)
+
+steps:
+[01] given(g_1) -> con_seg(EG,DF)
+[02] given(g_2) -> para(EG,DF)
+[03] corresp_ang(2) -> con_ang(a_EGD,a_FDG)
+[04] reflex() -> ref_seg(GD,GD)
+[05] sas(1,3,4) -> con_tri(t_EGD,t_FDG)
+[06] cpctc(5) -> con_ang(a_EGD,a_FDG)
+[07] altint_conv(6) -> para(ED,GF)

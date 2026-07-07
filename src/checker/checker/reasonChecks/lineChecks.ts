@@ -68,11 +68,11 @@ export const altint = (
     const [a1, a2] = res.angles;
     if (!a1.centerEquals(innerT.p1) || !a2.centerEquals(innerT.p2))
       return reasonApplicationFail(ALT_INT_CTR);
-    if (!a1.contains(innerT.p2) || !a2.contains(innerT.p1))
+    if (!a1.containsEndpoint(innerT.p2) || !a2.containsEndpoint(innerT.p1))
       return reasonApplicationFail(ALT_INT_INWARD);
     if (
-      (a1.contains(s1p1) && a2.contains(s2p2)) ||
-      (a1.contains(s1p2) && a2.contains(s2p1))
+      (a1.containsEndpoint(s1p1) && a2.containsEndpoint(s2p2)) ||
+      (a1.containsEndpoint(s1p2) && a2.containsEndpoint(s2p1))
     )
       return reasonApplicationOk();
     return reasonApplicationFail(ALT_INT_SIDES);
@@ -103,14 +103,14 @@ export const altext = (
     if (
       !a1.centerEquals(i1) ||
       !a2.centerEquals(i2) ||
-      !a1.contains(t1) ||
-      !a2.contains(t2)
+      !a1.containsEndpoint(t1) ||
+      !a2.containsEndpoint(t2)
     )
       return reasonApplicationFail(ALT_EXT_OUTER);
 
     if (
-      (a1.contains(s1p1) && a2.contains(s2p2)) ||
-      (a1.contains(s1p2) && a2.contains(s2p1))
+      (a1.containsEndpoint(s1p1) && a2.containsEndpoint(s2p2)) ||
+      (a1.containsEndpoint(s1p2) && a2.containsEndpoint(s2p1))
     )
       return reasonApplicationOk();
 
