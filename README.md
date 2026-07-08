@@ -61,6 +61,8 @@ Three containers are defined in `docker-compose.yml`:
 
 The backend calls the checker via HTTP (`CHECKER_URL=http://checker:4000`). The interface proxies `/api/*` requests to the backend through Vite's dev server proxy.
 
+Both `backend` and `interface` also mount an external, read-only volume named `proof_data` at `/app/geo-proof-dataset`. This volume is a named Docker volume produced by the [`geo-proof-dataset`](../geo-proof-dataset) repo — it is declared here as `external: true`, so it is not created or seeded by this project. It packages that repo's `proofs/` and `wrong_proofs/` folders.
+
 ### Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
@@ -70,6 +72,14 @@ The backend calls the checker via HTTP (`CHECKER_URL=http://checker:4000`). The 
 cp .env.example .env
 # then edit .env and set OPENAI_API_KEY
 ```
+- The `proof_data` volume must exist before starting this project. Build and seed it once from the `geo-proof-dataset` repo:
+
+```bash
+cd ../geo-proof-dataset
+docker compose up proof-data
+```
+
+  (See that repo's README for full details. If the volume doesn't exist yet, `docker compose up` here will fail with an error naming the missing external volume.)
 
 ### Build
 

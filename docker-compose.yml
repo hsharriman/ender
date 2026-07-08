@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile.checker
     ports:
       - "4000:4000"
+    networks:
+      - ender
 
   backend:
     build:
@@ -20,8 +22,11 @@ services:
       - ./src/checker/proofs:/app/src/checker/proofs
       - ./src/checker/grammar/defs:/app/src/checker/grammar/defs
       - ./backend:/app/backend
+      - proof_data:/app/geo-proof-dataset:ro
     depends_on:
       - checker
+    networks:
+      - ender
 
   interface:
     build:
@@ -31,5 +36,17 @@ services:
       - "3000:3000"
     environment:
       - BACKEND_URL=http://backend:5000
+    volumes:
+      - proof_data:/app/geo-proof-dataset:ro
     depends_on:
       - backend
+    networks:
+      - ender
+
+networks:
+  ender:
+    driver: bridge
+
+volumes:
+  proof_data:
+    external: true
