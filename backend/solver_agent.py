@@ -81,6 +81,17 @@ def get_fixed_proof(proof: str, fixed_steps: str, solution_path: str) -> str:
     return fixed_proof
 
 
+def parse_checker_output(checker_output: str) -> dict:
+    """Parse the checker output to json format"""
+    try:
+        start_index = checker_output.find("{")
+        parsed_output = json.loads(checker_output[start_index:])
+        return parsed_output
+    except json.JSONDecodeError:
+        print("Failed to parse checker output to json format")
+        return None
+
+
 def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
     """Run solution loop"""
     # Get system prompt
@@ -146,8 +157,9 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
         # Validate solution
         checker_output = run_checker(solution_path)
         solver_data["checker_output"] = checker_output
+        parsed_output = parse_checker_output(checker_output)
 
-        if "proof is correct" in checker_output:
+        if parsed_output.get("isCorrect"):
             solver_data["is_correct"] = True
             solver_metadata["iterations"].append(solver_data)
             visualize_changes(json.dumps(solver_metadata))
