@@ -1,7 +1,7 @@
 import os
-import subprocess
 import re
 import json
+import requests
 from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
@@ -26,23 +26,33 @@ def run_solver(system_prompt, input: str) -> str:
 
 
 def run_checker(proof_file):
-    command = ["npm", "run", "checkProof", "--", proof_file]
-    # By setting stderr=subprocess.STDOUT, both streams are combined into output.stdout
-    output = subprocess.run(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        check=False,
-    )
-
-    # Check the return code to determine if it actually succeeded or failed
-    if output.returncode == 0:
+    checker_url = os.getenv("CHECKER_URL", "http://localhost:4000")
+    with open(proof_file, "r", encoding="utf-8") as f:
+        proof_text = f.read()
+    try:
+        response = requests.post(
+            f"{checker_url}/check",
+            json={"text": proof_text},
+            timeout=30,
+        )
+        response.raise_for_status()
         print("Successfully got checker output")
-    else:
-        print("Proof checker encountered an issue or validation failed:")
-
-    return output.stdout
+        return json.dumps(response.json(), indent=2)
+    except requests.RequestException as e:
+        print(f"Proof checker service error: {e}")
+        return json.dumps(
+            {
+                "isCorrect": False,
+                "errors": [
+                    {
+                        "type": "UnclassifiedError",
+                        "code": "checker_unavailable",
+                        "details": {"msg": str(e)},
+                    }
+                ],
+            },
+            indent=2,
+        )
 
 
 def save_checker_output(proof_name):
@@ -140,7 +150,7 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
         checker_output = run_checker(f"backend/{PROOF}/fixed_solution.txt")
         print(checker_output)
 
-        if "proof is correct" in checker_output:
+        if json.loads(checker_output).get("isCorrect"):
             is_solution_correct = True
             print(
                 f"Correct solution found in {loop_times} trial(s). Solution loop completed"

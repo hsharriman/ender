@@ -1,0 +1,35 @@
+services:
+  checker:
+    build:
+      context: .
+      dockerfile: Dockerfile.checker
+    ports:
+      - "4000:4000"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "5000:5000"
+    environment:
+      - CHECKER_URL=http://checker:4000
+    env_file:
+      - .env
+    volumes:
+      - ./src/checker/proofs:/app/src/checker/proofs
+      - ./src/checker/grammar/defs:/app/src/checker/grammar/defs
+      - ./backend:/app/backend
+    depends_on:
+      - checker
+
+  interface:
+    build:
+      context: .
+      dockerfile: Dockerfile.interface
+    ports:
+      - "3000:3000"
+    environment:
+      - BACKEND_URL=http://backend:5000
+    depends_on:
+      - backend
