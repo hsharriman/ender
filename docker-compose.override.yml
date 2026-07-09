@@ -1,0 +1,19 @@
+# Dev-only overrides — automatically merged by `docker compose up`.
+# For production, skip this file: docker compose -f docker-compose.yml up
+
+services:
+  checker:
+    volumes:
+      - ./src:/app/src
+      - ./tsconfig.json:/app/tsconfig.json
+    command: npx tsx --watch src/checker/server.ts
+
+  backend:
+    environment:
+      - FLASK_DEBUG=1
+
+  interface:
+    volumes:
+      - ./src:/app/src
+      - ./index.html:/app/index.html
+      - ./public:/app/public

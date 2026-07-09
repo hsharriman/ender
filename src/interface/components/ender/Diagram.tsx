@@ -96,6 +96,7 @@ export class Diagram extends React.Component<DiagramProps> {
             a: ang.obj.labeled(),
             miniScale: this.props.miniScale,
             tick: ang.ticks.get(frame),
+            gradient: !this.props.isStatic && (ang.gradients.get(frame) ?? false),
           }}
           key={this.keyId(ang.obj.id, layer, i)}
           isHighlight={layer === 1}

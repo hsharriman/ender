@@ -80,10 +80,13 @@ docker compose build
 ### Start
 
 ```bash
-docker compose up
+docker compose up          # dev mode (default) — auto-reloads on source changes
+docker compose -f docker-compose.yml up   # production mode — no hot reload
 ```
 
 The interface is available at [http://localhost:3000/ender/](http://localhost:3000/ender/).
+
+**Dev mode** (`docker-compose.override.yml` is merged automatically): the checker restarts on TypeScript changes via `tsx --watch`, the backend restarts on Python changes via Flask's debug reloader, and the interface reflects changes instantly via Vite HMR.
 
 To start a specific service only:
 

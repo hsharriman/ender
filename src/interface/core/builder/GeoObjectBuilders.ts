@@ -55,14 +55,21 @@ export class AngleBuilder {
   readonly obj: Angle;
   readonly ticks: Map<string, { type: TickType; num: number }>;
   readonly modes: Map<string, SVGModes>;
+  readonly gradients: Map<string, boolean>;
   constructor(obj: Angle) {
     this.obj = obj;
     this.ticks = new Map<string, { type: TickType; num: number }>();
     this.modes = new Map<string, SVGModes>();
+    this.gradients = new Map<string, boolean>();
   }
 
   addTick = (frame: string, type: TickType, num: number = 1) => {
     this.ticks.set(frame, { type, num });
+    return this;
+  };
+
+  addGradient = (frame: string) => {
+    this.gradients.set(frame, true);
     return this;
   };
 

@@ -2,7 +2,6 @@ import { DiagramContent } from "../builder/DiagramContent";
 import { angleStr, segmentStr } from "../geometryText";
 import { SVGModes } from "../types/diagramTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
-import { EqualAngles } from "./EqualAngles";
 import { EqualSegments } from "./EqualSegments";
 
 export class AngleBisector {
@@ -12,7 +11,10 @@ export class AngleBisector {
     s: string,
     numTicks = 1,
   ) => {
-    EqualAngles.additions(props, angleSubstrs(props.ctx, a, s), numTicks);
+    // const [sub1, sub2] = angleSubstrs(props.ctx, a, s);
+    // EqualAngles.additions(props, [sub1, sub2], numTicks);
+    props.ctx.getAngle(a)?.addGradient(props.frame);
+    // props.ctx.getAngle(sub2)?.addGradient(props.frame);
     props.ctx.getSegment(s)?.mode(props.frame, props.mode);
   };
   static text = (a: string, s: string) => (isActive: boolean) => {
