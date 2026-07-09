@@ -1,14 +1,15 @@
 import os
 import subprocess
-import re
 import json
 from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
+from visualize_solver import visualize_changes
 
 
-def run_solver(system_prompt, input: str) -> str:
-    # Use LLM to provide feedback on the proof
+def run_solver(proof: str, checker_output: str, system_prompt: str) -> str:
+    """Returns LLM solution of the proof"""
+    # Use
     load_dotenv()
 
     response = completion(
@@ -17,7 +18,7 @@ def run_solver(system_prompt, input: str) -> str:
         api_key=os.getenv("OPENAI_API_KEY"),
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": input},
+            {"role": "user", "content": proof + checker_output},
         ],
     )
 
@@ -25,8 +26,9 @@ def run_solver(system_prompt, input: str) -> str:
     return response.choices[0].message.content
 
 
-def run_checker(proof_file):
-    command = ["npm", "run", "checkProof", "--", proof_file]
+def run_checker(proof_path: str) -> str:
+    """Returns ENDER checker output run on student's proof"""
+    command = ["npm", "run", "checkProof", "--", proof_path]
     # By setting stderr=subprocess.STDOUT, both streams are combined into output.stdout
     output = subprocess.run(
         command,
@@ -35,78 +37,65 @@ def run_checker(proof_file):
         text=True,
         check=False,
     )
-
     # Check the return code to determine if it actually succeeded or failed
     if output.returncode == 0:
         print("Successfully got checker output")
     else:
-        print("Proof checker encountered an issue or validation failed:")
-
+        print("Proof checker encountered an issue or validation failed")
     return output.stdout
 
 
-def save_checker_output(proof_name):
-    proof_file = "src/checker/proofs/" + proof_name + ".txt"
-    proof_result_folder = "backend/" + proof_name
-    if not os.path.exists(proof_result_folder):
-        os.mkdir(proof_result_folder)
-    proof_result_file = "backend/" + proof_name + "/result.txt"
-    if not os.path.exists(proof_result_file):
-        checker_output = run_checker(proof_file)
+def save_checker_output(proof_dir: str) -> str:
+    """Save and return the checker output, it doesn't already exist."""
+    proof_name = Path(proof_dir).name
+    proof_path = os.path.join(proof_dir, f"{proof_name}.txt")
+    checker_output_path = os.path.join(proof_dir, f"{proof_name}_checker_output.txt")
+    if not os.path.exists(checker_output_path):
+        checker_output = run_checker(proof_path)
         if checker_output:
-            with open(proof_result_file, "w", encoding="utf-8") as f:
+            with open(checker_output_path, "w", encoding="utf-8") as f:
                 f.write(checker_output)
             return checker_output
     else:
         print("Proof result already exists, skipping proof checker.")
-        with open(proof_result_file, encoding="utf-8") as f:
+        with open(checker_output_path, encoding="utf-8") as f:
             checker_output = f.read()
         return checker_output
 
 
-def get_feedback_path(
-    proof_name: str, prompt_name: str, base_dir: str = "backend"
-) -> Path:
-    target_dir = Path(base_dir) / proof_name
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    pattern = re.compile(rf"^feedback_{re.escape(prompt_name)}_(\d+)\.txt$")
-    max_num = -1
-
-    # Scan the directory for existing files
-    for file in target_dir.iterdir():
-        if file.is_file():
-            match = pattern.match(file.name)
-            if match:
-                # Extract the number and track the highest one found
-                file_num = int(match.group(1))
-                if file_num > max_num:
-                    max_num = file_num
-    next_num = max_num + 1
-
-    new_filename = f"feedback_{prompt_name}_{next_num:02d}.txt"
-
-    return target_dir / new_filename
+def get_fixed_steps(solver_output: str) -> str:
+    """Convert solver output to fixed steps text"""
+    json_output = json.loads(solver_output)
+    fixed_steps = json_output[0]["solution"]
+    return fixed_steps
 
 
-def get_fixed_proof(proof_name, str_output):
-    json_output = json.loads(str_output)
-    solution = json_output[0]["solution"]
-    fixed_step = solution[:4]
-
-    with open("src/checker/proofs/" + proof_name + ".txt", "r") as f:
-        proof = f.read()
-    student_proof = proof.split(fixed_step)[0].strip()
-
-    fixed_proof = student_proof + "\n" + solution
-    with open(f"backend/{proof_name}/fixed_solution.txt", "w") as f:
+def get_fixed_proof(proof: str, fixed_steps: str, solution_path: str) -> str:
+    """Save and return fixed proof that combine original proof's correct steps and fixed steps"""
+    incorrect_step_number = fixed_steps[:4]
+    original_proof = proof.split(incorrect_step_number)[0].strip()
+    fixed_proof = original_proof + "\n" + fixed_steps
+    # save solution
+    with open(solution_path, "w", encoding="utf-8") as f:
         f.write(fixed_proof)
     return fixed_proof
 
 
-def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
+def parse_checker_output(checker_output: str) -> dict:
+    """Parse the checker output to json format"""
+    try:
+        start_index = checker_output.find("{")
+        parsed_output = json.loads(checker_output[start_index:])
+        return parsed_output
+    except json.JSONDecodeError:
+        print("Failed to parse checker output to json format")
+        return None
+
+
+def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
+    """Run solution loop"""
     # Get system prompt
-    with open("backend/prompt/" + PROMPT + ".txt", encoding="utf-8") as f:
+    with open(prompt_path, encoding="utf-8") as f:
         system_prompt = f.read()
 
     # Append valid reasons and statements to the system prompt
@@ -118,45 +107,93 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
         Valid statements: {valid_statements}"
 
     # Get checker output
-    checker_output = save_checker_output(PROOF)
-    with open("src/checker/proofs/" + PROOF + ".txt", encoding="utf-8") as f:
-        student_proof = f.read()
-    # _, _, checker_result = split_output(result)
+    proof_name = Path(original_proof_dir).name
+    proof_path = os.path.join(original_proof_dir, f"{proof_name}.txt")
+    solution_path = os.path.join(original_proof_dir, f"{proof_name}_solution.txt")
 
+    checker_output = save_checker_output(original_proof_dir)
+    with open(proof_path, encoding="utf-8") as f:
+        student_proof = f.read()
+
+    solver_metadata = {
+        "proof_name": proof_name,
+        "solver_prompt_path": prompt_path,
+        "max_iterations": max_iterations,
+        "iterations": [
+            {
+                "iteration": 0,
+                "changed_steps": "",
+                "solution": student_proof,
+                "checker_output": checker_output,
+                "is_correct": False,
+            }
+        ],
+        "solution_reached": False,
+        "total_iterations": 0,
+    }
     # Run solution loop
-    is_solution_correct = False
-    loop_times = 0
-    while not is_solution_correct and loop_times <= LOOP_TIMES:
-        loop_times += 1
-        print(f"-----------------loop {loop_times}----------------")
+    while (
+        not solver_metadata["solution_reached"]
+        and solver_metadata["total_iterations"] < max_iterations
+    ):
+        solver_metadata["total_iterations"] += 1
+        solver_data = {
+            "iteration": solver_metadata["total_iterations"],
+            "changed_steps": "",
+            "solution": "",
+            "checker_output": "",
+            "is_correct": False,
+        }
         # Get LLM solution
-        llm_solution = run_solver(system_prompt, student_proof + checker_output)
-        fixed_proof = get_fixed_proof(PROOF, llm_solution)
-        print("---------fixed proof---------")
-        print(fixed_proof)
+        llm_solution = run_solver(student_proof, checker_output, system_prompt)
+
+        fixed_steps = get_fixed_steps(llm_solution)
+        fixed_proof = get_fixed_proof(
+            solver_metadata["iterations"][-1]["solution"], fixed_steps, solution_path
+        )
+        solver_data["changed_steps"] = llm_solution
+        solver_data["solution"] = fixed_proof
 
         # Validate solution
-        print("---------checker output---------")
-        checker_output = run_checker(f"backend/{PROOF}/fixed_solution.txt")
-        print(checker_output)
+        checker_output = run_checker(solution_path)
+        solver_data["checker_output"] = checker_output
+        parsed_output = parse_checker_output(checker_output)
 
-        if "proof is correct" in checker_output:
-            is_solution_correct = True
+        if parsed_output.get("isCorrect"):
+            solver_data["is_correct"] = True
+            solver_metadata["iterations"].append(solver_data)
+            visualize_changes(json.dumps(solver_metadata))
+            solver_metadata["solution_reached"] = True
             print(
-                f"Correct solution found in {loop_times} trial(s). Solution loop completed"
+                f"Correct solution found in {solver_metadata['total_iterations']} trial(s). Solution loop completed"
             )
-            return fixed_proof
+            print(f"Solution saved to {solution_path}")
+            return fixed_proof, solver_metadata
         else:
             # run llm again
-            print("Solution is incorrect, running the loop again ")
+            solver_metadata["iterations"].append(solver_data)
+            visualize_changes(json.dumps(solver_metadata))
+            print("Solution is incorrect, running the loop again.")
             student_proof = fixed_proof
-    raise ValueError("The correct solution was never reached.")
+    error = ValueError("The correct solution was never reached.")
+    error.metadata = solver_metadata
+    raise error
 
 
 if __name__ == "__main__":
-    PROOF = "s2inc1"
-    PROMPT = "solver_with_valid_reasons_and_explanation"
+    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s4-4_exer13_1corrs_inc5"
+    PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
     try:
-        solution = run_solver_agent(PROOF, PROMPT)
+        solution, metadata = run_solver_agent(PROOF_DIR, PROMPT_PATH)
     except ValueError as error:
         print(f"Solver failed: {error}")
+        metadata = getattr(error, "metadata", None)
+
+    if metadata is not None:
+        os.makedirs(PROOF_DIR, exist_ok=True)
+        metadata_path = os.path.join(PROOF_DIR, "solver_metadata.json")
+
+        with open(metadata_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=4)
+
+        print(f"Metadata successfully saved to {metadata_path}")
