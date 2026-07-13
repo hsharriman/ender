@@ -1,0 +1,19 @@
+// pass
+title: "Test: con_inscribed_angs (correct - both angles subtended by same chord)"
+premises:
+pt: O (5,5, c), A (3,8, l), B (6,2, r), D (7,7.5, tl), C (8,5, tr)
+circ: c_OB
+tri: t_ADC t_BDC
+seg: AC BD
+quad: q_ABCD
+[g_1] para(EB, AC)
+[d_1] inscribed_quad(c_OB, q_ABCD)
+-> con_tri(t_ACD, t_BDC)
+
+steps:
+[01] given(g_1) -> para(EB, AC)
+[02] para_con_arcs(1) -> con_arc(AD, BC)
+[03] inscribed_con_arcs(2) -> con_ang(a_BDC, a_ACD)
+[03] con_chords_intersect_arcs(2) -> con_seg(AD, BC)
+[04] con_inscribed_angs() -> con_ang(a_DAC, a_DBC)
+[05] aas(, 4, 3) -> con_tri(t_ACD, t_BDC)
