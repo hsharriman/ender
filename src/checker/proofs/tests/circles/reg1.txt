@@ -15,6 +15,7 @@ steps:
 [02] given(g_2) -> con_arc(BR_OB, YD_OB)
 [03] inscribed_semi(1) -> right(a_BRD)
 [04] inscribed_semi(1) -> right(a_DYB)
-[05] 
-[06] reflex() -> ref_seg(BD, BD)
-[07] aas(3, 4, 5) -> con_tri(t_DBR, t_BYD)
+[05] def_con_right(3, 4) -> con_right(a_BRD, a_DYB)
+[06] con_chords_intersect_arcs(2) -> con_seg(BR, YD)
+[07] reflex() -> ref_seg(BD, BD)
+[08] rhl(5, 7, 6) -> con_tri(t_DBR, t_BYD)
