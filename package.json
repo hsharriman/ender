@@ -18,7 +18,8 @@
     "deploy": "gh-pages -d dist",
     "checkProof": "tsx src/checker/proofCheckerCli.ts",
     "debugProof": "tsx src/checker/debugProofChecker.ts",
-    "test-core": "jest --passWithNoTests"
+    "test-core": "jest --passWithNoTests",
+    "checker-server": "tsx src/checker/server.ts"
   },
   "dependencies": {
     "@lezer/generator": "^1.8.0",

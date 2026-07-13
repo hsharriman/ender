@@ -1,6 +1,7 @@
 import os
 import subprocess
 import json
+import requests
 from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
