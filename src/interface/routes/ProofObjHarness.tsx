@@ -5,11 +5,14 @@ import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proo
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
+import { solveProof } from "../../solver/solver";
+import { SolverResult } from "../../solver/solverTypes";
 import ender from "../assets/ender.png";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
 } from "../components/ender/InteractiveAppPage";
+import { SolverPanel } from "../components/ender/SolverPanel";
 import {
   StaticAppPage,
   StaticAppPageProps,
@@ -86,6 +89,9 @@ type ProofObjHarnessState = {
   hoverTooltip: string;
   hoverPos: { x: number; y: number } | null;
   editorScrollTop: number;
+  isSolverPanelOpen: boolean;
+  solverRunning: boolean;
+  solverResult: SolverResult | null;
 };
 
 export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
@@ -116,7 +122,34 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       hoverTooltip: "",
       hoverPos: null,
       editorScrollTop: 0,
+      isSolverPanelOpen: false,
+      solverRunning: false,
+      solverResult: null,
     };
+  }
+
+  /** Run the proof solver on the current editor text and open the panel. */
+  private runSolver(): void {
+    this.setState({
+      isSolverPanelOpen: true,
+      solverRunning: true,
+      solverResult: null,
+    });
+    // Yield a frame so the panel paints its "Solving…" state before the
+    // synchronous solve occupies the main thread.
+    window.setTimeout(() => {
+      let result: SolverResult;
+      try {
+        result = solveProof(this.state.proofText);
+      } catch (err) {
+        this.setState({ solverRunning: false });
+        this.setState({
+          statusMessage: err instanceof Error ? err.message : String(err),
+        });
+        return;
+      }
+      this.setState({ solverRunning: false, solverResult: result });
+    }, 30);
   }
 
   componentDidMount(): void {
@@ -359,6 +392,14 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                 ? "Show Static Layout"
                 : "Show Interactive Layout"}
             </button>
+            <button
+              type="button"
+              onClick={() => this.runSolver()}
+              disabled={this.state.solverRunning}
+              className="px-3 py-1 rounded-md bg-violet-600 text-white text-sm disabled:opacity-50"
+            >
+              {this.state.solverRunning ? "Solving…" : "Solve Proof"}
+            </button>
             <NavLink
               to={"/ender/examples"}
               className="px-3 underline underline-offset-2 text-sm"
@@ -496,6 +537,14 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
               </div>
             )}
           </div>
+        )}
+
+        {this.state.isSolverPanelOpen && (
+          <SolverPanel
+            result={this.state.solverResult}
+            running={this.state.solverRunning}
+            onClose={() => this.setState({ isSolverPanelOpen: false })}
+          />
         )}
 
         <div className="w-full flex justify-start">
