@@ -34,6 +34,7 @@ def run_feedback_agent(
     checker_path = os.path.join(original_proof_dir, "checker_output.txt")
     solution_path = os.path.join(original_proof_dir, f"{proof_name}_solution.txt")
     solver_metadata_path = os.path.join(original_proof_dir, "solver_metadata.json")
+    solution_proof = ""
     solution_loaded = False
 
     if os.path.exists(solver_metadata_path):
@@ -78,11 +79,14 @@ def run_feedback_agent(
 
         print(f"Feedback metadata successfully saved to {metadata_path}")
 
-    feedback = give_feedback(
-        feedback_prompt, solution_proof, student_proof, checker_output
-    )
-    print(feedback)
-    save_feedback(feedback)
+    if solution_proof is not "":
+        feedback = give_feedback(
+            feedback_prompt, solution_proof, student_proof, checker_output
+        )
+        print(feedback)
+        save_feedback(feedback)
+    else:
+        print("No solution is provided. Try again.")
 
 
 if __name__ == "__main__":
