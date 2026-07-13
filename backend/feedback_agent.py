@@ -7,7 +7,7 @@ from solver_agent import run_solver_agent
 
 
 def give_feedback(system_prompt, solution_proof, student_proof, checker_output) -> str:
-    # Use LLM to provide feedback on the proof
+    """Use LLM to provide feedback on the proof"""
     load_dotenv()
 
     response = completion(
@@ -26,9 +26,21 @@ def give_feedback(system_prompt, solution_proof, student_proof, checker_output) 
     return response.choices[0].message.content
 
 
+def postprocess_output(llm_output):
+    """Split and return feedback and hint separately"""
+    try:
+        llm_output = json.loads(llm_output)
+        feedback = llm_output.get("feedback")
+        hint = llm_output.get("hint")
+        return feedback, hint
+    except json.JSONDecodeError as e:
+        print(f"LLM output format is wrong please regenerate the feedback.\n{e}")
+
+
 def run_feedback_agent(
     original_proof_dir: str, solver_prompt_path: str, feedback_prompt_path: str
 ):
+    """Run feedback agent on the original proof"""
     proof_name = Path(original_proof_dir).name
     proof_path = os.path.join(original_proof_dir, f"{proof_name}.txt")
     checker_path = os.path.join(original_proof_dir, "checker_output.txt")
@@ -64,12 +76,13 @@ def run_feedback_agent(
     with open(checker_path, encoding="utf-8") as f:
         checker_output = f.read()
 
-    def save_feedback(feedback: str):
-        """save feedback to feedback metadata"""
+    def save_metadata(feedback: str, hint: str):
+        """save feedback and hint to feedback metadata"""
         metadata = {
             "proof_name": proof_name,
             "feedback_prompt_path": feedback_prompt_path,
             "feedback": feedback,
+            "hint": hint,
         }
 
         metadata_path = os.path.join(original_proof_dir, "feedback_metadata.json")
@@ -79,12 +92,15 @@ def run_feedback_agent(
 
         print(f"Feedback metadata successfully saved to {metadata_path}")
 
-    if solution_proof is not "":
-        feedback = give_feedback(
+    if solution_proof != "":
+        llm_output = give_feedback(
             feedback_prompt, solution_proof, student_proof, checker_output
         )
+
+        feedback, hint = postprocess_output(llm_output)
         print(feedback)
-        save_feedback(feedback)
+        print(hint)
+        save_metadata(feedback, hint)
     else:
         print("No solution is provided. Try again.")
 

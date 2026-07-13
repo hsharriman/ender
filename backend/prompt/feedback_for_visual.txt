@@ -23,8 +23,8 @@ INSTRUCTIONS:
 OUTPUT FORMAT (strict): Return ONLY a valid JSON object with the following
 schema:
 
-[ { "step": number or null, "feedback": string (1–3 sentences) or null,
-"hint": string (1–2 sentences) or null}]
+{"feedback": string (1–3 sentences) or null,
+"hint": string (1–2 sentences) or null}
 
 RULES:
 
