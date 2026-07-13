@@ -65,7 +65,7 @@ def run_feedback_agent(
     # Run the solver if the file didn't exist, flag was false, or file reading failed
     if not solution_loaded:
         try:
-            solution_proof = run_solver_agent(original_proof_dir, solver_prompt_path)
+            solution_proof, _ = run_solver_agent(original_proof_dir, solver_prompt_path)
         except ValueError as error:
             print(f"Solver failed: {error}")
 
@@ -106,7 +106,7 @@ def run_feedback_agent(
 
 
 if __name__ == "__main__":
-    ORIGINAL_PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc1"
+    ORIGINAL_PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc4"
     SOLVER_PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
     FEEDBACK_PROMPT_PATH = "backend/prompt/feedback_for_visual.txt"
 
