@@ -14,6 +14,12 @@ export const STMTS_DEFS = {
       isPremisesOnly: true,
       isDiagramOnly: true,
     },
+    // A transversal is the line crossing two other lines (line1: s1p1-s1p2, line2: s2p1-s2p2).
+    // i1/i2 are where the transversal crosses line1/line2. t1/t2 are the
+    // transversal's two endpoints past each crossing: t1 is beyond line1 (the far side from
+    // line2), t2 is beyond line2 (the far side from line1). Along the transversal the order
+    // is t1 - i1 - ... - i2 - t2, so t1/i1 and t2/i2 are generally four distinct points. they only
+    // collapse to two points when the transversal's endpoints land exactly on the lines.
     transversal: {
       name: "transversal",
       parameters: [

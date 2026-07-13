@@ -34,11 +34,14 @@ const proofOptions: Array<{ key: string; label: string; url: string }> =
     })
     .sort((a, b) => a.label.localeCompare(b.label));
 
+const EXAMPLES_DIR = "tests/examples/";
+
 const TEST_GROUPS: Array<{ dir: string; label: string }> = [
+  { dir: "tests/examples/", label: "Examples" },
   { dir: "tests/lines_angles/", label: "Lines & Angles" },
-  { dir: "tests/triangles/",    label: "Triangles" },
+  { dir: "tests/triangles/", label: "Triangles" },
   { dir: "tests/quadrilaterals/", label: "Quadrilaterals" },
-  { dir: "tests/circles/",      label: "Circles" },
+  { dir: "tests/circles/", label: "Circles" },
 ];
 
 function formatErrorList(errors: ErrorDetails[] | undefined): string {
@@ -46,7 +49,9 @@ function formatErrorList(errors: ErrorDetails[] | undefined): string {
   return errors
     .map((e, i) => {
       const suffix =
-        e.details === undefined ? "" : `: ${JSON.stringify(e.details, null, 2)}`;
+        e.details === undefined
+          ? ""
+          : `: ${JSON.stringify(e.details, null, 2)}`;
       return `${i + 1}. ${e.code}${suffix}`;
     })
     .join("\n");
@@ -103,7 +108,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.state = {
       isEditorOpen: true,
       isInteractiveLayout: true,
-      selectedProofKey: "tutorial.txt",
+      selectedProofKey: `${EXAMPLES_DIR}tutorial.txt`,
       proofText: "",
       lastGoodProof: null,
       lastGoodCtx: null,
@@ -383,31 +388,23 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                 this.setState({ selectedProofKey: e.target.value })
               }
             >
-              {(() => {
-                const top = proofOptions.filter((p) => !p.key.startsWith("tests/"));
-                return (
-                  <>
-                    {top.map((proof) => (
-                      <option key={proof.key} value={proof.key}>
-                        {proof.label}
-                      </option>
-                    ))}
-                    {TEST_GROUPS.map(({ dir, label }) => {
-                      const group = proofOptions.filter((p) => p.key.startsWith(dir));
-                      if (group.length === 0) return null;
-                      return (
-                        <optgroup key={dir} label={`Tests — ${label}`}>
-                          {group.map((proof) => (
-                            <option key={proof.key} value={proof.key}>
-                              {proof.key.slice(dir.length)}
-                            </option>
-                          ))}
-                        </optgroup>
-                      );
-                    })}
-                  </>
-                );
-              })()}
+              <>
+                {TEST_GROUPS.map(({ dir, label }) => {
+                  const group = proofOptions.filter((p) =>
+                    p.key.startsWith(dir),
+                  );
+                  if (group.length === 0) return null;
+                  return (
+                    <optgroup key={dir} label={`Tests — ${label}`}>
+                      {group.map((proof) => (
+                        <option key={proof.key} value={proof.key}>
+                          {proof.key.slice(dir.length)}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })}
+              </>
             </select>
             <div className="relative w-full h-full border border-slate-200 rounded font-mono text-xs overflow-hidden">
               <pre
