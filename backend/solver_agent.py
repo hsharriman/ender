@@ -38,11 +38,6 @@ def run_checker(proof_path: str) -> str:
         text=True,
         check=False,
     )
-    # Check the return code to determine if it actually succeeded or failed
-    if output.returncode == 0:
-        print("Successfully got checker output")
-    else:
-        print("Proof checker encountered an issue or validation failed")
     return output.stdout
 
 
@@ -132,6 +127,18 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
         "solution_reached": False,
         "total_iterations": 0,
     }
+
+    def save_metadata(metadata):
+
+        if metadata is not None:
+            os.makedirs(original_proof_dir, exist_ok=True)
+            metadata_path = os.path.join(original_proof_dir, "solver_metadata.json")
+
+            with open(metadata_path, "w", encoding="utf-8") as f:
+                json.dump(metadata, f, indent=4)
+
+            print(f"Solver metadata successfully saved to {metadata_path}")
+
     # Run solution loop
     while (
         not solver_metadata["solution_reached"]
@@ -157,7 +164,9 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
 
         # Validate solution
         checker_output = run_checker(solution_path)
-        solver_data["checker_output"] = checker_output
+        solver_data["checker_output"] = (
+            checker_output  # TODO: explain error type in the prompt
+        )
         parsed_output = parse_checker_output(checker_output)
 
         if parsed_output.get("isCorrect"):
@@ -169,6 +178,7 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
                 f"Correct solution found in {solver_metadata['total_iterations']} trial(s). Solution loop completed"
             )
             print(f"Solution saved to {solution_path}")
+            save_metadata(solver_metadata)
             return fixed_proof, solver_metadata
         else:
             # run llm again
@@ -182,19 +192,9 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
 
 
 if __name__ == "__main__":
-    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s4-4_exer13_1corrs_inc5"
+    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc2"
     PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
     try:
         solution, metadata = run_solver_agent(PROOF_DIR, PROMPT_PATH)
     except ValueError as error:
         print(f"Solver failed: {error}")
-        metadata = getattr(error, "metadata", None)
-
-    if metadata is not None:
-        os.makedirs(PROOF_DIR, exist_ok=True)
-        metadata_path = os.path.join(PROOF_DIR, "solver_metadata.json")
-
-        with open(metadata_path, "w", encoding="utf-8") as f:
-            json.dump(metadata, f, indent=4)
-
-        print(f"Metadata successfully saved to {metadata_path}")

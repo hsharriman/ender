@@ -26,6 +26,7 @@ def generate_diff_text(old_str, new_str):
 
 
 def visualize_changes(solver_metadata):
+    "Print changes to visualize the solver metadata"
     data = json.loads(solver_metadata)
     console = Console()
     previous_solution = data["iterations"][-2]["solution"]
@@ -58,3 +59,12 @@ def visualize_changes(solver_metadata):
     )
 
     console.print(table)
+
+
+if __name__ == "__main__":
+    with open(
+        "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc1/solver_metadata.json",
+        encoding="utf-8",
+    ) as f:
+        m = f.read()
+        visualize_changes(m)
