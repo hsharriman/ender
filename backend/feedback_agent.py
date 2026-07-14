@@ -1,9 +1,13 @@
 import os
+import sys
 import json
 from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
 from solver_agent import run_solver_agent
+
+SOLVER_PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
+FEEDBACK_PROMPT_PATH = "backend/prompt/feedback_for_visual.txt"
 
 
 def give_feedback(system_prompt, solution_proof, student_proof, checker_output) -> str:
@@ -38,12 +42,14 @@ def postprocess_output(llm_output):
 
 
 def run_feedback_agent(
-    original_proof_dir: str, solver_prompt_path: str, feedback_prompt_path: str
+    original_proof_dir: str,
+    solver_prompt_path: str = SOLVER_PROMPT_PATH,
+    feedback_prompt_path: str = FEEDBACK_PROMPT_PATH,
 ):
-    """Run feedback agent on the original proof"""
+    """Run feedback agent on the original proof and return metadata"""
     proof_name = Path(original_proof_dir).name
     proof_path = os.path.join(original_proof_dir, f"{proof_name}.txt")
-    checker_path = os.path.join(original_proof_dir, "checker_output.txt")
+    checker_path = os.path.join(original_proof_dir, f"{proof_name}_checker_output.txt")
     solution_path = os.path.join(original_proof_dir, f"{proof_name}_solution.txt")
     solver_metadata_path = os.path.join(original_proof_dir, "solver_metadata.json")
     solution_proof = ""
@@ -76,8 +82,8 @@ def run_feedback_agent(
     with open(checker_path, encoding="utf-8") as f:
         checker_output = f.read()
 
-    def save_metadata(feedback: str, hint: str):
-        """save feedback and hint to feedback metadata"""
+    def process_metadata(feedback: str, hint: str):
+        """save and return feedback and hint to feedback metadata"""
         metadata = {
             "proof_name": proof_name,
             "feedback_prompt_path": feedback_prompt_path,
@@ -91,6 +97,7 @@ def run_feedback_agent(
             json.dump(metadata, f, indent=4)
 
         print(f"Feedback metadata successfully saved to {metadata_path}")
+        return metadata
 
     if solution_proof != "":
         llm_output = give_feedback(
@@ -98,16 +105,14 @@ def run_feedback_agent(
         )
 
         feedback, hint = postprocess_output(llm_output)
-        print(feedback)
-        print(hint)
-        save_metadata(feedback, hint)
+        metadata = process_metadata(feedback, hint)
+        return metadata
     else:
         print("No solution is provided. Try again.")
+        return None
 
 
 if __name__ == "__main__":
-    ORIGINAL_PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc4"
-    SOLVER_PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
-    FEEDBACK_PROMPT_PATH = "backend/prompt/feedback_for_visual.txt"
-
-    run_feedback_agent(ORIGINAL_PROOF_DIR, SOLVER_PROMPT_PATH, FEEDBACK_PROMPT_PATH)
+    target_dir = sys.argv[1]
+    output = run_feedback_agent(target_dir)
+    print(json.dumps(output))
