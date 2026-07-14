@@ -1,3 +1,4 @@
+// pass
 title: "pgram_opp_angs test"
 premises:
 pt: A (0, 0, t), B (0, 0, t), C (0, 0, t), D (0, 0, t)

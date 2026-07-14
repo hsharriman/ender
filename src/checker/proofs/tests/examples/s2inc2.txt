@@ -1,4 +1,4 @@
-// fail on step 5, dependency error on step 6
+// fail on step 5
 title: "S2INC2 - Prove Segments Parallel #3"
 premises:
 pt: X (9, 9, r), W (2, 9, l), Y (2, 1, bl), Z (9, 1, br), M (5.5, 5, r)

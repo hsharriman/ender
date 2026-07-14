@@ -4,7 +4,7 @@ const triangle = (t: string) => `Triangle ${t}`;
 const point = (p: string) => `Point ${p}`;
 const quadrilateral = (q: string) => `Quadrilateral ${q}`;
 const circle = (c: string) => `Circle ${c}`;
-// const arc = (a: string) => `Arc ${a}`;
+const arc = (a: string) => `Arc ${a}`;
 
 export const STMTS_DEFS = {
   statements: {
@@ -196,10 +196,10 @@ export const STMTS_DEFS = {
       parameters: [angle("a1"), angle("a2")],
       allowDupeArgs: true,
     },
-    // con_arc: {
-    //   name: "con_arc",
-    //   parameters: [arc("a1"), arc("a2")],
-    // },
+    con_arc: {
+      name: "con_arc",
+      parameters: [arc("a1"), arc("a2")],
+    },
   },
   groups: {
     congruent_angs: {

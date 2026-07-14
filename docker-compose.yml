@@ -42,3 +42,5 @@ volumes:
   proof_data:
     external: true
     name: proof_data
+    volumes:
+      - proof_data:/app/geo-proof-dataset:ro
