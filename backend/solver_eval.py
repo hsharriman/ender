@@ -27,9 +27,9 @@ def _get_mutation_score(proof_dir_path):
     return None
 
 
-def select_wrong_proofs(sample_size=20):
+def select_wrong_proofs(wrong_proofs_dir, sample_size=20):
     """select wrong proofs for each mutation score by sample size"""
-    proof_dirs = [d.path for d in os.scandir(WRONG_PROOFS_DIR) if d.is_dir()]
+    proof_dirs = [d.path for d in os.scandir(wrong_proofs_dir) if d.is_dir()]
     proof_to_score = {}
 
     print(f"Scanning {len(proof_dirs)} directories to group by mutation score...")
@@ -70,14 +70,87 @@ def select_wrong_proofs(sample_size=20):
     return selected_proofs
 
 
-if __name__ == "__main__":
-    WRONG_PROOFS_DIR = "geo-proof-dataset/wrong_proofs"
-    PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
-    CSV_OUTPUT_PATH = "backend/solver_evaluation.csv"
-    os.makedirs(os.path.dirname(CSV_OUTPUT_PATH), exist_ok=True)
+def _get_data_from_metadata(wp_metadata_path, row_data):
+    if os.path.isfile(wp_metadata_path):
+        try:
+            with open(wp_metadata_path, "r", encoding="utf-8") as mf:
+                meta_data = json.load(mf)
+                row_data["iterations"] = meta_data.get("total_iterations", "N/A")
+                row_data["solution_reached"] = True
+                row_data["cost"] = meta_data.get("total_cost", "N/A")
+                row_data["status"] = (
+                    "success_skipped"  # Flagged as skipped but successful
+                )
+        except Exception as e:
+            row_data["status"] = "failed_skipped"
+            row_data["error_message"] = f"Failed to read existing metadata: {e}"
+    else:
+        # Solution file exists, but metadata JSON is missing
+        row_data["status"] = "failed_skipped"
+        row_data["error_message"] = (
+            "Solution exists but solver_metadata.json is missing"
+        )
 
-    random.seed(42)
-    selected_dataset = select_wrong_proofs(sample_size=20)
+    return row_data
+
+
+def _process_single_proof(wp, score, wrong_proof_dir, prompt_path, max_iterations=3):
+    wp_solution_path = os.path.join(wrong_proof_dir, f"{wp}_solution.txt")
+    wp_metadata_path = os.path.join(wrong_proof_dir, "solver_metadata.json")
+
+    row_data = {
+        "proof_name": wp,
+        "mutation_score": score,
+        "status": "pending",
+        "iterations": "N/A",
+        "solution_reached": False,
+        "cost": "N/A",
+        "error_message": "",
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    # Solution already exists
+    if os.path.isfile(wp_solution_path):
+        return _get_data_from_metadata(wp_metadata_path, row_data)
+
+    # if no solution exists, run solver
+    try:
+        # Run the LLM-driven agent
+        _, solver_metadata = run_solver_agent(
+            wrong_proof_dir, prompt_path, max_iterations=max_iterations
+        )
+        # Try parsing the metadata returned from the agent
+        metadata = json.loads(solver_metadata)
+        row_data["iterations"] = metadata.get("total_iterations", "N/A")
+        row_data["cost"] = metadata.get("total_cost", "N/A")
+        row_data["solution_reached"] = True
+        row_data["status"] = "success"
+
+    except ValueError as error:
+        # Handle logical failures
+        tqdm.write(f"Solver failed for {wp}: {error}")
+        row_data["status"] = "failed"
+        row_data["error_message"] = str(error)
+
+    except Exception as e:
+        # Catch-all for API issues, network dropouts, or keyboard interrupts
+        tqdm.write(f"Unexpected error processing {wp}: {e}")
+        row_data["status"] = "exception"
+        row_data["error_message"] = str(e)
+    return row_data
+
+
+def run_solver_evaluation(
+    wrong_proofs_dir="geo-proof-dataset/wrong_proofs",
+    prompt_path="backend/prompt/solver_with_valid_reasons_and_explanation.txt",
+    csv_output_path="backend/solver_evaluation.csv",
+    seed=42,
+):
+    """Run solver evaluation pipeline for selected wrong proofs and save to csv"""
+    os.makedirs(os.path.dirname(csv_output_path), exist_ok=True)
+
+    random.seed(seed)
+    selected_dataset = select_wrong_proofs(wrong_proofs_dir, sample_size=20)
 
     # Flatten selected_dataset to a list of (proof_name, mutation_score) tuples
     proof_list = []
@@ -97,9 +170,9 @@ if __name__ == "__main__":
     ]
 
     # Check if we should append to an existing file or create a new one with headers
-    file_exists = os.path.isfile(CSV_OUTPUT_PATH)
+    file_exists = os.path.isfile(csv_output_path)
     with open(
-        CSV_OUTPUT_PATH, mode="a", newline="", encoding="utf-8", buffering=1
+        csv_output_path, mode="a", newline="", encoding="utf-8", buffering=1
     ) as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         if not file_exists:
@@ -107,76 +180,13 @@ if __name__ == "__main__":
 
         # Process every proof in the list with a beautiful progress bar
         for wp, score in tqdm(proof_list, desc="Running Solver Agent", unit="proof"):
-            wp_dir = os.path.join(WRONG_PROOFS_DIR, wp)
-            wp_solution_path = os.path.join(wp_dir, f"{wp}_solution.txt")
-            wp_metadata_path = os.path.join(wp_dir, "solver_metadata.json")
-
-            row_data = {
-                "proof_name": wp,
-                "mutation_score": score,
-                "status": "pending",
-                "iterations": "N/A",
-                "solution_reached": False,
-                "cost": "N/A",
-                "error_message": "",
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            }
-            # Solution already exists
-            if os.path.isfile(wp_solution_path):
-                if os.path.isfile(wp_metadata_path):
-                    try:
-                        with open(wp_metadata_path, "r", encoding="utf-8") as mf:
-                            meta_data = json.load(mf)
-                            row_data["iterations"] = meta_data.get(
-                                "total_iterations", "N/A"
-                            )
-                            row_data["solution_reached"] = True
-                            row_data["cost"] = meta_data.get("total_cost", "N/A")
-                            row_data["status"] = (
-                                "success_skipped"  # Flagged as skipped but successful
-                            )
-                    except Exception as e:
-                        row_data["status"] = "success_skipped"
-                        row_data["error_message"] = (
-                            f"Failed to read existing metadata: {e}"
-                        )
-                else:
-                    # Solution file exists, but metadata JSON is missing
-                    row_data["status"] = "success_skipped"
-                    row_data["iterations"] = "N/A"
-                    row_data["error_message"] = (
-                        "Solution exists but solver_metadata.json is missing"
-                    )
-
-                # Save to CSV immediately and jump to next proof
-                writer.writerow(row_data)
-                f.flush()
-                continue
-            # if no solution exists, run solver
-            try:
-                # Run the LLM-driven agent
-                fixed_proof, solver_metadata = run_solver_agent(
-                    wp_dir, PROMPT_PATH, max_iterations=3
-                )
-                # Try parsing the metadata returned from the agent
-                metadata = json.loads(solver_metadata)
-                row_data["iterations"] = metadata.get("total_iterations", "N/A")
-                row_data["cost"] = metadata.get("total_cost", "N/A")
-                row_data["solution_reached"] = True
-                row_data["status"] = "success"
-
-            except ValueError as error:
-                # Handle logical failures
-                tqdm.write(f"Solver failed for {wp}: {error}")
-                row_data["status"] = "failed"
-                row_data["error_message"] = str(error)
-
-            except Exception as e:
-                # Catch-all for API issues, network dropouts, or keyboard interrupts
-                tqdm.write(f"Unexpected error processing {wp}: {e}")
-                row_data["status"] = "exception"
-                row_data["error_message"] = str(e)
-
+            wp_dir = os.path.join(wrong_proofs_dir, wp)
+            processed_data = _process_single_proof(wp, score, wp_dir, prompt_path)
             # Write row to CSV and force flush it to the hard drive immediately
-            writer.writerow(row_data)
+            writer.writerow(processed_data)
             f.flush()
+    print("Solver evaluation completed!")
+
+
+if __name__ == "__main__":
+    run_solver_evaluation()
