@@ -8,3 +8,11 @@ the feedback agent.
 ```
 python backend/feedback_agent.py path-to-wrong-proof-directory
 ```
+
+## Solver agent
+
+status
+
+```
+"correct" | "fixed" | "unfixable" | "unparsable"
+```

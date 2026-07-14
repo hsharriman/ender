@@ -99,7 +99,7 @@ def parse_checker_output(checker_output: str) -> dict:
 
 
 def run_solver_agent(
-    original_proof_dir: str, prompt_path=PROMPT_PATH, max_iterations=5
+    original_proof_dir: str, prompt_path=PROMPT_PATH, max_iterations=3
 ):
     """Run solution loop"""
     # Get system prompt
@@ -239,7 +239,7 @@ def run_solver_agent(
 
 
 if __name__ == "__main__":
-    PROOF_DIR = "geo-proof-dataset/wrong_proofs/s2inc1"
+    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc1"
     try:
         solution, metadata = run_solver_agent(PROOF_DIR)
     except ValueError as error:

@@ -78,3 +78,4 @@ where:
 * Do not output any text outside the JSON.
 * Do not include explanations or markdown.
 * Ensure the JSON is valid and parsable.
+* Ensure both "status" and "solution" exists. 
