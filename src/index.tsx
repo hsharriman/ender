@@ -2,9 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
+import { DatasetProof } from "./interface/routes/DatasetProof";
 import { Examples } from "./interface/routes/Examples";
 import { Home } from "./interface/routes/Home";
-import { ProofObjHarness } from "./interface/routes/ProofObjHarness";
+import { ProofObjHarnessRoute } from "./interface/routes/ProofObjHarness";
 
 const router = createBrowserRouter([
   {
@@ -17,7 +18,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/ender/harness",
-    element: <ProofObjHarness />,
+    element: <ProofObjHarnessRoute />,
+  },
+  {
+    path: "/ender/dataset/*",
+    element: <DatasetProof />,
   },
 ]);
 

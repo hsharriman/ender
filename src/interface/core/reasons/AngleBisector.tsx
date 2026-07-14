@@ -13,7 +13,10 @@ export class AngleBisector {
   ) => {
     // const [sub1, sub2] = angleSubstrs(props.ctx, a, s);
     // EqualAngles.additions(props, [sub1, sub2], numTicks);
-    props.ctx.getAngle(a)?.addGradient(props.frame);
+    props.ctx
+      .getAngle(a)
+      ?.mode(props.frame, props.mode)
+      .addGradient(props.frame, props.mode);
     // props.ctx.getAngle(sub2)?.addGradient(props.frame);
     props.ctx.getSegment(s)?.mode(props.frame, props.mode);
   };

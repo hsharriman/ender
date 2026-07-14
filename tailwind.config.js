@@ -22,9 +22,14 @@ module.exports = {
             animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
           },
         },
+        blink: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.15" },
+        },
       },
       animation: {
         smallBounce: "smallBounce 1s infinite",
+        blink: "blink 1s ease-in-out infinite",
       },
     },
   },

@@ -61,9 +61,18 @@ Three containers are defined in `docker-compose.yml`:
 
 The backend calls the checker via HTTP (`CHECKER_URL=http://checker:4000`). The interface proxies `/api/*` requests to the backend through Vite's dev server proxy.
 
+The backend also mounts the external `proof_data` volume (created by the [geo-proof-dataset](../geo-proof-dataset) repo) at `/data` and serves it to the interface:
+
+- `GET /dataset/tree` — folder structure of the dataset (dirs + proofs, plus whether each proof dir has a `feedback.txt`)
+- `GET /dataset/proof?path=<rel>` — proof text and the contents of a sibling `feedback.txt` if present
+- `POST /dataset/feedback` `{path}` — runs the solver + feedback pipeline for that proof, writes `feedback.txt` next to it, and returns `{step, feedback, hint, feedbackText}`
+
+The homepage (`/ender/`) lists the dataset proofs; selecting one renders it in the ProofObj Harness at `/ender/dataset/<path>`. When running the backend outside Docker, point `PROOF_DATA_DIR` at a local geo-proof-dataset checkout.
+
 ### Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
+- The `proof_data` volume: run `docker compose up` in the geo-proof-dataset repo once to create/refresh it
 - A `.env` file in the repo root with your OpenAI API key (copy from `.env.example`):
 
 ```bash

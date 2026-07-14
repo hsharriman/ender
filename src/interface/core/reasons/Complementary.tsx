@@ -7,8 +7,14 @@ export class Complementary {
   static additions = (props: StepFocusProps, [a1, a2]: [string, string]) => {
     // const withGradient =
     //   props.mode !== SVGModes.Unfocused && props.mode !== SVGModes.Hidden;
-    props.ctx.getAngle(a1)?.addGradient(props.frame);
-    props.ctx.getAngle(a2)?.addGradient(props.frame);
+    props.ctx
+      .getAngle(a1)
+      ?.mode(props.frame, props.mode)
+      .addGradient(props.frame, props.mode);
+    props.ctx
+      .getAngle(a2)
+      ?.mode(props.frame, props.mode)
+      .addGradient(props.frame, props.mode);
     // props.ctx.getAngle(a1)?.mode(props.frame, props.mode);
     // props.ctx.getAngle(a2)?.mode(props.frame, props.mode);
   };

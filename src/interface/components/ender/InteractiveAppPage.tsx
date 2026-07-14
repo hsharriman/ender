@@ -20,6 +20,8 @@ export interface InteractiveAppPageProps {
   isTutorial?: boolean;
   /** When true, proof rows show every step (no reveal animation); used by ProofObjHarness */
   proofHarnessMode?: boolean;
+  /** Feedback shown on the first incorrect step (blinking dot + popover on select). */
+  feedbackText?: string;
   highlightCtx: DiagramRenderCtx;
   additionCtx: DiagramRenderCtx;
   diagramAspect: AspectRatio;
@@ -109,6 +111,7 @@ export class InteractiveAppPage extends React.Component<
                 isTutorial={this.props.isTutorial}
                 isCompact={rowsCompact}
                 revealAll={this.props.proofHarnessMode}
+                feedbackText={this.props.feedbackText}
               />
             </div>
           </div>

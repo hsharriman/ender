@@ -14,12 +14,14 @@ services:
       - "5000:5000"
     environment:
       - CHECKER_URL=http://checker:4000
+      - PROOF_DATA_DIR=/data
     env_file:
       - .env
     volumes:
       - ./src/checker/proofs:/app/src/checker/proofs
       - ./src/checker/grammar/defs:/app/src/checker/grammar/defs
       - ./backend:/app/backend
+      - proof_data:/data
     depends_on:
       - checker
 
@@ -33,3 +35,10 @@ services:
       - BACKEND_URL=http://backend:5000
     depends_on:
       - backend
+
+# Populated by the geo-proof-dataset repo: run `docker compose up` there first
+# to create/refresh the named `proof_data` volume.
+volumes:
+  proof_data:
+    external: true
+    name: proof_data

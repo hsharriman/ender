@@ -55,23 +55,24 @@ def run_checker(proof_file):
         )
 
 
-def save_checker_output(proof_name):
-    proof_file = "src/checker/proofs/" + proof_name + ".txt"
-    proof_result_folder = "backend/" + proof_name
-    if not os.path.exists(proof_result_folder):
-        os.mkdir(proof_result_folder)
-    proof_result_file = "backend/" + proof_name + "/result.txt"
-    if not os.path.exists(proof_result_file):
-        checker_output = run_checker(proof_file)
-        if checker_output:
-            with open(proof_result_file, "w", encoding="utf-8") as f:
-                f.write(checker_output)
-            return checker_output
-    else:
+def save_checker_output_for_file(proof_file, work_dir, use_cache=True):
+    os.makedirs(work_dir, exist_ok=True)
+    proof_result_file = os.path.join(work_dir, "result.txt")
+    if use_cache and os.path.exists(proof_result_file):
         print("Proof result already exists, skipping proof checker.")
         with open(proof_result_file, encoding="utf-8") as f:
-            checker_output = f.read()
+            return f.read()
+    checker_output = run_checker(proof_file)
+    if checker_output:
+        with open(proof_result_file, "w", encoding="utf-8") as f:
+            f.write(checker_output)
         return checker_output
+
+
+def save_checker_output(proof_name):
+    return save_checker_output_for_file(
+        "src/checker/proofs/" + proof_name + ".txt", "backend/" + proof_name
+    )
 
 
 def get_feedback_path(
@@ -99,24 +100,24 @@ def get_feedback_path(
     return target_dir / new_filename
 
 
-def get_fixed_proof(proof_name, str_output):
+def get_fixed_proof(proof_file, work_dir, str_output):
     json_output = json.loads(str_output)
     solution = json_output[0]["solution"]
     fixed_step = solution[:4]
 
-    with open("src/checker/proofs/" + proof_name + ".txt", "r") as f:
+    with open(proof_file, "r") as f:
         proof = f.read()
     student_proof = proof.split(fixed_step)[0].strip()
 
     fixed_proof = student_proof + "\n" + solution
-    with open(f"backend/{proof_name}/fixed_solution.txt", "w") as f:
+    with open(os.path.join(work_dir, "fixed_solution.txt"), "w") as f:
         f.write(fixed_proof)
     return fixed_proof
 
 
-def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
+def run_solver_agent_for_file(proof_file, prompt, work_dir, loop_times_max=5):
     # Get system prompt
-    with open("backend/prompt/" + PROMPT + ".txt", encoding="utf-8") as f:
+    with open("backend/prompt/" + prompt + ".txt", encoding="utf-8") as f:
         system_prompt = f.read()
 
     # Append valid reasons and statements to the system prompt
@@ -128,26 +129,26 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
         Valid statements: {valid_statements}"
 
     # Get checker output
-    checker_output = save_checker_output(PROOF)
-    with open("src/checker/proofs/" + PROOF + ".txt", encoding="utf-8") as f:
+    checker_output = save_checker_output_for_file(proof_file, work_dir)
+    with open(proof_file, encoding="utf-8") as f:
         student_proof = f.read()
     # _, _, checker_result = split_output(result)
 
     # Run solution loop
     is_solution_correct = False
     loop_times = 0
-    while not is_solution_correct and loop_times <= LOOP_TIMES:
+    while not is_solution_correct and loop_times <= loop_times_max:
         loop_times += 1
         print(f"-----------------loop {loop_times}----------------")
         # Get LLM solution
         llm_solution = run_solver(system_prompt, student_proof + checker_output)
-        fixed_proof = get_fixed_proof(PROOF, llm_solution)
+        fixed_proof = get_fixed_proof(proof_file, work_dir, llm_solution)
         print("---------fixed proof---------")
         print(fixed_proof)
 
         # Validate solution
         print("---------checker output---------")
-        checker_output = run_checker(f"backend/{PROOF}/fixed_solution.txt")
+        checker_output = run_checker(os.path.join(work_dir, "fixed_solution.txt"))
         print(checker_output)
 
         if json.loads(checker_output).get("isCorrect"):
@@ -161,6 +162,12 @@ def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
             print("Solution is incorrect, running the loop again ")
             student_proof = fixed_proof
     raise ValueError("The correct solution was never reached.")
+
+
+def run_solver_agent(PROOF, PROMPT, LOOP_TIMES=5):
+    return run_solver_agent_for_file(
+        "src/checker/proofs/" + PROOF + ".txt", PROMPT, "backend/" + PROOF, LOOP_TIMES
+    )
 
 
 if __name__ == "__main__":

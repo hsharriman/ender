@@ -10,6 +10,9 @@ export interface ProofRowsProps {
   isTutorial?: boolean;
   /** When true, every proof step row is expanded (no reveal animation). */
   revealAll?: boolean;
+  /** Feedback for the first incorrect step; shows a blinking dot and, when the
+   * row is selected, a popover with this text. */
+  feedbackText?: string;
 }
 
 export interface ProofRowsState {
@@ -135,6 +138,7 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
     const activeItem = this.props.items[this.state.idx];
     const isActive = activeItem && item.k === activeItem.k;
     const depends = (activeItem && activeItem.dependsOn?.has(item.k)) || false;
+    const firstIncorrect = this.props.items.find((it) => it.isIncorrect);
 
     return (
       <ProofRow
@@ -148,6 +152,11 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         i={i}
         activeIdx={this.state.idx}
         isCompact={this.props.isCompact}
+        feedbackText={
+          firstIncorrect && firstIncorrect.k === item.k
+            ? this.props.feedbackText
+            : undefined
+        }
       />
     );
   };
@@ -229,6 +238,8 @@ interface ProofRowProps {
   isCompact: boolean;
   activeIdx: number;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  /** Set only on the first incorrect step when feedback is available. */
+  feedbackText?: string;
 }
 
 class ProofRow extends React.Component<ProofRowProps> {
@@ -292,9 +303,23 @@ class ProofRow extends React.Component<ProofRowProps> {
 
     return (
       <div
-        className={`flex flex-row justify-start ${h}`}
+        className={`relative flex flex-row justify-start ${h}`}
         id={this.props.isTutorial ? `${this.props.item.k}-tutorial` : ""}
       >
+        {this.props.feedbackText && (
+          <span
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-red-600 animate-blink z-10 pointer-events-none"
+            id={`feedback-dot-${this.props.item.k}`}
+          />
+        )}
+        {this.props.feedbackText && this.props.isActive && (
+          <div
+            className="absolute top-full left-0 -translate-x-2/3 mt-1 z-50 w-96 rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-left font-normal text-slate-800 shadow-xl whitespace-pre-wrap"
+            id={`feedback-popover-${this.props.item.k}`}
+          >
+            {this.props.feedbackText}
+          </div>
+        )}
         {this.props.revealed ? (
           <button
             id={`${this.idPrefix}${this.props.item.k}`}

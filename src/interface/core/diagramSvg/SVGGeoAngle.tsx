@@ -10,11 +10,12 @@ import { arcSweepsCCW, coordsToSvg, scaleToSvg, updateStyle } from "./svgUtils";
 const GRADIENT_ARC_R = 1.0;
 const GRADIENT_MINI_ARC_R = 2.0;
 const DERIVED_BLUE = "#3b82f6";
+const RELIES_BLACK = "#000000";
 
 export type SVGAngleProps = {
   a: LAngle;
   tick?: { type: TickType; num: number };
-  gradient?: boolean;
+  gradientMode?: SVGModes;
 } & BaseSVGProps;
 
 export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
@@ -94,8 +95,10 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
   };
 
   renderGradient = () => {
-    const { a, mode, miniScale, geoId } = this.props;
-    if (mode !== SVGModes.Derived && mode !== SVGModes.Default) return null;
+    const { a, gradientMode, miniScale, geoId } = this.props;
+    if (gradientMode === undefined) return null;
+    const gradientColor =
+      gradientMode === SVGModes.ReliesOn ? RELIES_BLACK : DERIVED_BLUE;
 
     const gradId = `angle-grad-${geoId}`;
     const arcR = miniScale ? GRADIENT_MINI_ARC_R : GRADIENT_ARC_R;
@@ -131,9 +134,9 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
             r={rSvg}
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0%" stopColor={DERIVED_BLUE} stopOpacity={0} />
-            <stop offset="75%" stopColor={DERIVED_BLUE} stopOpacity={0.35} />
-            <stop offset="100%" stopColor={DERIVED_BLUE} stopOpacity={0.1} />
+            <stop offset="0%" stopColor={gradientColor} stopOpacity={0} />
+            <stop offset="75%" stopColor={gradientColor} stopOpacity={0.35} />
+            <stop offset="100%" stopColor={gradientColor} stopOpacity={0.1} />
           </radialGradient>
         </defs>
         <path
@@ -162,7 +165,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
     const pos = vops.add(this.props.a.center, vops.smul(bisector, 0.8));
     return (
       <>
-        {this.props.gradient && this.renderGradient()}
+        {this.renderGradient()}
         <SVGGeoTick
           parent={this.props.a}
           tick={this.props.tick}
