@@ -24,7 +24,9 @@ def run_solver(proof: str, checker_output: str, system_prompt: str) -> str:
     )
 
     print("Successfully got LLM response")
-    return response.choices[0].message.content
+    cost_usd = response._hidden_params["response_cost"]
+    print("spent", cost_usd)
+    return response.choices[0].message.content, cost_usd
 
 
 def run_checker(proof_path: str) -> str:
@@ -126,6 +128,7 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
         ],
         "solution_reached": False,
         "total_iterations": 0,
+        "total_cost": 0,
     }
 
     def save_metadata(metadata):
@@ -145,6 +148,7 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
         and solver_metadata["total_iterations"] < max_iterations
     ):
         solver_metadata["total_iterations"] += 1
+
         solver_data = {
             "iteration": solver_metadata["total_iterations"],
             "changed_steps": "",
@@ -153,8 +157,8 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
             "is_correct": False,
         }
         # Get LLM solution
-        llm_solution = run_solver(student_proof, checker_output, system_prompt)
-
+        llm_solution, cost = run_solver(student_proof, checker_output, system_prompt)
+        solver_metadata["total_cost"] += cost
         fixed_steps = get_fixed_steps(llm_solution)
         fixed_proof = get_fixed_proof(
             solver_metadata["iterations"][-1]["solution"], fixed_steps, solution_path
@@ -192,7 +196,7 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
 
 
 if __name__ == "__main__":
-    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc2"
+    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s4-6_cio2_3corrs_inc7"
     PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
     try:
         solution, metadata = run_solver_agent(PROOF_DIR, PROMPT_PATH)
