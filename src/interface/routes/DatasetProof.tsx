@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
+  FeedbackContent,
+  hasFeedbackContent,
+} from "../components/ender/FeedbackBubble";
+import {
   ProofCheckSummary,
   ProofObjHarness,
 } from "../components/ender/ProofObjHarness";
@@ -12,7 +16,7 @@ export const DatasetProof = () => {
   const proofPath = params["*"] ?? "";
 
   const [proofText, setProofText] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackContent | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isIncorrect, setIsIncorrect] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -34,7 +38,11 @@ export const DatasetProof = () => {
       .then((data) => {
         if (cancelled) return;
         setProofText(data.text ?? "");
-        setFeedback(data.feedback ?? null);
+        setFeedback(
+          data.feedback || data.hint
+            ? { feedback: data.feedback, hint: data.hint }
+            : null,
+        );
       })
       .catch((err) => {
         if (!cancelled) setLoadError(String(err));
@@ -65,7 +73,15 @@ export const DatasetProof = () => {
         if (!r.ok) throw new Error(data?.error ?? `HTTP ${r.status}`);
         return data;
       })
-      .then((data) => setFeedback(data.feedbackText || null))
+      .then((data) =>
+        setFeedback(
+          data.feedback || data.hint
+            ? { feedback: data.feedback, hint: data.hint }
+            : data.feedbackText
+              ? { feedback: data.feedbackText }
+              : null,
+        ),
+      )
       .catch((err) => setGenerateError(String(err)))
       .finally(() => setIsGenerating(false));
   };
@@ -99,7 +115,7 @@ export const DatasetProof = () => {
       >
         {isGenerating
           ? "Generating..."
-          : feedback
+          : hasFeedbackContent(feedback)
             ? "Regenerate Feedback"
             : "Generate Feedback"}
       </button>

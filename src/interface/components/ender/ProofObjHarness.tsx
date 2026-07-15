@@ -7,6 +7,7 @@ import React, { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../../assets/ender.png";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
+import { FeedbackContent } from "./FeedbackBubble";
 import {
   interactiveLayout,
   staticLayout,
@@ -80,8 +81,8 @@ export interface ProofObjHarnessProps {
   /** Header title; defaults to "ProofObj Harness". */
   title?: string;
   /** Feedback for the first incorrect step: blinking red dot on the row,
-   * popover with this text when the row is selected. */
-  feedback?: string | null;
+   * chat bubble with the feedback and hint when the row is selected. */
+  feedback?: FeedbackContent | null;
   /** Extra controls rendered in the header bar. */
   headerExtras?: React.ReactNode;
   /** Called after every checker run (or parse failure) with a summary. */
@@ -343,7 +344,7 @@ export class ProofObjHarness extends Component<
         ...(interactiveLayout(layoutProps).props as InteractiveAppPageProps),
         diagramAspect,
         proofHarnessMode: true,
-        feedbackText: this.props.feedback ?? undefined,
+        feedback: this.props.feedback,
       },
       static: {
         ...(staticLayout(layoutProps).props as StaticAppPageProps),

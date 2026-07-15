@@ -1,5 +1,10 @@
 import React from "react";
 import { ProofTextItem } from "../../core/types/stepTypes";
+import {
+  FeedbackBubble,
+  FeedbackContent,
+  hasFeedbackContent,
+} from "./FeedbackBubble";
 
 export interface ProofRowsProps {
   active: string;
@@ -11,8 +16,8 @@ export interface ProofRowsProps {
   /** When true, every proof step row is expanded (no reveal animation). */
   revealAll?: boolean;
   /** Feedback for the first incorrect step; shows a blinking dot and, when the
-   * row is selected, a popover with this text. */
-  feedbackText?: string;
+   * row is selected, a chat bubble with the feedback and hint. */
+  feedback?: FeedbackContent | null;
 }
 
 export interface ProofRowsState {
@@ -152,9 +157,11 @@ export class ProofRows extends React.Component<ProofRowsProps, ProofRowsState> {
         i={i}
         activeIdx={this.state.idx}
         isCompact={this.props.isCompact}
-        feedbackText={
-          firstIncorrect && firstIncorrect.k === item.k
-            ? this.props.feedbackText
+        feedback={
+          firstIncorrect &&
+          firstIncorrect.k === item.k &&
+          hasFeedbackContent(this.props.feedback)
+            ? this.props.feedback
             : undefined
         }
       />
@@ -239,7 +246,7 @@ interface ProofRowProps {
   activeIdx: number;
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
   /** Set only on the first incorrect step when feedback is available. */
-  feedbackText?: string;
+  feedback?: FeedbackContent;
 }
 
 class ProofRow extends React.Component<ProofRowProps> {
@@ -306,18 +313,18 @@ class ProofRow extends React.Component<ProofRowProps> {
         className={`relative flex flex-row justify-start ${h}`}
         id={this.props.isTutorial ? `${this.props.item.k}-tutorial` : ""}
       >
-        {this.props.feedbackText && (
+        {this.props.feedback && (
           <span
             className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-red-600 animate-blink z-10 pointer-events-none"
             id={`feedback-dot-${this.props.item.k}`}
           />
         )}
-        {this.props.feedbackText && this.props.isActive && (
+        {this.props.feedback && this.props.isActive && (
           <div
-            className="absolute top-full left-0 -translate-x-2/3 mt-1 z-50 w-96 rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-left font-normal text-slate-800 shadow-xl whitespace-pre-wrap"
+            className="absolute top-full left-0 -translate-x-2/3 mt-1 z-50 w-96 rounded-lg border border-red-300 bg-white px-3 py-2 text-sm leading-7 text-left font-normal text-slate-800 shadow-xl whitespace-pre-wrap"
             id={`feedback-popover-${this.props.item.k}`}
           >
-            {this.props.feedbackText}
+            <FeedbackBubble feedback={this.props.feedback} />
           </div>
         )}
         {this.props.revealed ? (
