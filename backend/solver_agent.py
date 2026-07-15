@@ -240,6 +240,7 @@ def run_solver_agent(
 
 if __name__ == "__main__":
     PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc1"
+
     try:
         solution, metadata = run_solver_agent(PROOF_DIR)
     except ValueError as error:
