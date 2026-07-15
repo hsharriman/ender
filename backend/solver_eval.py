@@ -11,6 +11,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from solver_agent import run_solver_agent
 
+PROMPT_PATH = "backend/prompt/solver_final.txt"
+
 
 def _get_mutation_score(proof_dir_path):
     """Worker function to quickly read the proof name and its mutation score."""
@@ -110,8 +112,8 @@ def _process_single_proof(wp, score, wrong_proof_dir, prompt_path, max_iteration
     }
 
     # Solution already exists
-    if os.path.isfile(wp_solution_path):
-        return _get_data_from_metadata(wp_metadata_path, row_data)
+    # if os.path.isfile(wp_solution_path):
+    #     return _get_data_from_metadata(wp_metadata_path, row_data)
 
     # if no solution exists, run solver
     try:
@@ -119,10 +121,8 @@ def _process_single_proof(wp, score, wrong_proof_dir, prompt_path, max_iteration
         _, solver_metadata = run_solver_agent(
             wrong_proof_dir, prompt_path, max_iterations=max_iterations
         )
-        # Try parsing the metadata returned from the agent
-        metadata = json.loads(solver_metadata)
-        row_data["iterations"] = metadata.get("total_iterations", "N/A")
-        row_data["cost"] = metadata.get("total_cost", "N/A")
+        row_data["iterations"] = solver_metadata.get("total_iterations", "N/A")
+        row_data["cost"] = solver_metadata.get("total_cost", "N/A")
         row_data["solution_reached"] = True
         row_data["status"] = "success"
 
@@ -142,7 +142,7 @@ def _process_single_proof(wp, score, wrong_proof_dir, prompt_path, max_iteration
 
 def run_solver_evaluation(
     wrong_proofs_dir="geo-proof-dataset/wrong_proofs",
-    prompt_path="backend/prompt/solver_with_valid_reasons_and_explanation.txt",
+    prompt_path=PROMPT_PATH,
     csv_output_path="backend/solver_evaluation.csv",
     seed=42,
 ):
