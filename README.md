@@ -53,33 +53,32 @@ npm run checker-server   # starts on http://localhost:4000
 
 Three containers are defined in `docker-compose.yml`:
 
-| Container | Role | Port |
-|---|---|---|
-| `checker` | Node.js HTTP server wrapping the proof checker | 4000 |
-| `backend` | Python/Flask server for the solver and feedback agents | 5000 |
-| `interface` | Vite dev server for the React UI | 3000 |
+| Container   | Role                                                   | Port |
+| ----------- | ------------------------------------------------------ | ---- |
+| `checker`   | Node.js HTTP server wrapping the proof checker         | 4000 |
+| `backend`   | Python/Flask server for the solver and feedback agents | 5000 |
+| `interface` | Vite dev server for the React UI                       | 3000 |
 
 The backend calls the checker via HTTP (`CHECKER_URL=http://checker:4000`). The interface proxies `/api/*` requests to the backend through Vite's dev server proxy.
 
-Both `backend` and `interface` also mount an external, read-only volume named `proof_data` at `/app/geo-proof-dataset`. This volume is a named Docker volume produced by the [`geo-proof-dataset`](../geo-proof-dataset) repo — it is declared here as `external: true`, so it is not created or seeded by this project. It packages that repo's `proofs/` and `wrong_proofs/` folders.
+The backend also mounts the external `proof_data` volume (created by the [geo-proof-dataset](../geo-proof-dataset) repo) at `/data` and serves it to the interface:
+
+- `GET /dataset/tree` — folder structure of the dataset (dirs + proofs, plus whether each proof dir has a `feedback.txt`)
+- `GET /dataset/proof?path=<rel>` — proof text and the contents of a sibling `feedback.txt` if present
+- `POST /dataset/feedback` `{path}` — runs the solver + feedback pipeline for that proof, writes `feedback.txt` next to it, and returns `{step, feedback, hint, feedbackText}`
+
+The homepage (`/ender/`) lists the dataset proofs; selecting one renders it in the ProofObj Harness at `/ender/dataset/<path>`. When running the backend outside Docker, point `PROOF_DATA_DIR` at a local geo-proof-dataset checkout.
 
 ### Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
+- The `proof_data` volume: run `docker compose up` in the geo-proof-dataset repo once to create/refresh it
 - A `.env` file in the repo root with your OpenAI API key (copy from `.env.example`):
 
 ```bash
 cp .env.example .env
 # then edit .env and set OPENAI_API_KEY
 ```
-- The `proof_data` volume must exist before starting this project. Build and seed it once from the `geo-proof-dataset` repo:
-
-```bash
-cd ../geo-proof-dataset
-docker compose up proof-data
-```
-
-  (See that repo's README for full details. If the volume doesn't exist yet, `docker compose up` here will fail with an error naming the missing external volume.)
 
 ### Build
 
@@ -90,10 +89,13 @@ docker compose build
 ### Start
 
 ```bash
-docker compose up
+docker compose up          # dev mode (default) — auto-reloads on source changes
+docker compose -f docker-compose.yml up   # production mode — no hot reload
 ```
 
 The interface is available at [http://localhost:3000/ender/](http://localhost:3000/ender/).
+
+**Dev mode** (`docker-compose.override.yml` is merged automatically): the checker restarts on TypeScript changes via `tsx --watch`, the backend restarts on Python changes via Flask's debug reloader, and the interface reflects changes instantly via Vite HMR.
 
 To start a specific service only:
 
@@ -125,11 +127,11 @@ docker compose logs -f backend    # one service
 
 Once running, the backend exposes:
 
-| Method | Path | Body | Description |
-|---|---|---|---|
-| `POST` | `/api/solve` | `{ "proofName": "s1c1", "prompt": "solver_with_valid_reasons_and_explanation" }` | Run the LLM solver on a proof |
+| Method | Path            | Body                                                                                                 | Description                      |
+| ------ | --------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `POST` | `/api/solve`    | `{ "proofName": "s1c1", "prompt": "solver_with_valid_reasons_and_explanation" }`                     | Run the LLM solver on a proof    |
 | `POST` | `/api/feedback` | `{ "proofName": "s1c1", "solverPrompt": "solver_with_valid_reasons", "feedbackPrompt": "feedback" }` | Get Socratic feedback on a proof |
-| `GET` | `/api/health` | — | Health check |
+| `GET`  | `/api/health`   | —                                                                                                    | Health check                     |
 
 `proofName` must match a file in `src/checker/proofs/` (without the `.txt` extension). The `prompt` fields default to the values shown above if omitted.
 
@@ -187,14 +189,14 @@ Use this when you introduce a new kind of literal in proofs (new premise section
 
 Many statements only combine existing object kinds (segments, angles, triangles, …). The project already defines `sim_tri` with two triangle arguments in `stmts.defs.ts`; the checklist below is what you would repeat for a **new** statement name.
 
-| Area                         | What to change                                                                                                                                                                                                                                                                                                                                          |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Definition (required)**    | `src/checker/grammar/defs/stmts.defs.ts` — add an entry under `statements`: `name`, `parameters` (human-readable labels like today’s `triangle("t1")`), optional `isPremisesOnly`, optional `group` for substitute-able statements (see `congruent_angs`). |
-| **Checker**                  | `checkStatementArguments` in `src/checker/checker/validators.ts` currently checks **arity** against `stmts.defs`. Graph building in `src/checker/checker/graph.ts` uses statement defs for step validity. Add **domain checks** in `reasonChecks/` or `validators` if you need more than arity.                                                         |
-| **Given / diagram premises** | If the statement can appear in givens and affects the built diagram, extend `src/checker/checker/premises.ts` (and the same for `proof.premises.diagramStatements`).                                                                                                                                                                                    |
-| **Interface: text**          | `src/interface/core/grammarToLayout/proofObjText.tsx` — add a branch in `stmtToText` (or the step falls back to `function(arg1, arg2, …)` plain text).                                                                                                                                                                                                  |
-| **Interface: diagram**       | `src/interface/core/grammarToLayout/proofObjDiagramAdditions.ts` — in `applyStmtAdditions`, map the new `stmt.function` to tick marks, labels, or overlays (see `con_seg`, `con_ang`, `con_tri`). If you need congruence-style tick tracking, extend `buildCongruenceTickTracker`.                                                                      |
-| **Layout**                   | `src/interface/core/grammarToLayout/proofObjLayout.ts` — only if the new statement needs special transversal/vertical-angle style behavior (rare; most changes stay in `proofObjDiagramAdditions.ts`).                                                                                                                                                  |
+| Area                         | What to change                                                                                                                                                                                                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Definition (required)**    | `src/checker/grammar/defs/stmts.defs.ts` — add an entry under `statements`: `name`, `parameters` (human-readable labels like today’s `triangle("t1")`), optional `isPremisesOnly`, optional `group` for substitute-able statements (see `congruent_angs`).                                      |
+| **Checker**                  | `checkStatementArguments` in `src/checker/checker/validators.ts` currently checks **arity** against `stmts.defs`. Graph building in `src/checker/checker/graph.ts` uses statement defs for step validity. Add **domain checks** in `reasonChecks/` or `validators` if you need more than arity. |
+| **Given / diagram premises** | If the statement can appear in givens and affects the built diagram, extend `src/checker/checker/premises.ts` (and the same for `proof.premises.diagramStatements`).                                                                                                                            |
+| **Interface: text**          | `src/interface/core/grammarToLayout/proofObjText.tsx` — add a branch in `stmtToText` (or the step falls back to `function(arg1, arg2, …)` plain text).                                                                                                                                          |
+| **Interface: diagram**       | `src/interface/core/grammarToLayout/proofObjDiagramAdditions.ts` — in `applyStmtAdditions`, map the new `stmt.function` to tick marks, labels, or overlays (see `con_seg`, `con_ang`, `con_tri`). If you need congruence-style tick tracking, extend `buildCongruenceTickTracker`.              |
+| **Layout**                   | `src/interface/core/grammarToLayout/proofObjLayout.ts` — only if the new statement needs special transversal/vertical-angle style behavior (rare; most changes stay in `proofObjDiagramAdditions.ts`).                                                                                          |
 
 ---
 
@@ -202,14 +204,14 @@ Many statements only combine existing object kinds (segments, angles, triangles,
 
 Reasons tie dependency step numbers to a conclusion statement. They are listed in `reasons.defs.ts` and checked in `reasonApplication.ts`.
 
-| Area                          | What to change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Area                          | What to change                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Definition (required)**     | `src/checker/grammar/defs/reasons.defs.ts` — add a key (lowercase function name used in proof text). Set `dependencies` to statement names or **groups** from `stmts.defs` (see `ReasonDefinition`). Use `diagramDependencies` when refs come from diagram premises instead of step lists. Set `conclusion` to the statement name(s) allowed for this reason — comma-separated if multiple (see existing entries). |
-| **Collision with statements** | `lezerParser.ts` — `parseStatement` rejects names that are **only** reasons; keep names consistent with defs.                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Structural checks**         | `src/checker/checker/validators.ts` — reason/step shape and dependency typing vs defs (already wired through the graph).                                                                                                                                                                                                                                                                                                                                                                               |
-| **Geometric / logical check** | `src/checker/checker/reasonApplication.ts` — add a `case "your_reason":` that calls helpers in `src/checker/checker/reasonChecks/`. If you omit this, unknown reasons fall through to `default` and **return `true`** after syntax passes (placeholder behavior).                                                                                                                                                                                                                                      |
-| **Interface: theorem panel**  | `src/interface/theorems/reasons.ts` — extend `reasonFromFunction`’s map so the step shows a proper title/body; otherwise the UI shows the raw function name. Add a `Reasons.YourReason` entry with `title` / `body` / optional `src` for assets. `expectedDependenciesDescription` is filled automatically from `reasons.defs` when possible.                                                                                                                                                          |
-| **Interface: highlights**     | Optional: add a small helper under `src/interface/core/reasons/` (like `Transversal.tsx`) and hook it from `proofObjLayout.ts` if the step needs custom diagram emphasis.                                                                                                                                                                                                                                                                                                                              |
+| **Collision with statements** | `lezerParser.ts` — `parseStatement` rejects names that are **only** reasons; keep names consistent with defs.                                                                                                                                                                                                                                                                                                      |
+| **Structural checks**         | `src/checker/checker/validators.ts` — reason/step shape and dependency typing vs defs (already wired through the graph).                                                                                                                                                                                                                                                                                           |
+| **Geometric / logical check** | `src/checker/checker/reasonApplication.ts` — add a `case "your_reason":` that calls helpers in `src/checker/checker/reasonChecks/`. If you omit this, unknown reasons fall through to `default` and **return `true`** after syntax passes (placeholder behavior).                                                                                                                                                  |
+| **Interface: theorem panel**  | `src/interface/theorems/reasons.ts` — extend `reasonFromFunction`’s map so the step shows a proper title/body; otherwise the UI shows the raw function name. Add a `Reasons.YourReason` entry with `title` / `body` / optional `src` for assets. `expectedDependenciesDescription` is filled automatically from `reasons.defs` when possible.                                                                      |
+| **Interface: highlights**     | Optional: add a small helper under `src/interface/core/reasons/` (like `Transversal.tsx`) and hook it from `proofObjLayout.ts` if the step needs custom diagram emphasis.                                                                                                                                                                                                                                          |
 
 ---
 

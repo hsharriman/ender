@@ -191,6 +191,118 @@ def run_solver_agent(original_proof_dir: str, prompt_path, max_iterations=5):
     raise error
 
 
+def run_checker_http(proof_file: str) -> str:
+    """Returns checker output from the HTTP checker service (Docker backend
+    has no Node, so it can't use the subprocess-based run_checker)."""
+    checker_url = os.getenv("CHECKER_URL", "http://localhost:4000")
+    with open(proof_file, "r", encoding="utf-8") as f:
+        proof_text = f.read()
+    try:
+        response = requests.post(
+            f"{checker_url}/check",
+            json={"text": proof_text},
+            timeout=30,
+        )
+        response.raise_for_status()
+        print("Successfully got checker output")
+        return json.dumps(response.json(), indent=2)
+    except requests.RequestException as e:
+        print(f"Proof checker service error: {e}")
+        return json.dumps(
+            {
+                "isCorrect": False,
+                "issues": [
+                    {
+                        "type": "UnclassifiedError",
+                        "code": "checker_unavailable",
+                        "details": {"msg": str(e)},
+                    }
+                ],
+            },
+            indent=2,
+        )
+
+
+def save_checker_output_for_file(proof_file: str, work_dir: str, use_cache=True) -> str:
+    os.makedirs(work_dir, exist_ok=True)
+    proof_result_file = os.path.join(work_dir, "result.txt")
+    if use_cache and os.path.exists(proof_result_file):
+        print("Proof result already exists, skipping proof checker.")
+        with open(proof_result_file, encoding="utf-8") as f:
+            return f.read()
+    checker_output = run_checker_http(proof_file)
+    if checker_output:
+        with open(proof_result_file, "w", encoding="utf-8") as f:
+            f.write(checker_output)
+        return checker_output
+
+
+def get_fixed_proof_for_file(proof_file: str, work_dir: str, str_output: str) -> str:
+    solution = get_fixed_steps(str_output)
+    fixed_step = solution[:4]
+
+    with open(proof_file, "r", encoding="utf-8") as f:
+        proof = f.read()
+    student_proof = proof.split(fixed_step)[0].strip()
+
+    fixed_proof = student_proof + "\n" + solution
+    with open(
+        os.path.join(work_dir, "fixed_solution.txt"), "w", encoding="utf-8"
+    ) as f:
+        f.write(fixed_proof)
+    return fixed_proof
+
+
+def run_solver_agent_for_file(proof_file: str, prompt: str, work_dir: str, loop_times_max=5) -> str:
+    """Run the solution loop on a single proof file via the HTTP checker
+    service, writing artifacts (result.txt, fixed_solution.txt) to work_dir."""
+    # Get system prompt
+    with open("backend/prompt/" + prompt + ".txt", encoding="utf-8") as f:
+        system_prompt = f.read()
+
+    # Append valid reasons and statements to the system prompt
+    with open("src/checker/grammar/defs/reasons.defs.ts", "r", encoding="utf-8") as f:
+        valid_reasons = f.read()
+    with open("src/checker/grammar/defs/stmts.defs.ts", "r", encoding="utf-8") as f:
+        valid_statements = f.read()
+    system_prompt = f"{system_prompt}\nValid reasons: {valid_reasons}\n\
+        Valid statements: {valid_statements}"
+
+    # Get checker output
+    checker_output = save_checker_output_for_file(proof_file, work_dir)
+    with open(proof_file, encoding="utf-8") as f:
+        student_proof = f.read()
+
+    # Run solution loop
+    is_solution_correct = False
+    loop_times = 0
+    while not is_solution_correct and loop_times <= loop_times_max:
+        loop_times += 1
+        print(f"-----------------loop {loop_times}----------------")
+        # Get LLM solution
+        llm_solution = run_solver(student_proof, checker_output, system_prompt)
+        fixed_proof = get_fixed_proof_for_file(proof_file, work_dir, llm_solution)
+        print("---------fixed proof---------")
+        print(fixed_proof)
+
+        # Validate solution
+        print("---------checker output---------")
+        checker_output = run_checker_http(os.path.join(work_dir, "fixed_solution.txt"))
+        print(checker_output)
+
+        if json.loads(checker_output).get("isCorrect"):
+            is_solution_correct = True
+            print(
+                f"Correct solution found in {loop_times} trial(s). Solution loop completed"
+            )
+            return fixed_proof
+        else:
+            # run llm again
+            print("Solution is incorrect, running the loop again ")
+            student_proof = fixed_proof
+    raise ValueError("The correct solution was never reached.")
+
+
 if __name__ == "__main__":
     PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc2"
     PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"

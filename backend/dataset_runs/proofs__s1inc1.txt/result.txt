@@ -1,0 +1,32 @@
+{
+  "isCorrect": false,
+  "issues": [
+    {
+      "type": 1,
+      "code": "angle_center_not_bw_both_con_segs",
+      "details": {
+        "reason": "sas",
+        "a": "B",
+        "s1": "AD",
+        "s2": "AB",
+        "tri": "ABD",
+        "steps": [
+          "4"
+        ]
+      }
+    },
+    {
+      "type": 6,
+      "code": "upstream_dep_error",
+      "details": {
+        "reason": "cpctc",
+        "dependsOn": [
+          "4"
+        ],
+        "steps": [
+          "5"
+        ]
+      }
+    }
+  ]
+}
