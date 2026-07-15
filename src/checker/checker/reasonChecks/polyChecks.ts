@@ -81,8 +81,8 @@ export const rect_pgram_ang_check = (
   if (!quadContainsAngle(r, a)) {
     return reasonApplicationFail(ANG_NOT_IN_RECT, { angle: a.label });
   }
-  const eq = checkEqual(quad, r);
-  if (!eq.ok) return { ...eq, reason: RECT_PGRAM_DIFF };
+  const eq = checkEqual(quad, r, RECT_PGRAM_DIFF);
+  if (!eq.ok) return eq;
   return reasonApplicationOk();
 };
 
@@ -295,9 +295,9 @@ export const pgram_diag_bisect_check = (
       ctx.getPoint(seg_b2.arguments[2].v),
     ];
     // p1 and p2 should be the same,
-    const eq = checkEqual(p1, p2);
+    const eq = checkEqual(p1, p2, DIFF_MIDPTS);
     if (!eq.ok) {
-      return { ...eq, reason: DIFF_MIDPTS };
+      return eq;
     }
     // c1,c2 and b1,b2 should be the same.
     if (!segmentPairsEqual([c1, c2], [b1, b2])) {
@@ -437,9 +437,9 @@ export const isos_trap_base_ang_check = (
   }
   if (trapPrem) {
     const [tr] = stmtMapper(trapPrem, ctx) as [Quadrilateral];
-    const eq = checkEqual(tr, isTrap);
+    const eq = checkEqual(tr, isTrap, TRAP_DIFF);
     if (!eq.ok) {
-      return { ...eq, reason: TRAP_DIFF };
+      return eq;
     }
   }
   return reasonApplicationOk();
@@ -453,9 +453,9 @@ export const checkQuadrilateralCls = (
 ) => {
   const q1 = ctx.getQuadrilateral(quad.arguments[0].v);
   const q2 = ctx.getQuadrilateral(quad2.arguments[0].v);
-  const eq = checkEqual(q1, q2);
+  const eq = checkEqual(q1, q2, DIFF_QUADS);
   if (!eq.ok) {
-    return { ...eq, reason: DIFF_QUADS };
+    return eq;
   }
   return reasonApplicationOk();
 };
