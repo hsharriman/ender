@@ -50,12 +50,12 @@ export const checkTangentPerpRelationship = (
     Point,
   ];
 
-  let eq = checkEqual(circle_tan, circle_rad);
-  if (!eq.ok) return { ...eq, reason: DIFF_CIRCLES };
-  eq = checkEqual(p_tan, p_rad);
-  if (!eq.ok) return { ...eq, reason: DIFF_TAN_PTS };
-  eq = checkEqual(p_int, p_tan);
-  if (!eq.ok) return { ...eq, reason: BAD_INT_PT };
+  let eq = checkEqual(circle_tan, circle_rad, DIFF_CIRCLES);
+  if (!eq.ok) return eq;
+  eq = checkEqual(p_tan, p_rad, DIFF_TAN_PTS);
+  if (!eq.ok) return eq;
+  eq = checkEqual(p_int, p_tan, BAD_INT_PT);
+  if (!eq.ok) return eq;
 
   const tanIsS1 = resolveSegmentForProp(s_tan, (s) => s1.equals(s)) !== null;
   const tanIsS2 = resolveSegmentForProp(s_tan, (s) => s2.equals(s)) !== null;
@@ -84,8 +84,8 @@ export const con_tangents_ext_check = (
   const [c2, s2, p2] = stmtMapper(tan2, ctx) as [Circle, Segment, Point];
   const [cs1, cs2] = stmtMapper(conclusion, ctx) as [Segment, Segment];
 
-  let eq = checkEqual(c1, c2);
-  if (!eq.ok) return { ...eq, reason: TAN_DIFF_CIRCLES };
+  let eq = checkEqual(c1, c2, TAN_DIFF_CIRCLES);
+  if (!eq.ok) return eq;
 
   if (p1.equals(p2)) {
     return reasonApplicationFail(SAME_TAN_PT, { p: p1.label });
@@ -99,8 +99,8 @@ export const con_tangents_ext_check = (
   const ext1 = s1.p1.equals(p1) ? s1.p2 : s1.p1;
   const ext2 = s2.p1.equals(p2) ? s2.p2 : s2.p1;
 
-  eq = checkEqual(ext1, ext2);
-  if (!eq.ok) return { ...eq, reason: NO_EXT_PT };
+  eq = checkEqual(ext1, ext2, NO_EXT_PT);
+  if (!eq.ok) return eq;
 
   return reasonApplicationOk();
 };
@@ -128,8 +128,8 @@ export const radius_chord_bisect_check = (
     Point,
   ];
 
-  let eq = checkEqual(c_rad, c_chord);
-  if (!eq.ok) return { ...eq, reason: RAD_CHORD_DIFF };
+  let eq = checkEqual(c_rad, c_chord, RAD_CHORD_DIFF);
+  if (!eq.ok) return eq;
 
   // One of the perp segments must be the chord
   const chordIsFirst = s_rad.equals(s_chord);
@@ -155,9 +155,9 @@ export const radius_chord_bisect_check = (
       radius: s_perpRad.label,
     });
   }
-  eq = checkEqual(cp, p_int);
+  eq = checkEqual(cp, p_int, BAD_BISECT_MIDPT);
   if (!eq.ok) {
-    return { ...eq, reason: BAD_BISECT_MIDPT };
+    return eq;
   }
   return reasonApplicationOk();
 };
@@ -179,13 +179,13 @@ export const radius_chord_bisect_conv_check = (
   const [c_chord, s_chord] = stmtMapper(chordStmt, ctx) as [Circle, Segment];
   const [c_conc, p_conc] = stmtMapper(conclusion, ctx) as [Circle, Point];
 
-  let eq = checkEqual(c_conc, c_chord);
+  let eq = checkEqual(c_conc, c_chord, CONC_DIFF_CIRCLES);
   if (!eq.ok) {
-    return { ...eq, reason: CONC_DIFF_CIRCLES };
+    return eq;
   }
-  eq = checkEqual(s_bisected, s_chord);
+  eq = checkEqual(s_bisected, s_chord, NOT_CHORD);
   if (!eq.ok) {
-    return { ...eq, reason: NOT_CHORD };
+    return eq;
   }
   // The conclusion point must be an endpoint of the perpendicular bisector
   if (!s_perp.p1.equals(p_conc) && !s_perp.p2.equals(p_conc)) {
@@ -224,7 +224,7 @@ export const con_inscribed_angs_check = (
     });
   }
 
-  [ca1, ca2].forEach((angle) => {
+  for (const angle of [ca1, ca2]) {
     const onCircleCheck = angle.getPts().every((pt) => pt.isOnCircle(c1));
     if (!onCircleCheck) {
       return reasonApplicationFail(ANG_NOT_ON_CIRC, {
@@ -232,6 +232,6 @@ export const con_inscribed_angs_check = (
         ang: angle.label,
       });
     }
-  });
+  }
   return reasonApplicationOk();
 };

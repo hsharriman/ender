@@ -166,9 +166,13 @@ export const anglePairsEqual = (
   return (a1.equals(a3) && a2.equals(a4)) || (a1.equals(a4) && a2.equals(a3));
 };
 
-export const checkEqual = (o1: BaseGeometryObject, o2: BaseGeometryObject) => {
+export const checkEqual = (
+  o1: BaseGeometryObject,
+  o2: BaseGeometryObject,
+  code = "objs_not_equal",
+) => {
   if (!o1.equals(o2)) {
-    return reasonApplicationFail("objs_not_equal", {
+    return reasonApplicationFail(code, {
       pair: [o1.label, o2.label],
     });
   }

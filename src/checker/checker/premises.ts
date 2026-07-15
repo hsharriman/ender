@@ -79,9 +79,11 @@ export const buildPremises = (proof: ProofObj) => {
       case "intersect_seg":
         intersectSeg(ctx, statement.arguments);
         break;
-      case "transversal":
-        transversal(ctx, statement.arguments);
+      case "transversal": {
+        const err = transversal(ctx, statement.arguments);
+        if (err) premiseErrors.push(err);
         break;
+      }
       case "midpt":
         midpt(ctx, statement.arguments);
         break;
@@ -460,10 +462,17 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[]) => {
   });
 };
 
-const transversal = (ctx: ProofContent, args: ParseObj[]) => {
-  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = args.map((arg) =>
-    ctx.getPoint(arg.v),
-  );
+const transversal = (
+  ctx: ProofContent,
+  args: ParseObj[],
+): ErrorDetails | undefined => {
+  const pts = args.map((arg) => ctx.getPoint(arg.v));
+  if (pts.length !== 8 || pts.some((p) => !p)) {
+    return parserError(
+      `transversal expects 8 points (s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2); got ${args.length} argument(s): (${args.map((a) => a.v).join(", ")})`,
+    );
+  }
+  const [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2] = pts;
   const seg1 = ctx.addSegmentFromStr(`${s1p1.label}${s1p2.label}`);
   const seg2 = ctx.addSegmentFromStr(`${s2p1.label}${s2p2.label}`);
   const transversalSeg = ctx.addSegmentFromStr(`${t1.label}${t2.label}`);

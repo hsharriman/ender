@@ -59,6 +59,10 @@ Any grammar change typically touches three areas: **(1) tokenization/parsing**, 
 
 Unknown reasons fall through to a `default: return true` in `reasonApplication.ts` — omitting a geometric check is valid placeholder behavior during development.
 
+## Error Codes
+
+`src/checker/ERROR_CODES.md` maps every error code (the `code` field on `ErrorDetails`) to a description of the boolean check that triggers it. When changing code in `src/checker/checker/` or `src/checker/grammar/` — adding, removing, renaming, or changing the trigger conditions of an error code — update `src/checker/ERROR_CODES.md` to match.
+
 ## Proof File Format
 
 ```
