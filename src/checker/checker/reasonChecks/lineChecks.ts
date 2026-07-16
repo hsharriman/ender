@@ -63,12 +63,11 @@ export const altint = (
   const check = (transversal: Stmt): CheckerResult => {
     const res = transversalHelper(ctx, transversal, conAng, para);
     if (!res.ok) return diagramFail(TRANSVERSAL_BAD).res;
-    const [s1p1, s1p2, , , s2p1, s2p2] = res.pts;
-    const [, innerT] = res.segs;
+    const [s1p1, s1p2, , i1, s2p1, s2p2, , i2] = res.pts;
     const [a1, a2] = res.angles;
-    if (!a1.centerEquals(innerT.p1) || !a2.centerEquals(innerT.p2))
+    if (!a1.centerEquals(i1) || !a2.centerEquals(i2))
       return reasonApplicationFail(ALT_INT_CTR);
-    if (!a1.angleRayContains(innerT.p2) || !a2.angleRayContains(innerT.p1))
+    if (!a1.angleRayContains(i2) || !a2.angleRayContains(i1))
       return reasonApplicationFail(ALT_INT_INWARD);
     if (
       (a1.angleRayContains(s1p1) && a2.angleRayContains(s2p2)) ||
@@ -299,11 +298,10 @@ const transversalHelper = (
     transversal,
     ctx,
   ) as Point[];
-  const [s1, s2, t, innerT] = [
+  const [s1, s2, t] = [
     ctx.getSegment(`${s1p1.label}${s1p2.label}`),
     ctx.getSegment(`${s2p1.label}${s2p2.label}`),
     ctx.getSegment(`${t1.label}${t2.label}`),
-    ctx.getSegment(`${i1.label}${i2.label}`),
   ];
   if (s1.equals(s2) || s1.equals(t) || s2.equals(t)) {
     ok = false;
@@ -331,7 +329,7 @@ const transversalHelper = (
   return {
     ok,
     pts: [s1p1, s1p2, t1, i1, s2p1, s2p2, t2, i2],
-    segs: [t, innerT],
+    segs: [t],
     angles: [a1, a2],
   };
 };

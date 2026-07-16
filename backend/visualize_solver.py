@@ -25,18 +25,18 @@ def generate_diff_text(old_str, new_str):
     return rich_text
 
 
-def visualize_changes(solver_metadata):
+def visualize_changes(solver_metadata, current_step=-1):
     "Print changes to visualize the solver metadata"
     data = json.loads(solver_metadata)
     console = Console()
-    previous_solution = data["iterations"][-2]["solution"]
-    current = current_solution = data["iterations"][-1]
+    previous_solution = data["iterations"][current_step - 1]["solution"]
+    current = current_solution = data["iterations"][current_step]
     current_solution = current["solution"]
     if data["total_iterations"] == "0":
         console.print("\n[bold yellow]Student's proof[/bold yellow] " + "─" * 40)
     else:
         console.print(
-            f"\n[bold yellow]🔄 Iteration {data['total_iterations']}[/bold yellow] "
+            f"\n[bold yellow]🔄 Iteration {data['iterations'][current_step]['iteration']}[/bold yellow] "
             + "─" * 40
         )
 
@@ -63,8 +63,8 @@ def visualize_changes(solver_metadata):
 
 if __name__ == "__main__":
     with open(
-        "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc1/solver_metadata.json",
+        "geo-proof-dataset/wrong_proofs/holt_s4-5_ex3_2corrs_inc10/solver_metadata.json",
         encoding="utf-8",
     ) as f:
         m = f.read()
-        visualize_changes(m)
+        visualize_changes(m, 1)
