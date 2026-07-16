@@ -1,0 +1,37 @@
+You are locating geometry diagrams inside rendered textbook PDF pages.
+
+The proof-extraction stage produced these items:
+
+{items_json}
+
+For every item whose status is "extractable", locate the single main geometry diagram used by that proof. Match the diagram using the proof title, point labels, givens, and goal; do not select a nearby diagram from another exercise.
+
+This is the first, generous localization pass. A second vision agent will make the final tight crop. Your priority is to include the entire correct diagram without clipping any part of it. It is acceptable for this first box to contain nearby whitespace or a small amount of neighboring text.
+
+Return JSON only:
+{
+  "diagrams": [
+    {
+      "item_index": 0,
+      "status": "found" or "none",
+      "page": 1,
+      "bbox": [x_min, y_min, x_max, y_max],
+      "reason": ""
+    }
+  ]
+}
+
+Bounding-box rules:
+- Coordinates use the displayed page image with top-left origin.
+- Normalize every coordinate to the range 0 to 1000.
+- Find the outermost visible geometry mark before choosing the box.
+- Include the complete drawing: all vertices, segments, rays, extended lines, circles, arrowheads, congruence marks, angle marks, variable labels, point labels, and line names.
+- Choose a separate generous margin for each diagram based on its label size, line thickness, and nearby content.
+- No geometry line, arrowhead, point label, or line name may touch or cross a bounding-box edge.
+- For parallel-line diagrams, include both complete lines, their arrowheads, and their line names even when they extend beyond the triangles.
+- Recheck all four edges of each proposed box before returning it. Expand any edge that clips or nearly touches the diagram. Do not risk clipping the diagram merely to remove nearby text in this first pass.
+- Exclude exercise text, proof text, answer text, page headers, and unrelated diagrams.
+- Completeness has priority over excluding a small amount of nearby whitespace or text. Never tighten a box enough to clip the diagram.
+- Use one main diagram per proof item.
+- If no matching diagram is visible, use status "none", page 0, and bbox [0, 0, 0, 0].
+- Preserve the given item_index values exactly.

@@ -1,0 +1,33 @@
+You are the final image-cropping agent. The attached image is a generous rough crop from a textbook page. It contains one target geometry diagram and may also contain unrelated text, table borders, page separators, or pieces of nearby exercises.
+
+Target proof item:
+
+{item_json}
+
+Return a clean crop around only the geometry diagram, but do not make it so tight that point labels, line endpoints, arrowheads, tick marks, or small intersection labels are close to the edge. This crop will be used for automatic coordinate extraction, so preserving every labeled point is more important than removing every bit of nearby whitespace.
+
+Keep every part belonging to the target diagram:
+
+- all vertices, segments, rays, extended lines, circles, and arrowheads;
+- all point labels and line names;
+- all congruence, parallel, perpendicular, angle, and tick marks;
+- all variables or measurements printed directly on the diagram.
+
+Remove everything that does not belong to the diagram:
+
+- problem, proof, answer, and instruction text;
+- table borders and page divider lines;
+- portions of neighboring diagrams or exercises;
+- excessive empty whitespace.
+
+Choose the margin independently for this image. Use a moderate, visually balanced whitespace margin around the outermost retained mark. No retained vertex, endpoint, intersection point, line, arrowhead, or label may touch or nearly touch the crop edge.
+
+Before returning the box, check all expected point labels from the target proof item. If the proof names four points, the crop must visibly include all four point labels and their corresponding geometry locations.
+
+Coordinates use the attached rough-crop image with top-left origin and are normalized from 0 to 1000.
+
+Return JSON only:
+
+{
+  "bbox": [x_min, y_min, x_max, y_max]
+}

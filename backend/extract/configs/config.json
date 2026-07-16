@@ -1,0 +1,24 @@
+{
+  "pdf_to_ender_model": "gpt-5.5",
+  "diagram_locator_model": "gpt-5.5",
+  "diagram_crop_refinement_model": "gpt-5.5",
+  "temperature": 0,
+  "crop_padding_ratio": 0.06,
+  "render_dpi": 220,
+  "env_path": "backend/extract/keys/.env",
+  "prompt_path": "backend/extract/prompts/pdf_to_ender.txt",
+  "crop_prompt_path": "backend/extract/prompts/crop_diagram.txt",
+  "crop_refinement_prompt_path": "backend/extract/prompts/refine_diagram.txt",
+  "stmts_defs": "src/checker/grammar/defs/stmts.defs.ts",
+  "reasons_defs": "src/checker/grammar/defs/reasons.defs.ts",
+  "example_files": [
+    "geo-proof-dataset/proofs/s1c1.txt",
+    "geo-proof-dataset/proofs/s1c2.txt",
+    "geo-proof-dataset/proofs/holt_s4-3_exer27_c1.txt"
+  ],
+  "coordinate_extraction_code_dir": "geo-proof-dataset/coordinate_extraction",
+  "final_proof_output_dir": "geo-proof-dataset/proofs",
+  "cropped_diagram_output_dir": "geo-proof-dataset/text_book_diagrams",
+  "intermediate_run_output_dir": "../pipeline_test_output_raw",
+  "max_pdf_text_chars": 120000
+}
