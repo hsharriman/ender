@@ -7,7 +7,7 @@ from litellm import completion
 from solver_agent import run_solver_agent
 
 SOLVER_PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
-FEEDBACK_PROMPT_PATH = "backend/prompt/feedbacks_gpt.txt"
+FEEDBACK_PROMPT_PATH = "backend/prompt/feedbacks_3.txt"
 
 
 def give_feedback(
