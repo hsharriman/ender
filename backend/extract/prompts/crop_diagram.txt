@@ -22,7 +22,8 @@ Return JSON only:
 }
 
 Bounding-box rules:
-- Coordinates use the displayed page image with top-left origin.
+- Bounding-box coordinates use the displayed raster page's top-left origin.
+- This image-cropping convention is separate from ENDER proof-point coordinates, which use a bottom-left origin when the diagram is rendered.
 - Normalize every coordinate to the range 0 to 1000.
 - Find the outermost visible geometry mark before choosing the box.
 - Include the complete drawing: all vertices, segments, rays, extended lines, circles, arrowheads, congruence marks, angle marks, variable labels, point labels, and line names.

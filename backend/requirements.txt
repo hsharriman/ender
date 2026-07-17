@@ -1,5 +1,7 @@
 flask>=3.0.0
 litellm==1.89.1
+Pillow==11.1.0
+PyMuPDF==1.26.3
 python-dotenv==1.0.1
 requests>=2.31.0
 pandas>=2.0.0

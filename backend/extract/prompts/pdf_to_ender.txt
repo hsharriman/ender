@@ -29,8 +29,8 @@ tri: ...
 quad: ...
 [g_1] ...
 [g_2] ...
-[d_01] ...
-[d_02] ...
+[d_1] ...
+[d_2] ...
 -> goal_statement(...)
 
 steps:
@@ -65,7 +65,7 @@ Typical naming conventions:
 
 7. Textbook givens should be written as `[g_1]`, `[g_2]`, etc.
 
-8. Diagram-only or structural facts should be written as `[d_01]`, `[d_02]`, etc. Use diagram facts only when they are necessary and supported by ENDER statement definitions.
+8. Diagram-only or structural facts should be written as `[d_1]`, `[d_2]`, etc. Use diagram facts only when they are necessary and supported by ENDER statement definitions.
 
 9. The first proof steps should usually introduce the givens using `given(g_1)`, `given(g_2)`, etc., unless the existing ENDER style for that reason does something different.
 
@@ -73,7 +73,7 @@ Typical naming conventions:
 
     * Every cited step number must exist.
     * Every step must produce exactly one checker statement.
-    * A reason may have no cited steps only if ENDER examples or definitions support that usage, such as `vert_ang()` or `reflex_s()`.
+    * A reason may have no cited steps only if ENDER examples or definitions support that usage, such as `vert_ang()` or `reflex()`.
 
 11. Do not use textbook labels like ∠1 or ∠2 directly in the final proof. Convert them to checker-compatible angle names such as `a_ABC` only when the diagram makes the mapping clear.
 

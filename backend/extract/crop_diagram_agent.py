@@ -13,6 +13,20 @@ from .llm_call import call_completion
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SIGNED_INTEGER_PATTERN = re.compile(r"[+-]?\d+")
+
+
+def parse_llm_integer(value: int | str) -> int | None:
+    """Parse an integer that an LLM may return as a JSON number or string."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+
+    stripped_value = value.strip()
+    if not SIGNED_INTEGER_PATTERN.fullmatch(stripped_value):
+        return None
+    return int(stripped_value)
 
 
 def parse_json_object(text: str) -> dict[str, Any]:
@@ -121,7 +135,9 @@ def locate_diagrams(
     return result.get("diagrams", [])
 
 
-def normalized_bbox_to_pixels(bbox: list[float], width: int, height: int) -> tuple[int, int, int, int]:
+def normalized_bbox_to_pixels(
+    bbox: list[float], width: int, height: int
+) -> tuple[int, int, int, int]:
     """
     Convert a normalized bounding box (values between 0 and 1000) to pixel coordinates based on the image dimensions.
     """
@@ -136,7 +152,12 @@ def normalized_bbox_to_pixels(bbox: list[float], width: int, height: int) -> tup
     return left, top, right, bottom
 
 
-def add_crop_padding(bbox: tuple[int, int, int, int], width: int, height: int, padding_ratio: float) -> tuple[int, int, int, int]:
+def add_crop_padding(
+    bbox: tuple[int, int, int, int],
+    width: int,
+    height: int,
+    padding_ratio: float,
+) -> tuple[int, int, int, int]:
     """
     Add proportional padding around a crop box so point labels and endpoints are not clipped.
     """
@@ -216,37 +237,53 @@ def crop_diagrams(
     crops: dict[int, Path] = {}
 
     for spec in diagram_specs:
+        # Ignore proof items for which the locator did not find a diagram.
         if spec.get("status", "found") != "found":
             continue
 
         item_index_value = spec.get("item_index")
         page_number_value = spec.get("page")
         bbox = spec.get("bbox")
-        if isinstance(item_index_value, bool) or isinstance(page_number_value, bool):
+
+        # JSON produced by an LLM may encode an integer as either 1 or "1".
+        # Reject every other type up front. Explicit bool checks are necessary
+        # because bool is a subclass of int in Python.
+        item_index_has_legal_type = (
+            isinstance(item_index_value, (int, str))
+            and not isinstance(item_index_value, bool)
+        )
+        page_number_has_legal_type = (
+            isinstance(page_number_value, (int, str))
+            and not isinstance(page_number_value, bool)
+        )
+        if not (item_index_has_legal_type and page_number_has_legal_type):
             continue
-        if isinstance(item_index_value, int):
-            item_index = item_index_value
-        elif isinstance(item_index_value, str) and re.fullmatch(
-            r"[+-]?\d+", item_index_value.strip()
-        ):
-            item_index = int(item_index_value)
-        else:
+
+        item_index = parse_llm_integer(item_index_value)
+        page_number = parse_llm_integer(page_number_value)
+        if item_index is None or page_number is None:
             continue
-        if isinstance(page_number_value, int):
-            page_number = page_number_value
-        elif isinstance(page_number_value, str) and re.fullmatch(
-            r"[+-]?\d+", page_number_value.strip()
-        ):
-            page_number = int(page_number_value)
-        else:
+
+        # Validate the box structure before passing its values to float().
+        bbox_is_valid = (
+            isinstance(bbox, list)
+            and len(bbox) == 4
+            and all(
+                isinstance(coordinate, (int, float))
+                and not isinstance(coordinate, bool)
+                for coordinate in bbox
+            )
+        )
+        if not bbox_is_valid:
             continue
-        if not isinstance(bbox, list):
-            continue
+
+        # Ensure the locator refers to an available proof item and rendered page.
         if not (0 <= item_index < len(items)):
             continue
         if not (1 <= page_number <= len(page_images)):
             continue
 
+        # Make a generous first crop, refine it with the vision model, and save it.
         page_path = page_images[page_number - 1]
         with Image.open(page_path) as image:
             pixel_bbox = normalized_bbox_to_pixels(bbox, image.width, image.height)

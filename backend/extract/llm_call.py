@@ -12,9 +12,7 @@ def call_completion(
     model_key: str,
 ) -> str:
     model = config[model_key]
-    temperature = config["temperature"]
     kwargs: dict[str, Any] = {"model": model, "messages": messages}
-    kwargs["temperature"] = float(temperature)
     if os.getenv("OPENAI_API_BASE"):
         kwargs["api_base"] = os.getenv("OPENAI_API_BASE")
     if os.getenv("OPENAI_API_KEY"):
