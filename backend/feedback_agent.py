@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from litellm import completion
 from solver_agent import run_solver_agent
 
-SOLVER_PROMPT_PATH = "backend/prompt/solver_with_valid_reasons_and_explanation.txt"
+SOLVER_PROMPT_PATH = "backend/prompt/solver_final.txt"
 FEEDBACK_PROMPT_PATH = "backend/prompt/feedbacks_3.txt"
 
 
@@ -59,19 +59,20 @@ def run_feedback_agent(
     solution_path = os.path.join(original_proof_dir, f"{proof_name}_solution.txt")
     solver_metadata_path = os.path.join(original_proof_dir, "solver_metadata.json")
     solution_proof = ""
+    hint = None
 
     if os.path.exists(solver_metadata_path):
         try:
             with open(solver_metadata_path, "r", encoding="utf-8") as f_meta:
                 metadata = json.load(f_meta)
-            if metadata.get("iterations")[0].get("llm_status") == "unfixable":
+            if metadata.get("iterations")[1].get("llm_status") == "unfixable":
                 print("The proof cannot be solved")
                 feedback = {"feedback": "unfixable"}
-            elif metadata.get("iterations")[0].get("llm_status") == "correct":
+            elif metadata.get("iterations")[1].get("llm_status") == "correct":
                 print("The student's solution is already correct")
                 feedback = {"feedback": "Good job! Your solution is already correct!!"}
             else:
-                if metadata.get("iterations")[0].get("llm_status") == "unparsable":
+                if metadata.get("iterations")[1].get("llm_status") == "unparsable":
                     print("The proof has syntax errors")
 
                 if metadata.get("solution_reached"):
