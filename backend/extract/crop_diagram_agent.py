@@ -13,22 +13,6 @@ from .llm_call import call_completion
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SIGNED_INTEGER_PATTERN = re.compile(r"[+-]?\d+")
-
-
-def parse_llm_integer(value: int | str) -> int | None:
-    """Parse an integer that an LLM may return as a JSON number or string."""
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, int):
-        return value
-
-    stripped_value = value.strip()
-    if not SIGNED_INTEGER_PATTERN.fullmatch(stripped_value):
-        return None
-    return int(stripped_value)
-
-
 def parse_json_object(text: str) -> dict[str, Any]:
     """
     Parse a JSON object from the given text.
@@ -245,24 +229,11 @@ def crop_diagrams(
         page_number_value = spec.get("page")
         bbox = spec.get("bbox")
 
-        # JSON produced by an LLM may encode an integer as either 1 or "1".
-        # Reject every other type up front. Explicit bool checks are necessary
-        # because bool is a subclass of int in Python.
-        item_index_has_legal_type = (
-            isinstance(item_index_value, (int, str))
-            and not isinstance(item_index_value, bool)
-        )
-        page_number_has_legal_type = (
-            isinstance(page_number_value, (int, str))
-            and not isinstance(page_number_value, bool)
-        )
-        if not (item_index_has_legal_type and page_number_has_legal_type):
+        if not all(type(value) is int for value in (item_index_value, page_number_value)):
             continue
 
-        item_index = parse_llm_integer(item_index_value)
-        page_number = parse_llm_integer(page_number_value)
-        if item_index is None or page_number is None:
-            continue
+        item_index = item_index_value
+        page_number = page_number_value
 
         # Validate the box structure before passing its values to float().
         bbox_is_valid = (

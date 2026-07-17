@@ -24,7 +24,7 @@ Choose the margin independently for this image. Use a moderate, visually balance
 
 Before returning the box, check all expected point labels from the target proof item. If the proof names four points, the crop must visibly include all four point labels and their corresponding geometry locations.
 
-Bounding-box coordinates use the attached raster image's top-left origin and are normalized from 0 to 1000. This image-cropping convention is separate from ENDER proof-point coordinates, which use a bottom-left origin when the diagram is rendered; no origin conversion is needed for the returned crop box.
+Coordinates use the attached rough-crop image with top-left origin and are normalized from 0 to 1000.
 
 Return JSON only:
 

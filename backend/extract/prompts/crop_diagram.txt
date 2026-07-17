@@ -22,8 +22,7 @@ Return JSON only:
 }
 
 Bounding-box rules:
-- Bounding-box coordinates use the displayed raster page's top-left origin.
-- This image-cropping convention is separate from ENDER proof-point coordinates, which use a bottom-left origin when the diagram is rendered.
+- Coordinates use the displayed page image with top-left origin.
 - Normalize every coordinate to the range 0 to 1000.
 - Find the outermost visible geometry mark before choosing the box.
 - Include the complete drawing: all vertices, segments, rays, extended lines, circles, arrowheads, congruence marks, angle marks, variable labels, point labels, and line names.
@@ -36,3 +35,4 @@ Bounding-box rules:
 - Use one main diagram per proof item.
 - If no matching diagram is visible, use status "none", page 0, and bbox [0, 0, 0, 0].
 - Preserve the given item_index values exactly.
+- Return item_index and page as JSON integers, not strings.
