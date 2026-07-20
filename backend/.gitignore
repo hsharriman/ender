@@ -3,3 +3,8 @@ __pycache__
 /s1inc2
 /s2inc1
 .vscode
+/extract/keys/.env
+/extract/__pycache__/
+/extract/__init__.py
+/extract/*.pyc
+/extract/notes/
