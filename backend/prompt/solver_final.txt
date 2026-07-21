@@ -48,10 +48,11 @@ Notes:
 ### Proof Construction Rules
 
 * Only use reasons from `REASONS_DEFS`.
-* Reason names, dependencies, and conclusions must exactly match their definitions.
+* Reason names, statement names, dependencies, diagramDependencies, and conclusions must exactly match their definitions.
 * Only use statements from `STMTS_DEFS`.
 * Statement names and parameter order must exactly match their definitions.
 * The generated proof must be syntactically valid and follow the same formatting as the student's proof.
+* the naming convention should follow lines or segments AB, angle a_ABC, triangle t_ABC, point A, circle c_OA where O is center and A is a pt on circle. quadrilateral q_ABCD
 
 ## OUTPUT FORMAT (strict)
 
