@@ -8,3 +8,4 @@ __pycache__
 /extract/__init__.py
 /extract/*.pyc
 /extract/notes/
+/extract/textbook_chapters/
