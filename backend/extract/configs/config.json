@@ -18,6 +18,6 @@
   "coordinate_extraction_code_dir": "geo-proof-dataset/coordinate_extraction",
   "final_proof_output_dir": "../geo-proof-dataset/proofs",
   "cropped_diagram_output_dir": "../geo-proof-dataset/textbook_diagrams",
-  "intermediate_run_output_dir": "../pipeline_test_output_raw",
+  "intermediate_run_output_dir": "../geo-proof-dataset/proofs",
   "max_pdf_text_chars": 120000
 }
