@@ -55,14 +55,24 @@ export class AngleBuilder {
   readonly obj: Angle;
   readonly ticks: Map<string, { type: TickType; num: number }>;
   readonly modes: Map<string, SVGModes>;
+  // Value is the mode the gradient was requested under (e.g. ReliesOn renders
+  // a different color than Derived) — never Unfocused/Hidden, see addGradient.
+  readonly gradients: Map<string, SVGModes>;
   constructor(obj: Angle) {
     this.obj = obj;
     this.ticks = new Map<string, { type: TickType; num: number }>();
     this.modes = new Map<string, SVGModes>();
+    this.gradients = new Map<string, SVGModes>();
   }
 
   addTick = (frame: string, type: TickType, num: number = 1) => {
     this.ticks.set(frame, { type, num });
+    return this;
+  };
+
+  addGradient = (frame: string, mode: SVGModes) => {
+    if (mode === SVGModes.Unfocused || mode === SVGModes.Hidden) return this;
+    this.gradients.set(frame, mode);
     return this;
   };
 

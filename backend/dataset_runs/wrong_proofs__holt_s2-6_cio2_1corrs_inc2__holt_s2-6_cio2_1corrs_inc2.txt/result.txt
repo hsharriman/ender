@@ -1,0 +1,36 @@
+{
+  "isCorrect": false,
+  "issues": [
+    {
+      "type": 11,
+      "code": "stmt_arg_type_invalid",
+      "details": {
+        "reason": "given",
+        "legalStatements": [
+          "supplementary"
+        ],
+        "actualStatement": "supplementary",
+        "ref": "g_1",
+        "argIndex": 1,
+        "expectedArg": "CBD",
+        "actualArg": "BCD",
+        "steps": [
+          "1"
+        ]
+      }
+    },
+    {
+      "type": 6,
+      "code": "upstream_dep_error",
+      "details": {
+        "reason": "con_supplements_same",
+        "dependsOn": [
+          "1"
+        ],
+        "steps": [
+          "3"
+        ]
+      }
+    }
+  ]
+}

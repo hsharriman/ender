@@ -6,6 +6,7 @@ import { Reason } from "../../core/types/layoutTypes";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { getReasonFn } from "../../theorems/utils";
 import { Diagram } from "./Diagram";
+import { FeedbackContent } from "./FeedbackBubble";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
@@ -20,6 +21,8 @@ export interface InteractiveAppPageProps {
   isTutorial?: boolean;
   /** When true, proof rows show every step (no reveal animation); used by ProofObjHarness */
   proofHarnessMode?: boolean;
+  /** Feedback shown on the first incorrect step (blinking dot + chat bubble on select). */
+  feedback?: FeedbackContent | null;
   highlightCtx: DiagramRenderCtx;
   additionCtx: DiagramRenderCtx;
   diagramAspect: AspectRatio;
@@ -109,6 +112,7 @@ export class InteractiveAppPage extends React.Component<
                 isTutorial={this.props.isTutorial}
                 isCompact={rowsCompact}
                 revealAll={this.props.proofHarnessMode}
+                feedback={this.props.feedback}
               />
             </div>
           </div>

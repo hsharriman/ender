@@ -1,8 +1,11 @@
 import { Stmt } from "checker/types/checkerTypes";
 import { DiagramContent } from "../builder/DiagramContent";
 import { AngleBisector } from "../reasons/AngleBisector";
+import { Complementary } from "../reasons/Complementary";
 import { CongruentTriangles } from "../reasons/CongruentTriangles";
 import { EqualAngles } from "../reasons/EqualAngles";
+import { LinearPair } from "../reasons/LinearPair";
+import { Supplementary } from "../reasons/Supplementary";
 import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
 import { InscribedAngle } from "../reasons/InscribedAngle";
@@ -180,6 +183,27 @@ export const applyStmtAdditions =
         stmt.arguments[0].v,
         stmt.arguments[1].v,
       );
+      return;
+    }
+    if (stmt.function === "supplementary" && stmt.arguments.length === 2) {
+      Supplementary.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
+      return;
+    }
+    if (stmt.function === "complementary" && stmt.arguments.length === 2) {
+      Complementary.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
+      return;
+    }
+    if (stmt.function === "linear_pair" && stmt.arguments.length === 2) {
+      LinearPair.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
       return;
     }
     if (stmt.function === "sim_seg" && stmt.arguments.length === 2) {
