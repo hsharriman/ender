@@ -265,6 +265,8 @@ def crop_diagrams(
                 proof_name = f"item_{item_index + 1}"
             output_path = out / f"{proof_name}_diagram.png"
             crop.save(output_path, format="PNG")
+            # If a previous run produced a metadata file for this crop, remove it to avoid confusion.
+            output_path.with_name(f"{output_path.stem}_metadata.json").unlink(missing_ok=True)
         crops[item_index] = output_path
 
     return crops
