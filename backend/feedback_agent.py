@@ -7,7 +7,7 @@ from litellm import completion
 from solver_agent import run_solver_agent
 
 SOLVER_PROMPT_PATH = "backend/prompt/solver_final.txt"
-FEEDBACK_PROMPT_PATH = "backend/prompt/feedbacks_3.txt"
+FEEDBACK_PROMPT_PATH = "backend/prompt/feedbacks_3_1.txt"
 
 
 def give_feedback(
@@ -121,7 +121,9 @@ def run_feedback_agent(
             "hint": hint,
         }
 
-        metadata_path = os.path.join(original_proof_dir, "feedback_metadata.json")
+        metadata_path = os.path.join(
+            original_proof_dir, "feedback_metadata_no_dependency.json"
+        )
 
         with open(metadata_path, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=4)
