@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import argparse
 import importlib
 import json
 import re
@@ -9,6 +9,7 @@ import sys
 from contextlib import chdir
 from pathlib import Path
 from typing import Any
+from dotenv import load_dotenv
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -30,12 +31,17 @@ def collect_images_coordinate(
     """Run ``coordinate_extraction.process_single_image`` and return metadata."""
     image = Path(image_path).expanduser().resolve()
     coord_dir = Path(coordinate_extraction_dir).expanduser().resolve()
+    metadata_path = image.with_name(f"{image.stem}_metadata.json")
+
+    # Preserve existing metadata and manually completed labels;
+    # --refresh-metadata deletes it to force regeneration (for errors)
+    if metadata_path.is_file():
+        return json.loads(metadata_path.read_text(encoding="utf-8"))
 
     process_single_image = load_coordinate_runner(coord_dir)
     with chdir(coord_dir):
         process_single_image(str(image), visualize=False)
 
-    metadata_path = image.with_name(f"{image.stem}_metadata.json")
     return json.loads(metadata_path.read_text(encoding="utf-8"))
 
 
@@ -132,8 +138,7 @@ def replace_point_declaration(text: str, point_declaration: str) -> str:
             f"{missing_text}. Detected point(s): {detected_text}."
         )
 
-    # Keep every detected point, including structural points not referenced by
-    # the proof, so the final declaration preserves the complete diagram.
+    # Keep every detected point, including structural points not referenced by the proof, so the final declaration preserves the complete diagram
     lines[start_index:end_index] = [replacement]
 
     return "\n".join(lines).rstrip() + "\n"
@@ -148,7 +153,12 @@ def replace_coordinates_in_proof(
     Find the point declaration in a proof text and replace it with the
     point declaration extracted from the corresponding proof diagram image."""
     metadata = collect_images_coordinate(image_path, coordinate_extraction_dir)
-    labeled_coordinates = metadata["labeled_coordinates"]
+    # A refinement can assign proof-compatible names to detected but unlabeled vertices.
+    # Keep the original alignment for reference, and use the refined alignment when updating the proof.
+    labeled_coordinates = metadata.get(
+        "labeled_coordinates_with_refinement",
+        metadata["labeled_coordinates"],
+    )
     return replace_point_declaration(text, labeled_coordinates), metadata
 
 
@@ -197,6 +207,8 @@ def finalize_and_save_proofs(
     crops: dict[int, Path],
     coordinate_extraction_dir: str | Path,
     proofs_dir: str | Path,
+    *,
+    skip_errors: bool = False,
 ) -> list[Path]:
     """
     For each extractable item, require a diagram crop, replace the complete
@@ -209,20 +221,134 @@ def finalize_and_save_proofs(
         if item.get("status") != "extractable" or not item.get("raw_path"):
             continue
         filename = str(item["filename"])
-        if index not in crops:
-            raise RuntimeError(
-                f"{filename}: no diagram crop was found for coordinate extraction."
-            )
-
-        final_text = Path(item["raw_path"]).read_text(encoding="utf-8")
+        temporary_path: Path | None = None
         try:
+            if index not in crops:
+                raise RuntimeError("no diagram crop was found for coordinate extraction.")
+
+            final_text = Path(item["raw_path"]).read_text(encoding="utf-8")
             final_text = replace_coordinates_in_proof(
                 final_text, crops[index], coordinate_extraction_dir
             )[0]
-        except ValueError as error:
-            raise ValueError(f"{filename}: {error}") from error
 
-        final_path = save_text_with_replaced_coordinates(final_text, Path(proofs_dir) / filename)
-        run_ender_checker(final_path)
-        final_paths.append(final_path)
+            final_path = Path(proofs_dir).expanduser().resolve() / filename
+            # Check a temporary path (prevents an invalid result from overwriting an existing proof when resume mode writes in place)
+            temporary_path = final_path.with_name(f".{final_path.stem}.pending{final_path.suffix}")
+            save_text_with_replaced_coordinates(final_text, temporary_path)
+            run_ender_checker(temporary_path)
+            temporary_path.replace(final_path)
+            final_paths.append(final_path)
+        except Exception as error:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+            run_error = RuntimeError(f"{filename}: {error}")
+            if not skip_errors:
+                raise run_error from error
+            print(f"SKIPPED: {run_error}", file=sys.stderr)
     return final_paths
+
+
+def prepare_proofs(
+    proofs_dir: Path,
+    diagrams_dir: Path,
+    pattern: str,
+    refresh_metadata: bool,
+) -> tuple[list[dict[str, Any]], dict[int, Path]]:
+    """
+    Prepare a list of extractable proofs and a mapping of diagram crops.
+    If ``refresh_metadata`` is True, delete any existing metadata to force
+    regeneration of the coordinate extraction results.
+    """
+    proof_paths = sorted(proofs_dir.glob(pattern))
+    if not proof_paths:
+        raise FileNotFoundError(f"No proof files matched {pattern!r} in {proofs_dir}.")
+    items: list[dict[str, Any]] = []
+    crops: dict[int, Path] = {}
+    for index, proof_path in enumerate(proof_paths):
+        items.append(
+            {
+                "status": "extractable",
+                "filename": proof_path.name,
+                "raw_path": str(proof_path),
+            }
+        )
+        crop_path = diagrams_dir / f"{proof_path.stem}_diagram.png"
+        if not crop_path.is_file():
+            continue
+
+        crops[index] = crop_path
+        if refresh_metadata:
+            metadata_path = crop_path.with_name(f"{crop_path.stem}_metadata.json")
+            metadata_path.unlink(missing_ok=True)
+
+    return items, crops
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Extract diagram coordinates and update matching ENDER proofs."
+    )
+    parser.add_argument(
+        "diagrams_dir",
+        type=Path,
+        help="Directory containing *_diagram.png files.",
+    )
+    parser.add_argument(
+        "proofs_dir",
+        type=Path,
+        help="Directory containing matching proof files.",
+    )
+    parser.add_argument(
+        "--proof-pattern",
+        default="*.txt",
+        help="Proof filename pattern (default: *.txt).",
+    )
+    parser.add_argument(
+        "--coordinate-extraction-dir",
+        type=Path,
+        default=PROJECT_ROOT / "geo-proof-dataset" / "coordinate_extraction",
+        help="Coordinate extractor directory.",
+    )
+    parser.add_argument(
+        "--env-path",
+        type=Path,
+        default=PROJECT_ROOT / "backend" / "extract" / "keys" / ".env",
+        help="Credential file used for coordinate label alignment.",
+    )
+    parser.add_argument(
+        "--skip-errors",
+        action="store_true",
+        help="Report per-proof failures and continue processing.",
+    )
+    parser.add_argument(
+        "--refresh-metadata",
+        action="store_true",
+        help="Discard existing crop metadata and rerun coordinate extraction.",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    load_dotenv(args.env_path.expanduser().resolve(), override=False)
+
+    diagrams_dir = args.diagrams_dir.expanduser().resolve()
+    proofs_dir = args.proofs_dir.expanduser().resolve()
+    items, crops = prepare_proofs(
+        proofs_dir,
+        diagrams_dir,
+        args.proof_pattern,
+        args.refresh_metadata,
+    )
+    final_paths = finalize_and_save_proofs(
+        items,
+        crops,
+        args.coordinate_extraction_dir,
+        proofs_dir,
+        skip_errors=args.skip_errors,
+    )
+    print("\n".join(str(path) for path in final_paths))
+
+
+if __name__ == "__main__":
+    main()

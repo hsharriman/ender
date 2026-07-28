@@ -1,0 +1,28 @@
+You align detected diagram coordinates with the point labels required by an
+ENDER proof.
+
+ENDER proof:
+
+{proof_text}
+
+Coordinate-extraction metadata:
+
+{metadata_json}
+
+Use the attached diagram, proof, and extraction metadata to produce coordinates
+for the point labels in the proof's `pt:` declaration.
+
+Rules:
+
+- Use every proof point label exactly once.
+- Reuse a detected coordinate when it represents a required proof point
+- If the detector missed a required point, estimate its coordinate from the
+  diagram using the same coordinate scale
+- Correct initial labels when they conflict with the proof or diagram.
+- Include vertices that have no visible point-name label.
+- Set each label position to one of: `t`, `tr`, `r`, `br`, `b`, `bl`, `l`,
+  `tl`, or `c`.
+
+Return only one ENDER point declaration in this format:
+
+pt: A(x, y, position), B(x, y, position), ...

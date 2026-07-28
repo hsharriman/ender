@@ -123,6 +123,40 @@ Run a different PDF:
 python -m backend.extract.pipeline "\path\to\textbook-pages.pdf"
 ```
 
+### Resume from existing proof text
+
+To skip proof-text extraction and start with diagram cropping, pass the directory containing the existing placeholder-coordinate proofs:
+
+```powershell
+python -m backend.extract.pipeline backend/extract/textbook_chapters/holt_geometry_chapter_4.pdf --existing-proofs-dir ../geo-proof-dataset/proofs
+```
+
+For a PDF named `holt_geometry_chapter_4.pdf`, the pipeline automatically selects `holt_s4-*.txt`. Use `--proof-pattern` when the PDF name does not contain the chapter number or when only a subset should be processed:
+
+```powershell
+python -m backend.extract.pipeline input.pdf --existing-proofs-dir ../geo-proof-dataset/proofs --proof-pattern "holt_s4-4_*.txt"
+```
+
+In resume mode, the pipeline renders the PDF, crops diagrams, extracts point coordinates, replaces each existing `pt:` declaration, runs the ENDER checker, and writes the checked proofs back to the existing proof directory.
+
+To continue past individual proofs whose coordinates cannot be extracted or whose completed proof fails the checker, add `--skip-errors`:
+
+```powershell
+python -m backend.extract.pipeline backend/extract/textbook_chapters/holt_geometry_chapter_2.pdf --existing-proofs-dir ../geo-proof-dataset/proofs --skip-errors
+```
+
+Skipped proofs are reported as `SKIPPED:` and their existing text is left unchanged.
+
+### Resume from existing diagram crops
+
+If diagrams have already been cropped, run coordinate extraction and proof replacement directly without rendering a PDF or calling either crop model:
+
+```powershell
+python -m backend.extract.coordinate_extraction_and_replacement ../geo-proof-dataset/textbook_diagrams ../geo-proof-dataset/proofs --proof-pattern "holt_s2-*.txt" --skip-errors
+```
+
+Existing `*_diagram_metadata.json` files are reused. Add `--refresh-metadata` to rerun coordinate extraction from the crop images. The command loads API credentials from `backend/extract/keys/.env` by default; use `--env-path` to select a different credential file.
+
 On macOS or Linux:
 
 ```bash
@@ -164,8 +198,4 @@ ender/geo-proof-dataset/
     `-- ...
 ```
 
-The command prints the absolute path of every final proof file after a
-successful run. If the LLM marks an item as not extractable, no final proof is
-created for that item. If an extractable proof has no diagram, coordinate
-extraction misses a required point, or the final proof fails the ENDER checker,
-the pipeline stops with a descriptive error.
+The command prints the absolute path of every final proof file after a successful run. If the LLM marks an item as not extractable, no final proof is created for that item. If an extractable proof has no diagram, coordinate extraction misses a required point, or the final proof fails the ENDER checker, the pipeline stops with a descriptive error.
