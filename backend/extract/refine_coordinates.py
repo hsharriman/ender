@@ -4,6 +4,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
 
+# TODO: Integrate this script into the pipeline for automatic coordinate refinement
+# Pipeline integration still needs:
+# 1. Identify failed extractions and pass their proof, image, and metadata files to coordinate refinement
+# 2. (Optional) assign labels to unlabeled coordinates deterministically, using an LLM only for ambiguous cases
+# 3. Parse and validate the returned point declaration
+# 4. Replace the proof coordinates and rerun the checker
+# 5. Record remaining failures for retry
 
 proof_path = Path(sys.argv[1])
 image_path = Path(sys.argv[2])
