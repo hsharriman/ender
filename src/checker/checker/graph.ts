@@ -9,7 +9,10 @@ import {
   Stmt,
 } from "../types/checkerTypes";
 import { checkReasonApplication } from "./reasonApplication";
-import { findDuplicateDependencyStatements } from "./reasonChecks/utils";
+import {
+  findDuplicateDependencyStatements,
+  sameConclusion,
+} from "./reasonChecks/utils";
 import {
   createReasonApplicabilityIndex,
   indexProofStepForReasons,
@@ -55,6 +58,9 @@ export const buildProofGraph = (
     graph.diagramPremises.set(d.stepNumber, d);
   });
   const reasonIndex = createReasonApplicabilityIndex(graph);
+
+  // Conclusions reached by earlier valid steps
+  const priorConclusions: Array<{ stepNum: string; stmt: Stmt }> = [];
 
   // Check each step and build edges
   proof.steps.forEach((step) => {
@@ -222,6 +228,26 @@ export const buildProofGraph = (
       // Check if reason is applied correctly using reason checker methods
       if (isCorrect) {
         isCorrect = checkReasonApplication(step, reasonDefs, graph, ctx);
+      }
+
+      // Reject a step that has the same fact as an earlier valid step
+      if (isCorrect && step.statement) {
+        const priorMatch = priorConclusions.find((prior) =>
+          sameConclusion(prior.stmt, step.statement!, ctx),
+        );
+        if (priorMatch) {
+          step.errors.push({
+            type: ErrorType.InvalidDupeStmt,
+            code: "duplicate_conclusion",
+            details: {
+              reason: step.reason.function,
+              duplicateOf: priorMatch.stepNum,
+            },
+          });
+          isCorrect = false;
+        } else {
+          priorConclusions.push({ stepNum, stmt: step.statement });
+        }
       }
 
       // Add edges from dependencies to this step
