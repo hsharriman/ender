@@ -170,7 +170,7 @@ def run_feedback_agent(
         }
 
         metadata_path = os.path.join(
-            original_proof_dir, "feedback_metadata_no_dependency_diff.json"
+            original_proof_dir, "feedback_metadata.json"
         )
 
         with open(metadata_path, "w", encoding="utf-8") as f:
