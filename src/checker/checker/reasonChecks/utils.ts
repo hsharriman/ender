@@ -96,6 +96,39 @@ export const stmtKey = (stmt: Stmt): string => {
 };
 
 /**
+ * True when two statements express the same geometric fact: same function and
+ * matching argument objects (resolved through `ctx`)
+ *
+ * Two-argument statements are compared without regard to argument order,
+ * catches e.g. `con_ang(a, b)` ≡ `con_ang(b, a)`.
+ *
+ * Statements with 3+ arguments are compared positionally, because
+ * some are directional — e.g. `seg_bisect(s1, s2, p)` ("s1 bisects s2 at p") is
+ * a different fact from `seg_bisect(s2, s1, p)`.
+ */
+export const sameConclusion = (
+  a: Stmt,
+  b: Stmt,
+  ctx: ProofContent,
+): boolean => {
+  if (a.function !== b.function) return false;
+
+  const objsA = stmtMapper(a, ctx);
+  const objsB = stmtMapper(b, ctx);
+  if (objsA.length !== objsB.length) return false;
+  // If any argument fails to resolve to geometry, we can't compare reliably.
+  if (objsA.some((o) => !o) || objsB.some((o) => !o)) return false;
+
+  if (objsA.length === 2) {
+    return (
+      (objsA[0].equals(objsB[0]) && objsA[1].equals(objsB[1])) ||
+      (objsA[0].equals(objsB[1]) && objsA[1].equals(objsB[0]))
+    );
+  }
+  return objsA.every((oa, i) => oa.equals(objsB[i]));
+};
+
+/**
  * If two or more entries denote the same statement (same `stmtKey`), returns
  * the first pair of indices; otherwise `null`. Use in reason checks that take
  * multiple dependency statements (e.g. SAS/SSS, altint, intersect_seg).

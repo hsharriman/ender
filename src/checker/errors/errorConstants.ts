@@ -14,6 +14,7 @@ export type ErrorCode =
   | "cycle"
   | "unused_step"
   | "duplicate_step"
+  | "duplicate_conclusion"
   | "goal_not_reached";
 
 export enum ErrorType {

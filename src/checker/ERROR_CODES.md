@@ -37,6 +37,7 @@ Every error the checker emits is an `ErrorDetails` object (`src/checker/types/ch
 | `object_not_in_premises` | A statement argument names a geometric object (point, segment, angle, triangle, quad, circle) that doesn't exist in the geometry built from the premises. |
 | `invalid_duplicate_stmt` | Two arguments of one statement resolve to the same geometric object (when the statement disallows duplicates), or two dependency slots of a reason cite the same statement. |
 | `duplicate_step` | Two proof steps are identical: same reason, reason arguments, statement function, and statement arguments. |
+| `duplicate_conclusion` | A valid proof step re-derives a fact an earlier valid step already concluded: same statement function and matching argument objects (compared via geometric equality, ignoring order for symmetric two-argument statements). Regardless of reason, e.g. `con_ang(a_CMA, a_DMB)` then `con_ang(a_AMC, a_DMB)`. |
 | `duplicate_step_number` | The same step number label (e.g. `[03]`) is used by more than one proof step. |
 | `invalid_step_number_labels` | Some proof step labels are not numeric, so sequential numbering can't be checked. |
 | `no_step_numbers` | The proof contains no numbered proof steps at all. |
