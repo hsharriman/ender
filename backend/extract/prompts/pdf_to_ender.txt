@@ -1,0 +1,151 @@
+You are extracting high-school geometry proof problems from a PDF/image into the ENDER geometry proof checker format.
+
+Extract only genuine proof tasks. A task qualifies when the textbook explicitly asks the student to prove a statement or presents a proof, normally with language such as `Given`, `Prove`, `Proof`, `Write a proof`, or `Complete the proof`.
+
+Do not extract:
+
+* Examples or exercises that only calculate a variable, angle, or length.
+* Problems that only ask whether triangles are congruent or ask the student to verify congruence by substituting values.
+* Theorem descriptions, definitions, worked calculations, demonstrations, or explanatory examples that are not framed as proof tasks.
+* A task merely because it contains a diagram, givens, or a congruence statement.
+
+The phrase `show that` qualifies only when the task requires a geometric proof. It does not qualify when the work is only arithmetic substitution or measurement comparison.
+
+Apply this proof-task gate before converting anything. Omit non-proof tasks completely from the `items` array; do not return them as `unsupported`.
+
+Convert each qualifying proof task into one checker-verifiable `.txt` proof file.
+
+The goal is not to preserve the wording exactly. The goal is to produce a proof that matches the ENDER checker format and can pass the checker.
+
+Use this general format:
+
+// pass
+title: "..."
+premises:
+pt: ...
+seg: ...
+ang: ...
+tri: ...
+quad: ...
+[g_1] ...
+[g_2] ...
+[d_1] ...
+[d_2] ...
+-> goal_statement(...)
+
+steps:
+[01] reason(...) -> statement(...)
+[02] reason(...) -> statement(...)
+...
+
+Rules:
+
+1. Output only the requested JSON object. For an extractable item, put only the final proof file in its `content` field. Do not add explanation to that field.
+
+2. Use only checker-defined statement names and reason names from the provided ENDER definitions. Do not invent new statements, reasons, or helper predicates.
+
+3. If a textbook phrase does not directly match an ENDER reason, replace it with the closest valid ENDER reason only if the meaning is checker-safe.
+
+4. If the proof requires a statement, reason, or diagram fact that is not supported by ENDER, briefly say which missing checker statement, reason, or diagram dependency prevents extraction.
+
+5. Follow the naming style used by existing ENDER proof files. Naming should be consistent and checker-compatible, but not unnecessarily rigid.
+
+Typical naming conventions:
+
+* Point: A, B, C
+* Segment: AB, BC, CD
+* Angle: a_ABC
+* Triangle: t_ABC
+* Quadrilateral: q_ABCD
+* Circle: c
+
+6. Use object names from the textbook diagram when possible. If the textbook uses labels such as ∠1, ∠2, line m, or line n, convert them into point-based ENDER names only when the diagram clearly determines the mapping.
+
+6a. In the premises, the `seg:` declaration should include all visible straight segments from the matching diagram, not only the segments used directly in the proof. Include outer sides, shared sides, diagonals, interior connector segments, transversal pieces, and any drawn subsegments between labeled points. If a drawn long segment contains labeled intermediate points, declare the meaningful subsegments between adjacent labeled points and any full segment used by the proof/checker. Do not omit a visible segment merely because it is not cited in the proof steps.
+
+7. Textbook givens should be written as `[g_1]`, `[g_2]`, etc.
+
+8. Diagram-only or structural facts should be written as `[d_1]`, `[d_2]`, etc. Use diagram facts only when they are necessary and supported by ENDER statement definitions.
+
+9. The first proof steps should usually introduce the givens using `given(g_1)`, `given(g_2)`, etc., unless the existing ENDER style for that reason does something different.
+
+10. Keep the proof minimal but complete.
+
+    * Every cited step number must exist.
+    * Every step must produce exactly one checker statement.
+    * A reason may have no cited steps only if ENDER examples or definitions support that usage, such as `vert_ang()` or `reflex()`.
+
+11. Do not use textbook labels like ∠1 or ∠2 directly in the final proof. Convert them to checker-compatible angle names such as `a_ABC` only when the diagram makes the mapping clear.
+
+12. Do not use unsupported helper statements such as `collinear(...)`, `ray(...)`, or `line(...)` unless they are explicitly defined in ENDER.
+
+13. Preserve checker validity over textbook wording. For example:
+
+    * If the textbook says “vertical angles are congruent,” use the ENDER reason name that represents vertical angles.
+    * If the textbook says “corresponding parts of congruent triangles are congruent,” use `cpctc(...)` if that is the checker-defined reason.
+    * If the textbook uses a theorem that is not available in ENDER, do not invent it.
+
+14. The final proof step must exactly match the goal statement after `->`.
+
+15. Before finalizing, check:
+
+    * Every object used in the proof is declared in the premises.
+    * Every statement name is checker-defined.
+    * Every reason name is checker-defined.
+    * Every cited dependency number is valid.
+    * The last step proves exactly the stated goal.
+    * The proof follows the style of the provided ENDER examples.
+    * No extra explanation is included for extractable proofs.
+
+16. Before adding an item to the JSON, check that the source is explicitly a proof task under the proof-task gate above. If it is not, omit it.
+
+
+Here are a few existing ENDER proof examples to follow:
+
+{examples}
+
+Here is the textbook/PDF content and solution:
+
+Attached as PDF/image.
+
+Here are the available ENDER statement definitions and reason definitions:
+
+{defs}
+
+Output JSON only with this format:
+{
+  "items": [
+    {
+      "status": "extractable" or "unsupported",
+      "filename": "some_name.txt",
+      "title": "...",
+      "content": "full ENDER proof text, empty if unsupported",
+      "unsupported_reason": ""
+    }
+  ]
+}
+Filename naming convention:
+- The `filename` field must follow this exact format:
+  `textbookPrefix_section_problemTypeProblemNumber_solutionLabel.txt`
+- Use lowercase letters, numbers, hyphens, and underscores only.
+- `textbookPrefix` is the textbook name prefix visible or inferable from the source, such as `holt`.
+- `section` must use the format `s4-2` for Section 4.2.
+- Problem types:
+  - `ex` for example problems, such as `ex4`;
+  - `exer` for exercises, such as `exer27`;
+  - `cio` for Check It Out problems, such as `cio3`.
+- For correct proofs, use solution labels `c1`, `c2`, etc.
+- For incorrect proofs, use solution labels `inc1`, `inc2`, etc.
+- Examples:
+  - `holt_s4-2_exer27_c1.txt`
+  - `holt_s4-4_ex4_c1.txt`
+  - `holt_s4-4_cio3_c1.txt`
+  - `holt_s4-2_exer27_inc1.txt`
+- Do not invent descriptive title filenames like `prove_triangles_congruent.txt` when textbook section/problem metadata is visible or inferable.
+
+Coordinate-pipeline requirement:
+- Keep the entire `pt:` declaration on one line.
+- Keep the entire `seg:` declaration on one line and include all visible straight segments in the matching diagram, not just proof-used segments.
+- Put exactly one space between every point label and its coordinate tuple, such as `A (0, 0, t)`, never `A(0, 0, t)`.
+- Use the point labels visible in the matching diagram.
+- Coordinates may initially be `(0, 0, position)` placeholders because a later coordinate-extraction stage will replace the complete `pt:` declaration.
