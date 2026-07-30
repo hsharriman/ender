@@ -28,14 +28,14 @@ Open **ProofObj Harness** from the app to edit proofs live; checker errors appea
 Run the checker on one proof file:
 
 ```bash
-npm run checkProof -- src/checker/proofs/tutorial.txt
+npm run checkProof -- src/checker/proofs/tests/examples/tutorial.txt
 ```
 
 The CLI checker does not require OpenAI/LLM configuration.
 
 ### Common proof files
 
-Proof samples live in `src/checker/proofs/` (for example: `tutorial.txt`, `tutinc.txt`, `s1c1.txt`, `s2c2.txt`).
+Proof samples live in `src/checker/proofs/tests/examples/` (for example: `tutorial.txt`, `tutinc.txt`, `s1c1.txt`, `s2c2.txt`).
 
 ### Checker HTTP server
 
@@ -179,7 +179,7 @@ Use this when you introduce a new kind of literal in proofs (new premise section
 | **Semantic premises / diagram seed** | `src/checker/checker/premises.ts` — only if givens or diagram premises must update geometric context (often `switch` on `statement.function`).                                                                                                                                                                           |
 | **Reason machinery**                 | `src/checker/utils/utils.ts` — `getGeometricObject` must support your `Obj` if any reason pulls live geometry from `ProofContent` (the function is imported by `reasonApplication.ts` and `reasonChecks/`).                                                                                                              |
 | **Interface: diagram**               | `src/interface/core/grammarToLayout/proofObjBaseContent.ts` — seed `DiagramContent` from the new premise list. Add drawing helpers under `src/interface/core/` as needed.                                                                                                                                                |
-| **Docs / samples**                   | `src/checker/glossary.md`, `src/checker/README.md`, and a proof under `src/checker/proofs/` that exercises the new syntax.                                                                                                                                                                                               |
+| **Docs / samples**                   | `src/checker/glossary.md`, `src/checker/README.md`, and a proof under `src/checker/proofs/tests/` that exercises the new syntax.                                                                                                                                                                                               |
 
 ---
 
@@ -220,7 +220,7 @@ Reasons tie dependency step numbers to a conclusion statement. They are listed i
 - [ ] **`ParseObj` / `ProofObj`** extended if premises or args introduced a new object kind
 - [ ] **`validators.ts`** (objects) and **`reasonApplication.ts`** (reason semantic check, or accept placeholder `default`)
 - [ ] **`proofObjText.tsx`** and **`proofObjDiagramAdditions.ts`** for readable text and diagram updates
-- [ ] Sample proof in **`src/checker/proofs/`** and **`npm run checkProof`** on it
+- [ ] Sample proof in **`src/checker/proofs/tests/`** and **`npm run checkProof`** on it
 
 ## Build tool (Vite)
 

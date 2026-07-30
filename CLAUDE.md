@@ -79,4 +79,4 @@ steps:
 [01] reason(deps) -> stmt(args)
 ```
 
-Sample proofs in `src/checker/proofs/` (e.g., `tutorial.txt`, `s1c1.txt`).
+Sample proofs in `src/checker/proofs/tests/examples/` (e.g., `tutorial.txt`, `s1c1.txt`).
