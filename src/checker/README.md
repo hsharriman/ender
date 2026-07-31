@@ -69,7 +69,7 @@ If you're on an Apple Silicon Mac, follow these additional steps:
 
 ```bash
 # Check a single proof file (prints harness-style issues to stdout)
-npm run checkProof src/checker/proofs/yourProof.txt
+npm run checkProof -- src/checker/proofs/tests/examples/tutorial.txt
 ```
 
 ### Programmatic Usage
