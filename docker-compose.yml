@@ -2,7 +2,8 @@ services:
   checker:
     build:
       context: .
-      dockerfile: Dockerfile.checker
+      dockerfile: Dockerfile.node
+    command: ["npm", "run", "checker-server"]
     ports:
       - "4000:4000"
     networks:
@@ -31,7 +32,7 @@ services:
   interface:
     build:
       context: .
-      dockerfile: Dockerfile.interface
+      dockerfile: Dockerfile.node
     ports:
       - "3000:3000"
     environment:

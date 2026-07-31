@@ -86,11 +86,10 @@ docker compose up proof-data
 `geo-proof-dataset` is a private repo, so it isn't available to everyone. If you don't have the `proof_data` volume, use the standalone compose file instead of the default one. It runs the same three services but drops the external volume, so only the proofs bundled in this repo under `src/checker/proofs/tests/` are available (that volume is only used by the manual eval scripts in `backend/`, not by the running services):
 
 ```bash
-docker compose -f docker-compose.standalone.yml build
-docker compose -f docker-compose.standalone.yml up
+npm run docker:standalone
 ```
 
-Everything else below (ports, logs, stop, backend API) works the same — just add `-f docker-compose.standalone.yml` to each `docker compose` command.
+This is a shortcut for `docker compose -f docker-compose.standalone.yml up --build` (builds the images and starts all three services). Everything else below (ports, logs, stop, backend API) works the same — just add `-f docker-compose.standalone.yml` to each `docker compose` command.
 
 ### Build
 

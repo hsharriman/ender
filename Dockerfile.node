@@ -1,0 +1,11 @@
+# Shared Node image for both the `checker` and `interface` services.
+# They run the same install; the compose service picks the command:
+#   - interface uses the default CMD (`npm start`, Vite dev server on 3000)
+#   - checker overrides it with `npm run checker-server` (HTTP checker on 4000)
+FROM node:23-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+EXPOSE 3000 4000
+CMD ["npm", "start"]
