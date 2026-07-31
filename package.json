@@ -19,7 +19,8 @@
     "checkProof": "tsx src/checker/proofCheckerCli.ts",
     "debugProof": "tsx src/checker/debugProofChecker.ts",
     "test-core": "jest --passWithNoTests",
-    "checker-server": "tsx src/checker/server.ts"
+    "checker-server": "tsx src/checker/server.ts",
+    "docker:standalone": "docker compose -f docker-compose.standalone.yml up --build"
   },
   "dependencies": {
     "@lezer/generator": "^1.8.0",

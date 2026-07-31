@@ -1,3 +1,11 @@
+# Standalone compose file — runs Ender without the private `geo-proof-dataset`
+# repo / `proof_data` external volume. Only the proofs bundled in this repo
+# under `src/checker/proofs/` are available (the dataset volume is only
+# used by the manual eval scripts in `backend/`, not by the running services).
+#
+# Usage:
+#   docker compose -f docker-compose.standalone.yml build
+#   docker compose -f docker-compose.standalone.yml up
 services:
   checker:
     build:
@@ -23,7 +31,6 @@ services:
       - ./src/checker/proofs:/app/src/checker/proofs
       - ./src/checker/grammar/defs:/app/src/checker/grammar/defs
       - ./backend:/app/backend
-      - proof_data:/app/geo-proof-dataset:ro
     depends_on:
       - checker
     networks:
@@ -37,8 +44,6 @@ services:
       - "3000:3000"
     environment:
       - BACKEND_URL=http://backend:5000
-    volumes:
-      - proof_data:/app/geo-proof-dataset:ro
     depends_on:
       - backend
     networks:
@@ -47,7 +52,3 @@ services:
 networks:
   ender:
     driver: bridge
-
-volumes:
-  proof_data:
-    external: true

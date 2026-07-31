@@ -26,20 +26,57 @@ const allProofUrls = import.meta.glob("/src/checker/proofs/**/*.txt", {
   eager: true,
 }) as Record<string, string>;
 
-const proofOptions: Array<{ key: string; label: string; url: string }> =
-  Object.entries(allProofUrls)
-    .map(([path, url]) => {
-      const relative = path.replace("/src/checker/proofs/", "");
-      return { key: relative, label: relative, url };
-    })
+type ProofOption = { key: string; label: string; url: string };
+
+const proofOptions: ProofOption[] = Object.entries(allProofUrls)
+  .map(([path, url]) => {
+    const relative = path.replace("/src/checker/proofs/", "");
+    return { key: relative, label: relative, url };
+  })
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+/** First path segment (the grouping directory), or null for a loose proof. */
+function proofGroupDir(key: string): string | null {
+  const slash = key.indexOf("/");
+  return slash === -1 ? null : key.slice(0, slash);
+}
+
+/** "lines_angles" -> "Lines Angles" */
+function prettifyDirName(dir: string): string {
+  return dir
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+// Build one group per subdirectory of proofs/, derived from the proofs present
+// rather than a hard-coded list, so new proof directories appear automatically.
+const proofGroups: Array<{ dir: string; label: string; proofs: ProofOption[] }> =
+  Array.from(
+    proofOptions
+      .reduce((acc, p) => {
+        const dir = proofGroupDir(p.key);
+        if (dir === null) return acc;
+        (acc.get(dir) ?? acc.set(dir, []).get(dir)!).push(p);
+        return acc;
+      }, new Map<string, ProofOption[]>())
+      .entries(),
+  )
+    .map(([dir, proofs]) => ({ dir, label: prettifyDirName(dir), proofs }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
-const TEST_GROUPS: Array<{ dir: string; label: string }> = [
-  { dir: "tests/lines_angles/", label: "Lines & Angles" },
-  { dir: "tests/triangles/",    label: "Triangles" },
-  { dir: "tests/quadrilaterals/", label: "Quadrilaterals" },
-  { dir: "tests/circles/",      label: "Circles" },
-];
+// Any proof not placed in a group (loose .txt files directly in proofs/) is
+// shown as a flat option.
+const groupedKeys = new Set(
+  proofGroups.flatMap((g) => g.proofs.map((p) => p.key)),
+);
+const ungroupedProofs = proofOptions.filter((p) => !groupedKeys.has(p.key));
+
+const DEFAULT_PROOF_KEY =
+  proofOptions.find((p) => p.key.endsWith("tutorial.txt"))?.key ??
+  proofOptions[0]?.key ??
+  "";
 
 function formatErrorList(errors: ErrorDetails[] | undefined): string {
   if (!errors?.length) return "Incorrect step (no step.errors payload)";
@@ -103,7 +140,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.state = {
       isEditorOpen: true,
       isInteractiveLayout: true,
-      selectedProofKey: "tutorial.txt",
+      selectedProofKey: DEFAULT_PROOF_KEY,
       proofText: "",
       lastGoodProof: null,
       lastGoodCtx: null,
@@ -383,31 +420,20 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                 this.setState({ selectedProofKey: e.target.value })
               }
             >
-              {(() => {
-                const top = proofOptions.filter((p) => !p.key.startsWith("tests/"));
-                return (
-                  <>
-                    {top.map((proof) => (
-                      <option key={proof.key} value={proof.key}>
-                        {proof.label}
-                      </option>
-                    ))}
-                    {TEST_GROUPS.map(({ dir, label }) => {
-                      const group = proofOptions.filter((p) => p.key.startsWith(dir));
-                      if (group.length === 0) return null;
-                      return (
-                        <optgroup key={dir} label={`Tests — ${label}`}>
-                          {group.map((proof) => (
-                            <option key={proof.key} value={proof.key}>
-                              {proof.key.slice(dir.length)}
-                            </option>
-                          ))}
-                        </optgroup>
-                      );
-                    })}
-                  </>
-                );
-              })()}
+              {ungroupedProofs.map((proof) => (
+                <option key={proof.key} value={proof.key}>
+                  {proof.label}
+                </option>
+              ))}
+              {proofGroups.map(({ dir, label, proofs }) => (
+                <optgroup key={dir} label={label}>
+                  {proofs.map((proof) => (
+                    <option key={proof.key} value={proof.key}>
+                      {proof.key.slice(dir.length + 1)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
             <div className="relative w-full h-full border border-slate-200 rounded font-mono text-xs overflow-hidden">
               <pre
