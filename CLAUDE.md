@@ -17,6 +17,7 @@ npm run deploy                     # Build and publish to gh-pages
 Run tests in watch mode: `npm test -- --watch`
 
 Docker (see README for full docs):
+
 ```bash
 docker compose build && docker compose up   # build and start all three services
 docker compose down                         # stop
@@ -35,6 +36,7 @@ Ender is a geometric proof checker with a React frontend and Python LLM backend 
 5. **Interface** — `src/interface/core/grammarToLayout/` converts `ProofObj` to readable text (`proofObjText.tsx`), SVG diagrams (`diagramSvg/`), and congruence tick marks (`proofObjObjectApplication.ts`)
 
 **Key types** (defined in `src/checker/types/checkerTypes.ts` and `src/geometry-object/types/types.ts`):
+
 - `Stmt` = `{ function: string; arguments: ParseObj[] }` — a statement like `con_seg(AB, CD)`
 - `Reason` = `{ function: string; arguments: string[] }` — a reason like `sas([01], [02], [03])`
 - `ParseObj` = `{ type: Obj.*; v: string }` — a geometric object (point, segment, angle, triangle, quad, circle)
@@ -48,14 +50,14 @@ Ender is a geometric proof checker with a React frontend and Python LLM backend 
 
 Any grammar change typically touches three areas: **(1) tokenization/parsing**, **(2) definitions + checker logic**, **(3) UI text and diagram**. See `README.md` for full per-file checklists. Key files per layer:
 
-| Layer | Files |
-|---|---|
+| Layer        | Files                                                              |
+| ------------ | ------------------------------------------------------------------ |
 | Tokenization | `parser.ts` (moo rules — longer patterns first!), `lezerParser.ts` |
-| Types | `checkerTypes.ts`, `geometry-object/types/types.ts` |
-| Definitions | `stmts.defs.ts`, `reasons.defs.ts` |
-| Validation | `validators.ts`, `reasonApplication.ts`, `reasonChecks/` |
-| UI text | `proofObjText.tsx` |
-| UI diagram | `proofObjDiagramAdditions.ts`, `diagramSvg/` |
+| Types        | `checkerTypes.ts`, `geometry-object/types/types.ts`                |
+| Definitions  | `stmts.defs.ts`, `reasons.defs.ts`                                 |
+| Validation   | `validators.ts`, `reasonApplication.ts`, `reasonChecks/`           |
+| UI text      | `proofObjText.tsx`                                                 |
+| UI diagram   | `proofObjDiagramAdditions.ts`, `diagramSvg/`                       |
 
 Unknown reasons fall through to a `default: return true` in `reasonApplication.ts` — omitting a geometric check is valid placeholder behavior during development.
 
