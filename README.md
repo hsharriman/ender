@@ -28,14 +28,14 @@ Open **ProofObj Harness** from the app to edit proofs live; checker errors appea
 Run the checker on one proof file:
 
 ```bash
-npm run checkProof -- src/checker/proofs/tutorial.txt
+npm run checkProof -- src/checker/proofs/examples/tutorial.txt
 ```
 
 The CLI checker does not require OpenAI/LLM configuration.
 
 ### Common proof files
 
-Proof samples live in `src/checker/proofs/` (for example: `tutorial.txt`, `tutinc.txt`, `s1c1.txt`, `s2c2.txt`).
+Proof samples live in `src/checker/proofs/`, organized into category subdirectories (`examples/`, `circles/`, `lines_angles/`, `quadrilaterals/`, `triangles/`) — for example: `examples/tutorial.txt`, `examples/tutinc.txt`, `examples/s1c1.txt`, `examples/s2c2.txt`.
 
 ### Checker HTTP server
 
@@ -83,7 +83,7 @@ docker compose up proof-data
 
 #### Running without `geo-proof-dataset`
 
-`geo-proof-dataset` is a private repo, so it isn't available to everyone. If you don't have the `proof_data` volume, use the standalone compose file instead of the default one. It runs the same three services but drops the external volume, so only the proofs bundled in this repo under `src/checker/proofs/tests/` are available (that volume is only used by the manual eval scripts in `backend/`, not by the running services):
+`geo-proof-dataset` is a private repo, so it isn't available to everyone. If you don't have the `proof_data` volume, use the standalone compose file instead of the default one. It runs the same three services but drops the external volume, so only the proofs bundled in this repo under `src/checker/proofs/` are available (that volume is only used by the manual eval scripts in `backend/`, not by the running services):
 
 ```bash
 npm run docker:standalone
@@ -141,7 +141,7 @@ Once running, the backend exposes:
 | `POST` | `/api/feedback` | `{ "proofName": "s1c1", "solverPrompt": "solver_with_valid_reasons", "feedbackPrompt": "feedback" }` | Get Socratic feedback on a proof |
 | `GET` | `/api/health` | — | Health check |
 
-`proofName` must match a file in `src/checker/proofs/` (without the `.txt` extension). The `prompt` fields default to the values shown above if omitted.
+`proofName` must match a file in `src/checker/proofs/` (without the `.txt` extension), including its category subdirectory — for example `examples/s1c1`. The `prompt` fields default to the values shown above if omitted.
 
 ---
 

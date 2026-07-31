@@ -1,6 +1,6 @@
 # Standalone compose file — runs Ender without the private `geo-proof-dataset`
 # repo / `proof_data` external volume. Only the proofs bundled in this repo
-# under `src/checker/proofs/tests/` are available (the dataset volume is only
+# under `src/checker/proofs/` are available (the dataset volume is only
 # used by the manual eval scripts in `backend/`, not by the running services).
 #
 # Usage:

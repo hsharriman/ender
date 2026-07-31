@@ -35,14 +35,10 @@ const proofOptions: ProofOption[] = Object.entries(allProofUrls)
   })
   .sort((a, b) => a.label.localeCompare(b.label));
 
-const TESTS_PREFIX = "tests/";
-
-/** First path segment under `tests/` (the grouping directory), or null. */
-function testGroupDir(key: string): string | null {
-  if (!key.startsWith(TESTS_PREFIX)) return null;
-  const rest = key.slice(TESTS_PREFIX.length);
-  const slash = rest.indexOf("/");
-  return slash === -1 ? null : rest.slice(0, slash);
+/** First path segment (the grouping directory), or null for a loose proof. */
+function proofGroupDir(key: string): string | null {
+  const slash = key.indexOf("/");
+  return slash === -1 ? null : key.slice(0, slash);
 }
 
 /** "lines_angles" -> "Lines Angles" */
@@ -54,14 +50,13 @@ function prettifyDirName(dir: string): string {
     .join(" ");
 }
 
-// Build one group per directory under proofs/tests/, derived from the proofs
-// present rather than a hard-coded list, so new test directories appear
-// automatically.
-const testGroups: Array<{ dir: string; label: string; proofs: ProofOption[] }> =
+// Build one group per subdirectory of proofs/, derived from the proofs present
+// rather than a hard-coded list, so new proof directories appear automatically.
+const proofGroups: Array<{ dir: string; label: string; proofs: ProofOption[] }> =
   Array.from(
     proofOptions
       .reduce((acc, p) => {
-        const dir = testGroupDir(p.key);
+        const dir = proofGroupDir(p.key);
         if (dir === null) return acc;
         (acc.get(dir) ?? acc.set(dir, []).get(dir)!).push(p);
         return acc;
@@ -71,10 +66,10 @@ const testGroups: Array<{ dir: string; label: string; proofs: ProofOption[] }> =
     .map(([dir, proofs]) => ({ dir, label: prettifyDirName(dir), proofs }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
-// Any proof not placed in a test group (top-level proofs, or a stray .txt
-// directly under tests/) is shown as a flat option.
+// Any proof not placed in a group (loose .txt files directly in proofs/) is
+// shown as a flat option.
 const groupedKeys = new Set(
-  testGroups.flatMap((g) => g.proofs.map((p) => p.key)),
+  proofGroups.flatMap((g) => g.proofs.map((p) => p.key)),
 );
 const ungroupedProofs = proofOptions.filter((p) => !groupedKeys.has(p.key));
 
@@ -430,11 +425,11 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                   {proof.label}
                 </option>
               ))}
-              {testGroups.map(({ dir, label, proofs }) => (
-                <optgroup key={dir} label={`Tests — ${label}`}>
+              {proofGroups.map(({ dir, label, proofs }) => (
+                <optgroup key={dir} label={label}>
                   {proofs.map((proof) => (
                     <option key={proof.key} value={proof.key}>
-                      {proof.key.slice(TESTS_PREFIX.length + dir.length + 1)}
+                      {proof.key.slice(dir.length + 1)}
                     </option>
                   ))}
                 </optgroup>
