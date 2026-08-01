@@ -38,8 +38,9 @@ well as a visibly separate contract for the executable slice:
 2. all 41 public statement forms and all five declaration forms;
 3. their Tarski-geometric meanings and explicit nondegeneracy conditions;
 4. canonical surface spellings and a declarative header grammar;
-5. `meaning : string -> option Prop`, which fails closed for ambiguous or
-   unsupported syntax; and
+5. a total `statementMeaning : PublicStatement -> Prop` and
+   `meaning : string -> option Prop`, where optionality belongs only to parsing;
+   and
 6. the final parser-correctness and checker-soundness signatures.
 
 The `COMPLETE_VERIFIED_CHECKER` signature is the target for the finished
@@ -100,8 +101,7 @@ The Wasm bundle is under
 
 Extending the executable to all of Ender requires implementing the final
 declaration and statement parser, proving it equivalent to `ProblemGrammar`,
-and mechanizing the remaining reason theorems. `kite_premise`, binary
-`sim_seg`, `linear_pair`, and arc syntax currently fail closed in the final
-meaning because their adopted elaboration or surface representation is not yet
-coherent. Resolving those decisions changes this audit surface but not the
-soundness architecture.
+and mechanizing the remaining reason theorems. Every trusted statement now has
+a total meaning. Binary `sim_seg` has been replaced by four-segment
+`proportion`; linear pairs have explicit ray geometry; `kite_premise` is a
+specified compatibility macro; and arcs carry explicit minor/major identity.

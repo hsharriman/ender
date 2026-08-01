@@ -131,8 +131,10 @@ Record QuadrilateralName := quadrilateral_name {
 Record CircleName := circle_name {
   circle_center : PointName; circle_radius_point : PointName
 }.
+Inductive ArcKind := MinorArc | MajorArc.
 Record ArcName := arc_name {
-  arc_circle : CircleName; arc_first : PointName; arc_second : PointName
+  arc_kind : ArcKind; arc_circle : CircleName;
+  arc_first : PointName; arc_second : PointName
 }.
 
 Inductive PublicStatement :=
@@ -155,7 +157,7 @@ Inductive PublicStatement :=
 | AngBisect : AngleName -> SegmentName -> PublicStatement
 | Rectangle : QuadrilateralName -> PublicStatement
 | Parallelogram : QuadrilateralName -> PublicStatement
-| SimSeg : SegmentName -> SegmentName -> PublicStatement
+| Proportion : SegmentName -> SegmentName -> SegmentName -> SegmentName -> PublicStatement
 | SimTri : TriangleName -> TriangleName -> PublicStatement
 | Equilateral : TriangleName -> PublicStatement
 | Supplementary : AngleName -> AngleName -> PublicStatement
@@ -170,7 +172,7 @@ Inductive PublicStatement :=
 | Rhombus : QuadrilateralName -> PublicStatement
 | Tangent : CircleName -> SegmentName -> PointName -> PublicStatement
 | Chord : CircleName -> SegmentName -> PublicStatement
-| ArcStatement : CircleName -> PointName -> PointName -> PublicStatement
+| ArcStatement : ArcName -> PublicStatement
 | Radius : CircleName -> PointName -> PublicStatement
 | Diameter : CircleName -> SegmentName -> PublicStatement
 | InscribedAngle : CircleName -> AngleName -> PublicStatement
@@ -291,6 +293,41 @@ Definition IsRhombus (q : QuadrilateralName) : Prop :=
   IsParallelogram q /\ SegmentCongruent (quad_ab q) (quad_bc q) /\
   SegmentCongruent (quad_bc q) (quad_cd q) /\
   SegmentCongruent (quad_cd q) (quad_da q).
+Definition SameAngleName (a b : AngleName) : Prop :=
+  a.(angle_vertex) = b.(angle_vertex) /\
+  ((a.(angle_first) = b.(angle_first) /\ a.(angle_last) = b.(angle_last)) \/
+   (a.(angle_first) = b.(angle_last) /\ a.(angle_last) = b.(angle_first))).
+Definition IsKitePremise
+    (q : QuadrilateralName) (selected1 selected2 : AngleName) : Prop :=
+  QuadrilateralWellFormed q /\
+  ((SegmentCongruent (quad_ab q) (quad_da q) /\
+    SegmentCongruent (quad_bc q) (quad_cd q) /\
+    ((SameAngleName selected1
+        (angle_name q.(quadrilateral_first) q.(quadrilateral_second)
+                    q.(quadrilateral_third)) /\
+      SameAngleName selected2
+        (angle_name q.(quadrilateral_third) q.(quadrilateral_fourth)
+                    q.(quadrilateral_first))) \/
+     (SameAngleName selected2
+        (angle_name q.(quadrilateral_first) q.(quadrilateral_second)
+                    q.(quadrilateral_third)) /\
+      SameAngleName selected1
+        (angle_name q.(quadrilateral_third) q.(quadrilateral_fourth)
+                    q.(quadrilateral_first))))) \/
+   (SegmentCongruent (quad_ab q) (quad_bc q) /\
+    SegmentCongruent (quad_cd q) (quad_da q) /\
+    ((SameAngleName selected1
+        (angle_name q.(quadrilateral_fourth) q.(quadrilateral_first)
+                    q.(quadrilateral_second)) /\
+      SameAngleName selected2
+        (angle_name q.(quadrilateral_second) q.(quadrilateral_third)
+                    q.(quadrilateral_fourth))) \/
+     (SameAngleName selected2
+        (angle_name q.(quadrilateral_fourth) q.(quadrilateral_first)
+                    q.(quadrilateral_second)) /\
+      SameAngleName selected1
+        (angle_name q.(quadrilateral_second) q.(quadrilateral_third)
+                    q.(quadrilateral_fourth)))))).
 Definition IsTrapezoid (q : QuadrilateralName) : Prop :=
   QuadrilateralWellFormed q /\
   (Parallel (quad_ab q) (quad_cd q) \/ Parallel (quad_bc q) (quad_da q)).
@@ -347,64 +384,96 @@ Definition IsIncenter (p : PointName) (t : TriangleName) : Prop :=
   InAngle (point p) (point t.(triangle_second)) (point t.(triangle_third))
                     (point t.(triangle_first)).
 
-Definition statementMeaning (s : PublicStatement) : option Prop :=
+Definition SegmentProportion
+    (a b c d : SegmentName) : Prop :=
+  SegmentWellFormed a /\ SegmentWellFormed b /\
+  SegmentWellFormed c /\ SegmentWellFormed d /\
+  exists O A B C D,
+    Cong O A (seg_start a) (seg_end a) /\
+    Cong O B (seg_start b) (seg_end b) /\
+    Cong O C (seg_start c) (seg_end c) /\
+    Cong O D (seg_start d) (seg_end d) /\
+    Out O A B /\ Out O C D /\ Par A C B D.
+
+Definition LinearPairMeaning (a b : AngleName) : Prop :=
+  AngleWellFormed a /\ AngleWellFormed b /\
+  point a.(angle_vertex) = point b.(angle_vertex) /\
+  let V := point a.(angle_vertex) in
+  ((Out V (point a.(angle_first)) (point b.(angle_first)) /\
+    BetS (point a.(angle_last)) V (point b.(angle_last))) \/
+   (Out V (point a.(angle_first)) (point b.(angle_last)) /\
+    BetS (point a.(angle_last)) V (point b.(angle_first))) \/
+   (Out V (point a.(angle_last)) (point b.(angle_first)) /\
+    BetS (point a.(angle_first)) V (point b.(angle_last))) \/
+   (Out V (point a.(angle_last)) (point b.(angle_last)) /\
+    BetS (point a.(angle_first)) V (point b.(angle_first)))).
+
+Definition ArcWellFormed (a : ArcName) : Prop :=
+  point a.(arc_first) <> point a.(arc_second) /\
+  OnCircle a.(arc_circle) a.(arc_first) /\ OnCircle a.(arc_circle) a.(arc_second).
+Definition ArcCongruent (a b : ArcName) : Prop :=
+  ArcWellFormed a /\ ArcWellFormed b /\ a.(arc_kind) = b.(arc_kind) /\
+  CongA (point a.(arc_first)) (point a.(arc_circle).(circle_center)) (point a.(arc_second))
+        (point b.(arc_first)) (point b.(arc_circle).(circle_center)) (point b.(arc_second)).
+
+Definition statementMeaning (s : PublicStatement) : Prop :=
   match s with
-  | OnLine s p => Some (SegmentWellFormed s /\ Col (seg_start s) (seg_end s) (point p))
+  | OnLine s p => SegmentWellFormed s /\ Col (seg_start s) (seg_end s) (point p)
   | Transversal a b t1 i1 c d t2 i2 =>
-      Some (point a <> point b /\ point c <> point d /\ point t1 <> point t2 /\
+      point a <> point b /\ point c <> point d /\ point t1 <> point t2 /\
         Col (point a) (point b) (point i1) /\
         Col (point c) (point d) (point i2) /\
         Col (point t1) (point t2) (point i1) /\
-        Col (point t1) (point t2) (point i2) /\ point i1 <> point i2)
-  | IntersectSeg a b p => Some (OnSegment a p /\ OnSegment b p)
-  | TrapezoidPremise q a b => Some (IsTrapezoid q /\ Parallel a b)
-  | KitePremise _ _ _ => None
-  | IsosTrapezoidPremise q a b => Some (IsIsoscelesTrapezoid q /\ Parallel a b)
-  | Right a => Some (AngleWellFormed a /\ RightAngle a)
-  | ConSeg a b => Some (SegmentCongruent a b)
-  | ConAng a b => Some (AngleCongruent a b)
-  | ConTri a b => Some (TriangleCongruent a b)
-  | ConRight a b => Some (RightAngle a /\ RightAngle b)
-  | Para a b => Some (Parallel a b)
-  | Isosceles t => Some (IsoscelesTriangle t)
-  | Perp a b p => Some (PerpendicularAt a b p)
-  | Midpt s p => Some (MidpointOf s p)
-  | AngBisect a s => Some (AngleBisector a s)
-  | Rectangle q => Some (IsRectangle q)
-  | Parallelogram q => Some (IsParallelogram q)
-  | SimSeg _ _ => None
-  | SimTri a b => Some (TriangleSimilar a b)
-  | Equilateral t => Some (EquilateralTriangle t)
+        Col (point t1) (point t2) (point i2) /\ point i1 <> point i2
+  | IntersectSeg a b p => OnSegment a p /\ OnSegment b p
+  | TrapezoidPremise q a b => IsTrapezoid q /\ Parallel a b
+  | KitePremise q a b => IsKitePremise q a b
+  | IsosTrapezoidPremise q a b => IsIsoscelesTrapezoid q /\ Parallel a b
+  | Right a => AngleWellFormed a /\ RightAngle a
+  | ConSeg a b => SegmentCongruent a b
+  | ConAng a b => AngleCongruent a b
+  | ConTri a b => TriangleCongruent a b
+  | ConRight a b => RightAngle a /\ RightAngle b
+  | Para a b => Parallel a b
+  | Isosceles t => IsoscelesTriangle t
+  | Perp a b p => PerpendicularAt a b p
+  | Midpt s p => MidpointOf s p
+  | AngBisect a s => AngleBisector a s
+  | Rectangle q => IsRectangle q
+  | Parallelogram q => IsParallelogram q
+  | Proportion a b c d => SegmentProportion a b c d
+  | SimTri a b => TriangleSimilar a b
+  | Equilateral t => EquilateralTriangle t
   | Supplementary a b =>
-      Some (SuppA (ang_start a) (ang_vertex a) (ang_end a)
-                  (ang_start b) (ang_vertex b) (ang_end b))
-  | Complementary a b => Some (exists X Y Z,
+      SuppA (ang_start a) (ang_vertex a) (ang_end a)
+            (ang_start b) (ang_vertex b) (ang_end b)
+  | Complementary a b => exists X Y Z,
       Per X Y Z /\ SumA (ang_start a) (ang_vertex a) (ang_end a)
-                         (ang_start b) (ang_vertex b) (ang_end b) X Y Z)
-  | LinearPair _ _ => None
-  | Equiangular t => Some (EquiangularTriangle t)
-  | Circumcenter p t => Some (IsCircumcenter p t)
-  | Incenter p t => Some (IsIncenter p t)
-  | PerpBisector a b p => Some (PerpendicularBisectorAt a b p)
-  | SegBisect a b p => Some (SegmentBisectorAt a b p)
-  | IsosTrapezoid q => Some (IsIsoscelesTrapezoid q)
-  | Rhombus q => Some (IsRhombus q)
-  | Tangent c s p => Some (IsTangent c s p)
-  | Chord c s => Some (IsChord c s)
-  | ArcStatement _ _ _ => None
-  | Radius c p => Some (OnCircle c p)
-  | Diameter c s => Some (IsDiameter c s)
-  | InscribedAngle c a => Some (IsInscribedAngle c a)
-  | RefSeg a b => Some (((a.(segment_first) = b.(segment_first) /\
-                           a.(segment_second) = b.(segment_second)) \/
-                          (a.(segment_first) = b.(segment_second) /\
-                           a.(segment_second) = b.(segment_first))) /\
-                         SegmentCongruent a b)
-  | RefAng a b => Some ((a.(angle_vertex) = b.(angle_vertex) /\
-                         ((a.(angle_first) = b.(angle_first) /\ a.(angle_last) = b.(angle_last)) \/
-                          (a.(angle_first) = b.(angle_last) /\ a.(angle_last) = b.(angle_first)))) /\
-                        AngleCongruent a b)
-  | ConArc _ _ => None
+                         (ang_start b) (ang_vertex b) (ang_end b) X Y Z
+  | LinearPair a b => LinearPairMeaning a b
+  | Equiangular t => EquiangularTriangle t
+  | Circumcenter p t => IsCircumcenter p t
+  | Incenter p t => IsIncenter p t
+  | PerpBisector a b p => PerpendicularBisectorAt a b p
+  | SegBisect a b p => SegmentBisectorAt a b p
+  | IsosTrapezoid q => IsIsoscelesTrapezoid q
+  | Rhombus q => IsRhombus q
+  | Tangent c s p => IsTangent c s p
+  | Chord c s => IsChord c s
+  | ArcStatement a => ArcWellFormed a
+  | Radius c p => OnCircle c p
+  | Diameter c s => IsDiameter c s
+  | InscribedAngle c a => IsInscribedAngle c a
+  | RefSeg a b => ((a.(segment_first) = b.(segment_first) /\
+                     a.(segment_second) = b.(segment_second)) \/
+                    (a.(segment_first) = b.(segment_second) /\
+                     a.(segment_second) = b.(segment_first))) /\
+                   SegmentCongruent a b
+  | RefAng a b => (a.(angle_vertex) = b.(angle_vertex) /\
+                   ((a.(angle_first) = b.(angle_first) /\ a.(angle_last) = b.(angle_last)) \/
+                    (a.(angle_first) = b.(angle_last) /\ a.(angle_last) = b.(angle_first)))) /\
+                  AngleCongruent a b
+  | ConArc a b => ArcCongruent a b
   end.
 
 Definition declarationMeaning (d : PublicDeclaration) : Prop :=
@@ -416,24 +485,10 @@ Definition declarationMeaning (d : PublicDeclaration) : Prop :=
   | CircleDeclaration c => CircleWellFormed c
   end.
 
-Definition optionHolds (meaning : option Prop) : Prop :=
-  match meaning with Some claim => claim | None => False end.
-
-Definition statementSupported (s : PublicStatement) : bool :=
-  match s with
-  | KitePremise _ _ _ | SimSeg _ _ | LinearPair _ _
-  | ArcStatement _ _ _ | ConArc _ _ => false
-  | _ => true
-  end.
-
-Definition problemSupported (p : PublicProblem) : bool :=
-  forallb statementSupported p.(public_premises) &&
-  statementSupported p.(public_conclusion).
-
 Definition problemClaim (p : PublicProblem) : Prop :=
   Forall declarationMeaning p.(public_declarations) ->
-  Forall (fun premise => optionHolds (statementMeaning premise)) p.(public_premises) ->
-  optionHolds (statementMeaning p.(public_conclusion)).
+  Forall statementMeaning p.(public_premises) ->
+  statementMeaning p.(public_conclusion).
 
 End GeometryMeaning.
 
@@ -451,7 +506,8 @@ Definition quadrilateralText (q : QuadrilateralName) : string :=
 Definition circleText (c : CircleName) : string :=
   "c_" ++ pointText c.(circle_center) ++ pointText c.(circle_radius_point).
 Definition arcText (a : ArcName) : string :=
-  "arc(" ++ circleText a.(arc_circle) ++ "," ++ pointText a.(arc_first) ++
+  let name := match a.(arc_kind) with MinorArc => "minor_arc" | MajorArc => "major_arc" end in
+  name ++ "(" ++ circleText a.(arc_circle) ++ "," ++ pointText a.(arc_first) ++
   "," ++ pointText a.(arc_second) ++ ")".
 Definition call (name : string) (arguments : list string) : string :=
   name ++ "(" ++ String.concat "," arguments ++ ")".
@@ -478,7 +534,8 @@ Definition statementText (s : PublicStatement) : string :=
   | AngBisect a s => call "ang_bisect" [angleText a; segmentText s]
   | Rectangle q => call "rectangle" [quadrilateralText q]
   | Parallelogram q => call "parallelogram" [quadrilateralText q]
-  | SimSeg a b => call "sim_seg" [segmentText a; segmentText b]
+  | Proportion a b c d => call "proportion"
+      [segmentText a; segmentText b; segmentText c; segmentText d]
   | SimTri a b => call "sim_tri" [triangleText a; triangleText b]
   | Equilateral t => call "equilateral" [triangleText t]
   | Supplementary a b => call "supplementary" [angleText a; angleText b]
@@ -493,7 +550,7 @@ Definition statementText (s : PublicStatement) : string :=
   | Rhombus q => call "rhombus" [quadrilateralText q]
   | Tangent c s p => call "tangent" [circleText c; segmentText s; pointText p]
   | Chord c s => call "chord" [circleText c; segmentText s]
-  | ArcStatement c a b => call "arc" [circleText c; pointText a; pointText b]
+  | ArcStatement a => arcText a
   | Radius c p => call "radius" [circleText c; pointText p]
   | Diameter c s => call "diameter" [circleText c; segmentText s]
   | InscribedAngle c a => call "inscribed_angle" [circleText c; angleText a]
@@ -597,9 +654,7 @@ Definition meaning (source : string) : option Prop :=
   match excluded_middle_informative (exists! problem, ProblemGrammar source problem) with
   | left unique =>
       let problem := proj1_sig (constructive_definite_description _ unique) in
-      if problemSupported problem
-      then Some (forall point : PointName -> Tpoint, problemClaim point problem)
-      else None
+      Some (forall point : PointName -> Tpoint, problemClaim point problem)
   | right _ => None
   end.
 
