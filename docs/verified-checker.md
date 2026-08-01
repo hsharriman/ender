@@ -104,7 +104,10 @@ The Wasm bundle is under
 The complete declaration and statement parser, parser-soundness proof, semantic
 adapter, and final checker theorem are implemented. Coverage now grows by
 mechanizing the remaining reason theorems. Parser completeness is an optional
-usability theorem; it is deliberately not assumed by soundness. Every trusted
+usability theorem; it is deliberately not assumed by soundness. In fact, the
+current declarative grammar permits any ASCII `PointName`, including syntax
+delimiters such as `,` and `(`, so completeness first requires an explicit
+audited restriction to Ender's intended point-label alphabet. Every trusted
 statement has a total meaning. Binary
 `sim_seg` has been replaced by four-segment
 `proportion`; linear pairs have explicit ray geometry; `kite_premise` is a
