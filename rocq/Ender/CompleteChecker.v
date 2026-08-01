@@ -92,7 +92,9 @@ Definition build_kernel_problem (public : FA.PublicProblem)
   | _, _ => None
   end.
 
-Definition complete_checker (source : string) : bool :=
+Inductive CheckResult := ParseFailure | ProofRejected | ProofAccepted.
+
+Definition classify_source (source : string) : CheckResult :=
   let text := list_ascii_of_string source in
   match problemPart source,
         Parser.find_after (list_ascii_of_string "steps:") text with
@@ -101,13 +103,16 @@ Definition complete_checker (source : string) : bool :=
             parse_step_lines (Parser.split_lines stepText []) [] with
       | Some public, Some header, Some steps =>
           match build_kernel_problem public header steps with
-          | Some p => check_problem p
-          | None => false
+          | Some p => if check_problem p then ProofAccepted else ProofRejected
+          | None => ProofRejected
           end
-      | _, _, _ => false
+      | _, _, _ => ParseFailure
       end
-  | _, _ => false
+  | _, _ => ParseFailure
   end.
+
+Definition complete_checker (source : string) : bool :=
+  match classify_source source with ProofAccepted => true | _ => false end.
 
 Lemma statement_list_eqb_eq : forall a b,
   statement_list_eqb a b = true <-> a = b.
@@ -207,7 +212,7 @@ Theorem complete_checker_problem_sound : forall source part public,
     FA.problemClaim point public.
 Proof.
   intros source part public Hpart Hpublic Hcheck Tn TnEQD point.
-  unfold complete_checker in Hcheck. rewrite Hpart, Hpublic in Hcheck.
+  unfold complete_checker, classify_source in Hcheck. rewrite Hpart, Hpublic in Hcheck.
   destruct (Parser.find_after (list_ascii_of_string "steps:")
               (list_ascii_of_string source)) as [stepText|] eqn:HstepText;
     try discriminate.
@@ -240,9 +245,12 @@ Proof.
     - exact HprojectPremises.
     - symmetry. exact Hpremises.
     - exact HpublicPremises. }
+  destruct (check_problem
+    (problem (header_triangles header) (header_premises header) goal steps))
+    eqn:HkernelCheck; try discriminate.
   pose proof (check_problem_sound point
     (problem (header_triangles header) (header_premises header) goal steps)
-    Hcheck Hwf HkernelPremises) as HkernelGoal.
+    HkernelCheck Hwf HkernelPremises) as HkernelGoal.
   eapply projected_goal_meaning; eauto.
 Qed.
 
@@ -274,7 +282,7 @@ Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
     - eexists. split; [reflexivity|].
       intros point. exact (@complete_checker_problem_sound source part public
         Hpart Hpublic Hcheck Tn TnEQD point).
-    - exfalso. unfold checker, complete_checker in Hcheck.
+    - exfalso. unfold checker, complete_checker, classify_source in Hcheck.
       rewrite Hpart in Hcheck.
       destruct (Parser.find_after (list_ascii_of_string "steps:")
         (list_ascii_of_string source)); [rewrite Hpublic in Hcheck|]; discriminate.

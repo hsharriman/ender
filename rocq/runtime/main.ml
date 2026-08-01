@@ -11,10 +11,13 @@ let () =
     exit 2
   end;
   let source = read_file Sys.argv.(1) |> String.to_seq |> List.of_seq in
-  if EnderChecker.complete_checker source then begin
-    print_endline "accepted";
-    exit 0
-  end else begin
-    print_endline "rejected";
-    exit 1
-  end
+  match EnderChecker.classify_source source with
+  | EnderChecker.ProofAccepted ->
+      print_endline "accepted";
+      exit 0
+  | EnderChecker.ProofRejected ->
+      print_endline "rejected proof";
+      exit 1
+  | EnderChecker.ParseFailure ->
+      print_endline "failed to parse problem";
+      exit 2

@@ -141,6 +141,13 @@ Proof. vm_compute. reflexivity. Qed.
 
 Example complete_wrong_reason_rejects : complete_checker bad_sss_source = false.
 Proof. vm_compute. reflexivity. Qed.
+Example complete_wrong_reason_is_proof_rejection :
+  classify_source bad_sss_source = ProofRejected.
+Proof. vm_compute. reflexivity. Qed.
+
+Example malformed_problem_is_parse_failure :
+  classify_source "this is not an Ender problem" = ParseFailure.
+Proof. vm_compute. reflexivity. Qed.
 
 Definition unsupported_goal_source := common_header "" "right(a_BAC)" "".
 Example parsed_but_unimplemented_goal_rejects :

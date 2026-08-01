@@ -45,8 +45,8 @@ no Ender implementation file and contains only the intended final contract:
 There is no `VERIFIED_SLICE_CHECKER` switch or second audit contract. The
 smaller executable reason kernel is an implementation detail outside the audit
 file. `parseProblem` must prove the trust-relevant direction—every successful
-parse satisfies the independent `ProblemGrammar`. Parser completeness is useful
-but is not needed for soundness because rejecting additional inputs is safe.
+parse satisfies the independent `ProblemGrammar`. Parser completeness remains
+a separate usability theorem.
 
 That proposition states:
 
@@ -95,7 +95,9 @@ nix build .#ender-checker-wasm
 `nix flake check` kernel-checks the Rocq development, runs positive and negative
 Rocq examples, extracts the checker, builds native and Wasm versions, and runs
 both against repository proof files. The native command exits zero and prints
-`accepted` on acceptance; it exits nonzero and prints `rejected` otherwise.
+`accepted` on acceptance. It prints `rejected proof` and exits 1 for a parsed
+but invalid or unsupported proof; malformed input prints
+`failed to parse problem` and exits 2.
 The Wasm bundle is under
 `result/share/ender-checker-wasm/` after the final command.
 
@@ -103,11 +105,9 @@ The Wasm bundle is under
 
 The complete declaration and statement parser, parser-soundness proof, semantic
 adapter, and final checker theorem are implemented. Coverage now grows by
-mechanizing the remaining reason theorems. Parser completeness is an optional
-usability theorem; it is deliberately not assumed by soundness. In fact, the
-current declarative grammar permits any ASCII `PointName`, including syntax
-delimiters such as `,` and `(`, so completeness first requires an explicit
-audited restriction to Ender's intended point-label alphabet. Every trusted
+mechanizing the remaining reason theorems. Parser completeness requires adding
+the TypeScript grammar's `[A-Z]` point-label restriction to the audited grammar.
+Every trusted
 statement has a total meaning. Binary
 `sim_seg` has been replaced by four-segment
 `proportion`; linear pairs have explicit ray geometry; `kite_premise` is a

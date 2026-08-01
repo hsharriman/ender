@@ -2,4 +2,4 @@ From Coq Require Import Extraction ExtrOcamlBasic ExtrOcamlString ExtrOcamlNatIn
 Require Import Ender.CompleteChecker.
 
 Extraction Language OCaml.
-Extraction "extracted/EnderChecker.ml" complete_checker.
+Extraction "extracted/EnderChecker.ml" classify_source complete_checker.
