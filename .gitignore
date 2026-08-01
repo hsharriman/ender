@@ -31,3 +31,14 @@ yarn-debug.log*
 yarn-error.log*
 
 .vscode/
+
+# verified Rocq checker
+/result
+/result-*
+/rocq/Ender/*.aux
+/rocq/Ender/*.glob
+/rocq/Ender/*.vo
+/rocq/Ender/*.vok
+/rocq/Ender/*.vos
+/rocq/runtime/*.cmi
+/rocq/runtime/*.cmo
