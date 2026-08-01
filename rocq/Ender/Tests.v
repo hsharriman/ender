@@ -116,6 +116,15 @@ Example public_arc_statement_parses :
   end = true.
 Proof. vm_compute. reflexivity. Qed.
 
+Example lowercase_point_label_is_rejected :
+  parse_public_statement "con_seg(aB,CD)" = None.
+Proof. vm_compute. reflexivity. Qed.
+
+Example public_statement_parser_is_complete : forall text statement,
+  Audit.FinalAudit.StatementText text statement ->
+  parse_public_statement text = Some statement.
+Proof. exact parse_public_statement_complete. Qed.
+
 Definition public_header := "tri: t_ABC t_DEF
 [g_1] con_seg(AB,DE)
 -> con_tri(t_ABC,t_DEF)

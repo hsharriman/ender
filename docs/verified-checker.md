@@ -105,11 +105,11 @@ The Wasm bundle is under
 
 ## Next work
 
-The complete declaration and statement parser, parser-soundness proof, semantic
-adapter, and final checker theorem are implemented. Coverage now grows by
-mechanizing the remaining reason theorems. Parser completeness requires adding
-the TypeScript grammar's `[A-Z]` point-label restriction to the audited grammar.
-Every trusted
+The complete declaration and statement parser, its soundness and completeness
+proofs, semantic adapter, and final checker theorem are implemented. The
+audited lexical grammar enforces Ender's `[A-Z]` point-label restriction, so
+object names cannot collide with grammar punctuation. Coverage now grows by
+mechanizing the remaining reason theorems. Every trusted
 statement has a total meaning. Binary
 `sim_seg` has been replaced by four-segment
 `proportion`; linear pairs have explicit ray geometry; `kite_premise` is a

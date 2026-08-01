@@ -266,6 +266,7 @@ Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
   Definition parseProblem := parsePublicProblem.
   Definition checker := complete_checker.
   Definition parser_sound := parsePublicProblem_sound.
+  Definition parser_complete := parsePublicProblem_complete.
 
   Definition meaning
       `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}

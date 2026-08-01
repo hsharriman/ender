@@ -462,6 +462,72 @@ Definition arcText (a : ArcName) : string :=
 Definition call (name : string) (arguments : list string) : string :=
   name ++ "(" ++ String.concat "," arguments ++ ")".
 
+(** Ender's lexical grammar admits exactly one upper-case ASCII letter as a
+    point label.  Keeping this restriction explicit prevents object names from
+    containing punctuation used by the surrounding grammar. *)
+Definition upperCaseLetters : list ascii :=
+  list_ascii_of_string "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
+Definition pointNameValid (p : PointName) : bool :=
+  existsb (Ascii.eqb p) upperCaseLetters.
+Definition pointsValid (points : list PointName) : bool :=
+  forallb pointNameValid points.
+
+Definition segmentPoints (s : SegmentName) :=
+  [s.(segment_first); s.(segment_second)].
+Definition anglePoints (a : AngleName) :=
+  [a.(angle_first); a.(angle_vertex); a.(angle_last)].
+Definition trianglePoints (t : TriangleName) :=
+  [t.(triangle_first); t.(triangle_second); t.(triangle_third)].
+Definition quadrilateralPoints (q : QuadrilateralName) :=
+  [q.(quadrilateral_first); q.(quadrilateral_second);
+   q.(quadrilateral_third); q.(quadrilateral_fourth)].
+Definition circlePoints (c : CircleName) :=
+  [c.(circle_center); c.(circle_radius_point)].
+Definition arcPoints (a : ArcName) :=
+  List.app (circlePoints a.(arc_circle)) [a.(arc_first); a.(arc_second)].
+
+Definition statementPoints (s : PublicStatement) : list PointName :=
+  match s with
+  | OnLine a p => List.app (segmentPoints a) [p]
+  | Transversal a b t1 i1 c d t2 i2 => [a;b;t1;i1;c;d;t2;i2]
+  | IntersectSeg a b p => List.app (segmentPoints a) (List.app (segmentPoints b) [p])
+  | TrapezoidPremise q a b | IsosTrapezoidPremise q a b =>
+      List.app (quadrilateralPoints q) (List.app (segmentPoints a) (segmentPoints b))
+  | KitePremise q a b =>
+      List.app (quadrilateralPoints q) (List.app (anglePoints a) (anglePoints b))
+  | Right a => anglePoints a
+  | ConSeg a b | Para a b | RefSeg a b => List.app (segmentPoints a) (segmentPoints b)
+  | ConAng a b | ConRight a b | Supplementary a b | Complementary a b
+  | LinearPair a b | RefAng a b => List.app (anglePoints a) (anglePoints b)
+  | ConTri a b | SimTri a b => List.app (trianglePoints a) (trianglePoints b)
+  | Isosceles t | Equilateral t | Equiangular t => trianglePoints t
+  | Perp a b p | PerpBisector a b p | SegBisect a b p =>
+      List.app (segmentPoints a) (List.app (segmentPoints b) [p])
+  | Midpt a p => List.app (segmentPoints a) [p]
+  | AngBisect a s => List.app (anglePoints a) (segmentPoints s)
+  | Rectangle q | Parallelogram q | IsosTrapezoid q | Rhombus q =>
+      quadrilateralPoints q
+  | Proportion a b c d =>
+      List.app (segmentPoints a) (List.app (segmentPoints b)
+        (List.app (segmentPoints c) (segmentPoints d)))
+  | Circumcenter p t | Incenter p t => p :: trianglePoints t
+  | Tangent c s p => List.app (circlePoints c) (List.app (segmentPoints s) [p])
+  | Chord c s | Diameter c s => List.app (circlePoints c) (segmentPoints s)
+  | ArcStatement a => arcPoints a
+  | Radius c p => List.app (circlePoints c) [p]
+  | InscribedAngle c a => List.app (circlePoints c) (anglePoints a)
+  | ConArc a b => List.app (arcPoints a) (arcPoints b)
+  end.
+
+Definition declarationPoints (d : PublicDeclaration) : list PointName :=
+  match d with
+  | SegmentDeclaration s => segmentPoints s
+  | AngleDeclaration a => anglePoints a
+  | TriangleDeclaration t => trianglePoints t
+  | QuadrilateralDeclaration q => quadrilateralPoints q
+  | CircleDeclaration c => circlePoints c
+  end.
+
 Definition statementText (s : PublicStatement) : string :=
   match s with
   | OnLine a p => call "on_line" [segmentText a; pointText p]
@@ -529,6 +595,7 @@ Fixpoint codeBeforeComment (text : list ascii) : list ascii :=
 Definition normalized (text : string) : list ascii :=
   removeWhitespace (codeBeforeComment (list_ascii_of_string text)).
 Definition StatementText (text : string) (statement : PublicStatement) : Prop :=
+  pointsValid (statementPoints statement) = true /\
   normalized text = list_ascii_of_string (statementText statement).
 
 Definition declarationTag (d : PublicDeclaration) : string :=
@@ -551,6 +618,8 @@ Definition DeclarationText (text : string) (declarations : list PublicDeclaratio
   exists first rest,
     declarations = first :: rest /\
     Forall (fun declaration => declarationTag declaration = declarationTag first) rest /\
+    Forall (fun declaration => pointsValid (declarationPoints declaration) = true)
+      declarations /\
     normalized text = list_ascii_of_string
       (declarationTag first ++ String.concat "" (map declarationObjectText declarations)).
 
@@ -578,14 +647,17 @@ Definition goalBody (line : string) : option string :=
 
 Inductive HeaderLine : string -> (list PublicDeclaration * list PublicStatement * option PublicStatement) -> Prop :=
 | DeclarationHeaderLine : forall text declarations,
+    premiseBody text = None -> goalBody text = None ->
     DeclarationText text declarations -> HeaderLine text (declarations, [], None)
 | PremiseHeaderLine : forall line body statement,
     premiseBody line = Some body -> StatementText body statement ->
     HeaderLine line ([], [statement], None)
 | GoalHeaderLine : forall line body statement,
+    premiseBody line = None ->
     goalBody line = Some body -> StatementText body statement ->
     HeaderLine line ([], [], Some statement)
 | IgnoredBlankLine : forall text,
+    premiseBody text = None -> goalBody text = None ->
     normalized text = [] -> HeaderLine text ([], [], None).
 
 Fixpoint splitLineChars (text current : list ascii) : list (list ascii) :=
@@ -617,15 +689,16 @@ Inductive ProblemGrammar : string -> PublicProblem -> Prop :=
     HeaderLines (splitLines source) declarations premises (Some conclusion) ->
     ProblemGrammar source (public_problem declarations premises conclusion).
 
-(** Final implementation contract.  Parser soundness is the trust-relevant
-    direction: every successfully decoded header has the independently
-    specified grammar above.  Accepting every grammatical spelling is a
-    usability property, not a premise of checker soundness. *)
+(** Final implementation contract.  Soundness says every successfully decoded
+    header has the independently specified grammar above; completeness says
+    every grammatical header is decoded to exactly the specified problem. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parseProblem : string -> option PublicProblem.
   Parameter checker : string -> bool.
   Parameter parser_sound : forall source problem,
     parseProblem source = Some problem -> ProblemGrammar source problem.
+  Parameter parser_complete : forall source problem,
+    ProblemGrammar source problem -> parseProblem source = Some problem.
 
   Definition meaning
       `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}
