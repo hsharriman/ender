@@ -1,5 +1,5 @@
 COQFLAGS := -Q Ender Ender
-MODULES := Audit Syntax Geometry Semantics Checker Parser Tests Extract
+MODULES := Audit PublicParser Syntax Geometry Semantics Checker Parser Tests Extract
 VOFILES := $(addprefix Ender/,$(addsuffix .vo,$(MODULES)))
 
 .PHONY: all proofs test extract clean
@@ -16,6 +16,9 @@ Ender/Audit.vo: Ender/Audit.v
 	coqc $(COQFLAGS) $<
 
 Ender/Syntax.vo: Ender/Syntax.v Ender/Audit.vo
+	coqc $(COQFLAGS) $<
+
+Ender/PublicParser.vo: Ender/PublicParser.v Ender/Audit.vo
 	coqc $(COQFLAGS) $<
 
 Ender/Geometry.vo: Ender/Geometry.v

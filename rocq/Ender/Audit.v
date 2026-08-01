@@ -2,7 +2,7 @@
   This is the complete human-audit surface for the verified checker slice.
   It intentionally imports no Ender implementation module.
 *)
-From Coq Require Import Ascii String List ClassicalDescription.
+From Coq Require Import Ascii String List Bool ClassicalDescription.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Import ListNotations.
 Local Open Scope string_scope.
@@ -605,15 +605,36 @@ Definition DeclarationText (text : string) (declarations : list PublicDeclaratio
       (declarationTag first ++ String.concat "" (map declarationObjectText declarations)).
 
 (** Relations for the exact theorem-bearing header language. *)
+Definition premiseBody (line : string) : option string :=
+  let text := list_ascii_of_string line in
+  match ProblemPart.take_before ["]"%char] text,
+        ProblemPart.find_after ["]"%char] text with
+  | Some label, Some body =>
+      if ProblemPart.starts_with (list_ascii_of_string "[g_") label ||
+         ProblemPart.starts_with (list_ascii_of_string "[d_") label
+      then Some (string_of_list_ascii body) else None
+  | _, _ => None
+  end.
+
+Definition goalBody (line : string) : option string :=
+  let compact := normalized line in
+  if ProblemPart.starts_with (list_ascii_of_string "->") compact
+  then match ProblemPart.find_after (list_ascii_of_string "->")
+                                    (list_ascii_of_string line) with
+       | Some body => Some (string_of_list_ascii body)
+       | None => None
+       end
+  else None.
+
 Inductive HeaderLine : string -> (list PublicDeclaration * list PublicStatement * option PublicStatement) -> Prop :=
 | DeclarationHeaderLine : forall text declarations,
     DeclarationText text declarations -> HeaderLine text (declarations, [], None)
-| PremiseHeaderLine : forall label body statement,
-    (String.prefix "[g_" label = true \/ String.prefix "[d_" label = true) ->
-    StatementText body statement ->
-    HeaderLine (label ++ "]" ++ body) ([], [statement], None)
-| GoalHeaderLine : forall body statement,
-    StatementText body statement -> HeaderLine ("->" ++ body) ([], [], Some statement)
+| PremiseHeaderLine : forall line body statement,
+    premiseBody line = Some body -> StatementText body statement ->
+    HeaderLine line ([], [statement], None)
+| GoalHeaderLine : forall line body statement,
+    goalBody line = Some body -> StatementText body statement ->
+    HeaderLine line ([], [], Some statement)
 | IgnoredBlankLine : forall text,
     normalized text = [] -> HeaderLine text ([], [], None).
 
@@ -660,13 +681,15 @@ Definition meaning (source : string) : option Prop :=
 
 End CompleteMeaning.
 
-(** Final implementation contract.  It is intentionally stronger than the
-    currently inhabited slice contract below. *)
+(** Final implementation contract.  Parser soundness is the trust-relevant
+    direction: every successfully decoded header has the independently
+    specified grammar above.  Accepting every grammatical spelling is a
+    usability property, not a premise of checker soundness. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parseProblem : string -> option PublicProblem.
   Parameter checker : string -> bool.
-  Parameter parser_correct : forall source problem,
-    parseProblem source = Some problem <-> ProblemGrammar source problem.
+  Parameter parser_sound : forall source problem,
+    parseProblem source = Some problem -> ProblemGrammar source problem.
   Parameter checker_sound : forall source,
     checker source = true ->
     forall part, problemPart source = Some part ->

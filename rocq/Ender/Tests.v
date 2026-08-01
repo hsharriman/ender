@@ -1,5 +1,5 @@
 From Coq Require Import String.
-Require Import Ender.Parser.
+Require Import Ender.Parser Ender.PublicParser.
 Open Scope string_scope.
 
 Definition common_header (premises goal steps : string) : string :=
@@ -90,6 +90,25 @@ Example asa_accepts : check_source asa_source = true. Proof. vm_compute. reflexi
 Example aas_accepts : check_source aas_source = true. Proof. vm_compute. reflexivity. Qed.
 Example cpctc_accepts : check_source cpctc_source = true. Proof. vm_compute. reflexivity. Qed.
 Example repository_tutorial_accepts : check_source repository_tutorial = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The complete public parser already covers statement forms outside the
+    currently executable reason kernel, including nested arc syntax. *)
+Example public_arc_statement_parses :
+  match parse_public_statement
+    "con_arc(minor_arc(c_OA,A,B),major_arc(c_OD,D,E))" with
+  | Some (Audit.FinalAudit.ConArc _ _) => true
+  | _ => false
+  end = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition public_header := "tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+-> con_tri(t_ABC,t_DEF)
+".
+
+Example complete_public_header_parses :
+  match parsePublicProblem public_header with Some _ => true | None => false end = true.
 Proof. vm_compute. reflexivity. Qed.
 
 Definition bad_sss_source := common_header
