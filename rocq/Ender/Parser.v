@@ -374,7 +374,7 @@ Proof.
   - exact Hprem.
 Qed.
 
-Module VerifiedChecker <: VERIFIED_CHECKER.
+Module VerifiedChecker <: VERIFIED_SLICE_CHECKER.
   Definition parseProblemPart := parseProblemPart.
   Definition check := check_source.
   Definition sound := audit_sound.

@@ -30,13 +30,22 @@ are noncollinear.
 ## Soundness boundary
 
 [Audit.v](../rocq/Ender/Audit.v) is the single human-audit surface. It imports
-no Ender implementation file and contains only:
+no Ender implementation file. It now contains the intended final contract as
+well as a visibly separate contract for the executable slice:
 
 1. `problemPart`, which returns the substring after the `pt:` line and before
    `steps:`;
-2. the complete grammar and geometric meaning of the supported statements;
-3. the signatures of the problem-part parser and Boolean checker; and
-4. the exact `sound` proposition that their implementation must prove.
+2. all 41 public statement forms and all five declaration forms;
+3. their Tarski-geometric meanings and explicit nondegeneracy conditions;
+4. canonical surface spellings and a declarative header grammar;
+5. `meaning : string -> option Prop`, which fails closed for ambiguous or
+   unsupported syntax; and
+6. the final parser-correctness and checker-soundness signatures.
+
+The `COMPLETE_VERIFIED_CHECKER` signature is the target for the finished
+project. The separate `VERIFIED_SLICE_CHECKER` signature records what is proved
+today. Thus the audit file can be reviewed now without suggesting that the
+executable already covers the complete language.
 
 That proposition states:
 
@@ -49,7 +58,7 @@ the header's declared noncollinearity and premises imply its goal.
 ```
 
 [Parser.v](../rocq/Ender/Parser.v) packages the executable implementation as a
-Rocq module constrained by that signature. Its `audit_sound` proof is outside
+Rocq module constrained by the slice signature. Its `audit_sound` proof is outside
 the audit surface. [Syntax.v](../rocq/Ender/Syntax.v) now contains only Boolean
 equality machinery, while [Semantics.v](../rocq/Ender/Semantics.v) contains only
 compatibility aliases to the meanings in `Audit.v`. The checker cannot compile
@@ -89,7 +98,10 @@ The Wasm bundle is under
 
 ## Next work
 
-Extending this to all of Ender requires adding its remaining declarations,
-statement meanings, parser productions, and reason theorems. The provisional
-choices above are intentionally localized in syntax, semantics, and individual
-rules, so most can be revised without changing the soundness architecture.
+Extending the executable to all of Ender requires implementing the final
+declaration and statement parser, proving it equivalent to `ProblemGrammar`,
+and mechanizing the remaining reason theorems. `kite_premise`, binary
+`sim_seg`, `linear_pair`, and arc syntax currently fail closed in the final
+meaning because their adopted elaboration or surface representation is not yet
+coherent. Resolving those decisions changes this audit surface but not the
+soundness architecture.
