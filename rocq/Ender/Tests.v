@@ -118,4 +118,18 @@ Example bad_dependency_rejects :
 [04] sas(1,2,99) -> con_tri(t_ABC,t_DEF)") = false.
 Proof. vm_compute. reflexivity. Qed.
 
-Print Assumptions check_source_sound.
+Example problem_part_excludes_coordinates_and_steps :
+  Audit.ProblemPart.problemPart "title: ignored
+pt: A (100,200)
+tri: t_ABC
+-> ref_seg(AB,AB)
+
+steps:
+[01] reflex() -> ref_seg(AB,AB)" =
+  Some "tri: t_ABC
+-> ref_seg(AB,AB)
+
+".
+Proof. vm_compute. reflexivity. Qed.
+
+Print Assumptions audit_sound.

@@ -29,25 +29,33 @@ are noncollinear.
 
 ## Soundness boundary
 
-[Parser.v](../rocq/Ender/Parser.v) is the principal human-audit boundary. Its
-`parse_problem` maps source text to the syntax in
-[Syntax.v](../rocq/Ender/Syntax.v), `check_source` is the executable Boolean
-entry point, and `check_source_sound` states:
+[Audit.v](../rocq/Ender/Audit.v) is the single human-audit surface. It imports
+no Ender implementation file and contains only:
+
+1. `problemPart`, which returns the substring after the `pt:` line and before
+   `steps:`;
+2. the complete grammar and geometric meaning of the supported statements;
+3. the signatures of the problem-part parser and Boolean checker; and
+4. the exact `sound` proposition that their implementation must prove.
+
+That proposition states:
 
 ```text
-parse_problem source = Some p
-and check_source source = true
-and p's triangle declarations are noncollinear
-and p's premises hold
-imply p's goal holds.
+problemPart source = Some part
+and parseProblemPart part = Some header
+and check source = true
+imply that, in every supported Tarski geometry and point interpretation,
+the header's declared noncollinearity and premises imply its goal.
 ```
 
-[Semantics.v](../rocq/Ender/Semantics.v) gives each supported statement its
-geometric meaning. The checker implementation and proof are in
-[Checker.v](../rocq/Ender/Checker.v). Successfully checking those files proves
-the Boolean checker's soundness relative to the parser and statement semantics;
-it cannot prove that these intentionally chosen interpretations match a
-reader's intent. Those definitions therefore remain part of the human audit.
+[Parser.v](../rocq/Ender/Parser.v) packages the executable implementation as a
+Rocq module constrained by that signature. Its `audit_sound` proof is outside
+the audit surface. [Syntax.v](../rocq/Ender/Syntax.v) now contains only Boolean
+equality machinery, while [Semantics.v](../rocq/Ender/Semantics.v) contains only
+compatibility aliases to the meanings in `Audit.v`. The checker cannot compile
+as `VerifiedChecker` unless its functions and proof have exactly the audited
+types. Rocq cannot establish that these intentionally chosen meanings match a
+reader's intent; this is why those meanings are kept in the audit file.
 
 The geometry is parametric over GeoCoq's
 `Tarski_neutral_dimensionless_with_decidable_point_equality`, rather than a

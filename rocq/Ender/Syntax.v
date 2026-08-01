@@ -1,38 +1,9 @@
 From Coq Require Import Ascii String List Bool Nat.
+Require Export Ender.Audit.
 Import ListNotations.
 
 Module EnderSyntax.
-
-Definition PointId := ascii.
-
-Record Segment := segment { seg_start : PointId; seg_end : PointId }.
-Record Angle := angle { ang_left : PointId; ang_vertex : PointId; ang_right : PointId }.
-Record Triangle := triangle { tri_a : PointId; tri_b : PointId; tri_c : PointId }.
-
-Inductive Statement :=
-| ConSeg : Segment -> Segment -> Statement
-| RefSeg : Segment -> Segment -> Statement
-| ConAng : Angle -> Angle -> Statement
-| RefAng : Angle -> Angle -> Statement
-| ConTri : Triangle -> Triangle -> Statement.
-
-Inductive Reason :=
-| Given : string -> Reason
-| Reflex : Reason
-| SAS : nat -> nat -> nat -> Reason
-| SSS : nat -> nat -> nat -> Reason
-| ASA : nat -> nat -> nat -> Reason
-| AAS : nat -> nat -> nat -> Reason
-| CPCTC : nat -> Reason.
-
-Record Premise := premise { premise_label : string; premise_statement : Statement }.
-Record Step := step { step_reason : Reason; step_conclusion : Statement }.
-Record Problem := problem {
-  problem_triangles : list Triangle;
-  problem_premises : list Premise;
-  problem_goal : Statement;
-  problem_steps : list Step
-}.
+Include EnderGrammar.
 
 Definition ascii_eqb := Ascii.eqb.
 

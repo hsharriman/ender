@@ -301,31 +301,31 @@ Fixpoint parse_step_lines (lines : list chars) (steps : list Step) : option (lis
       else parse_step_lines rest steps
   end.
 
+Definition parseProblemPart (part : string) : option ProblemHeader :=
+  match parse_header_lines (split_lines (list_ascii_of_string part) [])
+                           (header_state [] [] None) with
+  | Some header =>
+      match header.(hs_goal) with
+      | Some goal => Some (problem_header header.(hs_triangles)
+                                          header.(hs_premises) goal)
+      | None => None
+      end
+  | None => None
+  end.
+
 Definition parse_problem (source : string) : option Problem :=
   let text := list_ascii_of_string source in
-  match find_after (list_ascii_of_string "pt:") text with
-  | None => None
-  | Some after_pt =>
-      match find_after ["010"%char] after_pt with
-      | None => None
-      | Some after_coordinates =>
-          match take_before (list_ascii_of_string "steps:") after_coordinates,
-                find_after (list_ascii_of_string "steps:") after_coordinates with
-          | Some header_text, Some step_text =>
-              match parse_header_lines (split_lines header_text [])
-                      (header_state [] [] None),
-                    parse_step_lines (split_lines step_text []) [] with
-              | Some header, Some steps =>
-                  match header.(hs_goal) with
-                  | Some goal => Some (problem header.(hs_triangles)
-                                              header.(hs_premises) goal steps)
-                  | None => None
-                  end
-              | _, _ => None
-              end
-          | _, _ => None
-          end
+  match problemPart source,
+        find_after (list_ascii_of_string "steps:") text with
+  | Some part, Some step_text =>
+      match parseProblemPart part,
+            parse_step_lines (split_lines step_text []) [] with
+      | Some header, Some steps =>
+          Some (problem header.(header_triangles) header.(header_premises)
+                        header.(header_goal) steps)
+      | _, _ => None
       end
+  | _, _ => None
   end.
 
 Definition check_source (source : string) : bool :=
@@ -348,3 +348,34 @@ Proof.
 Qed.
 
 End SourceSoundness.
+
+Theorem audit_sound : forall source part header,
+  problemPart source = Some part ->
+  parseProblemPart part = Some header ->
+  check_source source = true ->
+  forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}
+         (point : PointId -> Tpoint),
+    headerMeaning point header.
+Proof.
+  intros source part header Hpart Hheader Hcheck Tn TnEQD point.
+  unfold check_source, parse_problem in Hcheck. rewrite Hpart in Hcheck.
+  destruct (find_after (list_ascii_of_string "steps:")
+                       (list_ascii_of_string source)) as [step_text|] eqn:Hsteps;
+    try discriminate.
+  rewrite Hheader in Hcheck.
+  destruct (parse_step_lines (split_lines step_text []) []) as [steps|] eqn:Hparsed;
+    try discriminate.
+  unfold headerMeaning. intros Hwf Hprem.
+  change (interp_statement point header.(header_goal)).
+  refine (check_problem_sound point
+            (problem header.(header_triangles) header.(header_premises)
+                     header.(header_goal) steps) Hcheck _ _).
+  - exact Hwf.
+  - exact Hprem.
+Qed.
+
+Module VerifiedChecker <: VERIFIED_CHECKER.
+  Definition parseProblemPart := parseProblemPart.
+  Definition check := check_source.
+  Definition sound := audit_sound.
+End VerifiedChecker.

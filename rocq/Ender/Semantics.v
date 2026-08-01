@@ -13,24 +13,16 @@ Definition segment_points (s : Segment) :=
   (point s.(seg_start), point s.(seg_end)).
 
 Definition interp_segment_congruence (s t : Segment) : Prop :=
-  Cong (point s.(seg_start)) (point s.(seg_end))
-       (point t.(seg_start)) (point t.(seg_end)).
+  statementMeaning point (ConSeg s t).
 
 Definition interp_angle_congruence (a b : Angle) : Prop :=
-  CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
-        (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right)).
+  statementMeaning point (ConAng a b).
 
 Definition interp_triangle_congruence (t u : Triangle) : Prop :=
-  TriangleCongruent
-    (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c))
-    (point u.(tri_a)) (point u.(tri_b)) (point u.(tri_c)).
+  triangle_congruence point t u.
 
 Definition interp_statement (s : Statement) : Prop :=
-  match s with
-  | ConSeg a b | RefSeg a b => interp_segment_congruence a b
-  | ConAng a b | RefAng a b => interp_angle_congruence a b
-  | ConTri a b => interp_triangle_congruence a b
-  end.
+  statementMeaning point s.
 
 Definition interp_premise (p : Premise) : Prop :=
   interp_statement p.(premise_statement).
