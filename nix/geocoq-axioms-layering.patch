@@ -1,0 +1,11 @@
+diff --git a/configure-axioms.sh b/configure-axioms.sh
+index 244eb4c..086009a 100755
+--- a/configure-axioms.sh
++++ b/configure-axioms.sh
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env sh
+ cp -f _CoqProject-Axioms.in _CoqProject
+-find theories/Axioms -name "*.v" >> _CoqProject
++find theories/Axioms -name "*.v" ! -name "gelertner_inspired_axioms.v" >> _CoqProject
+ coq_makefile -f _CoqProject -o Makefile
+ rm -f .coqdeps.d

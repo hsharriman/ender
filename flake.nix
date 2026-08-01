@@ -17,7 +17,7 @@
         coq = pkgs.coq_8_20;
         coqLib = "lib/coq/${coq.coq-version}/user-contrib";
 
-        mkGeoCoqPart = { pname, configure, dependencies ? [], postPatch ? "" }:
+        mkGeoCoqPart = { pname, configure, dependencies ? [], patches ? [] }:
           pkgs.stdenvNoCC.mkDerivation {
             inherit pname;
             version = geocoq.shortRev or "unstable";
@@ -25,7 +25,7 @@
             strictDeps = true;
             nativeBuildInputs = [ coq pkgs.gnumake ] ++ dependencies;
             buildInputs = dependencies;
-            inherit postPatch;
+            inherit patches;
             configurePhase = ''
               runHook preConfigure
               patchShebangs ${configure}
@@ -54,11 +54,7 @@
           dependencies = [ geocoqCoinc ];
           # This historical example lives under Axioms but imports Main, so it
           # cannot be part of the foundational Axioms layer used by Ender.
-          postPatch = ''
-            substituteInPlace configure-axioms.sh \
-              --replace-fail 'find theories/Axioms -name "*.v"' \
-                'find theories/Axioms -name "*.v" ! -name "gelertner_inspired_axioms.v"'
-          '';
+          patches = [ ./nix/geocoq-axioms-layering.patch ];
         };
         geocoqMain = mkGeoCoqPart {
           pname = "geocoq-main";
