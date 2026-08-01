@@ -151,4 +151,4 @@ steps:
 ".
 Proof. vm_compute. reflexivity. Qed.
 
-Print Assumptions audit_sound.
+Print Assumptions check_source_sound.

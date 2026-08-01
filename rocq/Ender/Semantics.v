@@ -9,20 +9,45 @@ Section EnderSemantics.
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 Variable point : PointId -> Tpoint.
 
+Definition triangle_congruence (t u : Triangle) : Prop :=
+  Cong (point t.(tri_a)) (point t.(tri_b))
+       (point u.(tri_a)) (point u.(tri_b)) /\
+  Cong (point t.(tri_b)) (point t.(tri_c))
+       (point u.(tri_b)) (point u.(tri_c)) /\
+  Cong (point t.(tri_c)) (point t.(tri_a))
+       (point u.(tri_c)) (point u.(tri_a)) /\
+  CongA (point t.(tri_b)) (point t.(tri_a)) (point t.(tri_c))
+        (point u.(tri_b)) (point u.(tri_a)) (point u.(tri_c)) /\
+  CongA (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c))
+        (point u.(tri_a)) (point u.(tri_b)) (point u.(tri_c)) /\
+  CongA (point t.(tri_a)) (point t.(tri_c)) (point t.(tri_b))
+        (point u.(tri_a)) (point u.(tri_c)) (point u.(tri_b)).
+
+Definition statement_meaning (s : Statement) : Prop :=
+  match s with
+  | ConSeg a b | RefSeg a b =>
+      Cong (point a.(seg_start)) (point a.(seg_end))
+           (point b.(seg_start)) (point b.(seg_end))
+  | ConAng a b | RefAng a b =>
+      CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
+            (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
+  | ConTri a b => triangle_congruence a b
+  end.
+
 Definition segment_points (s : Segment) :=
   (point s.(seg_start), point s.(seg_end)).
 
 Definition interp_segment_congruence (s t : Segment) : Prop :=
-  statementMeaning point (ConSeg s t).
+  statement_meaning (ConSeg s t).
 
 Definition interp_angle_congruence (a b : Angle) : Prop :=
-  statementMeaning point (ConAng a b).
+  statement_meaning (ConAng a b).
 
 Definition interp_triangle_congruence (t u : Triangle) : Prop :=
-  triangle_congruence point t u.
+  triangle_congruence t u.
 
 Definition interp_statement (s : Statement) : Prop :=
-  statementMeaning point s.
+  statement_meaning s.
 
 Definition interp_premise (p : Premise) : Prop :=
   interp_statement p.(premise_statement).

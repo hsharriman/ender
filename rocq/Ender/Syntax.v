@@ -3,7 +3,38 @@ Require Export Ender.Audit.
 Import ListNotations.
 
 Module EnderSyntax.
-Include EnderGrammar.
+
+(** Internal representation used by the currently implemented reason kernel.
+    These are implementation details and therefore deliberately absent from
+    the human-audit surface. *)
+Definition PointId := ascii.
+Record Segment := segment { seg_start : PointId; seg_end : PointId }.
+Record Angle := angle { ang_left : PointId; ang_vertex : PointId; ang_right : PointId }.
+Record Triangle := triangle { tri_a : PointId; tri_b : PointId; tri_c : PointId }.
+
+Inductive Statement :=
+| ConSeg : Segment -> Segment -> Statement
+| ConAng : Angle -> Angle -> Statement
+| ConTri : Triangle -> Triangle -> Statement
+| RefSeg : Segment -> Segment -> Statement
+| RefAng : Angle -> Angle -> Statement.
+
+Inductive Reason :=
+| Given : string -> Reason | Reflex : Reason
+| SAS : nat -> nat -> nat -> Reason | SSS : nat -> nat -> nat -> Reason
+| ASA : nat -> nat -> nat -> Reason | AAS : nat -> nat -> nat -> Reason
+| CPCTC : nat -> Reason.
+
+Record Premise := premise { premise_label : string; premise_statement : Statement }.
+Record Step := step { step_reason : Reason; step_conclusion : Statement }.
+Record ProblemHeader := problem_header {
+  header_triangles : list Triangle; header_premises : list Premise;
+  header_goal : Statement
+}.
+Record Problem := problem {
+  problem_triangles : list Triangle; problem_premises : list Premise;
+  problem_goal : Statement; problem_steps : list Step
+}.
 
 Definition ascii_eqb := Ascii.eqb.
 

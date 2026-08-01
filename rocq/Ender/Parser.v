@@ -348,34 +348,3 @@ Proof.
 Qed.
 
 End SourceSoundness.
-
-Theorem audit_sound : forall source part header,
-  problemPart source = Some part ->
-  parseProblemPart part = Some header ->
-  check_source source = true ->
-  forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}
-         (point : PointId -> Tpoint),
-    headerMeaning point header.
-Proof.
-  intros source part header Hpart Hheader Hcheck Tn TnEQD point.
-  unfold check_source, parse_problem in Hcheck. rewrite Hpart in Hcheck.
-  destruct (find_after (list_ascii_of_string "steps:")
-                       (list_ascii_of_string source)) as [step_text|] eqn:Hsteps;
-    try discriminate.
-  rewrite Hheader in Hcheck.
-  destruct (parse_step_lines (split_lines step_text []) []) as [steps|] eqn:Hparsed;
-    try discriminate.
-  unfold headerMeaning. intros Hwf Hprem.
-  change (interp_statement point header.(header_goal)).
-  refine (check_problem_sound point
-            (problem header.(header_triangles) header.(header_premises)
-                     header.(header_goal) steps) Hcheck _ _).
-  - exact Hwf.
-  - exact Hprem.
-Qed.
-
-Module VerifiedChecker <: VERIFIED_SLICE_CHECKER.
-  Definition parseProblemPart := parseProblemPart.
-  Definition check := check_source.
-  Definition sound := audit_sound.
-End VerifiedChecker.

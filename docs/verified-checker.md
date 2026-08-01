@@ -1,4 +1,4 @@
-# Verified checker vertical slice
+# Verified Ender checker
 
 This directory contains an executable, proved-sound checker for a deliberately
 small Ender language.  It is a feasibility result, not yet a replacement for
@@ -30,8 +30,7 @@ are noncollinear.
 ## Soundness boundary
 
 [Audit.v](../rocq/Ender/Audit.v) is the single human-audit surface. It imports
-no Ender implementation file. It now contains the intended final contract as
-well as a visibly separate contract for the executable slice:
+no Ender implementation file and contains only the intended final contract:
 
 1. `problemPart`, which returns the substring after the `pt:` line and before
    `steps:`;
@@ -41,31 +40,30 @@ well as a visibly separate contract for the executable slice:
 5. a total `statementMeaning : PublicStatement -> Prop` and
    `meaning : string -> option Prop`, where optionality belongs only to parsing;
    and
-6. the final parser-correctness and checker-soundness signatures.
+6. the final parser-soundness and checker-soundness signatures.
 
-The `COMPLETE_VERIFIED_CHECKER` signature is the target for the finished
-project. The separate `VERIFIED_SLICE_CHECKER` signature records what is proved
-today. Thus the audit file can be reviewed now without suggesting that the
-executable already covers the complete language.
+There is no `VERIFIED_SLICE_CHECKER` switch or second audit contract. The
+smaller executable reason kernel is an implementation detail outside the audit
+file. `parseProblem` must prove the trust-relevant direction—every successful
+parse satisfies the independent `ProblemGrammar`. Parser completeness is useful
+but is not needed for soundness because rejecting additional inputs is safe.
 
 That proposition states:
 
 ```text
 problemPart source = Some part
-and parseProblemPart part = Some header
-and check source = true
-imply that, in every supported Tarski geometry and point interpretation,
-the header's declared noncollinearity and premises imply its goal.
+and checker source = true
+imply that meaning part returns a proposition which holds in every supported
+two-dimensional Euclidean Tarski geometry.
 ```
 
-[Parser.v](../rocq/Ender/Parser.v) packages the executable implementation as a
-Rocq module constrained by the slice signature. Its `audit_sound` proof is outside
-the audit surface. [Syntax.v](../rocq/Ender/Syntax.v) now contains only Boolean
-equality machinery, while [Semantics.v](../rocq/Ender/Semantics.v) contains only
-compatibility aliases to the meanings in `Audit.v`. The checker cannot compile
-as `VerifiedChecker` unless its functions and proof have exactly the audited
-types. Rocq cannot establish that these intentionally chosen meanings match a
-reader's intent; this is why those meanings are kept in the audit file.
+[PublicParser.v](../rocq/Ender/PublicParser.v) implements all audited declaration
+and statement forms, including nested minor/major arc syntax, and proves that
+every accepted header satisfies `ProblemGrammar`. [Syntax.v](../rocq/Ender/Syntax.v)
+and [Semantics.v](../rocq/Ender/Semantics.v) contain the internal representation
+and compatibility semantics for the currently executable reason subset. Rocq
+cannot establish that the deliberately chosen public meanings match a reader's
+intent; this is why those meanings remain in the audit file.
 
 The geometry is parametric over GeoCoq's
 `Tarski_neutral_dimensionless_with_decidable_point_equality`, rather than a
@@ -99,9 +97,11 @@ The Wasm bundle is under
 
 ## Next work
 
-Extending the executable to all of Ender requires implementing the final
-declaration and statement parser, proving it equivalent to `ProblemGrammar`,
-and mechanizing the remaining reason theorems. Every trusted statement now has
-a total meaning. Binary `sim_seg` has been replaced by four-segment
+The complete declaration and statement parser and its soundness proof are now
+implemented. The immediate remaining integration task is to connect that public
+problem representation to the proved reason kernel and inhabit
+`COMPLETE_VERIFIED_CHECKER`; after that, coverage grows by mechanizing the
+remaining reason theorems. Every trusted statement has a total meaning. Binary
+`sim_seg` has been replaced by four-segment
 `proportion`; linear pairs have explicit ray geometry; `kite_premise` is a
 specified compatibility macro; and arcs carry explicit minor/major identity.

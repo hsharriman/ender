@@ -1,55 +1,9 @@
-(**
-  This is the complete human-audit surface for the verified checker slice.
-  It intentionally imports no Ender implementation module.
-*)
+(** This is the complete human-audit surface for the Ender checker.  It
+    intentionally imports no Ender implementation module. *)
 From Coq Require Import Ascii String List Bool ClassicalDescription.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Import ListNotations.
 Local Open Scope string_scope.
-
-Module EnderGrammar.
-
-Definition PointId := ascii.
-
-Record Segment := segment { seg_start : PointId; seg_end : PointId }.
-Record Angle := angle { ang_left : PointId; ang_vertex : PointId; ang_right : PointId }.
-Record Triangle := triangle { tri_a : PointId; tri_b : PointId; tri_c : PointId }.
-
-Inductive Statement :=
-| ConSeg : Segment -> Segment -> Statement
-| ConAng : Angle -> Angle -> Statement
-| ConTri : Triangle -> Triangle -> Statement
-| RefSeg : Segment -> Segment -> Statement
-| RefAng : Angle -> Angle -> Statement
-.
-
-Inductive Reason :=
-| Given : string -> Reason
-| Reflex : Reason
-| SAS : nat -> nat -> nat -> Reason
-| SSS : nat -> nat -> nat -> Reason
-| ASA : nat -> nat -> nat -> Reason
-| AAS : nat -> nat -> nat -> Reason
-| CPCTC : nat -> Reason.
-
-Record Premise := premise { premise_label : string; premise_statement : Statement }.
-Record Step := step { step_reason : Reason; step_conclusion : Statement }.
-Record ProblemHeader := problem_header {
-  header_triangles : list Triangle;
-  header_premises : list Premise;
-  header_goal : Statement
-}.
-Record Problem := problem {
-  problem_triangles : list Triangle;
-  problem_premises : list Premise;
-  problem_goal : Statement;
-  problem_steps : list Step
-}.
-
-
-End EnderGrammar.
-
-Import EnderGrammar.
 
 (** Return precisely the text after the [pt:] line and before [steps:]. *)
 Module ProblemPart.
@@ -107,11 +61,7 @@ End ProblemPart.
 
 Export ProblemPart.
 
-(**
-  The intended completed public language.  The executable development below
-  this section currently implements only the smaller [EnderGrammar] slice;
-  these definitions are the target contract, not an assertion of coverage.
-*)
+(** The complete public theorem language. *)
 Module FinalAudit.
 
 Local Open Scope string_scope.
@@ -700,58 +650,3 @@ Module Type COMPLETE_VERIFIED_CHECKER.
 End COMPLETE_VERIFIED_CHECKER.
 
 End FinalAudit.
-
-Section Meaning.
-
-Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
-Variable point : PointId -> Tpoint.
-
-Definition triangle_congruence (t u : Triangle) : Prop :=
-  Cong (point t.(tri_a)) (point t.(tri_b))
-       (point u.(tri_a)) (point u.(tri_b)) /\
-  Cong (point t.(tri_b)) (point t.(tri_c))
-       (point u.(tri_b)) (point u.(tri_c)) /\
-  Cong (point t.(tri_c)) (point t.(tri_a))
-       (point u.(tri_c)) (point u.(tri_a)) /\
-  CongA (point t.(tri_b)) (point t.(tri_a)) (point t.(tri_c))
-        (point u.(tri_b)) (point u.(tri_a)) (point u.(tri_c)) /\
-  CongA (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c))
-        (point u.(tri_a)) (point u.(tri_b)) (point u.(tri_c)) /\
-  CongA (point t.(tri_a)) (point t.(tri_c)) (point t.(tri_b))
-        (point u.(tri_a)) (point u.(tri_c)) (point u.(tri_b)).
-
-Definition statementMeaning (s : Statement) : Prop :=
-  match s with
-  | ConSeg a b | RefSeg a b =>
-      Cong (point a.(seg_start)) (point a.(seg_end))
-           (point b.(seg_start)) (point b.(seg_end))
-  | ConAng a b | RefAng a b =>
-      CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
-            (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
-  | ConTri a b => triangle_congruence a b
-  end.
-
-Definition headerMeaning (h : ProblemHeader) : Prop :=
-  (forall t, In t h.(header_triangles) ->
-     ~ Col (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c))) ->
-  Forall (fun p => statementMeaning p.(premise_statement)) h.(header_premises) ->
-  statementMeaning h.(header_goal).
-
-End Meaning.
-
-(**
-  The implementation must inhabit this signature.  A reviewer checks this
-  file; Rocq checks the implementation and the proof body elsewhere.
-*)
-Module Type VERIFIED_SLICE_CHECKER.
-  Parameter parseProblemPart : string -> option ProblemHeader.
-  Parameter check : string -> bool.
-
-  Parameter sound : forall source part header,
-    problemPart source = Some part ->
-    parseProblemPart part = Some header ->
-    check source = true ->
-    forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}
-           (point : PointId -> Tpoint),
-      headerMeaning point header.
-End VERIFIED_SLICE_CHECKER.
