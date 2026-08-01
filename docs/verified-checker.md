@@ -1,8 +1,8 @@
 # Verified Ender checker
 
-This directory contains an executable, proved-sound checker for a deliberately
-small Ender language.  It is a feasibility result, not yet a replacement for
-the TypeScript checker.
+This directory contains an executable, proved-sound checker with the complete
+audited Ender statement language and a deliberately smaller verified reason
+kernel. It is not yet a replacement for the TypeScript checker.
 
 ## Scope
 
@@ -61,7 +61,11 @@ two-dimensional Euclidean Tarski geometry.
 and statement forms, including nested minor/major arc syntax, and proves that
 every accepted header satisfies `ProblemGrammar`. [Syntax.v](../rocq/Ender/Syntax.v)
 and [Semantics.v](../rocq/Ender/Semantics.v) contain the internal representation
-and compatibility semantics for the currently executable reason subset. Rocq
+and compatibility semantics for the currently executable reason subset.
+[CompleteChecker.v](../rocq/Ender/CompleteChecker.v) supplies the fail-closed
+adapter, proves the semantic bridge, and inhabits `COMPLETE_VERIFIED_CHECKER`.
+The extracted native and Wasm programs now run that complete-contract checker.
+Rocq
 cannot establish that the deliberately chosen public meanings match a reader's
 intent; this is why those meanings remain in the audit file.
 
@@ -97,11 +101,11 @@ The Wasm bundle is under
 
 ## Next work
 
-The complete declaration and statement parser and its soundness proof are now
-implemented. The immediate remaining integration task is to connect that public
-problem representation to the proved reason kernel and inhabit
-`COMPLETE_VERIFIED_CHECKER`; after that, coverage grows by mechanizing the
-remaining reason theorems. Every trusted statement has a total meaning. Binary
+The complete declaration and statement parser, parser-soundness proof, semantic
+adapter, and final checker theorem are implemented. Coverage now grows by
+mechanizing the remaining reason theorems. Parser completeness is an optional
+usability theorem; it is deliberately not assumed by soundness. Every trusted
+statement has a total meaning. Binary
 `sim_seg` has been replaced by four-segment
 `proportion`; linear pairs have explicit ray geometry; `kite_premise` is a
 specified compatibility macro; and arcs carry explicit minor/major identity.

@@ -1,5 +1,5 @@
 From Coq Require Import String.
-Require Import Ender.Parser Ender.PublicParser.
+Require Import Ender.Parser Ender.PublicParser Ender.CompleteChecker.
 Open Scope string_scope.
 
 Definition common_header (premises goal steps : string) : string :=
@@ -92,6 +92,20 @@ Example cpctc_accepts : check_source cpctc_source = true. Proof. vm_compute. ref
 Example repository_tutorial_accepts : check_source repository_tutorial = true.
 Proof. vm_compute. reflexivity. Qed.
 
+Example complete_sas_accepts : complete_checker sas_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_sss_accepts : complete_checker sss_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_asa_accepts : complete_checker asa_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_aas_accepts : complete_checker aas_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_cpctc_accepts : complete_checker cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_repository_tutorial_accepts :
+  complete_checker repository_tutorial = true.
+Proof. vm_compute. reflexivity. Qed.
+
 (** The complete public parser already covers statement forms outside the
     currently executable reason kernel, including nested arc syntax. *)
 Example public_arc_statement_parses :
@@ -125,6 +139,18 @@ Definition bad_sss_source := common_header
 Example wrong_reason_rejects : check_source bad_sss_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+Example complete_wrong_reason_rejects : complete_checker bad_sss_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition unsupported_goal_source := common_header "" "right(a_BAC)" "".
+Example parsed_but_unimplemented_goal_rejects :
+  match Audit.ProblemPart.problemPart unsupported_goal_source with
+  | Some part =>
+      match parsePublicProblem part with Some _ => true | None => false end
+  | None => false
+  end = true /\ complete_checker unsupported_goal_source = false.
+Proof. vm_compute. split; reflexivity. Qed.
+
 Example bad_dependency_rejects :
   check_source (common_header
     "[g_1] con_seg(AB,DE)
@@ -152,3 +178,4 @@ steps:
 Proof. vm_compute. reflexivity. Qed.
 
 Print Assumptions check_source_sound.
+Print Assumptions CompleteVerifiedChecker.checker_sound.

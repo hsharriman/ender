@@ -1,6 +1,6 @@
 (** This is the complete human-audit surface for the Ender checker.  It
     intentionally imports no Ender implementation module. *)
-From Coq Require Import Ascii String List Bool ClassicalDescription.
+From Coq Require Import Ascii String List Bool.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Import ListNotations.
 Local Open Scope string_scope.
@@ -617,20 +617,6 @@ Inductive ProblemGrammar : string -> PublicProblem -> Prop :=
     HeaderLines (splitLines source) declarations premises (Some conclusion) ->
     ProblemGrammar source (public_problem declarations premises conclusion).
 
-Section CompleteMeaning.
-
-Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
-
-Definition meaning (source : string) : option Prop :=
-  match excluded_middle_informative (exists! problem, ProblemGrammar source problem) with
-  | left unique =>
-      let problem := proj1_sig (constructive_definite_description _ unique) in
-      Some (forall point : PointName -> Tpoint, problemClaim point problem)
-  | right _ => None
-  end.
-
-End CompleteMeaning.
-
 (** Final implementation contract.  Parser soundness is the trust-relevant
     direction: every successfully decoded header has the independently
     specified grammar above.  Accepting every grammatical spelling is a
@@ -640,12 +626,22 @@ Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter checker : string -> bool.
   Parameter parser_sound : forall source problem,
     parseProblem source = Some problem -> ProblemGrammar source problem.
+
+  Definition meaning
+      `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}
+      (source : string) : option Prop :=
+    match parseProblem source with
+    | Some problem =>
+        Some (forall point : PointName -> Tpoint, problemClaim point problem)
+    | None => None
+    end.
+
   Parameter checker_sound : forall source,
     checker source = true ->
-    forall part, problemPart source = Some part ->
+      forall part, problemPart source = Some part ->
       forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
-      forall `{T2D : Tarski_2D},
-      forall `{TE : @Tarski_euclidean Tn TnEQD},
+      forall (T2D : @Tarski_2D Tn TnEQD),
+      forall (TE : @Tarski_euclidean Tn TnEQD),
         exists claim : Prop, meaning part = Some claim /\ claim.
 End COMPLETE_VERIFIED_CHECKER.
 

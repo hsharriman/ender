@@ -11,7 +11,7 @@ let () =
     exit 2
   end;
   let source = read_file Sys.argv.(1) |> String.to_seq |> List.of_seq in
-  if EnderChecker.check_source source then begin
+  if EnderChecker.complete_checker source then begin
     print_endline "accepted";
     exit 0
   end else begin
