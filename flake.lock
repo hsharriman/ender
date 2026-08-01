@@ -21,32 +21,31 @@
     "geocoq": {
       "flake": false,
       "locked": {
-        "lastModified": 1746090833,
-        "narHash": "sha256-nLWxRAQHIV3XHjAJ3kAQMuxF0JxF62uG2CQg3sCwosg=",
+        "lastModified": 1763423194,
+        "narHash": "sha256-Ta0U2knrWFMQMfq2OoKzEHnsQLVn+2bPt4eMm5IBV0k=",
         "owner": "GeoCoq",
         "repo": "GeoCoq",
-        "rev": "90d8ce484b32e0568b106c85d7e15be719a40180",
+        "rev": "8848449c79c76eecd0c19c3f428c75f126117e66",
         "type": "github"
       },
       "original": {
         "owner": "GeoCoq",
         "repo": "GeoCoq",
-        "rev": "90d8ce484b32e0568b106c85d7e15be719a40180",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1785571196,
-        "narHash": "sha256-KoTsyMQqnXQZq8deCEnu4QkyldkwH/bpMMhUcfMdGIw=",
+        "lastModified": 1785542685,
+        "narHash": "sha256-sjfvXMbG5pCFgpvw2OZAFcZiTvrppCWvnB6cuGrSY08=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "148bab9c1c3c53136ecb44a6ea356a0ed5b39b06",
+        "rev": "f8e81fc7eb063db454f563cdd596fb96a5ad1497",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-unstable",
+        "ref": "nixpkgs-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }

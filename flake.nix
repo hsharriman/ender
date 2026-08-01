@@ -2,10 +2,10 @@
   description = "Ender verified Rocq checker vertical slice";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     geocoq = {
-      url = "github:GeoCoq/GeoCoq/90d8ce484b32e0568b106c85d7e15be719a40180";
+      url = "github:GeoCoq/GeoCoq";
       flake = false;
     };
   };
@@ -17,14 +17,15 @@
         coq = pkgs.coq_8_20;
         coqLib = "lib/coq/${coq.coq-version}/user-contrib";
 
-        mkGeoCoqPart = { pname, configure, dependencies ? [] }:
+        mkGeoCoqPart = { pname, configure, dependencies ? [], postPatch ? "" }:
           pkgs.stdenvNoCC.mkDerivation {
             inherit pname;
-            version = "90d8ce4";
+            version = geocoq.shortRev or "unstable";
             src = geocoq;
             strictDeps = true;
             nativeBuildInputs = [ coq pkgs.gnumake ] ++ dependencies;
             buildInputs = dependencies;
+            inherit postPatch;
             configurePhase = ''
               runHook preConfigure
               patchShebangs ${configure}
@@ -51,6 +52,13 @@
           pname = "geocoq-axioms";
           configure = "configure-axioms.sh";
           dependencies = [ geocoqCoinc ];
+          # This historical example lives under Axioms but imports Main, so it
+          # cannot be part of the foundational Axioms layer used by Ender.
+          postPatch = ''
+            substituteInPlace configure-axioms.sh \
+              --replace-fail 'find theories/Axioms -name "*.v"' \
+                'find theories/Axioms -name "*.v" ! -name "gelertner_inspired_axioms.v"'
+          '';
         };
         geocoqMain = mkGeoCoqPart {
           pname = "geocoq-main";
