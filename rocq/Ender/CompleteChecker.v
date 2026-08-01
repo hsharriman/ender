@@ -96,19 +96,27 @@ Inductive CheckResult := ParseFailure | ProofRejected | ProofAccepted.
 
 Definition classify_source (source : string) : CheckResult :=
   let text := list_ascii_of_string source in
-  match problemPart source,
-        Parser.find_after (list_ascii_of_string "steps:") text with
-  | Some part, Some stepText =>
-      match parsePublicProblem part, parseProblemPart part,
-            parse_step_lines (Parser.split_lines stepText []) [] with
-      | Some public, Some header, Some steps =>
-          match build_kernel_problem public header steps with
-          | Some p => if check_problem p then ProofAccepted else ProofRejected
-          | None => ProofRejected
+  match problemPart source with
+  | Some part =>
+      match parsePublicProblem part with
+      | Some public =>
+          match Parser.find_after (list_ascii_of_string "steps:") text,
+                parseProblemPart part with
+          | Some stepText, Some header =>
+              match parse_step_lines (Parser.split_lines stepText []) [] with
+              | Some steps =>
+                  match build_kernel_problem public header steps with
+                  | Some p =>
+                      if check_problem p then ProofAccepted else ProofRejected
+                  | None => ProofRejected
+                  end
+              | None => ProofRejected
+              end
+          | _, _ => ProofRejected
           end
-      | _, _, _ => ParseFailure
+      | None => ParseFailure
       end
-  | _, _ => ParseFailure
+  | None => ParseFailure
   end.
 
 Definition complete_checker (source : string) : bool :=
@@ -283,8 +291,6 @@ Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
       intros point. exact (@complete_checker_problem_sound source part public
         Hpart Hpublic Hcheck Tn TnEQD point).
     - exfalso. unfold checker, complete_checker, classify_source in Hcheck.
-      rewrite Hpart in Hcheck.
-      destruct (Parser.find_after (list_ascii_of_string "steps:")
-        (list_ascii_of_string source)); [rewrite Hpublic in Hcheck|]; discriminate.
+      rewrite Hpart, Hpublic in Hcheck. discriminate.
   Qed.
 End CompleteVerifiedChecker.

@@ -158,6 +158,10 @@ Example parsed_but_unimplemented_goal_rejects :
   end = true /\ complete_checker unsupported_goal_source = false.
 Proof. vm_compute. split; reflexivity. Qed.
 
+Example parsed_but_unimplemented_goal_is_proof_rejection :
+  classify_source unsupported_goal_source = ProofRejected.
+Proof. vm_compute. reflexivity. Qed.
+
 Example bad_dependency_rejects :
   check_source (common_header
     "[g_1] con_seg(AB,DE)

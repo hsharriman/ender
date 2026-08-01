@@ -95,8 +95,10 @@ nix build .#ender-checker-wasm
 `nix flake check` kernel-checks the Rocq development, runs positive and negative
 Rocq examples, extracts the checker, builds native and Wasm versions, and runs
 both against repository proof files. The native command exits zero and prints
-`accepted` on acceptance. It prints `rejected proof` and exits 1 for a parsed
-but invalid or unsupported proof; malformed input prints
+`accepted` on acceptance. Once the audited problem portion has parsed, every
+non-accepting outcome prints `rejected proof` and exits 1; this includes an
+invalid proof, an unsupported reason or statement adapter, and malformed proof
+steps. Only failure of `problemPart` or the public problem parser prints
 `failed to parse problem` and exits 2.
 The Wasm bundle is under
 `result/share/ender-checker-wasm/` after the final command.
