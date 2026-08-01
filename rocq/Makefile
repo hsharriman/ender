@@ -33,7 +33,7 @@ Ender/Checker.vo: Ender/Checker.v Ender/Syntax.vo Ender/Geometry.vo Ender/Semant
 Ender/Parser.vo: Ender/Parser.v Ender/Syntax.vo Ender/Semantics.vo Ender/Checker.vo
 	coqc $(COQFLAGS) $<
 
-Ender/Tests.vo: Ender/Tests.v Ender/Parser.vo
+Ender/Tests.vo: Ender/Tests.v Ender/Parser.vo Ender/PublicParser.vo
 	coqc $(COQFLAGS) $<
 
 Ender/Extract.vo: Ender/Extract.v Ender/Parser.vo
