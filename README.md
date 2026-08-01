@@ -28,11 +28,7 @@ Open **ProofObj Harness** from the app to edit proofs live; checker errors appea
 Run the checker on one proof file:
 
 ```bash
-<<<<<<< HEAD
 npm run checkProof -- src/checker/proofs/examples/tutorial.txt
-=======
-npm run checkProof -- src/checker/proofs/tests/examples/tutorial.txt
->>>>>>> main
 ```
 
 The CLI checker does not require OpenAI/LLM configuration.
