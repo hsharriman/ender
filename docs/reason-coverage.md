@@ -9,6 +9,13 @@ manifest for all 92 reason names in the retained Ender catalog. Each entry recor
 - every bundled fixture that invokes the reason; and
 - a concise implementation note.
 
+Parity is reported over two corpora. The bundled fixtures in
+`src/checker/proofs/` are mostly one-reason unit tests and are a biased sample;
+the textbook proofs in the sibling `geo-proof-dataset` checkout are the
+representative one, and the two numbers differ substantially. Set
+`ENDER_DATASET` to point elsewhere, or leave the sibling checkout absent and
+only fixture parity is reported.
+
 Regenerate the manifest and print current corpus parity from the reproducible
 development environment:
 
@@ -31,15 +38,16 @@ node scripts/reason-coverage.mjs --json
 
 The parity categories deliberately distinguish:
 
-- `accepted`: accepted by the current verified kernel;
+- `accepted`: accepted by the current verified kernel (acceptance wins over
+  the labels below, which only ever explain a rejection);
 - `rejected-supported-slice`: uses only implemented reason names but fails;
 - `unsupported-reason`: contains at least one unimplemented reason; and
 - `parse-failure`: the theorem-bearing problem could not be decoded.
 
-Two bundled fixtures marked `// pass` land in `rejected-supported-slice`, both
-for the same reason: a triangle-congruence step names a correspondence its own
-argument does not establish, while the `cpctc` step that follows relies on the
-correct one. The legacy checker evidently matched the two triangles up to
+Four proofs across the two corpora are marked `// pass` but land in
+`rejected-supported-slice`, all for the same reason: a triangle-congruence step
+names a correspondence its own argument does not establish, while the `cpctc`
+step that follows relies on the correct one. The legacy checker evidently matched the two triangles up to
 independent permutation, which is exactly what makes `con_tri` unsound as an
 ordered claim.
 
@@ -48,6 +56,10 @@ ordered claim.
 - `examples/s1c3.txt` step 7 concludes `con_tri(t_QRP,t_MRN)` from an ASA
   argument establishing `P-M`, `R-R`, `Q-N`; its step 8 then reads `con_seg(QR,
   RN)` off the correspondence the argument actually proves.
+- `geo-proof-dataset` `holt_s4-3_cio4_c1.txt` concludes `con_tri(t_JKN,t_MLN)`
+  where the SSS argument gives `t_LMN` — the last two vertices transposed.
+- `geo-proof-dataset` `holt_s4-6_exer9_c1.txt` concludes `con_tri(t_WXZ,t_YZX)`
+  where the argument gives `t_YXZ`.
 
 These are fixture defects, not missing reasons. Correspondence search already
 covers all six readings of a conclusion, and permuting the two triangles

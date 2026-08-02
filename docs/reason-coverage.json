@@ -290,9 +290,9 @@
     },
     {
       "reason": "perp_con_ang",
-      "status": "partial",
-      "priority": 2,
-      "axioms": "GeoCoq Perp_at definition and l8_2",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq Perp_at definition, l8_2, and l11_16",
       "fixtures": [
         "src/checker/proofs/examples/s1c2.txt",
         "src/checker/proofs/examples/s1inc2.txt",
@@ -302,7 +302,7 @@
         "src/checker/proofs/lines_angles/perp_con_ang_correct.txt",
         "src/checker/proofs/lines_angles/perp_con_ang_incorrect.txt"
       ],
-      "note": "con_right conclusion verified; con_ang remains fail-closed pending nondegenerate rays."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "rectangle",

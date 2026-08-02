@@ -423,9 +423,19 @@ Definition perp_con_ang_foreign_ray_source := transitive_header "tri: t_ABD t_CB
   "[01] given(g_1) -> perp(BD,AC,D)
 [02] perp_con_ang(1) -> con_right(a_ADB,a_EDB)".
 
-(** Perpendicularity alone does not supply nondegenerate rays, so the angle
-    congruence conclusion of this reason stays fail-closed. *)
+(** Perpendicularity alone does not supply nondegenerate rays, but declared
+    triangles spanning both angles do. *)
 Definition perp_con_ang_con_ang_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_ang(a_ADB,a_BDC)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_ang(a_ADB,a_BDC)".
+
+(** Without a declared triangle to span them, the rays may be degenerate and
+    the angle-congruence conclusion stays fail-closed. *)
+Definition perp_con_ang_con_ang_undeclared_source := transitive_header "seg: AC
 "
   "[g_1] perp(BD,AC,D)
 "
@@ -449,8 +459,11 @@ Proof. vm_compute. reflexivity. Qed.
 Example perp_con_ang_foreign_ray_rejects :
   complete_checker perp_con_ang_foreign_ray_source = false.
 Proof. vm_compute. reflexivity. Qed.
-Example perp_con_ang_con_ang_rejects :
-  complete_checker perp_con_ang_con_ang_source = false.
+Example perp_con_ang_con_ang_accepts :
+  complete_checker perp_con_ang_con_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_con_ang_undeclared_rejects :
+  complete_checker perp_con_ang_con_ang_undeclared_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
 (** A triangle criterion may consume a right-angle pair where it expects an
@@ -1032,6 +1045,22 @@ Proof. vm_compute. reflexivity. Qed.
 Example con_supplements_unrelated_rejects :
   complete_checker con_supplements_unrelated_source = false.
 Proof. vm_compute. reflexivity. Qed.
+(** The shared supplement may sit in the first slot of the second dependency,
+    which is how the textbook corpus chains them. *)
+Definition con_supplements_same_chained_source :=
+  transitive_header "ang: a_ACD a_DCB a_ACE
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_DCB,a_ACE)
+"
+  "con_ang(a_ACD,a_ACE)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_DCB,a_ACE)
+[03] con_supplements_same(1,2) -> con_ang(a_ACD,a_ACE)".
+
+Example con_supplements_same_chained_accepts :
+  complete_checker con_supplements_same_chained_source = true.
+Proof. vm_compute. reflexivity. Qed.
 Example con_supplements_same_accepts :
   complete_checker con_supplements_same_source = true.
 Proof. vm_compute. reflexivity. Qed.
@@ -1091,6 +1120,65 @@ Example def_perp_foreign_ray_rejects :
 Proof. vm_compute. reflexivity. Qed.
 Example def_perp_wrong_vertex_rejects :
   complete_checker def_perp_wrong_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** AAS may cite its two angles in either order. *)
+Definition aas_swapped_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_ang(a_ACB,a_DFE)
+[g_2] con_ang(a_ABC,a_DEF)
+[g_3] con_seg(AB,DE)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_ang(a_ACB,a_DFE)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] given(g_3) -> con_seg(AB,DE)
+[04] aas(2,1,3) -> con_tri(t_ABC,t_DEF)".
+
+Example aas_swapped_accepts : complete_checker aas_swapped_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The witness congruence may relate either angle of one supplementary
+    dependency to either angle of the other. *)
+Definition con_supplements_crossed_source :=
+  transitive_header "ang: a_ACD a_DCB a_EGH a_HGF
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_EGH,a_HGF)
+[g_3] con_ang(a_DCB,a_EGH)
+"
+  "con_ang(a_ACD,a_HGF)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_EGH,a_HGF)
+[03] given(g_3) -> con_ang(a_DCB,a_EGH)
+[04] con_supplements(1,2,3) -> con_ang(a_ACD,a_HGF)".
+
+Example con_supplements_crossed_accepts :
+  complete_checker con_supplements_crossed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** [vert_ang] may name the diagram premise it relies on. *)
+Definition vert_ang_labelled_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang(d_01) -> con_ang(a_CEA,a_DEB)".
+
+(** Naming a premise that is not a crossing proves nothing. *)
+Definition vert_ang_wrong_label_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+[g_1] con_seg(AB,CD)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang(g_1) -> con_ang(a_CEA,a_DEB)".
+
+Example vert_ang_labelled_accepts :
+  complete_checker vert_ang_labelled_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_wrong_label_rejects :
+  complete_checker vert_ang_wrong_label_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
 Example malformed_problem_is_parse_failure :

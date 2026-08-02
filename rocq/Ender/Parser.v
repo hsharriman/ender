@@ -281,7 +281,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
       (try_call "perp_con_ang" text (parse_one PerpConAng)
       (try_call "def_midpt" text (parse_one DefMidpt)
       (try_call "vert_ang" text
-        (fun body => match body with [] => Some VertAng | _ => None end)
+        (fun body => Some (VertAng (string_of_list_ascii body)))
         (try_call "def_ang_bisect" text (parse_one DefAngBisect)
         (try_call "rhl" text (parse_three RHL)
         (try_call "midpt_conv" text (parse_one MidptConv)

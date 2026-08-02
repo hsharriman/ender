@@ -41,7 +41,7 @@ Inductive Reason :=
 | DefConRight : nat -> nat -> Reason
 | PerpConAng : nat -> Reason
 | DefMidpt : nat -> Reason
-| VertAng : Reason
+| VertAng : string -> Reason
 | DefAngBisect : nat -> Reason
 | RHL : nat -> nat -> nat -> Reason
 | MidptConv : nat -> Reason

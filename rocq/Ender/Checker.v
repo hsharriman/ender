@@ -129,10 +129,16 @@ Definition asa_schema triangles facts i j k (t u : Triangle) : bool :=
     (ConSeg (side_ab t) (side_ab u))
     (ConAng (angle_b t) (angle_b u)).
 
+(** The two angles are interchangeable in the citation: swapping them names
+    the same three facts, so both orders are accepted. *)
 Definition aas_schema triangles facts i j k (t u : Triangle) : bool :=
   schema3 triangles facts i j k
     (ConAng (angle_c t) (angle_c u))
     (ConAng (angle_b t) (angle_b u))
+    (ConSeg (side_ab t) (side_ab u)) ||
+  schema3 triangles facts i j k
+    (ConAng (angle_b t) (angle_b u))
+    (ConAng (angle_c t) (angle_c u))
     (ConSeg (side_ab t) (side_ab u)).
 
 (** Right-hypotenuse-leg.  The bundled fixtures disagree about whether the
@@ -277,12 +283,17 @@ Definition perp_right_angle (s t : Segment) (p : PointId) (a : Angle) : bool :=
   ((endpoint_of a.(ang_left) s && endpoint_of a.(ang_right) t) ||
    (endpoint_of a.(ang_left) t && endpoint_of a.(ang_right) s)).
 
-Definition perp_con_ang (facts : list Statement) (i : nat)
-    (conclusion : Statement) : bool :=
+Definition perp_con_ang (triangles : list Triangle) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
   match lookup_step facts i with
   | Some (PerpAt s t p) =>
       match conclusion with
       | ConRight a b => perp_right_angle s t p a && perp_right_angle s t p b
+      (* [Perp_at] alone forces neither ray to be nondegenerate, but a declared
+         triangle spanning the angle does, and that is all [l11_16] needs. *)
+      | ConAng a b =>
+          perp_right_angle s t p a && perp_right_angle s t p b &&
+          declared_angle triangles a && declared_angle triangles b
       | _ => false
       end
   | _ => false
@@ -313,12 +324,13 @@ Definition vertical_angle_pair (triangles : list Triangle) (s t : Segment)
            (angle s.(seg_end) p t.(seg_start)).
 
 Definition vert_ang (triangles : list Triangle) (premises : list Premise)
-    (conclusion : Statement) : bool :=
-  existsb (fun pr => match pr.(premise_statement) with
-                     | IntersectSeg s t p =>
-                         vertical_angle_pair triangles s t p conclusion
-                     | _ => false
-                     end) premises.
+    (label : string) (conclusion : Statement) : bool :=
+  existsb (fun pr =>
+             (String.eqb label EmptyString || String.eqb label pr.(premise_label)) &&
+             match pr.(premise_statement) with
+             | IntersectSeg s t p => vertical_angle_pair triangles s t p conclusion
+             | _ => false
+             end) premises.
 
 (** An angle bisector halves its angle.  The audited meaning is a disjunction
     over which endpoint of the ray names the vertex, and that is a condition on
@@ -514,7 +526,10 @@ Definition con_supplements (facts : list Statement) (i j k : nat)
     (conclusion : Statement) : bool :=
   match lookup_step facts i, lookup_step facts j, lookup_step facts k with
   | Some (Supplementary a b), Some (Supplementary c d), Some witness =>
-      fact_eqb (ConAng b d) witness && fact_eqb (ConAng a c) conclusion
+      (fact_eqb (ConAng b d) witness && fact_eqb (ConAng a c) conclusion) ||
+      (fact_eqb (ConAng b c) witness && fact_eqb (ConAng a d) conclusion) ||
+      (fact_eqb (ConAng a d) witness && fact_eqb (ConAng b c) conclusion) ||
+      (fact_eqb (ConAng a c) witness && fact_eqb (ConAng b d) conclusion)
   | _, _, _ => false
   end.
 
@@ -522,7 +537,10 @@ Definition con_supplements_same (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
   match lookup_step facts i, lookup_step facts j with
   | Some (Supplementary a b), Some (Supplementary c d) =>
-      angle_u_eqb d b && fact_eqb (ConAng a c) conclusion
+      (angle_u_eqb d b && fact_eqb (ConAng a c) conclusion) ||
+      (angle_u_eqb c b && fact_eqb (ConAng a d) conclusion) ||
+      (angle_u_eqb d a && fact_eqb (ConAng b c) conclusion) ||
+      (angle_u_eqb c a && fact_eqb (ConAng b d) conclusion)
   | _, _ => false
   end.
 
@@ -609,9 +627,9 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | ConAngTrans i j => con_ang_transitive facts i j conclusion
   | ConTriTrans i j => con_tri_transitive facts i j conclusion
   | DefConRight i j => def_con_right facts i j conclusion
-  | PerpConAng i => perp_con_ang facts i conclusion
+  | PerpConAng i => perp_con_ang triangles facts i conclusion
   | DefMidpt i => def_midpt facts i conclusion
-  | VertAng => vert_ang triangles premises conclusion
+  | VertAng label => vert_ang triangles premises label conclusion
   | DefAngBisect i => def_ang_bisect facts i conclusion
   | MidptConv i => midpt_conv premises facts i conclusion
   | ThirdAngle i j => third_angle triangles facts i j conclusion
@@ -906,9 +924,14 @@ Lemma aas_schema_sound : forall triangles facts i j k t u,
   aas_schema triangles facts i j k t u = true -> interp_triangle_congruence point t u.
 Proof.
   intros triangles facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
-  apply schema3_sound in Hschema; [|exact Hdecl|exact Hall]. cbn in Hschema |- *.
-  destruct Hschema as [Hc [Hb Hs]]. apply ender_aas; auto.
-  now apply conga_comm.
+  unfold aas_schema in Hschema. apply orb_true_iff in Hschema.
+  assert (Hparts : forall x y z : Statement,
+      schema3 triangles facts i j k x y z = true ->
+      Interp x /\ Interp y /\ Interp z)
+    by (intros; eapply schema3_sound; eauto).
+  destruct Hschema as [H|H]; apply Hparts in H; cbn in H |- *.
+  - destruct H as [Hc [Hb Hs]]. apply ender_aas; auto. now apply conga_comm.
+  - destruct H as [Hb [Hc Hs]]. apply ender_aas; auto. now apply conga_comm.
 Qed.
 
 Lemma rhl_schema_sound : forall triangles facts i j k t u,
@@ -1149,17 +1172,28 @@ Proof.
   - apply l8_2. now apply Hall.
 Qed.
 
-Lemma perp_con_ang_sound : forall facts i conclusion,
-  Forall Interp facts -> perp_con_ang facts i conclusion = true ->
-  Interp conclusion.
+Lemma perp_con_ang_sound : forall triangles facts i conclusion,
+  declarations_well_formed point triangles -> Forall Interp facts ->
+  perp_con_ang triangles facts i conclusion = true -> Interp conclusion.
 Proof.
-  intros facts i conclusion Hfacts Hrule. unfold perp_con_ang in Hrule.
+  intros triangles facts i conclusion Hwf Hfacts Hrule.
+  unfold perp_con_ang in Hrule.
   destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
   destruct dependency; try discriminate.
   assert (Hperp : Interp (PerpAt s s0 p)) by (eapply lookup_step_sound; eauto).
   destruct conclusion; try discriminate.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hleft Hright].
-  split; eapply perp_right_angle_sound; eauto.
+  - (* con_ang: the declared triangles supply the nondegenerate rays *)
+    apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hdb].
+    apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hda].
+    apply andb_true_iff in Hrule. destruct Hrule as [Hpa Hpb].
+    apply (declared_angle_sound triangles _ Hwf) in Hda.
+    apply (declared_angle_sound triangles _ Hwf) in Hdb.
+    destruct Hda as [Hal Har]. destruct Hdb as [Hbl Hbr].
+    assert (Hra : right_angle point a) by (eapply perp_right_angle_sound; eauto).
+    assert (Hrb : right_angle point a0) by (eapply perp_right_angle_sound; eauto).
+    unfold right_angle in Hra, Hrb. cbn. now apply l11_16.
+  - apply andb_true_iff in Hrule. destruct Hrule as [Hleft Hright].
+    split; eapply perp_right_angle_sound; eauto.
 Qed.
 
 Lemma def_midpt_sound : forall facts i conclusion,
@@ -1192,14 +1226,15 @@ Proof.
   - apply l11_14; auto. now apply between_symmetry.
 Qed.
 
-Lemma vert_ang_sound : forall triangles premises conclusion,
+Lemma vert_ang_sound : forall triangles premises label conclusion,
   declarations_well_formed point triangles ->
   Forall (interp_premise point) premises ->
-  vert_ang triangles premises conclusion = true -> Interp conclusion.
+  vert_ang triangles premises label conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles premises conclusion Hwf Hprem Hrule.
+  intros triangles premises label conclusion Hwf Hprem Hrule.
   unfold vert_ang in Hrule. apply existsb_exists in Hrule.
   destruct Hrule as [pr [Hin Hmatch]].
+  apply andb_true_iff in Hmatch. destruct Hmatch as [_ Hmatch].
   pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
                 Hprem pr Hin) as Hpr.
   unfold interp_premise in Hpr.
@@ -1458,13 +1493,48 @@ Proof.
   destruct first; try discriminate.
   destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
   destruct second; try discriminate.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hshared Hconclusion].
   assert (Hs1 : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
   assert (Hs2 : Interp (Supplementary a1 a2)) by (eapply lookup_step_sound; eauto).
-  apply (supplement_realign a1 a0 a2 Hshared) in Hs2.
-  apply (fact_eqb_sound _ _ Hconclusion). cbn in Hs1, Hs2 |- *.
-  now apply (suppa2__conga123 _ _ _ (point (ang_left a0)) (point (ang_vertex a0))
-                              (point (ang_right a0))).
+  (* [SuppA] is symmetric, so the shared angle may occupy either slot of
+     either dependency; realign it into the second slot of both. *)
+  assert (Hcancel : forall x y z : Angle,
+      Interp (Supplementary x y) -> Interp (Supplementary z y) ->
+      Interp (ConAng x z)).
+  { intros x y z Hx Hz. cbn in Hx, Hz |- *.
+    now apply (suppa2__conga123 _ _ _ (point (ang_left y)) (point (ang_vertex y))
+                                (point (ang_right y))). }
+  repeat rewrite orb_true_iff in Hrule.
+  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hshared Hconclusion];
+    apply (fact_eqb_sound _ _ Hconclusion).
+  (* the shared angle is the second of the first dependency ... *)
+  - apply Hcancel with (y := a0);
+      [exact Hs1|now apply (supplement_realign a1 a0 a2)].
+  - apply Hcancel with (y := a0); [exact Hs1|].
+    apply (supplement_realign a2 a0 a1); [exact Hshared|now apply suppa_sym].
+  (* ... or its first *)
+  - apply Hcancel with (y := a);
+      [now apply suppa_sym|now apply (supplement_realign a1 a a2)].
+  - apply Hcancel with (y := a); [now apply suppa_sym|].
+    apply (supplement_realign a2 a a1); [exact Hshared|now apply suppa_sym].
+Qed.
+
+Lemma supplements_transfer : forall x y z w,
+  Interp (Supplementary x y) -> Interp (Supplementary z w) ->
+  Interp (ConAng y w) -> Interp (ConAng x z).
+Proof.
+  intros x y z w Hx Hz Hyw. cbn in Hx, Hz, Hyw |- *.
+  pose proof (suppa_distincts _ _ _ _ _ _ Hz) as Hd. spliter.
+  assert (Hzy : SuppA (point (ang_left z)) (point (ang_vertex z))
+                      (point (ang_right z))
+                      (point (ang_left y)) (point (ang_vertex y))
+                      (point (ang_right y))).
+  { apply (conga2_suppa__suppa (point (ang_left z)) (point (ang_vertex z))
+             (point (ang_right z)) (point (ang_left w)) (point (ang_vertex w))
+             (point (ang_right w)));
+      [apply conga_refl; auto|now apply conga_sym|exact Hz]. }
+  now apply (suppa2__conga123 _ _ _ (point (ang_left y)) (point (ang_vertex y))
+                              (point (ang_right y))).
 Qed.
 
 Lemma con_supplements_sound : forall facts i j k conclusion,
@@ -1477,24 +1547,21 @@ Proof.
   destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
   destruct second; try discriminate.
   destruct (lookup_step facts k) as [witness|] eqn:Hwitness; try discriminate.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hcongruent Hconclusion].
   assert (Hs1 : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
   assert (Hs2 : Interp (Supplementary a1 a2)) by (eapply lookup_step_sound; eauto).
   assert (Hw : Interp witness) by (eapply lookup_step_sound; eauto).
-  apply (fact_eqb_sound _ _ Hcongruent) in Hw. cbn in Hw.
-  cbn in Hs1, Hs2.
-  pose proof (suppa_distincts _ _ _ _ _ _ Hs2) as Hd. spliter.
-  assert (Hs2' : SuppA (point (ang_left a1)) (point (ang_vertex a1))
-                       (point (ang_right a1))
-                       (point (ang_left a0)) (point (ang_vertex a0))
-                       (point (ang_right a0))).
-  { apply (conga2_suppa__suppa (point (ang_left a1)) (point (ang_vertex a1))
-             (point (ang_right a1)) (point (ang_left a2)) (point (ang_vertex a2))
-             (point (ang_right a2))); [apply conga_refl; auto|now apply conga_sym
-                                      |exact Hs2]. }
-  apply (fact_eqb_sound _ _ Hconclusion). cbn.
-  now apply (suppa2__conga123 _ _ _ (point (ang_left a0)) (point (ang_vertex a0))
-                              (point (ang_right a0))).
+  (* the witness may relate either angle of one dependency to either of the
+     other; the conclusion is then the remaining pair *)
+  repeat rewrite orb_true_iff in Hrule.
+  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hcongruent Hconclusion];
+    apply (fact_eqb_sound _ _ Hcongruent) in Hw;
+    apply (fact_eqb_sound _ _ Hconclusion).
+  - now apply (supplements_transfer a a0 a1 a2).
+  - apply (supplements_transfer a a0 a2 a1); [exact Hs1|now apply suppa_sym|exact Hw].
+  - apply (supplements_transfer a0 a a1 a2); [now apply suppa_sym|exact Hs2|exact Hw].
+  - apply (supplements_transfer a0 a a2 a1);
+      [now apply suppa_sym|now apply suppa_sym|exact Hw].
 Qed.
 
 Lemma endpoints_determine : forall u p y, p <> y ->

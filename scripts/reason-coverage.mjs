@@ -7,6 +7,11 @@ import { join, relative, resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const catalogPath = join(root, "src/checker/grammar/defs/reasons.defs.ts");
 const proofsPath = join(root, "src/checker/proofs");
+// The bundled fixtures are mostly one-reason unit tests; the textbook corpus
+// in the sibling geo-proof-dataset repository is the representative sample.
+// Absent (it is a separate checkout), parity is reported for fixtures only.
+const datasetPath =
+  process.env.ENDER_DATASET ?? join(root, "../geo-proof-dataset/proofs");
 const catalog = [
   ...readFileSync(catalogPath, "utf8").matchAll(/^  ([a-zA-Z0-9_]+): \{/gm),
 ].map((match) => match[1]);
@@ -39,9 +44,11 @@ const implemented = new Set([
   "con_supplements",
   "con_supplements_same",
   "def_perp",
+  "perp_con_ang",
 ]);
-// perp_con_ang: con_right conclusions only; con_ang needs nondegenerate rays
-const partial = new Set(["reflex", "perp_con_ang"]);
+// reflex: segment reflexivity only; ref_ang needs nondegenerate rays, and the
+// kernel does not yet read the `ang:` declarations that would supply them.
+const partial = new Set(["reflex"]);
 const priorityOne = new Set(["ang_bisect_conv"]);
 const defer = /arc|sim_|_sim|inscribed|tangent|chord|radius|incenter|circumcenter|square|csstp|rect_para_right_opp/;
 
@@ -54,6 +61,16 @@ const walk = (directory) => {
   }
 };
 walk(proofsPath);
+const fixtureCount = files.length;
+let datasetFiles = [];
+try {
+  datasetFiles = readdirSync(datasetPath)
+    .filter((name) => name.endsWith(".txt"))
+    .map((name) => join(datasetPath, name))
+    .sort();
+} catch {
+  datasetFiles = [];
+}
 
 const reasonFiles = new Map(catalog.map((reason) => [reason, []]));
 const applicationsIn = (source) => {
@@ -88,7 +105,7 @@ const entries = catalog.map((reason) => {
       : reason === "def_con_right"
         ? "GeoCoq l11_16 (congruence of right angles)"
       : reason === "perp_con_ang"
-        ? "GeoCoq Perp_at definition and l8_2"
+        ? "GeoCoq Perp_at definition, l8_2, and l11_16"
       : reason === "def_midpt"
         ? "GeoCoq Midpoint definition"
       : reason === "vert_ang"
@@ -119,8 +136,6 @@ const entries = catalog.map((reason) => {
   const note =
     reason === "reflex"
       ? "Segment conclusion verified; ref_ang remains fail-closed pending nondegenerate rays."
-      : reason === "perp_con_ang"
-        ? "con_right conclusion verified; con_ang remains fail-closed pending nondegenerate rays."
       : status === "verified"
         ? "Parsed, checked, and covered by the kernel soundness proof."
         : priority === 3
@@ -130,7 +145,7 @@ const entries = catalog.map((reason) => {
 });
 
 const checker = process.env.ENDER_CHECKER ?? "ender-checker";
-const parity = files.map((file) => {
+const classify = (file) => {
   const source = readFileSync(file, "utf8");
   const applications = applicationsIn(source);
   const reasons = [...new Set(reasonsIn(source))];
@@ -144,10 +159,7 @@ const parity = files.map((file) => {
   }
   // Partially implemented reasons only count as supported for the conclusion
   // forms their verified rule can actually produce.
-  const partialConclusions = {
-    reflex: ["ref_seg"],
-    perp_con_ang: ["con_right"],
-  };
+  const partialConclusions = { reflex: ["ref_seg"] };
   const unsupported = [
     ...new Set(
       applications
@@ -162,13 +174,14 @@ const parity = files.map((file) => {
         ),
     ),
   ];
+  // Acceptance is the ground truth; the reason labels only explain rejections.
   const category =
-    report.verdict === "failed_to_parse_problem"
-      ? "parse-failure"
-      : unsupported.length > 0
-        ? "unsupported-reason"
-        : report.verdict === "accepted"
-          ? "accepted"
+    report.verdict === "accepted"
+      ? "accepted"
+      : report.verdict === "failed_to_parse_problem"
+        ? "parse-failure"
+        : unsupported.length > 0
+          ? "unsupported-reason"
           : "rejected-supported-slice";
   return {
     file: relative(root, file),
@@ -177,13 +190,25 @@ const parity = files.map((file) => {
     reasons,
     unsupported,
   };
-});
+};
+const parity = files.map(classify);
+const datasetParity = datasetFiles.map(classify);
 
-const summary = Object.fromEntries(
-  ["accepted", "rejected-supported-slice", "unsupported-reason", "parse-failure"].map(
-    (category) => [category, parity.filter((item) => item.category === category).length],
-  ),
-);
+const categories = [
+  "accepted",
+  "rejected-supported-slice",
+  "unsupported-reason",
+  "parse-failure",
+];
+const tally = (items) =>
+  Object.fromEntries(
+    categories.map((category) => [
+      category,
+      items.filter((item) => item.category === category).length,
+    ]),
+  );
+const summary = tally(parity);
+const datasetSummary = tally(datasetParity);
 
 const manifestPath = join(root, "docs/reason-coverage.json");
 const manifestText =
@@ -198,7 +223,13 @@ if (
 }
 
 if (process.argv.includes("--json")) {
-  process.stdout.write(JSON.stringify({ summary, parity, entries }, null, 2) + "\n");
+  process.stdout.write(
+    JSON.stringify(
+      { summary, parity, datasetSummary, datasetParity, entries },
+      null,
+      2,
+    ) + "\n",
+  );
 } else {
   console.log(`Reason catalog: ${entries.length}`);
   console.log(
@@ -206,8 +237,18 @@ if (process.argv.includes("--json")) {
       `${entries.filter((x) => x.status === "partial").length} partial, ` +
       `${entries.filter((x) => x.status === "unimplemented").length} unimplemented`,
   );
+  console.log(`\nBundled fixtures (${fixtureCount}):`);
   for (const [category, count] of Object.entries(summary))
-    console.log(`${category}: ${count}`);
+    console.log(`  ${category}: ${count}`);
+  if (datasetFiles.length) {
+    console.log(`\nTextbook corpus (${datasetFiles.length}):`);
+    for (const [category, count] of Object.entries(datasetSummary))
+      console.log(`  ${category}: ${count}`);
+  } else {
+    console.log(
+      `\nTextbook corpus: not found at ${relative(root, datasetPath)} (skipped)`,
+    );
+  }
   if (!process.argv.includes("--summary")) {
     console.log("\nUnsupported-reason fixtures:");
     for (const item of parity.filter((x) => x.category === "unsupported-reason"))

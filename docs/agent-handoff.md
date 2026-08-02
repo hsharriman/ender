@@ -24,8 +24,10 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- twenty-seven reasons are fully verified; `reflex` and `perp_con_ang` are
-  partial;
+- twenty-seven reasons are fully verified; `reflex` is the only partial one,
+  and its `ref_ang` conclusion is blocked only because the kernel discards the
+  `ang:` declaration line, whose audited meaning is exactly the
+  `AngleWellFormed` that `conga_refl` needs;
 - goal matching is still exact (`statement_eqb`), so a derived fact spelled
   with a reversed angle or segment will not close an otherwise identical goal
   even though step-to-step matching accepts it;
