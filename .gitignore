@@ -42,3 +42,7 @@ yarn-error.log*
 /rocq/Ender/*.vos
 /rocq/runtime/*.cmi
 /rocq/runtime/*.cmo
+
+# direnv
+/.direnv/
+/.envrc
