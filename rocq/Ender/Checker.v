@@ -179,6 +179,15 @@ Definition triangle_permutations (t : Triangle) : list Triangle :=
 Definition triangle_declared (triangles : list Triangle) (t : Triangle) : bool :=
   existsb (fun d => triangle_mem t (triangle_permutations d)) triangles.
 
+(** The same six readings [six_correspondences] searches, as data, for rules
+    whose shape does not fit the three-dependency schema. *)
+Definition correspondences (t u : Triangle) : list (Triangle * Triangle) :=
+  let r := rotate_triangle in
+  let t' := reverse_triangle t in
+  let u' := reverse_triangle u in
+  [ (t, u); (r t, r u); (r (r t), r (r u))
+  ; (t', u'); (r t', r u'); (r (r t'), r (r u')) ].
+
 Definition declared_pair (triangles : list Triangle) (t u : Triangle) : bool :=
   triangle_declared triangles t && triangle_declared triangles u.
 
@@ -345,6 +354,31 @@ Definition midpt_conv (premises : list Premise) (facts : list Statement)
   | _ => false
   end.
 
+(** Two angles of a triangle determine the third.  The rule needs both
+    triangles, and they are not named by the conclusion, so it searches the
+    declared pairs; declaring them is also what rules out degenerate ones. *)
+Definition schema2 (triangles : list Triangle) (facts : list Statement)
+    (i j : nat) (a b : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j with
+  | Some x, Some y =>
+      dependency_matches triangles a x && dependency_matches triangles b y
+  | _, _ => false
+  end.
+
+Definition third_angle_at (triangles : list Triangle) (facts : list Statement)
+    (i j : nat) (t u : Triangle) (conclusion : Statement) : bool :=
+  schema2 triangles facts i j
+    (ConAng (angle_a t) (angle_a u))
+    (ConAng (angle_b t) (angle_b u)) &&
+  fact_eqb (ConAng (angle_c t) (angle_c u)) conclusion.
+
+Definition third_angle (triangles : list Triangle) (facts : list Statement)
+    (i j : nat) (conclusion : Statement) : bool :=
+  existsb (fun t => existsb (fun u =>
+      existsb (fun c => third_angle_at triangles facts i j (fst c) (snd c) conclusion)
+              (correspondences t u))
+    triangles) triangles.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -404,6 +438,7 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | VertAng => vert_ang triangles premises conclusion
   | DefAngBisect i => def_ang_bisect facts i conclusion
   | MidptConv i => midpt_conv premises facts i conclusion
+  | ThirdAngle i j => third_angle triangles facts i j conclusion
   | RHL i j k =>
       match conclusion with
       | ConTri t u => declared_pair triangles t u &&
@@ -1008,6 +1043,63 @@ Proof.
                   Hbetween Hequal) as [Hsame|Hmid]; [contradiction|exact Hmid].
 Qed.
 
+(** Everything above holds in neutral geometry.  [third_angle] is the first
+    rule that genuinely needs the parallel postulate, so the assumption enters
+    here rather than at the top of the section; every lemma stated before this
+    point is free of it. *)
+Context {TE : @Tarski_euclidean Tn TnEQD}.
+
+Lemma schema2_sound : forall triangles facts i j a b,
+  declarations_well_formed point triangles ->
+  Forall Interp facts -> schema2 triangles facts i j a b = true ->
+  Interp a /\ Interp b.
+Proof.
+  intros triangles facts i j a b Hwf Hall H. unfold schema2 in H.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate.
+  apply andb_true_iff in H. destruct H as [Ha Hb].
+  pose proof (lookup_step_sound facts i x Hall Hx) as HIx.
+  pose proof (lookup_step_sound facts j y Hall Hy) as HIy.
+  split; eapply dependency_matches_sound; eauto.
+Qed.
+
+Lemma correspondences_well_formed : forall t u c,
+  In c (correspondences t u) ->
+  triangle_well_formed point t -> triangle_well_formed point u ->
+  triangle_well_formed point (fst c) /\ triangle_well_formed point (snd c).
+Proof.
+  intros t u c Hin Ht Hu. unfold correspondences in Hin. cbn in Hin.
+  repeat (destruct Hin as [<-|Hin]; [cbn; split;
+    solve [ assumption
+          | now apply rotated_well_formed
+          | now apply reversed_well_formed
+          | now apply rotated_well_formed, reversed_well_formed
+          | now apply rotated_well_formed, rotated_well_formed
+          | now apply rotated_well_formed, rotated_well_formed,
+                      reversed_well_formed ]|]).
+  contradiction.
+Qed.
+
+Lemma third_angle_sound : forall triangles facts i j conclusion,
+  declarations_well_formed point triangles ->
+  Forall Interp facts -> third_angle triangles facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros triangles facts i j conclusion Hwf Hall Hrule.
+  unfold third_angle in Hrule.
+  apply existsb_exists in Hrule. destruct Hrule as [t [Hint Hrule]].
+  apply existsb_exists in Hrule. destruct Hrule as [u [Hinu Hrule]].
+  apply existsb_exists in Hrule. destruct Hrule as [c [Hinc Hmatch]].
+  pose proof (correspondences_well_formed t u c Hinc (Hwf t Hint) (Hwf u Hinu))
+    as [Hwt Hwu].
+  apply andb_true_iff in Hmatch. destruct Hmatch as [Hdeps Hconclusion].
+  apply (schema2_sound _ _ _ _ _ _ Hwf Hall) in Hdeps.
+  destruct Hdeps as [HatA HatB].
+  apply (fact_eqb_sound _ _ Hconclusion).
+  destruct c as [[A B C] [D E F]]. cbn in HatA, HatB, Hwt, Hwu |- *.
+  now apply ender_third_angle.
+Qed.
+
 Lemma rule_valid_sound : forall triangles premises facts reason conclusion,
   declarations_well_formed point triangles ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -1065,6 +1157,7 @@ Proof.
     eapply six_correspondences_sound;
       [exact Hwf|exact Hfacts|exact Ht|exact rhl_schema_sound|exact Hschema].
   - eapply midpt_conv_sound; eauto.
+  - eapply third_angle_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,

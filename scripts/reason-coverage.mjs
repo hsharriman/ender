@@ -27,10 +27,11 @@ const implemented = new Set([
   "def_ang_bisect",
   "rhl",
   "midpt_conv",
+  "third_angle",
 ]);
 // perp_con_ang: con_right conclusions only; con_ang needs nondegenerate rays
 const partial = new Set(["reflex", "perp_con_ang"]);
-const priorityOne = new Set(["ang_bisect_conv", "third_angle"]);
+const priorityOne = new Set(["ang_bisect_conv"]);
 const defer = /arc|sim_|_sim|inscribed|tangent|chord|radius|incenter|circumcenter|square|csstp|rect_para_right_opp/;
 
 const files = [];
@@ -87,6 +88,8 @@ const entries = catalog.map((reason) => {
         ? "GeoCoq cong2_per2__cong_3 (neutral geometry)"
       : reason === "midpt_conv"
         ? "GeoCoq l7_20 (unique equidistant point on a line)"
+      : reason === "third_angle"
+        ? "GeoCoq Tarski_euclidean via Playfair; the only Euclidean rule"
       : reason === "given" || reason === "reflex"
         ? "logical/equality infrastructure"
         : "to determine from the weakest supporting GeoCoq theorem";

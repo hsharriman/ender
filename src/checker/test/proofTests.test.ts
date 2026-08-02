@@ -55,6 +55,7 @@ function parseExpected(firstLine: string): Expected | null {
  * file that leaves this list is a regression.
  */
 const OUTCOME_ENFORCED = new Set([
+  "examples/s1c1incomplete.txt",
   "examples/s1inc1.txt",
   "examples/s1inc2.txt",
   "examples/tutinc.txt",
@@ -68,6 +69,8 @@ const OUTCOME_ENFORCED = new Set([
   "lines_angles/perp_con_ang_incorrect.txt",
   "triangles/con_tri_transitive_correct.txt",
   "triangles/con_tri_transitive_incorrect.txt",
+  "triangles/third_angle_correct.txt",
+  "triangles/third_angle_incorrect.txt",
 ]);
 
 const stepsBlamedBy = (report: VerifiedCheckOutput): string[] => {

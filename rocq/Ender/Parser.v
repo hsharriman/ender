@@ -264,7 +264,8 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (fun body => match body with [] => Some VertAng | _ => None end)
         (try_call "def_ang_bisect" text (parse_one DefAngBisect)
         (try_call "rhl" text (parse_three RHL)
-        (try_call "midpt_conv" text (parse_one MidptConv) None))))))))))))))
+        (try_call "midpt_conv" text (parse_one MidptConv)
+        (try_call "third_angle" text (parse_two ThirdAngle) None)))))))))))))))
     end
   end.
 
@@ -388,6 +389,9 @@ Definition check_source (source : string) : bool :=
 Section SourceSoundness.
 
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
+(* [third_angle] is the one implemented rule that needs the parallel
+   postulate; see the comment above its soundness lemma in [Checker.v]. *)
+Context {TE : @Tarski_euclidean Tn TnEQD}.
 Variable point : PointId -> Tpoint.
 
 Theorem check_source_sound : forall source p,

@@ -12,8 +12,8 @@ The slice parses Ender source text and supports:
   `con_right`, `perp`, `midpt`, `intersect_seg`, `ang_bisect`, and `on_line`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `rhl`, `cpctc`,
   `con_seg_transitive`, `con_ang_transitive`, `con_tri_transitive`,
-  `def_con_right`, `perp_con_ang`, `def_midpt`, `midpt_conv`, `vert_ang`, and
-  `def_ang_bisect`;
+  `def_con_right`, `perp_con_ang`, `def_midpt`, `midpt_conv`, `vert_ang`,
+  `def_ang_bisect`, and `third_angle`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -74,6 +74,15 @@ point between the endpoints, so it additionally requires an `on_line` diagram
 premise: on a line there is exactly one point equidistant from two distinct
 points (GeoCoq `l7_20`).
 
+`third_angle` is the only implemented rule that needs the parallel postulate.
+Its assumption is introduced in `Checker.v` immediately before its soundness
+lemma rather than at the top of the section, so every lemma stated above that
+point is visibly free of it. GeoCoq's own Euclidean angle-sum theorem routes
+through `l12_21_a`, which rests on `Eqdep.Eq_rect_eq`;
+`euclidean_trisuma__bet` in `Geometry.v` goes through Playfair instead, which
+keeps the development free of axioms. `nix flake check` fails if
+`Print Assumptions` ever reports one again.
+
 ## Soundness boundary
 
 [Audit.v](../rocq/Ender/Audit.v) is the single human-audit surface. It imports
@@ -118,7 +127,9 @@ intent; this is why those meanings remain in the audit file.
 
 The geometry is parametric over GeoCoq's
 `Tarski_neutral_dimensionless_with_decidable_point_equality`, rather than a
-particular Cartesian model. [Geometry.v](../rocq/Ender/Geometry.v) derives the
+particular Cartesian model.  Every reason but `third_angle` is proved in that
+neutral setting; `third_angle` additionally assumes `Tarski_euclidean`, which
+the audited final theorem already provides. [Geometry.v](../rocq/Ender/Geometry.v) derives the
 four triangle criteria from GeoCoq's existing neutral-geometry lemmas and makes
 CPCTC a projection from ordered triangle congruence. The pinned upstream source
 is [GeoCoq commit `90d8ce4`](https://github.com/GeoCoq/GeoCoq/commit/90d8ce484b32e0568b106c85d7e15be719a40180).

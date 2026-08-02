@@ -40,7 +40,8 @@ Inductive Reason :=
 | VertAng : Reason
 | DefAngBisect : nat -> Reason
 | RHL : nat -> nat -> nat -> Reason
-| MidptConv : nat -> Reason.
+| MidptConv : nat -> Reason
+| ThirdAngle : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.

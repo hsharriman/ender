@@ -763,6 +763,62 @@ Example midpt_conv_wrong_halves_rejects :
   complete_checker midpt_conv_wrong_halves_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Two angles of a triangle determine the third.  This is the only
+    implemented rule that needs the parallel postulate. *)
+Definition third_angle_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_ABC,a_DEF)
+"
+  "con_ang(a_BCA,a_EFD)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] third_angle(1,2) -> con_ang(a_BCA,a_EFD)".
+
+(** The rule needs both triangles to be declared; otherwise they may be
+    degenerate and have no angle sum. *)
+Definition third_angle_undeclared_source := transitive_header "tri: t_ABC
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_ABC,a_DEF)
+"
+  "con_ang(a_BCA,a_EFD)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] third_angle(1,2) -> con_ang(a_BCA,a_EFD)".
+
+(** The concluded pair must be the remaining vertices. *)
+Definition third_angle_wrong_pair_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_ABC,a_DEF)
+"
+  "con_ang(a_BCA,a_DEF)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] third_angle(1,2) -> con_ang(a_BCA,a_DEF)".
+
+(** Two angles of the same triangle prove nothing about another. *)
+Definition third_angle_same_vertex_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+"
+  "con_ang(a_BCA,a_EFD)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] third_angle(1,1) -> con_ang(a_BCA,a_EFD)".
+
+Example third_angle_accepts : complete_checker third_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example third_angle_undeclared_rejects :
+  complete_checker third_angle_undeclared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example third_angle_wrong_pair_rejects :
+  complete_checker third_angle_wrong_pair_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example third_angle_same_vertex_rejects :
+  complete_checker third_angle_same_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

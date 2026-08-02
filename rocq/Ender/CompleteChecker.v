@@ -286,6 +286,10 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
       dependency_type_issue facts "def_midpt" 0 i ExpectedMidpoint step_number
   | MidptConv i =>
       dependency_type_issue facts "midpt_conv" 0 i ExpectedSegment step_number
+  | ThirdAngle i j =>
+      first_issue
+        (dependency_type_issue facts "third_angle" 0 i ExpectedAngle step_number)
+        (dependency_type_issue facts "third_angle" 1 j ExpectedAngle step_number)
   | DefAngBisect i =>
       dependency_type_issue facts "def_ang_bisect" 0 i ExpectedAngleBisector
         step_number
@@ -458,10 +462,11 @@ Theorem complete_checker_problem_sound : forall source part public,
   parsePublicProblem part = Some public ->
   complete_checker source = true ->
   forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
+  forall (TE : @Tarski_euclidean Tn TnEQD),
   forall point : FA.PointName -> Tpoint,
     FA.problemClaim point public.
 Proof.
-  intros source part public Hpart Hpublic Hcheck Tn TnEQD point.
+  intros source part public Hpart Hpublic Hcheck Tn TnEQD TE point.
   unfold complete_checker, classify_source in Hcheck. rewrite Hpart, Hpublic in Hcheck.
   destruct (Parser.find_after (list_ascii_of_string "steps:")
               (list_ascii_of_string source)) as [stepText|] eqn:HstepText;
@@ -536,7 +541,7 @@ Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
     destruct (parsePublicProblem part) as [public|] eqn:Hpublic.
     - eexists. split; [reflexivity|].
       intros point. exact (@complete_checker_problem_sound source part public
-        Hpart Hpublic Hcheck Tn TnEQD point).
+        Hpart Hpublic Hcheck Tn TnEQD TE point).
     - exfalso. unfold checker, complete_checker, classify_source in Hcheck.
       rewrite Hpart, Hpublic in Hcheck. discriminate.
   Qed.

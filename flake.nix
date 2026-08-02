@@ -75,7 +75,17 @@
           ];
           buildPhase = ''
             runHook preBuild
-            make -j$NIX_BUILD_CORES test extract
+            set -o pipefail
+            make -j$NIX_BUILD_CORES test extract 2>&1 | tee build.log
+            # Tests.v ends in `Print Assumptions`; those report "Axioms:" only
+            # when a proof rests on one.  Some GeoCoq Euclidean routes do (see
+            # euclidean_trisuma__bet in Geometry.v), so enforce rather than
+            # merely print the result.
+            if grep -q '^Axioms:' build.log; then
+              echo "the verified checker now depends on an axiom:" >&2
+              grep -A3 '^Axioms:' build.log >&2
+              exit 1
+            fi
             runHook postBuild
           '';
           installPhase = ''
