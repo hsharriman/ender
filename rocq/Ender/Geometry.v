@@ -52,6 +52,19 @@ Proof.
   split; [now apply conga_comm|exact HangA].
 Qed.
 
+(** Reversing both vertex lists describes the same correspondence read
+    backwards, so it preserves congruence. *)
+Lemma triangle_congruent_reverse A B C A' B' C' :
+  TriangleCongruent C B A C' B' A' -> TriangleCongruent A B C A' B' C'.
+Proof.
+  unfold TriangleCongruent. intros [HCB [HBA [HAC [HangC [HangB HangA]]]]].
+  split; [Cong|].
+  split; [Cong|].
+  split; [Cong|].
+  split; [now apply conga_comm|].
+  split; [now apply conga_comm|now apply conga_comm].
+Qed.
+
 Lemma triangle_congruent_rotate_back A B C A' B' C' :
   TriangleCongruent B C A B' C' A' -> TriangleCongruent A B C A' B' C'.
 Proof.

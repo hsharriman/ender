@@ -83,8 +83,8 @@ Definition premise_statements (ps : list Premise) : list Statement :=
 Definition goal_declarations_valid (goal : FA.PublicStatement)
     (triangles : list Triangle) : bool :=
   match goal with
-  | FA.ConTri a b => triangle_mem (project_triangle a) triangles &&
-                     triangle_mem (project_triangle b) triangles
+  | FA.ConTri a b => triangle_declared triangles (project_triangle a) &&
+                     triangle_declared triangles (project_triangle b)
   | _ => true
   end.
 
@@ -186,7 +186,7 @@ Definition expected_function (expected : ExpectedFact) : string :=
 Definition allowed_functions (expected : ExpectedFact) : list string :=
   match expected with
   | ExpectedSegment => ["ref_seg"]
-  | ExpectedAngle => ["ref_ang"]
+  | ExpectedAngle => ["ref_ang"; "con_right"]
   | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular => []
   end.
 
@@ -194,6 +194,7 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   match expected, s with
   | ExpectedSegment, ConSeg _ _ | ExpectedSegment, RefSeg _ _
   | ExpectedAngle, ConAng _ _ | ExpectedAngle, RefAng _ _
+  | ExpectedAngle, ConRight _ _
   | ExpectedTriangle, ConTri _ _ | ExpectedRight, RightAng _
   | ExpectedPerpendicular, PerpAt _ _ _ => true
   | _, _ => false
@@ -414,8 +415,8 @@ Proof.
     try discriminate;
     injection Hproject as <-; cbn in *; try exact Hmeaning.
   apply andb_true_iff in Hdecl. destruct Hdecl as [Ha Hb].
-  apply triangle_mem_spec in Ha. apply triangle_mem_spec in Hb.
-  pose proof (Hwf _ Ha) as Hwa. pose proof (Hwf _ Hb) as Hwb.
+  pose proof (triangle_declared_sound point _ _ Hwf Ha) as Hwa.
+  pose proof (triangle_declared_sound point _ _ Hwf Hb) as Hwb.
   apply noncol_well_formed in Hwa. apply noncol_well_formed in Hwb.
   unfold triangle_congruence in Hmeaning. cbn in Hmeaning.
   destruct Hmeaning as [Hab [Hbc [Hca Hangles]]].

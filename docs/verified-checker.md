@@ -24,11 +24,19 @@ not contribute to the theorem's meaning.
 
 Triangle congruence is ordered: `con_tri(t_ABC,t_DEF)` means the correspondence
 `A-D`, `B-E`, `C-F`. It comprises the three corresponding side congruences and
-the three corresponding angle congruences. SAS, ASA, and AAS also accept cyclic
-rotations of that correspondence. Segment notation is unoriented; congruence
-may be written with either endpoint order or with its two sides exchanged.
-Every declared triangle carries the semantic side condition that its vertices
-are noncollinear.
+the three corresponding angle congruences. SSS, SAS, ASA, and AAS search all
+six readings of that correspondence — its three cyclic rotations, each in both
+orientations — since a criterion's dependency order, not the conclusion's
+spelling, fixes which vertex plays which role. Segment and angle notation are
+both unoriented: `AB`/`BA` and `a_XYZ`/`a_ZYX` name the same object, and a
+congruence may be written with its two sides exchanged. Every declared triangle
+carries the semantic side condition that its vertices are noncollinear, which
+is invariant under renaming its vertices, so a declared triangle may be
+referred to by any permutation of its vertex list.
+
+A triangle criterion may also consume a `con_right` fact where it expects a
+`con_ang` one, provided both angles span the vertices of a declared triangle:
+two right angles with nondegenerate rays are congruent.
 
 The three transitivity rules take two congruence dependencies of the same
 object kind and conclude the congruence of the two unshared objects. The shared

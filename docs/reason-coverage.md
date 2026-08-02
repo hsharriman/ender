@@ -36,6 +36,13 @@ The parity categories deliberately distinguish:
 - `unsupported-reason`: contains at least one unimplemented reason; and
 - `parse-failure`: the theorem-bearing problem could not be decoded.
 
+One bundled fixture, `examples/s2c2.txt`, is marked `// pass` but lands in
+`rejected-supported-slice`. Its step 7 concludes `con_tri(t_ABD,t_BCD)` from an
+SAS argument that actually establishes the correspondence `A-C`, `B-B`, `D-D`.
+Under the audited ordered reading of `con_tri` that conclusion does not follow,
+so the kernel rejects it. This is a fixture defect, not a missing reason; do
+not widen the correspondence search to accommodate it.
+
 The manifest is generated from the untrusted metadata catalog, but its status
 overrides reflect the actual constructors in `rocq/Ender/Syntax.v`. Updating a
 reason requires updating both the kernel and this script. CI-facing tests cover

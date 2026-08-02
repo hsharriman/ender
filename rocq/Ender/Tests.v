@@ -253,7 +253,8 @@ Definition con_ang_transitive_source := transitive_header "tri: t_ABC t_DEF t_GH
 [02] given(g_2) -> con_ang(a_EDF,a_HGI)
 [03] con_ang_transitive(1,2) -> con_ang(a_BAC,a_HGI)".
 
-(** Angle names are oriented: a reversed middle angle is not the shared one. *)
+(** [a_XYZ] and [a_ZYX] name the same angle, so a reversed middle angle is
+    still the shared one. *)
 Definition con_ang_transitive_reversed_source := transitive_header "tri: t_ABC t_DEF t_GHI
 "
   "[g_1] con_ang(a_BAC,a_EDF)
@@ -262,6 +263,17 @@ Definition con_ang_transitive_reversed_source := transitive_header "tri: t_ABC t
   "con_ang(a_BAC,a_HGI)"
   "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
 [02] given(g_2) -> con_ang(a_FDE,a_HGI)
+[03] con_ang_transitive(1,2) -> con_ang(a_BAC,a_HGI)".
+
+Definition con_ang_transitive_unshared_source :=
+  transitive_header "tri: t_ABC t_DEF t_GHI t_JKL
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_HGI,a_KJL)
+"
+  "con_ang(a_BAC,a_HGI)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_HGI,a_KJL)
 [03] con_ang_transitive(1,2) -> con_ang(a_BAC,a_HGI)".
 
 Definition con_tri_transitive_source := transitive_header "tri: t_ABC t_DEF t_GHI
@@ -308,8 +320,11 @@ Proof. vm_compute. reflexivity. Qed.
 Example con_ang_transitive_accepts :
   complete_checker con_ang_transitive_source = true.
 Proof. vm_compute. reflexivity. Qed.
-Example con_ang_transitive_reversed_rejects :
-  complete_checker con_ang_transitive_reversed_source = false.
+Example con_ang_transitive_reversed_accepts :
+  complete_checker con_ang_transitive_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_ang_transitive_unshared_rejects :
+  complete_checker con_ang_transitive_unshared_source = false.
 Proof. vm_compute. reflexivity. Qed.
 Example con_tri_transitive_accepts :
   complete_checker con_tri_transitive_source = true.
@@ -436,6 +451,58 @@ Example perp_con_ang_foreign_ray_rejects :
 Proof. vm_compute. reflexivity. Qed.
 Example perp_con_ang_con_ang_rejects :
   complete_checker perp_con_ang_con_ang_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A triangle criterion may consume a right-angle pair where it expects an
+    angle congruence, may name a declared triangle by any permutation of its
+    vertices, may reverse an angle name, and may use the reversed vertex
+    correspondence. *)
+Definition right_angle_criterion_source := transitive_header "tri: t_ABC t_ABD
+"
+  "[g_1] perp(CD,AB,B)
+[g_2] con_ang(a_CAB,a_DAB)
+"
+  "con_tri(t_CBA,t_DBA)"
+  "[01] given(g_1) -> perp(CD,AB,B)
+[02] given(g_2) -> con_ang(a_CAB,a_DAB)
+[03] perp_con_ang(1) -> con_right(a_ABC,a_ABD)
+[04] reflex() -> ref_seg(AB,AB)
+[05] asa(2,4,3) -> con_tri(t_CBA,t_DBA)".
+
+(** An undeclared triangle is never noncollinear by assumption. *)
+Definition undeclared_triangle_source := transitive_header "tri: t_ABC
+"
+  "[g_1] perp(CD,AB,B)
+[g_2] con_ang(a_CAB,a_DAB)
+"
+  "con_tri(t_CBA,t_DBA)"
+  "[01] given(g_1) -> perp(CD,AB,B)
+[02] given(g_2) -> con_ang(a_CAB,a_DAB)
+[03] perp_con_ang(1) -> con_right(a_ABC,a_ABD)
+[04] reflex() -> ref_seg(AB,AB)
+[05] asa(2,4,3) -> con_tri(t_CBA,t_DBA)".
+
+(** The right angles must correspond the way the criterion needs them. *)
+Definition mismatched_right_angle_source := transitive_header "tri: t_ABC t_ABD
+"
+  "[g_1] perp(CD,AB,B)
+[g_2] con_ang(a_CAB,a_DAB)
+"
+  "con_tri(t_CBA,t_DBA)"
+  "[01] given(g_1) -> perp(CD,AB,B)
+[02] given(g_2) -> con_ang(a_CAB,a_DAB)
+[03] perp_con_ang(1) -> con_right(a_ABD,a_ABC)
+[04] reflex() -> ref_seg(AB,AB)
+[05] asa(2,4,3) -> con_tri(t_CBA,t_DBA)".
+
+Example right_angle_criterion_accepts :
+  complete_checker right_angle_criterion_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example undeclared_triangle_rejects :
+  complete_checker undeclared_triangle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example mismatched_right_angle_rejects :
+  complete_checker mismatched_right_angle_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
 Example malformed_problem_is_parse_failure :
