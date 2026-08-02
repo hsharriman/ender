@@ -17,7 +17,6 @@ import {
   loadReasonDefinitions,
   loadStatementDefinitions,
 } from "./grammar/defsParsers";
-import { ProofParser } from "./grammar/lezerParser";
 import {
   ErrorDetails,
   ProofGraph,
@@ -172,27 +171,6 @@ export const runProofChecker = (proof: ProofObj): ProofCheckerResult => {
   };
 };
 
-const parser = new ProofParser();
-
-/** Direct programmatic entry: parse proof text then run checker. */
-export const runProofCheckerFromText = (
-  proofText: string,
-): ProofCheckerResult => {
-  const parseResult = parser.parse(proofText);
-  if (!parseResult.ok) {
-    const empty = emptyResult();
-    return {
-      ...empty,
-      errors: parseResult.failure,
-      goalMatchResult: {
-        ...empty.goalMatchResult,
-        details: "parsing failure prevented goal check",
-      },
-    };
-  }
-  return runProofChecker(parseResult.value);
-};
-
 const formatStepErrors = (errors: ProofStep["errors"] | undefined): string => {
   if (!errors?.length) return "(no step.errors payload)";
   return errors
@@ -328,8 +306,5 @@ export const collectProofCheckerErrors = (
 /**
  * Convenience API: accepts either already-parsed `ProofObj` or raw proof text.
  */
-export const checkProof = (input: ProofObj | string): ProofCheckerResult => {
-  return typeof input === "string"
-    ? runProofCheckerFromText(input)
-    : runProofChecker(input);
-};
+export const checkProof = (input: ProofObj): ProofCheckerResult =>
+  runProofChecker(input);

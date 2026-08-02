@@ -117,6 +117,27 @@ Example certified_boolean_is_report_projection : forall source,
     Audit.FinalAudit.accepted (CertifiedAPI.check source).
 Proof. reflexivity. Qed.
 
+Example presentation_parser_retains_untrusted_display_data :
+  match CertifiedAPI.parsePresentation
+    "title: Display title
+premises:
+pt: A (-1.5, 2.0, tl), B (3, 4, br)
+tri: t_ABC
+[g_1] con_seg(AB,AC)
+-> con_seg(AB,AC)
+
+steps:
+[01] given(g_1) -> con_seg(AB,AC)" with
+  | Some file =>
+      file.(Audit.FinalAudit.presentation_title) = Some "Display title" /\
+      length file.(Audit.FinalAudit.presentation_points) = 2 /\
+      length file.(Audit.FinalAudit.presentation_declarations) = 1 /\
+      length file.(Audit.FinalAudit.presentation_givens) = 1 /\
+      length file.(Audit.FinalAudit.presentation_steps) = 1
+  | None => False
+  end.
+Proof. vm_compute. repeat split; reflexivity. Qed.
+
 (** The complete public parser already covers statement forms outside the
     currently executable reason kernel, including nested arc syntax. *)
 Example public_arc_statement_parses :

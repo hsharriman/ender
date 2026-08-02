@@ -1,7 +1,7 @@
 From Coq Require Import List String Bool Numbers.DecimalString.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Semantics
-  Ender.Checker Ender.Parser.
+  Ender.Checker Ender.Parser Ender.PresentationParser.
 Import ListNotations.
 Import EnderSyntax.
 Module FA := Audit.FinalAudit.
@@ -282,6 +282,7 @@ Definition report_errors_for (result : CheckResult) : list FA.Issue :=
 Definition check_report (source : string) : FA.CheckReport :=
   let result := classify_source source in
   FA.check_report (public_verdict result) (public_problem_of_source source)
+    (PresentationParser.parsePresentation source)
     [] empty_graph [] (FA.goal_report None [] [])
     (report_issues_for source result) (report_errors_for result)
     (verdict_diagnostics result).
@@ -435,6 +436,7 @@ Qed.
 
 Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
   Definition parseProblem := parsePublicProblem.
+  Definition parsePresentation := PresentationParser.parsePresentation.
   Definition check := check_report.
   Definition checker (source : string) : bool := FA.accepted (check source).
   Definition parser_sound := parsePublicProblem_sound.

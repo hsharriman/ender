@@ -5,50 +5,27 @@ let read_file path =
   close_in channel;
   contents
 
-let text chars = String.of_seq (List.to_seq chars)
-
-let rec json_value = function
-  | EnderChecker.FA.JsonNull -> `Null
-  | EnderChecker.FA.JsonBool value -> `Bool value
-  | EnderChecker.FA.JsonNumber value -> `Int value
-  | EnderChecker.FA.JsonString value -> `String (text value)
-  | EnderChecker.FA.JsonArray values -> `List (List.map json_value values)
-  | EnderChecker.FA.JsonObject fields ->
-      `Assoc (List.map (fun (key, value) -> text key, json_value value) fields)
-
-let issue_json issue =
-  `Assoc
-    [ ("type", `Int issue.EnderChecker.FA.issue_type)
-    ; ("code", `String (text issue.EnderChecker.FA.issue_code))
-    ; ("details", json_value issue.EnderChecker.FA.issue_details)
-    ]
-
-let output_json is_correct field issues =
-  let value = `Assoc
-    [ ("isCorrect", `Bool is_correct)
-    ; (field, `List (List.map issue_json issues))
-    ] in
-  let buffer = Buffer.create 256 in
-  let formatter = Format.formatter_of_buffer buffer in
-  Format.pp_set_margin formatter 20;
-  Yojson.Safe.pretty_print formatter value;
-  Format.pp_print_flush formatter ();
-  Buffer.contents buffer
-
 let () =
-  if Array.length Sys.argv <> 2 then begin
-    prerr_endline "usage: ender-checker PROOF_FILE";
+  let presentation_mode =
+    Array.length Sys.argv = 3 && Sys.argv.(1) = "--presentation" in
+  if Array.length Sys.argv <> 2 && not presentation_mode then begin
+    prerr_endline "usage: ender-checker [--presentation] PROOF_FILE";
     exit 2
   end;
-  let source = read_file Sys.argv.(1) |> String.to_seq |> List.of_seq in
+  let source_path = if presentation_mode then Sys.argv.(2) else Sys.argv.(1) in
+  let source = read_file source_path |> String.to_seq |> List.of_seq in
+  if presentation_mode then begin
+    print_endline (Report_json.presentation_output source);
+    exit 0
+  end;
   let report = EnderChecker.CertifiedChecker.check source in
   match report.EnderChecker.FA.report_verdict with
   | EnderChecker.FA.Accepted ->
-      print_endline (output_json true "issues" report.EnderChecker.FA.report_issues);
+      print_endline (Report_json.checker_output source);
       exit 0
   | EnderChecker.FA.RejectedProof ->
-      print_endline (output_json false "issues" report.EnderChecker.FA.report_issues);
+      print_endline (Report_json.checker_output source);
       exit 1
   | EnderChecker.FA.FailedToParseProblem ->
-      print_endline (output_json false "errors" report.EnderChecker.FA.report_errors);
+      print_endline (Report_json.checker_output source);
       exit 2

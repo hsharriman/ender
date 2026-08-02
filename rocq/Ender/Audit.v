@@ -143,6 +143,46 @@ Record PublicProblem := public_problem {
   public_conclusion : PublicStatement
 }.
 
+(** Presentation syntax is intentionally not part of theorem meaning.  Decimal
+    spellings are preserved exactly; JavaScript may interpret them for layout
+    without affecting checker soundness.  Generic calls let the presentation
+    parser retain unsupported and diagram-only vocabulary. *)
+Record SurfaceCall := surface_call {
+  surface_call_name : string;
+  surface_call_arguments : list string
+}.
+Record DisplayPoint := display_point {
+  display_point_name : PointName;
+  display_point_x : string;
+  display_point_y : string;
+  display_point_offset : option string
+}.
+Inductive DisplayObjectKind :=
+| DisplaySegment | DisplayAngle | DisplayTriangle
+| DisplayQuadrilateral | DisplayCircle.
+Record DisplayDeclaration := display_declaration {
+  display_declaration_kind : DisplayObjectKind;
+  display_declaration_objects : list string
+}.
+Record LabeledSurfaceCall := labeled_surface_call {
+  surface_label : string;
+  surface_labeled_call : SurfaceCall
+}.
+Record PresentationStep := presentation_step {
+  presentation_step_label : string;
+  presentation_step_reason : option SurfaceCall;
+  presentation_step_conclusion : option SurfaceCall
+}.
+Record PresentationFile := presentation_file {
+  presentation_title : option string;
+  presentation_points : list DisplayPoint;
+  presentation_declarations : list DisplayDeclaration;
+  presentation_diagram_premises : list LabeledSurfaceCall;
+  presentation_givens : list LabeledSurfaceCall;
+  presentation_goal : option SurfaceCall;
+  presentation_steps : list PresentationStep
+}.
+
 Section GeometryMeaning.
 
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
@@ -772,6 +812,7 @@ Record Issue := issue {
 Record CheckReport := check_report {
   report_verdict : Verdict;
   report_problem : option PublicProblem;
+  report_presentation : option PresentationFile;
   report_steps : list StepReport;
   report_graph : DependencyGraph;
   report_duplicates : list DuplicateDerivation;
@@ -791,6 +832,7 @@ Definition accepted (report : CheckReport) : bool :=
     projection. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parseProblem : string -> option PublicProblem.
+  Parameter parsePresentation : string -> option PresentationFile.
   Parameter check : string -> CheckReport.
   Definition checker (source : string) : bool := accepted (check source).
   Parameter parser_sound : forall source problem,

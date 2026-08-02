@@ -2,8 +2,10 @@ import { readdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
 import {
   collectProofCheckerIssues,
-  runProofCheckerFromText,
+  runProofChecker,
 } from "../proofChecker";
+import { presentationToProofObj } from "../verified/presentationAdapter";
+import { parsePresentationNode } from "../verified/nodeWasmLoader";
 
 const PROOFS_DIR = join(__dirname, "../proofs");
 
@@ -45,11 +47,23 @@ function parseExpected(firstLine: string): Expected {
 const proofFiles = collectTxtFiles(PROOFS_DIR);
 
 describe("proof checker regression tests", () => {
-  test.each(proofFiles)("%s", (filePath) => {
+  test.each(proofFiles)("%s", async (filePath) => {
     const text = readFileSync(filePath, "utf-8");
     const firstLine = text.split("\n")[0];
     const expected = parseExpected(firstLine);
-    const result = runProofCheckerFromText(text);
+    const presentation = await parsePresentationNode(text);
+
+    // Rocq preserves arc literals such as BR_OB, but the legacy TypeScript
+    // geometry object model has no Arc variant.  Its former parser silently
+    // split these literals.  Keep testing successful Rocq parsing here while
+    // refusing to reproduce that lossy behavior in the compatibility adapter.
+    if (/[A-Z]{2}_[A-Z]{2}/.test(text)) {
+      expect(() => presentationToProofObj(presentation)).toThrow(
+        "Unsupported presentation object",
+      );
+      return;
+    }
+    const result = runProofChecker(presentationToProofObj(presentation));
 
     if (expected.kind === "pass") {
       const issues = collectProofCheckerIssues(result);

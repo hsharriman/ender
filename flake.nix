@@ -102,9 +102,12 @@
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.ml .
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.mli .
             cp ${./rocq/runtime/main.ml} main.ml
+            cp ${./rocq/runtime/report_json.ml} report_json.ml
             ocamlfind ocamlopt -package yojson -c EnderChecker.mli
             ocamlfind ocamlopt -package yojson -c EnderChecker.ml
-            ocamlfind ocamlopt -package yojson -linkpkg -o ender-checker EnderChecker.cmx main.ml
+            ocamlfind ocamlopt -package yojson -c report_json.ml
+            ocamlfind ocamlopt -package yojson -linkpkg -o ender-checker \
+              EnderChecker.cmx report_json.cmx main.ml
             runHook postBuild
           '';
           installPhase = ''
@@ -126,16 +129,26 @@
             pkgs.ocamlPackages."wasm_of_ocaml-compiler"
             pkgs.binaryen
           ];
-          buildInputs = [ pkgs.ocamlPackages.yojson ];
+          buildInputs = [ pkgs.ocamlPackages.yojson pkgs.ocamlPackages.js_of_ocaml ];
           buildPhase = ''
             runHook preBuild
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.ml .
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.mli .
             cp ${./rocq/runtime/main.ml} main.ml
+            cp ${./rocq/runtime/report_json.ml} report_json.ml
+            cp ${./rocq/runtime/wasm_api.ml} wasm_api.ml
             ocamlfind ocamlc -package yojson -c EnderChecker.mli
             ocamlfind ocamlc -package yojson -c EnderChecker.ml
-            ocamlfind ocamlc -package yojson -linkpkg -o ender-checker.byte EnderChecker.cmo main.ml
+            ocamlfind ocamlc -package yojson -c report_json.ml
+            ocamlfind ocamlc -package yojson -linkpkg -o ender-checker.byte \
+              EnderChecker.cmo report_json.cmo main.ml
             wasm_of_ocaml ender-checker.byte -o ender-checker.js
+            ocamlfind ocamlc -package yojson,js_of_ocaml -c wasm_api.ml
+            ocamlfind ocamlc -package yojson,js_of_ocaml -linkpkg \
+              -o ender-checker-api.byte EnderChecker.cmo report_json.cmo wasm_api.cmo
+            wasm_of_ocaml ender-checker-api.byte -o ender-checker-api.js
+            substituteInPlace ender-checker-api.js \
+              --replace-fail 'require.main.filename' '__filename'
             runHook postBuild
           '';
           installPhase = ''
@@ -143,6 +156,8 @@
             mkdir -p "$out/share/ender-checker-wasm"
             cp ender-checker.js "$out/share/ender-checker-wasm/"
             cp -r ender-checker.assets "$out/share/ender-checker-wasm/"
+            cp ender-checker-api.js "$out/share/ender-checker-wasm/"
+            cp -r ender-checker-api.assets "$out/share/ender-checker-wasm/"
             runHook postInstall
           '';
         };
@@ -179,7 +194,7 @@
         '';
 
         integrationTests = pkgs.runCommand "ender-checker-tests" {
-          nativeBuildInputs = [ nativeChecker pkgs.nodejs_24 ];
+          nativeBuildInputs = [ nativeChecker pkgs.nodejs_24 pkgs.jq ];
         } ''
           ender-checker ${./src/checker/proofs/examples/tutorial.txt} > native-tutorial.json
           diff -u ${tutorialOutput} native-tutorial.json
@@ -197,6 +212,13 @@
             exit 1
           fi
           diff -u ${tutincOutput} wasm-tutinc.json
+          node ${./rocq/runtime/test_wasm_api.js} \
+            ${wasmChecker}/share/ender-checker-wasm/ender-checker-api.js \
+            ${./src/checker/proofs/examples/tutorial.txt} > wasm-api-tutorial.json
+          diff -u ${tutorialOutput} wasm-api-tutorial.json
+          find ${./src/checker/proofs} -name '*.txt' -print0 | while IFS= read -r -d $'\0' proof; do
+            ender-checker --presentation "$proof" | jq -e 'type == "object"' >/dev/null
+          done
           touch "$out"
         '';
       in {
@@ -230,6 +252,8 @@
             "${geocoqAxioms}/${coqLib}"
             "${geocoqMain}/${coqLib}"
           ];
+          ENDER_CHECKER_WASM_DIR =
+            "${wasmChecker}/share/ender-checker-wasm";
         };
       });
 }

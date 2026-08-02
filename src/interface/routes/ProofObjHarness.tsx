@@ -1,5 +1,10 @@
-import { runProofCheckerFromText } from "checker/proofChecker";
+import { runProofChecker } from "checker/proofChecker";
 import { ErrorDetails, ProofObj } from "checker/types/checkerTypes";
+import { presentationToProofObj } from "checker/verified/presentationAdapter";
+import {
+  checkVerifiedProof,
+  parsePresentation,
+} from "checker/verified/wasmLoader";
 import { ProofContent } from "geometry-object";
 import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
@@ -132,6 +137,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
 
   private proofParseTimeoutId: number | null = null;
   private selectedProofFetchGen = 0;
+  private proofParseGeneration = 0;
   private editorOutsideMouseDownHandler: ((event: MouseEvent) => void) | null =
     null;
 
@@ -198,10 +204,16 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       this.proofParseTimeoutId = null;
     }
     if (!this.state.proofText.trim()) return;
-    this.proofParseTimeoutId = window.setTimeout(() => {
+    const generation = ++this.proofParseGeneration;
+    this.proofParseTimeoutId = window.setTimeout(async () => {
       this.proofParseTimeoutId = null;
       try {
-        const result = runProofCheckerFromText(this.state.proofText);
+        const [presentation] = await Promise.all([
+          parsePresentation(this.state.proofText),
+          checkVerifiedProof(this.state.proofText),
+        ]);
+        if (generation !== this.proofParseGeneration) return;
+        const result = runProofChecker(presentationToProofObj(presentation));
 
         const nextIncorrectStepErrors = new Map<string, ErrorDetails[]>();
         result.graph.incorrectSteps.forEach((stepNum) => {

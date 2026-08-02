@@ -10,6 +10,7 @@ Module FA := Audit.FinalAudit.
 
 Module CertifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
   Definition parseProblem := CompleteVerifiedChecker.parseProblem.
+  Definition parsePresentation := CompleteVerifiedChecker.parsePresentation.
   Definition check := CompleteVerifiedChecker.check.
   Definition checker := CompleteVerifiedChecker.checker.
   Definition parser_sound := CompleteVerifiedChecker.parser_sound.
@@ -23,6 +24,7 @@ End CertifiedChecker.
 
 (** These are the only executable roots exported by [Extract.v]. *)
 Definition parseProblem := CertifiedChecker.parseProblem.
+Definition parsePresentation := CertifiedChecker.parsePresentation.
 Definition check := CertifiedChecker.check.
 Definition checker := CertifiedChecker.checker.
 

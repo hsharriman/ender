@@ -75,14 +75,12 @@ npm run checkProof -- src/checker/proofs/tests/examples/tutorial.txt
 ### Programmatic Usage
 
 ```typescript
-import {
-  collectProofCheckerIssues,
-  runProofCheckerFromText,
-} from "./proofChecker";
+import { checkVerifiedProofNode } from "./verified/nodeWasmLoader";
 
-const result = runProofCheckerFromText(proofText);
-const issues = collectProofCheckerIssues(result);
+const report = await checkVerifiedProofNode(proofText);
 ```
+
+Run Node clients inside `nix develop`, which supplies the extracted checker.
 
 ### Testing
 
