@@ -7,61 +7,33 @@ let read_file path =
 
 let text chars = String.of_seq (List.to_seq chars)
 
-let json_string chars =
-  let source = text chars in
-  let buffer = Buffer.create (String.length source + 2) in
-  Buffer.add_char buffer '"';
-  String.iter (function
-    | '"' -> Buffer.add_string buffer "\\\""
-    | '\\' -> Buffer.add_string buffer "\\\\"
-    | '\b' -> Buffer.add_string buffer "\\b"
-    | '\012' -> Buffer.add_string buffer "\\f"
-    | '\n' -> Buffer.add_string buffer "\\n"
-    | '\r' -> Buffer.add_string buffer "\\r"
-    | '\t' -> Buffer.add_string buffer "\\t"
-    | character ->
-        if Char.code character < 0x20 then
-          Buffer.add_string buffer (Printf.sprintf "\\u%04x" (Char.code character))
-        else Buffer.add_char buffer character
-  ) source;
-  Buffer.add_char buffer '"';
-  Buffer.contents buffer
-
-let indentation level = String.make (level * 2) ' '
-
-let rec json_value level = function
-  | EnderChecker.FA.JsonNull -> "null"
-  | EnderChecker.FA.JsonBool value -> if value then "true" else "false"
-  | EnderChecker.FA.JsonNumber value -> string_of_int value
-  | EnderChecker.FA.JsonString value -> json_string value
-  | EnderChecker.FA.JsonArray [] -> "[]"
-  | EnderChecker.FA.JsonArray values ->
-      "[\n" ^
-      String.concat ",\n"
-        (List.map (fun value -> indentation (level + 1) ^ json_value (level + 1) value) values) ^
-      "\n" ^ indentation level ^ "]"
-  | EnderChecker.FA.JsonObject [] -> "{}"
+let rec json_value = function
+  | EnderChecker.FA.JsonNull -> `Null
+  | EnderChecker.FA.JsonBool value -> `Bool value
+  | EnderChecker.FA.JsonNumber value -> `Int value
+  | EnderChecker.FA.JsonString value -> `String (text value)
+  | EnderChecker.FA.JsonArray values -> `List (List.map json_value values)
   | EnderChecker.FA.JsonObject fields ->
-      "{\n" ^
-      String.concat ",\n"
-        (List.map (fun (key, value) ->
-          indentation (level + 1) ^ json_string key ^ ": " ^ json_value (level + 1) value
-        ) fields) ^
-      "\n" ^ indentation level ^ "}"
+      `Assoc (List.map (fun (key, value) -> text key, json_value value) fields)
 
 let issue_json issue =
-  EnderChecker.FA.JsonObject
-    [ (List.of_seq (String.to_seq "type"), EnderChecker.FA.JsonNumber issue.EnderChecker.FA.issue_type)
-    ; (List.of_seq (String.to_seq "code"), EnderChecker.FA.JsonString issue.EnderChecker.FA.issue_code)
-    ; (List.of_seq (String.to_seq "details"), issue.EnderChecker.FA.issue_details)
+  `Assoc
+    [ ("type", `Int issue.EnderChecker.FA.issue_type)
+    ; ("code", `String (text issue.EnderChecker.FA.issue_code))
+    ; ("details", json_value issue.EnderChecker.FA.issue_details)
     ]
 
 let output_json is_correct field issues =
-  let key value = List.of_seq (String.to_seq value) in
-  json_value 0 (EnderChecker.FA.JsonObject
-    [ (key "isCorrect", EnderChecker.FA.JsonBool is_correct)
-    ; (key field, EnderChecker.FA.JsonArray (List.map issue_json issues))
-    ])
+  let value = `Assoc
+    [ ("isCorrect", `Bool is_correct)
+    ; (field, `List (List.map issue_json issues))
+    ] in
+  let buffer = Buffer.create 256 in
+  let formatter = Format.formatter_of_buffer buffer in
+  Format.pp_set_margin formatter 20;
+  Yojson.Safe.pretty_print formatter value;
+  Format.pp_print_flush formatter ();
+  Buffer.contents buffer
 
 let () =
   if Array.length Sys.argv <> 2 then begin

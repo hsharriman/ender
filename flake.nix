@@ -93,15 +93,16 @@
           version = "0.1.0";
           dontUnpack = true;
           strictDeps = true;
-          nativeBuildInputs = [ pkgs.ocaml ];
+          nativeBuildInputs = [ pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib ];
+          buildInputs = [ pkgs.ocamlPackages.yojson ];
           buildPhase = ''
             runHook preBuild
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.ml .
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.mli .
             cp ${./rocq/runtime/main.ml} main.ml
-            ocamlc -c EnderChecker.mli
-            ocamlc -c EnderChecker.ml
-            ocamlc -o ender-checker EnderChecker.cmo main.ml
+            ocamlfind ocamlc -package yojson -c EnderChecker.mli
+            ocamlfind ocamlc -package yojson -c EnderChecker.ml
+            ocamlfind ocamlc -package yojson -linkpkg -o ender-checker EnderChecker.cmo main.ml
             runHook postBuild
           '';
           installPhase = ''
@@ -119,17 +120,19 @@
           strictDeps = true;
           nativeBuildInputs = [
             pkgs.ocamlPackages.ocaml
+            pkgs.ocamlPackages.findlib
             pkgs.ocamlPackages."wasm_of_ocaml-compiler"
             pkgs.binaryen
           ];
+          buildInputs = [ pkgs.ocamlPackages.yojson ];
           buildPhase = ''
             runHook preBuild
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.ml .
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.mli .
             cp ${./rocq/runtime/main.ml} main.ml
-            ocamlc -c EnderChecker.mli
-            ocamlc -c EnderChecker.ml
-            ocamlc -o ender-checker.byte EnderChecker.cmo main.ml
+            ocamlfind ocamlc -package yojson -c EnderChecker.mli
+            ocamlfind ocamlc -package yojson -c EnderChecker.ml
+            ocamlfind ocamlc -package yojson -linkpkg -o ender-checker.byte EnderChecker.cmo main.ml
             wasm_of_ocaml ender-checker.byte -o ender-checker.js
             runHook postBuild
           '';
@@ -215,7 +218,8 @@
         devShells.default = pkgs.mkShell {
           packages = [
             coq geocoqCoinc geocoqAxioms geocoqMain
-            pkgs.gnumake pkgs.ocamlPackages.ocaml
+            pkgs.gnumake pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
+            pkgs.ocamlPackages.yojson
             pkgs.ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
             pkgs.nodejs_24
           ];
