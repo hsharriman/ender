@@ -3,6 +3,7 @@ import { join } from "path";
 import { presentationToProofObj } from "../verified/presentationAdapter";
 import {
   checkVerifiedProofNode,
+  checkVerifiedReportNode,
   parsePresentationNode,
 } from "../verified/nodeWasmLoader";
 import { presentationContent } from "../../interface/core/grammarToLayout/presentationContent";
@@ -52,5 +53,39 @@ describe("extracted Rocq API corpus tests", () => {
       presentation.givens.length + presentation.steps.length,
     );
     expect(presentationContent(proof)).toBeDefined();
+  });
+
+  test("exports every audited rich-report field", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutorial.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    expect(report.verdict).toBe("accepted");
+    expect(report.problem?.conclusion).toBe("con_tri(t_ABC,t_ADC)");
+    expect(report.presentation?.steps.length).toBeGreaterThan(0);
+    expect(report).toEqual(
+      expect.objectContaining({
+        steps: expect.any(Array),
+        graph: expect.any(Object),
+        duplicates: expect.any(Array),
+        goal: expect.any(Object),
+        issues: expect.any(Array),
+        errors: expect.any(Array),
+        diagnostics: expect.any(Array),
+      }),
+    );
+  });
+
+  test("coverage manifest contains every catalogued reason", () => {
+    const catalog = readFileSync(
+      join(__dirname, "../grammar/defs/reasons.defs.ts"),
+      "utf8",
+    );
+    const reasons = [
+      ...catalog.matchAll(/^  ([a-zA-Z0-9_]+): \{/gm),
+    ].map((match) => match[1]);
+    const manifest = JSON.parse(
+      readFileSync(join(__dirname, "../../../docs/reason-coverage.json"), "utf8"),
+    ) as { entries: Array<{ reason: string }> };
+    expect(manifest.entries.map(({ reason }) => reason)).toEqual(reasons);
+    expect(reasons).toHaveLength(92);
   });
 });

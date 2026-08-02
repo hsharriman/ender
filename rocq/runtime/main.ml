@@ -6,16 +6,20 @@ let read_file path =
   contents
 
 let () =
-  let presentation_mode =
-    Array.length Sys.argv = 3 && Sys.argv.(1) = "--presentation" in
-  if Array.length Sys.argv <> 2 && not presentation_mode then begin
-    prerr_endline "usage: ender-checker [--presentation] PROOF_FILE";
+  let mode = if Array.length Sys.argv = 3 then Some Sys.argv.(1) else None in
+  let special_mode = mode = Some "--presentation" || mode = Some "--report" in
+  if Array.length Sys.argv <> 2 && not special_mode then begin
+    prerr_endline "usage: ender-checker [--presentation|--report] PROOF_FILE";
     exit 2
   end;
-  let source_path = if presentation_mode then Sys.argv.(2) else Sys.argv.(1) in
+  let source_path = if special_mode then Sys.argv.(2) else Sys.argv.(1) in
   let source = read_file source_path |> String.to_seq |> List.of_seq in
-  if presentation_mode then begin
+  if mode = Some "--presentation" then begin
     print_endline (Report_json.presentation_output source);
+    exit 0
+  end;
+  if mode = Some "--report" then begin
+    print_endline (Report_json.report_output source);
     exit 0
   end;
   let report = EnderChecker.CertifiedChecker.check source in

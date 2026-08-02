@@ -94,12 +94,12 @@ nix build .#ender-checker-wasm
 
 `nix flake check` kernel-checks the Rocq development, runs positive and negative
 Rocq examples, extracts the checker, builds native and Wasm versions, and runs
-both against repository proof files. The native command exits zero and prints
-`accepted` on acceptance. Once the audited problem portion has parsed, every
-non-accepting outcome prints `rejected proof` and exits 1; this includes an
-invalid proof, an unsupported reason or statement adapter, and malformed proof
-steps. Only failure of `problemPart` or the public problem parser prints
-`failed to parse problem` and exits 2.
+both against repository proof files. The compatibility command emits
+`{isCorrect, issues}` or `{isCorrect, errors}` JSON and uses exit codes 0, 1,
+and 2 for accepted, rejected, and failed-to-parse results respectively.
+`ender-checker --report FILE` emits every field of the audited `CheckReport`.
+The callable Wasm equivalents are `enderCheckProof`, `enderParsePresentation`,
+and `enderCheckReport`.
 The Wasm bundle is under
 `result/share/ender-checker-wasm/` after the final command.
 
@@ -114,3 +114,7 @@ statement has a total meaning. Binary
 `sim_seg` has been replaced by four-segment
 `proportion`; linear pairs have explicit ray geometry; `kite_premise` is a
 specified compatibility macro; and arcs carry explicit minor/major identity.
+
+See [the agent handoff](agent-handoff.md),
+[reason-development workflow](reason-development.md), and
+[coverage ledger](reason-coverage.md) for the reason-parity campaign.

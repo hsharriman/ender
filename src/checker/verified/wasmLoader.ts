@@ -1,4 +1,8 @@
-import { PresentationFile, VerifiedCheckOutput } from "./presentationTypes";
+import {
+  PresentationFile,
+  VerifiedCheckOutput,
+  VerifiedCheckReport,
+} from "./presentationTypes";
 
 let initialization: Promise<void> | undefined;
 
@@ -6,7 +10,8 @@ const waitForExports = async (): Promise<void> => {
   for (let attempt = 0; attempt < 500; attempt += 1) {
     if (
       typeof window.enderCheckProof === "function" &&
-      typeof window.enderParsePresentation === "function"
+      typeof window.enderParsePresentation === "function" &&
+      typeof window.enderCheckReport === "function"
     ) {
       return;
     }
@@ -43,4 +48,11 @@ export const checkVerifiedProof = async (
 ): Promise<VerifiedCheckOutput> => {
   await initialize();
   return JSON.parse(window.enderCheckProof!(source)) as VerifiedCheckOutput;
+};
+
+export const checkVerifiedReport = async (
+  source: string,
+): Promise<VerifiedCheckReport> => {
+  await initialize();
+  return JSON.parse(window.enderCheckReport!(source)) as VerifiedCheckReport;
 };

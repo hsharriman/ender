@@ -21,18 +21,17 @@ npm start
 
 This starts the UI at [http://localhost:3000/ender/](http://localhost:3000/ender/) (the dev server redirects `/` to `/ender/`).
 
-Open **ProofObj Harness** from the app to edit proofs live; checker errors appear in the editor (red lines and hover tooltips) and in the proof-wide issues list.
+Open **ProofObj Harness** from the app to edit proofs live. Verified checker
+issues appear in the proof-wide issues list; step-local annotations will become
+available as the Rocq report producers are implemented.
 
 ### CLI proof checker
 
 Run the checker on one proof file:
 
 ```bash
-<<<<<<< HEAD
+nix develop
 npm run checkProof -- src/checker/proofs/examples/tutorial.txt
-=======
-npm run checkProof -- src/checker/proofs/tests/examples/tutorial.txt
->>>>>>> main
 ```
 
 The CLI checker does not require OpenAI/LLM configuration.
@@ -173,6 +172,10 @@ only adapts the presentation AST for rendering.
 - The files under `src/checker/grammar/defs/` are untrusted prose metadata for
   the theorem browser and solver prompt; they do not determine acceptance.
 - Add or update a proof fixture and run `nix flake check -L` and `npm test`.
+
+For verified-reason work, begin with
+[`docs/agent-handoff.md`](docs/agent-handoff.md) and the exhaustive
+[`docs/reason-coverage.json`](docs/reason-coverage.json) manifest.
 
 ## Build tool (Vite)
 

@@ -1,0 +1,1163 @@
+{
+  "generatedFrom": "src/checker/grammar/defs/reasons.defs.ts",
+  "entries": [
+    {
+      "reason": "def_isosceles",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s2c1.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "sas",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s1c1incomplete.txt",
+        "src/checker/proofs/examples/s1inc1.txt",
+        "src/checker/proofs/examples/s2c1.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
+        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "sss",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/tutinc.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "asa",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/overlap.txt",
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "aas",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/s1inc2.txt",
+        "src/checker/proofs/lines_angles/def_con_right_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rhl",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/circles/reg1v2.txt",
+        "src/checker/proofs/examples/s1inc3.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "cpctc",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/overlap.txt",
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s1inc1.txt",
+        "src/checker/proofs/examples/s2c1.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
+        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "reflex",
+      "status": "partial",
+      "priority": 2,
+      "axioms": "logical/equality infrastructure",
+      "fixtures": [
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/examples/overlap.txt",
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1inc2.txt",
+        "src/checker/proofs/examples/s1inc3.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/examples/tutinc.txt",
+        "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
+        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
+      ],
+      "note": "Segment conclusion verified; ref_ang remains fail-closed pending nondegenerate rays."
+    },
+    {
+      "reason": "def_perp",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c2.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "def_midpt",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s2c1.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "midpt_conv",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1c3.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "vert_ang",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s1c1incomplete.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s2inc2.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "altint_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
+        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "altint",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "altext",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/altext_correct.txt",
+        "src/checker/proofs/lines_angles/altext_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "altext_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/transversal_altext.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "sameside_ang",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/sameside_ang_correct.txt",
+        "src/checker/proofs/lines_angles/sameside_ang_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "sameside_ang_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/transversal_sameside.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "corresp_ang",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
+        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt",
+        "src/checker/proofs/lines_angles/corresp_ang_correct.txt",
+        "src/checker/proofs/lines_angles/corresp_ang_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "corresp_ang_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/transversal_corresp.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "def_ang_bisect",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c2.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "ang_bisect_conv",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "def_con_right",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/lines_angles/def_con_right_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "perp_con_ang",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1inc2.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/lines_angles/perp_con_ang_correct.txt",
+        "src/checker/proofs/lines_angles/perp_con_ang_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rectangle",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s1inc3.txt",
+        "src/checker/proofs/examples/s2c1.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "def_linear_pair",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/linear_pair_correct.txt",
+        "src/checker/proofs/lines_angles/linear_pair_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "linear_pair_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/linear_pair_conv_correct.txt",
+        "src/checker/proofs/lines_angles/linear_pair_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "con_supplements",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_supplements_correct.txt",
+        "src/checker/proofs/lines_angles/con_supplements_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "con_supplements_same",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_supplements_same_correct.txt",
+        "src/checker/proofs/lines_angles/con_supplements_same_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "con_complements",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_complements_correct.txt",
+        "src/checker/proofs/lines_angles/con_complements_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "con_complements_same",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_complements_same_correct.txt",
+        "src/checker/proofs/lines_angles/con_complements_same_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "perp_bisector",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/perp_bisector_correct.txt",
+        "src/checker/proofs/lines_angles/perp_bisector_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "given",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "logical/equality infrastructure",
+      "fixtures": [
+        "src/checker/proofs/circles/con_inscribed_angs_correct.txt",
+        "src/checker/proofs/circles/con_inscribed_angs_incorrect.txt",
+        "src/checker/proofs/circles/con_tangents_ext_correct.txt",
+        "src/checker/proofs/circles/con_tangents_ext_incorrect.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_conv_correct.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_conv_incorrect.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_correct.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_incorrect.txt",
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/circles/reg1v2.txt",
+        "src/checker/proofs/circles/tangent_perp_conv_correct.txt",
+        "src/checker/proofs/circles/tangent_perp_conv_incorrect.txt",
+        "src/checker/proofs/circles/tangent_perp_correct.txt",
+        "src/checker/proofs/circles/tangent_perp_incorrect.txt",
+        "src/checker/proofs/examples/buggypgram_opp_angs.txt",
+        "src/checker/proofs/examples/inscribed_angles.txt",
+        "src/checker/proofs/examples/overlap.txt",
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s1c1incomplete.txt",
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s1inc1.txt",
+        "src/checker/proofs/examples/s1inc2.txt",
+        "src/checker/proofs/examples/s1inc3.txt",
+        "src/checker/proofs/examples/s2c1.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2c2incomplete.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/examples/transversal_altext.txt",
+        "src/checker/proofs/examples/transversal_corresp.txt",
+        "src/checker/proofs/examples/transversal_sameside.txt",
+        "src/checker/proofs/examples/tutinc.txt",
+        "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/lines_angles/altext_correct.txt",
+        "src/checker/proofs/lines_angles/altext_incorrect.txt",
+        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
+        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_ang_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/con_ang_transitive_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_complements_correct.txt",
+        "src/checker/proofs/lines_angles/con_complements_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_complements_same_correct.txt",
+        "src/checker/proofs/lines_angles/con_complements_same_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_seg_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/con_seg_transitive_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_supplements_correct.txt",
+        "src/checker/proofs/lines_angles/con_supplements_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_supplements_same_correct.txt",
+        "src/checker/proofs/lines_angles/con_supplements_same_incorrect.txt",
+        "src/checker/proofs/lines_angles/corresp_ang_correct.txt",
+        "src/checker/proofs/lines_angles/corresp_ang_incorrect.txt",
+        "src/checker/proofs/lines_angles/def_con_right_incorrect.txt",
+        "src/checker/proofs/lines_angles/linear_pair_conv_correct.txt",
+        "src/checker/proofs/lines_angles/linear_pair_conv_incorrect.txt",
+        "src/checker/proofs/lines_angles/linear_pair_correct.txt",
+        "src/checker/proofs/lines_angles/linear_pair_incorrect.txt",
+        "src/checker/proofs/lines_angles/perp_bisector_correct.txt",
+        "src/checker/proofs/lines_angles/perp_bisector_incorrect.txt",
+        "src/checker/proofs/lines_angles/perp_con_ang_correct.txt",
+        "src/checker/proofs/lines_angles/perp_con_ang_incorrect.txt",
+        "src/checker/proofs/lines_angles/sameside_ang_correct.txt",
+        "src/checker/proofs/lines_angles/sameside_ang_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/def_parallelogram_correct.txt",
+        "src/checker/proofs/quadrilaterals/def_parallelogram_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_con_diags_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_con_diags_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/kite_diag_perp_correct.txt",
+        "src/checker/proofs/quadrilaterals/kite_diag_perp_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/kite_opp_con_ang_correct.txt",
+        "src/checker/proofs/quadrilaterals/kite_opp_con_ang_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_side_para_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_side_para_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rect_pgram_ang_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_pgram_ang_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_pgram_correct.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_pgram_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_consec_sides_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_consec_sides_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_pgram_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_pgram_incorrect.txt",
+        "src/checker/proofs/triangles/aa_sim_correct.txt",
+        "src/checker/proofs/triangles/aa_sim_incorrect.txt",
+        "src/checker/proofs/triangles/base_angle_conv_correct.txt",
+        "src/checker/proofs/triangles/base_angle_conv_incorrect.txt",
+        "src/checker/proofs/triangles/base_angle_correct.txt",
+        "src/checker/proofs/triangles/base_angle_incorrect.txt",
+        "src/checker/proofs/triangles/con_tri_transitive_correct.txt",
+        "src/checker/proofs/triangles/con_tri_transitive_incorrect.txt",
+        "src/checker/proofs/triangles/def_con_tri_correct.txt",
+        "src/checker/proofs/triangles/def_con_tri_incorrect.txt",
+        "src/checker/proofs/triangles/def_equiangular_correct.txt",
+        "src/checker/proofs/triangles/def_equiangular_incorrect.txt",
+        "src/checker/proofs/triangles/def_equilateral_correct.txt",
+        "src/checker/proofs/triangles/def_equilateral_incorrect.txt",
+        "src/checker/proofs/triangles/equiang_equilat_correct.txt",
+        "src/checker/proofs/triangles/equiang_equilat_incorrect.txt",
+        "src/checker/proofs/triangles/equilat_equiang_correct.txt",
+        "src/checker/proofs/triangles/equilat_equiang_incorrect.txt",
+        "src/checker/proofs/triangles/sas_sim_correct.txt",
+        "src/checker/proofs/triangles/sas_sim_incorrect.txt",
+        "src/checker/proofs/triangles/sss_sim_correct.txt",
+        "src/checker/proofs/triangles/sss_sim_incorrect.txt",
+        "src/checker/proofs/triangles/third_angle_correct.txt",
+        "src/checker/proofs/triangles/third_angle_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "third_angle",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/third_angle_correct.txt",
+        "src/checker/proofs/triangles/third_angle_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "base_angle",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/base_angle_correct.txt",
+        "src/checker/proofs/triangles/base_angle_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "base_angle_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/base_angle_conv_correct.txt",
+        "src/checker/proofs/triangles/base_angle_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "equilat_equiang",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/equilat_equiang_correct.txt",
+        "src/checker/proofs/triangles/equilat_equiang_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "equiang_equilat",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/equiang_equilat_correct.txt",
+        "src/checker/proofs/triangles/equiang_equilat_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "aa_sim",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/aa_sim_correct.txt",
+        "src/checker/proofs/triangles/aa_sim_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "sss_sim",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/sss_sim_correct.txt",
+        "src/checker/proofs/triangles/sss_sim_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "sas_sim",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/sas_sim_correct.txt",
+        "src/checker/proofs/triangles/sas_sim_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "def_equiangular",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/def_equiangular_correct.txt",
+        "src/checker/proofs/triangles/def_equiangular_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "def_equilateral",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/def_equilateral_correct.txt",
+        "src/checker/proofs/triangles/def_equilateral_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "def_con_tri",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/def_con_tri_correct.txt",
+        "src/checker/proofs/triangles/def_con_tri_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "def_parallelogram",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/def_parallelogram_correct.txt",
+        "src/checker/proofs/quadrilaterals/def_parallelogram_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_opp_sides",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_opp_sides_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_opp_angs",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/buggypgram_opp_angs.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_opp_angs_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_opp_side_para",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_opp_side_para_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_side_para_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_consec_angs",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_consec_angs_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_diag_bisect",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_diag_bisect_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rectangle_pgram",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rectangle_pgram_correct.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_pgram_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rhombus_pgram",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_pgram_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_pgram_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rect_diag_con",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rect_diag_con_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rect_diag_con_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rect_diag_con_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rect_pgram_ang",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rect_pgram_ang_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_pgram_ang_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rhombus_diag_perp",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rhombus_diag_perp_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rhombus_opp_bisect_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rhombus_opp_bisect",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rhombus_consec_sides",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_consec_sides_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_consec_sides_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "kite_diag_perp",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/kite_diag_perp_correct.txt",
+        "src/checker/proofs/quadrilaterals/kite_diag_perp_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "kite_opp_con_ang",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/kite_opp_con_ang_correct.txt",
+        "src/checker/proofs/quadrilaterals/kite_opp_con_ang_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "isos_trap_base_angs",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "isos_trap_base_angs_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "isos_trap_con_diags",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/isos_trap_con_diags_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_con_diags_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "tangent_perp",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/tangent_perp_correct.txt",
+        "src/checker/proofs/circles/tangent_perp_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "tangent_perp_conv",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/tangent_perp_conv_correct.txt",
+        "src/checker/proofs/circles/tangent_perp_conv_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "con_tangents_ext",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/con_tangents_ext_correct.txt",
+        "src/checker/proofs/circles/con_tangents_ext_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "radius_chord_bisect",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/radius_chord_bisect_correct.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "radius_chord_bisect_conv",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/radius_chord_bisect_conv_correct.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_conv_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "con_inscribed_angs",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/con_inscribed_angs_correct.txt",
+        "src/checker/proofs/circles/con_inscribed_angs_incorrect.txt",
+        "src/checker/proofs/examples/inscribed_angles.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "incenter",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "con_seg_transitive",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_seg_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/con_seg_transitive_incorrect.txt",
+        "src/checker/proofs/triangles/def_equilateral_correct.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "con_ang_transitive",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_ang_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/con_ang_transitive_incorrect.txt",
+        "src/checker/proofs/triangles/def_equiangular_correct.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "con_tri_transitive",
+      "status": "unimplemented",
+      "priority": 1,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/con_tri_transitive_correct.txt",
+        "src/checker/proofs/triangles/con_tri_transitive_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "square",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "rhombus",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rect_para_right_opp",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "para_transitive",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "con_arc",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "csstp",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "inscribed_semi",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/circles/reg1v2.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "para_con_arcs",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "con_chords_intersect_arcs",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/circles/reg1v2.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "def_radius",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "tangent_diam_perp",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "sim_tri_transitive",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "inscribed_angs",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    }
+  ]
+}

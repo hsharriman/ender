@@ -1,10 +1,15 @@
 import { createRequire } from "node:module";
 import path from "node:path";
-import { PresentationFile, VerifiedCheckOutput } from "./presentationTypes";
+import {
+  PresentationFile,
+  VerifiedCheckOutput,
+  VerifiedCheckReport,
+} from "./presentationTypes";
 
 type WasmGlobals = typeof globalThis & {
   enderCheckProof?: (source: string) => string;
   enderParsePresentation?: (source: string) => string;
+  enderCheckReport?: (source: string) => string;
 };
 
 let initialization: Promise<WasmGlobals> | undefined;
@@ -29,7 +34,8 @@ const initialize = async (): Promise<WasmGlobals> => {
     for (let attempt = 0; attempt < 500; attempt += 1) {
       if (
         typeof globals.enderCheckProof === "function" &&
-        typeof globals.enderParsePresentation === "function"
+        typeof globals.enderParsePresentation === "function" &&
+        typeof globals.enderCheckReport === "function"
       ) {
         return globals;
       }
@@ -56,4 +62,11 @@ export const parsePresentationNode = async (
   ) as PresentationFile | null;
   if (!result) throw new Error("Rocq presentation parser rejected the source");
   return result;
+};
+
+export const checkVerifiedReportNode = async (
+  source: string,
+): Promise<VerifiedCheckReport> => {
+  const wasm = await initialize();
+  return JSON.parse(wasm.enderCheckReport!(source)) as VerifiedCheckReport;
 };

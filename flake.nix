@@ -198,6 +198,13 @@
         } ''
           ender-checker ${./src/checker/proofs/examples/tutorial.txt} > native-tutorial.json
           diff -u ${tutorialOutput} native-tutorial.json
+          ender-checker --report ${./src/checker/proofs/examples/tutorial.txt} \
+            | jq -e '.verdict == "accepted" and
+                     .problem.conclusion == "con_tri(t_ABC,t_ADC)" and
+                     (.presentation.steps | length > 0) and
+                     (.steps | type == "array") and (.graph | type == "object") and
+                     (.duplicates | type == "array") and (.goal | type == "object") and
+                     (.diagnostics | type == "array")' >/dev/null
           if ender-checker ${./src/checker/proofs/examples/tutinc.txt} > native-tutinc.json; then
             echo "invalid SSS proof was accepted" >&2
             exit 1
@@ -245,7 +252,7 @@
             pkgs.gnumake pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
             pkgs.ocamlPackages.yojson
             pkgs.ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
-            pkgs.nodejs_24
+            pkgs.nodejs_24 nativeChecker
           ];
           COQPATH = pkgs.lib.concatStringsSep ":" [
             "${geocoqCoinc}/${coqLib}"

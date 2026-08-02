@@ -19,6 +19,7 @@
     "checkProof": "tsx src/checker/proofCheckerCli.ts",
     "test-core": "jest --passWithNoTests",
     "checker-server": "tsx src/checker/server.ts",
+    "reasonCoverage": "node scripts/reason-coverage.mjs",
     "docker:standalone": "docker compose -f docker-compose.standalone.yml up --build"
   },
   "dependencies": {
