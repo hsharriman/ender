@@ -711,6 +711,58 @@ Example rhl_wrong_vertex_rejects :
   complete_checker rhl_wrong_vertex_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Converse of the midpoint definition: congruent halves plus an [on_line]
+    diagram premise. *)
+Definition midpt_conv_source := transitive_header "seg: AC
+"
+  "[d_01] on_line(AC,B)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** Congruent halves alone place no point between the endpoints. *)
+Definition midpt_conv_no_line_source := transitive_header "seg: AC
+"
+  "[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** The collinear point must be the one the conclusion names. *)
+Definition midpt_conv_other_point_source := transitive_header "seg: AC
+"
+  "[d_01] on_line(AC,D)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** The cited congruence must be of the two halves. *)
+Definition midpt_conv_wrong_halves_source := transitive_header "seg: AC
+"
+  "[d_01] on_line(AC,B)
+[g_1] con_seg(AB,BD)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BD)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+Example midpt_conv_accepts : complete_checker midpt_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_no_line_rejects :
+  complete_checker midpt_conv_no_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_other_point_rejects :
+  complete_checker midpt_conv_other_point_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_wrong_halves_rejects :
+  complete_checker midpt_conv_wrong_halves_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

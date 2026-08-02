@@ -147,14 +147,14 @@
     },
     {
       "reason": "midpt_conv",
-      "status": "unimplemented",
-      "priority": 1,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l7_20 (unique equidistant point on a line)",
       "fixtures": [
         "src/checker/proofs/examples/s1c2.txt",
         "src/checker/proofs/examples/s1c3.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "vert_ang",

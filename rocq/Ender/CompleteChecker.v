@@ -32,6 +32,7 @@ Definition project_premise_statement (s : FA.PublicStatement) : option Statement
   | FA.IntersectSeg a b p =>
       Some (IntersectSeg (project_segment a) (project_segment b) p)
   | FA.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
+  | FA.OnLine s p => Some (OnLine (project_segment s) p)
   | _ => None
   end.
 
@@ -51,6 +52,7 @@ Definition project_goal_statement (s : FA.PublicStatement) : option Statement :=
   | FA.IntersectSeg a b p =>
       Some (IntersectSeg (project_segment a) (project_segment b) p)
   | FA.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
+  | FA.OnLine s p => Some (OnLine (project_segment s) p)
   | _ => None
   end.
 
@@ -184,7 +186,7 @@ Definition statement_function (s : Statement) : string :=
   | RefAng _ _ => "ref_ang" | RightAng _ => "right"
   | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
   | MidptOf _ _ => "midpt" | IntersectSeg _ _ _ => "intersect_seg"
-  | AngBisectOf _ _ => "ang_bisect"
+  | AngBisectOf _ _ => "ang_bisect" | OnLine _ _ => "on_line"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
@@ -282,6 +284,8 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
       dependency_type_issue facts "perp_con_ang" 0 i ExpectedPerpendicular step_number
   | DefMidpt i =>
       dependency_type_issue facts "def_midpt" 0 i ExpectedMidpoint step_number
+  | MidptConv i =>
+      dependency_type_issue facts "midpt_conv" 0 i ExpectedSegment step_number
   | DefAngBisect i =>
       dependency_type_issue facts "def_ang_bisect" 0 i ExpectedAngleBisector
         step_number

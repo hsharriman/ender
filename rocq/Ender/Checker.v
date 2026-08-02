@@ -64,6 +64,7 @@ Definition fact_eqb (expected actual : Statement) : bool :=
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
   (* Reversing the ray commutes the two disjuncts of the bisector meaning. *)
   | AngBisectOf a b, AngBisectOf c d => angle_eqb a c && segment_u_eqb b d
+  | OnLine a p, OnLine b q => segment_u_eqb a b && ascii_eqb p q
   | _, _ => false
   end.
 
@@ -323,6 +324,27 @@ Definition def_ang_bisect (facts : list Statement) (i : nat)
   | _ => false
   end.
 
+(** Converse of the midpoint definition.  Congruent halves alone do not place
+    the point between the endpoints, so this rule additionally requires an
+    [on_line] diagram premise: on a line there is exactly one point equidistant
+    from two distinct points. *)
+Definition midpt_conv (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion with
+  | MidptOf s p =>
+      match lookup_step facts i with
+      | Some dependency =>
+          fact_eqb (ConSeg (segment s.(seg_start) p) (segment p s.(seg_end)))
+                   dependency &&
+          existsb (fun pr => match pr.(premise_statement) with
+                             | OnLine t q => segment_u_eqb s t && ascii_eqb p q
+                             | _ => false
+                             end) premises
+      | None => false
+      end
+  | _ => false
+  end.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -381,6 +403,7 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | DefMidpt i => def_midpt facts i conclusion
   | VertAng => vert_ang triangles premises conclusion
   | DefAngBisect i => def_ang_bisect facts i conclusion
+  | MidptConv i => midpt_conv premises facts i conclusion
   | RHL i j k =>
       match conclusion with
       | ConTri t u => declared_pair triangles t u &&
@@ -458,10 +481,13 @@ Proof.
     | Heq : triangle_eqb _ _ = true |- _ => apply triangle_eqb_eq in Heq
     | Heq : ascii_eqb _ _ = true |- _ => apply Ascii.eqb_eq in Heq
     end; subst;
-    (* residual cases: a midpoint or an angle bisector on a reversed segment *)
+    (* residual cases: a midpoint, an angle bisector, or an on-line witness
+       stated on a reversed segment *)
     solve [ tauto
           | unfold reverse_segment; cbn; split; apply l7_2
-          | unfold reverse_segment; cbn; tauto ].
+          | unfold reverse_segment; cbn; tauto
+          | unfold reverse_segment; cbn;
+            split; intros [Hne Hcol]; (split; [congruence|Col]) ].
 Qed.
 
 Lemma find_premise_sound : forall label premises statement,
@@ -946,6 +972,42 @@ Proof.
   - exact Hc.
 Qed.
 
+Lemma on_line_u_sound : forall s t p q,
+  segment_u_eqb s t = true -> ascii_eqb p q = true ->
+  Interp (OnLine t q) -> Interp (OnLine s p).
+Proof.
+  intros s t p q Hs Hp Hon. unfold ascii_eqb in Hp. apply Ascii.eqb_eq in Hp.
+  subst q. apply segment_u_eqb_cases in Hs.
+  destruct Hs as [Heq|Heq]; subst s; [exact Hon|].
+  unfold reverse_segment in *. cbn in Hon |- *.
+  destruct Hon as [Hne Hcol]. split; [congruence|Col].
+Qed.
+
+Lemma midpt_conv_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  midpt_conv premises facts i conclusion = true -> Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold midpt_conv in Hrule. destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hhalves Hon].
+  assert (Hdep : Interp dependency) by (eapply lookup_step_sound; eauto).
+  apply (fact_eqb_sound _ _ Hhalves) in Hdep. cbn in Hdep.
+  apply existsb_exists in Hon. destruct Hon as [pr [Hin Hmatch]].
+  pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
+                Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr.
+  destruct (premise_statement pr) as [| | | | | | | | | | |t q]; try discriminate.
+  apply andb_true_iff in Hmatch. destruct Hmatch as [Hseg Hpoint].
+  pose proof (on_line_u_sound s t p q Hseg Hpoint Hpr) as Hline.
+  cbn in Hline. destruct Hline as [Hne Hcol]. cbn.
+  assert (Hbetween : Col (point s.(seg_start)) (point p) (point s.(seg_end))) by Col.
+  assert (Hequal : Cong (point p) (point s.(seg_start))
+                        (point p) (point s.(seg_end))) by Cong.
+  destruct (l7_20 (point p) (point s.(seg_start)) (point s.(seg_end))
+                  Hbetween Hequal) as [Hsame|Hmid]; [contradiction|exact Hmid].
+Qed.
+
 Lemma rule_valid_sound : forall triangles premises facts reason conclusion,
   declarations_well_formed point triangles ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -1002,6 +1064,7 @@ Proof.
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
     eapply six_correspondences_sound;
       [exact Hwf|exact Hfacts|exact Ht|exact rhl_schema_sound|exact Hschema].
+  - eapply midpt_conv_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,

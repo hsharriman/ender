@@ -36,12 +36,22 @@ The parity categories deliberately distinguish:
 - `unsupported-reason`: contains at least one unimplemented reason; and
 - `parse-failure`: the theorem-bearing problem could not be decoded.
 
-One bundled fixture, `examples/s2c2.txt`, is marked `// pass` but lands in
-`rejected-supported-slice`. Its step 7 concludes `con_tri(t_ABD,t_BCD)` from an
-SAS argument that actually establishes the correspondence `A-C`, `B-B`, `D-D`.
-Under the audited ordered reading of `con_tri` that conclusion does not follow,
-so the kernel rejects it. This is a fixture defect, not a missing reason; do
-not widen the correspondence search to accommodate it.
+Two bundled fixtures marked `// pass` land in `rejected-supported-slice`, both
+for the same reason: a triangle-congruence step names a correspondence its own
+argument does not establish, while the `cpctc` step that follows relies on the
+correct one. The legacy checker evidently matched the two triangles up to
+independent permutation, which is exactly what makes `con_tri` unsound as an
+ordered claim.
+
+- `examples/s2c2.txt` step 7 concludes `con_tri(t_ABD,t_BCD)` from an SAS
+  argument establishing `A-C`, `B-B`, `D-D`.
+- `examples/s1c3.txt` step 7 concludes `con_tri(t_QRP,t_MRN)` from an ASA
+  argument establishing `P-M`, `R-R`, `Q-N`; its step 8 then reads `con_seg(QR,
+  RN)` off the correspondence the argument actually proves.
+
+These are fixture defects, not missing reasons. Correspondence search already
+covers all six readings of a conclusion, and permuting the two triangles
+independently would defeat the point of an ordered `con_tri`; do not widen it.
 
 The manifest is generated from the untrusted metadata catalog, but its status
 overrides reflect the actual constructors in `rocq/Ender/Syntax.v`. Updating a

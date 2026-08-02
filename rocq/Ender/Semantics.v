@@ -59,6 +59,9 @@ Definition statement_meaning (s : Statement) : Prop :=
       (s.(seg_end) = a.(ang_vertex) /\
         CongA (point a.(ang_left)) (point a.(ang_vertex)) (point s.(seg_start))
               (point s.(seg_start)) (point a.(ang_vertex)) (point a.(ang_right)))
+  | OnLine s p =>
+      point s.(seg_start) <> point s.(seg_end) /\
+      Col (point s.(seg_start)) (point s.(seg_end)) (point p)
   end.
 
 Definition segment_points (s : Segment) :=

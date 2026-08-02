@@ -9,10 +9,10 @@ kernel. It is the sole executable checker; unsupported reasons fail closed.
 The slice parses Ender source text and supports:
 
 - statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
-  `con_right`, `perp`, `midpt`, `intersect_seg`, and `ang_bisect`;
+  `con_right`, `perp`, `midpt`, `intersect_seg`, `ang_bisect`, and `on_line`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `rhl`, `cpctc`,
   `con_seg_transitive`, `con_ang_transitive`, `con_tri_transitive`,
-  `def_con_right`, `perp_con_ang`, `def_midpt`, `vert_ang`, and
+  `def_con_right`, `perp_con_ang`, `def_midpt`, `midpt_conv`, `vert_ang`, and
   `def_ang_bisect`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
@@ -68,6 +68,11 @@ readings are therefore accepted, since each is separately sound. Two legs are
 still refused, and the correspondence search already covers which of the two
 legs is cited. GeoCoq proves RHL in neutral geometry as `cong2_per2__cong_3`,
 so this rule needs no Euclidean hypothesis.
+
+`midpt_conv` is the converse of `def_midpt`. Congruent halves alone place no
+point between the endpoints, so it additionally requires an `on_line` diagram
+premise: on a line there is exactly one point equidistant from two distinct
+points (GeoCoq `l7_20`).
 
 ## Soundness boundary
 

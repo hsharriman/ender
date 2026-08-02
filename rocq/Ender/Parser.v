@@ -152,15 +152,16 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
     | Some a => Some (RightAng a)
     | None => None
     end in
-  let parse_midpt body :=
+  let parse_point_at constructor body :=
     match split_on ","%char body [] with
     | [a; [p]] =>
         match parse_segment a with
-        | Some x => Some (MidptOf x p)
+        | Some x => Some (constructor x p)
         | None => None
         end
     | _ => None
     end in
+  let parse_midpt := parse_point_at MidptOf in
   let parse_ang_bisect body :=
     match split_on ","%char body [] with
     | [a; b] =>
@@ -190,7 +191,8 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "perp" text parse_perp
   (try_call "midpt" text parse_midpt
   (try_call "intersect_seg" text (parse_perp_like IntersectSeg)
-  (try_call "ang_bisect" text parse_ang_bisect None)))))))))).
+  (try_call "ang_bisect" text parse_ang_bisect
+  (try_call "on_line" text (parse_point_at OnLine) None))))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -261,7 +263,8 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
       (try_call "vert_ang" text
         (fun body => match body with [] => Some VertAng | _ => None end)
         (try_call "def_ang_bisect" text (parse_one DefAngBisect)
-        (try_call "rhl" text (parse_three RHL) None)))))))))))))
+        (try_call "rhl" text (parse_three RHL)
+        (try_call "midpt_conv" text (parse_one MidptConv) None))))))))))))))
     end
   end.
 
