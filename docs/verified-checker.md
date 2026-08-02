@@ -170,14 +170,35 @@ The theorem is conditional on the geometry hypotheses, which are universally
 quantified rather than asserted — `Print Assumptions` reports no axioms
 precisely because those hypotheses are not axioms, so it cannot speak to
 whether any model satisfies them. Nothing here exhibits one, so `checker_sound`
-would hold vacuously if none did. It does not: GeoCoq builds a
-two-dimensional Euclidean Tarski model over any real-closed field in
-`Algebraic/POF_to_Tarski.v` (`Rcf_to_T2D`, `Rcf_to_T_euclidean`). That part of
-GeoCoq is MathComp 1.x code, and Coq 8.20 has only MathComp 2.x packaged — its
-`mathcomp.ssreflect.ssreflect` no longer exists — so the witness is out of
-reach without moving to Coq 8.19 or porting GeoCoq's algebraic layer. `Audit.v`
-records the obligation that would close this, and why adding it early would
-only make the contract uninhabitable.
+would hold vacuously if none did.
+
+It does not: GeoCoq builds a two-dimensional Euclidean Tarski model over any
+real-closed field in `Algebraic/POF_to_Tarski.v` (`Rcf_to_T2D`,
+`Rcf_to_T_euclidean`). That layer simply does not build against this toolchain
+yet, and the reasons are worth recording because they are further along than
+they look:
+
+1. Sixteen files import `mathcomp.ssreflect.ssreflect`, which MathComp 2.3
+   removed when it renamed the `ssreflect` component to `boot` — the ssreflect
+   core now ships with Coq. One line each.
+2. GeoCoq reserves `'[ u , v ]` at level 2; MathComp 2.5 reserves the same
+   notation with the same format at level 0, in `boot/ssrnotations.v`. GeoCoq's
+   two reservation lines are now redundant.
+3. Past those, MathComp proof script whose `rewrite`s have become ambiguous
+   under the newer library.
+
+Only (3) is real work, and upstream has already done a version of it: GeoCoq
+merged a Rocq 9.0 / MathComp 2.4 port on 2025-11-17 and reverted it the next
+day (PRs 52 and 53). This development pins that revert. Applying the reverted
+patch here clears roughly two thirds of (3) before diverging, because it was
+written for Rocq 9.0 with MathComp 2.4 rather than Coq 8.20 with MathComp 2.5.
+
+So the realistic routes are to wait for upstream to re-land the port, or to
+move this development to the toolchain the port targets, at which point the
+model should come nearly for free. Finishing the port downstream would mean
+carrying a fork of a 1500-line MathComp development. `Audit.v` records the
+obligation that would close this, and why adding it early would only make the
+contract uninhabitable.
 
 Extraction and compilation add a conventional trusted-computing boundary:
 Rocq's kernel checks the proof, while Rocq extraction, the OCaml compiler, and

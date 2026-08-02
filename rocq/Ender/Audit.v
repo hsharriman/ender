@@ -835,10 +835,16 @@ Definition accepted (report : CheckReport) : bool :=
     Tarski geometry exists, so [checker_sound] would hold vacuously if none
     did.  That is not in doubt -- GeoCoq exhibits one over any real-closed
     field in [Algebraic/POF_to_Tarski.v] ([Rcf_to_T2D], [Rcf_to_T_euclidean])
-    -- but it is not checked here, because that part of GeoCoq is MathComp 1.x
-    code and this development is on Coq 8.20, for which only MathComp 2.x is
-    packaged.  Turning it into a checked guarantee means adding one obligation
-    to the module type below:
+    -- but that layer does not currently build here.  It is MathComp code, and
+    MathComp 2.3 renamed its [ssreflect] component to [boot]; GeoCoq also
+    reserves a notation MathComp 2.5 now reserves itself.  Both are mechanical,
+    but past them lies proof script whose rewrites have become ambiguous.
+    Upstream has a fix -- it was merged and reverted a day later (GeoCoq PRs 52
+    and 53; this development pins the revert) -- and it targets Rocq 9.0 with
+    MathComp 2.4 rather than the Coq 8.20 and MathComp 2.5 used here.
+
+    Turning non-vacuity into a checked guarantee means adding one obligation to
+    the module type below:
 
       Parameter models_exist : exists Tn TnEQD,
         inhabited (@Tarski_2D Tn TnEQD) /\ inhabited (@Tarski_euclidean Tn TnEQD).

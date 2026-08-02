@@ -56,8 +56,10 @@ Known limitations relevant to prioritization:
   lemma, so the rules above it stay visibly neutral.  Prefer a GeoCoq route
   that keeps `Print Assumptions` clean; `nix flake check` now enforces it;
 - the checker theorem is not shown to be non-vacuous: no model of the geometry
-  hypotheses is exhibited.  GeoCoq has one, but only in its MathComp 1.x
-  algebraic layer, which Coq 8.20 cannot build;
+  hypotheses is exhibited.  GeoCoq has one, in an algebraic layer that is two
+  mechanical fixes and one real port away from building here; upstream's own
+  port of it was merged and reverted in November 2025.  See
+  [`verified-checker.md`](verified-checker.md);
 - the rich report schema is fully exported, but most step/graph/suggestion
   fields are intentionally empty until their producers are implemented;
 - arc source is parsed losslessly but the TypeScript renderer has no Arc object;
