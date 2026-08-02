@@ -61,9 +61,14 @@ all corpus files through the extracted API.
 ## Priority policy
 
 - **Priority 1:** foundational, frequently reused facts with comparatively
-  local semantics—transitivity, midpoint/bisector definitions, vertical/right
-  angles, third-angle, and RHL.
+  local semantics. All but `ang_bisect_conv` are now implemented; that one
+  needs a decision about what fixes the bisecting ray, since the audited
+  `AngleBisector` names it and a congruence of the two halves does not.
 - **Priority 2:** ordinary triangle, line, and quadrilateral curriculum rules.
+  The triangle-shape group is done; the largest remaining clusters are the
+  parallel-line rules (which need the `para` and `transversal` statements and
+  the Euclidean context `third_angle` already established) and the
+  quadrilateral rules built on them.
 - **Priority 3:** circles/arcs, similarity, centers, or historically ambiguous
   catalog entries. Resolve their semantics and side conditions before coding.
 

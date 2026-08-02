@@ -189,12 +189,21 @@ The Wasm bundle is under
 The complete declaration and statement parser, its soundness and completeness
 proofs, semantic adapter, and final checker theorem are implemented. The
 audited lexical grammar enforces Ender's `[A-Z]` point-label restriction, so
-object names cannot collide with grammar punctuation. Coverage now grows by
-mechanizing the remaining reason theorems. Every trusted
-statement has a total meaning. Binary
-`sim_seg` has been replaced by four-segment
-`proportion`; linear pairs have explicit ray geometry; `kite_premise` is a
-specified compatibility macro; and arcs carry explicit minor/major identity.
+object names cannot collide with grammar punctuation. Every trusted statement
+has a total meaning. Coverage now grows by mechanizing the remaining reason
+theorems.
+
+Two things gate that growth, in this order. Statement coverage comes first:
+the kernel parser rejects a problem outright when any premise line names a
+statement it cannot decode, so a whole fixture stays out of reach until every
+statement it declares is supported. Nondegeneracy comes second: declared
+triangles are currently the only source of it, so a rule that needs
+nondegenerate rays and has no declared triangle to draw on must fail closed,
+as `reflex` on `ref_ang` and `perp_con_ang` on `con_ang` do.
+
+The largest remaining cluster is the parallel-line family, which needs the
+`para` and `transversal` statements and the Euclidean context that
+`third_angle` already established; the quadrilateral rules are built on it.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and
