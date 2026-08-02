@@ -33,9 +33,11 @@ Known limitations relevant to prioritization:
   (`declared_angle` in `Checker.v`); a rule needing nondegeneracy and having no
   such source must fail closed, as `reflex` on `ref_ang` and `perp_con_ang` on
   `con_ang` do;
-- `third_angle`, `rhl`, and the parallel-line rules need Euclidean or
-  2-dimensional hypotheses that the kernel's soundness section does not yet
-  assume, even though the audited final theorem does;
+- `third_angle`, the parallel-line rules, and everything built on them need
+  Euclidean or 2-dimensional hypotheses that the kernel's soundness section
+  does not yet assume, even though the audited final theorem does. `rhl` is
+  not among them: GeoCoq proves it in neutral geometry as
+  `cong2_per2__cong_3`;
 - the rich report schema is fully exported, but most step/graph/suggestion
   fields are intentionally empty until their producers are implemented;
 - arc source is parsed losslessly but the TypeScript renderer has no Arc object;
