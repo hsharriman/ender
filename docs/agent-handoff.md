@@ -56,10 +56,10 @@ Known limitations relevant to prioritization:
   lemma, so the rules above it stay visibly neutral.  Prefer a GeoCoq route
   that keeps `Print Assumptions` clean; `nix flake check` now enforces it;
 - the checker theorem is not shown to be non-vacuous: no model of the geometry
-  hypotheses is exhibited.  GeoCoq has one and it has been confirmed to build,
-  but only on a different toolchain (Rocq 9 + MathComp 2.4 + upstream's
-  reverted port); adopting it is a migration, not an addition.  See
-  [`verified-checker.md`](verified-checker.md);
+  hypotheses is exhibited.  GeoCoq has one and it compiles on Rocq 9 (branch
+  `rocq-9-migration`), but instantiating it needs a real-closed field, and
+  GeoCoq's algebraic layer and MathComp's real-closed library want disjoint
+  MathComp versions.  See [`verified-checker.md`](verified-checker.md);
 - the rich report schema is fully exported, but most step/graph/suggestion
   fields are intentionally empty until their producers are implemented;
 - arc source is parsed losslessly but the TypeScript renderer has no Arc object;

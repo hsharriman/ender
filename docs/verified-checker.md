@@ -174,29 +174,26 @@ would hold vacuously if none did.
 
 It does not: GeoCoq builds a two-dimensional Euclidean Tarski model over any
 real-closed field in `Algebraic/POF_to_Tarski.v` (`Rcf_to_T2D`,
-`Rcf_to_T_euclidean`). That file has been confirmed to compile against a
-toolchain reachable from this flake's own pinned nixpkgs, with this recipe:
+`Rcf_to_T_euclidean`). Adopting it was attempted and is preserved on the
+`rocq-9-migration` branch. That branch works — the whole development builds on
+Rocq 9.0 with **no source changes**, still axiom-free — but it does not close
+this gap, for a reason worth recording so nobody retries it blindly:
 
-- GeoCoq pinned at `1b1e7ad5` rather than the current pin. That commit is
-  upstream's Rocq 9.0 / MathComp 2.4 port, which was merged on 2025-11-17 and
-  reverted the next day (PRs 52 and 53); the current pin *is* the revert. The
-  port is not optional — the reverted tree fails on `Coinc/Utils/arity.v`
-  because Rocq 9 split the standard library out.
-- `coq_9_0` (9.0.1) with `coqPackages_9_0.stdlib`, in place of `coq_8_20`.
-- `coqPackages_9_0.mathcomp.override { version = "2.4.0"; }`. This one is not
-  optional either: on MathComp 2.5 the file fails at line 1134 (`The RHS of
-  mulrBl does not match any subterm`) — identically on Coq 8.20 and on Rocq 9,
-  so the residual breakage tracks the MathComp version, not the compiler.
-- Two mechanical patches: sixteen files import `mathcomp.ssreflect.ssreflect`,
-  removed when MathComp 2.3 renamed that component to `boot` (the ssreflect
-  core now ships with Coq); and GeoCoq's two `Reserved Notation` lines for
-  `'[ u , v ]` and `'[ u ]`, which MathComp now reserves itself.
+- GeoCoq's algebraic layer needs **MathComp 2.4**. On 2.5 it fails at
+  `POF_to_Tarski.v` line 1134, identically under Coq 8.20 and Rocq 9, so that
+  breakage tracks the library rather than the compiler. Upstream's port (merged
+  2025-11-17, reverted the next day as PRs 52 and 53) targets 2.4 and is
+  required even to get that far: the reverted tree does not build on Rocq 9 at
+  all, since Rocq 9 split out the standard library.
+- Instantiating the model needs a concrete real-closed field, which means
+  `mathcomp-real-closed`. In this nixpkgs, real-closed 2.0.5 requires
+  `mathcomp.all_boot`, introduced in **MathComp 2.5**.
 
-So this is a whole-toolchain migration for the project, pinned simultaneously
-to a commit upstream deliberately reverted and to a MathComp older than
-nixpkgs' default — a fragile perch that should be revisited when upstream
-re-lands the port. It has not been adopted. `Audit.v` records the obligation
-that would then close the gap.
+The two requirements are disjoint. Closing the gap therefore needs one of:
+GeoCoq's algebraic layer ported to MathComp 2.5 (the line-1134 work upstream
+has not done), a real-closed release that works against 2.4, or upstream
+re-landing its port against a newer MathComp. `Audit.v` records the obligation
+that would then close it.
 
 Extraction and compilation add a conventional trusted-computing boundary:
 Rocq's kernel checks the proof, while Rocq extraction, the OCaml compiler, and

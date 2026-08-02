@@ -835,10 +835,10 @@ Definition accepted (report : CheckReport) : bool :=
     Tarski geometry exists, so [checker_sound] would hold vacuously if none
     did.  GeoCoq exhibits one over any real-closed field in
     [Algebraic/POF_to_Tarski.v] ([Rcf_to_T2D], [Rcf_to_T_euclidean]), and that
-    file has been confirmed to build against a toolchain reachable from this
-    flake -- see the recipe in [docs/verified-checker.md].  It is a different
-    toolchain from the one this development currently uses, so adopting it is a
-    migration rather than an addition, and that decision has not been taken.
+    file does build here on Rocq 9 (see the [rocq-9-migration] branch), but the
+    model cannot be instantiated: doing so needs a concrete real-closed field,
+    and GeoCoq's algebraic layer and MathComp's real-closed library currently
+    require disjoint MathComp versions.  See [docs/verified-checker.md].
 
     Turning non-vacuity into a checked guarantee then means adding one
     obligation to the module type below:
