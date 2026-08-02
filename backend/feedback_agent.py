@@ -5,11 +5,19 @@ from pathlib import Path
 from dotenv import load_dotenv
 from litellm import completion
 from solver_agent import run_solver_agent
+import feedback_preprocessors
 
 SOLVER_PROMPT_PATH = "backend/prompt/solver_final.txt"
-FEEDBACK_PROMPT_PATH = "backend/prompt/feedbacks_3_1.txt"
+FEEDBACK_PROMPT_PATH = "backend/prompt/feedbacks_3_2.txt"
 
 
+def give_feedback(
+    system_prompt,
+    solution_proof,
+    student_proof,
+    checker_output,
+    error_code_explanation="",
+) -> str:
 def give_feedback(
     system_prompt,
     solution_proof,
@@ -28,6 +36,7 @@ def give_feedback(
             {"role": "system", "content": system_prompt},
             {"role": "assistant", "content": solution_proof},
             {"role": "user", "content": student_proof},
+            {"role": "assistant", "content": checker_output + error_code_explanation},
             {"role": "assistant", "content": checker_output + error_code_explanation},
         ],
     )
@@ -58,7 +67,8 @@ def run_feedback_agent(
     checker_path = os.path.join(original_proof_dir, f"{proof_name}_checker_output.txt")
     solution_path = os.path.join(original_proof_dir, f"{proof_name}_solution.txt")
     solver_metadata_path = os.path.join(original_proof_dir, "solver_metadata.json")
-    solution_proof = ""
+    solution_proof = None
+    feedback = None
     hint = None
 
     if os.path.exists(solver_metadata_path):
@@ -86,23 +96,61 @@ def run_feedback_agent(
                         )
                     except ValueError as error:
                         print(f"Solver failed: {error}")
+            if metadata.get("iterations")[1].get("llm_status") == "unfixable":
+                print("The proof cannot be solved")
+                feedback = {"feedback": "unfixable"}
+            elif metadata.get("iterations")[1].get("llm_status") == "correct":
+                print("The student's solution is already correct")
+                feedback = {"feedback": "Good job! Your solution is already correct!!"}
+            else:
+                if metadata.get("iterations")[1].get("llm_status") == "unparsable":
+                    print("The proof has syntax errors")
 
+                if metadata.get("solution_reached"):
+                    print("Solution already exists, skipping solver agent")
+                    with open(solution_path, "r", encoding="utf-8") as f_sol:
+                        solution_proof = f_sol.read()
+                else:
+                    try:
+                        solution_proof, _ = run_solver_agent(
+                            original_proof_dir, solver_prompt_path
+                        )
+                    except ValueError as error:
+                        print(f"Solver failed: {error}")
+
+                solution_proof_no_reason_params = (
+                    feedback_preprocessors.remove_reason_params(solution_proof)
+                )
+
+                # get all necessary files
                 with open(feedback_prompt_path, encoding="utf-8") as f:
                     feedback_prompt = f.read()
                 with open(proof_path, encoding="utf-8") as f:
                     student_proof = f.read()
+                student_proof_no_reason_params = (
+                    feedback_preprocessors.remove_reason_params(student_proof)
+                )
                 with open(checker_path, encoding="utf-8") as f:
                     checker_output = f.read()
-                with open("src/checker/ERROR_CODES.md", encoding="utf-8") as f:
-                    error_code_explanation = f.read()
+                error_code_explanation = (
+                    feedback_preprocessors.extract_error_code_explanation(
+                        checker_output
+                    )
+                )
+                checker_output_no_dependencies = (
+                    feedback_preprocessors.remove_checker_dependencies(checker_output)
+                )
 
-                if solution_proof != "":
+                if solution_proof_no_reason_params != "":
+                    corrections_needed = feedback_preprocessors.find_solution_changes(
+                        student_proof_no_reason_params, solution_proof_no_reason_params
+                    )
                     llm_output = give_feedback(
                         feedback_prompt,
-                        solution_proof,
-                        student_proof,
-                        checker_output,
-                        # error_code_explanation,
+                        student_proof_no_reason_params,
+                        checker_output_no_dependencies,
+                        error_code_explanation,
+                        corrections_needed,
                     )
 
                     feedback, hint = postprocess_output(llm_output)
@@ -122,7 +170,7 @@ def run_feedback_agent(
         }
 
         metadata_path = os.path.join(
-            original_proof_dir, "feedback_metadata_no_dependency.json"
+            original_proof_dir, "feedback_metadata.json"
         )
 
         with open(metadata_path, "w", encoding="utf-8") as f:
