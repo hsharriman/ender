@@ -689,12 +689,93 @@ Inductive ProblemGrammar : string -> PublicProblem -> Prop :=
     HeaderLines (splitLines source) declarations premises (Some conclusion) ->
     ProblemGrammar source (public_problem declarations premises conclusion).
 
+(** The designated public API.  These data are deliberately independent of the
+    implementation's parser, proof AST, and reason kernel.  [Extract.v] names
+    only the concrete operations in this signature as extraction roots; the
+    distribution layer must likewise expose only those named roots. *)
+Inductive Verdict := FailedToParseProblem | RejectedProof | Accepted.
+
+Inductive DiagnosticPhase := ProblemParsing | ProofParsing | ProofChecking.
+Inductive DiagnosticSeverity := DiagnosticInfo | DiagnosticWarning | DiagnosticError.
+Inductive DiagnosticCode :=
+| MalformedProblem
+| MalformedProof
+| UnsupportedStatement
+| HeaderMismatch
+| ProofNotAccepted
+| InvalidReason
+| MissingDependency
+| GoalNotProved.
+
+Record Diagnostic := diagnostic {
+  diagnostic_phase : DiagnosticPhase;
+  diagnostic_severity : DiagnosticSeverity;
+  diagnostic_code : DiagnosticCode;
+  diagnostic_message : string
+}.
+
+Inductive StepStatus := StepAccepted | StepRejected | StepBlocked.
+Inductive SuggestionSlotStatus := SlotSatisfied | SlotMissing | SlotConflicting.
+Record SuggestionSlot := suggestion_slot {
+  suggestion_slot_status : SuggestionSlotStatus;
+  suggestion_slot_description : string;
+  suggestion_slot_sources : list nat
+}.
+Record ProofSuggestion := proof_suggestion {
+  suggestion_reason : string;
+  suggestion_slots : list SuggestionSlot;
+  suggestion_complete : bool
+}.
+Record StepReport := step_report {
+  step_number : nat;
+  step_source : string;
+  step_reason_name : option string;
+  step_conclusion : option PublicStatement;
+  step_status : StepStatus;
+  step_dependencies : list nat;
+  step_diagram_dependencies : list PublicStatement;
+  step_diagnostics : list Diagnostic;
+  step_suggestions : list ProofSuggestion
+}.
+Record DependencyGraph := dependency_graph {
+  graph_nodes : list nat;
+  graph_edges : list (nat * nat);
+  graph_cycles : list (list nat);
+  graph_unused_steps : list nat
+}.
+Inductive FactOrigin := PremiseOrigin : string -> FactOrigin | StepOrigin : nat -> FactOrigin.
+Record DuplicateDerivation := duplicate_derivation {
+  duplicate_statement : PublicStatement;
+  duplicate_first : FactOrigin;
+  duplicate_again : FactOrigin
+}.
+Record GoalReport := goal_report {
+  goal_proved_by : option nat;
+  goal_diagnostics : list Diagnostic;
+  goal_suggestions : list ProofSuggestion
+}.
+Record CheckReport := check_report {
+  report_verdict : Verdict;
+  report_problem : option PublicProblem;
+  report_steps : list StepReport;
+  report_graph : DependencyGraph;
+  report_duplicates : list DuplicateDerivation;
+  report_goal : GoalReport;
+  report_diagnostics : list Diagnostic
+}.
+
+Definition accepted (report : CheckReport) : bool :=
+  match report.(report_verdict) with Accepted => true | _ => false end.
+
 (** Final implementation contract.  Soundness says every successfully decoded
     header has the independently specified grammar above; completeness says
-    every grammatical header is decoded to exactly the specified problem. *)
+    every grammatical header is decoded to exactly the specified problem.
+    [check] is the sole rich entrypoint and [checker] is its audited Boolean
+    projection. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parseProblem : string -> option PublicProblem.
-  Parameter checker : string -> bool.
+  Parameter check : string -> CheckReport.
+  Definition checker (source : string) : bool := accepted (check source).
   Parameter parser_sound : forall source problem,
     parseProblem source = Some problem -> ProblemGrammar source problem.
   Parameter parser_complete : forall source problem,

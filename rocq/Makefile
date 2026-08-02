@@ -1,5 +1,5 @@
 COQFLAGS := -Q Ender Ender
-MODULES := Audit PublicParser Syntax Geometry Semantics Checker Parser CompleteChecker Tests Extract
+MODULES := Audit PublicParser Syntax Geometry Semantics Checker Parser CompleteChecker CertifiedAPI Tests Extract
 VOFILES := $(addprefix Ender/,$(addsuffix .vo,$(MODULES)))
 
 .PHONY: all proofs test extract clean
@@ -36,10 +36,13 @@ Ender/Parser.vo: Ender/Parser.v Ender/Syntax.vo Ender/Semantics.vo Ender/Checker
 Ender/CompleteChecker.vo: Ender/CompleteChecker.v Ender/Parser.vo Ender/PublicParser.vo
 	coqc $(COQFLAGS) $<
 
-Ender/Tests.vo: Ender/Tests.v Ender/CompleteChecker.vo
+Ender/CertifiedAPI.vo: Ender/CertifiedAPI.v Ender/CompleteChecker.vo
 	coqc $(COQFLAGS) $<
 
-Ender/Extract.vo: Ender/Extract.v Ender/CompleteChecker.vo
+Ender/Tests.vo: Ender/Tests.v Ender/CertifiedAPI.vo
+	coqc $(COQFLAGS) $<
+
+Ender/Extract.vo: Ender/Extract.v Ender/CertifiedAPI.vo
 	coqc $(COQFLAGS) $<
 
 clean:

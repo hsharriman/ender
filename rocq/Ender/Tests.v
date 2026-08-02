@@ -1,5 +1,5 @@
 From Coq Require Import String.
-Require Import Ender.Parser Ender.PublicParser Ender.CompleteChecker.
+Require Import Ender.Parser Ender.PublicParser Ender.CompleteChecker Ender.CertifiedAPI.
 Open Scope string_scope.
 
 Definition common_header (premises goal steps : string) : string :=
@@ -105,6 +105,16 @@ Proof. vm_compute. reflexivity. Qed.
 Example complete_repository_tutorial_accepts :
   complete_checker repository_tutorial = true.
 Proof. vm_compute. reflexivity. Qed.
+
+Example certified_rich_report_accepts :
+  (CertifiedAPI.check sas_source).(Audit.FinalAudit.report_verdict) =
+    Audit.FinalAudit.Accepted.
+Proof. vm_compute. reflexivity. Qed.
+
+Example certified_boolean_is_report_projection : forall source,
+  CertifiedAPI.checker source =
+    Audit.FinalAudit.accepted (CertifiedAPI.check source).
+Proof. reflexivity. Qed.
 
 (** The complete public parser already covers statement forms outside the
     currently executable reason kernel, including nested arc syntax. *)

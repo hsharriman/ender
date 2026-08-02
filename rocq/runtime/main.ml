@@ -11,13 +11,13 @@ let () =
     exit 2
   end;
   let source = read_file Sys.argv.(1) |> String.to_seq |> List.of_seq in
-  match EnderChecker.classify_source source with
-  | EnderChecker.ProofAccepted ->
+  match (EnderChecker.CertifiedChecker.check source).EnderChecker.FA.report_verdict with
+  | EnderChecker.FA.Accepted ->
       print_endline "accepted";
       exit 0
-  | EnderChecker.ProofRejected ->
+  | EnderChecker.FA.RejectedProof ->
       print_endline "rejected proof";
       exit 1
-  | EnderChecker.ParseFailure ->
+  | EnderChecker.FA.FailedToParseProblem ->
       print_endline "failed to parse problem";
       exit 2

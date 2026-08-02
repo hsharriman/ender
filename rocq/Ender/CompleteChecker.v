@@ -122,6 +122,48 @@ Definition classify_source (source : string) : CheckResult :=
 Definition complete_checker (source : string) : bool :=
   match classify_source source with ProofAccepted => true | _ => false end.
 
+(** Rich public reporting façade.  The current vertical slice has no
+    step-local recovery yet, so those lists are empty rather than fabricated.
+    Their types are already part of the stable audited API. *)
+Definition empty_graph : FA.DependencyGraph :=
+  FA.dependency_graph [] [] [] [].
+
+Definition public_problem_of_source (source : string) : option FA.PublicProblem :=
+  match problemPart source with
+  | Some part => parsePublicProblem part
+  | None => None
+  end.
+
+Definition public_verdict (result : CheckResult) : FA.Verdict :=
+  match result with
+  | ParseFailure => FA.FailedToParseProblem
+  | ProofRejected => FA.RejectedProof
+  | ProofAccepted => FA.Accepted
+  end.
+
+Definition verdict_diagnostics (result : CheckResult) : list FA.Diagnostic :=
+  match result with
+  | ParseFailure =>
+      [FA.diagnostic FA.ProblemParsing FA.DiagnosticError FA.MalformedProblem
+        "the theorem-bearing problem header could not be parsed"]
+  | ProofRejected =>
+      [FA.diagnostic FA.ProofChecking FA.DiagnosticError FA.ProofNotAccepted
+        "the proof was not accepted by the verified reason kernel"]
+  | ProofAccepted => []
+  end.
+
+Definition check_report (source : string) : FA.CheckReport :=
+  let result := classify_source source in
+  FA.check_report (public_verdict result) (public_problem_of_source source)
+    [] empty_graph [] (FA.goal_report None [] []) (verdict_diagnostics result).
+
+Lemma check_report_accepted : forall source,
+  FA.accepted (check_report source) = complete_checker source.
+Proof.
+  intro source. unfold check_report, FA.accepted, complete_checker.
+  destruct (classify_source source); reflexivity.
+Qed.
+
 Lemma statement_list_eqb_eq : forall a b,
   statement_list_eqb a b = true <-> a = b.
 Proof.
@@ -264,7 +306,8 @@ Qed.
 
 Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
   Definition parseProblem := parsePublicProblem.
-  Definition checker := complete_checker.
+  Definition check := check_report.
+  Definition checker (source : string) : bool := FA.accepted (check source).
   Definition parser_sound := parsePublicProblem_sound.
   Definition parser_complete := parsePublicProblem_complete.
 
@@ -286,6 +329,8 @@ Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
         exists claim : Prop, meaning part = Some claim /\ claim.
   Proof.
     intros source Hcheck part Hpart Tn TnEQD T2D TE.
+    change (FA.accepted (check_report source) = true) in Hcheck.
+    rewrite check_report_accepted in Hcheck.
     unfold meaning, parseProblem.
     destruct (parsePublicProblem part) as [public|] eqn:Hpublic.
     - eexists. split; [reflexivity|].
