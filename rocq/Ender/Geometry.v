@@ -16,6 +16,31 @@ Lemma triangle_congruent_cpctc A B C A' B' C' :
   CongA A C B A' C' B'.
 Proof. trivial. Qed.
 
+Lemma triangle_congruent_sym A B C A' B' C' :
+  TriangleCongruent A B C A' B' C' -> TriangleCongruent A' B' C' A B C.
+Proof.
+  unfold TriangleCongruent. intros [HAB [HBC [HCA [HangA [HangB HangC]]]]].
+  split; [now apply cong_symmetry|].
+  split; [now apply cong_symmetry|].
+  split; [now apply cong_symmetry|].
+  split; [now apply conga_sym|].
+  split; [now apply conga_sym|now apply conga_sym].
+Qed.
+
+Lemma triangle_congruent_trans A B C A' B' C' A'' B'' C'' :
+  TriangleCongruent A B C A' B' C' -> TriangleCongruent A' B' C' A'' B'' C'' ->
+  TriangleCongruent A B C A'' B'' C''.
+Proof.
+  unfold TriangleCongruent.
+  intros [HAB [HBC [HCA [HangA [HangB HangC]]]]].
+  intros [HAB' [HBC' [HCA' [HangA' [HangB' HangC']]]]].
+  split; [eapply cong_transitivity; eassumption|].
+  split; [eapply cong_transitivity; eassumption|].
+  split; [eapply cong_transitivity; eassumption|].
+  split; [eapply conga_trans; eassumption|].
+  split; [eapply conga_trans; eassumption|eapply conga_trans; eassumption].
+Qed.
+
 Lemma triangle_congruent_rotate A B C A' B' C' :
   TriangleCongruent A B C A' B' C' -> TriangleCongruent B C A B' C' A'.
 Proof.

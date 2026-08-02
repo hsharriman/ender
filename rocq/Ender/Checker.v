@@ -98,6 +98,47 @@ Definition cpctc_facts (t u : Triangle) : list Statement :=
 Definition is_cpctc_fact (t u : Triangle) (conclusion : Statement) : bool :=
   existsb (fun expected => fact_eqb expected conclusion) (cpctc_facts t u).
 
+(** Transitivity of congruence.  A dependency states a congruence between two
+    like objects; the two dependencies must share one object, and the
+    conclusion must congruate the remaining two.  Sharing is decided by the
+    same object identity the corresponding [fact_eqb] case uses, so segments
+    may be shared with either endpoint order while angles and triangles must
+    be shared exactly. *)
+Definition segment_congruence_pair (s : Statement) : option (Segment * Segment) :=
+  match s with ConSeg a b | RefSeg a b => Some (a, b) | _ => None end.
+Definition angle_congruence_pair (s : Statement) : option (Angle * Angle) :=
+  match s with ConAng a b | RefAng a b => Some (a, b) | _ => None end.
+Definition triangle_congruence_pair (s : Statement) : option (Triangle * Triangle) :=
+  match s with ConTri a b => Some (a, b) | _ => None end.
+
+Section Transitivity.
+Context {A : Type} (same : A -> A -> bool) (congruence : A -> A -> Statement).
+
+Definition transitive_link (x1 x2 y1 y2 : A) (conclusion : Statement) : bool :=
+  (same x2 y1 && fact_eqb (congruence x1 y2) conclusion) ||
+  (same x2 y2 && fact_eqb (congruence x1 y1) conclusion) ||
+  (same x1 y1 && fact_eqb (congruence x2 y2) conclusion) ||
+  (same x1 y2 && fact_eqb (congruence x2 y1) conclusion).
+
+Definition transitive_rule (pair_of : Statement -> option (A * A))
+    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j with
+  | Some first, Some second =>
+      match pair_of first, pair_of second with
+      | Some (x1, x2), Some (y1, y2) => transitive_link x1 x2 y1 y2 conclusion
+      | _, _ => false
+      end
+  | _, _ => false
+  end.
+End Transitivity.
+
+Definition con_seg_transitive facts i j conclusion : bool :=
+  transitive_rule segment_u_eqb ConSeg segment_congruence_pair facts i j conclusion.
+Definition con_ang_transitive facts i j conclusion : bool :=
+  transitive_rule angle_eqb ConAng angle_congruence_pair facts i j conclusion.
+Definition con_tri_transitive facts i j conclusion : bool :=
+  transitive_rule triangle_eqb ConTri triangle_congruence_pair facts i j conclusion.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -147,6 +188,9 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
       | Some (ConTri t u) => is_cpctc_fact t u conclusion
       | _ => false
       end
+  | ConSegTrans i j => con_seg_transitive facts i j conclusion
+  | ConAngTrans i j => con_ang_transitive facts i j conclusion
+  | ConTriTrans i j => con_tri_transitive facts i j conclusion
   end.
 
 Fixpoint check_steps triangles premises facts steps : option (list Statement) :=
@@ -318,6 +362,91 @@ Proof.
   apply fact_eqb_sound in H; tauto.
 Qed.
 
+(** One transitivity argument covers segments, angles, and triangles.  The
+    shared-object test is only ever used to move an already established
+    congruence onto an equal object, so no reflexivity — and in particular no
+    nondegenerate-ray hypothesis for angles — is required. *)
+Lemma transitive_rule_sound :
+  forall (A : Type) (same : A -> A -> bool) (congruence : A -> A -> Statement)
+         (pair_of : Statement -> option (A * A)),
+  (forall w x y, same x y = true ->
+     Interp (congruence w x) -> Interp (congruence w y)) ->
+  (forall x y, Interp (congruence x y) -> Interp (congruence y x)) ->
+  (forall x y z, Interp (congruence x y) -> Interp (congruence y z) ->
+     Interp (congruence x z)) ->
+  (forall s x y, pair_of s = Some (x, y) -> Interp s -> Interp (congruence x y)) ->
+  forall facts i j conclusion,
+  Forall Interp facts ->
+  transitive_rule same congruence pair_of facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros A same congruence pair_of Hsame Hsym Htrans Hpair facts i j conclusion
+    Hfacts Hrule.
+  unfold transitive_rule in Hrule.
+  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
+  destruct (pair_of first) as [[x1 x2]|] eqn:Hx; try discriminate.
+  destruct (pair_of second) as [[y1 y2]|] eqn:Hy; try discriminate.
+  assert (Hxx : Interp (congruence x1 x2))
+    by (eapply Hpair; [exact Hx|eapply lookup_step_sound; eauto]).
+  assert (Hyy : Interp (congruence y1 y2))
+    by (eapply Hpair; [exact Hy|eapply lookup_step_sound; eauto]).
+  unfold transitive_link in Hrule.
+  repeat rewrite orb_true_iff in Hrule.
+  assert (Hconclude : forall x y, Interp (congruence x y) ->
+            fact_eqb (congruence x y) conclusion = true -> Interp conclusion).
+  { intros x y Hxy Heq. now apply (fact_eqb_sound _ _ Heq). }
+  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hlink Heq];
+    eapply Hconclude; [|exact Heq| |exact Heq| |exact Heq| |exact Heq].
+  - eapply Htrans; [eapply Hsame; [exact Hlink|exact Hxx]|exact Hyy].
+  - eapply Htrans; [eapply Hsame; [exact Hlink|exact Hxx]|now apply Hsym].
+  - eapply Htrans; [eapply Hsame; [exact Hlink|now apply Hsym]|exact Hyy].
+  - eapply Htrans; [eapply Hsame; [exact Hlink|now apply Hsym]|now apply Hsym].
+Qed.
+
+Lemma con_seg_transitive_sound : forall facts i j conclusion,
+  Forall Interp facts -> con_seg_transitive facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  eapply transitive_rule_sound; [| | | |exact Hfacts|exact Hrule].
+  - intros w x y Hsame Hcong. apply segment_u_eqb_cases in Hsame.
+    destruct Hsame as [Heq|Heq]; subst x; [exact Hcong|].
+    unfold reverse_segment in Hcong. cbn in Hcong |- *. Cong.
+  - intros x y Hcong. cbn in Hcong |- *. Cong.
+  - intros x y z Hxy Hyz. cbn in Hxy, Hyz |- *. eapply cong_transitivity; eauto.
+  - intros s x y Hpair Hs. destruct s; cbn in Hpair; try discriminate;
+      injection Hpair as <- <-; exact Hs.
+Qed.
+
+Lemma con_ang_transitive_sound : forall facts i j conclusion,
+  Forall Interp facts -> con_ang_transitive facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  eapply transitive_rule_sound; [| | | |exact Hfacts|exact Hrule].
+  - intros w x y Hsame Hcong. apply angle_eqb_eq in Hsame. now subst.
+  - intros x y Hcong. cbn in Hcong |- *. now apply conga_sym.
+  - intros x y z Hxy Hyz. cbn in Hxy, Hyz |- *. eapply conga_trans; eauto.
+  - intros s x y Hpair Hs. destruct s; cbn in Hpair; try discriminate;
+      injection Hpair as <- <-; exact Hs.
+Qed.
+
+Lemma con_tri_transitive_sound : forall facts i j conclusion,
+  Forall Interp facts -> con_tri_transitive facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  eapply transitive_rule_sound; [| | | |exact Hfacts|exact Hrule].
+  - intros w x y Hsame Hcong. apply triangle_eqb_eq in Hsame. now subst.
+  - intros x y Hcong. cbn in Hcong |- *. now apply triangle_congruent_sym.
+  - intros x y z Hxy Hyz. cbn in Hxy, Hyz |- *.
+    eapply triangle_congruent_trans; eauto.
+  - intros s x y Hpair Hs. destruct s; cbn in Hpair; try discriminate;
+      injection Hpair as <- <-; exact Hs.
+Qed.
+
 Lemma rule_valid_sound : forall triangles premises facts reason conclusion,
   declarations_well_formed point triangles ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -357,6 +486,9 @@ Proof.
     change (is_cpctc_fact t t0 conclusion = true) in Hvalid.
     apply (cpctc_sound t t0 conclusion); [|exact Hvalid].
     change (Interp (ConTri t t0)). eapply lookup_step_sound; eauto.
+  - eapply con_seg_transitive_sound; eauto.
+  - eapply con_ang_transitive_sound; eauto.
+  - eapply con_tri_transitive_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,

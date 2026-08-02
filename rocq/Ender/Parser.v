@@ -190,6 +190,15 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         end
     | _ => None
     end in
+  let parse_two constructor body :=
+    match split_on ","%char body [] with
+    | [a; b] =>
+        match parse_nat a, parse_nat b with
+        | Some i, Some j => Some (constructor i j)
+        | _, _ => None
+        end
+    | _ => None
+    end in
   match strip_call "given" text with
   | Some label => Some (Given (string_of_list_ascii label))
   | None => match strip_call "reflex" text with
@@ -205,7 +214,16 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
             | None => match strip_call "cpctc" text with
               | Some body => match parse_nat body with
                              | Some i => Some (CPCTC i) | None => None end
-              | None => None
+              | None => match strip_call "con_seg_transitive" text with
+                | Some body => parse_two ConSegTrans body
+                | None => match strip_call "con_ang_transitive" text with
+                  | Some body => parse_two ConAngTrans body
+                  | None => match strip_call "con_tri_transitive" text with
+                    | Some body => parse_two ConTriTrans body
+                    | None => None
+                    end
+                  end
+                end
               end
             end
           end

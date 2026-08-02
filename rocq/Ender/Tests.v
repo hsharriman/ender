@@ -201,6 +201,158 @@ Example certified_sss_type_mismatch_is_structured :
             [Audit.FinalAudit.JsonString "4"])]))].
 Proof. vm_compute. reflexivity. Qed.
 
+(** Transitivity of congruence, for each supported object kind. *)
+Definition transitive_header (declarations premises goal steps : string) : string :=
+  "title: Transitivity
+premises:
+pt: A (0,0), B (1,0), C (2,0), D (3,0), E (4,0), F (5,0), G (6,0), H (7,0), I (8,0), J (9,0), K (10,0), L (11,0)
+" ++ declarations ++ premises ++ "-> " ++ goal ++ "
+
+steps:
+" ++ steps.
+
+Definition con_seg_transitive_source := transitive_header "seg: AB CD EF
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(CD,EF)
+"
+  "con_seg(AB,EF)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(CD,EF)
+[03] con_seg_transitive(1,2) -> con_seg(AB,EF)".
+
+(** Segment names are unoriented, and either dependency may list the shared
+    segment on either side. *)
+Definition con_seg_transitive_reordered_source := transitive_header "seg: AB CD EF
+"
+  "[g_1] con_seg(CD,AB)
+[g_2] con_seg(EF,DC)
+"
+  "con_seg(BA,EF)"
+  "[01] given(g_1) -> con_seg(CD,AB)
+[02] given(g_2) -> con_seg(EF,DC)
+[03] con_seg_transitive(1,2) -> con_seg(BA,EF)".
+
+Definition con_seg_transitive_unshared_source := transitive_header "seg: AB CD EF GH
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(EF,GH)
+"
+  "con_seg(AB,EF)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(EF,GH)
+[03] con_seg_transitive(1,2) -> con_seg(AB,EF)".
+
+Definition con_ang_transitive_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_EDF,a_HGI)
+"
+  "con_ang(a_BAC,a_HGI)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_EDF,a_HGI)
+[03] con_ang_transitive(1,2) -> con_ang(a_BAC,a_HGI)".
+
+(** Angle names are oriented: a reversed middle angle is not the shared one. *)
+Definition con_ang_transitive_reversed_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_FDE,a_HGI)
+"
+  "con_ang(a_BAC,a_HGI)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_FDE,a_HGI)
+[03] con_ang_transitive(1,2) -> con_ang(a_BAC,a_HGI)".
+
+Definition con_tri_transitive_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_tri(t_ABC,t_DEF)
+[g_2] con_tri(t_DEF,t_GHI)
+"
+  "con_tri(t_ABC,t_GHI)"
+  "[01] given(g_1) -> con_tri(t_ABC,t_DEF)
+[02] given(g_2) -> con_tri(t_DEF,t_GHI)
+[03] con_tri_transitive(1,2) -> con_tri(t_ABC,t_GHI)".
+
+(** The shared triangle may appear on either side of either dependency. *)
+Definition con_tri_transitive_crossed_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_tri(t_ABC,t_DEF)
+[g_2] con_tri(t_GHI,t_ABC)
+"
+  "con_tri(t_DEF,t_GHI)"
+  "[01] given(g_1) -> con_tri(t_ABC,t_DEF)
+[02] given(g_2) -> con_tri(t_GHI,t_ABC)
+[03] con_tri_transitive(1,2) -> con_tri(t_DEF,t_GHI)".
+
+Definition con_tri_transitive_unshared_source :=
+  transitive_header "tri: t_ABC t_DEF t_GHI t_JKL
+"
+  "[g_1] con_tri(t_ABC,t_DEF)
+[g_2] con_tri(t_GHI,t_JKL)
+"
+  "con_tri(t_ABC,t_GHI)"
+  "[01] given(g_1) -> con_tri(t_ABC,t_DEF)
+[02] given(g_2) -> con_tri(t_GHI,t_JKL)
+[03] con_tri_transitive(1,2) -> con_tri(t_ABC,t_GHI)".
+
+Example con_seg_transitive_accepts :
+  complete_checker con_seg_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_seg_transitive_reordered_accepts :
+  complete_checker con_seg_transitive_reordered_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_seg_transitive_unshared_rejects :
+  complete_checker con_seg_transitive_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example con_ang_transitive_accepts :
+  complete_checker con_ang_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_ang_transitive_reversed_rejects :
+  complete_checker con_ang_transitive_reversed_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example con_tri_transitive_accepts :
+  complete_checker con_tri_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_tri_transitive_crossed_accepts :
+  complete_checker con_tri_transitive_crossed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_tri_transitive_unshared_rejects :
+  complete_checker con_tri_transitive_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A transitivity dependency of the wrong statement kind fails closed and is
+    reported through the audited issue channel. *)
+Definition con_seg_transitive_wrong_kind_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_ang(a_BAC,a_EDF)
+"
+  "con_seg(AB,EF)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] con_seg_transitive(1,2) -> con_seg(AB,EF)".
+
+Example con_seg_transitive_wrong_kind_rejects :
+  complete_checker con_seg_transitive_wrong_kind_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example con_seg_transitive_wrong_kind_is_structured :
+  (CertifiedAPI.check con_seg_transitive_wrong_kind_source)
+    .(Audit.FinalAudit.report_issues) =
+    [(Audit.FinalAudit.issue 12 "reason_dep_type_mismatch"
+      (Audit.FinalAudit.JsonObject
+        [("reason", Audit.FinalAudit.JsonString "con_seg_transitive");
+         ("index", Audit.FinalAudit.JsonNumber 1);
+         ("ref", Audit.FinalAudit.JsonString "2");
+         ("expectedType", Audit.FinalAudit.JsonString "con_seg");
+         ("allowedTypes", Audit.FinalAudit.JsonArray
+            [Audit.FinalAudit.JsonString "ref_seg"]);
+         ("receivedType", Audit.FinalAudit.JsonString "con_ang");
+         ("steps", Audit.FinalAudit.JsonArray
+            [Audit.FinalAudit.JsonString "3"])]))].
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

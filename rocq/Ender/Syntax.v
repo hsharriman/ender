@@ -23,7 +23,10 @@ Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
 | SAS : nat -> nat -> nat -> Reason | SSS : nat -> nat -> nat -> Reason
 | ASA : nat -> nat -> nat -> Reason | AAS : nat -> nat -> nat -> Reason
-| CPCTC : nat -> Reason.
+| CPCTC : nat -> Reason
+| ConSegTrans : nat -> nat -> Reason
+| ConAngTrans : nat -> nat -> Reason
+| ConTriTrans : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.

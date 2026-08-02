@@ -11,7 +11,17 @@ const catalog = [
   ...readFileSync(catalogPath, "utf8").matchAll(/^  ([a-zA-Z0-9_]+): \{/gm),
 ].map((match) => match[1]);
 
-const implemented = new Set(["given", "sas", "sss", "asa", "aas", "cpctc"]);
+const implemented = new Set([
+  "given",
+  "sas",
+  "sss",
+  "asa",
+  "aas",
+  "cpctc",
+  "con_seg_transitive",
+  "con_ang_transitive",
+  "con_tri_transitive",
+]);
 const partial = new Set(["reflex"]); // segment reflexivity only; angles fail closed
 const priorityOne = new Set([
   "rhl",
@@ -23,9 +33,6 @@ const priorityOne = new Set([
   "def_con_right",
   "perp_con_ang",
   "third_angle",
-  "con_seg_transitive",
-  "con_ang_transitive",
-  "con_tri_transitive",
 ]);
 const defer = /arc|sim_|_sim|inscribed|tangent|chord|radius|incenter|circumcenter|square|csstp|rect_para_right_opp/;
 
@@ -65,6 +72,10 @@ const entries = catalog.map((reason) => {
   const axioms =
     ["sas", "sss", "asa", "aas", "cpctc"].includes(reason)
       ? "GeoCoq neutral Tarski geometry"
+      : ["con_seg_transitive", "con_ang_transitive", "con_tri_transitive"].includes(
+            reason,
+          )
+        ? "GeoCoq congruence transitivity and symmetry"
       : reason === "given" || reason === "reflex"
         ? "logical/equality infrastructure"
         : "to determine from the weakest supporting GeoCoq theorem";

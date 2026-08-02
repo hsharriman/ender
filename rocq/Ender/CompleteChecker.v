@@ -1,7 +1,7 @@
 From Coq Require Import List String Bool Numbers.DecimalString.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
-Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Semantics
-  Ender.Checker Ender.Parser Ender.PresentationParser.
+Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Geometry
+  Ender.Semantics Ender.Checker Ender.Parser Ender.PresentationParser.
 Import ListNotations.
 Import EnderSyntax.
 Module FA := Audit.FinalAudit.
@@ -14,11 +14,15 @@ Definition project_angle (a : FA.AngleName) : Angle :=
 Definition project_triangle (t : FA.TriangleName) : Triangle :=
   triangle t.(FA.triangle_first) t.(FA.triangle_second) t.(FA.triangle_third).
 
-(** Statements usable as premises by the currently implemented kernel. *)
+(** Statements usable as premises by the currently implemented kernel.  A
+    public [con_tri] premise carries both triangles' noncollinearity together
+    with the three side congruences, which is exactly the SSS hypothesis, so
+    the kernel's stronger side-and-angle reading of [ConTri] is justified. *)
 Definition project_premise_statement (s : FA.PublicStatement) : option Statement :=
   match s with
   | FA.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
   | FA.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
+  | FA.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
   | FA.RefSeg a b => Some (RefSeg (project_segment a) (project_segment b))
   | FA.RefAng a b => Some (RefAng (project_angle a) (project_angle b))
   | _ => None
@@ -226,6 +230,18 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
        (first_issue (dependency_type_issue facts "aas" 1 j ExpectedAngle step_number)
                     (dependency_type_issue facts "aas" 2 k ExpectedSegment step_number))
   | CPCTC i => dependency_type_issue facts "cpctc" 0 i ExpectedTriangle step_number
+  | ConSegTrans i j =>
+      first_issue
+        (dependency_type_issue facts "con_seg_transitive" 0 i ExpectedSegment step_number)
+        (dependency_type_issue facts "con_seg_transitive" 1 j ExpectedSegment step_number)
+  | ConAngTrans i j =>
+      first_issue
+        (dependency_type_issue facts "con_ang_transitive" 0 i ExpectedAngle step_number)
+        (dependency_type_issue facts "con_ang_transitive" 1 j ExpectedAngle step_number)
+  | ConTriTrans i j =>
+      first_issue
+        (dependency_type_issue facts "con_tri_transitive" 0 i ExpectedTriangle step_number)
+        (dependency_type_issue facts "con_tri_transitive" 1 j ExpectedTriangle step_number)
   | _ => None
   end.
 
@@ -331,7 +347,14 @@ Lemma projected_premise_meaning : forall public internal,
   FA.statementMeaning point public -> interp_statement point internal.
 Proof.
   destruct public; cbn; intros internal Hproject Hmeaning; try discriminate;
-    injection Hproject as <-; cbn in *; try exact Hmeaning; tauto.
+    injection Hproject as <-; cbn in *; try exact Hmeaning; try tauto.
+  (* [con_tri]: the audited meaning supplies noncollinearity and the three
+     corresponding sides, so SSS recovers the kernel's angle components. *)
+  unfold FA.TriangleCongruent, FA.TriangleWellFormed, FA.SegmentCongruent,
+    FA.side_ab, FA.side_bc, FA.side_ca, FA.seg_start, FA.seg_end in Hmeaning.
+  cbn in Hmeaning.
+  destruct Hmeaning as [[_ [_ [_ Hncol]]] [_ [Hab [Hbc Hca]]]].
+  now apply ender_sss.
 Qed.
 
 Lemma projected_premises_meaning : forall publics internals premises,

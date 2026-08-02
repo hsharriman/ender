@@ -9,7 +9,8 @@ kernel. It is the sole executable checker; unsupported reasons fail closed.
 The slice parses Ender source text and supports:
 
 - statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, and `con_tri`;
-- reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, and `cpctc`;
+- reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `cpctc`,
+  `con_seg_transitive`, `con_ang_transitive`, and `con_tri_transitive`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -26,6 +27,14 @@ rotations of that correspondence. Segment notation is unoriented; congruence
 may be written with either endpoint order or with its two sides exchanged.
 Every declared triangle carries the semantic side condition that its vertices
 are noncollinear.
+
+The three transitivity rules take two congruence dependencies of the same
+object kind and conclude the congruence of the two unshared objects. The shared
+object may sit on either side of either dependency and is identified exactly as
+the corresponding congruence test does: segments match with either endpoint
+order, angles and triangles match exactly. Because the shared object is only
+used to relay an already established congruence, these rules need no
+reflexivity and therefore no nondegenerate-ray hypothesis.
 
 ## Soundness boundary
 
