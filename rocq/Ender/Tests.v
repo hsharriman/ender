@@ -353,6 +353,91 @@ Example con_seg_transitive_wrong_kind_is_structured :
             [Audit.FinalAudit.JsonString "3"])]))].
 Proof. vm_compute. reflexivity. Qed.
 
+(** Right angles and perpendicularity. *)
+Definition def_con_right_source := transitive_header ""
+  "[g_1] right(a_CAB)
+[g_2] right(a_FDE)
+"
+  "con_ang(a_CAB,a_FDE)"
+  "[01] given(g_1) -> right(a_CAB)
+[02] given(g_2) -> right(a_FDE)
+[03] def_con_right(1,2) -> con_ang(a_CAB,a_FDE)".
+
+Definition def_con_right_con_right_source := transitive_header ""
+  "[g_1] right(a_CAB)
+[g_2] right(a_FDE)
+"
+  "con_right(a_CAB,a_FDE)"
+  "[01] given(g_1) -> right(a_CAB)
+[02] given(g_2) -> right(a_FDE)
+[03] def_con_right(1,2) -> con_right(a_CAB,a_FDE)".
+
+(** The concluded angles must be the ones stated to be right. *)
+Definition def_con_right_other_angle_source := transitive_header ""
+  "[g_1] right(a_CAB)
+[g_2] right(a_FDE)
+"
+  "con_ang(a_ABC,a_FDE)"
+  "[01] given(g_1) -> right(a_CAB)
+[02] given(g_2) -> right(a_FDE)
+[03] def_con_right(1,2) -> con_ang(a_ABC,a_FDE)".
+
+Definition perp_con_ang_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_right(a_ADB,a_BDC)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_right(a_ADB,a_BDC)".
+
+(** Both concluded angles must have the foot of the perpendicular as vertex. *)
+Definition perp_con_ang_wrong_vertex_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_right(a_ADB,a_ABD)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_right(a_ADB,a_ABD)".
+
+(** Each ray must reach one of the two perpendicular segments. *)
+Definition perp_con_ang_foreign_ray_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_right(a_ADB,a_EDB)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_right(a_ADB,a_EDB)".
+
+(** Perpendicularity alone does not supply nondegenerate rays, so the angle
+    congruence conclusion of this reason stays fail-closed. *)
+Definition perp_con_ang_con_ang_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_ang(a_ADB,a_BDC)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_ang(a_ADB,a_BDC)".
+
+Example def_con_right_accepts : complete_checker def_con_right_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_con_right_con_right_accepts :
+  complete_checker def_con_right_con_right_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_con_right_other_angle_rejects :
+  complete_checker def_con_right_other_angle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_accepts : complete_checker perp_con_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_wrong_vertex_rejects :
+  complete_checker perp_con_ang_wrong_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_foreign_ray_rejects :
+  complete_checker perp_con_ang_foreign_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_con_ang_rejects :
+  complete_checker perp_con_ang_con_ang_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

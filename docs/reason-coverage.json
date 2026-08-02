@@ -278,21 +278,21 @@
     },
     {
       "reason": "def_con_right",
-      "status": "unimplemented",
-      "priority": 1,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_16 (congruence of right angles)",
       "fixtures": [
         "src/checker/proofs/circles/reg1.txt",
         "src/checker/proofs/examples/s1c3.txt",
         "src/checker/proofs/lines_angles/def_con_right_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "perp_con_ang",
-      "status": "unimplemented",
-      "priority": 1,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "partial",
+      "priority": 2,
+      "axioms": "GeoCoq Perp_at definition and l8_2",
       "fixtures": [
         "src/checker/proofs/examples/s1c2.txt",
         "src/checker/proofs/examples/s1inc2.txt",
@@ -302,7 +302,7 @@
         "src/checker/proofs/lines_angles/perp_con_ang_correct.txt",
         "src/checker/proofs/lines_angles/perp_con_ang_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "con_right conclusion verified; con_ang remains fail-closed pending nondegenerate rays."
     },
     {
       "reason": "rectangle",

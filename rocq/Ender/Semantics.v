@@ -23,6 +23,15 @@ Definition triangle_congruence (t u : Triangle) : Prop :=
   CongA (point t.(tri_a)) (point t.(tri_c)) (point t.(tri_b))
         (point u.(tri_a)) (point u.(tri_c)) (point u.(tri_b)).
 
+(** Kept identical to the audited [AngleWellFormed] so that public [right]
+    statements project both ways. *)
+Definition angle_well_formed (a : Angle) : Prop :=
+  point a.(ang_left) <> point a.(ang_vertex) /\
+  point a.(ang_right) <> point a.(ang_vertex).
+
+Definition right_angle (a : Angle) : Prop :=
+  Per (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right)).
+
 Definition statement_meaning (s : Statement) : Prop :=
   match s with
   | ConSeg a b | RefSeg a b =>
@@ -32,6 +41,11 @@ Definition statement_meaning (s : Statement) : Prop :=
       CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
             (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
   | ConTri a b => triangle_congruence a b
+  | RightAng a => angle_well_formed a /\ right_angle a
+  | ConRight a b => right_angle a /\ right_angle b
+  | PerpAt a b p =>
+      Perp_at (point p) (point a.(seg_start)) (point a.(seg_end))
+              (point b.(seg_start)) (point b.(seg_end))
   end.
 
 Definition segment_points (s : Segment) :=

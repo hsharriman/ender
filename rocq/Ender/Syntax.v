@@ -17,7 +17,10 @@ Inductive Statement :=
 | ConAng : Angle -> Angle -> Statement
 | ConTri : Triangle -> Triangle -> Statement
 | RefSeg : Segment -> Segment -> Statement
-| RefAng : Angle -> Angle -> Statement.
+| RefAng : Angle -> Angle -> Statement
+| RightAng : Angle -> Statement
+| ConRight : Angle -> Angle -> Statement
+| PerpAt : Segment -> Segment -> PointId -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -26,7 +29,9 @@ Inductive Reason :=
 | CPCTC : nat -> Reason
 | ConSegTrans : nat -> nat -> Reason
 | ConAngTrans : nat -> nat -> Reason
-| ConTriTrans : nat -> nat -> Reason.
+| ConTriTrans : nat -> nat -> Reason
+| DefConRight : nat -> nat -> Reason
+| PerpConAng : nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
@@ -60,6 +65,10 @@ Definition statement_eqb (x y : Statement) : bool :=
   | ConAng a b, ConAng c d | RefAng a b, RefAng c d =>
       angle_eqb a c && angle_eqb b d
   | ConTri a b, ConTri c d => triangle_eqb a c && triangle_eqb b d
+  | RightAng a, RightAng b => angle_eqb a b
+  | ConRight a b, ConRight c d => angle_eqb a c && angle_eqb b d
+  | PerpAt a b p, PerpAt c d q =>
+      segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | _, _ => false
   end.
 
@@ -97,11 +106,10 @@ Qed.
 
 Lemma statement_eqb_eq : forall x y, statement_eqb x y = true <-> x = y.
 Proof.
-  destruct x, y; cbn; try (split; [discriminate|congruence]);
-    rewrite andb_true_iff, ?segment_eqb_eq, ?angle_eqb_eq, ?triangle_eqb_eq;
-    split.
-  all: try (intros [H1 H2]; subst; reflexivity).
-  all: intros H; inversion H; split; reflexivity.
+  destruct x, y; cbn; unfold ascii_eqb;
+    rewrite ?andb_true_iff, ?segment_eqb_eq, ?angle_eqb_eq, ?triangle_eqb_eq,
+      ?Ascii.eqb_eq;
+    split; intro H; solve [discriminate | intuition congruence].
 Qed.
 
 Definition triangle_mem (t : Triangle) (ts : list Triangle) : bool :=

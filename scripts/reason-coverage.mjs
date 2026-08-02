@@ -21,8 +21,10 @@ const implemented = new Set([
   "con_seg_transitive",
   "con_ang_transitive",
   "con_tri_transitive",
+  "def_con_right",
 ]);
-const partial = new Set(["reflex"]); // segment reflexivity only; angles fail closed
+// perp_con_ang: con_right conclusions only; con_ang needs nondegenerate rays
+const partial = new Set(["reflex", "perp_con_ang"]);
 const priorityOne = new Set([
   "rhl",
   "def_midpt",
@@ -30,8 +32,6 @@ const priorityOne = new Set([
   "vert_ang",
   "def_ang_bisect",
   "ang_bisect_conv",
-  "def_con_right",
-  "perp_con_ang",
   "third_angle",
 ]);
 const defer = /arc|sim_|_sim|inscribed|tangent|chord|radius|incenter|circumcenter|square|csstp|rect_para_right_opp/;
@@ -76,12 +76,18 @@ const entries = catalog.map((reason) => {
             reason,
           )
         ? "GeoCoq congruence transitivity and symmetry"
+      : reason === "def_con_right"
+        ? "GeoCoq l11_16 (congruence of right angles)"
+      : reason === "perp_con_ang"
+        ? "GeoCoq Perp_at definition and l8_2"
       : reason === "given" || reason === "reflex"
         ? "logical/equality infrastructure"
         : "to determine from the weakest supporting GeoCoq theorem";
   const note =
     reason === "reflex"
       ? "Segment conclusion verified; ref_ang remains fail-closed pending nondegenerate rays."
+      : reason === "perp_con_ang"
+        ? "con_right conclusion verified; con_ang remains fail-closed pending nondegenerate rays."
       : status === "verified"
         ? "Parsed, checked, and covered by the kernel soundness proof."
         : priority === 3
@@ -103,16 +109,23 @@ const parity = files.map((file) => {
     if (!stdout) throw error;
     report = JSON.parse(stdout);
   }
+  // Partially implemented reasons only count as supported for the conclusion
+  // forms their verified rule can actually produce.
+  const partialConclusions = {
+    reflex: ["ref_seg"],
+    perp_con_ang: ["con_right"],
+  };
   const unsupported = [
     ...new Set(
       applications
         .filter(
           ({ reason, conclusion }) =>
             (!implemented.has(reason) && !partial.has(reason)) ||
-            (reason === "reflex" && conclusion === "ref_ang"),
+            (partial.has(reason) &&
+              !partialConclusions[reason].includes(conclusion)),
         )
         .map(({ reason, conclusion }) =>
-          reason === "reflex" ? `${reason}(${conclusion})` : reason,
+          partial.has(reason) ? `${reason}(${conclusion})` : reason,
         ),
     ),
   ];

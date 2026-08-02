@@ -8,9 +8,11 @@ kernel. It is the sole executable checker; unsupported reasons fail closed.
 
 The slice parses Ender source text and supports:
 
-- statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, and `con_tri`;
+- statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
+  `con_right`, and `perp`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `cpctc`,
-  `con_seg_transitive`, `con_ang_transitive`, and `con_tri_transitive`;
+  `con_seg_transitive`, `con_ang_transitive`, `con_tri_transitive`,
+  `def_con_right`, and `perp_con_ang`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -35,6 +37,14 @@ the corresponding congruence test does: segments match with either endpoint
 order, angles and triangles match exactly. Because the shared object is only
 used to relay an already established congruence, these rules need no
 reflexivity and therefore no nondegenerate-ray hypothesis.
+
+`def_con_right` concludes `con_right` or `con_ang` from two `right` premises;
+the audited `right` meaning carries the nondegenerate rays that GeoCoq's
+`l11_16` needs. `perp_con_ang` concludes `con_right` for any two angles whose
+vertex is the foot of the perpendicular and whose rays end on the two
+perpendicular segments — `Perp_at` states exactly that. Its `con_ang`
+conclusion remains fail-closed: `Perp_at` does not force either ray to be
+nondegenerate.
 
 ## Soundness boundary
 

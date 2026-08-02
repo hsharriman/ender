@@ -109,6 +109,15 @@ Definition strip_call (name : string) (text : chars) : option chars :=
     end
   else None.
 
+(** Each recognized call name is tried in turn; [strip_call] matches the whole
+    name followed by [(], so no name can shadow a longer one. *)
+Definition try_call {A : Type} (name : string) (text : chars)
+    (build : chars -> option A) (fallback : option A) : option A :=
+  match strip_call name text with
+  | Some body => build body
+  | None => fallback
+  end.
+
 Definition parse_statement_chars (raw : chars) : option Statement :=
   let text := remove_space (take_until "/"%char raw) in
   let parse_segments constructor body :=
@@ -129,30 +138,37 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
         end
     | _ => None
     end in
-  match strip_call "con_seg" text with
-  | Some body => parse_segments ConSeg body
-  | None => match strip_call "ref_seg" text with
-    | Some body => parse_segments RefSeg body
-    | None => match strip_call "con_ang" text with
-      | Some body => parse_angles ConAng body
-      | None => match strip_call "ref_ang" text with
-        | Some body => parse_angles RefAng body
-        | None => match strip_call "con_tri" text with
-          | Some body =>
-              match split_on ","%char body [] with
-              | [a; b] =>
-                  match parse_triangle a, parse_triangle b with
-                  | Some x, Some y => Some (ConTri x y)
-                  | _, _ => None
-                  end
-              | _ => None
-              end
-          | None => None
-          end
+  let parse_triangles constructor body :=
+    match split_on ","%char body [] with
+    | [a; b] =>
+        match parse_triangle a, parse_triangle b with
+        | Some x, Some y => Some (constructor x y)
+        | _, _ => None
         end
-      end
-    end
-  end.
+    | _ => None
+    end in
+  let parse_right body :=
+    match parse_angle body with
+    | Some a => Some (RightAng a)
+    | None => None
+    end in
+  let parse_perp body :=
+    match split_on ","%char body [] with
+    | [a; b; [p]] =>
+        match parse_segment a, parse_segment b with
+        | Some x, Some y => Some (PerpAt x y p)
+        | _, _ => None
+        end
+    | _ => None
+    end in
+  try_call "con_seg" text (parse_segments ConSeg)
+  (try_call "ref_seg" text (parse_segments RefSeg)
+  (try_call "con_ang" text (parse_angles ConAng)
+  (try_call "ref_ang" text (parse_angles RefAng)
+  (try_call "con_tri" text (parse_triangles ConTri)
+  (try_call "con_right" text (parse_angles ConRight)
+  (try_call "right" text parse_right
+  (try_call "perp" text parse_perp None))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -199,36 +215,26 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         end
     | _ => None
     end in
+  let parse_one constructor body :=
+    match parse_nat body with
+    | Some i => Some (constructor i)
+    | None => None
+    end in
   match strip_call "given" text with
   | Some label => Some (Given (string_of_list_ascii label))
   | None => match strip_call "reflex" text with
     | Some [] => Some Reflex
-    | _ => match strip_call "sas" text with
-      | Some body => parse_three SAS body
-      | None => match strip_call "sss" text with
-        | Some body => parse_three SSS body
-        | None => match strip_call "asa" text with
-          | Some body => parse_three ASA body
-          | None => match strip_call "aas" text with
-            | Some body => parse_three AAS body
-            | None => match strip_call "cpctc" text with
-              | Some body => match parse_nat body with
-                             | Some i => Some (CPCTC i) | None => None end
-              | None => match strip_call "con_seg_transitive" text with
-                | Some body => parse_two ConSegTrans body
-                | None => match strip_call "con_ang_transitive" text with
-                  | Some body => parse_two ConAngTrans body
-                  | None => match strip_call "con_tri_transitive" text with
-                    | Some body => parse_two ConTriTrans body
-                    | None => None
-                    end
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
+    | _ =>
+      try_call "sas" text (parse_three SAS)
+      (try_call "sss" text (parse_three SSS)
+      (try_call "asa" text (parse_three ASA)
+      (try_call "aas" text (parse_three AAS)
+      (try_call "cpctc" text (parse_one CPCTC)
+      (try_call "con_seg_transitive" text (parse_two ConSegTrans)
+      (try_call "con_ang_transitive" text (parse_two ConAngTrans)
+      (try_call "con_tri_transitive" text (parse_two ConTriTrans)
+      (try_call "def_con_right" text (parse_two DefConRight)
+      (try_call "perp_con_ang" text (parse_one PerpConAng) None)))))))))
     end
   end.
 

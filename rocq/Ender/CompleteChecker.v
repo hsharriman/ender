@@ -25,16 +25,24 @@ Definition project_premise_statement (s : FA.PublicStatement) : option Statement
   | FA.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
   | FA.RefSeg a b => Some (RefSeg (project_segment a) (project_segment b))
   | FA.RefAng a b => Some (RefAng (project_angle a) (project_angle b))
+  | FA.Right a => Some (RightAng (project_angle a))
+  | FA.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
+  | FA.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
   | _ => None
   end.
 
 (** Reflexive goals carry extra public same-object meaning not supplied merely
-    by internal congruence, so this adapter conservatively rejects them. *)
+    by internal congruence, so this adapter conservatively rejects them.  The
+    right-angle and perpendicularity statements below are defined to have
+    exactly their audited meanings, so they project in both directions. *)
 Definition project_goal_statement (s : FA.PublicStatement) : option Statement :=
   match s with
   | FA.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
   | FA.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
   | FA.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
+  | FA.Right a => Some (RightAng (project_angle a))
+  | FA.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
+  | FA.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
   | _ => None
   end.
 
@@ -156,33 +164,38 @@ Definition verdict_diagnostics (result : CheckResult) : list FA.Diagnostic :=
   | ProofAccepted => []
   end.
 
-Inductive ExpectedFact := ExpectedSegment | ExpectedAngle | ExpectedTriangle.
+Inductive ExpectedFact :=
+| ExpectedSegment | ExpectedAngle | ExpectedTriangle
+| ExpectedRight | ExpectedPerpendicular.
 
 Definition statement_function (s : Statement) : string :=
   match s with
   | ConSeg _ _ => "con_seg" | ConAng _ _ => "con_ang"
   | ConTri _ _ => "con_tri" | RefSeg _ _ => "ref_seg"
-  | RefAng _ _ => "ref_ang"
+  | RefAng _ _ => "ref_ang" | RightAng _ => "right"
+  | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
   match expected with
   | ExpectedSegment => "con_seg" | ExpectedAngle => "con_ang"
-  | ExpectedTriangle => "con_tri"
+  | ExpectedTriangle => "con_tri" | ExpectedRight => "right"
+  | ExpectedPerpendicular => "perp"
   end.
 
 Definition allowed_functions (expected : ExpectedFact) : list string :=
   match expected with
   | ExpectedSegment => ["ref_seg"]
   | ExpectedAngle => ["ref_ang"]
-  | ExpectedTriangle => []
+  | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular => []
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
   match expected, s with
   | ExpectedSegment, ConSeg _ _ | ExpectedSegment, RefSeg _ _
   | ExpectedAngle, ConAng _ _ | ExpectedAngle, RefAng _ _
-  | ExpectedTriangle, ConTri _ _ => true
+  | ExpectedTriangle, ConTri _ _ | ExpectedRight, RightAng _
+  | ExpectedPerpendicular, PerpAt _ _ _ => true
   | _, _ => false
   end.
 
@@ -242,6 +255,12 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
       first_issue
         (dependency_type_issue facts "con_tri_transitive" 0 i ExpectedTriangle step_number)
         (dependency_type_issue facts "con_tri_transitive" 1 j ExpectedTriangle step_number)
+  | DefConRight i j =>
+      first_issue
+        (dependency_type_issue facts "def_con_right" 0 i ExpectedRight step_number)
+        (dependency_type_issue facts "def_con_right" 1 j ExpectedRight step_number)
+  | PerpConAng i =>
+      dependency_type_issue facts "perp_con_ang" 0 i ExpectedPerpendicular step_number
   | _ => None
   end.
 

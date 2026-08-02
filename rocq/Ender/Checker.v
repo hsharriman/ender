@@ -38,6 +38,10 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | RefAng a b, ConAng c d | RefAng a b, RefAng c d =>
       angle_eqb a c && angle_eqb b d
   | ConTri a b, ConTri c d => triangle_eqb a c && triangle_eqb b d
+  | RightAng a, RightAng b => angle_eqb a b
+  | ConRight a b, ConRight c d => angle_eqb a c && angle_eqb b d
+  | PerpAt a b p, PerpAt c d q =>
+      segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | _, _ => false
   end.
 
@@ -139,6 +143,46 @@ Definition con_ang_transitive facts i j conclusion : bool :=
 Definition con_tri_transitive facts i j conclusion : bool :=
   transitive_rule triangle_eqb ConTri triangle_congruence_pair facts i j conclusion.
 
+(** Two right angles are congruent.  The audited [right] meaning supplies the
+    nondegenerate rays that GeoCoq's [l11_16] needs, so this rule may conclude
+    either [con_right] or [con_ang]. *)
+Definition def_con_right_conclusion (a b : Angle) (conclusion : Statement) : bool :=
+  match conclusion with
+  | ConRight c d | ConAng c d =>
+      (angle_eqb a c && angle_eqb b d) || (angle_eqb a d && angle_eqb b c)
+  | _ => false
+  end.
+
+Definition def_con_right (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j with
+  | Some (RightAng a), Some (RightAng b) => def_con_right_conclusion a b conclusion
+  | _, _ => false
+  end.
+
+(** Every angle whose vertex is the foot of a perpendicular and whose rays end
+    on the two perpendicular segments is right.  [Perp_at] states exactly this
+    for all points collinear with either segment, and segment endpoints are
+    trivially collinear with their own segment. *)
+Definition endpoint_of (c : PointId) (s : Segment) : bool :=
+  ascii_eqb c s.(seg_start) || ascii_eqb c s.(seg_end).
+
+Definition perp_right_angle (s t : Segment) (p : PointId) (a : Angle) : bool :=
+  ascii_eqb a.(ang_vertex) p &&
+  ((endpoint_of a.(ang_left) s && endpoint_of a.(ang_right) t) ||
+   (endpoint_of a.(ang_left) t && endpoint_of a.(ang_right) s)).
+
+Definition perp_con_ang (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (PerpAt s t p) =>
+      match conclusion with
+      | ConRight a b => perp_right_angle s t p a && perp_right_angle s t p b
+      | _ => false
+      end
+  | _ => false
+  end.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -191,6 +235,8 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | ConSegTrans i j => con_seg_transitive facts i j conclusion
   | ConAngTrans i j => con_ang_transitive facts i j conclusion
   | ConTriTrans i j => con_tri_transitive facts i j conclusion
+  | DefConRight i j => def_con_right facts i j conclusion
+  | PerpConAng i => perp_con_ang facts i conclusion
   end.
 
 Fixpoint check_steps triangles premises facts steps : option (list Statement) :=
@@ -228,11 +274,19 @@ Proof.
       destruct H1 as [H1|H1]; destruct H2 as [H2|H2]; subst;
       unfold reverse_segment, interp_segment_congruence; cbn; split; intro; Cong. }
   destruct expected, actual; cbn; try discriminate; intros H;
-    try now apply Hpair.
-  all: apply andb_true_iff in H; destruct H as [H1 H2];
-    try apply angle_eqb_eq in H1; try apply angle_eqb_eq in H2;
-    try apply triangle_eqb_eq in H1; try apply triangle_eqb_eq in H2;
-    subst; tauto.
+    try (now apply Hpair);
+    (* Split only syntactic conjunctions: the object comparisons are
+       themselves conjunctions of character tests, and decomposing those
+       would lose the record-level equalities this proof needs. *)
+    repeat match goal with
+    | Heq : _ && _ = true |- _ => apply andb_true_iff in Heq; destruct Heq as [? ?]
+    end;
+    repeat match goal with
+    | Heq : segment_eqb _ _ = true |- _ => apply segment_eqb_eq in Heq
+    | Heq : angle_eqb _ _ = true |- _ => apply angle_eqb_eq in Heq
+    | Heq : triangle_eqb _ _ = true |- _ => apply triangle_eqb_eq in Heq
+    | Heq : ascii_eqb _ _ = true |- _ => apply Ascii.eqb_eq in Heq
+    end; subst; tauto.
 Qed.
 
 Lemma find_premise_sound : forall label premises statement,
@@ -447,6 +501,68 @@ Proof.
       injection Hpair as <- <-; exact Hs.
 Qed.
 
+Lemma def_con_right_sound : forall facts i j conclusion,
+  Forall Interp facts -> def_con_right facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule. unfold def_con_right in Hrule.
+  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
+  destruct first; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
+  destruct second; try discriminate.
+  assert (Ha : Interp (RightAng a)) by (eapply lookup_step_sound; eauto).
+  assert (Hb : Interp (RightAng a0)) by (eapply lookup_step_sound; eauto).
+  cbn in Ha, Hb.
+  destruct Ha as [[Hal Har] Hap]. destruct Hb as [[Hbl Hbr] Hbp].
+  unfold right_angle in Hap, Hbp.
+  unfold def_con_right_conclusion in Hrule.
+  destruct conclusion; try discriminate;
+    apply orb_true_iff in Hrule;
+    destruct Hrule as [Hmatch|Hmatch]; apply andb_true_iff in Hmatch;
+    destruct Hmatch as [H1 H2]; apply angle_eqb_eq in H1;
+    apply angle_eqb_eq in H2; subst; cbn;
+    solve [ tauto | now apply l11_16 ].
+Qed.
+
+Lemma endpoint_of_col : forall c s,
+  endpoint_of c s = true ->
+  Col (point c) (point s.(seg_start)) (point s.(seg_end)).
+Proof.
+  intros c s H. unfold endpoint_of, ascii_eqb in H.
+  apply orb_true_iff in H. destruct H as [H|H]; apply Ascii.eqb_eq in H; subst;
+    [apply col_trivial_1|apply col_trivial_3].
+Qed.
+
+Lemma perp_right_angle_sound : forall s t p a,
+  Interp (PerpAt s t p) -> perp_right_angle s t p a = true ->
+  right_angle point a.
+Proof.
+  intros s t p a Hperp H. cbn in Hperp.
+  unfold perp_right_angle, ascii_eqb in H.
+  apply andb_true_iff in H. destruct H as [Hvertex H].
+  apply Ascii.eqb_eq in Hvertex.
+  destruct Hperp as [_ [_ [_ [_ Hall]]]].
+  unfold right_angle. rewrite Hvertex.
+  apply orb_true_iff in H. destruct H as [H|H];
+    apply andb_true_iff in H; destruct H as [Hleft Hright];
+    apply endpoint_of_col in Hleft; apply endpoint_of_col in Hright.
+  - now apply Hall.
+  - apply l8_2. now apply Hall.
+Qed.
+
+Lemma perp_con_ang_sound : forall facts i conclusion,
+  Forall Interp facts -> perp_con_ang facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule. unfold perp_con_ang in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hperp : Interp (PerpAt s s0 p)) by (eapply lookup_step_sound; eauto).
+  destruct conclusion; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hleft Hright].
+  split; eapply perp_right_angle_sound; eauto.
+Qed.
+
 Lemma rule_valid_sound : forall triangles premises facts reason conclusion,
   declarations_well_formed point triangles ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -489,6 +605,8 @@ Proof.
   - eapply con_seg_transitive_sound; eauto.
   - eapply con_ang_transitive_sound; eauto.
   - eapply con_tri_transitive_sound; eauto.
+  - eapply def_con_right_sound; eauto.
+  - eapply perp_con_ang_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,
