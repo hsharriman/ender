@@ -91,6 +91,9 @@ Definition statement_meaning (s : Statement) : Prop :=
             (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c)) /\
       CongA (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c))
             (point t.(tri_b)) (point t.(tri_c)) (point t.(tri_a))
+  | Supplementary a b =>
+      SuppA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
+            (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
   end.
 
 Definition segment_points (s : Segment) :=

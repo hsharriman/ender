@@ -977,6 +977,68 @@ Example def_con_tri_wrong_part_rejects :
   complete_checker def_con_tri_wrong_part_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Supplements of congruent angles, and of the same angle. *)
+Definition con_supplements_source := transitive_header "ang: a_ACD a_DCB a_EGH a_HGF
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_EGH,a_HGF)
+[g_3] con_ang(a_DCB,a_HGF)
+"
+  "con_ang(a_ACD,a_EGH)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_EGH,a_HGF)
+[03] given(g_3) -> con_ang(a_DCB,a_HGF)
+[04] con_supplements(1,2,3) -> con_ang(a_ACD,a_EGH)".
+
+(** Without the congruence of the two supplements nothing follows. *)
+Definition con_supplements_unrelated_source :=
+  transitive_header "ang: a_ACD a_DCB a_EGH a_HGF
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_EGH,a_HGF)
+[g_3] con_ang(a_ACD,a_HGF)
+"
+  "con_ang(a_ACD,a_EGH)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_EGH,a_HGF)
+[03] given(g_3) -> con_ang(a_ACD,a_HGF)
+[04] con_supplements(1,2,3) -> con_ang(a_ACD,a_EGH)".
+
+Definition con_supplements_same_source := transitive_header "ang: a_ACD a_DCB a_ACE
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_ACE,a_DCB)
+"
+  "con_ang(a_ACD,a_ACE)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_ACE,a_DCB)
+[03] con_supplements_same(1,2) -> con_ang(a_ACD,a_ACE)".
+
+(** The shared supplement really has to be shared. *)
+Definition con_supplements_same_unshared_source :=
+  transitive_header "ang: a_ACD a_DCB a_ACE a_ECB
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_ACE,a_ECB)
+"
+  "con_ang(a_ACD,a_ACE)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_ACE,a_ECB)
+[03] con_supplements_same(1,2) -> con_ang(a_ACD,a_ACE)".
+
+Example con_supplements_accepts :
+  complete_checker con_supplements_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_supplements_unrelated_rejects :
+  complete_checker con_supplements_unrelated_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example con_supplements_same_accepts :
+  complete_checker con_supplements_same_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_supplements_same_unshared_rejects :
+  complete_checker con_supplements_same_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

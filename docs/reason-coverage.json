@@ -339,25 +339,25 @@
     },
     {
       "reason": "con_supplements",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq suppa2__conga123 and conga2_suppa__suppa",
       "fixtures": [
         "src/checker/proofs/lines_angles/con_supplements_correct.txt",
         "src/checker/proofs/lines_angles/con_supplements_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "con_supplements_same",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq suppa2__conga123 and conga2_suppa__suppa",
       "fixtures": [
         "src/checker/proofs/lines_angles/con_supplements_same_correct.txt",
         "src/checker/proofs/lines_angles/con_supplements_same_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "con_complements",

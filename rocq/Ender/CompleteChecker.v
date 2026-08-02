@@ -36,6 +36,7 @@ Definition project_premise_statement (s : FA.PublicStatement) : option Statement
   | FA.Isosceles t => Some (IsoscelesTri (project_triangle t))
   | FA.Equilateral t => Some (EquilateralTri (project_triangle t))
   | FA.Equiangular t => Some (EquiangularTri (project_triangle t))
+  | FA.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
   | _ => None
   end.
 
@@ -59,6 +60,7 @@ Definition project_goal_statement (s : FA.PublicStatement) : option Statement :=
   | FA.Isosceles t => Some (IsoscelesTri (project_triangle t))
   | FA.Equilateral t => Some (EquilateralTri (project_triangle t))
   | FA.Equiangular t => Some (EquiangularTri (project_triangle t))
+  | FA.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
   | _ => None
   end.
 
@@ -184,7 +186,7 @@ Inductive ExpectedFact :=
 | ExpectedSegment | ExpectedAngle | ExpectedTriangle
 | ExpectedRight | ExpectedPerpendicular | ExpectedMidpoint
 | ExpectedAngleBisector | ExpectedConRight
-| ExpectedEquilateral | ExpectedEquiangular.
+| ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary.
 
 Definition statement_function (s : Statement) : string :=
   match s with
@@ -195,7 +197,7 @@ Definition statement_function (s : Statement) : string :=
   | MidptOf _ _ => "midpt" | IntersectSeg _ _ _ => "intersect_seg"
   | AngBisectOf _ _ => "ang_bisect" | OnLine _ _ => "on_line"
   | IsoscelesTri _ => "isosceles" | EquilateralTri _ => "equilateral"
-  | EquiangularTri _ => "equiangular"
+  | EquiangularTri _ => "equiangular" | Supplementary _ _ => "supplementary"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
@@ -206,6 +208,7 @@ Definition expected_function (expected : ExpectedFact) : string :=
   | ExpectedAngleBisector => "ang_bisect" | ExpectedConRight => "con_right"
   | ExpectedEquilateral => "equilateral"
   | ExpectedEquiangular => "equiangular"
+  | ExpectedSupplementary => "supplementary"
   end.
 
 Definition allowed_functions (expected : ExpectedFact) : list string :=
@@ -214,7 +217,7 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedAngle => ["ref_ang"; "con_right"]
   | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular
   | ExpectedMidpoint | ExpectedAngleBisector | ExpectedConRight
-  | ExpectedEquilateral | ExpectedEquiangular => []
+  | ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary => []
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -226,7 +229,8 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedPerpendicular, PerpAt _ _ _ | ExpectedMidpoint, MidptOf _ _
   | ExpectedAngleBisector, AngBisectOf _ _ | ExpectedConRight, ConRight _ _
   | ExpectedEquilateral, EquilateralTri _
-  | ExpectedEquiangular, EquiangularTri _ => true
+  | ExpectedEquiangular, EquiangularTri _
+  | ExpectedSupplementary, Supplementary _ _ => true
   | _, _ => false
   end.
 
@@ -300,6 +304,21 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
       dependency_type_issue facts "def_midpt" 0 i ExpectedMidpoint step_number
   | MidptConv i =>
       dependency_type_issue facts "midpt_conv" 0 i ExpectedSegment step_number
+  | ConSupplements i j k =>
+      first_issue
+        (dependency_type_issue facts "con_supplements" 0 i ExpectedSupplementary
+           step_number)
+        (first_issue
+          (dependency_type_issue facts "con_supplements" 1 j ExpectedSupplementary
+             step_number)
+          (dependency_type_issue facts "con_supplements" 2 k ExpectedAngle
+             step_number))
+  | ConSupplementsSame i j =>
+      first_issue
+        (dependency_type_issue facts "con_supplements_same" 0 i
+           ExpectedSupplementary step_number)
+        (dependency_type_issue facts "con_supplements_same" 1 j
+           ExpectedSupplementary step_number)
   | DefIsosceles i =>
       dependency_type_issue facts "def_isosceles" 0 i ExpectedSegment step_number
   | BaseAngle i =>

@@ -67,6 +67,8 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | OnLine a p, OnLine b q => segment_u_eqb a b && ascii_eqb p q
   | IsoscelesTri a, IsoscelesTri b | EquilateralTri a, EquilateralTri b
   | EquiangularTri a, EquiangularTri b => triangle_eqb a b
+  (* [SuppA] is symmetric and unaffected by reversing either angle. *)
+  | Supplementary a b, Supplementary c d => angle_pair_eqb a b c d
   | _, _ => false
   end.
 
@@ -506,6 +508,24 @@ Definition equiang_equilat (facts : list Statement) (i : nat)
   | _, _ => false
   end.
 
+(** Angles supplementary to congruent angles are congruent, and so are two
+    supplements of the same angle. *)
+Definition con_supplements (facts : list Statement) (i j k : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j, lookup_step facts k with
+  | Some (Supplementary a b), Some (Supplementary c d), Some witness =>
+      fact_eqb (ConAng b d) witness && fact_eqb (ConAng a c) conclusion
+  | _, _, _ => false
+  end.
+
+Definition con_supplements_same (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j with
+  | Some (Supplementary a b), Some (Supplementary c d) =>
+      angle_u_eqb d b && fact_eqb (ConAng a c) conclusion
+  | _, _ => false
+  end.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -575,6 +595,8 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | DefEquiangular i j k => def_equiangular triangles facts i j k conclusion
   | EquilatEquiang i => equilat_equiang facts i conclusion
   | EquiangEquilat i => equiang_equilat facts i conclusion
+  | ConSupplements i j k => con_supplements facts i j k conclusion
+  | ConSupplementsSame i j => con_supplements_same facts i j conclusion
   | RHL i j k =>
       match conclusion with
       | ConTri t u => declared_pair triangles t u &&
@@ -626,6 +648,23 @@ Proof.
       apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
       destruct H1 as [H1|H1]; destruct H2 as [H2|H2]; subst;
       unfold reverse_angle, interp_angle_congruence; cbn; split; intro; CongA. }
+  assert (Hsupp : forall a b c d, angle_pair_eqb a b c d = true ->
+      (Interp (Supplementary a b) <-> Interp (Supplementary c d))).
+  { intros a b c d H. unfold angle_pair_eqb in H. apply orb_true_iff in H.
+    destruct H as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
+      apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
+      destruct H1 as [H1|H1]; destruct H2 as [H2|H2]; subst;
+      unfold reverse_angle; cbn; split; intro Hs;
+      solve [ assumption
+            | now apply suppa_sym
+            | now apply suppa_left_comm | now apply suppa_right_comm
+            | now apply suppa_comm
+            | now apply suppa_left_comm, suppa_sym
+            | now apply suppa_right_comm, suppa_sym
+            | now apply suppa_comm, suppa_sym
+            | now apply suppa_sym, suppa_left_comm
+            | now apply suppa_sym, suppa_right_comm
+            | now apply suppa_sym, suppa_comm ]. }
   assert (Hrights : forall a b c d, angle_pair_eqb a b c d = true ->
       ((right_angle point a /\ right_angle point b) <->
        (right_angle point c /\ right_angle point d))).
@@ -638,6 +677,7 @@ Proof.
       solve [assumption | now apply l8_2]. }
   destruct expected, actual; cbn; try discriminate; intros H;
     try (now apply Hpair); try (now apply Hangles); try (now apply Hrights);
+    try (now apply Hsupp);
     (* Split only syntactic conjunctions: the object comparisons are
        themselves conjunctions of character tests, and decomposing those
        would lose the record-level equalities this proof needs. *)
@@ -1352,6 +1392,63 @@ Proof.
   apply ender_equiangular_equilateral; [apply Hnd|exact HangA|exact HangB].
 Qed.
 
+Lemma supplement_realign : forall c b d,
+  angle_u_eqb d b = true ->
+  Interp (Supplementary c d) -> Interp (Supplementary c b).
+Proof.
+  intros c b d H Hs. apply angle_u_eqb_cases in H.
+  destruct H as [Heq|Heq]; subst d; [exact Hs|].
+  unfold reverse_angle in Hs. cbn in Hs |- *. now apply suppa_right_comm.
+Qed.
+
+Lemma con_supplements_same_sound : forall facts i j conclusion,
+  Forall Interp facts -> con_supplements_same facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hall Hrule. unfold con_supplements_same in Hrule.
+  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
+  destruct first; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
+  destruct second; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hshared Hconclusion].
+  assert (Hs1 : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
+  assert (Hs2 : Interp (Supplementary a1 a2)) by (eapply lookup_step_sound; eauto).
+  apply (supplement_realign a1 a0 a2 Hshared) in Hs2.
+  apply (fact_eqb_sound _ _ Hconclusion). cbn in Hs1, Hs2 |- *.
+  now apply (suppa2__conga123 _ _ _ (point (ang_left a0)) (point (ang_vertex a0))
+                              (point (ang_right a0))).
+Qed.
+
+Lemma con_supplements_sound : forall facts i j k conclusion,
+  Forall Interp facts -> con_supplements facts i j k conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j k conclusion Hall Hrule. unfold con_supplements in Hrule.
+  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
+  destruct first; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
+  destruct second; try discriminate.
+  destruct (lookup_step facts k) as [witness|] eqn:Hwitness; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hcongruent Hconclusion].
+  assert (Hs1 : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
+  assert (Hs2 : Interp (Supplementary a1 a2)) by (eapply lookup_step_sound; eauto).
+  assert (Hw : Interp witness) by (eapply lookup_step_sound; eauto).
+  apply (fact_eqb_sound _ _ Hcongruent) in Hw. cbn in Hw.
+  cbn in Hs1, Hs2.
+  pose proof (suppa_distincts _ _ _ _ _ _ Hs2) as Hd. spliter.
+  assert (Hs2' : SuppA (point (ang_left a1)) (point (ang_vertex a1))
+                       (point (ang_right a1))
+                       (point (ang_left a0)) (point (ang_vertex a0))
+                       (point (ang_right a0))).
+  { apply (conga2_suppa__suppa (point (ang_left a1)) (point (ang_vertex a1))
+             (point (ang_right a1)) (point (ang_left a2)) (point (ang_vertex a2))
+             (point (ang_right a2))); [apply conga_refl; auto|now apply conga_sym
+                                      |exact Hs2]. }
+  apply (fact_eqb_sound _ _ Hconclusion). cbn.
+  now apply (suppa2__conga123 _ _ _ (point (ang_left a0)) (point (ang_vertex a0))
+                              (point (ang_right a0))).
+Qed.
+
 (** Everything above holds in neutral geometry.  [third_angle] is the first
     rule that genuinely needs the parallel postulate, so the assumption enters
     here rather than at the top of the section; every lemma stated before this
@@ -1475,6 +1572,8 @@ Proof.
   - eapply def_equiangular_sound; eauto.
   - eapply equilat_equiang_sound; eauto.
   - eapply equiang_equilat_sound; eauto.
+  - eapply con_supplements_sound; eauto.
+  - eapply con_supplements_same_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,

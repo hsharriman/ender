@@ -200,7 +200,8 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "on_line" text (parse_point_at OnLine)
   (try_call "isosceles" text (parse_shape IsoscelesTri)
   (try_call "equilateral" text (parse_shape EquilateralTri)
-  (try_call "equiangular" text (parse_shape EquiangularTri) None)))))))))))))).
+  (try_call "equiangular" text (parse_shape EquiangularTri)
+  (try_call "supplementary" text (parse_angles Supplementary) None))))))))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -292,8 +293,10 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "def_equilateral" text (parse_three DefEquilateral)
         (try_call "def_equiangular" text (parse_three DefEquiangular)
         (try_call "equilat_equiang" text (parse_one EquilatEquiang)
+        (try_call "con_supplements_same" text (parse_two ConSupplementsSame)
+        (try_call "con_supplements" text (parse_three ConSupplements)
         (try_call "equiang_equilat" text (parse_one EquiangEquilat)
-        None)))))))))))))))))))))))
+        None)))))))))))))))))))))))))
     end
   end.
 

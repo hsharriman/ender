@@ -27,7 +27,8 @@ Inductive Statement :=
 | OnLine : Segment -> PointId -> Statement
 | IsoscelesTri : Triangle -> Statement
 | EquilateralTri : Triangle -> Statement
-| EquiangularTri : Triangle -> Statement.
+| EquiangularTri : Triangle -> Statement
+| Supplementary : Angle -> Angle -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -52,7 +53,9 @@ Inductive Reason :=
 | DefEquilateral : nat -> nat -> nat -> Reason
 | DefEquiangular : nat -> nat -> nat -> Reason
 | EquilatEquiang : nat -> Reason
-| EquiangEquilat : nat -> Reason.
+| EquiangEquilat : nat -> Reason
+| ConSupplements : nat -> nat -> nat -> Reason
+| ConSupplementsSame : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
@@ -97,6 +100,7 @@ Definition statement_eqb (x y : Statement) : bool :=
   | OnLine a p, OnLine b q => segment_eqb a b && ascii_eqb p q
   | IsoscelesTri a, IsoscelesTri b | EquilateralTri a, EquilateralTri b
   | EquiangularTri a, EquiangularTri b => triangle_eqb a b
+  | Supplementary a b, Supplementary c d => angle_eqb a c && angle_eqb b d
   | _, _ => false
   end.
 

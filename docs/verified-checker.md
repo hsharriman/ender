@@ -10,13 +10,14 @@ The slice parses Ender source text and supports:
 
 - statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
   `con_right`, `perp`, `midpt`, `intersect_seg`, `ang_bisect`, `on_line`,
-  `isosceles`, `equilateral`, and `equiangular`;
+  `isosceles`, `equilateral`, `equiangular`, and `supplementary`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `rhl`, `cpctc`,
   `def_con_tri`, `con_seg_transitive`, `con_ang_transitive`,
   `con_tri_transitive`, `def_con_right`, `perp_con_ang`, `def_midpt`,
   `midpt_conv`, `vert_ang`, `def_ang_bisect`, `third_angle`, `def_isosceles`,
   `base_angle`, `base_angle_conv`, `def_equilateral`, `def_equiangular`,
-  `equilat_equiang`, and `equiang_equilat`;
+  `equilat_equiang`, `equiang_equilat`, `con_supplements`, and
+  `con_supplements_same`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -96,6 +97,14 @@ apexes in turn. `def_equilateral`, `def_equiangular`, and `def_con_tri` read
 their conclusions off the cited parts; their dependency order is the one the
 catalog lists, since unlike a triangle criterion they cite every part and so
 have no correspondence left to search.
+
+`con_supplements` and `con_supplements_same` come straight from GeoCoq's
+`suppa2__conga123`.  The rest of the angle-arithmetic family is deferred for
+specific reasons, not for lack of time: `con_complements` and its `_same`
+variant need `SAMS` for a pair summing to a right angle, which GeoCoq does not
+provide directly (`bet_suma__sams` only covers a straight sum); and
+`def_linear_pair` and `linear_pair_conv` need a four-case analysis of the
+audited `LinearPairMeaning` ray geometry.
 
 ## Soundness boundary
 
