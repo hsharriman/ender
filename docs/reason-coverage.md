@@ -65,13 +65,21 @@ ordered claim.
 - `geo-proof-dataset` `holt_s4-6_exer9_c1.txt` concludes `con_tri(t_WXZ,t_YZX)`
   where the argument gives `t_YXZ`.
 
-A fifth, `examples/overlap.txt`, is marked `// pass` and is *not* a defect: its
+A fifth, `examples/overlap.txt`, is marked `// pass` and is *not* a defect. Its
 ASA step cites `ref_ang(a_EGD,a_EGD)` as the angle at `G` for triangles
-`t_EHG` and `t_DFG`, which is sound only once ray `GH` is identified with ray
-`GD` using the `on_line(DG,H)` diagram premise. The kernel has no such ray
-reasoning yet. That capability (GeoCoq's `out2__conga` and friends) is
-cross-cutting — every overlapping-triangle proof needs it — and is probably the
-highest-value unblocked item after the two `Audit.v` decisions.
+`t_EHG` and `t_DFG`. That is sound only once ray `GH` is identified with ray
+`GD`, which needs `Out G H D` — and the audited `on_line` supplies only
+`Col`, which permits `H` on the far side of `G`, where the angle is the
+supplement instead. So this is a third instance of the same shape as the
+`Transversal` and `IsParallelogram` gaps: a statement whose audited meaning is
+weaker than the diagram it describes. `on_line` would need `Bet`, or a
+same-ray condition, to support it.
+
+The ray reasoning itself is straightforward once a premise supplies `Out`
+(GeoCoq's `out2__conga`), and `intersect_seg` does supply betweenness — but
+measured across both corpora it would unlock only the two copies of
+`overlap.txt`, and those need the `on_line` change anyway. It is not worth
+building ahead of that decision.
 
 The four above are fixture defects, not missing reasons. Correspondence search already
 covers all six readings of a conclusion, and permuting the two triangles

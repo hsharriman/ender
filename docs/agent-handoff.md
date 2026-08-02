@@ -50,8 +50,11 @@ Known limitations relevant to prioritization:
   else (`declared_angle` in `Checker.v`); a rule needing it with no such source
   must fail closed;
 - the kernel does no ray reasoning, so an angle named by a point that merely
-  lies on the right ray is not recognised.  `examples/overlap.txt` needs
-  exactly this, and so does every overlapping-triangle proof;
+  lies on the right ray is not recognised.  Adding it is easy where a premise
+  supplies `Out`, but the premise that would drive it, `on_line`, is audited as
+  `Col` -- a third statement weaker than the diagram it describes.  Measured
+  over both corpora the capability would unlock two files, both needing that
+  change first, so it is not worth building ahead of the decision;
 - the parallel-line rules and everything built on them need Euclidean or
   2-dimensional hypotheses.  The mechanism for that now exists: `third_angle`
   introduces `Tarski_euclidean` in `Checker.v` right before its own soundness

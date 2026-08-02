@@ -193,6 +193,16 @@ this gap, for a reason worth recording so nobody retries it blindly:
   `mathcomp-real-closed`. In this nixpkgs, real-closed 2.0.5 requires
   `mathcomp.all_boot`, introduced in **MathComp 2.5**.
 
+A third audited statement is weaker than the diagram it describes, alongside
+`Transversal` and `IsParallelogram`: `on_line(s, p)` means
+`SegmentWellFormed s /\ Col ...`, so it places `p` anywhere on the line rather
+than between the endpoints. Overlapping-triangle proofs need the stronger
+reading — `examples/overlap.txt` identifies ray `GH` with ray `GD` from
+`on_line(DG,H)`, which `Col` does not justify since `H` may lie beyond `G`,
+making the angle a supplement rather than a congruence. `intersect_seg` shows
+the audit is willing to state betweenness where it means it (`OnSegment` is
+`Bet`), so this looks like an oversight rather than a deliberate choice.
+
 The two requirements are disjoint. Closing the gap therefore needs one of:
 GeoCoq's algebraic layer ported to MathComp 2.5 (the line-1134 work upstream
 has not done), a real-closed release that works against 2.4, or upstream
