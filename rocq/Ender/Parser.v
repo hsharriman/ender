@@ -293,10 +293,11 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "def_equilateral" text (parse_three DefEquilateral)
         (try_call "def_equiangular" text (parse_three DefEquiangular)
         (try_call "equilat_equiang" text (parse_one EquilatEquiang)
+        (try_call "def_perp" text (parse_one DefPerp)
         (try_call "con_supplements_same" text (parse_two ConSupplementsSame)
         (try_call "con_supplements" text (parse_three ConSupplements)
         (try_call "equiang_equilat" text (parse_one EquiangEquilat)
-        None)))))))))))))))))))))))))
+        None))))))))))))))))))))))))))
     end
   end.
 

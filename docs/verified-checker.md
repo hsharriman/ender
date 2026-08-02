@@ -16,8 +16,8 @@ The slice parses Ender source text and supports:
   `con_tri_transitive`, `def_con_right`, `perp_con_ang`, `def_midpt`,
   `midpt_conv`, `vert_ang`, `def_ang_bisect`, `third_angle`, `def_isosceles`,
   `base_angle`, `base_angle_conv`, `def_equilateral`, `def_equiangular`,
-  `equilat_equiang`, `equiang_equilat`, `con_supplements`, and
-  `con_supplements_same`;
+  `equilat_equiang`, `equiang_equilat`, `con_supplements`,
+  `con_supplements_same`, and `def_perp`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -105,6 +105,13 @@ variant need `SAMS` for a pair summing to a right angle, which GeoCoq does not
 provide directly (`bet_suma__sams` only covers a straight sum); and
 `def_linear_pair` and `linear_pair_conv` need a four-case analysis of the
 audited `LinearPairMeaning` ray geometry.
+
+`def_perp` turns a right angle into perpendicularity. `Perp_at` demands that
+*every* point of each line meet at right angles, not just the two the angle
+names, so the rule additionally requires an `on_line` premise placing the foot
+on the target line; that is what lets `perp_in_col_perp_in` carry the right
+angle from the ray to the whole line. With it, `examples/s1c2.txt` — a nine
+step curriculum proof — is accepted end to end.
 
 ## Soundness boundary
 
@@ -201,9 +208,26 @@ triangles are currently the only source of it, so a rule that needs
 nondegenerate rays and has no declared triangle to draw on must fail closed,
 as `reflex` on `ref_ang` and `perp_con_ang` on `con_ang` do.
 
-The largest remaining cluster is the parallel-line family, which needs the
-`para` and `transversal` statements and the Euclidean context that
-`third_angle` already established; the quadrilateral rules are built on it.
+The largest remaining cluster is the parallel-line family — `altint`,
+`altint_conv`, `altext`, `corresp_ang`, `sameside_ang` and their converses,
+with the quadrilateral rules built on top. **These cannot be verified against
+the audited meanings as they stand.** Every one of them is a theorem about
+*which side* of the transversal each point lies on: alternate, corresponding,
+and same-side angles are distinguished by nothing else, and they have
+different conclusions. GeoCoq's lemmas say so explicitly — `l12_21_b`, the
+alternate-interior converse, is neutral but takes `TS A C B D` as a hypothesis.
+The audited `Transversal` meaning records only distinctness and collinearity:
+
+```coq
+point a <> point b /\ point c <> point d /\ point t1 <> point t2 /\
+Col a b i1 /\ Col c d i2 /\ Col t1 t2 i1 /\ Col t1 t2 i2 /\ i1 <> i2
+```
+
+Nothing there fixes a side, so no sound rule can tell an alternate pair from a
+corresponding one. Closing this needs a decision about `Audit.v` — either
+strengthen `Transversal` to state the sidedness, or add a statement that does
+— and that changes what the checker claims, so it is not a decision to take
+silently.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and

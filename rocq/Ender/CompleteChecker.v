@@ -304,6 +304,8 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
       dependency_type_issue facts "def_midpt" 0 i ExpectedMidpoint step_number
   | MidptConv i =>
       dependency_type_issue facts "midpt_conv" 0 i ExpectedSegment step_number
+  | DefPerp i =>
+      dependency_type_issue facts "def_perp" 0 i ExpectedRight step_number
   | ConSupplements i j k =>
       first_issue
         (dependency_type_issue facts "con_supplements" 0 i ExpectedSupplementary

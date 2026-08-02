@@ -56,6 +56,7 @@ function parseExpected(firstLine: string): Expected | null {
  */
 const OUTCOME_ENFORCED = new Set([
   "examples/s1c1incomplete.txt",
+  "examples/s1c2.txt",
   "examples/s1inc1.txt",
   "examples/s1inc2.txt",
   "examples/s2c2incomplete.txt",

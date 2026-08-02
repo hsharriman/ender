@@ -58,7 +58,7 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | RightAng a, RightAng b => angle_eqb a b
   | ConRight a b, ConRight c d => angle_pair_eqb a b c d
   | PerpAt a b p, PerpAt c d q =>
-      segment_eqb a c && segment_eqb b d && ascii_eqb p q
+      segment_u_eqb a c && segment_u_eqb b d && ascii_eqb p q
   | MidptOf a p, MidptOf b q => segment_u_eqb a b && ascii_eqb p q
   | IntersectSeg a b p, IntersectSeg c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
@@ -526,6 +526,35 @@ Definition con_supplements_same (facts : list Statement) (i j : nat)
   | _, _ => false
   end.
 
+(** A right angle at [p] whose rays reach the two lines makes them
+    perpendicular at [p].  [Perp_at] additionally demands that the whole of
+    each line meet at right angles, so the [on_line] premise is what lets the
+    right angle be transported from the ray to the line that contains it. *)
+Definition other_endpoint (c : PointId) (s : Segment) : PointId :=
+  if ascii_eqb c s.(seg_start) then s.(seg_end) else s.(seg_start).
+
+Definition def_perp_shape (u s : Segment) (p x y : PointId) : bool :=
+  endpoint_of p u && endpoint_of x s && endpoint_of y u.
+
+Definition def_perp (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion with
+  | PerpAt u s p =>
+      match lookup_step facts i with
+      | Some (RightAng a) =>
+          ascii_eqb a.(ang_vertex) p &&
+          (def_perp_shape u s p a.(ang_left) a.(ang_right) ||
+           def_perp_shape u s p a.(ang_right) a.(ang_left)) &&
+          existsb (fun pr =>
+                     match on_line_witness pr.(premise_statement) with
+                     | Some (t, q) => segment_u_eqb s t && ascii_eqb p q
+                     | None => false
+                     end) premises
+      | _ => false
+      end
+  | _ => false
+  end.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -597,6 +626,7 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | EquiangEquilat i => equiang_equilat facts i conclusion
   | ConSupplements i j k => con_supplements facts i j k conclusion
   | ConSupplementsSame i j => con_supplements_same facts i j conclusion
+  | DefPerp i => def_perp premises facts i conclusion
   | RHL i j k =>
       match conclusion with
       | ConTri t u => declared_pair triangles t u &&
@@ -626,6 +656,21 @@ Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 Variable point : PointId -> Tpoint.
 
 Notation Interp := (interp_statement point).
+
+Lemma perp_at_realign : forall a b c d p q,
+  segment_u_eqb a c = true -> segment_u_eqb b d = true ->
+  ascii_eqb p q = true ->
+  (Interp (PerpAt a b p) <-> Interp (PerpAt c d q)).
+Proof.
+  intros a b c d p q Ha Hb Hp. unfold ascii_eqb in Hp.
+  apply Ascii.eqb_eq in Hp. subst q.
+  apply segment_u_eqb_cases in Ha. apply segment_u_eqb_cases in Hb.
+  destruct Ha as [Ha|Ha]; destruct Hb as [Hb|Hb]; subst;
+    unfold reverse_segment; cbn; split; intro H;
+    solve [ assumption
+          | now apply perp_in_left_comm | now apply perp_in_right_comm
+          | now apply perp_in_comm ].
+Qed.
 
 Lemma fact_eqb_sound : forall expected actual,
   fact_eqb expected actual = true -> (Interp expected <-> Interp actual).
@@ -678,6 +723,9 @@ Proof.
   destruct expected, actual; cbn; try discriminate; intros H;
     try (now apply Hpair); try (now apply Hangles); try (now apply Hrights);
     try (now apply Hsupp);
+    try (apply andb_true_iff in H; destruct H as [H ?];
+         apply andb_true_iff in H; destruct H as [H ?];
+         now apply perp_at_realign);
     (* Split only syntactic conjunctions: the object comparisons are
        themselves conjunctions of character tests, and decomposing those
        would lose the record-level equalities this proof needs. *)
@@ -1449,6 +1497,98 @@ Proof.
                               (point (ang_right a0))).
 Qed.
 
+Lemma endpoints_determine : forall u p y, p <> y ->
+  endpoint_of p u = true -> endpoint_of y u = true ->
+  segment_u_eqb (segment p y) u = true.
+Proof.
+  intros [c1 c2] p y Hne Hp Hy.
+  unfold endpoint_of, segment_u_eqb, segment_eqb, reverse_segment,
+         ascii_eqb in *. cbn in *.
+  destruct (Ascii.eqb p c1) eqn:Hp1, (Ascii.eqb p c2) eqn:Hp2,
+           (Ascii.eqb y c1) eqn:Hy1, (Ascii.eqb y c2) eqn:Hy2;
+    cbn in *; try discriminate; try reflexivity;
+    exfalso; apply Hne;
+    repeat match goal with
+    | H : Ascii.eqb _ _ = true |- _ => apply Ascii.eqb_eq in H
+    end; congruence.
+Qed.
+
+Lemma other_endpoint_spec : forall x s, endpoint_of x s = true ->
+  segment_u_eqb (segment x (other_endpoint x s)) s = true.
+Proof.
+  intros x [c1 c2] Hx.
+  unfold endpoint_of, other_endpoint, segment_u_eqb, segment_eqb,
+         reverse_segment, ascii_eqb in *. cbn in *.
+  destruct (Ascii.eqb x c1) eqn:H1; cbn in *.
+  - now rewrite Ascii.eqb_refl.
+  - rewrite Hx. cbn. now rewrite Ascii.eqb_refl.
+Qed.
+
+Lemma def_perp_core : forall u s p x y,
+  point x <> point p -> point y <> point p ->
+  Per (point x) (point p) (point y) ->
+  endpoint_of p u = true -> endpoint_of y u = true ->
+  endpoint_of x s = true -> Interp (OnLine s p) -> Interp (PerpAt u s p).
+Proof.
+  intros u s p x y Hx Hy Hper Hpu Hyu Hxs Hline.
+  cbn in Hline. destruct Hline as [Hne Hcol].
+  assert (Hbase : Perp_at (point p) (point p) (point y) (point x) (point p))
+    by (apply perp_in_sym, per_perp_in; auto).
+  assert (Hspec : point x <> point (other_endpoint x s) /\
+                  Col (point x) (point p) (point (other_endpoint x s))).
+  { unfold other_endpoint, endpoint_of, ascii_eqb in *.
+    destruct (Ascii.eqb x (seg_start s)) eqn:Hstart.
+    - apply Ascii.eqb_eq in Hstart. rewrite Hstart. split; [exact Hne|Col].
+    - apply orb_true_iff in Hxs. destruct Hxs as [Hbad|Hend]; [congruence|].
+      apply Ascii.eqb_eq in Hend. rewrite Hend. split; [congruence|Col]. }
+  destruct Hspec as [Hdistinct Hcollinear].
+  assert (Hext : Interp (PerpAt (segment p y) (segment x (other_endpoint x s)) p)).
+  { cbn. eapply perp_in_col_perp_in; [exact Hdistinct|exact Hcollinear|exact Hbase]. }
+  apply (perp_at_realign (segment p y) (segment x (other_endpoint x s)) u s p p);
+    [ apply endpoints_determine; [intro Heq; apply Hy; now rewrite Heq| |]; auto
+    | now apply other_endpoint_spec
+    | unfold ascii_eqb; apply Ascii.eqb_refl
+    | exact Hext ].
+Qed.
+
+Lemma def_perp_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  def_perp premises facts i conclusion = true -> Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold def_perp in Hrule. destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hshape Hon].
+  assert (Hright : Interp (RightAng a)) by (eapply lookup_step_sound; eauto).
+  cbn in Hright. destruct Hright as [[Hleft Hright] Hper].
+  unfold right_angle in Hper.
+  (* the [on_line] premise, realigned onto the conclusion's own segment *)
+  apply existsb_exists in Hon. destruct Hon as [pr [Hin Hmatch]].
+  pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
+                Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr.
+  destruct (on_line_witness (premise_statement pr)) as [[t q]|] eqn:Hwitness;
+    try discriminate.
+  assert (Hpremise : premise_statement pr = OnLine t q).
+  { unfold on_line_witness in Hwitness.
+    destruct (premise_statement pr); try discriminate.
+    now injection Hwitness as <- <-. }
+  rewrite Hpremise in Hpr.
+  apply andb_true_iff in Hmatch. destruct Hmatch as [Hseg Hpoint].
+  pose proof (on_line_u_sound s0 t p q Hseg Hpoint Hpr) as Hline.
+  (* either ray may be the one lying along the perpendicular *)
+  apply andb_true_iff in Hshape. destruct Hshape as [Hvertex Hshape].
+  unfold ascii_eqb in Hvertex. apply Ascii.eqb_eq in Hvertex. subst p.
+  apply orb_true_iff in Hshape. unfold def_perp_shape in Hshape.
+  destruct Hshape as [Hcase|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hcase Hyu];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hpu Hxs].
+  - eapply (def_perp_core _ _ _ (ang_left a) (ang_right a)); eassumption.
+  - eapply (def_perp_core _ _ _ (ang_right a) (ang_left a)); try eassumption.
+    now apply l8_2.
+Qed.
+
 (** Everything above holds in neutral geometry.  [third_angle] is the first
     rule that genuinely needs the parallel postulate, so the assumption enters
     here rather than at the top of the section; every lemma stated before this
@@ -1574,6 +1714,7 @@ Proof.
   - eapply equiang_equilat_sound; eauto.
   - eapply con_supplements_sound; eauto.
   - eapply con_supplements_same_sound; eauto.
+  - eapply def_perp_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,

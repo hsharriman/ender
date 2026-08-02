@@ -24,11 +24,15 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- twenty-six reasons are fully verified; `reflex` and `perp_con_ang` are
+- twenty-seven reasons are fully verified; `reflex` and `perp_con_ang` are
   partial;
 - goal matching is still exact (`statement_eqb`), so a derived fact spelled
   with a reversed angle or segment will not close an otherwise identical goal
   even though step-to-step matching accepts it;
+- the parallel-line family is blocked on an `Audit.v` decision, not on effort:
+  the audited `Transversal` meaning records no sidedness, and alternate,
+  corresponding, and same-side angles differ by nothing else.  See
+  [`verified-checker.md`](verified-checker.md);
 - statement coverage gates whole files: the kernel parser rejects a problem
   outright when any premise line names a statement it cannot decode, so a
   fixture stays out of reach until every statement it declares is supported;

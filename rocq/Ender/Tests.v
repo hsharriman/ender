@@ -1039,6 +1039,60 @@ Example con_supplements_same_unshared_rejects :
   complete_checker con_supplements_same_unshared_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A right angle at a point of a line makes the two lines perpendicular
+    there.  The [on_line] premise is what carries the right angle from the ray
+    to the whole line. *)
+Definition def_perp_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_ADB)
+[d_01] on_line(AC,D)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_ADB)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+(** Without knowing the foot lies on the line, the right angle says nothing
+    about the rest of it. *)
+Definition def_perp_no_line_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_ADB)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_ADB)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+(** Each ray has to reach one of the two lines. *)
+Definition def_perp_foreign_ray_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_EDB)
+[d_01] on_line(AC,D)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_EDB)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+(** The right angle must be at the stated foot. *)
+Definition def_perp_wrong_vertex_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_ABD)
+[d_01] on_line(AC,D)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_ABD)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+Example def_perp_accepts : complete_checker def_perp_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_perp_no_line_rejects :
+  complete_checker def_perp_no_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_perp_foreign_ray_rejects :
+  complete_checker def_perp_foreign_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_perp_wrong_vertex_rejects :
+  complete_checker def_perp_wrong_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

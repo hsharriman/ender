@@ -38,6 +38,7 @@ const implemented = new Set([
   "equiang_equilat",
   "con_supplements",
   "con_supplements_same",
+  "def_perp",
 ]);
 // perp_con_ang: con_right conclusions only; con_ang needs nondegenerate rays
 const partial = new Set(["reflex", "perp_con_ang"]);
@@ -110,6 +111,8 @@ const entries = catalog.map((reason) => {
         ? "audited meaning plus declared-triangle nondegeneracy"
       : ["con_supplements", "con_supplements_same"].includes(reason)
         ? "GeoCoq suppa2__conga123 and conga2_suppa__suppa"
+      : reason === "def_perp"
+        ? "GeoCoq per_perp_in and perp_in_col_perp_in"
       : reason === "given" || reason === "reflex"
         ? "logical/equality infrastructure"
         : "to determine from the weakest supporting GeoCoq theorem";
