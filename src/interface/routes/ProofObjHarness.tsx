@@ -1,6 +1,6 @@
-import { runProofChecker } from "checker/proofChecker";
-import { ErrorDetails, ProofObj } from "checker/types/checkerTypes";
+import { ProofObj } from "checker/types/checkerTypes";
 import { presentationToProofObj } from "checker/verified/presentationAdapter";
+import { VerifiedIssue } from "checker/verified/presentationTypes";
 import {
   checkVerifiedProof,
   parsePresentation,
@@ -8,6 +8,7 @@ import {
 import { ProofContent } from "geometry-object";
 import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
+import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -83,8 +84,8 @@ const DEFAULT_PROOF_KEY =
   proofOptions[0]?.key ??
   "";
 
-function formatErrorList(errors: ErrorDetails[] | undefined): string {
-  if (!errors?.length) return "Incorrect step (no step.errors payload)";
+function formatErrorList(errors: VerifiedIssue[] | undefined): string {
+  if (!errors?.length) return "Incorrect step";
   return errors
     .map((e, i) => {
       const suffix =
@@ -96,7 +97,7 @@ function formatErrorList(errors: ErrorDetails[] | undefined): string {
 
 function buildAnnotatedLines(
   text: string,
-  stepErrorsByStep: Map<string, ErrorDetails[]>,
+  stepErrorsByStep: Map<string, VerifiedIssue[]>,
 ): Array<{ text: string; tooltip?: string; isIncorrect: boolean }> {
   return text.split("\n").map((line) => {
     const m = line.match(/^\s*\[(\d+)\]/);
@@ -123,7 +124,7 @@ type ProofObjHarnessState = {
   statusMessage: string;
   incorrectSteps: Set<string>;
   proofWideIssues: string[];
-  incorrectStepErrors: Map<string, ErrorDetails[]>;
+  incorrectStepErrors: Map<string, VerifiedIssue[]>;
   proofParseSucceeded: boolean;
   hoverTooltip: string;
   hoverPos: { x: number; y: number } | null;
@@ -208,62 +209,27 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.proofParseTimeoutId = window.setTimeout(async () => {
       this.proofParseTimeoutId = null;
       try {
-        const [presentation] = await Promise.all([
+        const [presentation, report] = await Promise.all([
           parsePresentation(this.state.proofText),
           checkVerifiedProof(this.state.proofText),
         ]);
         if (generation !== this.proofParseGeneration) return;
-        const result = runProofChecker(presentationToProofObj(presentation));
-
-        const nextIncorrectStepErrors = new Map<string, ErrorDetails[]>();
-        result.graph.incorrectSteps.forEach((stepNum) => {
-          const step = result.proof.steps.find((s) => s.stepNumber === stepNum);
-          nextIncorrectStepErrors.set(stepNum, step?.errors ?? []);
-        });
-
-        const nextProofIssues: string[] = [];
-        if (!result.goalMatchResult.matches) {
-          nextProofIssues.push(
-            `Goal not reached: ${result.goalMatchResult.details}`,
-          );
-        }
-        if (result.graph.unusedSteps.size > 0) {
-          nextProofIssues.push(
-            `Unused steps: ${Array.from(result.graph.unusedSteps).sort().join(", ")}`,
-          );
-        }
-        if (result.graph.cycles.length > 0) {
-          nextProofIssues.push(
-            `Cycles: ${result.graph.cycles.map((c) => c.join(" -> ")).join(" | ")}`,
-          );
-        }
-        if (result.duplicateSteps.length > 0) {
-          nextProofIssues.push(
-            `Duplicate steps: ${result.duplicateSteps
-              .map(([a, b]) => `${a} & ${b}`)
-              .join(", ")}`,
-          );
-        }
-        if (result.errors.length > 0) {
-          result.errors.forEach((e) => {
-            nextProofIssues.push(
-              `${e.code}${e.details ? `: ${JSON.stringify(e.details)}` : ""}`,
-            );
-          });
-        }
-        if (result.graph.incorrectSteps.size > 0) {
-          nextProofIssues.push(
-            `Incorrect steps: ${Array.from(result.graph.incorrectSteps).sort().join(", ")}`,
-          );
-        }
+        const proof = presentationToProofObj(presentation);
+        const checkerIssues = "issues" in report ? report.issues : report.errors;
+        const nextProofIssues = checkerIssues.map(
+          (issue) =>
+            `${issue.code}${issue.details === undefined ? "" : `: ${JSON.stringify(issue.details)}`}`,
+        );
 
         this.setState((prev) => ({
-          incorrectStepErrors: nextIncorrectStepErrors,
+          incorrectStepErrors: new Map(),
           proofWideIssues: nextProofIssues,
-          statusMessage: "Proof parsed successfully.",
-          lastGoodProof: result.proof,
-          lastGoodCtx: result.ctx,
-          incorrectSteps: result.graph.incorrectSteps,
+          statusMessage: report.isCorrect
+            ? "Accepted by the verified checker."
+            : "Rejected by the verified checker.",
+          lastGoodProof: proof,
+          lastGoodCtx: presentationContent(proof),
+          incorrectSteps: new Set(),
           proofParseSucceeded: true,
           parseVersion: prev.parseVersion + 1,
         }));

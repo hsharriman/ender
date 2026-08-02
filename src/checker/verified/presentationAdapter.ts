@@ -61,7 +61,6 @@ export const presentationToProofObj = (file: PresentationFile): ProofObj => ({
       type: "diagram",
       stepNumber: normalizeReference(label),
       statement: statement(call),
-      errors: [],
     })),
   },
   steps: [
@@ -69,7 +68,6 @@ export const presentationToProofObj = (file: PresentationFile): ProofObj => ({
       type: "given" as const,
       stepNumber: normalizeReference(label),
       statement: statement(call),
-      errors: [],
     })),
     ...file.steps.map((step) => ({
       type: "proof" as const,
@@ -81,10 +79,7 @@ export const presentationToProofObj = (file: PresentationFile): ProofObj => ({
           }
         : undefined,
       statement: step.conclusion ? statement(step.conclusion) : undefined,
-      errors: [],
     })),
   ],
   goal: file.goal ? statement(file.goal) : undefined,
-  errors: [],
-  isCorrect: false,
 });

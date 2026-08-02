@@ -2,7 +2,7 @@
 
 This directory contains an executable, proved-sound checker with the complete
 audited Ender statement language and a deliberately smaller verified reason
-kernel. It is not yet a replacement for the TypeScript checker.
+kernel. It is the sole executable checker; unsupported reasons fail closed.
 
 ## Scope
 

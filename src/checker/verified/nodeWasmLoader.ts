@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import path from "node:path";
-import { PresentationFile } from "./presentationTypes";
+import { PresentationFile, VerifiedCheckOutput } from "./presentationTypes";
 
 type WasmGlobals = typeof globalThis & {
   enderCheckProof?: (source: string) => string;
@@ -42,9 +42,9 @@ const initialize = async (): Promise<WasmGlobals> => {
 
 export const checkVerifiedProofNode = async (
   source: string,
-): Promise<Record<string, unknown>> => {
+): Promise<VerifiedCheckOutput> => {
   const wasm = await initialize();
-  return JSON.parse(wasm.enderCheckProof!(source)) as Record<string, unknown>;
+  return JSON.parse(wasm.enderCheckProof!(source)) as VerifiedCheckOutput;
 };
 
 export const parsePresentationNode = async (

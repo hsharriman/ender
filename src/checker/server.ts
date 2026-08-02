@@ -1,6 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { checkVerifiedProofNode } from "./verified/nodeWasmLoader";
-import { ErrorType } from "./errors/errorConstants";
 
 const PORT = parseInt(process.env.PORT ?? "4000", 10);
 
@@ -43,7 +42,7 @@ createServer(async (req, res) => {
         isCorrect: false,
         errors: [
           {
-            type: ErrorType.UnclassifiedError,
+            type: 16,
             code: "unexpected_error",
             details: { msg: e instanceof Error ? e.message : String(e) },
           },

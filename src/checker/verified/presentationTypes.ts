@@ -25,6 +25,16 @@ export type PresentationFile = {
   steps: PresentationStep[];
 };
 
+export type VerifiedIssue = {
+  type: number;
+  code: string;
+  details?: unknown;
+};
+
+export type VerifiedCheckOutput =
+  | { isCorrect: boolean; issues: VerifiedIssue[] }
+  | { isCorrect: false; errors: VerifiedIssue[] };
+
 declare global {
   interface Window {
     enderCheckProof?: (source: string) => string;

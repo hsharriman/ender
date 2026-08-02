@@ -1,4 +1,4 @@
-import { PresentationFile } from "./presentationTypes";
+import { PresentationFile, VerifiedCheckOutput } from "./presentationTypes";
 
 let initialization: Promise<void> | undefined;
 
@@ -38,7 +38,9 @@ export const parsePresentation = async (
   return parsed;
 };
 
-export const checkVerifiedProof = async (source: string): Promise<unknown> => {
+export const checkVerifiedProof = async (
+  source: string,
+): Promise<VerifiedCheckOutput> => {
   await initialize();
-  return JSON.parse(window.enderCheckProof!(source));
+  return JSON.parse(window.enderCheckProof!(source)) as VerifiedCheckOutput;
 };

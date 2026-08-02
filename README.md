@@ -159,82 +159,20 @@ Once running, the backend exposes:
    c. `chore:` Some utility/devops/upkeep is done
 4. In the PR description provide a list of the changes that were made
 
-## Extending the proof grammar (objects, statements, reasons)
+## Extending the proof language
 
-Proofs are text files parsed into a `ProofObj`, checked by `src/checker/proofChecker.ts`, and rendered from that same object in the React interface. A change usually touches **(1) tokenization and parsing**, **(2) type definitions and checker logic**, and **(3) UI text and diagram behavior**. The tables below list the main files for each kind of change.
+Ender source is parsed and checked by extracted Rocq code. The TypeScript code
+only adapts the presentation AST for rendering.
 
-**Conceptual pipeline**
-
-- **Extracted Rocq parser** (`rocq/Ender/PresentationParser.v`) parses source text into a presentation AST without assigning theorem semantics to display metadata.
-- **TypeScript adapter** (`src/checker/verified/presentationAdapter.ts`) converts that AST into the existing `ProofObj` used by the diagram and transitional rich-feedback checker.
-- **Definitions** — statement shapes live in `src/checker/grammar/defs/stmts.defs.ts`; reason shapes in `src/checker/grammar/defs/reasons.defs.ts`. These `.defs.ts` files are the source of truth; update them directly.
-- **Checker** uses definition maps + `src/checker/checker/graph.ts`, `validators.ts`, and `reasonApplication.ts` (plus `reasonChecks/` for geometric checks).
-- **Interface** uses `src/interface/core/grammarToLayout/proofObjLayout.ts` and helpers like `proofObjText.tsx`, `proofObjDiagramAdditions.ts`, and `proofObjBaseContent.ts`.
-
-**Types to know**
-
-- `Stmt` = `{ function: string; arguments: ParseObj[] }` (`src/checker/types/checkerTypes.ts`).
-- `ParseObj` = `{ type: Obj.*; v: string }` (`src/geometry-object/types/types.ts`). The presentation adapter maps source spellings to `Obj` and stored `v` (often stripping prefixes like `t_` / `a_` for checks).
-
----
-
-### 1. Add a new geometric **object** type (example: `circle`)
-
-Use this when you introduce a new kind of literal in proofs (new premise section, new statement argument shape, and usually new diagram behavior).
-
-| Area                                 | What to change                                                                                                                                                                                                                                                                                                           |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Parsing**                          | `rocq/Ender/PresentationParser.v` — parse the new literal or premise section into the presentation AST, then expose its JSON shape in `rocq/runtime/report_json.ml` and the TypeScript presentation types.                                                                                                                   |
-| **AST / `ProofObj` premises**        | `src/checker/types/checkerTypes.ts` — extend `premises` (e.g. add `circles: ParseObj[]`) if circles are listed in the premises block.                                                                                                                                                                                    |
-| **Object model**                     | `src/geometry-object/types/types.ts` — add a value to `Obj` and extend the `ParseObj` union. Implement a geometry class if the diagram needs it (see `geometry-object/geometry/*`, `ProofContent` / `DiagramContent`).                                                                                                   |
-| **Presentation adapter**             | `src/checker/verified/presentationAdapter.ts` — map the parsed surface object to the existing TypeScript `Obj` representation used for display and transitional feedback.                                                                                                                                                |
-| **Normalization**                    | `src/checker/normalizeProofObj.ts` — strip or canonicalize prefixes on objects if you use them in proofs.                                                                                                                                                                                                                |
-| **Well-formedness**                  | `src/checker/checker/validators.ts` — `checkGeometricObjects`: add a `switch` case for the new `Obj` (point sets, duplicate letters, etc.).                                                                                                                                                                              |
-| **Semantic premises / diagram seed** | `src/checker/checker/premises.ts` — only if givens or diagram premises must update geometric context (often `switch` on `statement.function`).                                                                                                                                                                           |
-| **Reason machinery**                 | `src/checker/utils/utils.ts` — `getGeometricObject` must support your `Obj` if any reason pulls live geometry from `ProofContent` (the function is imported by `reasonApplication.ts` and `reasonChecks/`).                                                                                                              |
-| **Interface: diagram**               | `src/interface/core/grammarToLayout/proofObjBaseContent.ts` — seed `DiagramContent` from the new premise list. Add drawing helpers under `src/interface/core/` as needed.                                                                                                                                                |
-| **Docs / samples**                   | `src/checker/glossary.md`, `src/checker/README.md`, and a proof under `src/checker/proofs/tests/` that exercises the new syntax.                                                                                                                                                                                               |
-
----
-
-### 2. Add a new **statement** (example: `sim_tri(t_ABC, t_DEF)`)
-
-Many statements only combine existing object kinds (segments, angles, triangles, …). The project already defines `sim_tri` with two triangle arguments in `stmts.defs.ts`; the checklist below is what you would repeat for a **new** statement name.
-
-| Area                         | What to change                                                                                                                                                                                                                                                                                                                                          |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Definition (required)**    | `src/checker/grammar/defs/stmts.defs.ts` — add an entry under `statements`: `name`, `parameters` (human-readable labels like today’s `triangle("t1")`), optional `isPremisesOnly`, optional `group` for substitute-able statements (see `congruent_angs`). |
-| **Checker**                  | `checkStatementArguments` in `src/checker/checker/validators.ts` currently checks **arity** against `stmts.defs`. Graph building in `src/checker/checker/graph.ts` uses statement defs for step validity. Add **domain checks** in `reasonChecks/` or `validators` if you need more than arity.                                                         |
-| **Given / diagram premises** | If the statement can appear in givens and affects the built diagram, extend `src/checker/checker/premises.ts` (and the same for `proof.premises.diagramStatements`).                                                                                                                                                                                    |
-| **Interface: text**          | `src/interface/core/grammarToLayout/proofObjText.tsx` — add a branch in `stmtToText` (or the step falls back to `function(arg1, arg2, …)` plain text).                                                                                                                                                                                                  |
-| **Interface: diagram**       | `src/interface/core/grammarToLayout/proofObjDiagramAdditions.ts` — in `applyStmtAdditions`, map the new `stmt.function` to tick marks, labels, or overlays (see `con_seg`, `con_ang`, `con_tri`). If you need congruence-style tick tracking, extend `buildCongruenceTickTracker`.                                                                      |
-| **Layout**                   | `src/interface/core/grammarToLayout/proofObjLayout.ts` — only if the new statement needs special transversal/vertical-angle style behavior (rare; most changes stay in `proofObjDiagramAdditions.ts`).                                                                                                                                                  |
-
----
-
-### 3. Add a new **reason** (example: `corr_ang([01],[02]) -> con_ang(...)`)
-
-Reasons tie dependency step numbers to a conclusion statement. They are listed in `reasons.defs.ts` and checked in `reasonApplication.ts`.
-
-| Area                          | What to change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Definition (required)**     | `src/checker/grammar/defs/reasons.defs.ts` — add a key (lowercase function name used in proof text). Set `dependencies` to statement names or **groups** from `stmts.defs` (see `ReasonDefinition`). Use `diagramDependencies` when refs come from diagram premises instead of step lists. Set `conclusion` to the statement name(s) allowed for this reason — comma-separated if multiple (see existing entries). |
-| **Collision with statements** | Keep reason and statement names consistent with the definitions and the semantic parser in `rocq/Ender/PublicParser.v`.                                                                                                                                                                                                                                                                                                                                                                                |
-| **Structural checks**         | `src/checker/checker/validators.ts` — reason/step shape and dependency typing vs defs (already wired through the graph).                                                                                                                                                                                                                                                                                                                                                                               |
-| **Geometric / logical check** | `src/checker/checker/reasonApplication.ts` — add a `case "your_reason":` that calls helpers in `src/checker/checker/reasonChecks/`. If you omit this, unknown reasons fall through to `default` and **return `true`** after syntax passes (placeholder behavior).                                                                                                                                                                                                                                      |
-| **Interface: theorem panel**  | `src/interface/theorems/reasons.ts` — extend `reasonFromFunction`’s map so the step shows a proper title/body; otherwise the UI shows the raw function name. Add a `Reasons.YourReason` entry with `title` / `body` / optional `src` for assets. `expectedDependenciesDescription` is filled automatically from `reasons.defs` when possible.                                                                                                                                                          |
-| **Interface: highlights**     | Optional: add a small helper under `src/interface/core/reasons/` (like `Transversal.tsx`) and hook it from `proofObjLayout.ts` if the step needs custom diagram emphasis.                                                                                                                                                                                                                                                                                                                              |
-
----
-
-### Quick “did I forget anything?” checklist
-
-- [ ] Definitions updated in **`stmts.defs.ts`** and/or **`reasons.defs.ts`**
-- [ ] Rocq parser accepts the new syntax (**`PresentationParser.v`**, and `PublicParser.v` when it affects theorem semantics)
-- [ ] **`ParseObj` / `ProofObj`** extended if premises or args introduced a new object kind
-- [ ] **`validators.ts`** (objects) and **`reasonApplication.ts`** (reason semantic check, or accept placeholder `default`)
-- [ ] **`proofObjText.tsx`** and **`proofObjDiagramAdditions.ts`** for readable text and diagram updates
-- [ ] Sample proof in **`src/checker/proofs/tests/`** and **`npm run checkProof`** on it
+- Add theorem-bearing syntax and semantics in `rocq/Ender/Audit.v`, and update
+  `PublicParser.v`, the verified kernel, and its proof.
+- Add display-only syntax in `rocq/Ender/PresentationParser.v`, then update the
+  JSON and TypeScript presentation types if its shape changes.
+- Update `presentationAdapter.ts` and the geometry/layout code when a new object
+  needs to be drawn.
+- The files under `src/checker/grammar/defs/` are untrusted prose metadata for
+  the theorem browser and solver prompt; they do not determine acceptance.
+- Add or update a proof fixture and run `nix flake check -L` and `npm test`.
 
 ## Build tool (Vite)
 
