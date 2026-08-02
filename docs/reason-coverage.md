@@ -17,6 +17,12 @@ nix develop
 npm run reasonCoverage -- --write
 ```
 
+For just the current totals and parity categories:
+
+```sh
+npm run reasonCoverage:summary
+```
+
 For machine-readable live results, avoiding npm's banner:
 
 ```sh

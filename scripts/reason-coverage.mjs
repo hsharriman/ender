@@ -151,8 +151,10 @@ if (process.argv.includes("--json")) {
   );
   for (const [category, count] of Object.entries(summary))
     console.log(`${category}: ${count}`);
-  console.log("\nUnsupported-reason fixtures:");
-  for (const item of parity.filter((x) => x.category === "unsupported-reason"))
-    console.log(`- ${item.file}: ${item.unsupported.join(", ")}`);
+  if (!process.argv.includes("--summary")) {
+    console.log("\nUnsupported-reason fixtures:");
+    for (const item of parity.filter((x) => x.category === "unsupported-reason"))
+      console.log(`- ${item.file}: ${item.unsupported.join(", ")}`);
+  }
   if (process.argv.includes("--write")) console.log("\nUpdated docs/reason-coverage.json");
 }
