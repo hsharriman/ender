@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "fs";
-import { join } from "path";
+import { join, relative, sep } from "path";
 import { presentationToProofObj } from "../verified/presentationAdapter";
 import {
   checkVerifiedProofNode,
@@ -7,6 +7,7 @@ import {
   parsePresentationNode,
 } from "../verified/nodeWasmLoader";
 import { presentationContent } from "../../interface/core/grammarToLayout/presentationContent";
+import { VerifiedCheckOutput } from "../verified/presentationTypes";
 
 const PROOFS_DIR = join(__dirname, "../proofs");
 
@@ -25,6 +26,85 @@ function collectTxtFiles(dir: string): string[] {
 }
 
 const proofFiles = collectTxtFiles(PROOFS_DIR);
+
+type Expected =
+  | { kind: "pass" }
+  | { kind: "fail"; step: string }
+  | { kind: "incomplete" };
+
+/**
+ * Parse the first line of a proof file, which records the outcome the corpus
+ * author intended:
+ *   // pass
+ *   // fail on step N
+ *   // fail incomplete
+ */
+function parseExpected(firstLine: string): Expected | null {
+  const trimmed = firstLine.trim();
+  if (trimmed === "// pass") return { kind: "pass" };
+  if (trimmed === "// fail incomplete") return { kind: "incomplete" };
+  const failMatch = trimmed.match(/^\/\/ fail on step (\d+)$/);
+  return failMatch ? { kind: "fail", step: failMatch[1] } : null;
+}
+
+/**
+ * Files whose intended outcome the verified kernel can already reproduce.  The
+ * rest of the corpus needs reasons or statements that are still fail-closed,
+ * and a fail-closed rejection is not evidence of anything, so asserting on it
+ * would only lock in today's gaps.  Move a file here once it is in scope; a
+ * file that leaves this list is a regression.
+ */
+const OUTCOME_ENFORCED = new Set([
+  "examples/s1inc1.txt",
+  "examples/s1inc2.txt",
+  "examples/tutinc.txt",
+  "examples/tutorial.txt",
+  "lines_angles/con_ang_transitive_correct.txt",
+  "lines_angles/con_ang_transitive_incorrect.txt",
+  "lines_angles/con_seg_transitive_correct.txt",
+  "lines_angles/con_seg_transitive_incorrect.txt",
+  "lines_angles/def_con_right_incorrect.txt",
+  "lines_angles/perp_con_ang_correct.txt",
+  "lines_angles/perp_con_ang_incorrect.txt",
+  "triangles/con_tri_transitive_correct.txt",
+  "triangles/con_tri_transitive_incorrect.txt",
+]);
+
+const stepsBlamedBy = (report: VerifiedCheckOutput): string[] => {
+  const issues = "issues" in report ? report.issues : report.errors;
+  return issues.flatMap((issue) => {
+    const steps = (issue.details as { steps?: unknown } | undefined)?.steps;
+    return Array.isArray(steps) ? (steps as string[]) : [];
+  });
+};
+
+describe("intended corpus outcomes", () => {
+  const enforced = proofFiles.filter((file) =>
+    OUTCOME_ENFORCED.has(relative(PROOFS_DIR, file).split(sep).join("/")),
+  );
+
+  test("every enforced file exists", () => {
+    expect(enforced).toHaveLength(OUTCOME_ENFORCED.size);
+  });
+
+  test.each(enforced)("%s", async (filePath) => {
+    const text = readFileSync(filePath, "utf-8");
+    const expected = parseExpected(text.split("\n")[0]);
+    if (!expected) throw new Error("missing outcome comment");
+    const report = await checkVerifiedProofNode(text);
+
+    if (expected.kind === "pass") {
+      expect(report.isCorrect).toBe(true);
+      return;
+    }
+    expect(report.isCorrect).toBe(false);
+    if (expected.kind === "fail") {
+      // The kernel must blame the step the corpus author blamed, not merely
+      // reject the proof somewhere.
+      expect(stepsBlamedBy(report)).toContain(expected.step);
+    }
+  });
+});
 
 describe("extracted Rocq API corpus tests", () => {
   test.each(proofFiles)("%s", async (filePath) => {
