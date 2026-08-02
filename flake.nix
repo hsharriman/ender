@@ -142,21 +142,56 @@
           '';
         };
 
+        tutorialOutput = pkgs.writeText "ender-tutorial-output.json" ''
+          {
+            "isCorrect": true,
+            "issues": []
+          }
+        '';
+        tutincOutput = pkgs.writeText "ender-tutinc-output.json" ''
+          {
+            "isCorrect": false,
+            "issues": [
+              {
+                "type": 12,
+                "code": "reason_dep_type_mismatch",
+                "details": {
+                  "reason": "sss",
+                  "index": 1,
+                  "ref": "2",
+                  "expectedType": "con_seg",
+                  "allowedTypes": [
+                    "ref_seg"
+                  ],
+                  "receivedType": "con_ang",
+                  "steps": [
+                    "4"
+                  ]
+                }
+              }
+            ]
+          }
+        '';
+
         integrationTests = pkgs.runCommand "ender-checker-tests" {
           nativeBuildInputs = [ nativeChecker pkgs.nodejs_24 ];
         } ''
-          ender-checker ${./src/checker/proofs/examples/tutorial.txt}
-          if ender-checker ${./src/checker/proofs/examples/tutinc.txt}; then
+          ender-checker ${./src/checker/proofs/examples/tutorial.txt} > native-tutorial.json
+          diff -u ${tutorialOutput} native-tutorial.json
+          if ender-checker ${./src/checker/proofs/examples/tutinc.txt} > native-tutinc.json; then
             echo "invalid SSS proof was accepted" >&2
             exit 1
           fi
+          diff -u ${tutincOutput} native-tutinc.json
           node ${wasmChecker}/share/ender-checker-wasm/ender-checker.js \
-            ${./src/checker/proofs/examples/tutorial.txt}
+            ${./src/checker/proofs/examples/tutorial.txt} > wasm-tutorial.json
+          diff -u ${tutorialOutput} wasm-tutorial.json
           if node ${wasmChecker}/share/ender-checker-wasm/ender-checker.js \
-              ${./src/checker/proofs/examples/tutinc.txt}; then
+              ${./src/checker/proofs/examples/tutinc.txt} > wasm-tutinc.json; then
             echo "Wasm checker accepted invalid SSS proof" >&2
             exit 1
           fi
+          diff -u ${tutincOutput} wasm-tutinc.json
           touch "$out"
         '';
       in {

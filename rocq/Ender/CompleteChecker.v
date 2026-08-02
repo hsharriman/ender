@@ -1,4 +1,4 @@
-From Coq Require Import List String Bool.
+From Coq Require Import List String Bool Numbers.DecimalString.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Semantics
   Ender.Checker Ender.Parser.
@@ -152,10 +152,139 @@ Definition verdict_diagnostics (result : CheckResult) : list FA.Diagnostic :=
   | ProofAccepted => []
   end.
 
+Inductive ExpectedFact := ExpectedSegment | ExpectedAngle | ExpectedTriangle.
+
+Definition statement_function (s : Statement) : string :=
+  match s with
+  | ConSeg _ _ => "con_seg" | ConAng _ _ => "con_ang"
+  | ConTri _ _ => "con_tri" | RefSeg _ _ => "ref_seg"
+  | RefAng _ _ => "ref_ang"
+  end.
+
+Definition expected_function (expected : ExpectedFact) : string :=
+  match expected with
+  | ExpectedSegment => "con_seg" | ExpectedAngle => "con_ang"
+  | ExpectedTriangle => "con_tri"
+  end.
+
+Definition allowed_functions (expected : ExpectedFact) : list string :=
+  match expected with
+  | ExpectedSegment => ["ref_seg"]
+  | ExpectedAngle => ["ref_ang"]
+  | ExpectedTriangle => []
+  end.
+
+Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
+  match expected, s with
+  | ExpectedSegment, ConSeg _ _ | ExpectedSegment, RefSeg _ _
+  | ExpectedAngle, ConAng _ _ | ExpectedAngle, RefAng _ _
+  | ExpectedTriangle, ConTri _ _ => true
+  | _, _ => false
+  end.
+
+Definition nat_text (n : nat) : string := NilZero.string_of_uint (Nat.to_uint n).
+Definition json_strings (xs : list string) : list FA.JsonValue :=
+  map FA.JsonString xs.
+
+Definition dependency_type_issue (facts : list Statement) (reason : string)
+    (index reference : nat) (expected : ExpectedFact) (step_number : nat)
+    : option FA.Issue :=
+  match lookup_step facts reference with
+  | Some received =>
+      if fact_has_expected_type expected received then None else
+      Some (FA.issue 12 "reason_dep_type_mismatch" (FA.JsonObject
+        [("reason", FA.JsonString reason);
+         ("index", FA.JsonNumber index);
+         ("ref", FA.JsonString (nat_text reference));
+         ("expectedType", FA.JsonString (expected_function expected));
+         ("allowedTypes", FA.JsonArray (json_strings (allowed_functions expected)));
+         ("receivedType", FA.JsonString (statement_function received));
+         ("steps", FA.JsonArray [FA.JsonString (nat_text step_number)])]))
+  | None => None
+  end.
+
+Definition first_issue (a b : option FA.Issue) : option FA.Issue :=
+  match a with Some issue => Some issue | None => b end.
+
+Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
+    (step_number : nat) : option FA.Issue :=
+  match reason with
+  | SAS i j k =>
+      first_issue (dependency_type_issue facts "sas" 0 i ExpectedSegment step_number)
+       (first_issue (dependency_type_issue facts "sas" 1 j ExpectedAngle step_number)
+                    (dependency_type_issue facts "sas" 2 k ExpectedSegment step_number))
+  | SSS i j k =>
+      first_issue (dependency_type_issue facts "sss" 0 i ExpectedSegment step_number)
+       (first_issue (dependency_type_issue facts "sss" 1 j ExpectedSegment step_number)
+                    (dependency_type_issue facts "sss" 2 k ExpectedSegment step_number))
+  | ASA i j k =>
+      first_issue (dependency_type_issue facts "asa" 0 i ExpectedAngle step_number)
+       (first_issue (dependency_type_issue facts "asa" 1 j ExpectedSegment step_number)
+                    (dependency_type_issue facts "asa" 2 k ExpectedAngle step_number))
+  | AAS i j k =>
+      first_issue (dependency_type_issue facts "aas" 0 i ExpectedAngle step_number)
+       (first_issue (dependency_type_issue facts "aas" 1 j ExpectedAngle step_number)
+                    (dependency_type_issue facts "aas" 2 k ExpectedSegment step_number))
+  | CPCTC i => dependency_type_issue facts "cpctc" 0 i ExpectedTriangle step_number
+  | _ => None
+  end.
+
+Definition generic_rejection_issue (step_number : nat) : FA.Issue :=
+  FA.issue 1 "reason_application_error"
+    (FA.JsonObject [("steps", FA.JsonArray [FA.JsonString (nat_text step_number)])]).
+
+Fixpoint diagnose_steps (triangles : list Triangle) (premises : list Premise)
+    (facts : list Statement) (steps : list Step) (step_number : nat)
+    : list FA.Issue :=
+  match steps with
+  | [] =>
+      [FA.issue 4 "goal_not_reached" (FA.JsonObject [])]
+  | current :: rest =>
+      if rule_valid triangles premises facts current.(step_reason) current.(step_conclusion)
+      then diagnose_steps triangles premises (facts ++ [current.(step_conclusion)])
+             rest (S step_number)
+      else match reason_dependency_issue facts current.(step_reason) step_number with
+           | Some issue => [issue]
+           | None => [generic_rejection_issue step_number]
+           end
+  end.
+
+Definition rejected_proof_issues (source : string) : list FA.Issue :=
+  let text := list_ascii_of_string source in
+  match problemPart source with
+  | Some part =>
+      match parsePublicProblem part,
+            Parser.find_after (list_ascii_of_string "steps:") text,
+            parseProblemPart part with
+      | Some public, Some stepText, Some header =>
+          match parse_step_lines (Parser.split_lines stepText []) [] with
+          | Some steps =>
+              match build_kernel_problem public header steps with
+              | Some p => diagnose_steps p.(problem_triangles) p.(problem_premises)
+                            [] p.(problem_steps) 1
+              | None => [generic_rejection_issue 0]
+              end
+          | None => [FA.issue 3 "parser_error" (FA.JsonObject [])]
+          end
+      | _, _, _ => [FA.issue 3 "parser_error" (FA.JsonObject [])]
+      end
+  | None => [FA.issue 3 "parser_error" (FA.JsonObject [])]
+  end.
+
+Definition report_issues_for (source : string) (result : CheckResult) : list FA.Issue :=
+  match result with ProofRejected => rejected_proof_issues source | _ => [] end.
+Definition report_errors_for (result : CheckResult) : list FA.Issue :=
+  match result with
+  | ParseFailure => [FA.issue 3 "parser_error" (FA.JsonObject [])]
+  | _ => []
+  end.
+
 Definition check_report (source : string) : FA.CheckReport :=
   let result := classify_source source in
   FA.check_report (public_verdict result) (public_problem_of_source source)
-    [] empty_graph [] (FA.goal_report None [] []) (verdict_diagnostics result).
+    [] empty_graph [] (FA.goal_report None [] [])
+    (report_issues_for source result) (report_errors_for result)
+    (verdict_diagnostics result).
 
 Lemma check_report_accepted : forall source,
   FA.accepted (check_report source) = complete_checker source.

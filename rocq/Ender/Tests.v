@@ -1,5 +1,6 @@
-From Coq Require Import String.
+From Coq Require Import String List.
 Require Import Ender.Parser Ender.PublicParser Ender.CompleteChecker Ender.CertifiedAPI.
+Import ListNotations.
 Open Scope string_scope.
 
 Definition common_header (premises goal steps : string) : string :=
@@ -162,6 +163,21 @@ Example complete_wrong_reason_rejects : complete_checker bad_sss_source = false.
 Proof. vm_compute. reflexivity. Qed.
 Example complete_wrong_reason_is_proof_rejection :
   classify_source bad_sss_source = ProofRejected.
+Proof. vm_compute. reflexivity. Qed.
+
+Example certified_sss_type_mismatch_is_structured :
+  (CertifiedAPI.check bad_sss_source).(Audit.FinalAudit.report_issues) =
+    [(Audit.FinalAudit.issue 12 "reason_dep_type_mismatch"
+      (Audit.FinalAudit.JsonObject
+        [("reason", Audit.FinalAudit.JsonString "sss");
+         ("index", Audit.FinalAudit.JsonNumber 1);
+         ("ref", Audit.FinalAudit.JsonString "2");
+         ("expectedType", Audit.FinalAudit.JsonString "con_seg");
+         ("allowedTypes", Audit.FinalAudit.JsonArray
+            [Audit.FinalAudit.JsonString "ref_seg"]);
+         ("receivedType", Audit.FinalAudit.JsonString "con_ang");
+         ("steps", Audit.FinalAudit.JsonArray
+            [Audit.FinalAudit.JsonString "4"])]))].
 Proof. vm_compute. reflexivity. Qed.
 
 Example malformed_problem_is_parse_failure :

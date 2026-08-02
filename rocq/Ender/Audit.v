@@ -754,6 +754,21 @@ Record GoalReport := goal_report {
   goal_diagnostics : list Diagnostic;
   goal_suggestions : list ProofSuggestion
 }.
+(** JSON-shaped values preserve the extensible [details] object of Ender's
+    existing TypeScript [ErrorDetails] interface without asking the unverified
+    host wrapper to reconstruct checker facts. *)
+Inductive JsonValue :=
+| JsonNull
+| JsonBool : bool -> JsonValue
+| JsonNumber : nat -> JsonValue
+| JsonString : string -> JsonValue
+| JsonArray : list JsonValue -> JsonValue
+| JsonObject : list (string * JsonValue) -> JsonValue.
+Record Issue := issue {
+  issue_type : nat;
+  issue_code : string;
+  issue_details : JsonValue
+}.
 Record CheckReport := check_report {
   report_verdict : Verdict;
   report_problem : option PublicProblem;
@@ -761,6 +776,8 @@ Record CheckReport := check_report {
   report_graph : DependencyGraph;
   report_duplicates : list DuplicateDerivation;
   report_goal : GoalReport;
+  report_issues : list Issue;
+  report_errors : list Issue;
   report_diagnostics : list Diagnostic
 }.
 
