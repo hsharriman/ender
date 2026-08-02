@@ -829,7 +829,23 @@ Definition accepted (report : CheckReport) : bool :=
     header has the independently specified grammar above; completeness says
     every grammatical header is decoded to exactly the specified problem.
     [check] is the sole rich entrypoint and [checker] is its audited Boolean
-    projection. *)
+    projection.
+
+    Deliberate non-goal: nothing below asserts that a two-dimensional Euclidean
+    Tarski geometry exists, so [checker_sound] would hold vacuously if none
+    did.  That is not in doubt -- GeoCoq exhibits one over any real-closed
+    field in [Algebraic/POF_to_Tarski.v] ([Rcf_to_T2D], [Rcf_to_T_euclidean])
+    -- but it is not checked here, because that part of GeoCoq is MathComp 1.x
+    code and this development is on Coq 8.20, for which only MathComp 2.x is
+    packaged.  Turning it into a checked guarantee means adding one obligation
+    to the module type below:
+
+      Parameter models_exist : exists Tn TnEQD,
+        inhabited (@Tarski_2D Tn TnEQD) /\ inhabited (@Tarski_euclidean Tn TnEQD).
+
+    stated existentially so that no particular model enters this file, and
+    discharged in the implementation.  Adding it before a model is reachable
+    would only make the contract uninhabitable. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parseProblem : string -> option PublicProblem.
   Parameter parsePresentation : string -> option PresentationFile.

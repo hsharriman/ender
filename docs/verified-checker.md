@@ -166,6 +166,19 @@ four triangle criteria from GeoCoq's existing neutral-geometry lemmas and makes
 CPCTC a projection from ordered triangle congruence. The pinned upstream source
 is [GeoCoq commit `90d8ce4`](https://github.com/GeoCoq/GeoCoq/commit/90d8ce484b32e0568b106c85d7e15be719a40180).
 
+The theorem is conditional on the geometry hypotheses, which are universally
+quantified rather than asserted — `Print Assumptions` reports no axioms
+precisely because those hypotheses are not axioms, so it cannot speak to
+whether any model satisfies them. Nothing here exhibits one, so `checker_sound`
+would hold vacuously if none did. It does not: GeoCoq builds a
+two-dimensional Euclidean Tarski model over any real-closed field in
+`Algebraic/POF_to_Tarski.v` (`Rcf_to_T2D`, `Rcf_to_T_euclidean`). That part of
+GeoCoq is MathComp 1.x code, and Coq 8.20 has only MathComp 2.x packaged — its
+`mathcomp.ssreflect.ssreflect` no longer exists — so the witness is out of
+reach without moving to Coq 8.19 or porting GeoCoq's algebraic layer. `Audit.v`
+records the obligation that would close this, and why adding it early would
+only make the contract uninhabitable.
+
 Extraction and compilation add a conventional trusted-computing boundary:
 Rocq's kernel checks the proof, while Rocq extraction, the OCaml compiler, and
 `wasm_of_ocaml` produce the executable artifacts. The geometric proof terms are
