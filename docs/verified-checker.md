@@ -174,31 +174,29 @@ would hold vacuously if none did.
 
 It does not: GeoCoq builds a two-dimensional Euclidean Tarski model over any
 real-closed field in `Algebraic/POF_to_Tarski.v` (`Rcf_to_T2D`,
-`Rcf_to_T_euclidean`). That layer simply does not build against this toolchain
-yet, and the reasons are worth recording because they are further along than
-they look:
+`Rcf_to_T_euclidean`). That file has been confirmed to compile against a
+toolchain reachable from this flake's own pinned nixpkgs, with this recipe:
 
-1. Sixteen files import `mathcomp.ssreflect.ssreflect`, which MathComp 2.3
-   removed when it renamed the `ssreflect` component to `boot` — the ssreflect
-   core now ships with Coq. One line each.
-2. GeoCoq reserves `'[ u , v ]` at level 2; MathComp 2.5 reserves the same
-   notation with the same format at level 0, in `boot/ssrnotations.v`. GeoCoq's
-   two reservation lines are now redundant.
-3. Past those, MathComp proof script whose `rewrite`s have become ambiguous
-   under the newer library.
+- GeoCoq pinned at `1b1e7ad5` rather than the current pin. That commit is
+  upstream's Rocq 9.0 / MathComp 2.4 port, which was merged on 2025-11-17 and
+  reverted the next day (PRs 52 and 53); the current pin *is* the revert. The
+  port is not optional — the reverted tree fails on `Coinc/Utils/arity.v`
+  because Rocq 9 split the standard library out.
+- `coq_9_0` (9.0.1) with `coqPackages_9_0.stdlib`, in place of `coq_8_20`.
+- `coqPackages_9_0.mathcomp.override { version = "2.4.0"; }`. This one is not
+  optional either: on MathComp 2.5 the file fails at line 1134 (`The RHS of
+  mulrBl does not match any subterm`) — identically on Coq 8.20 and on Rocq 9,
+  so the residual breakage tracks the MathComp version, not the compiler.
+- Two mechanical patches: sixteen files import `mathcomp.ssreflect.ssreflect`,
+  removed when MathComp 2.3 renamed that component to `boot` (the ssreflect
+  core now ships with Coq); and GeoCoq's two `Reserved Notation` lines for
+  `'[ u , v ]` and `'[ u ]`, which MathComp now reserves itself.
 
-Only (3) is real work, and upstream has already done a version of it: GeoCoq
-merged a Rocq 9.0 / MathComp 2.4 port on 2025-11-17 and reverted it the next
-day (PRs 52 and 53). This development pins that revert. Applying the reverted
-patch here clears roughly two thirds of (3) before diverging, because it was
-written for Rocq 9.0 with MathComp 2.4 rather than Coq 8.20 with MathComp 2.5.
-
-So the realistic routes are to wait for upstream to re-land the port, or to
-move this development to the toolchain the port targets, at which point the
-model should come nearly for free. Finishing the port downstream would mean
-carrying a fork of a 1500-line MathComp development. `Audit.v` records the
-obligation that would close this, and why adding it early would only make the
-contract uninhabitable.
+So this is a whole-toolchain migration for the project, pinned simultaneously
+to a commit upstream deliberately reverted and to a MathComp older than
+nixpkgs' default — a fragile perch that should be revisited when upstream
+re-lands the port. It has not been adopted. `Audit.v` records the obligation
+that would then close the gap.
 
 Extraction and compilation add a conventional trusted-computing boundary:
 Rocq's kernel checks the proof, while Rocq extraction, the OCaml compiler, and

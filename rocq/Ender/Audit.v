@@ -833,25 +833,22 @@ Definition accepted (report : CheckReport) : bool :=
 
     Deliberate non-goal: nothing below asserts that a two-dimensional Euclidean
     Tarski geometry exists, so [checker_sound] would hold vacuously if none
-    did.  That is not in doubt -- GeoCoq exhibits one over any real-closed
-    field in [Algebraic/POF_to_Tarski.v] ([Rcf_to_T2D], [Rcf_to_T_euclidean])
-    -- but that layer does not currently build here.  It is MathComp code, and
-    MathComp 2.3 renamed its [ssreflect] component to [boot]; GeoCoq also
-    reserves a notation MathComp 2.5 now reserves itself.  Both are mechanical,
-    but past them lies proof script whose rewrites have become ambiguous.
-    Upstream has a fix -- it was merged and reverted a day later (GeoCoq PRs 52
-    and 53; this development pins the revert) -- and it targets Rocq 9.0 with
-    MathComp 2.4 rather than the Coq 8.20 and MathComp 2.5 used here.
+    did.  GeoCoq exhibits one over any real-closed field in
+    [Algebraic/POF_to_Tarski.v] ([Rcf_to_T2D], [Rcf_to_T_euclidean]), and that
+    file has been confirmed to build against a toolchain reachable from this
+    flake -- see the recipe in [docs/verified-checker.md].  It is a different
+    toolchain from the one this development currently uses, so adopting it is a
+    migration rather than an addition, and that decision has not been taken.
 
-    Turning non-vacuity into a checked guarantee means adding one obligation to
-    the module type below:
+    Turning non-vacuity into a checked guarantee then means adding one
+    obligation to the module type below:
 
       Parameter models_exist : exists Tn TnEQD,
         inhabited (@Tarski_2D Tn TnEQD) /\ inhabited (@Tarski_euclidean Tn TnEQD).
 
     stated existentially so that no particular model enters this file, and
-    discharged in the implementation.  Adding it before a model is reachable
-    would only make the contract uninhabitable. *)
+    discharged in the implementation.  Adding it before the model is actually
+    built would only make the contract uninhabitable. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parseProblem : string -> option PublicProblem.
   Parameter parsePresentation : string -> option PresentationFile.
