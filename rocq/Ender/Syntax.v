@@ -22,7 +22,8 @@ Inductive Statement :=
 | ConRight : Angle -> Angle -> Statement
 | PerpAt : Segment -> Segment -> PointId -> Statement
 | MidptOf : Segment -> PointId -> Statement
-| IntersectSeg : Segment -> Segment -> PointId -> Statement.
+| IntersectSeg : Segment -> Segment -> PointId -> Statement
+| AngBisectOf : Angle -> Segment -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -35,7 +36,9 @@ Inductive Reason :=
 | DefConRight : nat -> nat -> Reason
 | PerpConAng : nat -> Reason
 | DefMidpt : nat -> Reason
-| VertAng : Reason.
+| VertAng : Reason
+| DefAngBisect : nat -> Reason
+| RHL : nat -> nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
@@ -76,6 +79,7 @@ Definition statement_eqb (x y : Statement) : bool :=
   | MidptOf a p, MidptOf b q => segment_eqb a b && ascii_eqb p q
   | IntersectSeg a b p, IntersectSeg c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
+  | AngBisectOf a b, AngBisectOf c d => angle_eqb a c && segment_eqb b d
   | _, _ => false
   end.
 

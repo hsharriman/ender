@@ -24,16 +24,12 @@ const implemented = new Set([
   "def_con_right",
   "def_midpt",
   "vert_ang",
+  "def_ang_bisect",
+  "rhl",
 ]);
 // perp_con_ang: con_right conclusions only; con_ang needs nondegenerate rays
 const partial = new Set(["reflex", "perp_con_ang"]);
-const priorityOne = new Set([
-  "rhl",
-  "midpt_conv",
-  "def_ang_bisect",
-  "ang_bisect_conv",
-  "third_angle",
-]);
+const priorityOne = new Set(["midpt_conv", "ang_bisect_conv", "third_angle"]);
 const defer = /arc|sim_|_sim|inscribed|tangent|chord|radius|incenter|circumcenter|square|csstp|rect_para_right_opp/;
 
 const files = [];
@@ -84,6 +80,10 @@ const entries = catalog.map((reason) => {
         ? "GeoCoq Midpoint definition"
       : reason === "vert_ang"
         ? "GeoCoq l11_14 (vertical angles)"
+      : reason === "def_ang_bisect"
+        ? "audited AngleBisector meaning"
+      : reason === "rhl"
+        ? "GeoCoq cong2_per2__cong_3 (neutral geometry)"
       : reason === "given" || reason === "reflex"
         ? "logical/equality infrastructure"
         : "to determine from the weakest supporting GeoCoq theorem";

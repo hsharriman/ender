@@ -9,10 +9,11 @@ kernel. It is the sole executable checker; unsupported reasons fail closed.
 The slice parses Ender source text and supports:
 
 - statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
-  `con_right`, `perp`, `midpt`, and `intersect_seg`;
-- reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `cpctc`,
+  `con_right`, `perp`, `midpt`, `intersect_seg`, and `ang_bisect`;
+- reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `rhl`, `cpctc`,
   `con_seg_transitive`, `con_ang_transitive`, `con_tri_transitive`,
-  `def_con_right`, `perp_con_ang`, `def_midpt`, and `vert_ang`;
+  `def_con_right`, `perp_con_ang`, `def_midpt`, `vert_ang`, and
+  `def_ang_bisect`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -56,7 +57,17 @@ nondegenerate. `def_midpt` reads the two congruent halves straight off the
 `Midpoint` definition; midpoint statements, like segments, are unoriented.
 `vert_ang` takes no step dependency: it looks up an `intersect_seg` diagram
 premise and concludes either pair of opposite angles at the crossing, provided
-both spanned point triples are declared triangles.
+both spanned point triples are declared triangles. `def_ang_bisect` halves its
+angle; which endpoint of the ray names the vertex is a condition on point
+names, so the checker decides it rather than assuming it.
+
+`rhl` is the one rule whose surface form the corpus does not pin down: the two
+bundled fixtures disagree about whether the hypotenuse or the leg is cited
+second, and the catalog only records that both are segment congruences. Both
+readings are therefore accepted, since each is separately sound. Two legs are
+still refused, and the correspondence search already covers which of the two
+legs is cited. GeoCoq proves RHL in neutral geometry as `cong2_per2__cong_3`,
+so this rule needs no Euclidean hypothesis.
 
 ## Soundness boundary
 

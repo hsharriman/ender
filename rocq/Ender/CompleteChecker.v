@@ -31,6 +31,7 @@ Definition project_premise_statement (s : FA.PublicStatement) : option Statement
   | FA.Midpt s p => Some (MidptOf (project_segment s) p)
   | FA.IntersectSeg a b p =>
       Some (IntersectSeg (project_segment a) (project_segment b) p)
+  | FA.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
   | _ => None
   end.
 
@@ -49,6 +50,7 @@ Definition project_goal_statement (s : FA.PublicStatement) : option Statement :=
   | FA.Midpt s p => Some (MidptOf (project_segment s) p)
   | FA.IntersectSeg a b p =>
       Some (IntersectSeg (project_segment a) (project_segment b) p)
+  | FA.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
   | _ => None
   end.
 
@@ -172,7 +174,8 @@ Definition verdict_diagnostics (result : CheckResult) : list FA.Diagnostic :=
 
 Inductive ExpectedFact :=
 | ExpectedSegment | ExpectedAngle | ExpectedTriangle
-| ExpectedRight | ExpectedPerpendicular | ExpectedMidpoint.
+| ExpectedRight | ExpectedPerpendicular | ExpectedMidpoint
+| ExpectedAngleBisector | ExpectedConRight.
 
 Definition statement_function (s : Statement) : string :=
   match s with
@@ -181,6 +184,7 @@ Definition statement_function (s : Statement) : string :=
   | RefAng _ _ => "ref_ang" | RightAng _ => "right"
   | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
   | MidptOf _ _ => "midpt" | IntersectSeg _ _ _ => "intersect_seg"
+  | AngBisectOf _ _ => "ang_bisect"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
@@ -188,6 +192,7 @@ Definition expected_function (expected : ExpectedFact) : string :=
   | ExpectedSegment => "con_seg" | ExpectedAngle => "con_ang"
   | ExpectedTriangle => "con_tri" | ExpectedRight => "right"
   | ExpectedPerpendicular => "perp" | ExpectedMidpoint => "midpt"
+  | ExpectedAngleBisector => "ang_bisect" | ExpectedConRight => "con_right"
   end.
 
 Definition allowed_functions (expected : ExpectedFact) : list string :=
@@ -195,7 +200,7 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedSegment => ["ref_seg"]
   | ExpectedAngle => ["ref_ang"; "con_right"]
   | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular
-  | ExpectedMidpoint => []
+  | ExpectedMidpoint | ExpectedAngleBisector | ExpectedConRight => []
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -204,7 +209,8 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedAngle, ConAng _ _ | ExpectedAngle, RefAng _ _
   | ExpectedAngle, ConRight _ _
   | ExpectedTriangle, ConTri _ _ | ExpectedRight, RightAng _
-  | ExpectedPerpendicular, PerpAt _ _ _ | ExpectedMidpoint, MidptOf _ _ => true
+  | ExpectedPerpendicular, PerpAt _ _ _ | ExpectedMidpoint, MidptOf _ _
+  | ExpectedAngleBisector, AngBisectOf _ _ | ExpectedConRight, ConRight _ _ => true
   | _, _ => false
   end.
 
@@ -252,6 +258,10 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
        (first_issue (dependency_type_issue facts "aas" 1 j ExpectedAngle step_number)
                     (dependency_type_issue facts "aas" 2 k ExpectedSegment step_number))
   | CPCTC i => dependency_type_issue facts "cpctc" 0 i ExpectedTriangle step_number
+  | RHL i j k =>
+      first_issue (dependency_type_issue facts "rhl" 0 i ExpectedConRight step_number)
+       (first_issue (dependency_type_issue facts "rhl" 1 j ExpectedSegment step_number)
+                    (dependency_type_issue facts "rhl" 2 k ExpectedSegment step_number))
   | ConSegTrans i j =>
       first_issue
         (dependency_type_issue facts "con_seg_transitive" 0 i ExpectedSegment step_number)
@@ -272,6 +282,9 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
       dependency_type_issue facts "perp_con_ang" 0 i ExpectedPerpendicular step_number
   | DefMidpt i =>
       dependency_type_issue facts "def_midpt" 0 i ExpectedMidpoint step_number
+  | DefAngBisect i =>
+      dependency_type_issue facts "def_ang_bisect" 0 i ExpectedAngleBisector
+        step_number
   | _ => None
   end.
 

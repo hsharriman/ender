@@ -56,12 +56,14 @@ Definition fact_eqb (expected actual : Statement) : bool :=
       angle_pair_eqb a b c d
   | ConTri a b, ConTri c d => triangle_eqb a c && triangle_eqb b d
   | RightAng a, RightAng b => angle_eqb a b
-  | ConRight a b, ConRight c d => angle_eqb a c && angle_eqb b d
+  | ConRight a b, ConRight c d => angle_pair_eqb a b c d
   | PerpAt a b p, PerpAt c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | MidptOf a p, MidptOf b q => segment_u_eqb a b && ascii_eqb p q
   | IntersectSeg a b p, IntersectSeg c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
+  (* Reversing the ray commutes the two disjuncts of the bisector meaning. *)
+  | AngBisectOf a b, AngBisectOf c d => angle_eqb a c && segment_u_eqb b d
   | _, _ => false
   end.
 
@@ -127,6 +129,21 @@ Definition aas_schema triangles facts i j k (t u : Triangle) : bool :=
     (ConAng (angle_c t) (angle_c u))
     (ConAng (angle_b t) (angle_b u))
     (ConSeg (side_ab t) (side_ab u)).
+
+(** Right-hypotenuse-leg.  The bundled fixtures disagree about whether the
+    hypotenuse or the leg is cited second, and the catalog only says both are
+    segment congruences, so both readings are accepted; each is separately
+    sound.  Two legs are still refused, and the correspondence search already
+    covers which leg is cited. *)
+Definition rhl_schema triangles facts i j k (t u : Triangle) : bool :=
+  schema3 triangles facts i j k
+    (ConRight (angle_b t) (angle_b u))
+    (ConSeg (side_ca t) (side_ca u))
+    (ConSeg (side_bc t) (side_bc u)) ||
+  schema3 triangles facts i j k
+    (ConRight (angle_b t) (angle_b u))
+    (ConSeg (side_bc t) (side_bc u))
+    (ConSeg (side_ca t) (side_ca u)).
 
 Definition three_rotations
     (schema : list Triangle -> list Statement -> nat -> nat -> nat ->
@@ -289,6 +306,23 @@ Definition vert_ang (triangles : list Triangle) (premises : list Premise)
                      | _ => false
                      end) premises.
 
+(** An angle bisector halves its angle.  The audited meaning is a disjunction
+    over which endpoint of the ray names the vertex, and that is a condition on
+    names, so the checker can decide which disjunct is available. *)
+Definition def_ang_bisect (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (AngBisectOf a s) =>
+      let halves far :=
+        ConAng (angle a.(ang_left) a.(ang_vertex) far)
+               (angle far a.(ang_vertex) a.(ang_right)) in
+      (ascii_eqb s.(seg_start) a.(ang_vertex) &&
+        fact_eqb (halves s.(seg_end)) conclusion) ||
+      (ascii_eqb s.(seg_end) a.(ang_vertex) &&
+        fact_eqb (halves s.(seg_start)) conclusion)
+  | _ => false
+  end.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -346,6 +380,13 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | PerpConAng i => perp_con_ang facts i conclusion
   | DefMidpt i => def_midpt facts i conclusion
   | VertAng => vert_ang triangles premises conclusion
+  | DefAngBisect i => def_ang_bisect facts i conclusion
+  | RHL i j k =>
+      match conclusion with
+      | ConTri t u => declared_pair triangles t u &&
+          six_correspondences rhl_schema triangles facts i j k t u
+      | _ => false
+      end
   end.
 
 Fixpoint check_steps triangles premises facts steps : option (list Statement) :=
@@ -391,8 +432,18 @@ Proof.
       apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
       destruct H1 as [H1|H1]; destruct H2 as [H2|H2]; subst;
       unfold reverse_angle, interp_angle_congruence; cbn; split; intro; CongA. }
+  assert (Hrights : forall a b c d, angle_pair_eqb a b c d = true ->
+      ((right_angle point a /\ right_angle point b) <->
+       (right_angle point c /\ right_angle point d))).
+  { intros a b c d H. unfold angle_pair_eqb in H. apply orb_true_iff in H.
+    destruct H as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
+      apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
+      destruct H1 as [H1|H1]; destruct H2 as [H2|H2]; subst;
+      unfold reverse_angle, right_angle; cbn;
+      split; intros [Hx Hy]; split;
+      solve [assumption | now apply l8_2]. }
   destruct expected, actual; cbn; try discriminate; intros H;
-    try (now apply Hpair); try (now apply Hangles);
+    try (now apply Hpair); try (now apply Hangles); try (now apply Hrights);
     (* Split only syntactic conjunctions: the object comparisons are
        themselves conjunctions of character tests, and decomposing those
        would lose the record-level equalities this proof needs. *)
@@ -407,8 +458,10 @@ Proof.
     | Heq : triangle_eqb _ _ = true |- _ => apply triangle_eqb_eq in Heq
     | Heq : ascii_eqb _ _ = true |- _ => apply Ascii.eqb_eq in Heq
     end; subst;
-    (* the only residual case is a midpoint of a reversed segment *)
-    solve [tauto | unfold reverse_segment; cbn; split; apply l7_2].
+    (* residual cases: a midpoint or an angle bisector on a reversed segment *)
+    solve [ tauto
+          | unfold reverse_segment; cbn; split; apply l7_2
+          | unfold reverse_segment; cbn; tauto ].
 Qed.
 
 Lemma find_premise_sound : forall label premises statement,
@@ -571,6 +624,32 @@ Proof.
   apply schema3_sound in Hschema; [|exact Hdecl|exact Hall]. cbn in Hschema |- *.
   destruct Hschema as [Hc [Hb Hs]]. apply ender_aas; auto.
   now apply conga_comm.
+Qed.
+
+Lemma rhl_schema_sound : forall triangles facts i j k t u,
+  declarations_well_formed point triangles ->
+  Forall Interp facts -> triangle_well_formed point t ->
+  rhl_schema triangles facts i j k t u = true ->
+  interp_triangle_congruence point t u.
+Proof.
+  intros triangles facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
+  unfold rhl_schema in Hschema. apply orb_true_iff in Hschema.
+  assert (Hsides : forall x y z : Statement,
+      schema3 triangles facts i j k x y z = true -> Interp x /\ Interp y /\ Interp z)
+    by (intros; eapply schema3_sound; eauto).
+  assert (Hbuild : Per (point A) (point B) (point C) ->
+                   Per (point D) (point E) (point F) ->
+                   Cong (point C) (point A) (point F) (point D) ->
+                   Cong (point B) (point C) (point E) (point F) ->
+                   interp_triangle_congruence point (triangle A B C) (triangle D E F)).
+  { intros Hper Hper' Hca Hbc.
+    assert (Hcong3 : Cong_3 (point A) (point B) (point C)
+                            (point D) (point E) (point F))
+      by (apply cong2_per2__cong_3; auto; Cong).
+    destruct Hcong3 as [Hab [Hac Hbc']]. cbn.
+    apply ender_sss; auto; Cong. }
+  destruct Hschema as [H|H]; apply Hsides in H; cbn in H;
+    destruct H as [[Hper Hper'] [H1 H2]]; now apply Hbuild.
 Qed.
 
 Lemma three_rotations_sound : forall schema triangles facts i j k t u,
@@ -843,6 +922,30 @@ Proof.
   eapply vertical_angle_pair_sound; eauto.
 Qed.
 
+Lemma def_ang_bisect_sound : forall facts i conclusion,
+  Forall Interp facts -> def_ang_bisect facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule. unfold def_ang_bisect in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hbisect : Interp (AngBisectOf a s)) by (eapply lookup_step_sound; eauto).
+  cbn in Hbisect.
+  apply orb_true_iff in Hrule; destruct Hrule as [Hcase|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hvertex Heq];
+    unfold ascii_eqb in Hvertex; apply Ascii.eqb_eq in Hvertex;
+    apply (fact_eqb_sound _ _ Heq); cbn;
+    destruct Hbisect as [[Hstart Hc]|[Hend Hc]].
+  (* the named endpoint is the vertex, so the other disjunct can only hold when
+     both endpoints name it and the two halves therefore coincide *)
+  - exact Hc.
+  - assert (Hsame : s.(seg_end) = s.(seg_start)) by congruence.
+    rewrite Hsame. exact Hc.
+  - assert (Hsame : s.(seg_start) = s.(seg_end)) by congruence.
+    rewrite Hsame. exact Hc.
+  - exact Hc.
+Qed.
+
 Lemma rule_valid_sound : forall triangles premises facts reason conclusion,
   declarations_well_formed point triangles ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -893,6 +996,12 @@ Proof.
   - eapply perp_con_ang_sound; eauto.
   - eapply def_midpt_sound; eauto.
   - eapply vert_ang_sound; eauto.
+  - eapply def_ang_bisect_sound; eauto.
+  - destruct conclusion; try discriminate.
+    apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
+    apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
+    eapply six_correspondences_sound;
+      [exact Hwf|exact Hfacts|exact Ht|exact rhl_schema_sound|exact Hschema].
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,

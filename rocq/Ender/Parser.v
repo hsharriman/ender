@@ -161,6 +161,15 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
         end
     | _ => None
     end in
+  let parse_ang_bisect body :=
+    match split_on ","%char body [] with
+    | [a; b] =>
+        match parse_angle a, parse_segment b with
+        | Some x, Some y => Some (AngBisectOf x y)
+        | _, _ => None
+        end
+    | _ => None
+    end in
   let parse_perp_like constructor body :=
     match split_on ","%char body [] with
     | [a; b; [p]] =>
@@ -180,7 +189,8 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "right" text parse_right
   (try_call "perp" text parse_perp
   (try_call "midpt" text parse_midpt
-  (try_call "intersect_seg" text (parse_perp_like IntersectSeg) None))))))))).
+  (try_call "intersect_seg" text (parse_perp_like IntersectSeg)
+  (try_call "ang_bisect" text parse_ang_bisect None)))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -250,7 +260,8 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
       (try_call "def_midpt" text (parse_one DefMidpt)
       (try_call "vert_ang" text
         (fun body => match body with [] => Some VertAng | _ => None end)
-        None)))))))))))
+        (try_call "def_ang_bisect" text (parse_one DefAngBisect)
+        (try_call "rhl" text (parse_three RHL) None)))))))))))))
     end
   end.
 

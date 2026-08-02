@@ -604,6 +604,113 @@ Example vert_ang_no_crossing_rejects :
   complete_checker vert_ang_no_crossing_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** An angle bisector halves its angle. *)
+Definition def_ang_bisect_source := transitive_header "ang: a_ABC
+"
+  "[g_1] ang_bisect(a_ABC,BD)
+"
+  "con_ang(a_ABD,a_DBC)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,BD)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
+
+(** The ray may be written with the vertex second. *)
+Definition def_ang_bisect_reversed_source := transitive_header "ang: a_ABC
+"
+  "[g_1] ang_bisect(a_ABC,DB)
+"
+  "con_ang(a_ABD,a_DBC)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,DB)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
+
+(** The halves must be the ones the bisector actually defines. *)
+Definition def_ang_bisect_wrong_halves_source := transitive_header "ang: a_ABC
+"
+  "[g_1] ang_bisect(a_ABC,BD)
+"
+  "con_ang(a_ABD,a_DBE)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,BD)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBE)".
+
+(** A ray that misses the vertex bisects nothing. *)
+Definition def_ang_bisect_detached_source := transitive_header "ang: a_ABC
+"
+  "[g_1] ang_bisect(a_ABC,DE)
+"
+  "con_ang(a_ABD,a_DBC)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,DE)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
+
+Example def_ang_bisect_accepts : complete_checker def_ang_bisect_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_ang_bisect_reversed_accepts :
+  complete_checker def_ang_bisect_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_ang_bisect_wrong_halves_rejects :
+  complete_checker def_ang_bisect_wrong_halves_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_ang_bisect_detached_rejects :
+  complete_checker def_ang_bisect_detached_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Right-hypotenuse-leg, in both of the dependency orders the corpus uses. *)
+Definition rhl_hypotenuse_first_source := transitive_header "tri: t_KLM t_MNK
+"
+  "[g_1] con_right(a_KLM,a_MNK)
+[g_2] con_seg(LM,NK)
+"
+  "con_tri(t_KLM,t_MNK)"
+  "[01] given(g_1) -> con_right(a_KLM,a_MNK)
+[02] given(g_2) -> con_seg(LM,NK)
+[03] reflex() -> ref_seg(MK,MK)
+[04] rhl(1,3,2) -> con_tri(t_KLM,t_MNK)".
+
+Definition rhl_leg_first_source := transitive_header "tri: t_KLM t_MNK
+"
+  "[g_1] con_right(a_KLM,a_MNK)
+[g_2] con_seg(LM,NK)
+"
+  "con_tri(t_KLM,t_MNK)"
+  "[01] given(g_1) -> con_right(a_KLM,a_MNK)
+[02] given(g_2) -> con_seg(LM,NK)
+[03] reflex() -> ref_seg(MK,MK)
+[04] rhl(1,2,3) -> con_tri(t_KLM,t_MNK)".
+
+(** Two legs are not a hypotenuse and a leg. *)
+Definition rhl_two_legs_source := transitive_header "tri: t_KLM t_MNK
+"
+  "[g_1] con_right(a_KLM,a_MNK)
+[g_2] con_seg(LM,NK)
+[g_3] con_seg(KL,MN)
+"
+  "con_tri(t_KLM,t_MNK)"
+  "[01] given(g_1) -> con_right(a_KLM,a_MNK)
+[02] given(g_2) -> con_seg(LM,NK)
+[03] given(g_3) -> con_seg(KL,MN)
+[04] rhl(1,2,3) -> con_tri(t_KLM,t_MNK)".
+
+(** The cited angles must be the ones at the corresponding vertices. *)
+Definition rhl_wrong_vertex_source := transitive_header "tri: t_KLM t_MNK
+"
+  "[g_1] con_right(a_LMK,a_MNK)
+[g_2] con_seg(LM,NK)
+"
+  "con_tri(t_KLM,t_MNK)"
+  "[01] given(g_1) -> con_right(a_LMK,a_MNK)
+[02] given(g_2) -> con_seg(LM,NK)
+[03] reflex() -> ref_seg(MK,MK)
+[04] rhl(1,3,2) -> con_tri(t_KLM,t_MNK)".
+
+Example rhl_hypotenuse_first_accepts :
+  complete_checker rhl_hypotenuse_first_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhl_leg_first_accepts : complete_checker rhl_leg_first_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhl_two_legs_rejects : complete_checker rhl_two_legs_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example rhl_wrong_vertex_rejects :
+  complete_checker rhl_wrong_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

@@ -50,6 +50,15 @@ Definition statement_meaning (s : Statement) : Prop :=
   | IntersectSeg a b p =>
       Bet (point a.(seg_start)) (point p) (point a.(seg_end)) /\
       Bet (point b.(seg_start)) (point p) (point b.(seg_end))
+  (* Mirrors the audited [AngleBisector]: which endpoint of the ray names the
+     vertex is a condition on point *names*, exactly as in [Audit.v]. *)
+  | AngBisectOf a s =>
+      (s.(seg_start) = a.(ang_vertex) /\
+        CongA (point a.(ang_left)) (point a.(ang_vertex)) (point s.(seg_end))
+              (point s.(seg_end)) (point a.(ang_vertex)) (point a.(ang_right))) \/
+      (s.(seg_end) = a.(ang_vertex) /\
+        CongA (point a.(ang_left)) (point a.(ang_vertex)) (point s.(seg_start))
+              (point s.(seg_start)) (point a.(ang_vertex)) (point a.(ang_right)))
   end.
 
 Definition segment_points (s : Segment) :=
