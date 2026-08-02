@@ -60,12 +60,20 @@ Inductive Reason :=
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
+
+(** Declared objects, bundled because every rule that needs one of them needs
+    the others too: they are the kernel's only source of nondegeneracy. *)
+Record Declarations := declarations {
+  decl_triangles : list Triangle;
+  decl_angles : list Angle
+}.
+
 Record ProblemHeader := problem_header {
-  header_triangles : list Triangle; header_premises : list Premise;
+  header_declarations : Declarations; header_premises : list Premise;
   header_goal : Statement
 }.
 Record Problem := problem {
-  problem_triangles : list Triangle; problem_premises : list Premise;
+  problem_declarations : Declarations; problem_premises : list Premise;
   problem_goal : Statement; problem_steps : list Step
 }.
 

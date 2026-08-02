@@ -65,7 +65,15 @@ ordered claim.
 - `geo-proof-dataset` `holt_s4-6_exer9_c1.txt` concludes `con_tri(t_WXZ,t_YZX)`
   where the argument gives `t_YXZ`.
 
-These are fixture defects, not missing reasons. Correspondence search already
+A fifth, `examples/overlap.txt`, is marked `// pass` and is *not* a defect: its
+ASA step cites `ref_ang(a_EGD,a_EGD)` as the angle at `G` for triangles
+`t_EHG` and `t_DFG`, which is sound only once ray `GH` is identified with ray
+`GD` using the `on_line(DG,H)` diagram premise. The kernel has no such ray
+reasoning yet. That capability (GeoCoq's `out2__conga` and friends) is
+cross-cutting — every overlapping-triangle proof needs it — and is probably the
+highest-value unblocked item after the two `Audit.v` decisions.
+
+The four above are fixture defects, not missing reasons. Correspondence search already
 covers all six readings of a conclusion, and permuting the two triangles
 independently would defeat the point of an ordered `con_tri`; do not widen it.
 

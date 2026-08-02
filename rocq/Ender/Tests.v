@@ -1181,6 +1181,51 @@ Example vert_ang_wrong_label_rejects :
   complete_checker vert_ang_wrong_label_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Angle reflexivity, once an [ang:] declaration supplies the nondegenerate
+    rays: the audited meaning of an angle declaration is exactly
+    [AngleWellFormed], which is what [conga_refl] needs.  [ref_ang] cannot be a
+    goal, so these pin the behaviour by which step the checker blames: with the
+    declaration it gets past step 1 and blames the deliberately broken step 2;
+    without it, it stops at step 1. *)
+Definition ref_ang_declared_source := transitive_header "ang: a_ABC
+" ""
+  "con_seg(AB,AB)"
+  "[01] reflex() -> ref_ang(a_ABC,a_ABC)
+[02] reflex() -> ref_seg(AB,CD)".
+
+Definition ref_ang_undeclared_source := transitive_header "seg: AB
+" ""
+  "con_seg(AB,AB)"
+  "[01] reflex() -> ref_ang(a_ABC,a_ABC)
+[02] reflex() -> ref_seg(AB,CD)".
+
+Definition blamed_step (n : string) : list Audit.FinalAudit.Issue :=
+  [Audit.FinalAudit.issue 1 "reason_application_error"
+    (Audit.FinalAudit.JsonObject
+      [("steps", Audit.FinalAudit.JsonArray [Audit.FinalAudit.JsonString n])])].
+
+Example ref_ang_declared_clears_its_step :
+  (CertifiedAPI.check ref_ang_declared_source).(Audit.FinalAudit.report_issues) =
+    blamed_step "2".
+Proof. vm_compute. reflexivity. Qed.
+
+Example ref_ang_undeclared_stops_at_its_step :
+  (CertifiedAPI.check ref_ang_undeclared_source).(Audit.FinalAudit.report_issues) =
+    blamed_step "1".
+Proof. vm_compute. reflexivity. Qed.
+
+(** A declared angle says nothing about a different one. *)
+Definition ref_ang_other_angle_source := transitive_header "ang: a_ABC
+" ""
+  "con_seg(AB,AB)"
+  "[01] reflex() -> ref_ang(a_DEF,a_DEF)
+[02] reflex() -> ref_seg(AB,CD)".
+
+Example ref_ang_other_angle_stops_at_its_step :
+  (CertifiedAPI.check ref_ang_other_angle_source).(Audit.FinalAudit.report_issues) =
+    blamed_step "1".
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

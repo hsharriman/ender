@@ -45,10 +45,9 @@ const implemented = new Set([
   "con_supplements_same",
   "def_perp",
   "perp_con_ang",
+  "reflex",
 ]);
-// reflex: segment reflexivity only; ref_ang needs nondegenerate rays, and the
-// kernel does not yet read the `ang:` declarations that would supply them.
-const partial = new Set(["reflex"]);
+const partial = new Set();
 const priorityOne = new Set(["ang_bisect_conv"]);
 const defer = /arc|sim_|_sim|inscribed|tangent|chord|radius|incenter|circumcenter|square|csstp|rect_para_right_opp/;
 
@@ -130,13 +129,13 @@ const entries = catalog.map((reason) => {
         ? "GeoCoq suppa2__conga123 and conga2_suppa__suppa"
       : reason === "def_perp"
         ? "GeoCoq per_perp_in and perp_in_col_perp_in"
-      : reason === "given" || reason === "reflex"
+      : reason === "given"
         ? "logical/equality infrastructure"
+      : reason === "reflex"
+        ? "reflexivity of congruence; ref_ang needs a declared angle"
         : "to determine from the weakest supporting GeoCoq theorem";
   const note =
-    reason === "reflex"
-      ? "Segment conclusion verified; ref_ang remains fail-closed pending nondegenerate rays."
-      : status === "verified"
+    status === "verified"
         ? "Parsed, checked, and covered by the kernel soundness proof."
         : priority === 3
           ? "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
@@ -159,7 +158,7 @@ const classify = (file) => {
   }
   // Partially implemented reasons only count as supported for the conclusion
   // forms their verified rule can actually produce.
-  const partialConclusions = { reflex: ["ref_seg"] };
+  const partialConclusions = {};
   const unsupported = [
     ...new Set(
       applications

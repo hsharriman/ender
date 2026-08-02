@@ -125,7 +125,8 @@ Proof.
   repeat split; auto.
 Qed.
 
-Definition declarations_well_formed (ts : list Triangle) : Prop :=
-  forall t, In t ts -> triangle_well_formed t.
+Definition declarations_well_formed (d : Declarations) : Prop :=
+  (forall t, In t d.(decl_triangles) -> triangle_well_formed t) /\
+  (forall a, In a d.(decl_angles) -> angle_well_formed a).
 
 End EnderSemantics.

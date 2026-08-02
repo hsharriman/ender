@@ -86,57 +86,61 @@ Definition angle_of_triangle (t : Triangle) (a : Angle) : bool :=
   angle_eqb a (angle t.(tri_a) t.(tri_c) t.(tri_b)) ||
   angle_eqb a (angle t.(tri_b) t.(tri_c) t.(tri_a)).
 
-Definition declared_angle (triangles : list Triangle) (a : Angle) : bool :=
-  existsb (fun t => angle_of_triangle t a) triangles.
+(** An angle is nondegenerate if it spans a declared triangle's vertices, or if
+    it is itself declared on an [ang:] line -- the audited meaning of an angle
+    declaration is exactly [AngleWellFormed]. *)
+Definition declared_angle (decls : Declarations) (a : Angle) : bool :=
+  existsb (fun t => angle_of_triangle t a) decls.(decl_triangles) ||
+  existsb (angle_u_eqb a) decls.(decl_angles).
 
 (** A triangle criterion may consume a [con_right] fact where it expects a
     [con_ang] one: two right angles are congruent as soon as both have
     nondegenerate rays, which declared triangles supply. *)
-Definition dependency_matches (triangles : list Triangle)
+Definition dependency_matches (decls : Declarations)
     (expected actual : Statement) : bool :=
   fact_eqb expected actual ||
   match expected, actual with
   | ConAng a b, ConRight c d =>
       angle_u_eqb a c && angle_u_eqb b d &&
-      declared_angle triangles a && declared_angle triangles b
+      declared_angle decls a && declared_angle decls b
   | _, _ => false
   end.
 
-Definition schema3 (triangles : list Triangle) (facts : list Statement)
+Definition schema3 (decls : Declarations) (facts : list Statement)
     (i j k : nat) (a b c : Statement) : bool :=
   match lookup_step facts i, lookup_step facts j, lookup_step facts k with
   | Some x, Some y, Some z =>
-      dependency_matches triangles a x && dependency_matches triangles b y &&
-      dependency_matches triangles c z
+      dependency_matches decls a x && dependency_matches decls b y &&
+      dependency_matches decls c z
   | _, _, _ => false
   end.
 
-Definition sas_schema triangles facts i j k (t u : Triangle) : bool :=
-  schema3 triangles facts i j k
+Definition sas_schema decls facts i j k (t u : Triangle) : bool :=
+  schema3 decls facts i j k
     (ConSeg (side_ab t) (side_ab u))
     (ConAng (angle_a t) (angle_a u))
     (ConSeg (side_ca t) (side_ca u)).
 
-Definition sss_schema triangles facts i j k (t u : Triangle) : bool :=
-  schema3 triangles facts i j k
+Definition sss_schema decls facts i j k (t u : Triangle) : bool :=
+  schema3 decls facts i j k
     (ConSeg (side_ab t) (side_ab u))
     (ConSeg (side_bc t) (side_bc u))
     (ConSeg (side_ca t) (side_ca u)).
 
-Definition asa_schema triangles facts i j k (t u : Triangle) : bool :=
-  schema3 triangles facts i j k
+Definition asa_schema decls facts i j k (t u : Triangle) : bool :=
+  schema3 decls facts i j k
     (ConAng (angle_a t) (angle_a u))
     (ConSeg (side_ab t) (side_ab u))
     (ConAng (angle_b t) (angle_b u)).
 
 (** The two angles are interchangeable in the citation: swapping them names
     the same three facts, so both orders are accepted. *)
-Definition aas_schema triangles facts i j k (t u : Triangle) : bool :=
-  schema3 triangles facts i j k
+Definition aas_schema decls facts i j k (t u : Triangle) : bool :=
+  schema3 decls facts i j k
     (ConAng (angle_c t) (angle_c u))
     (ConAng (angle_b t) (angle_b u))
     (ConSeg (side_ab t) (side_ab u)) ||
-  schema3 triangles facts i j k
+  schema3 decls facts i j k
     (ConAng (angle_b t) (angle_b u))
     (ConAng (angle_c t) (angle_c u))
     (ConSeg (side_ab t) (side_ab u)).
@@ -146,23 +150,23 @@ Definition aas_schema triangles facts i j k (t u : Triangle) : bool :=
     segment congruences, so both readings are accepted; each is separately
     sound.  Two legs are still refused, and the correspondence search already
     covers which leg is cited. *)
-Definition rhl_schema triangles facts i j k (t u : Triangle) : bool :=
-  schema3 triangles facts i j k
+Definition rhl_schema decls facts i j k (t u : Triangle) : bool :=
+  schema3 decls facts i j k
     (ConRight (angle_b t) (angle_b u))
     (ConSeg (side_ca t) (side_ca u))
     (ConSeg (side_bc t) (side_bc u)) ||
-  schema3 triangles facts i j k
+  schema3 decls facts i j k
     (ConRight (angle_b t) (angle_b u))
     (ConSeg (side_bc t) (side_bc u))
     (ConSeg (side_ca t) (side_ca u)).
 
 Definition three_rotations
-    (schema : list Triangle -> list Statement -> nat -> nat -> nat ->
+    (schema : Declarations -> list Statement -> nat -> nat -> nat ->
               Triangle -> Triangle -> bool)
-    triangles facts i j k t u : bool :=
-  schema triangles facts i j k t u ||
-  schema triangles facts i j k (rotate_triangle t) (rotate_triangle u) ||
-  schema triangles facts i j k (rotate_triangle (rotate_triangle t))
+    decls facts i j k t u : bool :=
+  schema decls facts i j k t u ||
+  schema decls facts i j k (rotate_triangle t) (rotate_triangle u) ||
+  schema decls facts i j k (rotate_triangle (rotate_triangle t))
                                (rotate_triangle (rotate_triangle u)).
 
 (** A criterion's dependency order fixes which vertex plays which role, so the
@@ -172,11 +176,11 @@ Definition reverse_triangle (t : Triangle) : Triangle :=
   triangle t.(tri_c) t.(tri_b) t.(tri_a).
 
 Definition six_correspondences
-    (schema : list Triangle -> list Statement -> nat -> nat -> nat ->
+    (schema : Declarations -> list Statement -> nat -> nat -> nat ->
               Triangle -> Triangle -> bool)
-    triangles facts i j k t u : bool :=
-  three_rotations schema triangles facts i j k t u ||
-  three_rotations schema triangles facts i j k
+    decls facts i j k t u : bool :=
+  three_rotations schema decls facts i j k t u ||
+  three_rotations schema decls facts i j k
     (reverse_triangle t) (reverse_triangle u).
 
 (** Declaring [t_ABC] asserts that its vertices are noncollinear, and that is
@@ -186,8 +190,9 @@ Definition triangle_permutations (t : Triangle) : list Triangle :=
   ; triangle t.(tri_b) t.(tri_a) t.(tri_c); triangle t.(tri_b) t.(tri_c) t.(tri_a)
   ; triangle t.(tri_c) t.(tri_a) t.(tri_b); triangle t.(tri_c) t.(tri_b) t.(tri_a) ].
 
-Definition triangle_declared (triangles : list Triangle) (t : Triangle) : bool :=
-  existsb (fun d => triangle_mem t (triangle_permutations d)) triangles.
+Definition triangle_declared (decls : Declarations) (t : Triangle) : bool :=
+  existsb (fun d => triangle_mem t (triangle_permutations d))
+          decls.(decl_triangles).
 
 (** The same six readings [six_correspondences] searches, as data, for rules
     whose shape does not fit the three-dependency schema. *)
@@ -198,8 +203,8 @@ Definition correspondences (t u : Triangle) : list (Triangle * Triangle) :=
   [ (t, u); (r t, r u); (r (r t), r (r u))
   ; (t', u'); (r t', r u'); (r (r t'), r (r u')) ].
 
-Definition declared_pair (triangles : list Triangle) (t u : Triangle) : bool :=
-  triangle_declared triangles t && triangle_declared triangles u.
+Definition declared_pair (decls : Declarations) (t u : Triangle) : bool :=
+  triangle_declared decls t && triangle_declared decls u.
 
 Definition cpctc_facts (t u : Triangle) : list Statement :=
   [ ConSeg (side_ab t) (side_ab u)
@@ -283,7 +288,7 @@ Definition perp_right_angle (s t : Segment) (p : PointId) (a : Angle) : bool :=
   ((endpoint_of a.(ang_left) s && endpoint_of a.(ang_right) t) ||
    (endpoint_of a.(ang_left) t && endpoint_of a.(ang_right) s)).
 
-Definition perp_con_ang (triangles : list Triangle) (facts : list Statement)
+Definition perp_con_ang (decls : Declarations) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match lookup_step facts i with
   | Some (PerpAt s t p) =>
@@ -293,7 +298,7 @@ Definition perp_con_ang (triangles : list Triangle) (facts : list Statement)
          triangle spanning the angle does, and that is all [l11_16] needs. *)
       | ConAng a b =>
           perp_right_angle s t p a && perp_right_angle s t p b &&
-          declared_angle triangles a && declared_angle triangles b
+          declared_angle decls a && declared_angle decls b
       | _ => false
       end
   | _ => false
@@ -313,22 +318,22 @@ Definition def_midpt (facts : list Statement) (i : nat)
     a declared triangle, which is what supplies the nondegenerate rays.  This
     reason takes no step dependency, so the crossing is looked up among the
     diagram premises. *)
-Definition vertical_angle_pair (triangles : list Triangle) (s t : Segment)
+Definition vertical_angle_pair (decls : Declarations) (s t : Segment)
     (p : PointId) (conclusion : Statement) : bool :=
   let opposite first second :=
-    declared_angle triangles first && declared_angle triangles second &&
+    declared_angle decls first && declared_angle decls second &&
     fact_eqb (ConAng first second) conclusion in
   opposite (angle s.(seg_start) p t.(seg_start))
            (angle s.(seg_end) p t.(seg_end)) ||
   opposite (angle s.(seg_start) p t.(seg_end))
            (angle s.(seg_end) p t.(seg_start)).
 
-Definition vert_ang (triangles : list Triangle) (premises : list Premise)
+Definition vert_ang (decls : Declarations) (premises : list Premise)
     (label : string) (conclusion : Statement) : bool :=
   existsb (fun pr =>
              (String.eqb label EmptyString || String.eqb label pr.(premise_label)) &&
              match pr.(premise_statement) with
-             | IntersectSeg s t p => vertical_angle_pair triangles s t p conclusion
+             | IntersectSeg s t p => vertical_angle_pair decls s t p conclusion
              | _ => false
              end) premises.
 
@@ -377,39 +382,39 @@ Definition midpt_conv (premises : list Premise) (facts : list Statement)
 (** Two angles of a triangle determine the third.  The rule needs both
     triangles, and they are not named by the conclusion, so it searches the
     declared pairs; declaring them is also what rules out degenerate ones. *)
-Definition schema2 (triangles : list Triangle) (facts : list Statement)
+Definition schema2 (decls : Declarations) (facts : list Statement)
     (i j : nat) (a b : Statement) : bool :=
   match lookup_step facts i, lookup_step facts j with
   | Some x, Some y =>
-      dependency_matches triangles a x && dependency_matches triangles b y
+      dependency_matches decls a x && dependency_matches decls b y
   | _, _ => false
   end.
 
-Definition third_angle_at (triangles : list Triangle) (facts : list Statement)
+Definition third_angle_at (decls : Declarations) (facts : list Statement)
     (i j : nat) (t u : Triangle) (conclusion : Statement) : bool :=
-  schema2 triangles facts i j
+  schema2 decls facts i j
     (ConAng (angle_a t) (angle_a u))
     (ConAng (angle_b t) (angle_b u)) &&
   fact_eqb (ConAng (angle_c t) (angle_c u)) conclusion.
 
-Definition third_angle (triangles : list Triangle) (facts : list Statement)
+Definition third_angle (decls : Declarations) (facts : list Statement)
     (i j : nat) (conclusion : Statement) : bool :=
   existsb (fun t => existsb (fun u =>
-      existsb (fun c => third_angle_at triangles facts i j (fst c) (snd c) conclusion)
+      existsb (fun c => third_angle_at decls facts i j (fst c) (snd c) conclusion)
               (correspondences t u))
-    triangles) triangles.
+    decls.(decl_triangles)) decls.(decl_triangles).
 
-Definition schema6 (triangles : list Triangle) (facts : list Statement)
+Definition schema6 (decls : Declarations) (facts : list Statement)
     (i1 i2 i3 i4 i5 i6 : nat) (a b c d e f : Statement) : bool :=
-  schema3 triangles facts i1 i2 i3 a b c &&
-  schema3 triangles facts i4 i5 i6 d e f.
+  schema3 decls facts i1 i2 i3 a b c &&
+  schema3 decls facts i4 i5 i6 d e f.
 
 (** All six corresponding parts, cited explicitly.  The dependency order fixes
     the correspondence, so the six readings of the conclusion are searched as
     they are for the other criteria. *)
-Definition def_con_tri_at (triangles : list Triangle) (facts : list Statement)
+Definition def_con_tri_at (decls : Declarations) (facts : list Statement)
     (i1 i2 i3 i4 i5 i6 : nat) (t u : Triangle) : bool :=
-  schema6 triangles facts i1 i2 i3 i4 i5 i6
+  schema6 decls facts i1 i2 i3 i4 i5 i6
     (ConSeg (side_ab t) (side_ab u))
     (ConSeg (side_bc t) (side_bc u))
     (ConSeg (side_ca t) (side_ca u))
@@ -417,12 +422,12 @@ Definition def_con_tri_at (triangles : list Triangle) (facts : list Statement)
     (ConAng (angle_b t) (angle_b u))
     (ConAng (angle_c t) (angle_c u)).
 
-Definition def_con_tri (triangles : list Triangle) (facts : list Statement)
+Definition def_con_tri (decls : Declarations) (facts : list Statement)
     (i1 i2 i3 i4 i5 i6 : nat) (conclusion : Statement) : bool :=
   match conclusion with
   | ConTri t u =>
-      declared_pair triangles t u &&
-      existsb (fun c => def_con_tri_at triangles facts i1 i2 i3 i4 i5 i6
+      declared_pair decls t u &&
+      existsb (fun c => def_con_tri_at decls facts i1 i2 i3 i4 i5 i6
                           (fst c) (snd c))
               (correspondences t u)
   | _ => false
@@ -435,11 +440,11 @@ Definition isosceles_pairs (t : Triangle) : list Statement :=
   ; ConSeg (side_bc t) (side_ca t)
   ; ConSeg (side_ca t) (side_ab t) ].
 
-Definition def_isosceles (triangles : list Triangle) (facts : list Statement)
+Definition def_isosceles (decls : Declarations) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion with
   | IsoscelesTri t =>
-      triangle_declared triangles t &&
+      triangle_declared decls t &&
       match lookup_step facts i with
       | Some dependency =>
           existsb (fun expected => fact_eqb expected dependency)
@@ -460,46 +465,46 @@ Definition base_angle_angles (t : Triangle) : Statement :=
 Definition apex_readings (t : Triangle) : list Triangle :=
   [t; rotate_triangle t; rotate_triangle (rotate_triangle t)].
 
-Definition base_angle (triangles : list Triangle) (facts : list Statement)
+Definition base_angle (decls : Declarations) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match lookup_step facts i with
   | Some dependency =>
-      existsb (fun t => triangle_declared triangles t &&
+      existsb (fun t => triangle_declared decls t &&
                         fact_eqb (base_angle_sides t) dependency &&
                         fact_eqb (base_angle_angles t) conclusion)
-              (flat_map apex_readings triangles)
+              (flat_map apex_readings decls.(decl_triangles))
   | None => false
   end.
 
-Definition base_angle_conv (triangles : list Triangle) (facts : list Statement)
+Definition base_angle_conv (decls : Declarations) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match lookup_step facts i with
   | Some dependency =>
-      existsb (fun t => triangle_declared triangles t &&
+      existsb (fun t => triangle_declared decls t &&
                         fact_eqb (base_angle_angles t) dependency &&
                         fact_eqb (base_angle_sides t) conclusion)
-              (flat_map apex_readings triangles)
+              (flat_map apex_readings decls.(decl_triangles))
   | None => false
   end.
 
-Definition def_equilateral (triangles : list Triangle) (facts : list Statement)
+Definition def_equilateral (decls : Declarations) (facts : list Statement)
     (i j k : nat) (conclusion : Statement) : bool :=
   match conclusion with
   | EquilateralTri t =>
-      triangle_declared triangles t &&
-      schema3 triangles facts i j k
+      triangle_declared decls t &&
+      schema3 decls facts i j k
         (ConSeg (side_ab t) (side_bc t))
         (ConSeg (side_bc t) (side_ca t))
         (ConSeg (side_ca t) (side_ab t))
   | _ => false
   end.
 
-Definition def_equiangular (triangles : list Triangle) (facts : list Statement)
+Definition def_equiangular (decls : Declarations) (facts : list Statement)
     (i j k : nat) (conclusion : Statement) : bool :=
   match conclusion with
   | EquiangularTri t =>
-      triangle_declared triangles t &&
-      schema3 triangles facts i j k
+      triangle_declared decls t &&
+      schema3 decls facts i j k
         (ConAng (angle_a t) (angle_b t))
         (ConAng (angle_b t) (angle_c t))
         (ConAng (angle_c t) (angle_a t))
@@ -581,7 +586,7 @@ Fixpoint find_premise (label : string) (premises : list Premise) : option Statem
       else find_premise label rest
   end.
 
-Definition rule_valid (triangles : list Triangle) (premises : list Premise)
+Definition rule_valid (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
   match r with
   | Given label =>
@@ -592,30 +597,33 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | Reflex =>
       match conclusion with
       | RefSeg a b => segment_u_eqb a b
+      (* An angle is congruent to itself once its rays are known to be
+         nondegenerate, which a declaration supplies. *)
+      | RefAng a b => angle_u_eqb a b && declared_angle decls a
       | _ => false
       end
   | SAS i j k =>
       match conclusion with
-      | ConTri t u => declared_pair triangles t u &&
-          six_correspondences sas_schema triangles facts i j k t u
+      | ConTri t u => declared_pair decls t u &&
+          six_correspondences sas_schema decls facts i j k t u
       | _ => false
       end
   | SSS i j k =>
       match conclusion with
-      | ConTri t u => declared_pair triangles t u &&
-          six_correspondences sss_schema triangles facts i j k t u
+      | ConTri t u => declared_pair decls t u &&
+          six_correspondences sss_schema decls facts i j k t u
       | _ => false
       end
   | ASA i j k =>
       match conclusion with
-      | ConTri t u => declared_pair triangles t u &&
-          six_correspondences asa_schema triangles facts i j k t u
+      | ConTri t u => declared_pair decls t u &&
+          six_correspondences asa_schema decls facts i j k t u
       | _ => false
       end
   | AAS i j k =>
       match conclusion with
-      | ConTri t u => declared_pair triangles t u &&
-          six_correspondences aas_schema triangles facts i j k t u
+      | ConTri t u => declared_pair decls t u &&
+          six_correspondences aas_schema decls facts i j k t u
       | _ => false
       end
   | CPCTC i =>
@@ -627,19 +635,19 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | ConAngTrans i j => con_ang_transitive facts i j conclusion
   | ConTriTrans i j => con_tri_transitive facts i j conclusion
   | DefConRight i j => def_con_right facts i j conclusion
-  | PerpConAng i => perp_con_ang triangles facts i conclusion
+  | PerpConAng i => perp_con_ang decls facts i conclusion
   | DefMidpt i => def_midpt facts i conclusion
-  | VertAng label => vert_ang triangles premises label conclusion
+  | VertAng label => vert_ang decls premises label conclusion
   | DefAngBisect i => def_ang_bisect facts i conclusion
   | MidptConv i => midpt_conv premises facts i conclusion
-  | ThirdAngle i j => third_angle triangles facts i j conclusion
+  | ThirdAngle i j => third_angle decls facts i j conclusion
   | DefConTri i1 i2 i3 i4 i5 i6 =>
-      def_con_tri triangles facts i1 i2 i3 i4 i5 i6 conclusion
-  | DefIsosceles i => def_isosceles triangles facts i conclusion
-  | BaseAngle i => base_angle triangles facts i conclusion
-  | BaseAngleConv i => base_angle_conv triangles facts i conclusion
-  | DefEquilateral i j k => def_equilateral triangles facts i j k conclusion
-  | DefEquiangular i j k => def_equiangular triangles facts i j k conclusion
+      def_con_tri decls facts i1 i2 i3 i4 i5 i6 conclusion
+  | DefIsosceles i => def_isosceles decls facts i conclusion
+  | BaseAngle i => base_angle decls facts i conclusion
+  | BaseAngleConv i => base_angle_conv decls facts i conclusion
+  | DefEquilateral i j k => def_equilateral decls facts i j k conclusion
+  | DefEquiangular i j k => def_equiangular decls facts i j k conclusion
   | EquilatEquiang i => equilat_equiang facts i conclusion
   | EquiangEquilat i => equiang_equilat facts i conclusion
   | ConSupplements i j k => con_supplements facts i j k conclusion
@@ -647,23 +655,23 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | DefPerp i => def_perp premises facts i conclusion
   | RHL i j k =>
       match conclusion with
-      | ConTri t u => declared_pair triangles t u &&
-          six_correspondences rhl_schema triangles facts i j k t u
+      | ConTri t u => declared_pair decls t u &&
+          six_correspondences rhl_schema decls facts i j k t u
       | _ => false
       end
   end.
 
-Fixpoint check_steps triangles premises facts steps : option (list Statement) :=
+Fixpoint check_steps decls premises facts steps : option (list Statement) :=
   match steps with
   | [] => Some facts
   | s :: rest =>
-      if rule_valid triangles premises facts s.(step_reason) s.(step_conclusion)
-      then check_steps triangles premises (facts ++ [s.(step_conclusion)]) rest
+      if rule_valid decls premises facts s.(step_reason) s.(step_conclusion)
+      then check_steps decls premises (facts ++ [s.(step_conclusion)]) rest
       else None
   end.
 
 Definition check_problem (p : Problem) : bool :=
-  match check_steps p.(problem_triangles) p.(problem_premises) [] p.(problem_steps) with
+  match check_steps p.(problem_declarations) p.(problem_premises) [] p.(problem_steps) with
   | Some facts => existsb (statement_eqb p.(problem_goal)) facts
   | None => false
   end.
@@ -801,37 +809,42 @@ Proof.
   unfold reverse_angle, angle_well_formed; cbn. tauto.
 Qed.
 
-Lemma declared_angle_sound : forall triangles a,
-  declarations_well_formed point triangles ->
-  declared_angle triangles a = true -> angle_well_formed point a.
+Lemma declared_angle_sound : forall decls a,
+  declarations_well_formed point decls ->
+  declared_angle decls a = true -> angle_well_formed point a.
 Proof.
-  intros triangles a Hwf H. unfold declared_angle in H.
-  apply existsb_exists in H. destruct H as [t [Hin Hangle]].
-  pose proof (Hwf t Hin) as Hncol.
-  destruct t as [A B C]. unfold triangle_well_formed in Hncol. cbn in Hncol.
-  apply not_col_distincts in Hncol.
-  destruct Hncol as [_ [Hab [Hbc Hac]]].
-  unfold angle_of_triangle in Hangle. cbn in Hangle.
-  repeat rewrite orb_true_iff in Hangle.
-  unfold angle_well_formed.
-  repeat match goal with H : _ \/ _ |- _ => destruct H as [H|H] end;
-    apply angle_eqb_eq in Hangle; subst; cbn; split; auto.
+  intros decls a [Hwft Hwfa] H. unfold declared_angle in H.
+  apply orb_true_iff in H. destruct H as [H|H].
+  - (* spans the vertices of a declared triangle *)
+    apply existsb_exists in H. destruct H as [t [Hin Hangle]].
+    pose proof (Hwft t Hin) as Hncol.
+    destruct t as [A B C]. unfold triangle_well_formed in Hncol. cbn in Hncol.
+    apply not_col_distincts in Hncol.
+    destruct Hncol as [_ [Hab [Hbc Hac]]].
+    unfold angle_of_triangle in Hangle. cbn in Hangle.
+    repeat rewrite orb_true_iff in Hangle.
+    unfold angle_well_formed.
+    repeat match goal with H : _ \/ _ |- _ => destruct H as [H|H] end;
+      apply angle_eqb_eq in Hangle; subst; cbn; split; auto.
+  - (* declared directly on an [ang:] line *)
+    apply existsb_exists in H. destruct H as [b [Hin Heq]].
+    apply (proj2 (angle_u_eqb_well_formed _ _ Heq)). now apply Hwfa.
 Qed.
 
-Lemma dependency_matches_sound : forall triangles expected actual,
-  declarations_well_formed point triangles ->
-  dependency_matches triangles expected actual = true ->
+Lemma dependency_matches_sound : forall decls expected actual,
+  declarations_well_formed point decls ->
+  dependency_matches decls expected actual = true ->
   Interp actual -> Interp expected.
 Proof.
-  intros triangles expected actual Hwf H Hactual.
+  intros decls expected actual Hwf H Hactual.
   unfold dependency_matches in H. apply orb_true_iff in H.
   destruct H as [H|H]; [now apply (fact_eqb_sound _ _ H)|].
   destruct expected; try discriminate. destruct actual; try discriminate.
   apply andb_true_iff in H. destruct H as [H Hb].
   apply andb_true_iff in H. destruct H as [H Ha].
   apply andb_true_iff in H. destruct H as [H1 H2].
-  apply (declared_angle_sound triangles _ Hwf) in Ha.
-  apply (declared_angle_sound triangles _ Hwf) in Hb.
+  apply (declared_angle_sound decls _ Hwf) in Ha.
+  apply (declared_angle_sound decls _ Hwf) in Hb.
   destruct Ha as [Hal Har]. destruct Hb as [Hbl Hbr].
   destruct Hactual as [Hpa Hpb].
   apply (proj2 (angle_u_eqb_right _ _ H1)) in Hpa.
@@ -840,12 +853,12 @@ Proof.
   cbn. now apply l11_16.
 Qed.
 
-Lemma schema3_sound : forall triangles facts i j k a b c,
-  declarations_well_formed point triangles ->
-  Forall Interp facts -> schema3 triangles facts i j k a b c = true ->
+Lemma schema3_sound : forall decls facts i j k a b c,
+  declarations_well_formed point decls ->
+  Forall Interp facts -> schema3 decls facts i j k a b c = true ->
   Interp a /\ Interp b /\ Interp c.
 Proof.
-  intros triangles facts i j k a b c Hwf Hall H.
+  intros decls facts i j k a b c Hwf Hall H.
   unfold schema3 in H.
   destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate.
@@ -858,25 +871,25 @@ Proof.
   repeat split; eapply dependency_matches_sound; eauto.
 Qed.
 
-Lemma triangle_declared_sound : forall triangles t,
-  declarations_well_formed point triangles ->
-  triangle_declared triangles t = true -> triangle_well_formed point t.
+Lemma triangle_declared_sound : forall decls t,
+  declarations_well_formed point decls ->
+  triangle_declared decls t = true -> triangle_well_formed point t.
 Proof.
-  intros triangles t Hwf H. unfold triangle_declared in H.
+  intros decls t [Hwft _] H. unfold triangle_declared in H.
   apply existsb_exists in H. destruct H as [d [Hin Hperm]].
-  pose proof (Hwf d Hin) as Hd.
+  pose proof (Hwft d Hin) as Hd.
   apply triangle_mem_spec in Hperm. destruct d as [A B C].
   unfold triangle_well_formed in Hd |- *. cbn in Hd, Hperm.
   destruct Hperm as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]]; cbn;
     intro Hcol; apply Hd; Col.
 Qed.
 
-Lemma declared_pair_sound : forall triangles t u,
-  declarations_well_formed point triangles ->
-  declared_pair triangles t u = true ->
+Lemma declared_pair_sound : forall decls t u,
+  declarations_well_formed point decls ->
+  declared_pair decls t u = true ->
   triangle_well_formed point t /\ triangle_well_formed point u.
 Proof.
-  intros triangles t u Hwf H. apply andb_true_iff in H. destruct H as [Ht Hu].
+  intros decls t u Hwf H. apply andb_true_iff in H. destruct H as [Ht Hu].
   split; eapply triangle_declared_sound; eauto.
 Qed.
 
@@ -887,46 +900,46 @@ Proof.
   intros Hncol Hcol. apply Hncol. Col.
 Qed.
 
-Lemma sas_schema_sound : forall triangles facts i j k t u,
-  declarations_well_formed point triangles ->
+Lemma sas_schema_sound : forall decls facts i j k t u,
+  declarations_well_formed point decls ->
   Forall Interp facts -> triangle_well_formed point t ->
-  sas_schema triangles facts i j k t u = true ->
+  sas_schema decls facts i j k t u = true ->
   interp_triangle_congruence point t u.
 Proof.
-  intros triangles facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
+  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
   apply schema3_sound in Hschema; [|exact Hdecl|exact Hall]. cbn in Hschema |- *.
   destruct Hschema as [Hs1 [Ha Hs2]]. eapply ender_sas; eauto; Cong.
 Qed.
 
-Lemma sss_schema_sound : forall triangles facts i j k t u,
-  declarations_well_formed point triangles ->
+Lemma sss_schema_sound : forall decls facts i j k t u,
+  declarations_well_formed point decls ->
   Forall Interp facts -> triangle_well_formed point t ->
-  sss_schema triangles facts i j k t u = true -> interp_triangle_congruence point t u.
+  sss_schema decls facts i j k t u = true -> interp_triangle_congruence point t u.
 Proof.
-  intros triangles facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
+  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
   apply schema3_sound in Hschema; [|exact Hdecl|exact Hall]. cbn in Hschema |- *.
   destruct Hschema as [Hs1 [Hs2 Hs3]]. now apply ender_sss.
 Qed.
 
-Lemma asa_schema_sound : forall triangles facts i j k t u,
-  declarations_well_formed point triangles ->
+Lemma asa_schema_sound : forall decls facts i j k t u,
+  declarations_well_formed point decls ->
   Forall Interp facts -> triangle_well_formed point t ->
-  asa_schema triangles facts i j k t u = true -> interp_triangle_congruence point t u.
+  asa_schema decls facts i j k t u = true -> interp_triangle_congruence point t u.
 Proof.
-  intros triangles facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
+  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
   apply schema3_sound in Hschema; [|exact Hdecl|exact Hall]. cbn in Hschema |- *.
   destruct Hschema as [Ha [Hs Hb]]. now apply ender_asa.
 Qed.
 
-Lemma aas_schema_sound : forall triangles facts i j k t u,
-  declarations_well_formed point triangles ->
+Lemma aas_schema_sound : forall decls facts i j k t u,
+  declarations_well_formed point decls ->
   Forall Interp facts -> triangle_well_formed point t ->
-  aas_schema triangles facts i j k t u = true -> interp_triangle_congruence point t u.
+  aas_schema decls facts i j k t u = true -> interp_triangle_congruence point t u.
 Proof.
-  intros triangles facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
+  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
   unfold aas_schema in Hschema. apply orb_true_iff in Hschema.
   assert (Hparts : forall x y z : Statement,
-      schema3 triangles facts i j k x y z = true ->
+      schema3 decls facts i j k x y z = true ->
       Interp x /\ Interp y /\ Interp z)
     by (intros; eapply schema3_sound; eauto).
   destruct Hschema as [H|H]; apply Hparts in H; cbn in H |- *.
@@ -934,16 +947,16 @@ Proof.
   - destruct H as [Hb [Hc Hs]]. apply ender_aas; auto. now apply conga_comm.
 Qed.
 
-Lemma rhl_schema_sound : forall triangles facts i j k t u,
-  declarations_well_formed point triangles ->
+Lemma rhl_schema_sound : forall decls facts i j k t u,
+  declarations_well_formed point decls ->
   Forall Interp facts -> triangle_well_formed point t ->
-  rhl_schema triangles facts i j k t u = true ->
+  rhl_schema decls facts i j k t u = true ->
   interp_triangle_congruence point t u.
 Proof.
-  intros triangles facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
+  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
   unfold rhl_schema in Hschema. apply orb_true_iff in Hschema.
   assert (Hsides : forall x y z : Statement,
-      schema3 triangles facts i j k x y z = true -> Interp x /\ Interp y /\ Interp z)
+      schema3 decls facts i j k x y z = true -> Interp x /\ Interp y /\ Interp z)
     by (intros; eapply schema3_sound; eauto).
   assert (Hbuild : Per (point A) (point B) (point C) ->
                    Per (point D) (point E) (point F) ->
@@ -960,26 +973,26 @@ Proof.
     destruct H as [[Hper Hper'] [H1 H2]]; now apply Hbuild.
 Qed.
 
-Lemma three_rotations_sound : forall schema triangles facts i j k t u,
-  declarations_well_formed point triangles ->
+Lemma three_rotations_sound : forall schema decls facts i j k t u,
+  declarations_well_formed point decls ->
   Forall Interp facts -> triangle_well_formed point t ->
-  (forall triangles facts i j k t u,
-    declarations_well_formed point triangles ->
+  (forall decls facts i j k t u,
+    declarations_well_formed point decls ->
     Forall Interp facts -> triangle_well_formed point t ->
-    schema triangles facts i j k t u = true ->
+    schema decls facts i j k t u = true ->
     interp_triangle_congruence point t u) ->
-  three_rotations schema triangles facts i j k t u = true ->
+  three_rotations schema decls facts i j k t u = true ->
   interp_triangle_congruence point t u.
 Proof.
-  intros schema triangles facts i j k t u Hdecl Hall Hwf Hsound H.
+  intros schema decls facts i j k t u Hdecl Hall Hwf Hsound H.
   unfold three_rotations in H. apply orb_true_iff in H. destruct H as [H|H].
   - apply orb_true_iff in H. destruct H as [H|H].
-    + exact (Hsound triangles facts i j k t u Hdecl Hall Hwf H).
+    + exact (Hsound decls facts i j k t u Hdecl Hall Hwf H).
     + apply triangle_congruent_rotate_back.
-      exact (Hsound triangles facts i j k (rotate_triangle t) (rotate_triangle u)
+      exact (Hsound decls facts i j k (rotate_triangle t) (rotate_triangle u)
                Hdecl Hall (rotated_well_formed t Hwf) H).
   - apply triangle_congruent_rotate_back. apply triangle_congruent_rotate_back.
-    exact (Hsound triangles facts i j k (rotate_triangle (rotate_triangle t))
+    exact (Hsound decls facts i j k (rotate_triangle (rotate_triangle t))
              (rotate_triangle (rotate_triangle u)) Hdecl Hall
              (rotated_well_formed _ (rotated_well_formed t Hwf)) H).
 Qed.
@@ -991,18 +1004,18 @@ Proof.
   intros Hncol Hcol. apply Hncol. Col.
 Qed.
 
-Lemma six_correspondences_sound : forall schema triangles facts i j k t u,
-  declarations_well_formed point triangles ->
+Lemma six_correspondences_sound : forall schema decls facts i j k t u,
+  declarations_well_formed point decls ->
   Forall Interp facts -> triangle_well_formed point t ->
-  (forall triangles facts i j k t u,
-    declarations_well_formed point triangles ->
+  (forall decls facts i j k t u,
+    declarations_well_formed point decls ->
     Forall Interp facts -> triangle_well_formed point t ->
-    schema triangles facts i j k t u = true ->
+    schema decls facts i j k t u = true ->
     interp_triangle_congruence point t u) ->
-  six_correspondences schema triangles facts i j k t u = true ->
+  six_correspondences schema decls facts i j k t u = true ->
   interp_triangle_congruence point t u.
 Proof.
-  intros schema triangles facts i j k [A B C] [D E F] Hdecl Hall Hwf Hsound H.
+  intros schema decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hsound H.
   unfold six_correspondences in H. apply orb_true_iff in H. destruct H as [H|H].
   - eapply three_rotations_sound; eauto.
   - apply triangle_congruent_reverse.
@@ -1172,11 +1185,11 @@ Proof.
   - apply l8_2. now apply Hall.
 Qed.
 
-Lemma perp_con_ang_sound : forall triangles facts i conclusion,
-  declarations_well_formed point triangles -> Forall Interp facts ->
-  perp_con_ang triangles facts i conclusion = true -> Interp conclusion.
+Lemma perp_con_ang_sound : forall decls facts i conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  perp_con_ang decls facts i conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles facts i conclusion Hwf Hfacts Hrule.
+  intros decls facts i conclusion Hwf Hfacts Hrule.
   unfold perp_con_ang in Hrule.
   destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
   destruct dependency; try discriminate.
@@ -1186,8 +1199,8 @@ Proof.
     apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hdb].
     apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hda].
     apply andb_true_iff in Hrule. destruct Hrule as [Hpa Hpb].
-    apply (declared_angle_sound triangles _ Hwf) in Hda.
-    apply (declared_angle_sound triangles _ Hwf) in Hdb.
+    apply (declared_angle_sound decls _ Hwf) in Hda.
+    apply (declared_angle_sound decls _ Hwf) in Hdb.
     destruct Hda as [Hal Har]. destruct Hdb as [Hbl Hbr].
     assert (Hra : right_angle point a) by (eapply perp_right_angle_sound; eauto).
     assert (Hrb : right_angle point a0) by (eapply perp_right_angle_sound; eauto).
@@ -1206,19 +1219,19 @@ Proof.
   apply (fact_eqb_sound _ _ Hrule). cbn in Hmid |- *. apply Hmid.
 Qed.
 
-Lemma vertical_angle_pair_sound : forall triangles s t p conclusion,
-  declarations_well_formed point triangles ->
+Lemma vertical_angle_pair_sound : forall decls s t p conclusion,
+  declarations_well_formed point decls ->
   Interp (IntersectSeg s t p) ->
-  vertical_angle_pair triangles s t p conclusion = true -> Interp conclusion.
+  vertical_angle_pair decls s t p conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles s t p conclusion Hwf Hcross Hpair.
+  intros decls s t p conclusion Hwf Hcross Hpair.
   cbn in Hcross. destruct Hcross as [Hs Ht].
   unfold vertical_angle_pair in Hpair. apply orb_true_iff in Hpair.
   destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
     destruct Hcase as [Hdeclared Heq]; apply andb_true_iff in Hdeclared;
     destruct Hdeclared as [Hfirst Hsecond];
-    apply (declared_angle_sound triangles _ Hwf) in Hfirst;
-    apply (declared_angle_sound triangles _ Hwf) in Hsecond;
+    apply (declared_angle_sound decls _ Hwf) in Hfirst;
+    apply (declared_angle_sound decls _ Hwf) in Hsecond;
     destruct Hfirst as [Hf1 Hf2]; destruct Hsecond as [Hs1 Hs2];
     cbn in Hf1, Hf2, Hs1, Hs2;
     apply (fact_eqb_sound _ _ Heq); cbn.
@@ -1226,12 +1239,12 @@ Proof.
   - apply l11_14; auto. now apply between_symmetry.
 Qed.
 
-Lemma vert_ang_sound : forall triangles premises label conclusion,
-  declarations_well_formed point triangles ->
+Lemma vert_ang_sound : forall decls premises label conclusion,
+  declarations_well_formed point decls ->
   Forall (interp_premise point) premises ->
-  vert_ang triangles premises label conclusion = true -> Interp conclusion.
+  vert_ang decls premises label conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles premises label conclusion Hwf Hprem Hrule.
+  intros decls premises label conclusion Hwf Hprem Hrule.
   unfold vert_ang in Hrule. apply existsb_exists in Hrule.
   destruct Hrule as [pr [Hin Hmatch]].
   apply andb_true_iff in Hmatch. destruct Hmatch as [_ Hmatch].
@@ -1329,23 +1342,23 @@ Proof.
   contradiction.
 Qed.
 
-Lemma schema6_sound : forall triangles facts i1 i2 i3 i4 i5 i6 a b c d e f,
-  declarations_well_formed point triangles -> Forall Interp facts ->
-  schema6 triangles facts i1 i2 i3 i4 i5 i6 a b c d e f = true ->
+Lemma schema6_sound : forall decls facts i1 i2 i3 i4 i5 i6 a b c d e f,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  schema6 decls facts i1 i2 i3 i4 i5 i6 a b c d e f = true ->
   Interp a /\ Interp b /\ Interp c /\ Interp d /\ Interp e /\ Interp f.
 Proof.
-  intros triangles facts i1 i2 i3 i4 i5 i6 a b c d e f Hwf Hall H.
+  intros decls facts i1 i2 i3 i4 i5 i6 a b c d e f Hwf Hall H.
   unfold schema6 in H. apply andb_true_iff in H. destruct H as [H1 H2].
   apply (schema3_sound _ _ _ _ _ _ _ _ Hwf Hall) in H1.
   apply (schema3_sound _ _ _ _ _ _ _ _ Hwf Hall) in H2. tauto.
 Qed.
 
-Lemma def_con_tri_sound : forall triangles facts i1 i2 i3 i4 i5 i6 conclusion,
-  declarations_well_formed point triangles -> Forall Interp facts ->
-  def_con_tri triangles facts i1 i2 i3 i4 i5 i6 conclusion = true ->
+Lemma def_con_tri_sound : forall decls facts i1 i2 i3 i4 i5 i6 conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  def_con_tri decls facts i1 i2 i3 i4 i5 i6 conclusion = true ->
   Interp conclusion.
 Proof.
-  intros triangles facts i1 i2 i3 i4 i5 i6 conclusion Hwf Hall Hrule.
+  intros decls facts i1 i2 i3 i4 i5 i6 conclusion Hwf Hall Hrule.
   unfold def_con_tri in Hrule. destruct conclusion; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [_ Hrule].
   apply existsb_exists in Hrule. destruct Hrule as [c [Hin Hmatch]].
@@ -1357,16 +1370,16 @@ Proof.
   cbn. tauto.
 Qed.
 
-Lemma def_isosceles_sound : forall triangles facts i conclusion,
-  declarations_well_formed point triangles -> Forall Interp facts ->
-  def_isosceles triangles facts i conclusion = true -> Interp conclusion.
+Lemma def_isosceles_sound : forall decls facts i conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  def_isosceles decls facts i conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles facts i conclusion Hwf Hall Hrule.
+  intros decls facts i conclusion Hwf Hall Hrule.
   unfold def_isosceles in Hrule. destruct conclusion; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hrule].
   destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
   assert (Hdep : Interp dependency) by (eapply lookup_step_sound; eauto).
-  apply (triangle_declared_sound triangles _ Hwf) in Hdeclared.
+  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
   apply triangle_well_formed_nondegenerate in Hdeclared.
   apply existsb_exists in Hrule. destruct Hrule as [expected [Hin Heq]].
   apply (fact_eqb_sound _ _ Heq) in Hdep.
@@ -1375,69 +1388,69 @@ Proof.
   destruct Hin as [<-|[<-|[<-|[]]]]; cbn in Hdep; tauto.
 Qed.
 
-Lemma apex_readings_well_formed : forall triangles t r,
-  declarations_well_formed point triangles ->
-  triangle_declared triangles t = true -> In r (apex_readings t) ->
+Lemma apex_readings_well_formed : forall decls t r,
+  declarations_well_formed point decls ->
+  triangle_declared decls t = true -> In r (apex_readings t) ->
   triangle_well_formed point t.
-Proof. intros triangles t r Hwf Hd _. eapply triangle_declared_sound; eauto. Qed.
+Proof. intros decls t r Hwf Hd _. eapply triangle_declared_sound; eauto. Qed.
 
-Lemma base_angle_sound : forall triangles facts i conclusion,
-  declarations_well_formed point triangles -> Forall Interp facts ->
-  base_angle triangles facts i conclusion = true -> Interp conclusion.
+Lemma base_angle_sound : forall decls facts i conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  base_angle decls facts i conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles facts i conclusion Hwf Hall Hrule.
+  intros decls facts i conclusion Hwf Hall Hrule.
   unfold base_angle in Hrule.
   destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
   assert (Hdep : Interp dependency) by (eapply lookup_step_sound; eauto).
   apply existsb_exists in Hrule. destruct Hrule as [t [_ Hmatch]].
   apply andb_true_iff in Hmatch. destruct Hmatch as [Hmatch Hconclusion].
   apply andb_true_iff in Hmatch. destruct Hmatch as [Hdeclared Hsides].
-  apply (triangle_declared_sound triangles _ Hwf) in Hdeclared.
+  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
   apply (fact_eqb_sound _ _ Hsides) in Hdep.
   apply (fact_eqb_sound _ _ Hconclusion).
   destruct t as [A B C]. cbn in Hdep, Hdeclared |- *.
   now apply ender_base_angle.
 Qed.
 
-Lemma base_angle_conv_sound : forall triangles facts i conclusion,
-  declarations_well_formed point triangles -> Forall Interp facts ->
-  base_angle_conv triangles facts i conclusion = true -> Interp conclusion.
+Lemma base_angle_conv_sound : forall decls facts i conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  base_angle_conv decls facts i conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles facts i conclusion Hwf Hall Hrule.
+  intros decls facts i conclusion Hwf Hall Hrule.
   unfold base_angle_conv in Hrule.
   destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
   assert (Hdep : Interp dependency) by (eapply lookup_step_sound; eauto).
   apply existsb_exists in Hrule. destruct Hrule as [t [_ Hmatch]].
   apply andb_true_iff in Hmatch. destruct Hmatch as [Hmatch Hconclusion].
   apply andb_true_iff in Hmatch. destruct Hmatch as [Hdeclared Hangles].
-  apply (triangle_declared_sound triangles _ Hwf) in Hdeclared.
+  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
   apply (fact_eqb_sound _ _ Hangles) in Hdep.
   apply (fact_eqb_sound _ _ Hconclusion).
   destruct t as [A B C]. cbn in Hdep, Hdeclared |- *.
   now apply ender_base_angle_conv.
 Qed.
 
-Lemma def_equilateral_sound : forall triangles facts i j k conclusion,
-  declarations_well_formed point triangles -> Forall Interp facts ->
-  def_equilateral triangles facts i j k conclusion = true -> Interp conclusion.
+Lemma def_equilateral_sound : forall decls facts i j k conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  def_equilateral decls facts i j k conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles facts i j k conclusion Hwf Hall Hrule.
+  intros decls facts i j k conclusion Hwf Hall Hrule.
   unfold def_equilateral in Hrule. destruct conclusion; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hschema].
-  apply (triangle_declared_sound triangles _ Hwf) in Hdeclared.
+  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
   apply triangle_well_formed_nondegenerate in Hdeclared.
   apply (schema3_sound _ _ _ _ _ _ _ _ Hwf Hall) in Hschema.
   destruct t as [A B C]. cbn in Hschema, Hdeclared |- *. tauto.
 Qed.
 
-Lemma def_equiangular_sound : forall triangles facts i j k conclusion,
-  declarations_well_formed point triangles -> Forall Interp facts ->
-  def_equiangular triangles facts i j k conclusion = true -> Interp conclusion.
+Lemma def_equiangular_sound : forall decls facts i j k conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  def_equiangular decls facts i j k conclusion = true -> Interp conclusion.
 Proof.
-  intros triangles facts i j k conclusion Hwf Hall Hrule.
+  intros decls facts i j k conclusion Hwf Hall Hrule.
   unfold def_equiangular in Hrule. destruct conclusion; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hschema].
-  apply (triangle_declared_sound triangles _ Hwf) in Hdeclared.
+  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
   apply triangle_well_formed_nondegenerate in Hdeclared.
   apply (schema3_sound _ _ _ _ _ _ _ _ Hwf Hall) in Hschema.
   destruct t as [A B C]. cbn in Hschema, Hdeclared |- *.
@@ -1662,12 +1675,12 @@ Qed.
     point is free of it. *)
 Context {TE : @Tarski_euclidean Tn TnEQD}.
 
-Lemma schema2_sound : forall triangles facts i j a b,
-  declarations_well_formed point triangles ->
-  Forall Interp facts -> schema2 triangles facts i j a b = true ->
+Lemma schema2_sound : forall decls facts i j a b,
+  declarations_well_formed point decls ->
+  Forall Interp facts -> schema2 decls facts i j a b = true ->
   Interp a /\ Interp b.
 Proof.
-  intros triangles facts i j a b Hwf Hall H. unfold schema2 in H.
+  intros decls facts i j a b Hwf Hall H. unfold schema2 in H.
   destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate.
   apply andb_true_iff in H. destruct H as [Ha Hb].
@@ -1693,17 +1706,19 @@ Proof.
   contradiction.
 Qed.
 
-Lemma third_angle_sound : forall triangles facts i j conclusion,
-  declarations_well_formed point triangles ->
-  Forall Interp facts -> third_angle triangles facts i j conclusion = true ->
+Lemma third_angle_sound : forall decls facts i j conclusion,
+  declarations_well_formed point decls ->
+  Forall Interp facts -> third_angle decls facts i j conclusion = true ->
   Interp conclusion.
 Proof.
-  intros triangles facts i j conclusion Hwf Hall Hrule.
+  intros decls facts i j conclusion Hwf Hall Hrule.
   unfold third_angle in Hrule.
   apply existsb_exists in Hrule. destruct Hrule as [t [Hint Hrule]].
   apply existsb_exists in Hrule. destruct Hrule as [u [Hinu Hrule]].
   apply existsb_exists in Hrule. destruct Hrule as [c [Hinc Hmatch]].
-  pose proof (correspondences_well_formed t u c Hinc (Hwf t Hint) (Hwf u Hinu))
+  assert (Hwft : forall x, In x decls.(decl_triangles) ->
+                 triangle_well_formed point x) by apply Hwf.
+  pose proof (correspondences_well_formed t u c Hinc (Hwft t Hint) (Hwft u Hinu))
     as [Hwt Hwu].
   apply andb_true_iff in Hmatch. destruct Hmatch as [Hdeps Hconclusion].
   apply (schema2_sound _ _ _ _ _ _ Hwf Hall) in Hdeps.
@@ -1713,13 +1728,13 @@ Proof.
   now apply ender_third_angle.
 Qed.
 
-Lemma rule_valid_sound : forall triangles premises facts reason conclusion,
-  declarations_well_formed point triangles ->
+Lemma rule_valid_sound : forall decls premises facts reason conclusion,
+  declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
-  rule_valid triangles premises facts reason conclusion = true ->
+  rule_valid decls premises facts reason conclusion = true ->
   Interp conclusion.
 Proof.
-  intros triangles premises facts reason conclusion Hwf Hprem Hfacts Hvalid.
+  intros decls premises facts reason conclusion Hwf Hprem Hfacts Hvalid.
   destruct reason; cbn in Hvalid.
   - destruct (find_premise s premises) eqn:Hfind; try discriminate.
     apply statement_eqb_eq in Hvalid. subst conclusion.
@@ -1731,6 +1746,14 @@ Proof.
     + apply segment_u_eqb_cases in Hvalid. destruct Hvalid as [Hvalid|Hvalid].
       * subst. cbn. apply cong_reflexivity.
       * subst. unfold reverse_segment. cbn. apply cong_pseudo_reflexivity.
+    + (* the declaration is what makes the two rays nondegenerate *)
+      apply andb_true_iff in Hvalid. destruct Hvalid as [Hsame Hdeclared].
+      apply (declared_angle_sound _ _ Hwf) in Hdeclared.
+      apply angle_u_eqb_cases in Hsame.
+      destruct Hsame as [Heq|Heq]; subst a;
+        [destruct Hdeclared as [Hl Hr]; cbn; now apply conga_refl|].
+      unfold reverse_angle in Hdeclared |- *. cbn in Hdeclared |- *.
+      destruct Hdeclared as [Hl Hr]. now apply conga_pseudo_refl.
   - destruct conclusion; try discriminate.
     apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
@@ -1784,16 +1807,16 @@ Proof.
   - eapply def_perp_sound; eauto.
 Qed.
 
-Lemma check_steps_sound : forall triangles premises steps facts output,
-  declarations_well_formed point triangles ->
+Lemma check_steps_sound : forall decls premises steps facts output,
+  declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
-  check_steps triangles premises facts steps = Some output ->
+  check_steps decls premises facts steps = Some output ->
   Forall Interp output.
 Proof.
-  intros triangles premises steps. induction steps as [|s rest IH];
+  intros decls premises steps. induction steps as [|s rest IH];
     intros facts output Hwf Hprem Hfacts Hcheck; cbn in Hcheck.
   - injection Hcheck as <-. exact Hfacts.
-  - destruct (rule_valid triangles premises facts (step_reason s)
+  - destruct (rule_valid decls premises facts (step_reason s)
               (step_conclusion s)) eqn:Hvalid; try discriminate.
     apply (IH (facts ++ [step_conclusion s]) output); auto.
     apply Forall_app. split; auto. constructor; auto.
@@ -1802,12 +1825,12 @@ Qed.
 
 Theorem check_problem_sound : forall p,
   check_problem p = true ->
-  declarations_well_formed point p.(problem_triangles) ->
+  declarations_well_formed point p.(problem_declarations) ->
   Forall (interp_premise point) p.(problem_premises) ->
   Interp p.(problem_goal).
 Proof.
   intros p Hcheck Hwf Hprem. unfold check_problem in Hcheck.
-  destruct (check_steps (problem_triangles p) (problem_premises p) []
+  destruct (check_steps (problem_declarations p) (problem_premises p) []
             (problem_steps p)) as [facts|] eqn:Hsteps; try discriminate.
   apply existsb_exists in Hcheck. destruct Hcheck as [goal [Hin Heq]].
   apply statement_eqb_eq in Heq. subst goal.

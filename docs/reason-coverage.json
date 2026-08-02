@@ -104,9 +104,9 @@
     },
     {
       "reason": "reflex",
-      "status": "partial",
-      "priority": 2,
-      "axioms": "logical/equality infrastructure",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "reflexivity of congruence; ref_ang needs a declared angle",
       "fixtures": [
         "src/checker/proofs/circles/reg1.txt",
         "src/checker/proofs/examples/overlap.txt",
@@ -122,7 +122,7 @@
         "src/checker/proofs/lines_angles/altint_conv_correct.txt",
         "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
       ],
-      "note": "Segment conclusion verified; ref_ang remains fail-closed pending nondegenerate rays."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "def_perp",

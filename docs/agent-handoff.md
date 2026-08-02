@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- twenty-seven reasons are fully verified; `reflex` is the only partial one,
+- twenty-eight reasons are fully verified, and none are partial; `reflex` is the only partial one,
   and its `ref_ang` conclusion is blocked only because the kernel discards the
   `ang:` declaration line, whose audited meaning is exactly the
   `AngleWellFormed` that `conga_refl` needs;
@@ -46,10 +46,12 @@ Known limitations relevant to prioritization:
 - statement coverage gates whole files: the kernel parser rejects a problem
   outright when any premise line names a statement it cannot decode, so a
   fixture stays out of reach until every statement it declares is supported;
-- angles obtain their nondegenerate rays from declared triangles
-  (`declared_angle` in `Checker.v`); a rule needing nondegeneracy and having no
-  such source must fail closed, as `reflex` on `ref_ang` and `perp_con_ang` on
-  `con_ang` do;
+- nondegeneracy comes from declared triangles or declared angles, and nothing
+  else (`declared_angle` in `Checker.v`); a rule needing it with no such source
+  must fail closed;
+- the kernel does no ray reasoning, so an angle named by a point that merely
+  lies on the right ray is not recognised.  `examples/overlap.txt` needs
+  exactly this, and so does every overlapping-triangle proof;
 - the parallel-line rules and everything built on them need Euclidean or
   2-dimensional hypotheses.  The mechanism for that now exists: `third_angle`
   introduces `Tarski_euclidean` in `Checker.v` right before its own soundness

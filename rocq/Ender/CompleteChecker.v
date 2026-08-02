@@ -81,6 +81,15 @@ Definition projected_triangles (ds : list FA.PublicDeclaration) : list Triangle 
     | _ => rest
     end) [] ds.
 
+Definition projected_angles (ds : list FA.PublicDeclaration) : list Angle :=
+  fold_right (fun d rest => match d with
+    | FA.AngleDeclaration a => project_angle a :: rest
+    | _ => rest
+    end) [] ds.
+
+Definition projected_declarations (ds : list FA.PublicDeclaration) : Declarations :=
+  declarations (projected_triangles ds) (projected_angles ds).
+
 Fixpoint statement_list_eqb (a b : list Statement) : bool :=
   match a, b with
   | [], [] => true
@@ -95,14 +104,25 @@ Fixpoint triangle_list_eqb (a b : list Triangle) : bool :=
   | _, _ => false
   end.
 
+Fixpoint angle_list_eqb (a b : list Angle) : bool :=
+  match a, b with
+  | [], [] => true
+  | x :: xs, y :: ys => angle_eqb x y && angle_list_eqb xs ys
+  | _, _ => false
+  end.
+
+Definition declarations_eqb (a b : Declarations) : bool :=
+  triangle_list_eqb a.(decl_triangles) b.(decl_triangles) &&
+  angle_list_eqb a.(decl_angles) b.(decl_angles).
+
 Definition premise_statements (ps : list Premise) : list Statement :=
   map premise_statement ps.
 
 Definition goal_declarations_valid (goal : FA.PublicStatement)
-    (triangles : list Triangle) : bool :=
+    (decls : Declarations) : bool :=
   match goal with
-  | FA.ConTri a b => triangle_declared triangles (project_triangle a) &&
-                     triangle_declared triangles (project_triangle b)
+  | FA.ConTri a b => triangle_declared decls (project_triangle a) &&
+                     triangle_declared decls (project_triangle b)
   | _ => true
   end.
 
@@ -111,13 +131,14 @@ Definition build_kernel_problem (public : FA.PublicProblem)
   match project_premise_statements public.(FA.public_premises),
         project_goal_statement public.(FA.public_conclusion) with
   | Some premises, Some goal =>
-      if triangle_list_eqb (projected_triangles public.(FA.public_declarations))
-                           header.(header_triangles) &&
+      if declarations_eqb (projected_declarations public.(FA.public_declarations))
+                          header.(header_declarations) &&
          statement_list_eqb premises (premise_statements header.(header_premises)) &&
          statement_eqb goal header.(header_goal) &&
          goal_declarations_valid public.(FA.public_conclusion)
-           header.(header_triangles)
-      then Some (problem header.(header_triangles) header.(header_premises) goal steps)
+           header.(header_declarations)
+      then Some (problem header.(header_declarations) header.(header_premises)
+                        goal steps)
       else None
   | _, _ => None
   end.
@@ -347,15 +368,15 @@ Definition generic_rejection_issue (step_number : nat) : FA.Issue :=
   FA.issue 1 "reason_application_error"
     (FA.JsonObject [("steps", FA.JsonArray [FA.JsonString (nat_text step_number)])]).
 
-Fixpoint diagnose_steps (triangles : list Triangle) (premises : list Premise)
+Fixpoint diagnose_steps (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (steps : list Step) (step_number : nat)
     : list FA.Issue :=
   match steps with
   | [] =>
       [FA.issue 4 "goal_not_reached" (FA.JsonObject [])]
   | current :: rest =>
-      if rule_valid triangles premises facts current.(step_reason) current.(step_conclusion)
-      then diagnose_steps triangles premises (facts ++ [current.(step_conclusion)])
+      if rule_valid decls premises facts current.(step_reason) current.(step_conclusion)
+      then diagnose_steps decls premises (facts ++ [current.(step_conclusion)])
              rest (S step_number)
       else match reason_dependency_issue facts current.(step_reason) step_number with
            | Some issue => [issue]
@@ -374,7 +395,7 @@ Definition rejected_proof_issues (source : string) : list FA.Issue :=
           match parse_step_lines (Parser.split_lines stepText []) [] with
           | Some steps =>
               match build_kernel_problem public header steps with
-              | Some p => diagnose_steps p.(problem_triangles) p.(problem_premises)
+              | Some p => diagnose_steps p.(problem_declarations) p.(problem_premises)
                             [] p.(problem_steps) 1
               | None => [generic_rejection_issue 0]
               end
@@ -426,18 +447,39 @@ Proof.
   - intros H. inversion H. auto.
 Qed.
 
+Lemma angle_list_eqb_eq : forall a b, angle_list_eqb a b = true <-> a = b.
+Proof.
+  induction a as [|x xs IH]; destruct b as [|y ys]; cbn; try easy.
+  rewrite andb_true_iff, angle_eqb_eq, IH. split.
+  - intros [-> ->]. reflexivity.
+  - intros H. inversion H. auto.
+Qed.
+
+Lemma declarations_eqb_eq : forall a b, declarations_eqb a b = true <-> a = b.
+Proof.
+  intros [t1 a1] [t2 a2]. unfold declarations_eqb. cbn.
+  rewrite andb_true_iff, triangle_list_eqb_eq, angle_list_eqb_eq. split.
+  - intros [-> ->]. reflexivity.
+  - intros H. inversion H. auto.
+Qed.
+
 Section Bridge.
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 Variable point : FA.PointName -> Tpoint.
 
-Lemma projected_triangle_meaning : forall declarations,
-  Forall (FA.declarationMeaning point) declarations ->
-  declarations_well_formed point (projected_triangles declarations).
+Lemma projected_triangle_meaning : forall ds,
+  Forall (FA.declarationMeaning point) ds ->
+  declarations_well_formed point (projected_declarations ds).
 Proof.
-  intros declarations Hall t Hin. induction Hall as [|d ds Hd Hds IH]; cbn in Hin.
-  - contradiction.
-  - destruct d; cbn in *; try now apply IH.
-    destruct Hin as [<-|Hin]; [exact (proj2 (proj2 (proj2 Hd)))|now apply IH].
+  intros ds Hall. split.
+  - intros t Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
+    + contradiction.
+    + destruct d; cbn in *; try now apply IH.
+      destruct Hin as [<-|Hin]; [exact (proj2 (proj2 (proj2 Hd)))|now apply IH].
+  - intros a Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
+    + contradiction.
+    + destruct d; cbn in *; try now apply IH.
+      destruct Hin as [<-|Hin]; [exact Hd|now apply IH].
 Qed.
 
 Lemma projected_premise_meaning : forall public internal,
@@ -482,14 +524,14 @@ Proof.
   destruct Hd as [Hn [Hab [Hbc Hac]]]. repeat split; auto; congruence.
 Qed.
 
-Lemma projected_goal_meaning : forall public internal declarations,
+Lemma projected_goal_meaning : forall public internal decls,
   project_goal_statement public = Some internal ->
   interp_statement point internal ->
-  declarations_well_formed point declarations ->
-  goal_declarations_valid public declarations = true ->
+  declarations_well_formed point decls ->
+  goal_declarations_valid public decls = true ->
   FA.statementMeaning point public.
 Proof.
-  destruct public; cbn; intros internal declarations Hproject Hmeaning Hwf Hdecl;
+  destruct public; cbn; intros internal decls Hproject Hmeaning Hwf Hdecl;
     try discriminate;
     injection Hproject as <-; cbn in *; try exact Hmeaning.
   apply andb_true_iff in Hdecl. destruct Hdecl as [Ha Hb].
@@ -526,16 +568,16 @@ Proof.
     eqn:HprojectPremises; try discriminate.
   destruct (project_goal_statement (FA.public_conclusion public)) as [goal|]
     eqn:HprojectGoal; try discriminate.
-  destruct (triangle_list_eqb (projected_triangles (FA.public_declarations public))
-              (header_triangles header) &&
+  destruct (declarations_eqb (projected_declarations (FA.public_declarations public))
+              (header_declarations header) &&
             statement_list_eqb premises (premise_statements (header_premises header)) &&
             statement_eqb goal (header_goal header) &&
             goal_declarations_valid (FA.public_conclusion public)
-              (header_triangles header)) eqn:Hmatches; try discriminate.
+              (header_declarations header)) eqn:Hmatches; try discriminate.
   apply andb_true_iff in Hmatches. destruct Hmatches as [Hrest HgoalDeclared].
   apply andb_true_iff in Hrest. destruct Hrest as [Hrest Hgoal].
   apply andb_true_iff in Hrest. destruct Hrest as [Htriangles Hpremises].
-  apply triangle_list_eqb_eq in Htriangles.
+  apply declarations_eqb_eq in Htriangles.
   apply statement_list_eqb_eq in Hpremises.
   apply statement_eqb_eq in Hgoal.
   unfold FA.problemClaim. intros Hdeclarations HpublicPremises.
@@ -548,10 +590,10 @@ Proof.
     - symmetry. exact Hpremises.
     - exact HpublicPremises. }
   destruct (check_problem
-    (problem (header_triangles header) (header_premises header) goal steps))
+    (problem (header_declarations header) (header_premises header) goal steps))
     eqn:HkernelCheck; try discriminate.
   pose proof (check_problem_sound point
-    (problem (header_triangles header) (header_premises header) goal steps)
+    (problem (header_declarations header) (header_premises header) goal steps)
     HkernelCheck Hwf HkernelPremises) as HkernelGoal.
   eapply projected_goal_meaning; eauto.
 Qed.

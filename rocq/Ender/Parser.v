@@ -81,6 +81,14 @@ Fixpoint point_tokens (text : chars) : list Triangle :=
   | [] => []
   end.
 
+Fixpoint angle_tokens (text : chars) : list Angle :=
+  match text with
+  | "a"%char :: "_"%char :: a :: b :: c :: rest =>
+      angle a b c :: angle_tokens rest
+  | _ :: rest => angle_tokens rest
+  | [] => []
+  end.
+
 Definition parse_segment (text : chars) : option Segment :=
   match text with
   | [a; b] => Some (segment a b)
@@ -342,6 +350,7 @@ Definition parse_step (line : chars) : option Step :=
 
 Record HeaderState := header_state {
   hs_triangles : list Triangle;
+  hs_angles : list Angle;
   hs_premises : list Premise;
   hs_goal : option Statement
 }.
@@ -355,11 +364,17 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
       if starts_with (list_ascii_of_string "tri:") compact then
         parse_header_lines rest
           (header_state (state.(hs_triangles) ++ point_tokens line)
+                        state.(hs_angles) state.(hs_premises) state.(hs_goal))
+      else if starts_with (list_ascii_of_string "ang:") compact then
+        parse_header_lines rest
+          (header_state state.(hs_triangles)
+                        (state.(hs_angles) ++ angle_tokens line)
                         state.(hs_premises) state.(hs_goal))
       else if starts_with ["["%char] compact then
         match parse_labeled_premise line with
         | Some prem => parse_header_lines rest
-            (header_state state.(hs_triangles) (state.(hs_premises) ++ [prem]) state.(hs_goal))
+            (header_state state.(hs_triangles) state.(hs_angles)
+                          (state.(hs_premises) ++ [prem]) state.(hs_goal))
         | None => None
         end
       else if starts_with (list_ascii_of_string "->") compact then
@@ -367,7 +382,8 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
         | None, Some (_, goal_text) =>
             match parse_statement_chars goal_text with
             | Some goal => parse_header_lines rest
-                (header_state state.(hs_triangles) state.(hs_premises) (Some goal))
+                (header_state state.(hs_triangles) state.(hs_angles)
+                              state.(hs_premises) (Some goal))
             | None => None
             end
         | _, _ => None
@@ -390,11 +406,13 @@ Fixpoint parse_step_lines (lines : list chars) (steps : list Step) : option (lis
 
 Definition parseProblemPart (part : string) : option ProblemHeader :=
   match parse_header_lines (split_lines (list_ascii_of_string part) [])
-                           (header_state [] [] None) with
+                           (header_state [] [] [] None) with
   | Some header =>
       match header.(hs_goal) with
-      | Some goal => Some (problem_header header.(hs_triangles)
-                                          header.(hs_premises) goal)
+      | Some goal =>
+          Some (problem_header
+                  (declarations header.(hs_triangles) header.(hs_angles))
+                  header.(hs_premises) goal)
       | None => None
       end
   | None => None
@@ -408,7 +426,7 @@ Definition parse_problem (source : string) : option Problem :=
       match parseProblemPart part,
             parse_step_lines (split_lines step_text []) [] with
       | Some header, Some steps =>
-          Some (problem header.(header_triangles) header.(header_premises)
+          Some (problem header.(header_declarations) header.(header_premises)
                         header.(header_goal) steps)
       | _, _ => None
       end
@@ -428,7 +446,7 @@ Variable point : PointId -> Tpoint.
 
 Theorem check_source_sound : forall source p,
   parse_problem source = Some p -> check_source source = true ->
-  declarations_well_formed point p.(problem_triangles) ->
+  declarations_well_formed point p.(problem_declarations) ->
   Forall (interp_premise point) p.(problem_premises) ->
   interp_statement point p.(problem_goal).
 Proof.

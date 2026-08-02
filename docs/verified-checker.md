@@ -18,15 +18,19 @@ The slice parses Ender source text and supports:
   `base_angle`, `base_angle_conv`, `def_equilateral`, `def_equiangular`,
   `equilat_equiang`, `equiang_equilat`, `con_supplements`,
   `con_supplements_same`, and `def_perp`;
-- one-character point names, named premises, triangle declarations, numbered
-  steps, and exact step dependencies.
+- one-character point names, named premises, triangle and angle declarations,
+  numbered steps, and exact step dependencies.
 
 Unsupported statements, reasons, or malformed relevant lines are rejected.
-`ref_ang` is parsed but no reflexive-angle step is accepted yet: GeoCoq angle
-congruence has nondegenerate-ray hypotheses, and although the audited `ang:`
-declaration means exactly `AngleWellFormed`, the kernel does not yet read that
-line. Reading it is the smallest remaining unblocked improvement. Coordinates on the `pt:` line are intentionally discarded and do
-not contribute to the theorem's meaning.
+Coordinates on the `pt:` line are intentionally discarded and do not contribute
+to the theorem's meaning.
+
+Nondegeneracy has exactly two sources, and every rule that needs it draws on
+one of them: a declared triangle, whose vertices are noncollinear, or a
+declared angle, whose audited meaning is exactly `AngleWellFormed`. `reflex`
+concludes `ref_ang` only for a declared angle, which is what `conga_refl`
+needs; `Declarations` in `Syntax.v` bundles both because no rule wants one
+without the other.
 
 Triangle congruence is ordered: `con_tri(t_ABC,t_DEF)` means the correspondence
 `A-D`, `B-E`, `C-F`. It comprises the three corresponding side congruences and
