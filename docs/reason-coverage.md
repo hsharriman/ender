@@ -11,10 +11,14 @@ manifest for all 92 reason names in the retained Ender catalog. Each entry recor
 
 Parity is reported over two corpora. The bundled fixtures in
 `src/checker/proofs/` are mostly one-reason unit tests and are a biased sample;
-the textbook proofs in the sibling `geo-proof-dataset` checkout are the
-representative one, and the two numbers differ substantially. Set
-`ENDER_DATASET` to point elsewhere, or leave the sibling checkout absent and
-only fixture parity is reported.
+the textbook proofs in the `geo-proof-dataset` submodule are the representative
+one, and the two numbers differ substantially. Populate it with:
+
+```sh
+git submodule update --init
+```
+
+Until then only fixture parity is reported.
 
 Regenerate the manifest and print current corpus parity from the reproducible
 development environment:

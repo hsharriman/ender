@@ -8,10 +8,10 @@ const root = resolve(import.meta.dirname, "..");
 const catalogPath = join(root, "src/checker/grammar/defs/reasons.defs.ts");
 const proofsPath = join(root, "src/checker/proofs");
 // The bundled fixtures are mostly one-reason unit tests; the textbook corpus
-// in the sibling geo-proof-dataset repository is the representative sample.
-// Absent (it is a separate checkout), parity is reported for fixtures only.
-const datasetPath =
-  process.env.ENDER_DATASET ?? join(root, "../geo-proof-dataset/proofs");
+// in the geo-proof-dataset submodule is the representative sample.  Run
+// `git submodule update --init` to populate it; until then only fixture
+// parity is reported.
+const datasetPath = join(root, "geo-proof-dataset/proofs");
 const catalog = [
   ...readFileSync(catalogPath, "utf8").matchAll(/^  ([a-zA-Z0-9_]+): \{/gm),
 ].map((match) => match[1]);
@@ -246,7 +246,8 @@ if (process.argv.includes("--json")) {
       console.log(`  ${category}: ${count}`);
   } else {
     console.log(
-      `\nTextbook corpus: not found at ${relative(root, datasetPath)} (skipped)`,
+      "\nTextbook corpus: geo-proof-dataset submodule is empty; run" +
+        " `git submodule update --init` to include it",
     );
   }
   if (!process.argv.includes("--summary")) {
