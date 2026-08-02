@@ -93,16 +93,18 @@
           version = "0.1.0";
           dontUnpack = true;
           strictDeps = true;
-          nativeBuildInputs = [ pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib ];
+          nativeBuildInputs = [
+            pkgs.stdenv.cc pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
+          ];
           buildInputs = [ pkgs.ocamlPackages.yojson ];
           buildPhase = ''
             runHook preBuild
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.ml .
             cp ${verifiedProofs}/share/ender/extracted/EnderChecker.mli .
             cp ${./rocq/runtime/main.ml} main.ml
-            ocamlfind ocamlc -package yojson -c EnderChecker.mli
-            ocamlfind ocamlc -package yojson -c EnderChecker.ml
-            ocamlfind ocamlc -package yojson -linkpkg -o ender-checker EnderChecker.cmo main.ml
+            ocamlfind ocamlopt -package yojson -c EnderChecker.mli
+            ocamlfind ocamlopt -package yojson -c EnderChecker.ml
+            ocamlfind ocamlopt -package yojson -linkpkg -o ender-checker EnderChecker.cmx main.ml
             runHook postBuild
           '';
           installPhase = ''
