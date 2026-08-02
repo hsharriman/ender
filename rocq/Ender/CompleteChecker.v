@@ -33,6 +33,9 @@ Definition project_premise_statement (s : FA.PublicStatement) : option Statement
       Some (IntersectSeg (project_segment a) (project_segment b) p)
   | FA.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
   | FA.OnLine s p => Some (OnLine (project_segment s) p)
+  | FA.Isosceles t => Some (IsoscelesTri (project_triangle t))
+  | FA.Equilateral t => Some (EquilateralTri (project_triangle t))
+  | FA.Equiangular t => Some (EquiangularTri (project_triangle t))
   | _ => None
   end.
 
@@ -53,6 +56,9 @@ Definition project_goal_statement (s : FA.PublicStatement) : option Statement :=
       Some (IntersectSeg (project_segment a) (project_segment b) p)
   | FA.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
   | FA.OnLine s p => Some (OnLine (project_segment s) p)
+  | FA.Isosceles t => Some (IsoscelesTri (project_triangle t))
+  | FA.Equilateral t => Some (EquilateralTri (project_triangle t))
+  | FA.Equiangular t => Some (EquiangularTri (project_triangle t))
   | _ => None
   end.
 
@@ -177,7 +183,8 @@ Definition verdict_diagnostics (result : CheckResult) : list FA.Diagnostic :=
 Inductive ExpectedFact :=
 | ExpectedSegment | ExpectedAngle | ExpectedTriangle
 | ExpectedRight | ExpectedPerpendicular | ExpectedMidpoint
-| ExpectedAngleBisector | ExpectedConRight.
+| ExpectedAngleBisector | ExpectedConRight
+| ExpectedEquilateral | ExpectedEquiangular.
 
 Definition statement_function (s : Statement) : string :=
   match s with
@@ -187,6 +194,8 @@ Definition statement_function (s : Statement) : string :=
   | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
   | MidptOf _ _ => "midpt" | IntersectSeg _ _ _ => "intersect_seg"
   | AngBisectOf _ _ => "ang_bisect" | OnLine _ _ => "on_line"
+  | IsoscelesTri _ => "isosceles" | EquilateralTri _ => "equilateral"
+  | EquiangularTri _ => "equiangular"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
@@ -195,6 +204,8 @@ Definition expected_function (expected : ExpectedFact) : string :=
   | ExpectedTriangle => "con_tri" | ExpectedRight => "right"
   | ExpectedPerpendicular => "perp" | ExpectedMidpoint => "midpt"
   | ExpectedAngleBisector => "ang_bisect" | ExpectedConRight => "con_right"
+  | ExpectedEquilateral => "equilateral"
+  | ExpectedEquiangular => "equiangular"
   end.
 
 Definition allowed_functions (expected : ExpectedFact) : list string :=
@@ -202,7 +213,8 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedSegment => ["ref_seg"]
   | ExpectedAngle => ["ref_ang"; "con_right"]
   | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular
-  | ExpectedMidpoint | ExpectedAngleBisector | ExpectedConRight => []
+  | ExpectedMidpoint | ExpectedAngleBisector | ExpectedConRight
+  | ExpectedEquilateral | ExpectedEquiangular => []
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -212,7 +224,9 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedAngle, ConRight _ _
   | ExpectedTriangle, ConTri _ _ | ExpectedRight, RightAng _
   | ExpectedPerpendicular, PerpAt _ _ _ | ExpectedMidpoint, MidptOf _ _
-  | ExpectedAngleBisector, AngBisectOf _ _ | ExpectedConRight, ConRight _ _ => true
+  | ExpectedAngleBisector, AngBisectOf _ _ | ExpectedConRight, ConRight _ _
+  | ExpectedEquilateral, EquilateralTri _
+  | ExpectedEquiangular, EquiangularTri _ => true
   | _, _ => false
   end.
 
@@ -286,6 +300,18 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
       dependency_type_issue facts "def_midpt" 0 i ExpectedMidpoint step_number
   | MidptConv i =>
       dependency_type_issue facts "midpt_conv" 0 i ExpectedSegment step_number
+  | DefIsosceles i =>
+      dependency_type_issue facts "def_isosceles" 0 i ExpectedSegment step_number
+  | BaseAngle i =>
+      dependency_type_issue facts "base_angle" 0 i ExpectedSegment step_number
+  | BaseAngleConv i =>
+      dependency_type_issue facts "base_angle_conv" 0 i ExpectedAngle step_number
+  | EquilatEquiang i =>
+      dependency_type_issue facts "equilat_equiang" 0 i ExpectedEquilateral
+        step_number
+  | EquiangEquilat i =>
+      dependency_type_issue facts "equiang_equilat" 0 i ExpectedEquiangular
+        step_number
   | ThirdAngle i j =>
       first_issue
         (dependency_type_issue facts "third_angle" 0 i ExpectedAngle step_number)

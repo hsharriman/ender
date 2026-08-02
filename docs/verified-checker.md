@@ -9,11 +9,14 @@ kernel. It is the sole executable checker; unsupported reasons fail closed.
 The slice parses Ender source text and supports:
 
 - statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
-  `con_right`, `perp`, `midpt`, `intersect_seg`, `ang_bisect`, and `on_line`;
+  `con_right`, `perp`, `midpt`, `intersect_seg`, `ang_bisect`, `on_line`,
+  `isosceles`, `equilateral`, and `equiangular`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `rhl`, `cpctc`,
-  `con_seg_transitive`, `con_ang_transitive`, `con_tri_transitive`,
-  `def_con_right`, `perp_con_ang`, `def_midpt`, `midpt_conv`, `vert_ang`,
-  `def_ang_bisect`, and `third_angle`;
+  `def_con_tri`, `con_seg_transitive`, `con_ang_transitive`,
+  `con_tri_transitive`, `def_con_right`, `perp_con_ang`, `def_midpt`,
+  `midpt_conv`, `vert_ang`, `def_ang_bisect`, `third_angle`, `def_isosceles`,
+  `base_angle`, `base_angle_conv`, `def_equilateral`, `def_equiangular`,
+  `equilat_equiang`, and `equiang_equilat`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -82,6 +85,17 @@ through `l12_21_a`, which rests on `Eqdep.Eq_rect_eq`;
 `euclidean_trisuma__bet` in `Geometry.v` goes through Playfair instead, which
 keeps the development free of axioms. `nix flake check` fails if
 `Print Assumptions` ever reports one again.
+
+The three triangle-shape statements each name one declared triangle, which is
+where their nondegeneracy comes from, and their meanings mirror the audited
+ones exactly — including the audited angle vertex order — so they project both
+as premises and as goals. `base_angle` and its converse are pons asinorum in
+both directions (GeoCoq `l11_44_1`), applied at whichever vertex of a declared
+triangle is the apex; `equilat_equiang` and `equiang_equilat` apply it at two
+apexes in turn. `def_equilateral`, `def_equiangular`, and `def_con_tri` read
+their conclusions off the cited parts; their dependency order is the one the
+catalog lists, since unlike a triangle criterion they cite every part and so
+have no correspondence left to search.
 
 ## Soundness boundary
 

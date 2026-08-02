@@ -819,6 +819,164 @@ Example third_angle_same_vertex_rejects :
   complete_checker third_angle_same_vertex_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Triangle shape statements and the reasons that produce or consume them. *)
+Definition shape_header (premises goal steps : string) : string :=
+  transitive_header "tri: t_ABC
+" premises goal steps.
+
+Definition def_isosceles_source := shape_header
+  "[g_1] con_seg(AB,BC)
+"
+  "isosceles(t_ABC)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] def_isosceles(1) -> isosceles(t_ABC)".
+
+(** A congruence between sides of two different triangles proves nothing about
+    the shape of this one. *)
+Definition def_isosceles_foreign_side_source := shape_header
+  "[g_1] con_seg(AB,DE)
+"
+  "isosceles(t_ABC)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] def_isosceles(1) -> isosceles(t_ABC)".
+
+Definition base_angle_source := shape_header
+  "[g_1] con_seg(AB,AC)
+"
+  "con_ang(a_ABC,a_ACB)"
+  "[01] given(g_1) -> con_seg(AB,AC)
+[02] base_angle(1) -> con_ang(a_ABC,a_ACB)".
+
+(** The two sides must share the apex. *)
+Definition base_angle_no_apex_source := shape_header
+  "[g_1] con_seg(AB,BC)
+"
+  "con_ang(a_ABC,a_ACB)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] base_angle(1) -> con_ang(a_ABC,a_ACB)".
+
+Definition base_angle_conv_source := shape_header
+  "[g_1] con_ang(a_ABC,a_ACB)
+"
+  "con_seg(AB,AC)"
+  "[01] given(g_1) -> con_ang(a_ABC,a_ACB)
+[02] base_angle_conv(1) -> con_seg(AB,AC)".
+
+Definition def_equilateral_source := shape_header
+  "[g_1] con_seg(AB,BC)
+[g_2] con_seg(BC,AC)
+"
+  "equilateral(t_ABC)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] given(g_2) -> con_seg(BC,AC)
+[03] con_seg_transitive(1,2) -> con_seg(AC,AB)
+[04] def_equilateral(1,2,3) -> equilateral(t_ABC)".
+
+Definition def_equiangular_source := shape_header
+  "[g_1] con_ang(a_BAC,a_ABC)
+[g_2] con_ang(a_ABC,a_ACB)
+"
+  "equiangular(t_ABC)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_ABC)
+[02] given(g_2) -> con_ang(a_ABC,a_ACB)
+[03] con_ang_transitive(1,2) -> con_ang(a_ACB,a_BAC)
+[04] def_equiangular(1,2,3) -> equiangular(t_ABC)".
+
+Definition equilat_equiang_source := shape_header
+  "[g_1] equilateral(t_ABC)
+"
+  "equiangular(t_ABC)"
+  "[01] given(g_1) -> equilateral(t_ABC)
+[02] equilat_equiang(1) -> equiangular(t_ABC)".
+
+Definition equiang_equilat_source := shape_header
+  "[g_1] equiangular(t_ABC)
+"
+  "equilateral(t_ABC)"
+  "[01] given(g_1) -> equiangular(t_ABC)
+[02] equiang_equilat(1) -> equilateral(t_ABC)".
+
+(** The conclusion must be about the triangle the dependency is about. *)
+Definition equilat_equiang_other_triangle_source := transitive_header
+  "tri: t_ABC t_DEF
+"
+  "[g_1] equilateral(t_ABC)
+"
+  "equiangular(t_DEF)"
+  "[01] given(g_1) -> equilateral(t_ABC)
+[02] equilat_equiang(1) -> equiangular(t_DEF)".
+
+Definition def_con_tri_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_seg(AB,DE)
+[g_2] con_seg(BC,EF)
+[g_3] con_seg(AC,DF)
+[g_4] con_ang(a_BAC,a_EDF)
+[g_5] con_ang(a_ABC,a_DEF)
+[g_6] con_ang(a_ACB,a_DFE)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_seg(BC,EF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] given(g_4) -> con_ang(a_BAC,a_EDF)
+[05] given(g_5) -> con_ang(a_ABC,a_DEF)
+[06] given(g_6) -> con_ang(a_ACB,a_DFE)
+[07] def_con_tri(1,2,3,4,5,6) -> con_tri(t_ABC,t_DEF)".
+
+(** One mismatched part is enough to refuse the congruence. *)
+Definition def_con_tri_wrong_part_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_seg(AB,DE)
+[g_2] con_seg(BC,EF)
+[g_3] con_seg(AC,DF)
+[g_4] con_ang(a_BAC,a_EDF)
+[g_5] con_ang(a_ABC,a_DEF)
+[g_6] con_ang(a_ACB,a_DEF)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_seg(BC,EF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] given(g_4) -> con_ang(a_BAC,a_EDF)
+[05] given(g_5) -> con_ang(a_ABC,a_DEF)
+[06] given(g_6) -> con_ang(a_ACB,a_DEF)
+[07] def_con_tri(1,2,3,4,5,6) -> con_tri(t_ABC,t_DEF)".
+
+Example def_isosceles_accepts : complete_checker def_isosceles_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_isosceles_foreign_side_rejects :
+  complete_checker def_isosceles_foreign_side_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example base_angle_accepts : complete_checker base_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example base_angle_no_apex_rejects :
+  complete_checker base_angle_no_apex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example base_angle_conv_accepts :
+  complete_checker base_angle_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_equilateral_accepts :
+  complete_checker def_equilateral_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_equiangular_accepts :
+  complete_checker def_equiangular_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example equilat_equiang_accepts :
+  complete_checker equilat_equiang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example equiang_equilat_accepts :
+  complete_checker equiang_equilat_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example equilat_equiang_other_triangle_rejects :
+  complete_checker equilat_equiang_other_triangle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_con_tri_accepts : complete_checker def_con_tri_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_con_tri_wrong_part_rejects :
+  complete_checker def_con_tri_wrong_part_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

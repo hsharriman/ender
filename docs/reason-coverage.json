@@ -3,13 +3,13 @@
   "entries": [
     {
       "reason": "def_isosceles",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meaning plus declared-triangle nondegeneracy",
       "fixtures": [
         "src/checker/proofs/examples/s2c1.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "sas",
@@ -554,47 +554,47 @@
     },
     {
       "reason": "base_angle",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_44_1 (pons asinorum, both directions)",
       "fixtures": [
         "src/checker/proofs/triangles/base_angle_correct.txt",
         "src/checker/proofs/triangles/base_angle_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "base_angle_conv",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_44_1 (pons asinorum, both directions)",
       "fixtures": [
         "src/checker/proofs/triangles/base_angle_conv_correct.txt",
         "src/checker/proofs/triangles/base_angle_conv_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "equilat_equiang",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_44_1 (pons asinorum, both directions)",
       "fixtures": [
         "src/checker/proofs/triangles/equilat_equiang_correct.txt",
         "src/checker/proofs/triangles/equilat_equiang_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "equiang_equilat",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_44_1 (pons asinorum, both directions)",
       "fixtures": [
         "src/checker/proofs/triangles/equiang_equilat_correct.txt",
         "src/checker/proofs/triangles/equiang_equilat_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "aa_sim",
@@ -631,36 +631,36 @@
     },
     {
       "reason": "def_equiangular",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meaning plus declared-triangle nondegeneracy",
       "fixtures": [
         "src/checker/proofs/triangles/def_equiangular_correct.txt",
         "src/checker/proofs/triangles/def_equiangular_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "def_equilateral",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meaning plus declared-triangle nondegeneracy",
       "fixtures": [
         "src/checker/proofs/triangles/def_equilateral_correct.txt",
         "src/checker/proofs/triangles/def_equilateral_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "def_con_tri",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meaning plus declared-triangle nondegeneracy",
       "fixtures": [
         "src/checker/proofs/triangles/def_con_tri_correct.txt",
         "src/checker/proofs/triangles/def_con_tri_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "def_parallelogram",

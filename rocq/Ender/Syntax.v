@@ -24,7 +24,10 @@ Inductive Statement :=
 | MidptOf : Segment -> PointId -> Statement
 | IntersectSeg : Segment -> Segment -> PointId -> Statement
 | AngBisectOf : Angle -> Segment -> Statement
-| OnLine : Segment -> PointId -> Statement.
+| OnLine : Segment -> PointId -> Statement
+| IsoscelesTri : Triangle -> Statement
+| EquilateralTri : Triangle -> Statement
+| EquiangularTri : Triangle -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -41,7 +44,15 @@ Inductive Reason :=
 | DefAngBisect : nat -> Reason
 | RHL : nat -> nat -> nat -> Reason
 | MidptConv : nat -> Reason
-| ThirdAngle : nat -> nat -> Reason.
+| ThirdAngle : nat -> nat -> Reason
+| DefConTri : nat -> nat -> nat -> nat -> nat -> nat -> Reason
+| DefIsosceles : nat -> Reason
+| BaseAngle : nat -> Reason
+| BaseAngleConv : nat -> Reason
+| DefEquilateral : nat -> nat -> nat -> Reason
+| DefEquiangular : nat -> nat -> nat -> Reason
+| EquilatEquiang : nat -> Reason
+| EquiangEquilat : nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
@@ -84,6 +95,8 @@ Definition statement_eqb (x y : Statement) : bool :=
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | AngBisectOf a b, AngBisectOf c d => angle_eqb a c && segment_eqb b d
   | OnLine a p, OnLine b q => segment_eqb a b && ascii_eqb p q
+  | IsoscelesTri a, IsoscelesTri b | EquilateralTri a, EquilateralTri b
+  | EquiangularTri a, EquiangularTri b => triangle_eqb a b
   | _, _ => false
   end.
 

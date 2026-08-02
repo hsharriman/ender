@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- only sixteen reasons are fully verified; `reflex` and `perp_con_ang` are
+- twenty-four reasons are fully verified; `reflex` and `perp_con_ang` are
   partial;
 - goal matching is still exact (`statement_eqb`), so a derived fact spelled
   with a reversed angle or segment will not close an otherwise identical goal

@@ -32,6 +32,13 @@ Definition angle_well_formed (a : Angle) : Prop :=
 Definition right_angle (a : Angle) : Prop :=
   Per (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right)).
 
+(** Kept identical to the audited [TriangleWellFormed]. *)
+Definition triangle_nondegenerate (t : Triangle) : Prop :=
+  point t.(tri_a) <> point t.(tri_b) /\
+  point t.(tri_b) <> point t.(tri_c) /\
+  point t.(tri_c) <> point t.(tri_a) /\
+  ~ Col (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c)).
+
 Definition statement_meaning (s : Statement) : Prop :=
   match s with
   | ConSeg a b | RefSeg a b =>
@@ -62,6 +69,28 @@ Definition statement_meaning (s : Statement) : Prop :=
   | OnLine s p =>
       point s.(seg_start) <> point s.(seg_end) /\
       Col (point s.(seg_start)) (point s.(seg_end)) (point p)
+  (* The three shape statements mirror the audited meanings exactly, including
+     the audited angle vertex order, so that they project both ways. *)
+  | IsoscelesTri t =>
+      triangle_nondegenerate t /\
+      (Cong (point t.(tri_a)) (point t.(tri_b))
+            (point t.(tri_b)) (point t.(tri_c)) \/
+       Cong (point t.(tri_b)) (point t.(tri_c))
+            (point t.(tri_c)) (point t.(tri_a)) \/
+       Cong (point t.(tri_c)) (point t.(tri_a))
+            (point t.(tri_a)) (point t.(tri_b)))
+  | EquilateralTri t =>
+      triangle_nondegenerate t /\
+      Cong (point t.(tri_a)) (point t.(tri_b))
+           (point t.(tri_b)) (point t.(tri_c)) /\
+      Cong (point t.(tri_b)) (point t.(tri_c))
+           (point t.(tri_c)) (point t.(tri_a))
+  | EquiangularTri t =>
+      triangle_nondegenerate t /\
+      CongA (point t.(tri_c)) (point t.(tri_a)) (point t.(tri_b))
+            (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c)) /\
+      CongA (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c))
+            (point t.(tri_b)) (point t.(tri_c)) (point t.(tri_a))
   end.
 
 Definition segment_points (s : Segment) :=
@@ -84,6 +113,14 @@ Definition interp_premise (p : Premise) : Prop :=
 
 Definition triangle_well_formed (t : Triangle) : Prop :=
   ~ Col (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c)).
+
+Lemma triangle_well_formed_nondegenerate : forall t,
+  triangle_well_formed t -> triangle_nondegenerate t.
+Proof.
+  intros t H. unfold triangle_well_formed in H. unfold triangle_nondegenerate.
+  apply not_col_distincts in H. destruct H as [Hncol [Hab [Hbc Hac]]].
+  repeat split; auto.
+Qed.
 
 Definition declarations_well_formed (ts : list Triangle) : Prop :=
   forall t, In t ts -> triangle_well_formed t.

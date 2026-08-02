@@ -28,6 +28,14 @@ const implemented = new Set([
   "rhl",
   "midpt_conv",
   "third_angle",
+  "def_con_tri",
+  "def_isosceles",
+  "base_angle",
+  "base_angle_conv",
+  "def_equilateral",
+  "def_equiangular",
+  "equilat_equiang",
+  "equiang_equilat",
 ]);
 // perp_con_ang: con_right conclusions only; con_ang needs nondegenerate rays
 const partial = new Set(["reflex", "perp_con_ang"]);
@@ -90,6 +98,14 @@ const entries = catalog.map((reason) => {
         ? "GeoCoq l7_20 (unique equidistant point on a line)"
       : reason === "third_angle"
         ? "GeoCoq Tarski_euclidean via Playfair; the only Euclidean rule"
+      : ["base_angle", "base_angle_conv", "equilat_equiang", "equiang_equilat"].includes(
+            reason,
+          )
+        ? "GeoCoq l11_44_1 (pons asinorum, both directions)"
+      : ["def_isosceles", "def_equilateral", "def_equiangular", "def_con_tri"].includes(
+            reason,
+          )
+        ? "audited meaning plus declared-triangle nondegeneracy"
       : reason === "given" || reason === "reflex"
         ? "logical/equality infrastructure"
         : "to determine from the weakest supporting GeoCoq theorem";

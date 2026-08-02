@@ -152,6 +152,11 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
     | Some a => Some (RightAng a)
     | None => None
     end in
+  let parse_shape constructor body :=
+    match parse_triangle body with
+    | Some t => Some (constructor t)
+    | None => None
+    end in
   let parse_point_at constructor body :=
     match split_on ","%char body [] with
     | [a; [p]] =>
@@ -192,7 +197,10 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "midpt" text parse_midpt
   (try_call "intersect_seg" text (parse_perp_like IntersectSeg)
   (try_call "ang_bisect" text parse_ang_bisect
-  (try_call "on_line" text (parse_point_at OnLine) None))))))))))).
+  (try_call "on_line" text (parse_point_at OnLine)
+  (try_call "isosceles" text (parse_shape IsoscelesTri)
+  (try_call "equilateral" text (parse_shape EquilateralTri)
+  (try_call "equiangular" text (parse_shape EquiangularTri) None)))))))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -239,6 +247,17 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         end
     | _ => None
     end in
+  let parse_six_def_con_tri body :=
+    match split_on ","%char body [] with
+    | [a; b; c; d; e; f] =>
+        match parse_nat a, parse_nat b, parse_nat c,
+              parse_nat d, parse_nat e, parse_nat f with
+        | Some i1, Some i2, Some i3, Some i4, Some i5, Some i6 =>
+            Some (DefConTri i1 i2 i3 i4 i5 i6)
+        | _, _, _, _, _, _ => None
+        end
+    | _ => None
+    end in
   let parse_one constructor body :=
     match parse_nat body with
     | Some i => Some (constructor i)
@@ -265,7 +284,16 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "def_ang_bisect" text (parse_one DefAngBisect)
         (try_call "rhl" text (parse_three RHL)
         (try_call "midpt_conv" text (parse_one MidptConv)
-        (try_call "third_angle" text (parse_two ThirdAngle) None)))))))))))))))
+        (try_call "third_angle" text (parse_two ThirdAngle)
+        (try_call "def_con_tri" text parse_six_def_con_tri
+        (try_call "def_isosceles" text (parse_one DefIsosceles)
+        (try_call "base_angle_conv" text (parse_one BaseAngleConv)
+        (try_call "base_angle" text (parse_one BaseAngle)
+        (try_call "def_equilateral" text (parse_three DefEquilateral)
+        (try_call "def_equiangular" text (parse_three DefEquiangular)
+        (try_call "equilat_equiang" text (parse_one EquilatEquiang)
+        (try_call "equiang_equilat" text (parse_one EquiangEquilat)
+        None)))))))))))))))))))))))
     end
   end.
 

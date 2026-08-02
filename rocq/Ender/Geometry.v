@@ -130,6 +130,50 @@ Proof.
   unfold TriangleCongruent. tauto.
 Qed.
 
+(** Pons asinorum, stated with the apex first.  Both directions hold in
+    neutral geometry. *)
+Lemma ender_base_angle A B C :
+  ~ Col A B C -> Cong A B A C -> CongA A B C A C B.
+Proof.
+  intros Hncol Hcong. apply (proj2 (l11_44_1 B A C ltac:(Col))). exact Hcong.
+Qed.
+
+Lemma ender_base_angle_conv A B C :
+  ~ Col A B C -> CongA A B C A C B -> Cong A B A C.
+Proof.
+  intros Hncol Hang. apply (proj1 (l11_44_1 B A C ltac:(Col))). exact Hang.
+Qed.
+
+(** Equilateral and equiangular coincide, by applying pons asinorum at two
+    different apexes. *)
+Lemma ender_equilateral_equiangular A B C :
+  ~ Col A B C -> Cong A B B C -> Cong B C C A ->
+  CongA C A B A B C /\ CongA A B C B C A.
+Proof.
+  intros Hncol Hab Hbc. split.
+  - assert (Hapex : Cong C A C B) by Cong.
+    assert (Hbase : CongA C A B C B A)
+      by (apply ender_base_angle; [Col|exact Hapex]).
+    CongA.
+  - assert (Hapex : Cong A B A C) by (apply cong_transitivity with B C; Cong).
+    assert (Hbase : CongA A B C A C B)
+      by (apply ender_base_angle; [Col|exact Hapex]).
+    CongA.
+Qed.
+
+Lemma ender_equiangular_equilateral A B C :
+  ~ Col A B C -> CongA C A B A B C -> CongA A B C B C A ->
+  Cong A B B C /\ Cong B C C A.
+Proof.
+  intros Hncol HangA HangB.
+  assert (Hca : Cong C A C B).
+  { apply ender_base_angle_conv; [Col|CongA]. }
+  assert (Hab : Cong A B A C).
+  { apply ender_base_angle_conv; [Col|CongA]. }
+  split; [|Cong].
+  apply cong_transitivity with A C; [exact Hab|Cong].
+Qed.
+
 End EnderGeometry.
 
 (** Rules that genuinely need the parallel postulate live here, in their own
