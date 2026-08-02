@@ -23,8 +23,9 @@ The slice parses Ender source text and supports:
 
 Unsupported statements, reasons, or malformed relevant lines are rejected.
 `ref_ang` is parsed but no reflexive-angle step is accepted yet: GeoCoq angle
-congruence has nondegenerate-ray hypotheses that the present declarations do
-not supply. Coordinates on the `pt:` line are intentionally discarded and do
+congruence has nondegenerate-ray hypotheses, and although the audited `ang:`
+declaration means exactly `AngleWellFormed`, the kernel does not yet read that
+line. Reading it is the smallest remaining unblocked improvement. Coordinates on the `pt:` line are intentionally discarded and do
 not contribute to the theorem's meaning.
 
 Triangle congruence is ordered: `con_tri(t_ABC,t_DEF)` means the correspondence
@@ -55,9 +56,10 @@ reflexivity and therefore no nondegenerate-ray hypothesis.
 the audited `right` meaning carries the nondegenerate rays that GeoCoq's
 `l11_16` needs. `perp_con_ang` concludes `con_right` for any two angles whose
 vertex is the foot of the perpendicular and whose rays end on the two
-perpendicular segments — `Perp_at` states exactly that. Its `con_ang`
-conclusion remains fail-closed: `Perp_at` does not force either ray to be
-nondegenerate. `def_midpt` reads the two congruent halves straight off the
+perpendicular segments — `Perp_at` states exactly that. It may also conclude
+`con_ang`, but only when both angles span a declared triangle: `Perp_at` forces
+neither ray to be nondegenerate, so the declaration is what supplies what
+`l11_16` needs. `def_midpt` reads the two congruent halves straight off the
 `Midpoint` definition; midpoint statements, like segments, are unoriented.
 `vert_ang` takes no step dependency: it looks up an `intersect_seg` diagram
 premise and concludes either pair of opposite angles at the crossing, provided
@@ -228,6 +230,33 @@ corresponding one. Closing this needs a decision about `Audit.v` — either
 strengthen `Transversal` to state the sidedness, or add a statement that does
 — and that changes what the checker claims, so it is not a decision to take
 silently.
+
+The parallelogram family, which is the next largest cluster and includes the
+most-used unimplemented reason in the textbook corpus (`pgram_opp_sides`, 12
+uses), is blocked the same way, and more sharply: **`pgram_opp_sides` is false
+as audited, not merely unproven.** `IsParallelogram q` is
+`QuadrilateralWellFormed q` plus two `Parallel` facts, and GeoCoq's `Par`
+admits collinear segments — its second disjunct is
+`A <> B /\ C <> D /\ Col A C D /\ Col B C D`. Take `A`, `B`, `C`, `D` at
+`0`, `1`, `5`, `7` on one line: all six distinctness conditions hold, the
+diagonals "cross" at `3` (`BetS A 3 C` and `BetS B 3 D`), and both `Par` facts
+hold by that second disjunct — so the quadrilateral is an audited
+parallelogram. But `|AB| = 1` and `|CD| = 2`.
+
+GeoCoq offers no way around this, because congruence is an *input* to its
+notion of parallelogram rather than an output: both disjuncts of
+`Parallelogram` carry `Cong A B A' B'`, and the only bridge from two `Par`
+facts, `par_2_plg`, requires `~ Col A B C`. Adding a non-degeneracy conjunct to
+`IsParallelogram` — `~ Col` on three of the vertices would do — makes
+`pgram_opp_sides` provable via `par_2_plg` and `plg_cong`, and unblocks the
+rules built on it.
+
+What stays provable under the audit as it stands is the definitional-projection
+subset: `def_parallelogram`, `pgram_opp_side_para`, `rectangle_pgram`,
+`rhombus_pgram`, and `rhombus_consec_sides` all just assemble or take apart the
+audited definitions. Those need quadrilateral objects in the kernel — a
+`Quadrilateral` type, `quad:` declaration parsing, and the well-formedness
+projection triangles already have — which does not exist yet.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and

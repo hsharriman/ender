@@ -31,6 +31,14 @@ Known limitations relevant to prioritization:
 - goal matching is still exact (`statement_eqb`), so a derived fact spelled
   with a reversed angle or segment will not close an otherwise identical goal
   even though step-to-step matching accepts it;
+- the two largest remaining clusters are both blocked on `Audit.v` decisions
+  rather than on effort, and in the same way — a statement whose audited
+  meaning is too weak to support the rules that cite it.  `pgram_opp_sides` is
+  actually *false* as audited (collinear counterexample in
+  [`verified-checker.md`](verified-checker.md)); it needs a non-degeneracy
+  conjunct on `IsParallelogram`.  The definitional-projection parallelogram
+  rules are provable today but need quadrilateral objects in the kernel, which
+  do not exist yet;
 - the parallel-line family is blocked on an `Audit.v` decision, not on effort:
   the audited `Transversal` meaning records no sidedness, and alternate,
   corresponding, and same-side angles differ by nothing else.  See
