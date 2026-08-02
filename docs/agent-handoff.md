@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- only ten reasons are fully verified; `reflex` and `perp_con_ang` are partial;
+- only eleven reasons are fully verified; `reflex` and `perp_con_ang` are partial;
 - the rich report schema is fully exported, but most step/graph/suggestion
   fields are intentionally empty until their producers are implemented;
 - arc source is parsed losslessly but the TypeScript renderer has no Arc object;

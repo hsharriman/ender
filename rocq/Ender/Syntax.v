@@ -20,7 +20,8 @@ Inductive Statement :=
 | RefAng : Angle -> Angle -> Statement
 | RightAng : Angle -> Statement
 | ConRight : Angle -> Angle -> Statement
-| PerpAt : Segment -> Segment -> PointId -> Statement.
+| PerpAt : Segment -> Segment -> PointId -> Statement
+| MidptOf : Segment -> PointId -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -31,7 +32,8 @@ Inductive Reason :=
 | ConAngTrans : nat -> nat -> Reason
 | ConTriTrans : nat -> nat -> Reason
 | DefConRight : nat -> nat -> Reason
-| PerpConAng : nat -> Reason.
+| PerpConAng : nat -> Reason
+| DefMidpt : nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
@@ -69,6 +71,7 @@ Definition statement_eqb (x y : Statement) : bool :=
   | ConRight a b, ConRight c d => angle_eqb a c && angle_eqb b d
   | PerpAt a b p, PerpAt c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
+  | MidptOf a p, MidptOf b q => segment_eqb a b && ascii_eqb p q
   | _, _ => false
   end.
 

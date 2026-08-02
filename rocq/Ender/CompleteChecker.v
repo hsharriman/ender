@@ -28,6 +28,7 @@ Definition project_premise_statement (s : FA.PublicStatement) : option Statement
   | FA.Right a => Some (RightAng (project_angle a))
   | FA.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
   | FA.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
+  | FA.Midpt s p => Some (MidptOf (project_segment s) p)
   | _ => None
   end.
 
@@ -43,6 +44,7 @@ Definition project_goal_statement (s : FA.PublicStatement) : option Statement :=
   | FA.Right a => Some (RightAng (project_angle a))
   | FA.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
   | FA.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
+  | FA.Midpt s p => Some (MidptOf (project_segment s) p)
   | _ => None
   end.
 
@@ -166,7 +168,7 @@ Definition verdict_diagnostics (result : CheckResult) : list FA.Diagnostic :=
 
 Inductive ExpectedFact :=
 | ExpectedSegment | ExpectedAngle | ExpectedTriangle
-| ExpectedRight | ExpectedPerpendicular.
+| ExpectedRight | ExpectedPerpendicular | ExpectedMidpoint.
 
 Definition statement_function (s : Statement) : string :=
   match s with
@@ -174,20 +176,22 @@ Definition statement_function (s : Statement) : string :=
   | ConTri _ _ => "con_tri" | RefSeg _ _ => "ref_seg"
   | RefAng _ _ => "ref_ang" | RightAng _ => "right"
   | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
+  | MidptOf _ _ => "midpt"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
   match expected with
   | ExpectedSegment => "con_seg" | ExpectedAngle => "con_ang"
   | ExpectedTriangle => "con_tri" | ExpectedRight => "right"
-  | ExpectedPerpendicular => "perp"
+  | ExpectedPerpendicular => "perp" | ExpectedMidpoint => "midpt"
   end.
 
 Definition allowed_functions (expected : ExpectedFact) : list string :=
   match expected with
   | ExpectedSegment => ["ref_seg"]
   | ExpectedAngle => ["ref_ang"; "con_right"]
-  | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular => []
+  | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular
+  | ExpectedMidpoint => []
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -196,7 +200,7 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedAngle, ConAng _ _ | ExpectedAngle, RefAng _ _
   | ExpectedAngle, ConRight _ _
   | ExpectedTriangle, ConTri _ _ | ExpectedRight, RightAng _
-  | ExpectedPerpendicular, PerpAt _ _ _ => true
+  | ExpectedPerpendicular, PerpAt _ _ _ | ExpectedMidpoint, MidptOf _ _ => true
   | _, _ => false
   end.
 
@@ -262,6 +266,8 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
         (dependency_type_issue facts "def_con_right" 1 j ExpectedRight step_number)
   | PerpConAng i =>
       dependency_type_issue facts "perp_con_ang" 0 i ExpectedPerpendicular step_number
+  | DefMidpt i =>
+      dependency_type_issue facts "def_midpt" 0 i ExpectedMidpoint step_number
   | _ => None
   end.
 

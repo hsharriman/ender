@@ -505,6 +505,50 @@ Example mismatched_right_angle_rejects :
   complete_checker mismatched_right_angle_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A midpoint halves its segment; the halves must be the two it defines. *)
+Definition def_midpt_source := transitive_header "seg: AC
+"
+  "[g_1] midpt(AC,B)
+"
+  "con_seg(AB,BC)"
+  "[01] given(g_1) -> midpt(AC,B)
+[02] def_midpt(1) -> con_seg(AB,BC)".
+
+Definition def_midpt_reversed_source := transitive_header "seg: AC
+"
+  "[g_1] midpt(CA,B)
+"
+  "con_seg(CB,BA)"
+  "[01] given(g_1) -> midpt(CA,B)
+[02] def_midpt(1) -> con_seg(CB,BA)".
+
+Definition def_midpt_other_segment_source := transitive_header "seg: AC
+"
+  "[g_1] midpt(AC,B)
+"
+  "con_seg(AB,BD)"
+  "[01] given(g_1) -> midpt(AC,B)
+[02] def_midpt(1) -> con_seg(AB,BD)".
+
+(** A midpoint goal is only reached by a rule that actually produces one. *)
+Definition midpt_goal_source := transitive_header "seg: AC
+"
+  "[g_1] midpt(AC,B)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> midpt(AC,B)".
+
+Example def_midpt_accepts : complete_checker def_midpt_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_midpt_reversed_accepts :
+  complete_checker def_midpt_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_midpt_other_segment_rejects :
+  complete_checker def_midpt_other_segment_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_goal_accepts : complete_checker midpt_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

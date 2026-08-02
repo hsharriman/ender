@@ -59,6 +59,7 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | ConRight a b, ConRight c d => angle_eqb a c && angle_eqb b d
   | PerpAt a b p, PerpAt c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
+  | MidptOf a p, MidptOf b q => segment_u_eqb a b && ascii_eqb p q
   | _, _ => false
   end.
 
@@ -254,6 +255,15 @@ Definition perp_con_ang (facts : list Statement) (i : nat)
   | _ => false
   end.
 
+(** A midpoint halves its segment. *)
+Definition def_midpt (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (MidptOf s p) =>
+      fact_eqb (ConSeg (segment s.(seg_start) p) (segment p s.(seg_end))) conclusion
+  | _ => false
+  end.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -309,6 +319,7 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | ConTriTrans i j => con_tri_transitive facts i j conclusion
   | DefConRight i j => def_con_right facts i j conclusion
   | PerpConAng i => perp_con_ang facts i conclusion
+  | DefMidpt i => def_midpt facts i conclusion
   end.
 
 Fixpoint check_steps triangles premises facts steps : option (list Statement) :=
@@ -364,10 +375,14 @@ Proof.
     end;
     repeat match goal with
     | Heq : segment_eqb _ _ = true |- _ => apply segment_eqb_eq in Heq
+    | Heq : segment_u_eqb _ _ = true |- _ =>
+        apply segment_u_eqb_cases in Heq; destruct Heq as [Heq|Heq]
     | Heq : angle_eqb _ _ = true |- _ => apply angle_eqb_eq in Heq
     | Heq : triangle_eqb _ _ = true |- _ => apply triangle_eqb_eq in Heq
     | Heq : ascii_eqb _ _ = true |- _ => apply Ascii.eqb_eq in Heq
-    end; subst; tauto.
+    end; subst;
+    (* the only residual case is a midpoint of a reversed segment *)
+    solve [tauto | unfold reverse_segment; cbn; split; apply l7_2].
 Qed.
 
 Lemma find_premise_sound : forall label premises statement,
@@ -757,6 +772,16 @@ Proof.
   split; eapply perp_right_angle_sound; eauto.
 Qed.
 
+Lemma def_midpt_sound : forall facts i conclusion,
+  Forall Interp facts -> def_midpt facts i conclusion = true -> Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule. unfold def_midpt in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hmid : Interp (MidptOf s p)) by (eapply lookup_step_sound; eauto).
+  apply (fact_eqb_sound _ _ Hrule). cbn in Hmid |- *. apply Hmid.
+Qed.
+
 Lemma rule_valid_sound : forall triangles premises facts reason conclusion,
   declarations_well_formed point triangles ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -805,6 +830,7 @@ Proof.
   - eapply con_tri_transitive_sound; eauto.
   - eapply def_con_right_sound; eauto.
   - eapply perp_con_ang_sound; eauto.
+  - eapply def_midpt_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,

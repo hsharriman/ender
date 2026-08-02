@@ -22,12 +22,12 @@ const implemented = new Set([
   "con_ang_transitive",
   "con_tri_transitive",
   "def_con_right",
+  "def_midpt",
 ]);
 // perp_con_ang: con_right conclusions only; con_ang needs nondegenerate rays
 const partial = new Set(["reflex", "perp_con_ang"]);
 const priorityOne = new Set([
   "rhl",
-  "def_midpt",
   "midpt_conv",
   "vert_ang",
   "def_ang_bisect",
@@ -80,6 +80,8 @@ const entries = catalog.map((reason) => {
         ? "GeoCoq l11_16 (congruence of right angles)"
       : reason === "perp_con_ang"
         ? "GeoCoq Perp_at definition and l8_2"
+      : reason === "def_midpt"
+        ? "GeoCoq Midpoint definition"
       : reason === "given" || reason === "reflex"
         ? "logical/equality infrastructure"
         : "to determine from the weakest supporting GeoCoq theorem";

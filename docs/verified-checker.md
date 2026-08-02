@@ -9,10 +9,10 @@ kernel. It is the sole executable checker; unsupported reasons fail closed.
 The slice parses Ender source text and supports:
 
 - statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
-  `con_right`, and `perp`;
+  `con_right`, `perp`, and `midpt`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `cpctc`,
   `con_seg_transitive`, `con_ang_transitive`, `con_tri_transitive`,
-  `def_con_right`, and `perp_con_ang`;
+  `def_con_right`, `perp_con_ang`, and `def_midpt`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -52,7 +52,8 @@ the audited `right` meaning carries the nondegenerate rays that GeoCoq's
 vertex is the foot of the perpendicular and whose rays end on the two
 perpendicular segments — `Perp_at` states exactly that. Its `con_ang`
 conclusion remains fail-closed: `Perp_at` does not force either ray to be
-nondegenerate.
+nondegenerate. `def_midpt` reads the two congruent halves straight off the
+`Midpoint` definition; midpoint statements, like segments, are unoriented.
 
 ## Soundness boundary
 

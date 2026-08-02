@@ -152,6 +152,15 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
     | Some a => Some (RightAng a)
     | None => None
     end in
+  let parse_midpt body :=
+    match split_on ","%char body [] with
+    | [a; [p]] =>
+        match parse_segment a with
+        | Some x => Some (MidptOf x p)
+        | None => None
+        end
+    | _ => None
+    end in
   let parse_perp body :=
     match split_on ","%char body [] with
     | [a; b; [p]] =>
@@ -168,7 +177,8 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "con_tri" text (parse_triangles ConTri)
   (try_call "con_right" text (parse_angles ConRight)
   (try_call "right" text parse_right
-  (try_call "perp" text parse_perp None))))))).
+  (try_call "perp" text parse_perp
+  (try_call "midpt" text parse_midpt None)))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -234,7 +244,8 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
       (try_call "con_ang_transitive" text (parse_two ConAngTrans)
       (try_call "con_tri_transitive" text (parse_two ConTriTrans)
       (try_call "def_con_right" text (parse_two DefConRight)
-      (try_call "perp_con_ang" text (parse_one PerpConAng) None)))))))))
+      (try_call "perp_con_ang" text (parse_one PerpConAng)
+      (try_call "def_midpt" text (parse_one DefMidpt) None))))))))))
     end
   end.
 
