@@ -24,7 +24,18 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- only eleven reasons are fully verified; `reflex` and `perp_con_ang` are partial;
+- only twelve reasons are fully verified; `reflex` and `perp_con_ang` are
+  partial;
+- statement coverage gates whole files: the kernel parser rejects a problem
+  outright when any premise line names a statement it cannot decode, so a
+  fixture stays out of reach until every statement it declares is supported;
+- angles obtain their nondegenerate rays from declared triangles
+  (`declared_angle` in `Checker.v`); a rule needing nondegeneracy and having no
+  such source must fail closed, as `reflex` on `ref_ang` and `perp_con_ang` on
+  `con_ang` do;
+- `third_angle`, `rhl`, and the parallel-line rules need Euclidean or
+  2-dimensional hypotheses that the kernel's soundness section does not yet
+  assume, even though the audited final theorem does;
 - the rich report schema is fully exported, but most step/graph/suggestion
   fields are intentionally empty until their producers are implemented;
 - arc source is parsed losslessly but the TypeScript renderer has no Arc object;

@@ -9,10 +9,10 @@ kernel. It is the sole executable checker; unsupported reasons fail closed.
 The slice parses Ender source text and supports:
 
 - statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
-  `con_right`, `perp`, and `midpt`;
+  `con_right`, `perp`, `midpt`, and `intersect_seg`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `cpctc`,
   `con_seg_transitive`, `con_ang_transitive`, `con_tri_transitive`,
-  `def_con_right`, `perp_con_ang`, and `def_midpt`;
+  `def_con_right`, `perp_con_ang`, `def_midpt`, and `vert_ang`;
 - one-character point names, named premises, triangle declarations, numbered
   steps, and exact step dependencies.
 
@@ -41,8 +41,8 @@ two right angles with nondegenerate rays are congruent.
 The three transitivity rules take two congruence dependencies of the same
 object kind and conclude the congruence of the two unshared objects. The shared
 object may sit on either side of either dependency and is identified exactly as
-the corresponding congruence test does: segments match with either endpoint
-order, angles and triangles match exactly. Because the shared object is only
+the corresponding congruence test does: segments and angles match unoriented,
+triangles match exactly. Because the shared object is only
 used to relay an already established congruence, these rules need no
 reflexivity and therefore no nondegenerate-ray hypothesis.
 
@@ -54,6 +54,9 @@ perpendicular segments — `Perp_at` states exactly that. Its `con_ang`
 conclusion remains fail-closed: `Perp_at` does not force either ray to be
 nondegenerate. `def_midpt` reads the two congruent halves straight off the
 `Midpoint` definition; midpoint statements, like segments, are unoriented.
+`vert_ang` takes no step dependency: it looks up an `intersect_seg` diagram
+premise and concludes either pair of opposite angles at the crossing, provided
+both spanned point triples are declared triangles.
 
 ## Soundness boundary
 

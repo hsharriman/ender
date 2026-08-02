@@ -549,6 +549,61 @@ Proof. vm_compute. reflexivity. Qed.
 Example midpt_goal_accepts : complete_checker midpt_goal_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Vertical angles, taken from the diagram premise rather than a step. *)
+Definition vert_ang_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang() -> con_ang(a_CEA,a_DEB)".
+
+(** The other opposite pair is equally valid. *)
+Definition vert_ang_other_pair_source := transitive_header "tri: t_ADE t_BCE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_AED,a_BEC)"
+  "[01] vert_ang() -> con_ang(a_AED,a_BEC)".
+
+(** Adjacent angles at the crossing are not vertical angles. *)
+Definition vert_ang_adjacent_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_CEA,a_CEB)"
+  "[01] vert_ang() -> con_ang(a_CEA,a_CEB)".
+
+(** Without declared triangles the rays may be degenerate. *)
+Definition vert_ang_undeclared_source := transitive_header "seg: AB
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang() -> con_ang(a_CEA,a_DEB)".
+
+(** No crossing in the diagram means no vertical angles. *)
+Definition vert_ang_no_crossing_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[g_1] con_seg(AB,CD)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang() -> con_ang(a_CEA,a_DEB)".
+
+Example vert_ang_accepts : complete_checker vert_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_other_pair_accepts :
+  complete_checker vert_ang_other_pair_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_adjacent_rejects :
+  complete_checker vert_ang_adjacent_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_undeclared_rejects :
+  complete_checker vert_ang_undeclared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_no_crossing_rejects :
+  complete_checker vert_ang_no_crossing_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example malformed_problem_is_parse_failure :
   classify_source "this is not an Ender problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.

@@ -60,6 +60,8 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | PerpAt a b p, PerpAt c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | MidptOf a p, MidptOf b q => segment_u_eqb a b && ascii_eqb p q
+  | IntersectSeg a b p, IntersectSeg c d q =>
+      segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | _, _ => false
   end.
 
@@ -264,6 +266,29 @@ Definition def_midpt (facts : list Statement) (i : nat)
   | _ => false
   end.
 
+(** Vertical angles.  Two segments crossing at [p] give two pairs of opposite
+    angles at [p]; both members of the concluded pair must span the vertices of
+    a declared triangle, which is what supplies the nondegenerate rays.  This
+    reason takes no step dependency, so the crossing is looked up among the
+    diagram premises. *)
+Definition vertical_angle_pair (triangles : list Triangle) (s t : Segment)
+    (p : PointId) (conclusion : Statement) : bool :=
+  let opposite first second :=
+    declared_angle triangles first && declared_angle triangles second &&
+    fact_eqb (ConAng first second) conclusion in
+  opposite (angle s.(seg_start) p t.(seg_start))
+           (angle s.(seg_end) p t.(seg_end)) ||
+  opposite (angle s.(seg_start) p t.(seg_end))
+           (angle s.(seg_end) p t.(seg_start)).
+
+Definition vert_ang (triangles : list Triangle) (premises : list Premise)
+    (conclusion : Statement) : bool :=
+  existsb (fun pr => match pr.(premise_statement) with
+                     | IntersectSeg s t p =>
+                         vertical_angle_pair triangles s t p conclusion
+                     | _ => false
+                     end) premises.
+
 Fixpoint find_premise (label : string) (premises : list Premise) : option Statement :=
   match premises with
   | [] => None
@@ -320,6 +345,7 @@ Definition rule_valid (triangles : list Triangle) (premises : list Premise)
   | DefConRight i j => def_con_right facts i j conclusion
   | PerpConAng i => perp_con_ang facts i conclusion
   | DefMidpt i => def_midpt facts i conclusion
+  | VertAng => vert_ang triangles premises conclusion
   end.
 
 Fixpoint check_steps triangles premises facts steps : option (list Statement) :=
@@ -782,6 +808,41 @@ Proof.
   apply (fact_eqb_sound _ _ Hrule). cbn in Hmid |- *. apply Hmid.
 Qed.
 
+Lemma vertical_angle_pair_sound : forall triangles s t p conclusion,
+  declarations_well_formed point triangles ->
+  Interp (IntersectSeg s t p) ->
+  vertical_angle_pair triangles s t p conclusion = true -> Interp conclusion.
+Proof.
+  intros triangles s t p conclusion Hwf Hcross Hpair.
+  cbn in Hcross. destruct Hcross as [Hs Ht].
+  unfold vertical_angle_pair in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [Hdeclared Heq]; apply andb_true_iff in Hdeclared;
+    destruct Hdeclared as [Hfirst Hsecond];
+    apply (declared_angle_sound triangles _ Hwf) in Hfirst;
+    apply (declared_angle_sound triangles _ Hwf) in Hsecond;
+    destruct Hfirst as [Hf1 Hf2]; destruct Hsecond as [Hs1 Hs2];
+    cbn in Hf1, Hf2, Hs1, Hs2;
+    apply (fact_eqb_sound _ _ Heq); cbn.
+  - now apply l11_14.
+  - apply l11_14; auto. now apply between_symmetry.
+Qed.
+
+Lemma vert_ang_sound : forall triangles premises conclusion,
+  declarations_well_formed point triangles ->
+  Forall (interp_premise point) premises ->
+  vert_ang triangles premises conclusion = true -> Interp conclusion.
+Proof.
+  intros triangles premises conclusion Hwf Hprem Hrule.
+  unfold vert_ang in Hrule. apply existsb_exists in Hrule.
+  destruct Hrule as [pr [Hin Hmatch]].
+  pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
+                Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr.
+  destruct (premise_statement pr); try discriminate.
+  eapply vertical_angle_pair_sound; eauto.
+Qed.
+
 Lemma rule_valid_sound : forall triangles premises facts reason conclusion,
   declarations_well_formed point triangles ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -831,6 +892,7 @@ Proof.
   - eapply def_con_right_sound; eauto.
   - eapply perp_con_ang_sound; eauto.
   - eapply def_midpt_sound; eauto.
+  - eapply vert_ang_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall triangles premises steps facts output,

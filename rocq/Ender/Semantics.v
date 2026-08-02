@@ -47,6 +47,9 @@ Definition statement_meaning (s : Statement) : Prop :=
       Perp_at (point p) (point a.(seg_start)) (point a.(seg_end))
               (point b.(seg_start)) (point b.(seg_end))
   | MidptOf s p => Midpoint (point p) (point s.(seg_start)) (point s.(seg_end))
+  | IntersectSeg a b p =>
+      Bet (point a.(seg_start)) (point p) (point a.(seg_end)) /\
+      Bet (point b.(seg_start)) (point p) (point b.(seg_end))
   end.
 
 Definition segment_points (s : Segment) :=

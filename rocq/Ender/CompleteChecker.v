@@ -29,6 +29,8 @@ Definition project_premise_statement (s : FA.PublicStatement) : option Statement
   | FA.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
   | FA.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
   | FA.Midpt s p => Some (MidptOf (project_segment s) p)
+  | FA.IntersectSeg a b p =>
+      Some (IntersectSeg (project_segment a) (project_segment b) p)
   | _ => None
   end.
 
@@ -45,6 +47,8 @@ Definition project_goal_statement (s : FA.PublicStatement) : option Statement :=
   | FA.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
   | FA.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
   | FA.Midpt s p => Some (MidptOf (project_segment s) p)
+  | FA.IntersectSeg a b p =>
+      Some (IntersectSeg (project_segment a) (project_segment b) p)
   | _ => None
   end.
 
@@ -176,7 +180,7 @@ Definition statement_function (s : Statement) : string :=
   | ConTri _ _ => "con_tri" | RefSeg _ _ => "ref_seg"
   | RefAng _ _ => "ref_ang" | RightAng _ => "right"
   | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
-  | MidptOf _ _ => "midpt"
+  | MidptOf _ _ => "midpt" | IntersectSeg _ _ _ => "intersect_seg"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
