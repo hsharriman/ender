@@ -259,6 +259,13 @@
         devShells.default = pkgs.mkShell {
           packages = [
             coq geocoqCoinc geocoqAxioms geocoqMain
+            # VsRocq's language server loads the `.vo` files of whatever it is
+            # editing, and those are locked to the compiler that built them, so
+            # it has to be the one matching `coq` above rather than whichever
+            # the editor happens to ship.  VsRocq prefers a `vsrocqtop` on the
+            # PATH over its own, so launching the editor from this shell is
+            # enough; see README.md.
+            pkgs.coqPackages_8_20.vsrocq-language-server
             pkgs.gnumake pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
             pkgs.ocamlPackages.yojson
             pkgs.ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen

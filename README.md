@@ -177,6 +177,29 @@ For verified-reason work, begin with
 [`docs/agent-handoff.md`](docs/agent-handoff.md) and the exhaustive
 [`docs/reason-coverage.json`](docs/reason-coverage.json) manifest.
 
+### Editing the Rocq sources
+
+Launch the editor from `nix develop`, at the repository root:
+
+```bash
+nix develop
+code .
+```
+
+The dev shell puts a `vsrocqtop` matching this project's Coq on the `PATH`, and
+[VsRocq](https://marketplace.visualstudio.com/items?itemName=rocq-prover.vsrocq)
+prefers that over any language server it ships with. This matters because a
+language server compiled against a different Rocq release cannot read the `.vo`
+files this one produces — it will refuse GeoCoq and even the standard library,
+reporting `Cannot find a physical path bound to logical path Ascii` or
+`has bad version number`. The shell also exports the `COQPATH` that makes GeoCoq
+visible, which an editor started outside it will not have.
+
+`_CoqProject` at the repository root supplies the `Ender` load path. It has to
+live there rather than beside the sources: with Rocq 8.20 the VsRocq server
+reads a project file once at startup, searching upward from its working
+directory, and ignores per-document ones.
+
 ## Build tool (Vite)
 
 The web interface is built with [Vite](https://vitejs.dev/). `vite.config.ts` sets `base: "/ender/"` for GitHub Pages.

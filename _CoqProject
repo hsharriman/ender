@@ -1,0 +1,7 @@
+# Load path for editors; the build itself goes through rocq/Makefile, which
+# passes the same -Q flag.  This file has to sit at the repository root rather
+# than next to the sources: Rocq 8.20's VsRocq server reads a project file once
+# at startup, searching upward from its working directory (the workspace root),
+# and ignores per-document ones.  GeoCoq comes from COQPATH, which the dev
+# shell sets, so the editor has to be launched from `nix develop`.
+-Q rocq/Ender Ender
