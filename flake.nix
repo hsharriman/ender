@@ -5,7 +5,15 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     geocoq = {
-      url = "github:GeoCoq/GeoCoq";
+      # Upstream's Rocq 9 port, merged 2025-11-17 and reverted the next day
+      # (PRs 52 and 53) with no stated reason -- most likely because its
+      # `intuition` and `Unshelve` fixes narrow GeoCoq's declared `coq >= 8.10`
+      # support, which it has no CI to check.  Pinned here rather than tracking
+      # master because master does not build on Rocq 9 at all: it fails at
+      # `Coinc/Utils/arity.v` line 1, since Rocq 9 split out the standard
+      # library and master still writes `Require Import Arith`.  The port
+      # targets 9.0; the layers Ender uses build unchanged on 9.1 as well.
+      url = "github:GeoCoq/GeoCoq/1b1e7ad51d9139b6c98cde48a4516b78546cae9d";
       flake = false;
     };
   };
@@ -14,7 +22,10 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        coq = pkgs.coq_8_20;
+        coq = pkgs.coq_9_1;
+        # Rocq 9 split the standard library out of the compiler, so every
+        # derivation that compiles a `.v` file needs it explicitly.
+        stdlib = pkgs.coqPackages_9_1.stdlib;
         coqLib = "lib/coq/${coq.coq-version}/user-contrib";
 
         mkGeoCoqPart = { pname, configure, dependencies ? [], patches ? [] }:
@@ -23,9 +34,11 @@
             version = geocoq.shortRev or "unstable";
             src = geocoq;
             strictDeps = true;
-            nativeBuildInputs = [ coq pkgs.gnumake ] ++ dependencies;
-            buildInputs = dependencies;
+            nativeBuildInputs = [ coq pkgs.gnumake stdlib ] ++ dependencies;
+            buildInputs = [ stdlib ] ++ dependencies;
             inherit patches;
+            COQPATH = pkgs.lib.concatStringsSep ":"
+              (map (part: "${part}/${coqLib}") ([ stdlib ] ++ dependencies));
             configurePhase = ''
               runHook preConfigure
               patchShebangs ${configure}
@@ -67,12 +80,13 @@
           version = "0.1.0";
           src = ./rocq;
           strictDeps = true;
-          nativeBuildInputs = [ coq pkgs.gnumake geocoqCoinc geocoqAxioms geocoqMain ];
-          COQPATH = pkgs.lib.concatStringsSep ":" [
-            "${geocoqCoinc}/${coqLib}"
-            "${geocoqAxioms}/${coqLib}"
-            "${geocoqMain}/${coqLib}"
+          nativeBuildInputs = [
+            coq pkgs.gnumake stdlib geocoqCoinc geocoqAxioms geocoqMain
           ];
+          buildInputs = [ stdlib ];
+          COQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${coqLib}") [
+            stdlib geocoqCoinc geocoqAxioms geocoqMain
+          ]);
           buildPhase = ''
             runHook preBuild
             set -o pipefail
@@ -258,24 +272,22 @@
 
         devShells.default = pkgs.mkShell {
           packages = [
-            coq geocoqCoinc geocoqAxioms geocoqMain
+            coq stdlib geocoqCoinc geocoqAxioms geocoqMain
             # VsRocq's language server loads the `.vo` files of whatever it is
             # editing, and those are locked to the compiler that built them, so
             # it has to be the one matching `coq` above rather than whichever
             # the editor happens to ship.  VsRocq prefers a `vsrocqtop` on the
             # PATH over its own, so launching the editor from this shell is
             # enough; see README.md.
-            pkgs.coqPackages_8_20.vsrocq-language-server
+            pkgs.coqPackages_9_1.vsrocq-language-server
             pkgs.gnumake pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
             pkgs.ocamlPackages.yojson
             pkgs.ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
             pkgs.nodejs_24 nativeChecker
           ];
-          COQPATH = pkgs.lib.concatStringsSep ":" [
-            "${geocoqCoinc}/${coqLib}"
-            "${geocoqAxioms}/${coqLib}"
-            "${geocoqMain}/${coqLib}"
-          ];
+          COQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${coqLib}") [
+            stdlib geocoqCoinc geocoqAxioms geocoqMain
+          ]);
           ENDER_CHECKER_WASM_DIR =
             "${wasmChecker}/share/ender-checker-wasm";
         };

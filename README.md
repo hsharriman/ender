@@ -186,7 +186,7 @@ nix develop
 code .
 ```
 
-The dev shell puts a `vsrocqtop` matching this project's Coq on the `PATH`, and
+The dev shell puts a `vsrocqtop` matching this project's Rocq on the `PATH`, and
 [VsRocq](https://marketplace.visualstudio.com/items?itemName=rocq-prover.vsrocq)
 prefers that over any language server it ships with. This matters because a
 language server compiled against a different Rocq release cannot read the `.vo`
@@ -195,10 +195,10 @@ reporting `Cannot find a physical path bound to logical path Ascii` or
 `has bad version number`. The shell also exports the `COQPATH` that makes GeoCoq
 visible, which an editor started outside it will not have.
 
-`_CoqProject` at the repository root supplies the `Ender` load path. It has to
-live there rather than beside the sources: with Rocq 8.20 the VsRocq server
-reads a project file once at startup, searching upward from its working
-directory, and ignores per-document ones.
+`_CoqProject` at the repository root supplies the `Ender` load path. Rocq 9's
+VsRocq server would also read one placed beside the sources, searching upward
+from the file being edited, but the root is where a server started in the
+workspace directory finds it either way.
 
 ## Build tool (Vite)
 
