@@ -179,9 +179,11 @@ would hold vacuously if none did.
 It does not: GeoCoq builds a two-dimensional Euclidean Tarski model over any
 real-closed field in `Algebraic/POF_to_Tarski.v` (`Rcf_to_T2D`,
 `Rcf_to_T_euclidean`). Adopting it was attempted and is preserved on the
-`rocq-9-migration` branch. That branch works — the whole development builds on
-Rocq 9.0 with **no source changes**, still axiom-free — but it does not close
-this gap, for a reason worth recording so nobody retries it blindly:
+`rocq-9-migration-model-attempt` branch; `rocq-9-migration` now carries only
+the compiler migration that attempt was built on. That attempt works as far as
+it goes — the whole development builds on Rocq 9 with **no source changes**,
+still axiom-free — but it does not close this gap, for a reason worth recording
+so nobody retries it blindly:
 
 - GeoCoq's algebraic layer needs **MathComp 2.4**. On 2.5 it fails at
   `POF_to_Tarski.v` line 1134, identically under Coq 8.20 and Rocq 9, so that
