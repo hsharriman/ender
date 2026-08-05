@@ -192,10 +192,10 @@ prefers that over any language server it ships with. This matters because a
 language server compiled against a different Rocq release cannot read the `.vo`
 files this one produces — it will refuse GeoCoq and even the standard library,
 reporting `Cannot find a physical path bound to logical path Ascii` or
-`has bad version number`. The shell also exports the `COQPATH` that makes GeoCoq
-visible, which an editor started outside it will not have.
+`has bad version number`. The shell also exports the `ROCQPATH` that makes
+GeoCoq visible, which an editor started outside it will not have.
 
-`_CoqProject` at the repository root supplies the `Ender` load path. Rocq 9's
+`_RocqProject` at the repository root supplies the `Ender` load path. Rocq 9's
 VsRocq server would also read one placed beside the sources, searching upward
 from the file being edited, but the root is where a server started in the
 workspace directory finds it either way.

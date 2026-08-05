@@ -1,4 +1,4 @@
-From Coq Require Import List.
+From Stdlib Require Import List.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Syntax Ender.Geometry.
 Import ListNotations.

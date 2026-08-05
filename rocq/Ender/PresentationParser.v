@@ -1,4 +1,4 @@
-From Coq Require Import Ascii String List Bool Nat.
+From Stdlib Require Import Ascii String List Bool Nat.
 Require Import Ender.Audit Ender.PublicParser.
 Import ListNotations.
 Module FA := Audit.FinalAudit.

@@ -1,4 +1,4 @@
-From Coq Require Import Ascii String List Bool Nat.
+From Stdlib Require Import Ascii String List Bool Nat.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Syntax Ender.Semantics Ender.Checker.
 Import ListNotations.

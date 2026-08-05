@@ -1,4 +1,4 @@
-From Coq Require Import String List.
+From Stdlib Require Import String List.
 Require Import Ender.Parser Ender.PublicParser Ender.CompleteChecker Ender.CertifiedAPI.
 Import ListNotations.
 Open Scope string_scope.

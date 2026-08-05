@@ -1,4 +1,4 @@
-From Coq Require Import List String Bool Lia.
+From Stdlib Require Import List String Bool Lia.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Syntax Ender.Geometry Ender.Semantics.
 Import ListNotations.

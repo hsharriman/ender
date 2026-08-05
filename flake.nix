@@ -22,11 +22,16 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        coq = pkgs.coq_9_1;
+        # `rocqPackages_9_1.rocq-core` ships only `rocq` and `rocqchk`, but
+        # GeoCoq's build script calls `coq_makefile` and `coqdep`, which live in
+        # the `coq_9_1` compatibility wrapper around it.  Same compiler either
+        # way, so the `.vo` files stay interchangeable.
+        rocq = pkgs.coq_9_1;
         # Rocq 9 split the standard library out of the compiler, so every
         # derivation that compiles a `.v` file needs it explicitly.
-        stdlib = pkgs.coqPackages_9_1.stdlib;
-        coqLib = "lib/coq/${coq.coq-version}/user-contrib";
+        stdlib = pkgs.rocqPackages_9_1.stdlib;
+        # Rocq 9 still installs to `lib/coq`, whatever the tools are called.
+        rocqLib = "lib/coq/${rocq.coq-version}/user-contrib";
 
         mkGeoCoqPart = { pname, configure, dependencies ? [], patches ? [] }:
           pkgs.stdenvNoCC.mkDerivation {
@@ -34,11 +39,11 @@
             version = geocoq.shortRev or "unstable";
             src = geocoq;
             strictDeps = true;
-            nativeBuildInputs = [ coq pkgs.gnumake stdlib ] ++ dependencies;
+            nativeBuildInputs = [ rocq pkgs.gnumake stdlib ] ++ dependencies;
             buildInputs = [ stdlib ] ++ dependencies;
             inherit patches;
-            COQPATH = pkgs.lib.concatStringsSep ":"
-              (map (part: "${part}/${coqLib}") ([ stdlib ] ++ dependencies));
+            ROCQPATH = pkgs.lib.concatStringsSep ":"
+              (map (part: "${part}/${rocqLib}") ([ stdlib ] ++ dependencies));
             configurePhase = ''
               runHook preConfigure
               patchShebangs ${configure}
@@ -52,7 +57,7 @@
             '';
             installPhase = ''
               runHook preInstall
-              make install COQLIBINSTALL="$out/${coqLib}"
+              make install COQLIBINSTALL="$out/${rocqLib}"
               runHook postInstall
             '';
           };
@@ -81,10 +86,10 @@
           src = ./rocq;
           strictDeps = true;
           nativeBuildInputs = [
-            coq pkgs.gnumake stdlib geocoqCoinc geocoqAxioms geocoqMain
+            rocq pkgs.gnumake stdlib geocoqCoinc geocoqAxioms geocoqMain
           ];
           buildInputs = [ stdlib ];
-          COQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${coqLib}") [
+          ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") [
             stdlib geocoqCoinc geocoqAxioms geocoqMain
           ]);
           buildPhase = ''
@@ -272,20 +277,20 @@
 
         devShells.default = pkgs.mkShell {
           packages = [
-            coq stdlib geocoqCoinc geocoqAxioms geocoqMain
+            rocq stdlib geocoqCoinc geocoqAxioms geocoqMain
             # VsRocq's language server loads the `.vo` files of whatever it is
             # editing, and those are locked to the compiler that built them, so
-            # it has to be the one matching `coq` above rather than whichever
+            # it has to be the one matching `rocq` above rather than whichever
             # the editor happens to ship.  VsRocq prefers a `vsrocqtop` on the
             # PATH over its own, so launching the editor from this shell is
             # enough; see README.md.
-            pkgs.coqPackages_9_1.vsrocq-language-server
+            pkgs.rocqPackages_9_1.vsrocq-language-server
             pkgs.gnumake pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
             pkgs.ocamlPackages.yojson
             pkgs.ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
             pkgs.nodejs_24 nativeChecker
           ];
-          COQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${coqLib}") [
+          ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") [
             stdlib geocoqCoinc geocoqAxioms geocoqMain
           ]);
           ENDER_CHECKER_WASM_DIR =

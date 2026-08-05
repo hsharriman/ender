@@ -1,6 +1,6 @@
 (** This is the complete human-audit surface for the Ender checker.  It
     intentionally imports no Ender implementation module. *)
-From Coq Require Import Ascii String List Bool.
+From Stdlib Require Import Ascii String List Bool.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Import ListNotations.
 Local Open Scope string_scope.

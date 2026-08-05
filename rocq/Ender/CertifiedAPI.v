@@ -2,7 +2,7 @@
     This file intentionally contains no checker logic.  Every public operation
     and theorem is a transparent alias of the implementation that is compiled
     and extracted. *)
-From Coq Require Import String.
+From Stdlib Require Import String.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Audit Ender.CompleteChecker.
 

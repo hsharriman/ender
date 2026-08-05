@@ -265,7 +265,7 @@ different conclusions. GeoCoq's lemmas say so explicitly — `l12_21_b`, the
 alternate-interior converse, is neutral but takes `TS A C B D` as a hypothesis.
 The audited `Transversal` meaning records only distinctness and collinearity:
 
-```coq
+```rocq
 point a <> point b /\ point c <> point d /\ point t1 <> point t2 /\
 Col a b i1 /\ Col c d i2 /\ Col t1 t2 i1 /\ Col t1 t2 i2 /\ i1 <> i2
 ```

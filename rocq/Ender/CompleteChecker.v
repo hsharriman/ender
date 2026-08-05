@@ -1,4 +1,4 @@
-From Coq Require Import List String Bool Numbers.DecimalString.
+From Stdlib Require Import List String Bool Numbers.DecimalString.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Geometry
   Ender.Semantics Ender.Checker Ender.Parser Ender.PresentationParser.

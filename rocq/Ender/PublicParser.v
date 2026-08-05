@@ -1,4 +1,4 @@
-From Coq Require Import Ascii String List Bool.
+From Stdlib Require Import Ascii String List Bool.
 Require Import Ender.Audit.
 Import ListNotations.
 Import FinalAudit.
