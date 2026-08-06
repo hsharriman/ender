@@ -268,6 +268,50 @@ and `enderCheckReport`.
 The Wasm bundle is under
 `result/share/ender-checker-wasm/` after the final command.
 
+## Open question: which arc an inscribed angle stands on
+
+This one is not a proof obligation and cannot be settled inside `Audit.v`. It
+needs a decision about the language Ender offers students, so it is written
+out here rather than left as a stalled task.
+
+Two inscribed angles standing on the same chord are congruent when their
+vertices lie on the same arc and *supplementary* when they lie on opposite
+arcs. The corpus spelling says neither:
+
+```
+[g_1] inscribed_angle(c_OA, a_APB)
+[g_2] inscribed_angle(c_OA, a_AQB)
+[03] con_inscribed_angs(1,2) -> con_ang(a_APB, a_AQB)
+```
+
+Nothing there distinguishes the two cases, so `con_inscribed_angs` and
+`inscribed_angs` are false as spelled, and stay fail-closed. Note what this is
+*not*: it is not the sphere problem, which assuming `Tarski_2D` fixed, and it
+is not a weakness in `IsInscribedAngle` that a stronger meaning could repair —
+the missing fact relates the two vertices to each other, so no property of a
+single inscribed angle can supply it. The catalog entry hedges in the same
+place, offering "the same chord **or arc**", and `inscribed_angs` carries an
+explicit `TODO should these even be implemented?`.
+
+Three ways out, none of them free:
+
+1. **Leave both fail-closed.** Costs two textbook proofs
+   (`holt_s11-4_exer32_c1`, `holt_s11-6_cio6_c1`). Since those live in the
+   `geo-proof-dataset` submodule, options 2 and 3 do not recover them either
+   without editing that corpus.
+2. **Add a same-side premise form**, `sameside(AB, P, Q)` meaning `OS A B P Q`.
+   Smallest surface change, and it reads as a diagram fact like `on_line`
+   does. Students would have to state it, which is a real cost for a fact a
+   figure makes obvious.
+3. **Have `inscribed_angle` name its intercepted arc.** Closest to how the
+   textbook talks ("the angle inscribed in arc AB"), and it makes the premise
+   carry its own disambiguation. It breaks every existing spelling of the
+   statement.
+
+Whichever is chosen, the rules also need the arc-kind side condition that
+separates congruent from supplementary, in the same way `Transversal`
+sidedness does for the parallel-line family.
+
 ## Next work
 
 The complete declaration and statement parser, its soundness and completeness

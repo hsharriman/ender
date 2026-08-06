@@ -332,6 +332,25 @@ Definition IsTangent (c : CircleName) (s : SegmentName) (p : PointName) : Prop :
   OnCircle c p /\ Col (seg_start s) (seg_end s) (point p) /\
   exists Q, (Q = seg_start s \/ Q = seg_end s) /\ Q <> point p /\
             Per (circ_center c) (point p) Q.
+(** This says which points are on the circle and nothing about which arc the
+    vertex is on, because the surface syntax it reads carries nothing more:
+    [inscribed_angle(c_OA, a_APB)] names a circle and an angle.
+
+    That is enough for [inscribed_semi], whose chord is a diameter and whose
+    conclusion is the same from either arc.  It is *not* enough to compare two
+    inscribed angles on one chord: they are congruent when their vertices
+    share an arc and supplementary when they do not, so no rule can conclude
+    congruence from two of these premises, in any dimension.  Strengthening
+    this meaning cannot fix it either -- the missing fact is a relation
+    between the two vertices, not a property of one angle.
+
+    So [con_inscribed_angs] and [inscribed_angs] stay fail-closed by decision,
+    not by omission.  Admitting them needs the language to gain a way to say
+    the two vertices share an arc: a same-side premise form, or an
+    [inscribed_angle] spelling that names its intercepted arc.  Both change
+    the surface syntax, which is a decision about the curriculum this checker
+    serves rather than about its geometry.  See
+    [docs/verified-checker.md]. *)
 Definition IsInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
   OnCircle c a.(angle_first) /\ OnCircle c a.(angle_vertex) /\
   OnCircle c a.(angle_last) /\ AngleWellFormed a.

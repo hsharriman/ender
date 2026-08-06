@@ -105,6 +105,12 @@ all corpus files through the extracted API.
   quadrilateral rules built on them.
 - **Priority 3:** circles/arcs, similarity, centers, or historically ambiguous
   catalog entries. Resolve their semantics and side conditions before coding.
+  Two of them are not merely deferred: `con_inscribed_angs` and
+  `inscribed_angs` are false as the corpus spells them, because
+  `inscribed_angle(c_OA, a_APB)` never says which arc the vertex is on and the
+  answer flips between congruent and supplementary across arcs. They are
+  blocked on a surface-syntax decision, written up under "Open question" in
+  [`verified-checker.md`](verified-checker.md). Skip them.
 
 Fixture count is evidence, not a semantic specification. The audited meanings
 in `rocq/Ender/Audit.v` and a reason's explicit theorem are authoritative.

@@ -67,18 +67,20 @@ Known limitations relevant to prioritization:
   `altint(2,d_01)` are accepted; the diagram label is compatibility metadata,
   while the rule still searches and validates the actual transversal;
 - the inscribed-angle congruence rules (`con_inscribed_angs`, `inscribed_angs`)
-  are false in Euclidean models of dimension three or more: the audited
-  `OnCircle` is equidistance from the center, which is a sphere, and vertices
-  off a common circle see the same chord at different angles.  `Tarski_2D` is
-  back in the public theorem for exactly this reason, so they are now
-  implementable; what remains for them is `Transversal`-style sidedness, since
-  same-arc versus opposite-arc is what separates congruent from supplementary.
-  The alternative — coplanarity conjuncts in the circle meanings, as GeoCoq's
-  own `Annexes/inscribed_angle.v` uses — was considered and rejected: a
-  statement meaning is proved as well as assumed, so a planar student proof
-  would be rejected for never having derived a coplanarity it could not have
-  known to state.  `inscribed_semi` never needed either: a right angle in a
-  semicircle holds on spheres too.  Relatedly, `ArcCongruent` now requires congruent radii,
+  stay fail-closed **by decision**; do not attempt them.  Two problems stacked
+  here and only one is fixed.  The audited `OnCircle` is equidistance from a
+  center, which in three dimensions is a sphere; `Tarski_2D` is back in the
+  public theorem for exactly that reason, so the meanings are now right.  What
+  remains is not a meaning defect at all: the corpus spells these premises as
+  `inscribed_angle(c_OA, a_APB)`, which never says which arc the vertex is on,
+  and two inscribed angles on one chord are congruent from the same arc and
+  supplementary from opposite ones.  No strengthening of `IsInscribedAngle`
+  can supply that, because the missing fact relates the two vertices rather
+  than describing one angle.  Admitting these rules needs a surface-syntax
+  change, which is a curriculum decision and is written up with its options in
+  [`verified-checker.md`](verified-checker.md).  `inscribed_semi` is unaffected
+  either way: its chord is a diameter, and a right angle in a semicircle holds
+  on spheres too.  Relatedly, `ArcCongruent` now requires congruent radii,
   matching the textbook "same or congruent circles" clause; without it,
   `con_chords_intersect_arcs` was false across circles of different sizes.
   The sphere-safe core of the family is implemented over a kernel circle
