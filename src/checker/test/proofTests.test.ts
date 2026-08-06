@@ -238,6 +238,72 @@ describe("extracted Rocq API corpus tests", () => {
     );
   });
 
+  test("reports each step of an accepted proof", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutorial.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    expect(report.steps.map((step) => step.status)).toEqual([
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+    ]);
+    expect(report.steps[3]).toEqual(
+      expect.objectContaining({
+        number: 4,
+        reason: "sas",
+        conclusion: "con_tri(t_ABC,t_ADC)",
+        dependencies: [1, 2, 3],
+      }),
+    );
+    expect(report.steps[0].source).toContain("given(g_1)");
+    // The dependency graph is acyclic by construction: a step can only cite
+    // facts proved before it.
+    expect(report.graph).toEqual({
+      nodes: [1, 2, 3, 4],
+      edges: [
+        [1, 4],
+        [2, 4],
+        [3, 4],
+      ],
+      cycles: [],
+      unusedSteps: [],
+    });
+    expect(report.goal.provedBy).toBe(4);
+    // Citing a premise with `given` is not a second derivation of it.
+    expect(report.duplicates).toEqual([]);
+  });
+
+  test("blames one step and blocks nothing after it", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    expect(report.verdict).toBe("rejected_proof");
+    expect(report.steps.map((step) => step.status)).toEqual([
+      "accepted",
+      "accepted",
+      "accepted",
+      "rejected",
+    ]);
+    expect(report.steps[3].diagnostics.length).toBeGreaterThan(0);
+    // The goal is stated by the rejected step, so nothing proved it, but it is
+    // not a stray step either.
+    expect(report.goal.provedBy).toBeNull();
+    expect(report.graph.unusedSteps).toEqual([]);
+  });
+
+  test("reports a fact derived twice", async () => {
+    const source = readFileSync(
+      join(PROOFS_DIR, "examples/s1c1_dupe_stmts.txt"),
+      "utf8",
+    );
+    const report = await checkVerifiedReportNode(source);
+    expect(report.duplicates).toHaveLength(1);
+    expect(report.duplicates[0]).toEqual({
+      statement: "con_ang(a_AMC,a_DMB)",
+      first: { kind: "step", step: 3 },
+      again: { kind: "step", step: 5 },
+    });
+  });
+
   test("coverage manifest contains every catalogued reason", () => {
     const catalog = readFileSync(
       join(__dirname, "../grammar/defs/reasons.defs.ts"),

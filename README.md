@@ -22,8 +22,10 @@ npm start
 This starts the UI at [http://localhost:3000/ender/](http://localhost:3000/ender/) (the dev server redirects `/` to `/ender/`).
 
 Open **ProofObj Harness** from the app to edit proofs live. Verified checker
-issues appear in the proof-wide issues list; step-local annotations will become
-available as the Rocq report producers are implemented.
+issues appear in the proof-wide issues list. `enderCheckReport` additionally
+returns per-step status, each step's dependencies, the dependency graph with
+its unused steps, facts derived twice, and which step reached the goal; the
+harness does not render those yet.
 
 ### CLI proof checker
 

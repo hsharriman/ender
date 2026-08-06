@@ -1,4 +1,4 @@
-From Stdlib Require Import List String Bool Numbers.DecimalString.
+From Stdlib Require Import Ascii List String Bool Numbers.DecimalString.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Geometry
   Ender.Semantics Ender.Checker Ender.Parser Ender.PresentationParser.
@@ -549,11 +549,345 @@ Definition report_errors_for (result : CheckResult) : list Audit.Issue :=
   | _ => []
   end.
 
+(** * Advisory report content
+
+    Nothing below is trusted.  [accepted] reads the verdict alone, so these
+    fields cannot make a rejected proof look accepted; they exist so the
+    interface can say which step failed, what fed it, and what was never
+    used.  They are written to be honest about their own limits: a step after
+    the first failure is reported [StepBlocked] rather than judged, because
+    its dependency was never established. *)
+
+Definition unproject_segment (s : Segment) : Audit.SegmentName :=
+  Audit.segment_name s.(seg_start) s.(seg_end).
+Definition unproject_angle (a : Angle) : Audit.AngleName :=
+  Audit.angle_name a.(ang_left) a.(ang_vertex) a.(ang_right).
+Definition unproject_triangle (t : Triangle) : Audit.TriangleName :=
+  Audit.triangle_name t.(tri_a) t.(tri_b) t.(tri_c).
+Definition unproject_quadrilateral (q : Quadrilateral) : Audit.QuadrilateralName :=
+  Audit.quadrilateral_name q.(quad_a) q.(quad_b) q.(quad_c) q.(quad_d).
+Definition unproject_circle (c : Circle) : Audit.CircleName :=
+  Audit.circle_name c.(circle_c) c.(circle_r).
+Definition unproject_arc (a : Arc) : Audit.ArcName :=
+  Audit.arc_name a.(arc_k) (unproject_circle a.(arc_circ)) a.(arc_p1) a.(arc_p2).
+
+(** The kernel representation carries no more than the public one, so every
+    internal statement names a public statement again. *)
+Definition public_of_statement (s : Statement) : Audit.PublicStatement :=
+  match s with
+  | ConSeg a b => Audit.ConSeg (unproject_segment a) (unproject_segment b)
+  | ConAng a b => Audit.ConAng (unproject_angle a) (unproject_angle b)
+  | ConTri a b => Audit.ConTri (unproject_triangle a) (unproject_triangle b)
+  | RefSeg a b => Audit.RefSeg (unproject_segment a) (unproject_segment b)
+  | RefAng a b => Audit.RefAng (unproject_angle a) (unproject_angle b)
+  | RightAng a => Audit.Right (unproject_angle a)
+  | ConRight a b => Audit.ConRight (unproject_angle a) (unproject_angle b)
+  | PerpAt a b p => Audit.Perp (unproject_segment a) (unproject_segment b) p
+  | MidptOf s p => Audit.Midpt (unproject_segment s) p
+  | IntersectSeg a b p =>
+      Audit.IntersectSeg (unproject_segment a) (unproject_segment b) p
+  | AngBisectOf a s => Audit.AngBisect (unproject_angle a) (unproject_segment s)
+  | OnLine s p => Audit.OnLine (unproject_segment s) p
+  | IsoscelesTri t => Audit.Isosceles (unproject_triangle t)
+  | EquilateralTri t => Audit.Equilateral (unproject_triangle t)
+  | EquiangularTri t => Audit.Equiangular (unproject_triangle t)
+  | Supplementary a b => Audit.Supplementary (unproject_angle a) (unproject_angle b)
+  | Complementary a b => Audit.Complementary (unproject_angle a) (unproject_angle b)
+  | LinearPair a b => Audit.LinearPair (unproject_angle a) (unproject_angle b)
+  | Para a b => Audit.Para (unproject_segment a) (unproject_segment b)
+  | Pgram q => Audit.Parallelogram (unproject_quadrilateral q)
+  | Rect q => Audit.Rectangle (unproject_quadrilateral q)
+  | Rhomb q => Audit.Rhombus (unproject_quadrilateral q)
+  | IsosTrap q => Audit.IsosTrapezoid (unproject_quadrilateral q)
+  | TrapPremise q a b =>
+      Audit.TrapezoidPremise (unproject_quadrilateral q)
+        (unproject_segment a) (unproject_segment b)
+  | IsosTrapPremise q a b =>
+      Audit.IsosTrapezoidPremise (unproject_quadrilateral q)
+        (unproject_segment a) (unproject_segment b)
+  | KiteP q a b =>
+      Audit.KitePremise (unproject_quadrilateral q)
+        (unproject_angle a) (unproject_angle b)
+  | Transv a b t1 i1 c d t2 i2 => Audit.Transversal a b t1 i1 c d t2 i2
+  | RadiusOf c p => Audit.Radius (unproject_circle c) p
+  | ChordOf c s => Audit.Chord (unproject_circle c) (unproject_segment s)
+  | DiameterOf c s => Audit.Diameter (unproject_circle c) (unproject_segment s)
+  | TangentAt c s p => Audit.Tangent (unproject_circle c) (unproject_segment s) p
+  | InscribedAngleOf c a =>
+      Audit.InscribedAngle (unproject_circle c) (unproject_angle a)
+  | ArcOf a => Audit.ArcStatement (unproject_arc a)
+  | ConArc a b => Audit.ConArc (unproject_arc a) (unproject_arc b)
+  end.
+
+Definition reason_name (r : Reason) : string :=
+  match r with
+  | Given _ => "given" | Reflex => "reflex"
+  | SAS _ _ _ => "sas" | SSS _ _ _ => "sss"
+  | ASA _ _ _ => "asa" | AAS _ _ _ => "aas"
+  | CPCTC _ => "cpctc"
+  | ConSegTrans _ _ => "con_seg_transitive"
+  | ConAngTrans _ _ => "con_ang_transitive"
+  | ConTriTrans _ _ => "con_tri_transitive"
+  | DefConRight _ _ => "def_con_right"
+  | PerpConAng _ => "perp_con_ang"
+  | DefMidpt _ => "def_midpt"
+  | VertAng _ => "vert_ang"
+  | DefAngBisect _ => "def_ang_bisect"
+  | AngBisectConv _ => "ang_bisect_conv"
+  | RHL _ _ _ => "rhl"
+  | MidptConv _ => "midpt_conv"
+  | ThirdAngle _ _ => "third_angle"
+  | DefConTri _ _ _ _ _ _ => "def_con_tri"
+  | DefIsosceles _ => "def_isosceles"
+  | BaseAngle _ => "base_angle"
+  | BaseAngleConv _ => "base_angle_conv"
+  | DefEquilateral _ _ _ => "def_equilateral"
+  | DefEquiangular _ _ _ => "def_equiangular"
+  | EquilatEquiang _ => "equilat_equiang"
+  | EquiangEquilat _ => "equiang_equilat"
+  | ConSupplements _ _ _ => "con_supplements"
+  | ConSupplementsSame _ _ => "con_supplements_same"
+  | ConComplements _ _ _ => "con_complements"
+  | ConComplementsSame _ _ => "con_complements_same"
+  | DefLinearPair _ => "def_linear_pair"
+  | DefPerp _ => "def_perp"
+  | DefParallelogram _ _ => "def_parallelogram"
+  | PgramOppSides _ => "pgram_opp_sides"
+  | PgramOppAngles _ => "pgram_opp_angs"
+  | PgramConsecAngs _ => "pgram_consec_angs"
+  | PgramOppSidePara _ _ => "pgram_opp_side_para"
+  | RectanglePgram _ => "rectangle_pgram"
+  | RhombusPgram _ => "rhombus_pgram"
+  | RhombusConsecSides _ _ => "rhombus_consec_sides"
+  | RhombusDef _ => "rhombus"
+  | RhombusOppBisect _ => "rhombus_opp_bisect"
+  | RectDiagCon _ => "rect_diag_con"
+  | RectangleDef _ => "rectangle"
+  | AltInt _ => "altint" | AltExt _ => "altext"
+  | CorrespAng _ => "corresp_ang" | SamesideAng _ => "sameside_ang"
+  | AltIntConv _ => "altint_conv" | AltExtConv _ => "altext_conv"
+  | CorrespAngConv _ => "corresp_ang_conv"
+  | SamesideAngConv _ => "sameside_ang_conv"
+  | ParaTrans _ _ => "para_transitive"
+  | DefRadius _ => "def_radius"
+  | InscribedSemi _ => "inscribed_semi"
+  | ConChordsArcs _ => "con_chords_intersect_arcs"
+  | TangentPerp _ _ => "tangent_perp"
+  end.
+
+(** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
+    label rather than a step, and [reflex] cites nothing. *)
+Definition reason_dependencies (r : Reason) : list nat :=
+  match r with
+  | Given _ | Reflex | VertAng _ => []
+  | CPCTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
+  | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
+  | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
+  | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | RectanglePgram i
+  | RhombusPgram i | RhombusDef i | RhombusOppBisect i | RectDiagCon i
+  | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
+  | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
+  | DefRadius i | InscribedSemi i | ConChordsArcs i => [i]
+  | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
+  | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
+  | DefParallelogram i j | PgramOppSidePara i j | RhombusConsecSides i j
+  | ParaTrans i j | TangentPerp i j => [i; j]
+  | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
+  | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
+  | ConComplements i j k => [i; j; k]
+  | DefConTri i j k l m n => [i; j; k; l; m; n]
+  end.
+
+Definition step_failure_diagnostic : Audit.Diagnostic :=
+  Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.InvalidReason
+    "the verified reason kernel did not accept this step".
+
+Fixpoint step_reports (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (steps : list (string * Step))
+    (number : nat) (blocked : bool) : list Audit.StepReport :=
+  match steps with
+  | [] => []
+  | (source, current) :: rest =>
+      let valid :=
+        rule_valid decls premises facts current.(step_reason)
+          current.(step_conclusion) in
+      let status :=
+        if blocked then Audit.StepBlocked
+        else if valid then Audit.StepAccepted else Audit.StepRejected in
+      Audit.step_report number source (Some (reason_name current.(step_reason)))
+        (Some (public_of_statement current.(step_conclusion))) status
+        (reason_dependencies current.(step_reason)) []
+        (match status with
+         | Audit.StepRejected => [step_failure_diagnostic]
+         | _ => []
+         end) []
+      :: step_reports decls premises (facts ++ [current.(step_conclusion)])
+           rest (S number) (blocked || negb valid)
+  end.
+
+Definition nat_eqb_report (a b : nat) : bool := Nat.eqb a b.
+
+(** Steps form a directed acyclic graph by construction: a dependency index
+    reaches into the facts proved before the step, so it can only name an
+    earlier one, and [graph_cycles] is therefore always empty.
+
+    A step is unused when nothing cites it and it does not state the goal.
+    Whether that step was *accepted* is beside the point here -- a failed last
+    step is the one the writer was trying to finish on, not a stray. *)
+Definition step_graph (reports : list Audit.StepReport) (stated_by : option nat)
+    : Audit.DependencyGraph :=
+  let nodes := map Audit.step_number reports in
+  let edges :=
+    flat_map (fun r =>
+      map (fun d => (d, r.(Audit.step_number))) r.(Audit.step_dependencies))
+      reports in
+  let cited n := existsb (fun e => nat_eqb_report (fst e) n) edges in
+  let goal_step n :=
+    match stated_by with Some g => nat_eqb_report g n | None => false end in
+  Audit.dependency_graph nodes edges []
+    (filter (fun n => negb (cited n || goal_step n)) nodes).
+
+(** A fact proved twice.  Sameness is the checker's own [fact_eqb], so a
+    congruence restated with its sides exchanged counts, as it should.
+
+    A [given] step restating the premise it cites is not a second derivation
+    of anything -- it is how the language spells "use this premise" -- so the
+    premise a step names is not counted against it.  A second [given] of the
+    same premise still is. *)
+Definition origin_is_cited (r : Reason) (origin : Audit.FactOrigin) : bool :=
+  match r, origin with
+  | Given label, Audit.PremiseOrigin cited => String.eqb label cited
+  | _, _ => false
+  end.
+
+Fixpoint duplicate_scan (seen : list (Audit.FactOrigin * Statement))
+    (later : list (Audit.FactOrigin * Reason * Statement))
+    : list Audit.DuplicateDerivation :=
+  match later with
+  | [] => []
+  | (origin, r, s) :: rest =>
+      let earlier :=
+        filter (fun p => fact_eqb (snd p) s && negb (origin_is_cited r (fst p)))
+          seen in
+      (match earlier with
+       | [] => []
+       | (first, _) :: _ =>
+           [Audit.duplicate_derivation (public_of_statement s) first origin]
+       end) ++ duplicate_scan (seen ++ [(origin, s)]) rest
+  end.
+
+Fixpoint numbered_step_facts (steps : list Step) (number : nat)
+    : list (Audit.FactOrigin * Reason * Statement) :=
+  match steps with
+  | [] => []
+  | current :: rest =>
+      (Audit.StepOrigin number, current.(step_reason), current.(step_conclusion))
+      :: numbered_step_facts rest (S number)
+  end.
+
+Definition premise_facts (premises : list Premise)
+    : list (Audit.FactOrigin * Statement) :=
+  map (fun p => (Audit.PremiseOrigin p.(premise_label), p.(premise_statement)))
+      premises.
+
+(** Which step first states the goal, read exactly as the checker reads it.
+    Only the steps before the first failure are offered: a step the kernel
+    rejected proves nothing, so pointing at it as the one that reached the
+    goal would be the report's own version of accepting a bad proof. *)
+Fixpoint goal_proved_by (goal : Statement) (steps : list Step) (number : nat)
+    : option nat :=
+  match steps with
+  | [] => None
+  | current :: rest =>
+      if fact_eqb goal current.(step_conclusion) then Some number
+      else goal_proved_by goal rest (S number)
+  end.
+
+Fixpoint accepted_prefix (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (steps : list Step) : nat :=
+  match steps with
+  | [] => O
+  | current :: rest =>
+      if rule_valid decls premises facts current.(step_reason)
+           current.(step_conclusion)
+      then S (accepted_prefix decls premises
+                (facts ++ [current.(step_conclusion)]) rest)
+      else O
+  end.
+
+Definition goal_missing_diagnostic : Audit.Diagnostic :=
+  Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
+    "no accepted step states the goal".
+
+Definition goal_report_for (p : Problem) : Audit.GoalReport :=
+  let reached :=
+    firstn (accepted_prefix p.(problem_declarations) p.(problem_premises) []
+              p.(problem_steps))
+      p.(problem_steps) in
+  match goal_proved_by p.(problem_goal) reached 1 with
+  | Some n => Audit.goal_report (Some n) [] []
+  | None => Audit.goal_report None [goal_missing_diagnostic] []
+  end.
+
+(** Keep each step's own source line beside it, so a report can quote the line
+    it is talking about. *)
+Fixpoint parse_sourced_step_lines (lines : list chars)
+    (steps : list (string * Step)) : option (list (string * Step)) :=
+  match lines with
+  | [] => Some steps
+  | line :: rest =>
+      let compact := Parser.remove_space (Parser.take_until "/"%char line) in
+      if Parser.starts_with ["["%char] compact then
+        match Parser.parse_step line with
+        | Some parsed =>
+            parse_sourced_step_lines rest
+              (steps ++ [(string_of_list_ascii line, parsed)])
+        | None => None
+        end
+      else parse_sourced_step_lines rest steps
+  end.
+
+Definition report_content (source : string)
+    : list Audit.StepReport * Audit.DependencyGraph *
+      list Audit.DuplicateDerivation * Audit.GoalReport :=
+  let empty := ([], empty_graph, [], Audit.goal_report None [] []) in
+  let text := list_ascii_of_string source in
+  match problemPart source with
+  | Some part =>
+      match parsePublicProblem part,
+            Parser.find_after (list_ascii_of_string "steps:") text,
+            parseProblemPart part with
+      | Some public, Some stepText, Some header =>
+          match parse_sourced_step_lines (Parser.split_lines stepText []) [] with
+          | Some sourced =>
+              match build_kernel_problem public header (map snd sourced) with
+              | Some p =>
+                  let reports :=
+                    step_reports p.(problem_declarations) p.(problem_premises)
+                      [] sourced 1 false in
+                  let goal := goal_report_for p in
+                  let stated :=
+                    goal_proved_by p.(problem_goal) p.(problem_steps) 1 in
+                  (reports, step_graph reports stated,
+                   duplicate_scan (premise_facts p.(problem_premises))
+                     (numbered_step_facts p.(problem_steps) 1),
+                   goal)
+              | None => empty
+              end
+          | None => empty
+          end
+      | _, _, _ => empty
+      end
+  | None => empty
+  end.
+
 Definition check_report (source : string) : Audit.CheckReport :=
   let result := classify_source source in
+  let content := report_content source in
   Audit.check_report (public_verdict result) (public_problem_of_source source)
     (PresentationParser.parsePresentation source)
-    [] empty_graph [] (Audit.goal_report None [] [])
+    (fst (fst (fst content))) (snd (fst (fst content))) (snd (fst content))
+    (snd content)
     (report_issues_for source result) (report_errors_for result)
     (verdict_diagnostics result).
 

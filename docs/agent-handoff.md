@@ -126,8 +126,15 @@ Known limitations relevant to prioritization:
   `rocq-9-migration`), but instantiating it needs a real-closed field, and
   GeoCoq's algebraic layer and MathComp's real-closed library want disjoint
   MathComp versions.  See [`verified-checker.md`](verified-checker.md);
-- the rich report schema is fully exported, but most step/graph/suggestion
-  fields are intentionally empty until their producers are implemented;
+- the rich report is produced, not merely exported: per-step status, reason
+  name, conclusion, source line and dependencies; the dependency graph with
+  its unused steps; duplicate derivations; and which step reached the goal.
+  None of it is trusted -- `accepted` reads the verdict alone -- and it is
+  written to stay honest about its own limits: steps after the first failure
+  are `blocked` rather than judged, and `provedBy` skips a step the kernel
+  rejected even when that step states the goal.  `suggestions` and
+  `diagramDependencies` are still empty, and no interface renders any of this
+  yet;
 - arc source is parsed losslessly but the TypeScript renderer has no Arc
   object; the presentation adapter passes nested arc arguments through as
   text rather than failing, while legacy `BR_OB`-style arc tokens still
