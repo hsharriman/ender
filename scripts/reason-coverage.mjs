@@ -55,6 +55,7 @@ const implemented = new Set([
   "rhombus_pgram",
   "rhombus_consec_sides",
   "rhombus",
+  "rectangle",
   "altint",
   "altext",
   "corresp_ang",
@@ -149,6 +150,8 @@ const entries = catalog.map((reason) => {
         ? "Tarski_euclidean via Playfair alternate interior angles; ASA along the diagonal"
       : reason === "rhombus"
         ? "audited IsRhombus congruence chain (neutral)"
+      : reason === "rectangle"
+        ? "audited IsRectangle corners; opposite sides via Euclidean parallelogram theorem"
       : reason === "pgram_opp_side_para"
         ? "GeoCoq par_cong_mid_ts; the audited crossing diagonals supply its TS"
       : ["altint", "altext", "corresp_ang", "sameside_ang"].includes(reason)

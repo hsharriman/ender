@@ -704,6 +704,14 @@ Definition quad_side_cd (q : Quadrilateral) : Segment :=
   segment q.(quad_c) q.(quad_d).
 Definition quad_side_da (q : Quadrilateral) : Segment :=
   segment q.(quad_d) q.(quad_a).
+Definition quad_corner_a (q : Quadrilateral) : Angle :=
+  angle q.(quad_d) q.(quad_a) q.(quad_b).
+Definition quad_corner_b (q : Quadrilateral) : Angle :=
+  angle q.(quad_a) q.(quad_b) q.(quad_c).
+Definition quad_corner_c (q : Quadrilateral) : Angle :=
+  angle q.(quad_b) q.(quad_c) q.(quad_d).
+Definition quad_corner_d (q : Quadrilateral) : Angle :=
+  angle q.(quad_c) q.(quad_d) q.(quad_a).
 
 Definition def_parallelogram_rule (decls : Declarations)
     (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
@@ -765,6 +773,24 @@ Definition rhombus_def_rule (facts : list Statement) (i : nat)
       fact_eqb (ConSeg (quad_side_ab q) (quad_side_da q)) conclusion ||
       fact_eqb (ConSeg (quad_side_bc q) (quad_side_da q)) conclusion
   | _ => false
+  end.
+
+Definition rectangle_corner (q : Quadrilateral) (a : Angle) : bool :=
+  angle_u_eqb a (quad_corner_a q) || angle_u_eqb a (quad_corner_b q) ||
+  angle_u_eqb a (quad_corner_c q) || angle_u_eqb a (quad_corner_d q).
+
+(** A rectangle has four right, mutually congruent corners and congruent
+    opposite sides.  This core names the actual quadrilateral vertices; ray
+    renaming through points on a side is handled separately. *)
+Definition rectangle_def_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i, conclusion with
+  | Some (Rect q), ConRight a b | Some (Rect q), ConAng a b =>
+      rectangle_corner q a && rectangle_corner q b
+  | Some (Rect q), ConSeg a b =>
+      segment_pair_eqb a b (quad_side_ab q) (quad_side_cd q) ||
+      segment_pair_eqb a b (quad_side_bc q) (quad_side_da q)
+  | _, _ => false
   end.
 
 (** One pair of opposite sides both parallel and congruent.  The conclusion's
@@ -1057,6 +1083,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RhombusPgram i => rhombus_pgram_rule facts i conclusion
   | RhombusConsecSides i j => rhombus_consec_sides_rule facts i j conclusion
   | RhombusDef i => rhombus_def_rule facts i conclusion
+  | RectangleDef i => rectangle_def_rule facts i conclusion
   | AltInt i => altint_rule premises facts i conclusion
   | AltExt i => altext_rule premises facts i conclusion
   | CorrespAng i => corresp_ang_rule premises facts i conclusion
@@ -3034,6 +3061,73 @@ Proof.
     apply (fact_eqb_sound _ _ Heq); assumption.
 Qed.
 
+Lemma rectangle_corner_sound : forall q a,
+  Audit.QuadrilateralWellFormed point (quad_name q) ->
+  right_angle point (quad_corner_a q) ->
+  right_angle point (quad_corner_b q) ->
+  right_angle point (quad_corner_c q) ->
+  right_angle point (quad_corner_d q) ->
+  rectangle_corner q a = true ->
+  angle_well_formed point a /\ right_angle point a.
+Proof.
+  intros [A B C D] a Hwf Hra Hrb Hrc Hrd Hmatch.
+  unfold quad_name, Audit.QuadrilateralWellFormed in Hwf. cbn in Hwf.
+  unfold rectangle_corner in Hmatch. cbn in Hra, Hrb, Hrc, Hrd, Hmatch |- *.
+  destruct Hwf as [HAB [HAC [HAD [HBC [HBD [HCD _]]]]]].
+  assert (Hwa : angle_well_formed point
+      (quad_corner_a (quadrilateral A B C D))) by
+    (unfold angle_well_formed; cbn; split; congruence).
+  assert (Hwb : angle_well_formed point
+      (quad_corner_b (quadrilateral A B C D))) by
+    (unfold angle_well_formed; cbn; split; congruence).
+  assert (Hwc : angle_well_formed point
+      (quad_corner_c (quadrilateral A B C D))) by
+    (unfold angle_well_formed; cbn; split; congruence).
+  assert (Hwd : angle_well_formed point
+      (quad_corner_d (quadrilateral A B C D))) by
+    (unfold angle_well_formed; cbn; split; congruence).
+  repeat rewrite orb_true_iff in Hmatch.
+  destruct Hmatch as [[[Hm|Hm]|Hm]|Hm]; apply angle_u_eqb_cases in Hm;
+    destruct Hm as [Heq|Heq]; subst a.
+  all: try (split; assumption).
+  all: unfold reverse_angle; split;
+    [unfold angle_well_formed in Hwa, Hwb, Hwc, Hwd |- *;
+     cbn in Hwa, Hwb, Hwc, Hwd |- *; tauto|now apply l8_2].
+Qed.
+
+Lemma rectangle_def_sound : forall facts i conclusion,
+  Forall Interp facts -> rectangle_def_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule. unfold rectangle_def_rule in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hr : Interp (Rect q)) by (eapply lookup_step_sound; eauto).
+  cbn in Hr. destruct Hr as [Hp [Hra [Hrb [Hrc Hrd]]]].
+  destruct Hp as [Hwf [Hpar1 Hpar2]].
+  destruct conclusion; try discriminate.
+  - destruct Hwf as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol Hex]]]]]]].
+    destruct Hex as [X [HXac HXbd]].
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
+      cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
+    pose proof (ender_pgram_opp_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2)
+      as [Hc1 Hc2].
+    apply orb_true_iff in Hrule. destruct Hrule as [Hm|Hm].
+    + eapply cong_pair_conclude; [exact Hm|]. cbn. exact Hc1.
+    + eapply cong_pair_conclude; [exact Hm|]. cbn. exact Hc2.
+  - apply andb_true_iff in Hrule. destruct Hrule as [Ha Hb].
+    pose proof (rectangle_corner_sound q a Hwf Hra Hrb Hrc Hrd Ha) as [Hwa Hra'].
+    pose proof (rectangle_corner_sound q a0 Hwf Hra Hrb Hrc Hrd Hb) as [Hwb Hrb'].
+    cbn in Hwa, Hwb, Hra', Hrb' |- *.
+    destruct Hwa as [Hwa1 Hwa2]. destruct Hwb as [Hwb1 Hwb2].
+    now apply l11_16.
+  - apply andb_true_iff in Hrule. destruct Hrule as [Ha Hb].
+    pose proof (rectangle_corner_sound q a Hwf Hra Hrb Hrc Hrd Ha) as [_ Hra'].
+    pose proof (rectangle_corner_sound q a0 Hwf Hra Hrb Hrc Hrd Hb) as [_ Hrb'].
+    exact (conj Hra' Hrb').
+Qed.
+
 Lemma pgram_opp_side_para_sound : forall decls facts i j conclusion,
   declarations_well_formed point decls -> Forall Interp facts ->
   pgram_opp_side_para_rule decls facts i j conclusion = true ->
@@ -3383,6 +3477,7 @@ Proof.
   - eapply rhombus_pgram_sound; eauto.
   - eapply rhombus_consec_sides_sound; eauto.
   - eapply rhombus_def_sound; eauto.
+  - eapply rectangle_def_sound; eauto.
   - eapply altint_sound; eauto.
   - eapply altext_sound; eauto.
   - eapply corresp_ang_sound; eauto.

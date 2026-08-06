@@ -1170,6 +1170,46 @@ Example rhombus_def_diagonal_rejects :
   complete_checker rhombus_def_diagonal_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Rectangle corners are mutually congruent and opposite sides are
+    congruent; a diagonal ray is not a corner. *)
+Definition rectangle_def_angle_source := transitive_header
+  "quad: q_EFGH
+ang: a_FEH a_GHE
+"
+  "[g_1] rectangle(q_EFGH)
+"
+  "con_ang(a_FEH,a_GHE)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] rectangle(1) -> con_ang(a_FEH,a_GHE)".
+
+Definition rectangle_def_side_source := transitive_header "quad: q_EFGH
+"
+  "[g_1] rectangle(q_EFGH)
+"
+  "con_seg(EF,GH)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] rectangle(1) -> con_seg(EF,GH)".
+
+Definition rectangle_def_noncorner_source := transitive_header
+  "quad: q_EFGH
+ang: a_FEH a_FGE
+"
+  "[g_1] rectangle(q_EFGH)
+"
+  "con_ang(a_FEH,a_FGE)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] rectangle(1) -> con_ang(a_FEH,a_FGE)".
+
+Example rectangle_def_angle_accepts :
+  complete_checker rectangle_def_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rectangle_def_side_accepts :
+  complete_checker rectangle_def_side_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rectangle_def_noncorner_rejects :
+  complete_checker rectangle_def_noncorner_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** A right angle at a point of a line makes the two lines perpendicular
     there.  The [on_line] premise is what carries the right angle from the ray
     to the whole line. *)
