@@ -347,8 +347,11 @@ opposite-sides congruence is proved through the Playfair-derived alternate
 interior angles instead (`ender_alternate_interior` in `Geometry.v`), with
 ASA along the diagonal through the audited crossing point; `par_cong_mid_ts`,
 `plg_to_parallelogram`, and `plg_par` are axiom-clean and stay in use.
-The diagonal-heavy remainder (`pgram_diag_bisect`, the kite rules, the
-trapezoid rules) is still fail-closed.
+`rhombus_opp_bisect` joins them from the rhombus side: the two triangles a
+diagonal cuts a rhombus into have three pairs of congruent sides, so `l11_51`
+gives the corner halves at either end, neutrally.  The diagonal-heavy
+remainder (`pgram_diag_bisect`, the kite rules, the trapezoid rules) is still
+fail-closed.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and

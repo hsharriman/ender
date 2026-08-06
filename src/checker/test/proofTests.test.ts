@@ -122,6 +122,8 @@ const OUTCOME_ENFORCED = new Set([
   "quadrilaterals/rhombus_consec_sides_incorrect.txt",
   "quadrilaterals/rhombus_def_correct.txt",
   "quadrilaterals/rhombus_def_incorrect.txt",
+  "quadrilaterals/rhombus_opp_bisect_correct.txt",
+  "quadrilaterals/rhombus_opp_bisect_incorrect.txt",
   "quadrilaterals/rhombus_pgram_correct.txt",
   "quadrilaterals/rhombus_pgram_incorrect.txt",
   "triangles/base_angle_conv_correct.txt",

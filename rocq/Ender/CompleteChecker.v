@@ -453,6 +453,9 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
       dependency_type_issue facts "def_linear_pair" 0 i ExpectedLinearPair step_number
   | RhombusDef i =>
       dependency_type_issue facts "rhombus" 0 i ExpectedRhombus step_number
+  | RhombusOppBisect i =>
+      dependency_type_issue facts "rhombus_opp_bisect" 0 i ExpectedRhombus
+        step_number
   | RectangleDef i =>
       dependency_type_issue facts "rectangle" 0 i ExpectedRectangle step_number
   | DefIsosceles i =>

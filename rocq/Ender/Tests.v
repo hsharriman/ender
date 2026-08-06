@@ -1194,6 +1194,43 @@ Example rhombus_def_diagonal_rejects :
   complete_checker rhombus_def_diagonal_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Either diagonal of a rhombus bisects the two corners it runs between; a
+    side is not a diagonal, and a diagonal says nothing about the corners it
+    misses. *)
+Definition rhombus_opp_bisect_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_DAB,AC)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AC)".
+
+Definition rhombus_opp_bisect_far_corner_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_ABC,AC)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_ABC,AC)".
+
+Definition rhombus_opp_bisect_side_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_DAB,AB)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AB)".
+
+Example rhombus_opp_bisect_accepts :
+  complete_checker rhombus_opp_bisect_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_opp_bisect_far_corner_rejects :
+  complete_checker rhombus_opp_bisect_far_corner_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_opp_bisect_side_rejects :
+  complete_checker rhombus_opp_bisect_side_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Rectangle corners are mutually congruent and opposite sides are
     congruent; a diagonal ray is not a corner. *)
 Definition rectangle_def_angle_source := transitive_header

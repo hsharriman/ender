@@ -494,6 +494,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "rectangle_pgram" text (parse_one RectanglePgram)
         (try_call "rhombus_pgram" text (parse_one RhombusPgram)
         (try_call "rhombus_consec_sides" text (parse_two RhombusConsecSides)
+        (try_call "rhombus_opp_bisect" text (parse_one RhombusOppBisect)
         (try_call "rhombus" text (parse_one RhombusDef)
         (try_call "rectangle" text (parse_one RectangleDef)
         (try_call "altint_conv" text (parse_one_with_diagram AltIntConv)
@@ -509,7 +510,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "inscribed_semi" text (parse_one InscribedSemi)
         (try_call "con_chords_intersect_arcs" text (parse_one ConChordsArcs)
         (try_call "tangent_perp" text (parse_two TangentPerp)
-        None))))))))))))))))))))))))))))))))))))))))))))))))))
+        None)))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

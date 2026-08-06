@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- fifty-three reasons are fully verified and none are partial. The conservative
+- fifty-four reasons are fully verified and none are partial. The conservative
   `ang_bisect_conv` rule requires its congruent dependency to name exactly the
   two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
@@ -40,7 +40,17 @@ Known limitations relevant to prioritization:
   which rules out the interleaved-collinear quadrilaterals that once made
   `pgram_opp_sides` *false* as audited (historical counterexample in
   [`verified-checker.md`](verified-checker.md)).  The core of the family is
-  implemented and verified over the kernel quadrilateral layer; the
+  implemented and verified over the kernel quadrilateral layer, and
+  `rhombus_opp_bisect` with it: a rhombus diagonal cuts the two corners it
+  runs between into congruent halves, by SSS on the two triangles it makes
+  (`l11_51`, neutral).  The rule pairs the named corner with the named
+  diagonal, so the diagonal must actually end at that corner, and it reads
+  the diagonal only as literally spelled -- a proof that names the corner's
+  ray by the crossing point instead (`geo-proof-dataset`
+  `holt_s6-4_exer17_c1`, and the bundled `examples/rhombusOutside.txt`) needs
+  the far point to be distinct from the vertex, which today's kernel has no
+  declaration to draw it from: `seg:` lines are audited as
+  `SegmentWellFormed` but the kernel discards them.  The rest of the
   diagonal-heavy remainder (`pgram_diag_bisect`, kite and trapezoid rules)
   is still fail-closed;
 - the parallel-line family is implemented and verified: `altint`, `altext`,

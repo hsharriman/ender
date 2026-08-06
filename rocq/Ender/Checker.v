@@ -721,6 +721,10 @@ Definition quad_corner_c (q : Quadrilateral) : Angle :=
   angle q.(quad_b) q.(quad_c) q.(quad_d).
 Definition quad_corner_d (q : Quadrilateral) : Angle :=
   angle q.(quad_c) q.(quad_d) q.(quad_a).
+Definition quad_diagonal_ac (q : Quadrilateral) : Segment :=
+  segment q.(quad_a) q.(quad_c).
+Definition quad_diagonal_bd (q : Quadrilateral) : Segment :=
+  segment q.(quad_b) q.(quad_d).
 
 Definition def_parallelogram_rule (decls : Declarations)
     (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
@@ -791,6 +795,24 @@ Definition rhombus_def_rule (facts : list Statement) (i : nat)
       fact_eqb (ConSeg (quad_side_ab q) (quad_side_da q)) conclusion ||
       fact_eqb (ConSeg (quad_side_bc q) (quad_side_da q)) conclusion
   | _ => false
+  end.
+
+(** Each diagonal of a rhombus bisects the two corners it runs between: the
+    two triangles it cuts the rhombus into have three pairs of congruent
+    sides, so the halves at either end are congruent.  The conclusion names
+    one corner and one diagonal, and the rule pairs them: only a corner at an
+    end of the named diagonal is bisected by it.  The audited
+    [AngleBisector] already reads the far endpoint of the segment as the ray
+    the halves are measured to, and that endpoint is the opposite corner. *)
+Definition rhombus_opp_bisect_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | AngBisectOf a s, Some (Rhomb q) =>
+      (segment_u_eqb s (quad_diagonal_ac q) &&
+        (angle_u_eqb a (quad_corner_a q) || angle_u_eqb a (quad_corner_c q))) ||
+      (segment_u_eqb s (quad_diagonal_bd q) &&
+        (angle_u_eqb a (quad_corner_b q) || angle_u_eqb a (quad_corner_d q)))
+  | _, _ => false
   end.
 
 (** A midpoint named on a rectangle side names the same ray from either
@@ -1152,6 +1174,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RhombusPgram i => rhombus_pgram_rule facts i conclusion
   | RhombusConsecSides i j => rhombus_consec_sides_rule facts i j conclusion
   | RhombusDef i => rhombus_def_rule facts i conclusion
+  | RhombusOppBisect i => rhombus_opp_bisect_rule facts i conclusion
   | RectangleDef i => rectangle_def_rule facts i conclusion
   | AltInt i => altint_rule premises facts i conclusion
   | AltExt i => altext_rule premises facts i conclusion
@@ -3232,6 +3255,96 @@ Proof.
     apply (fact_eqb_sound _ _ Heq); assumption.
 Qed.
 
+Lemma segment_u_eqb_flip : forall s v w,
+  segment_u_eqb s (segment v w) = true ->
+  segment_u_eqb s (segment w v) = true.
+Proof.
+  intros s v w H. apply segment_u_eqb_cases in H.
+  unfold segment_u_eqb, segment_eqb, ascii_eqb, reverse_segment.
+  destruct H as [H|H]; subst s; cbn; apply orb_true_iff;
+    [right|left]; apply andb_true_iff; split; apply Ascii.eqb_refl.
+Qed.
+
+(** [W] sees the two rays of the corner at [V] as the equal sides of an
+    isosceles pair, so the two triangles the segment [V W] cuts share three
+    pairs of congruent sides and its corner halves are congruent. *)
+Lemma ender_two_pairs_bisect : forall V P Q W,
+  V <> P -> V <> W -> P <> W ->
+  Cong V P V Q -> Cong W P W Q -> CongA P V W W V Q.
+Proof.
+  intros V P Q W HVP HVW HPW HV HW.
+  destruct (l11_51 V P W V Q W HVP HVW HPW HV (cong_reflexivity V W)
+              (cong_commutativity _ _ _ _ HW)) as [Hangle _].
+  now apply conga_right_comm.
+Qed.
+
+(** Both spellings of the corner and both spellings of the ray name the same
+    bisection; the audited meaning is a disjunction over exactly which
+    endpoint of the ray is the vertex. *)
+Lemma bisect_conclude : forall a s v p q w,
+  angle_u_eqb a (angle p v q) = true ->
+  segment_u_eqb s (segment v w) = true ->
+  CongA (point p) (point v) (point w) (point w) (point v) (point q) ->
+  Interp (AngBisectOf a s).
+Proof.
+  intros a s v p q w Hangle Hsegment Hcong.
+  apply angle_u_eqb_cases in Hangle. apply segment_u_eqb_cases in Hsegment.
+  unfold reverse_angle, reverse_segment in Hangle, Hsegment; cbn in *.
+  destruct Hangle as [Hangle|Hangle]; subst a;
+    destruct Hsegment as [Hsegment|Hsegment]; subst s; cbn;
+    [left|right|left|right]; (split; [reflexivity|]);
+    solve [exact Hcong | now apply conga_comm, conga_sym].
+Qed.
+
+Lemma rhombus_opp_bisect_sound : forall facts i conclusion,
+  Forall Interp facts -> rhombus_opp_bisect_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule.
+  unfold rhombus_opp_bisect_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hr : Interp (Rhomb q)) by (eapply lookup_step_sound; eauto).
+  cbn in Hr. destruct Hr as [[Hwf _] [Hab [Hbc Hcd]]].
+  destruct Hwf as [HAB [HAC [HAD [HBC [HBD [HCD _]]]]]].
+  unfold Audit.SegmentCongruent, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.seg_start, Audit.seg_end, quad_name
+    in Hab, Hbc, Hcd, HAB, HAC, HAD, HBC, HBD, HCD.
+  cbn in Hab, Hbc, Hcd, HAB, HAC, HAD, HBC, HBD, HCD.
+  (* the four sides are mutually congruent, so both triangles a diagonal cuts
+     have congruent legs at either end *)
+  assert (Hda : Cong (point q.(quad_a)) (point q.(quad_b))
+                     (point q.(quad_d)) (point q.(quad_a))).
+  { apply (cong_transitivity _ _ (point q.(quad_c)) (point q.(quad_d)));
+      [now apply (cong_transitivity _ _ (point q.(quad_b)) (point q.(quad_c)))
+      |exact Hcd]. }
+  apply orb_true_iff in Hrule.
+  destruct Hrule as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [Hs Ha]; apply orb_true_iff in Ha;
+    destruct Ha as [Ha|Ha].
+  (* diagonal AC bisects the corners at A and at C *)
+  - apply (bisect_conclude _ _ q.(quad_a) q.(quad_d) q.(quad_b) q.(quad_c) Ha Hs).
+    apply ender_two_pairs_bisect; auto.
+    + apply cong_symmetry, cong_right_commutativity, Hda.
+    + apply cong_right_commutativity, cong_symmetry, Hbc.
+  - apply (bisect_conclude _ _ q.(quad_c) q.(quad_b) q.(quad_d) q.(quad_a) Ha
+             (segment_u_eqb_flip _ _ _ Hs)).
+    apply ender_two_pairs_bisect; auto.
+    + apply cong_left_commutativity, Hbc.
+    + apply cong_right_commutativity, Hda.
+  (* and diagonal BD the corners at B and at D *)
+  - apply (bisect_conclude _ _ q.(quad_b) q.(quad_a) q.(quad_c) q.(quad_d) Ha Hs).
+    apply ender_two_pairs_bisect; auto.
+    + apply cong_left_commutativity, Hab.
+    + apply cong_symmetry, cong_left_commutativity, Hcd.
+  - apply (bisect_conclude _ _ q.(quad_d) q.(quad_c) q.(quad_a) q.(quad_b) Ha
+             (segment_u_eqb_flip _ _ _ Hs)).
+    apply ender_two_pairs_bisect; auto.
+    + apply cong_left_commutativity, Hcd.
+    + apply cong_symmetry, cong_left_commutativity, Hab.
+Qed.
+
 Lemma midpoint_ray_linked_out : forall facts v p q,
   Forall Interp facts ->
   point p <> point v ->
@@ -3709,6 +3822,7 @@ Proof.
   - eapply rhombus_pgram_sound; eauto.
   - eapply rhombus_consec_sides_sound; eauto.
   - eapply rhombus_def_sound; eauto.
+  - eapply rhombus_opp_bisect_sound; eauto.
   - eapply rectangle_def_sound; eauto.
   - eapply altint_sound; eauto.
   - eapply altext_sound; eauto.
