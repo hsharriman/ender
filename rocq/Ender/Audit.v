@@ -417,14 +417,27 @@ Definition ArcCongruent (a b : ArcName) : Prop :=
 
 Definition statementMeaning (s : PublicStatement) : Prop :=
   match s with
-  | OnLine s p => SegmentWellFormed s /\ Col (seg_start s) (seg_end s) (point p)
+  (* Every corpus diagram places the named point on the drawn segment, so
+     the meaning is endpoint-inclusive betweenness, not mere collinearity. *)
+  | OnLine s p => SegmentWellFormed s /\ OnSegment s p
+  (* The eight arguments name the whole drawn figure: [a] and [b] flank the
+     crossing [i1] on the first line, [c] and [d] flank [i2] on the second,
+     and [t1], [t2] extend the transversal strictly beyond [i1] and [i2],
+     naming the exterior angles.  The strict betweenness conjuncts state
+     that order, and the one-side conjunct fixes which flanking points share
+     a side of the transversal -- the datum that separates alternate from
+     corresponding from same-side angle pairs.  [OS] also places [A] and [C]
+     strictly off the transversal, which keeps both lines genuinely
+     transverse to it; every collinearity and distinctness of the earlier,
+     weaker reading is derivable from these five conjuncts. *)
   | Transversal a b t1 i1 c d t2 i2 =>
       let A := point a in let B := point b in
       let C := point c in let D := point d in
       let T1 := point t1 in let T2 := point t2 in
       let I1 := point i1 in let I2 := point i2 in
-      A <> B /\ C <> D /\ T1 <> T2 /\ I1 <> I2 /\
-      Col A B I1 /\ Col C D I2 /\ Col T1 T2 I1 /\ Col T1 T2 I2
+      BetS T1 I1 I2 /\ BetS I1 I2 T2 /\
+      BetS A I1 B /\ BetS C I2 D /\
+      OS I1 I2 A C
   | IntersectSeg a b p => OnSegment a p /\ OnSegment b p
   | TrapezoidPremise q a b => IsTrapezoid q /\ Parallel a b
   | KitePremise q a b => IsKitePremise q a b

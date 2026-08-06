@@ -68,7 +68,7 @@ Definition statement_meaning (s : Statement) : Prop :=
               (point s.(seg_start)) (point a.(ang_vertex)) (point a.(ang_right)))
   | OnLine s p =>
       point s.(seg_start) <> point s.(seg_end) /\
-      Col (point s.(seg_start)) (point s.(seg_end)) (point p)
+      Bet (point s.(seg_start)) (point p) (point s.(seg_end))
   (* The three shape statements mirror the audited meanings exactly, including
      the audited angle vertex order, so that they project both ways. *)
   | IsoscelesTri t =>

@@ -269,24 +269,37 @@ as `reflex` on `ref_ang` and `perp_con_ang` on `con_ang` do.
 
 The largest remaining cluster is the parallel-line family — `altint`,
 `altint_conv`, `altext`, `corresp_ang`, `sameside_ang` and their converses,
-with the quadrilateral rules built on top. **These cannot be verified against
-the audited meanings as they stand.** Every one of them is a theorem about
-*which side* of the transversal each point lies on: alternate, corresponding,
-and same-side angles are distinguished by nothing else, and they have
-different conclusions. GeoCoq's lemmas say so explicitly — `l12_21_b`, the
-alternate-interior converse, is neutral but takes `TS A C B D` as a hypothesis.
-The audited `Transversal` meaning records only distinctness and collinearity:
+with the quadrilateral rules built on top. Every one of them is a theorem
+about *which side* of the transversal each point lies on: alternate,
+corresponding, and same-side angles are distinguished by nothing else, and
+they have different conclusions. GeoCoq's lemmas say so explicitly —
+`l12_21_b`, the alternate-interior converse, is neutral but takes
+`TS A C B D` as a hypothesis. The audited `Transversal` meaning once recorded
+only distinctness and collinearity, which fixed no side; it now states the
+whole drawn configuration:
 
 ```rocq
-point a <> point b /\ point c <> point d /\ point t1 <> point t2 /\
-Col a b i1 /\ Col c d i2 /\ Col t1 t2 i1 /\ Col t1 t2 i2 /\ i1 <> i2
+BetS T1 I1 I2 /\ BetS I1 I2 T2 /\   (* exteriors out, interior between *)
+BetS A I1 B  /\ BetS C I2 D  /\     (* named points flank their crossings *)
+OS I1 I2 A C                        (* first-named points share a side *)
 ```
 
-Nothing there fixes a side, so no sound rule can tell an alternate pair from a
-corresponding one. Closing this needs a decision about `Audit.v` — either
-strengthen `Transversal` to state the sidedness, or add a statement that does
-— and that changes what the checker claims, so it is not a decision to take
-silently.
+Every distinctness and collinearity of the weaker reading is derivable, and
+the `OS` conjunct (through `TS`, which carries `~ Col`) keeps both lines
+genuinely transverse. From these, the side classifications the rules need —
+`TS I1 I2 A D` for alternate pairs and their kin — all follow, in the form
+GeoCoq's lemmas consume. The family is now provable in principle and waits
+only on kernel support for the `transversal` and `para` statements.
+
+`para` itself deliberately keeps GeoCoq's inclusive `Par`, coincident-lines
+disjunct and all, for two reasons. The catalog's `para_transitive` ("two
+lines parallel to the same line are parallel to each other") is false under
+a strict reading when the two outer segments happen to lie on one line, and
+GeoCoq's `par_trans` proves it directly under the inclusive one. And no
+angle rule needs strictness from `para`: inside any transversal figure the
+coincident case is impossible, since two coincident "parallel" lines would
+share both crossing points with the transversal and so *be* the transversal,
+which the `OS` conjunct forbids.
 
 The parallelogram family, which is the next largest cluster and includes the
 most-used unimplemented reason in the textbook corpus (`pgram_opp_sides`, 12

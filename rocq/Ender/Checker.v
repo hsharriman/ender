@@ -772,7 +772,8 @@ Proof.
           | unfold reverse_segment; cbn; split; apply l7_2
           | unfold reverse_segment; cbn; tauto
           | unfold reverse_segment; cbn;
-            split; intros [Hne Hcol]; (split; [congruence|Col]) ].
+            split; intros [Hne Hbet];
+            (split; [congruence|now apply between_symmetry]) ].
 Qed.
 
 Lemma find_premise_sound : forall label premises statement,
@@ -1287,7 +1288,7 @@ Proof.
   subst q. apply segment_u_eqb_cases in Hs.
   destruct Hs as [Heq|Heq]; subst s; [exact Hon|].
   unfold reverse_segment in *. cbn in Hon |- *.
-  destruct Hon as [Hne Hcol]. split; [congruence|Col].
+  destruct Hon as [Hne Hbet]. split; [congruence|now apply between_symmetry].
 Qed.
 
 Lemma midpt_conv_sound : forall premises facts i conclusion,
@@ -1313,8 +1314,9 @@ Proof.
   rewrite Hpremise in Hpr.
   apply andb_true_iff in Hmatch. destruct Hmatch as [Hseg Hpoint].
   pose proof (on_line_u_sound s t p q Hseg Hpoint Hpr) as Hline.
-  cbn in Hline. destruct Hline as [Hne Hcol]. cbn.
-  assert (Hbetween : Col (point s.(seg_start)) (point p) (point s.(seg_end))) by Col.
+  cbn in Hline. destruct Hline as [Hne Hbet]. cbn.
+  assert (Hbetween : Col (point s.(seg_start)) (point p) (point s.(seg_end)))
+    by (apply bet_col in Hbet; Col).
   assert (Hequal : Cong (point p) (point s.(seg_start))
                         (point p) (point s.(seg_end))) by Cong.
   destruct (l7_20 (point p) (point s.(seg_start)) (point s.(seg_end))
@@ -1611,7 +1613,8 @@ Lemma def_perp_core : forall u s p x y,
   endpoint_of x s = true -> Interp (OnLine s p) -> Interp (PerpAt u s p).
 Proof.
   intros u s p x y Hx Hy Hper Hpu Hyu Hxs Hline.
-  cbn in Hline. destruct Hline as [Hne Hcol].
+  cbn in Hline. destruct Hline as [Hne Hbet].
+  pose proof (bet_col _ _ _ Hbet) as Hcol.
   assert (Hbase : Perp_at (point p) (point p) (point y) (point x) (point p))
     by (apply perp_in_sym, per_perp_in; auto).
   assert (Hspec : point x <> point (other_endpoint x s) /\

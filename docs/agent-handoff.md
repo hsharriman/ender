@@ -37,10 +37,14 @@ Known limitations relevant to prioritization:
   [`verified-checker.md`](verified-checker.md)).  The whole parallelogram
   family is now provable in principle but needs quadrilateral objects in the
   kernel, which do not exist yet;
-- the parallel-line family is blocked on an `Audit.v` decision, not on effort:
-  the audited `Transversal` meaning records no sidedness, and alternate,
-  corresponding, and same-side angles differ by nothing else.  See
-  [`verified-checker.md`](verified-checker.md);
+- the parallel-line family is unblocked: the audited `Transversal` meaning
+  now states the drawn configuration (strict order along the transversal,
+  flanking points at each crossing, and which flankers share a side), which
+  is the sidedness the alternate/corresponding/same-side rules need, in the
+  form GeoCoq's lemmas consume.  `para` deliberately keeps GeoCoq's inclusive
+  `Par` so that `para_transitive` stays true.  Remaining work is kernel
+  support for the `transversal` and `para` statements and the rules
+  themselves.  See [`verified-checker.md`](verified-checker.md);
 - the inscribed-angle congruence rules (`con_inscribed_angs`, `inscribed_angs`)
   are false as audited in Euclidean models of dimension three or more: the
   audited `OnCircle` is equidistance from the center, which is a sphere, and
@@ -64,11 +68,10 @@ Known limitations relevant to prioritization:
   else (`declared_angle` in `Checker.v`); a rule needing it with no such source
   must fail closed;
 - the kernel does no ray reasoning, so an angle named by a point that merely
-  lies on the right ray is not recognised.  Adding it is easy where a premise
-  supplies `Out`, but the premise that would drive it, `on_line`, is audited as
-  `Col` -- a third statement weaker than the diagram it describes.  Measured
-  over both corpora the capability would unlock two files, both needing that
-  change first, so it is not worth building ahead of the decision;
+  lies on the right ray is not recognised.  The blocker is gone: `on_line` is
+  now audited as segment membership (`Bet`), matching every corpus diagram,
+  so a premise supplies the `Out` facts ray reasoning needs.  Measured over
+  both corpora the capability would unlock two files;
 - the parallel-line rules and everything built on them need the Euclidean
   hypothesis.  The mechanism for that now exists: `third_angle` introduces
   `Tarski_euclidean` in `Checker.v` right before its own soundness lemma, so
