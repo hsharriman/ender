@@ -288,8 +288,12 @@ Every distinctness and collinearity of the weaker reading is derivable, and
 the `OS` conjunct (through `TS`, which carries `~ Col`) keeps both lines
 genuinely transverse. From these, the side classifications the rules need —
 `TS I1 I2 A D` for alternate pairs and their kin — all follow, in the form
-GeoCoq's lemmas consume. The family is now provable in principle and waits
-only on kernel support for the `transversal` and `para` statements.
+GeoCoq's lemmas consume, and the whole family is now implemented and
+verified: the forward rules through the Playfair-derived alternate interior
+angles, the converses neutrally through `l12_21_b`, and `para_transitive`
+through a re-proof of GeoCoq's `par_trans` whose one `CopR` reflection call
+(the source of an `Eqdep.Eq_rect_eq` dependency) is replaced by explicit
+plane pasting, keeping the development axiom-free.
 
 `para` itself deliberately keeps GeoCoq's inclusive `Par`, coincident-lines
 disjunct and all, for two reasons. The catalog's `para_transitive` ("two

@@ -78,7 +78,16 @@ Inductive Reason :=
 | PgramOppSidePara : nat -> nat -> Reason
 | RectanglePgram : nat -> Reason
 | RhombusPgram : nat -> Reason
-| RhombusConsecSides : nat -> nat -> Reason.
+| RhombusConsecSides : nat -> nat -> Reason
+| AltInt : nat -> Reason
+| AltExt : nat -> Reason
+| CorrespAng : nat -> Reason
+| SamesideAng : nat -> Reason
+| AltIntConv : nat -> Reason
+| AltExtConv : nat -> Reason
+| CorrespAngConv : nat -> Reason
+| SamesideAngConv : nat -> Reason
+| ParaTrans : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.

@@ -46,6 +46,21 @@ const implemented = new Set([
   "def_perp",
   "perp_con_ang",
   "reflex",
+  "def_parallelogram",
+  "pgram_opp_sides",
+  "pgram_opp_side_para",
+  "rectangle_pgram",
+  "rhombus_pgram",
+  "rhombus_consec_sides",
+  "altint",
+  "altext",
+  "corresp_ang",
+  "sameside_ang",
+  "altint_conv",
+  "altext_conv",
+  "corresp_ang_conv",
+  "sameside_ang_conv",
+  "para_transitive",
 ]);
 const partial = new Set();
 const priorityOne = new Set(["ang_bisect_conv"]);
@@ -116,7 +131,21 @@ const entries = catalog.map((reason) => {
       : reason === "midpt_conv"
         ? "GeoCoq l7_20 (unique equidistant point on a line)"
       : reason === "third_angle"
-        ? "GeoCoq Tarski_euclidean via Playfair; the only Euclidean rule"
+        ? "GeoCoq Tarski_euclidean via Playfair"
+      : ["def_parallelogram", "rectangle_pgram", "rhombus_pgram"].includes(reason)
+        ? "audited meanings plus declared-quadrilateral nondegeneracy (neutral)"
+      : ["pgram_opp_sides", "rhombus_consec_sides"].includes(reason)
+        ? "Tarski_euclidean via Playfair alternate interior angles; ASA along the diagonal"
+      : reason === "pgram_opp_side_para"
+        ? "GeoCoq par_cong_mid_ts; the audited crossing diagonals supply its TS"
+      : ["altint", "altext", "corresp_ang", "sameside_ang"].includes(reason)
+        ? "Tarski_euclidean via Playfair over the audited transversal configuration"
+      : ["altint_conv", "altext_conv", "corresp_ang_conv", "sameside_ang_conv"].includes(
+            reason,
+          )
+        ? "GeoCoq l12_21_b (neutral) with the audited sidedness"
+      : reason === "para_transitive"
+        ? "Tarski_euclidean via Playfair; CopR-free re-proof of par_trans"
       : ["base_angle", "base_angle_conv", "equilat_equiang", "equiang_equilat"].includes(
             reason,
           )

@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- thirty-five reasons are fully verified and none are partial: the `ang:`
+- forty-four reasons are fully verified and none are partial: the `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
   angles.  The complete-contract adapter still rejects reflexive statements
   in the *goal* position, deliberately (`project_goal_statement`): a `ref_*`
@@ -39,14 +39,16 @@ Known limitations relevant to prioritization:
   [`verified-checker.md`](verified-checker.md)).  The whole parallelogram
   family is now provable in principle but needs quadrilateral objects in the
   kernel, which do not exist yet;
-- the parallel-line family is unblocked: the audited `Transversal` meaning
-  now states the drawn configuration (strict order along the transversal,
-  flanking points at each crossing, and which flankers share a side), which
-  is the sidedness the alternate/corresponding/same-side rules need, in the
-  form GeoCoq's lemmas consume.  `para` deliberately keeps GeoCoq's inclusive
-  `Par` so that `para_transitive` stays true.  Remaining work is kernel
-  support for the `transversal` and `para` statements and the rules
-  themselves.  See [`verified-checker.md`](verified-checker.md);
+- the parallel-line family is implemented and verified: `altint`, `altext`,
+  `corresp_ang`, `sameside_ang`, their converses, and `para_transitive`.
+  The forwards are Euclidean (Playfair alternate interior angles); the
+  converses are neutral (`l12_21_b`).  One naming limitation remains: a rule
+  matches a line only by the transversal's flanking pair, so a segment that
+  *ends* at a crossing (the Z-figure and quad-side transversals in the older
+  fixtures, which also spell degenerate transversal premises) cannot yet name
+  its line.  Those fixtures stay out of reach until a line-naming extension
+  (match a segment through the crossing point plus one flank) or fixture
+  rewrites;
 - the inscribed-angle congruence rules (`con_inscribed_angs`, `inscribed_angs`)
   are false as audited in Euclidean models of dimension three or more: the
   audited `OnCircle` is equidistance from the center, which is a sphere, and

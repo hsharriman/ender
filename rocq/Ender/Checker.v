@@ -667,6 +667,140 @@ Definition pgram_opp_side_para_rule (decls : Declarations)
   | _, _, _ => false
   end.
 
+(** * The parallel-line family
+
+    Every rule reads the drawn configuration from the transversal diagram
+    premise, the way [vert_ang] reads the crossing, and matches its named
+    angles against the figure's labeled points up to reversal and pair
+    order. *)
+Definition transversal_witness (s : Statement)
+  : option (PointId * PointId * PointId * PointId *
+            PointId * PointId * PointId * PointId) :=
+  match s with
+  | Transv a b t1 i1 c d t2 i2 => Some (a, b, t1, i1, c, d, t2, i2)
+  | _ => None
+  end.
+
+Definition transversal_premise_check
+    (check : PointId -> PointId -> PointId -> PointId ->
+             PointId -> PointId -> PointId -> PointId -> bool)
+    (premises : list Premise) : bool :=
+  existsb (fun pr =>
+    match transversal_witness pr.(premise_statement) with
+    | Some (a, b, t1, i1, c, d, t2, i2) => check a b t1 i1 c d t2 i2
+    | None => false
+    end) premises.
+
+Definition transversal_lines_match (s1 s2 : Segment)
+    (a b c d : PointId) : bool :=
+  segment_pair_eqb s1 s2 (segment a b) (segment c d).
+
+Definition altint_pair (a b i1 c d i2 : PointId) (x y : Angle) : bool :=
+  angle_pair_eqb x y (angle a i1 i2) (angle d i2 i1) ||
+  angle_pair_eqb x y (angle b i1 i2) (angle c i2 i1).
+Definition altext_pair (a b t1 i1 c d t2 i2 : PointId) (x y : Angle) : bool :=
+  angle_pair_eqb x y (angle t1 i1 a) (angle t2 i2 d) ||
+  angle_pair_eqb x y (angle t1 i1 b) (angle t2 i2 c).
+Definition corresp_pair (a b t1 i1 c d t2 i2 : PointId) (x y : Angle) : bool :=
+  angle_pair_eqb x y (angle i2 i1 b) (angle t2 i2 d) ||
+  angle_pair_eqb x y (angle i2 i1 a) (angle t2 i2 c) ||
+  angle_pair_eqb x y (angle t1 i1 a) (angle i1 i2 c) ||
+  angle_pair_eqb x y (angle t1 i1 b) (angle i1 i2 d).
+Definition sameside_pair (a b i1 c d i2 : PointId) (x y : Angle) : bool :=
+  angle_pair_eqb x y (angle b i1 i2) (angle i1 i2 d) ||
+  angle_pair_eqb x y (angle a i1 i2) (angle i1 i2 c).
+
+Definition altint_rule (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | ConAng x y, Some (Para s1 s2) =>
+      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
+        transversal_lines_match s1 s2 a b c d &&
+        altint_pair a b i1 c d i2 x y) premises
+  | _, _ => false
+  end.
+
+Definition altext_rule (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | ConAng x y, Some (Para s1 s2) =>
+      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
+        transversal_lines_match s1 s2 a b c d &&
+        altext_pair a b t1 i1 c d t2 i2 x y) premises
+  | _, _ => false
+  end.
+
+Definition corresp_ang_rule (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | ConAng x y, Some (Para s1 s2) =>
+      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
+        transversal_lines_match s1 s2 a b c d &&
+        corresp_pair a b t1 i1 c d t2 i2 x y) premises
+  | _, _ => false
+  end.
+
+Definition sameside_ang_rule (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | Supplementary x y, Some (Para s1 s2) =>
+      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
+        transversal_lines_match s1 s2 a b c d &&
+        sameside_pair a b i1 c d i2 x y) premises
+  | _, _ => false
+  end.
+
+Definition altint_conv_rule (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | Para s1 s2, Some (ConAng x y) =>
+      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
+        transversal_lines_match s1 s2 a b c d &&
+        altint_pair a b i1 c d i2 x y) premises
+  | _, _ => false
+  end.
+
+Definition altext_conv_rule (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | Para s1 s2, Some (ConAng x y) =>
+      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
+        transversal_lines_match s1 s2 a b c d &&
+        altext_pair a b t1 i1 c d t2 i2 x y) premises
+  | _, _ => false
+  end.
+
+Definition corresp_ang_conv_rule (premises : list Premise)
+    (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | Para s1 s2, Some (ConAng x y) =>
+      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
+        transversal_lines_match s1 s2 a b c d &&
+        corresp_pair a b t1 i1 c d t2 i2 x y) premises
+  | _, _ => false
+  end.
+
+Definition sameside_ang_conv_rule (premises : list Premise)
+    (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | Para s1 s2, Some (Supplementary x y) =>
+      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
+        transversal_lines_match s1 s2 a b c d &&
+        sameside_pair a b i1 c d i2 x y) premises
+  | _, _ => false
+  end.
+
+Definition para_transitive_rule (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | Para s1 s2, Some (Para u1 u2), Some (Para v1 v2) =>
+      (segment_u_eqb u2 v1 && segment_pair_eqb s1 s2 u1 v2) ||
+      (segment_u_eqb u2 v2 && segment_pair_eqb s1 s2 u1 v1) ||
+      (segment_u_eqb u1 v1 && segment_pair_eqb s1 s2 u2 v2) ||
+      (segment_u_eqb u1 v2 && segment_pair_eqb s1 s2 u2 v1)
+  | _, _, _ => false
+  end.
+
 Definition rule_valid (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
   match r with
@@ -740,6 +874,15 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RectanglePgram i => rectangle_pgram_rule facts i conclusion
   | RhombusPgram i => rhombus_pgram_rule facts i conclusion
   | RhombusConsecSides i j => rhombus_consec_sides_rule facts i j conclusion
+  | AltInt i => altint_rule premises facts i conclusion
+  | AltExt i => altext_rule premises facts i conclusion
+  | CorrespAng i => corresp_ang_rule premises facts i conclusion
+  | SamesideAng i => sameside_ang_rule premises facts i conclusion
+  | AltIntConv i => altint_conv_rule premises facts i conclusion
+  | AltExtConv i => altext_conv_rule premises facts i conclusion
+  | CorrespAngConv i => corresp_ang_conv_rule premises facts i conclusion
+  | SamesideAngConv i => sameside_ang_conv_rule premises facts i conclusion
+  | ParaTrans i j => para_transitive_rule facts i j conclusion
   | RHL i j k =>
       match conclusion with
       | ConTri t u => declared_pair decls t u &&
@@ -1879,6 +2022,245 @@ Proof.
   cbn in Hr |- *. exact (proj1 Hr).
 Qed.
 
+Lemma para_pair_conclude : forall s1 s2 a b,
+  segment_pair_eqb s1 s2 a b = true ->
+  Par (point a.(seg_start)) (point a.(seg_end))
+      (point b.(seg_start)) (point b.(seg_end)) ->
+  Interp (Para s1 s2).
+Proof.
+  intros s1 s2 a b Hpair Hpar.
+  cbn. unfold Audit.Parallel, seg_name, Audit.seg_start, Audit.seg_end. cbn.
+  unfold segment_pair_eqb in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [H1 H2];
+    apply segment_u_eqb_cases in H1; apply segment_u_eqb_cases in H2;
+    destruct H1 as [->| ->]; destruct H2 as [->| ->];
+    unfold reverse_segment; cbn;
+    eauto 6 using par_symmetry, par_left_comm, par_right_comm, par_comm.
+Qed.
+
+Lemma conga_pair_sound : forall x y a b,
+  angle_pair_eqb x y a b = true ->
+  Interp (ConAng x y) ->
+  CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
+        (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right)).
+Proof.
+  intros x y a b Hpair Hconga. cbn in Hconga.
+  unfold angle_pair_eqb in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [H1 H2];
+    apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
+    destruct H1 as [->| ->]; destruct H2 as [->| ->];
+    unfold reverse_angle in Hconga; cbn in Hconga; CongA.
+Qed.
+
+Lemma conga_pair_conclude : forall x y a b,
+  angle_pair_eqb x y a b = true ->
+  CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
+        (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right)) ->
+  Interp (ConAng x y).
+Proof.
+  intros x y a b Hpair Hconga.
+  cbn. unfold angle_pair_eqb in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [H1 H2];
+    apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
+    destruct H1 as [->| ->]; destruct H2 as [->| ->];
+    unfold reverse_angle; cbn; CongA.
+Qed.
+
+Lemma suppa_pair_sound : forall x y a b,
+  angle_pair_eqb x y a b = true ->
+  Interp (Supplementary x y) ->
+  SuppA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
+        (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right)).
+Proof.
+  intros x y a b Hpair Hsupp. cbn in Hsupp.
+  unfold angle_pair_eqb in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [H1 H2];
+    apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
+    destruct H1 as [->| ->]; destruct H2 as [->| ->];
+    unfold reverse_angle in Hsupp; cbn in Hsupp;
+    solve [ assumption
+          | now apply suppa_sym
+          | now apply suppa_left_comm | now apply suppa_right_comm
+          | now apply suppa_comm
+          | now apply suppa_left_comm, suppa_sym
+          | now apply suppa_right_comm, suppa_sym
+          | now apply suppa_comm, suppa_sym
+          | now apply suppa_sym, suppa_left_comm
+          | now apply suppa_sym, suppa_right_comm
+          | now apply suppa_sym, suppa_comm ].
+Qed.
+
+Lemma suppa_pair_conclude : forall x y a b,
+  angle_pair_eqb x y a b = true ->
+  SuppA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
+        (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right)) ->
+  Interp (Supplementary x y).
+Proof.
+  intros x y a b Hpair Hsupp.
+  cbn. unfold angle_pair_eqb in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [H1 H2];
+    apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
+    destruct H1 as [->| ->]; destruct H2 as [->| ->];
+    unfold reverse_angle; cbn;
+    solve [ assumption
+          | now apply suppa_sym
+          | now apply suppa_left_comm | now apply suppa_right_comm
+          | now apply suppa_comm
+          | now apply suppa_left_comm, suppa_sym
+          | now apply suppa_right_comm, suppa_sym
+          | now apply suppa_comm, suppa_sym
+          | now apply suppa_sym, suppa_left_comm
+          | now apply suppa_sym, suppa_right_comm
+          | now apply suppa_sym, suppa_comm ].
+Qed.
+
+(** Extract the transversal configuration named by a diagram premise. *)
+Lemma transversal_premise_sound : forall premises check,
+  Forall (interp_premise point) premises ->
+  transversal_premise_check check premises = true ->
+  exists pa pb pt1 pi1 pc pd pt2 pi2,
+    check pa pb pt1 pi1 pc pd pt2 pi2 = true /\
+    BetS (point pt1) (point pi1) (point pi2) /\
+    BetS (point pi1) (point pi2) (point pt2) /\
+    BetS (point pa) (point pi1) (point pb) /\
+    BetS (point pc) (point pi2) (point pd) /\
+    OS (point pi1) (point pi2) (point pa) (point pc).
+Proof.
+  intros premises check Hprem Hcheck.
+  unfold transversal_premise_check in Hcheck.
+  apply existsb_exists in Hcheck. destruct Hcheck as [pr [Hin Hc]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr.
+  destruct (transversal_witness pr.(premise_statement))
+    as [[[[[[[[pa pb] pt1] pi1] pc] pd] pt2] pi2]|] eqn:Hwit; try discriminate.
+  assert (Hpremise : pr.(premise_statement) = Transv pa pb pt1 pi1 pc pd pt2 pi2).
+  { unfold transversal_witness in Hwit.
+    destruct pr.(premise_statement); try discriminate.
+    now injection Hwit as <- <- <- <- <- <- <- <-. }
+  rewrite Hpremise in Hpr. cbn in Hpr.
+  unfold Audit.TransversalConfiguration in Hpr. cbn in Hpr.
+  destruct Hpr as [H1 [H2 [H3 [H4 H5]]]].
+  exists pa, pb, pt1, pi1, pc, pd, pt2, pi2.
+  split; [exact Hc|]. split; [exact H1|]. split; [exact H2|].
+  split; [exact H3|]. split; [exact H4|exact H5].
+Qed.
+
+Lemma altint_conv_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  altint_conv_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold altint_conv_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hconga : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
+  destruct (transversal_premise_sound _ _ Hprem Hrule)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc [Hbt1 [Hbt2 [Hbab [Hbcd Hos]]]]]]]]]]]]].
+  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
+  unfold transversal_lines_match in Hlines.
+  eapply para_pair_conclude; [exact Hlines|]. cbn.
+  apply (ender_transversal_master_conv (point pi1) (point pi2)); try assumption.
+  unfold altint_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm].
+  - left. pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC.
+    cbn in HC. exact HC.
+  - right. pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC.
+    cbn in HC. exact HC.
+Qed.
+
+Lemma altext_conv_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  altext_conv_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold altext_conv_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hconga : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
+  destruct (transversal_premise_sound _ _ Hprem Hrule)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc [Hbt1 [Hbt2 [Hbab [Hbcd Hos]]]]]]]]]]]]].
+  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
+  unfold transversal_lines_match in Hlines.
+  eapply para_pair_conclude; [exact Hlines|]. cbn.
+  apply (ender_transversal_altext_conv (point pt1) (point pi1) (point pi2)
+           (point pt2)); try assumption.
+  unfold altext_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm].
+  - left. pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC.
+    cbn in HC. exact HC.
+  - right. pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC.
+    cbn in HC. exact HC.
+Qed.
+
+Lemma corresp_ang_conv_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  corresp_ang_conv_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold corresp_ang_conv_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hconga : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
+  destruct (transversal_premise_sound _ _ Hprem Hrule)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc [Hbt1 [Hbt2 [Hbab [Hbcd Hos]]]]]]]]]]]]].
+  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
+  unfold transversal_lines_match in Hlines.
+  eapply para_pair_conclude; [exact Hlines|]. cbn.
+  apply (ender_transversal_corresp_conv (point pt1) (point pi1) (point pi2)
+           (point pt2)); try assumption.
+  unfold corresp_pair in Hpairs.
+  apply orb_true_iff in Hpairs. destruct Hpairs as [Hpairs|Hm4].
+  2:{ do 3 right. pose proof (conga_pair_sound _ _ _ _ Hm4 Hconga) as HC.
+      cbn in HC. exact HC. }
+  apply orb_true_iff in Hpairs. destruct Hpairs as [Hpairs|Hm3].
+  2:{ do 2 right; left.
+      pose proof (conga_pair_sound _ _ _ _ Hm3 Hconga) as HC.
+      cbn in HC. exact HC. }
+  apply orb_true_iff in Hpairs. destruct Hpairs as [Hm1|Hm2].
+  - left. pose proof (conga_pair_sound _ _ _ _ Hm1 Hconga) as HC.
+    cbn in HC. exact HC.
+  - right; left. pose proof (conga_pair_sound _ _ _ _ Hm2 Hconga) as HC.
+    cbn in HC. exact HC.
+Qed.
+
+Lemma sameside_ang_conv_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  sameside_ang_conv_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold sameside_ang_conv_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hsupp : Interp (Supplementary a a0))
+    by (eapply lookup_step_sound; eauto).
+  destruct (transversal_premise_sound _ _ Hprem Hrule)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc [Hbt1 [Hbt2 [Hbab [Hbcd Hos]]]]]]]]]]]]].
+  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
+  unfold transversal_lines_match in Hlines.
+  eapply para_pair_conclude; [exact Hlines|]. cbn.
+  apply (ender_transversal_sameside_conv (point pt1) (point pi1) (point pi2)
+           (point pt2)); try assumption.
+  unfold sameside_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm].
+  - left. pose proof (suppa_pair_sound _ _ _ _ Hm Hsupp) as HC.
+    cbn in HC. exact HC.
+  - right. pose proof (suppa_pair_sound _ _ _ _ Hm Hsupp) as HC.
+    cbn in HC. exact HC.
+Qed.
+
 (** Everything above holds in neutral geometry.  [third_angle] is the first
     rule that genuinely needs the parallel postulate, so the assumption enters
     here rather than at the top of the section; every lemma stated before this
@@ -2065,6 +2447,160 @@ Proof.
     apply par_symmetry. exact Hother.
 Qed.
 
+Lemma altint_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  altint_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold altint_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hpara : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
+  destruct (transversal_premise_sound _ _ Hprem Hrule)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc [Hbt1 [Hbt2 [Hbab [Hbcd Hos]]]]]]]]]]]]].
+  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
+  unfold transversal_lines_match in Hlines.
+  pose proof (para_pair_sound _ _ _ _ Hlines Hpara) as HP. cbn in HP.
+  destruct (ender_transversal_master _ _ _ _ _ _ _ _
+              Hbt1 Hbt2 Hbab Hbcd Hos HP) as [Hm1 Hm2].
+  unfold altint_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm].
+  - eapply conga_pair_conclude; [exact Hm|]. cbn. exact Hm1.
+  - eapply conga_pair_conclude; [exact Hm|]. cbn. exact Hm2.
+Qed.
+
+Lemma altext_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  altext_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold altext_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hpara : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
+  destruct (transversal_premise_sound _ _ Hprem Hrule)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc [Hbt1 [Hbt2 [Hbab [Hbcd Hos]]]]]]]]]]]]].
+  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
+  unfold transversal_lines_match in Hlines.
+  pose proof (para_pair_sound _ _ _ _ Hlines Hpara) as HP. cbn in HP.
+  destruct (ender_transversal_altext _ _ _ _ _ _ _ _
+              Hbt1 Hbt2 Hbab Hbcd Hos HP) as [He1 He2].
+  unfold altext_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm].
+  - eapply conga_pair_conclude; [exact Hm|]. cbn. exact He1.
+  - eapply conga_pair_conclude; [exact Hm|]. cbn. exact He2.
+Qed.
+
+Lemma corresp_ang_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  corresp_ang_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold corresp_ang_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hpara : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
+  destruct (transversal_premise_sound _ _ Hprem Hrule)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc [Hbt1 [Hbt2 [Hbab [Hbcd Hos]]]]]]]]]]]]].
+  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
+  unfold transversal_lines_match in Hlines.
+  pose proof (para_pair_sound _ _ _ _ Hlines Hpara) as HP. cbn in HP.
+  destruct (ender_transversal_corresp _ _ _ _ _ _ _ _
+              Hbt1 Hbt2 Hbab Hbcd Hos HP) as [Hc1 [Hc2 [Hc3 Hc4]]].
+  unfold corresp_pair in Hpairs.
+  apply orb_true_iff in Hpairs. destruct Hpairs as [Hpairs|Hm].
+  2:{ eapply conga_pair_conclude; [exact Hm|]. cbn. exact Hc4. }
+  apply orb_true_iff in Hpairs. destruct Hpairs as [Hpairs|Hm].
+  2:{ eapply conga_pair_conclude; [exact Hm|]. cbn. exact Hc3. }
+  apply orb_true_iff in Hpairs. destruct Hpairs as [Hm|Hm].
+  - eapply conga_pair_conclude; [exact Hm|]. cbn. exact Hc1.
+  - eapply conga_pair_conclude; [exact Hm|]. cbn. exact Hc2.
+Qed.
+
+Lemma sameside_ang_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  sameside_ang_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold sameside_ang_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hpara : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
+  destruct (transversal_premise_sound _ _ Hprem Hrule)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc [Hbt1 [Hbt2 [Hbab [Hbcd Hos]]]]]]]]]]]]].
+  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
+  unfold transversal_lines_match in Hlines.
+  pose proof (para_pair_sound _ _ _ _ Hlines Hpara) as HP. cbn in HP.
+  destruct (ender_transversal_sameside _ _ _ _ _ _ _ _
+              Hbt1 Hbt2 Hbab Hbcd Hos HP) as [Hs1 Hs2].
+  unfold sameside_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm].
+  - eapply suppa_pair_conclude; [exact Hm|]. cbn. exact Hs1.
+  - eapply suppa_pair_conclude; [exact Hm|]. cbn. exact Hs2.
+Qed.
+
+Lemma para_link_left : forall u v X Y,
+  segment_u_eqb u v = true ->
+  Par (point v.(seg_start)) (point v.(seg_end)) X Y ->
+  Par (point u.(seg_start)) (point u.(seg_end)) X Y.
+Proof.
+  intros u v X Y Heq Hpar. apply segment_u_eqb_cases in Heq.
+  destruct Heq as [->| ->]; [exact Hpar|].
+  unfold reverse_segment. cbn. now apply par_left_comm.
+Qed.
+
+Lemma para_trans_sound : forall facts i j conclusion,
+  Forall Interp facts ->
+  para_transitive_rule facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  unfold para_transitive_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  assert (Hp1 : Interp (Para s1 s2)) by (eapply lookup_step_sound; eauto).
+  assert (Hp2 : Interp (Para s3 s4)) by (eapply lookup_step_sound; eauto).
+  cbn in Hp1, Hp2.
+  unfold Audit.Parallel, seg_name, Audit.seg_start, Audit.seg_end
+    in Hp1, Hp2; cbn in Hp1, Hp2.
+  apply orb_true_iff in Hrule. destruct Hrule as [Hrule|Hcase4].
+  2:{ apply andb_true_iff in Hcase4. destruct Hcase4 as [Hshared Hconc].
+      eapply para_pair_conclude; [exact Hconc|]. cbn.
+      apply ender_par_trans with (point s1.(seg_start)) (point s1.(seg_end)).
+      - now apply par_symmetry.
+      - apply (para_link_left s1 s4 _ _ Hshared).
+        now apply par_symmetry. }
+  apply orb_true_iff in Hrule. destruct Hrule as [Hrule|Hcase3].
+  2:{ apply andb_true_iff in Hcase3. destruct Hcase3 as [Hshared Hconc].
+      eapply para_pair_conclude; [exact Hconc|]. cbn.
+      apply ender_par_trans with (point s1.(seg_start)) (point s1.(seg_end)).
+      - now apply par_symmetry.
+      - apply (para_link_left s1 s3 _ _ Hshared). exact Hp2. }
+  apply orb_true_iff in Hrule. destruct Hrule as [Hcase1|Hcase2].
+  - apply andb_true_iff in Hcase1. destruct Hcase1 as [Hshared Hconc].
+    eapply para_pair_conclude; [exact Hconc|]. cbn.
+    apply ender_par_trans with (point s2.(seg_start)) (point s2.(seg_end));
+      [exact Hp1|].
+    apply (para_link_left s2 s3 _ _ Hshared). exact Hp2.
+  - apply andb_true_iff in Hcase2. destruct Hcase2 as [Hshared Hconc].
+    eapply para_pair_conclude; [exact Hconc|]. cbn.
+    apply ender_par_trans with (point s2.(seg_start)) (point s2.(seg_end));
+      [exact Hp1|].
+    apply (para_link_left s2 s4 _ _ Hshared).
+    now apply par_symmetry.
+Qed.
+
 Lemma rule_valid_sound : forall decls premises facts reason conclusion,
   declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -2148,6 +2684,15 @@ Proof.
   - eapply rectangle_pgram_sound; eauto.
   - eapply rhombus_pgram_sound; eauto.
   - eapply rhombus_consec_sides_sound; eauto.
+  - eapply altint_sound; eauto.
+  - eapply altext_sound; eauto.
+  - eapply corresp_ang_sound; eauto.
+  - eapply sameside_ang_sound; eauto.
+  - eapply altint_conv_sound; eauto.
+  - eapply altext_conv_sound; eauto.
+  - eapply corresp_ang_conv_sound; eauto.
+  - eapply sameside_ang_conv_sound; eauto.
+  - eapply para_trans_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

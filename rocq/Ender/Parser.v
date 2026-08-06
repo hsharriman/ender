@@ -364,7 +364,16 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "rectangle_pgram" text (parse_one RectanglePgram)
         (try_call "rhombus_pgram" text (parse_one RhombusPgram)
         (try_call "rhombus_consec_sides" text (parse_two RhombusConsecSides)
-        None))))))))))))))))))))))))))))))))
+        (try_call "altint_conv" text (parse_one AltIntConv)
+        (try_call "altint" text (parse_one AltInt)
+        (try_call "altext_conv" text (parse_one AltExtConv)
+        (try_call "altext" text (parse_one AltExt)
+        (try_call "corresp_ang_conv" text (parse_one CorrespAngConv)
+        (try_call "corresp_ang" text (parse_one CorrespAng)
+        (try_call "sameside_ang_conv" text (parse_one SamesideAngConv)
+        (try_call "sameside_ang" text (parse_one SamesideAng)
+        (try_call "para_transitive" text (parse_two ParaTrans)
+        None)))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

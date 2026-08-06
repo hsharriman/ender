@@ -2,6 +2,8 @@ Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import GeoCoq.Axioms.parallel_postulates.
 Require Import GeoCoq.Main.Annexes.suma.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.tarski_playfair.
+Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_par_trans.
+Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_alternate_interior_angles.
 Require Import GeoCoq.Main.Annexes.quadrilaterals.
 Require Import GeoCoq.Main.Annexes.quadrilaterals_inter_dec.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_alternate_interior_angles.
@@ -215,6 +217,185 @@ Proof.
     apply Hncol. Col.
 Qed.
 
+(** The two-sides facts of a transversal figure, from the configuration
+    alone: the flanking points of each line are on opposite sides of the
+    transversal, and with [A] and [C] sharing a side, the alternate pairs
+    [(A, D)] and [(B, C)] are separated. *)
+Lemma ender_transversal_sides : forall I1 I2 A B C D,
+  BetS A I1 B -> BetS C I2 D -> OS I1 I2 A C ->
+  TS I1 I2 A D /\ TS I1 I2 B C.
+Proof.
+  intros I1 I2 A B C D Hab Hcd Hos.
+  destruct Hab as [HbetAB [HneAI1 HneI1B]].
+  destruct Hcd as [HbetCD [HneCI2 HneI2D]].
+  assert (HncolA : ~ Col I1 I2 A) by (apply one_side_not_col123 with C; auto).
+  assert (HncolC : ~ Col I1 I2 C)
+    by (apply one_side_not_col123 with A; auto using one_side_symmetry).
+  assert (HcolAB1 : Col A B I1) by (apply bet_col in HbetAB; Col).
+  assert (HcolCD2 : Col C D I2) by (apply bet_col in HbetCD; Col).
+  assert (HncolB : ~ Col I1 I2 B).
+  { intro Hcol.
+    assert (Hstep : Col I1 A I2)
+      by (apply (col_transitivity_1 I1 B A I2 HneI1B); Col).
+    apply HncolA. Col. }
+  assert (HncolD : ~ Col I1 I2 D).
+  { intro Hcol.
+    assert (Hstep : Col I2 C I1)
+      by (apply (col_transitivity_1 I2 D C I1 HneI2D); Col).
+    apply HncolC. Col. }
+  assert (HtsAB : TS I1 I2 A B).
+  { repeat split; [intro; apply HncolA; Col|intro; apply HncolB; Col|].
+    exists I1. split; [Col|assumption]. }
+  assert (HtsCD : TS I1 I2 C D).
+  { repeat split; [intro; apply HncolC; Col|intro; apply HncolD; Col|].
+    exists I2. split; [Col|assumption]. }
+  split.
+  - apply l9_8_2 with C; [exact HtsCD|now apply one_side_symmetry].
+  - apply l9_2. apply l9_8_2 with A; assumption.
+Qed.
+
+(** The vertical angles of the transversal figure, from the configuration
+    alone. *)
+Lemma ender_transversal_verticals : forall T1 I1 I2 T2 A B C D,
+  BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
+  CongA T1 I1 A I2 I1 B /\ CongA T1 I1 B I2 I1 A /\
+  CongA I1 I2 C T2 I2 D /\ CongA I1 I2 D T2 I2 C.
+Proof.
+  intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd.
+  destruct Ht1 as [HbetT1 [HneT1I1 HneI1I2]].
+  destruct Ht2 as [HbetT2 [HneI1I2' HneI2T2]].
+  destruct Hab as [HbetAB [HneAI1 HneI1B]].
+  destruct Hcd as [HbetCD [HneCI2 HneI2D]].
+  assert (HneI2I1 : I2 <> I1) by (intro Heq; apply HneI1I2; auto).
+  assert (HneI1A : I1 <> A) by (intro Heq; apply HneAI1; auto).
+  assert (HneT2I2 : T2 <> I2) by (intro Heq; apply HneI2T2; auto).
+  assert (HneI2C : I2 <> C) by (intro Heq; apply HneCI2; auto).
+  assert (HbetBA : Bet B I1 A) by (apply between_symmetry; assumption).
+  assert (HbetDC : Bet D I2 C) by (apply between_symmetry; assumption).
+  split; [apply l11_14; assumption|].
+  split; [apply l11_14; assumption|].
+  split; apply l11_14; assumption.
+Qed.
+
+(** The converse master: either alternate interior congruence forces the
+    lines parallel.  Purely neutral, through GeoCoq's [l12_21_b]. *)
+Lemma ender_transversal_master_conv : forall I1 I2 A B C D,
+  BetS A I1 B -> BetS C I2 D -> OS I1 I2 A C ->
+  CongA A I1 I2 D I2 I1 \/ CongA B I1 I2 C I2 I1 ->
+  Par A B C D.
+Proof.
+  intros I1 I2 A B C D Hab Hcd Hos Hconga.
+  destruct (ender_transversal_sides I1 I2 A B C D Hab Hcd Hos) as [HtsAD HtsBC].
+  destruct Hab as [HbetAB [HneAI1 HneI1B]].
+  destruct Hcd as [HbetCD [HneCI2 HneI2D]].
+  assert (HneAB : A <> B).
+  { intro Heq. subst B. apply HneAI1, between_identity. assumption. }
+  assert (HneCD : C <> D).
+  { intro Heq. subst D. apply HneCI2, between_identity. assumption. }
+  assert (HcolAB1 : Col A B I1) by (apply bet_col in HbetAB; Col).
+  assert (HcolCD2 : Col C D I2) by (apply bet_col in HbetCD; Col).
+  destruct Hconga as [Hm|Hm].
+  - assert (Hpar : Par I1 A I2 D) by (apply l12_21_b; assumption).
+    assert (Hstep : Par I1 A C D)
+      by (apply (par_col2_par I1 A I2 D C D HneCD Hpar); Col).
+    apply par_symmetry.
+    apply (par_col2_par C D I1 A A B HneAB); [now apply par_symmetry|Col|Col].
+  - assert (Hpar : Par I1 B I2 C) by (apply l12_21_b; assumption).
+    assert (Hstep : Par I1 B C D)
+      by (apply (par_col2_par I1 B I2 C C D HneCD Hpar); Col).
+    apply par_symmetry.
+    apply (par_col2_par C D I1 B A B HneAB); [now apply par_symmetry|Col|Col].
+Qed.
+
+(** Family reductions to the converse master.  Each named angle relation of
+    the figure pins an alternate interior congruence through vertical angles
+    and linear pairs; all of it is neutral, so the converse parallel-line
+    rules need no parallel postulate. *)
+Lemma ender_transversal_altext_conv : forall T1 I1 I2 T2 A B C D,
+  BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
+  OS I1 I2 A C ->
+  CongA T1 I1 A T2 I2 D \/ CongA T1 I1 B T2 I2 C ->
+  Par A B C D.
+Proof.
+  intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hconga.
+  destruct (ender_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
+    as [Hv1 [Hv1' [Hv2 Hv2']]].
+  apply (ender_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
+  destruct Hconga as [Hin|Hin].
+  - right. apply conga_comm.
+    apply conga_trans with T1 I1 A; [apply conga_sym; exact Hv1|].
+    apply conga_trans with T2 I2 D; [exact Hin|].
+    apply conga_sym. exact Hv2.
+  - left. apply conga_comm.
+    apply conga_trans with T1 I1 B; [apply conga_sym; exact Hv1'|].
+    apply conga_trans with T2 I2 C; [exact Hin|].
+    apply conga_sym. exact Hv2'.
+Qed.
+
+Lemma ender_transversal_corresp_conv : forall T1 I1 I2 T2 A B C D,
+  BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
+  OS I1 I2 A C ->
+  CongA I2 I1 B T2 I2 D \/ CongA I2 I1 A T2 I2 C \/
+  CongA T1 I1 A I1 I2 C \/ CongA T1 I1 B I1 I2 D ->
+  Par A B C D.
+Proof.
+  intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hconga.
+  destruct (ender_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
+    as [Hv1 [Hv1' [Hv2 Hv2']]].
+  apply (ender_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
+  destruct Hconga as [Hin|[Hin|[Hin|Hin]]].
+  - right. apply conga_comm.
+    apply conga_trans with T2 I2 D; [exact Hin|].
+    apply conga_sym. exact Hv2.
+  - left. apply conga_comm.
+    apply conga_trans with T2 I2 C; [exact Hin|].
+    apply conga_sym. exact Hv2'.
+  - right. apply conga_comm.
+    apply conga_trans with T1 I1 A; [apply conga_sym; exact Hv1|exact Hin].
+  - left. apply conga_comm.
+    apply conga_trans with T1 I1 B; [apply conga_sym; exact Hv1'|exact Hin].
+Qed.
+
+Lemma ender_transversal_sameside_conv : forall T1 I1 I2 T2 A B C D,
+  BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
+  OS I1 I2 A C ->
+  SuppA B I1 I2 I1 I2 D \/ SuppA A I1 I2 I1 I2 C ->
+  Par A B C D.
+Proof.
+  intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hsupp.
+  pose proof Hab as Hab0. pose proof Hcd as Hcd0.
+  destruct Hab0 as [HbetAB [HneAI1 HneI1B]].
+  destruct Hcd0 as [HbetCD [HneCI2 HneI2D]].
+  apply (ender_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
+  destruct Hsupp as [Hin|Hin].
+  - destruct Hin as [HneBI1 [A' [HbetBA' Hconga']]].
+    pose proof Hconga' as Hd.
+    destruct Hd as [HneI1I2 [HneDI2 [HneI2I1 [HneA'I1 _]]]].
+    assert (Hout : Out I1 A A').
+    { apply (proj1 (l6_2 A A' B I1 HneAI1 HneA'I1 HneBI1 HbetAB)).
+      apply between_symmetry. exact HbetBA'. }
+    left. apply conga_comm.
+    apply conga_trans with I2 I1 A'.
+    + apply out2__conga.
+      * apply out_trivial. exact HneI2I1.
+      * apply l6_6. exact Hout.
+    + apply conga_sym. exact Hconga'.
+  - destruct Hin as [HneAI1' [B' [HbetAB' Hconga']]].
+    pose proof Hconga' as Hd.
+    destruct Hd as [HneI1I2 [HneCI2' [HneI2I1 [HneB'I1 _]]]].
+    assert (HneBI1 : B <> I1) by (intro Heq; apply HneI1B; auto).
+    assert (Hout : Out I1 B B').
+    { apply (proj1 (l6_2 B B' A I1 HneBI1 HneB'I1 HneAI1
+                      (between_symmetry A I1 B HbetAB))).
+      apply between_symmetry. exact HbetAB'. }
+    right. apply conga_comm.
+    apply conga_trans with I2 I1 B'.
+    + apply out2__conga.
+      * apply out_trivial. exact HneI2I1.
+      * apply l6_6. exact Hout.
+    + apply conga_sym. exact Hconga'.
+Qed.
+
 End EnderGeometry.
 
 (** Rules that genuinely need the parallel postulate live here, in their own
@@ -382,6 +563,198 @@ Proof.
     [|intro Heq; subst B; apply Hncol; Col
      |intro Heq; subst C; apply Hncol; Col].
   destruct Hplg as [_ Had]. apply par_symmetry, par_left_comm. exact Had.
+Qed.
+
+Lemma ender_playfair : playfair_s_postulate.
+Proof.
+  apply tarski_s_euclid_implies_playfair.
+  unfold tarski_s_parallel_postulate. exact euclid.
+Qed.
+
+(** Parallel lines are transitive.  This is GeoCoq's
+    [playfair_implies_par_trans] with its one [CopR] reflection call replaced
+    by explicit plane pasting through [coplanar_pseudo_trans]: the reflection
+    tactic's proof term depends on [Eqdep.Eq_rect_eq], and this development
+    stays free of axioms. *)
+Lemma ender_par_trans : forall A1 A2 B1 B2 C1 C2,
+  Par A1 A2 B1 B2 -> Par B1 B2 C1 C2 -> Par A1 A2 C1 C2.
+Proof.
+  intros A1 A2 B1 B2 C1 C2 HAB HBC.
+  pose proof ender_playfair as HP.
+  assert_diffs.
+  destruct (cop_dec A1 A2 C1 B1) as [Hcop|HNCop];
+    [induction (col_dec A1 A2 C1)|].
+  - right.
+    destruct (HP B1 B2 C1 C2 A1 A2 C1); repeat split; Par; Col.
+  - left.
+    split.
+    { apply par_symmetry in HBC.
+      destruct HBC as [HBCs|HBCd]; [destruct HAB as [HABs|HABd]|].
+      - assert (HncolAB : ~ Col A1 A2 B1)
+          by (apply par_strict_not_col_1 with B2; exact HABs).
+        assert (HncolBC : ~ Col B1 B2 C1).
+        { apply par_strict_not_col_1 with C2.
+          apply par_strict_symmetry. exact HBCs. }
+        assert (Ha1 : Coplanar B1 B2 C1 A1).
+        { apply coplanar_pseudo_trans with A1 A2 B1;
+            [exact HncolAB|Cop|apply pars__coplanar; exact HABs|Cop|Cop]. }
+        assert (Ha2 : Coplanar B1 B2 C1 A2).
+        { apply coplanar_pseudo_trans with A1 A2 B1;
+            [exact HncolAB|Cop|apply pars__coplanar; exact HABs|Cop|Cop]. }
+        apply coplanar_pseudo_trans with B1 B2 C1;
+          [exact HncolBC|exact Ha1|exact Ha2|Cop|].
+        assert (Hcp := pars__coplanar _ _ _ _ HBCs). Cop.
+      - spliter. apply coplanar_perm_16, col2_cop__cop with B1 B2; Col; Cop.
+      - spliter. apply col2_cop__cop with B1 B2; Col; Cop.
+    }
+    intros [X []].
+    destruct (HP B1 B2 A1 A2 C1 C2 X); Par; Col.
+  - apply (par_not_col_strict A1 A2 B1 B2 B1) in HAB;
+      [|Col|intro; apply HNCop; Cop].
+    apply (par_not_col_strict B1 B2 C1 C2 C1) in HBC;
+      [|Col|intro; apply HNCop, coplanar_perm_1, col_cop__cop with B2; Cop].
+    destruct (cop_osp__ex_cop2 A1 A2 C1 B1 B2 C1) as [C' [HCop1 [HCop2 HC1C']]];
+      Cop.
+      apply cop2_os__osp with A1 A2; Side; Cop.
+    assert (HC' : forall X, Coplanar A1 A2 B1 X -> ~ Col X C1 C').
+    { intros X HX1 HX2.
+      apply (par_not_col A1 A2 B1 B2 X HAB).
+      - apply (l9_30 A1 A2 C1 A1 A2 B1 B1); Cop.
+          apply par_strict_not_col_1 with B2, HAB.
+        apply col_cop__cop with C'; Col.
+      - apply (l9_30 A1 A2 B1 B1 B2 C1 C1); Cop.
+          apply par_strict_not_col_1 with C2, HBC.
+        apply col_cop__cop with C'; Col.
+    }
+    left; apply par_strict_col_par_strict with C'; auto.
+    { split; trivial.
+      intros [X [HX1 HX2]].
+      revert HX2.
+      apply HC'; Cop.
+    }
+    assert (HBC' : Par_strict B1 B2 C1 C').
+    { split; trivial.
+      intros [X [HX1 HX2]].
+      revert HX2.
+      apply HC', col_cop__cop with B2; Col; Cop.
+    }
+    destruct (HP B1 B2 C1 C2 C1 C' C1); Par; Col.
+Qed.
+
+(** The master congruences of a transversal figure: with the audited
+    configuration and the lines parallel, both alternate interior pairs are
+    congruent.  Every other angle relation of the figure is neutral algebra
+    over these two. *)
+Lemma ender_transversal_master : forall T1 I1 I2 T2 A B C D,
+  BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
+  OS I1 I2 A C -> Par A B C D ->
+  CongA A I1 I2 D I2 I1 /\ CongA B I1 I2 C I2 I1.
+Proof.
+  intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hpar.
+  destruct Hab as [HbetAB [HneAI1 HneI1B]].
+  destruct Hcd as [HbetCD [HneCI2 HneI2D]].
+  assert (HncolA : ~ Col I1 I2 A) by (apply one_side_not_col123 with C; auto).
+  assert (HncolC : ~ Col I1 I2 C)
+    by (apply one_side_not_col123 with A; auto using one_side_symmetry).
+  assert (HcolAB1 : Col A B I1) by (apply bet_col in HbetAB; Col).
+  assert (HcolCD2 : Col C D I2) by (apply bet_col in HbetCD; Col).
+  assert (HncolB : ~ Col I1 I2 B).
+  { intro Hcol.
+    assert (Hstep : Col I1 A I2)
+      by (apply (col_transitivity_1 I1 B A I2 HneI1B); Col).
+    apply HncolA. Col. }
+  assert (HncolD : ~ Col I1 I2 D).
+  { intro Hcol.
+    assert (Hstep : Col I2 C I1)
+      by (apply (col_transitivity_1 I2 D C I1 HneI2D); Col).
+    apply HncolC. Col. }
+  assert (HtsAB : TS I1 I2 A B).
+  { repeat split; [intro; apply HncolA; Col|intro; apply HncolB; Col|].
+    exists I1. split; [Col|assumption]. }
+  assert (HtsCD : TS I1 I2 C D).
+  { repeat split; [intro; apply HncolC; Col|intro; apply HncolD; Col|].
+    exists I2. split; [Col|assumption]. }
+  assert (HtsAD : TS I1 I2 A D).
+  { apply l9_8_2 with C; [exact HtsCD|now apply one_side_symmetry]. }
+  assert (HtsBC : TS I1 I2 B C).
+  { apply l9_2. apply l9_8_2 with A; assumption. }
+  assert (HneI1A : I1 <> A) by (intro Heq; apply HneAI1; auto).
+  assert (HneI2C : I2 <> C) by (intro Heq; apply HneCI2; auto).
+  assert (HparProjD : Par A B I2 D)
+    by (apply (par_col2_par A B C D I2 D HneI2D Hpar); Col).
+  assert (HparAD : Par I1 A I2 D).
+  { apply par_symmetry.
+    apply (par_col2_par I2 D A B I1 A HneI1A); [now apply par_symmetry|Col|Col]. }
+  assert (HparProjC : Par A B I2 C)
+    by (apply (par_col2_par A B C D I2 C HneI2C Hpar); Col).
+  assert (HparBC : Par I1 B I2 C).
+  { apply par_symmetry.
+    apply (par_col2_par I2 C A B I1 B HneI1B); [now apply par_symmetry|Col|Col]. }
+  split.
+  - apply ender_alternate_interior; assumption.
+  - apply ender_alternate_interior; assumption.
+Qed.
+
+(** The remaining forward families are the master congruences carried around
+    the figure by its vertical angles and linear pairs. *)
+Lemma ender_transversal_altext : forall T1 I1 I2 T2 A B C D,
+  BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
+  OS I1 I2 A C -> Par A B C D ->
+  CongA T1 I1 A T2 I2 D /\ CongA T1 I1 B T2 I2 C.
+Proof.
+  intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hpar.
+  destruct (ender_transversal_master T1 I1 I2 T2 A B C D
+              Ht1 Ht2 Hab Hcd Hos Hpar) as [Hm1 Hm2].
+  destruct (ender_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
+    as [Hv1 [Hv1' [Hv2 Hv2']]].
+  split.
+  - apply conga_trans with I2 I1 B; [exact Hv1|].
+    apply conga_trans with I1 I2 C; [|exact Hv2].
+    apply conga_comm. exact Hm2.
+  - apply conga_trans with I2 I1 A; [exact Hv1'|].
+    apply conga_trans with I1 I2 D; [|exact Hv2'].
+    apply conga_comm. exact Hm1.
+Qed.
+
+Lemma ender_transversal_corresp : forall T1 I1 I2 T2 A B C D,
+  BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
+  OS I1 I2 A C -> Par A B C D ->
+  CongA I2 I1 B T2 I2 D /\ CongA I2 I1 A T2 I2 C /\
+  CongA T1 I1 A I1 I2 C /\ CongA T1 I1 B I1 I2 D.
+Proof.
+  intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hpar.
+  destruct (ender_transversal_master T1 I1 I2 T2 A B C D
+              Ht1 Ht2 Hab Hcd Hos Hpar) as [Hm1 Hm2].
+  destruct (ender_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
+    as [Hv1 [Hv1' [Hv2 Hv2']]].
+  split; [|split; [|split]].
+  - apply conga_trans with I1 I2 C; [|exact Hv2].
+    apply conga_comm. exact Hm2.
+  - apply conga_trans with I1 I2 D; [|exact Hv2'].
+    apply conga_comm. exact Hm1.
+  - apply conga_trans with I2 I1 B; [exact Hv1|].
+    apply conga_comm. exact Hm2.
+  - apply conga_trans with I2 I1 A; [exact Hv1'|].
+    apply conga_comm. exact Hm1.
+Qed.
+
+Lemma ender_transversal_sameside : forall T1 I1 I2 T2 A B C D,
+  BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
+  OS I1 I2 A C -> Par A B C D ->
+  SuppA B I1 I2 I1 I2 D /\ SuppA A I1 I2 I1 I2 C.
+Proof.
+  intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hpar.
+  destruct (ender_transversal_master T1 I1 I2 T2 A B C D
+              Ht1 Ht2 Hab Hcd Hos Hpar) as [Hm1 Hm2].
+  destruct Hab as [HbetAB [HneAI1 HneI1B]].
+  assert (HneBI1 : B <> I1) by (intro Heq; apply HneI1B; auto).
+  split.
+  - split; [exact HneBI1|]. exists A.
+    split; [apply between_symmetry; exact HbetAB|].
+    apply conga_sym, conga_comm. exact Hm1.
+  - split; [exact HneAI1|]. exists B.
+    split; [exact HbetAB|].
+    apply conga_sym, conga_comm. exact Hm2.
 Qed.
 
 End EnderEuclideanGeometry.

@@ -26,9 +26,7 @@
         "src/checker/proofs/examples/s2c2.txt",
         "src/checker/proofs/examples/s2inc1corrected.txt",
         "src/checker/proofs/examples/s2inc2.txt",
-        "src/checker/proofs/examples/tutorial.txt",
-        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
-        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
+        "src/checker/proofs/examples/tutorial.txt"
       ],
       "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
@@ -96,9 +94,7 @@
         "src/checker/proofs/examples/s2c2.txt",
         "src/checker/proofs/examples/s2inc1.txt",
         "src/checker/proofs/examples/s2inc1corrected.txt",
-        "src/checker/proofs/examples/s2inc2.txt",
-        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
-        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
+        "src/checker/proofs/examples/s2inc2.txt"
       ],
       "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
@@ -118,9 +114,7 @@
         "src/checker/proofs/examples/s2inc1.txt",
         "src/checker/proofs/examples/s2inc1corrected.txt",
         "src/checker/proofs/examples/tutinc.txt",
-        "src/checker/proofs/examples/tutorial.txt",
-        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
-        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
+        "src/checker/proofs/examples/tutorial.txt"
       ],
       "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
@@ -172,9 +166,9 @@
     },
     {
       "reason": "altint_conv",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l12_21_b (neutral) with the audited sidedness",
       "fixtures": [
         "src/checker/proofs/examples/s1c1.txt",
         "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
@@ -182,80 +176,81 @@
         "src/checker/proofs/lines_angles/altint_conv_correct.txt",
         "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "altint",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
-      "fixtures": [],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/altint_correct.txt",
+        "src/checker/proofs/lines_angles/altint_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "altext",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
       "fixtures": [
         "src/checker/proofs/lines_angles/altext_correct.txt",
         "src/checker/proofs/lines_angles/altext_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "altext_conv",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l12_21_b (neutral) with the audited sidedness",
       "fixtures": [
         "src/checker/proofs/examples/transversal_altext.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "sameside_ang",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
       "fixtures": [
         "src/checker/proofs/lines_angles/sameside_ang_correct.txt",
         "src/checker/proofs/lines_angles/sameside_ang_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "sameside_ang_conv",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l12_21_b (neutral) with the audited sidedness",
       "fixtures": [
         "src/checker/proofs/examples/transversal_sameside.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "corresp_ang",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
       "fixtures": [
-        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
-        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt",
         "src/checker/proofs/lines_angles/corresp_ang_correct.txt",
         "src/checker/proofs/lines_angles/corresp_ang_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "corresp_ang_conv",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l12_21_b (neutral) with the audited sidedness",
       "fixtures": [
         "src/checker/proofs/examples/transversal_corresp.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "def_ang_bisect",
@@ -439,6 +434,8 @@
         "src/checker/proofs/lines_angles/altext_incorrect.txt",
         "src/checker/proofs/lines_angles/altint_conv_correct.txt",
         "src/checker/proofs/lines_angles/altint_conv_incorrect.txt",
+        "src/checker/proofs/lines_angles/altint_correct.txt",
+        "src/checker/proofs/lines_angles/altint_incorrect.txt",
         "src/checker/proofs/lines_angles/con_ang_transitive_correct.txt",
         "src/checker/proofs/lines_angles/con_ang_transitive_incorrect.txt",
         "src/checker/proofs/lines_angles/con_complements_correct.txt",
@@ -458,6 +455,8 @@
         "src/checker/proofs/lines_angles/linear_pair_conv_incorrect.txt",
         "src/checker/proofs/lines_angles/linear_pair_correct.txt",
         "src/checker/proofs/lines_angles/linear_pair_incorrect.txt",
+        "src/checker/proofs/lines_angles/para_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/para_transitive_incorrect.txt",
         "src/checker/proofs/lines_angles/perp_bisector_correct.txt",
         "src/checker/proofs/lines_angles/perp_bisector_incorrect.txt",
         "src/checker/proofs/lines_angles/perp_con_ang_correct.txt",
@@ -545,7 +544,7 @@
       "reason": "third_angle",
       "status": "verified",
       "priority": 0,
-      "axioms": "GeoCoq Tarski_euclidean via Playfair; the only Euclidean rule",
+      "axioms": "GeoCoq Tarski_euclidean via Playfair",
       "fixtures": [
         "src/checker/proofs/triangles/third_angle_correct.txt",
         "src/checker/proofs/triangles/third_angle_incorrect.txt"
@@ -665,8 +664,8 @@
     {
       "reason": "def_parallelogram",
       "status": "verified",
-      "priority": 2,
-      "axioms": "neutral; Par permutation lemmas; declared quadrilateral supplies well-formedness",
+      "priority": 0,
+      "axioms": "audited meanings plus declared-quadrilateral nondegeneracy (neutral)",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/def_parallelogram_correct.txt",
         "src/checker/proofs/quadrilaterals/def_parallelogram_incorrect.txt"
@@ -676,8 +675,8 @@
     {
       "reason": "pgram_opp_sides",
       "status": "verified",
-      "priority": 2,
-      "axioms": "Tarski_euclidean via Playfair alternate interior angles; diagonal ASA at the audited crossing point",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair alternate interior angles; ASA along the diagonal",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/pgram_opp_sides_correct.txt",
         "src/checker/proofs/quadrilaterals/pgram_opp_sides_incorrect.txt"
@@ -721,8 +720,8 @@
     {
       "reason": "pgram_opp_side_para",
       "status": "verified",
-      "priority": 2,
-      "axioms": "Tarski_euclidean via par_cong_mid_ts; the audited crossing diagonals supply its TS hypothesis",
+      "priority": 0,
+      "axioms": "GeoCoq par_cong_mid_ts; the audited crossing diagonals supply its TS",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/pgram_opp_side_para_correct.txt",
         "src/checker/proofs/quadrilaterals/pgram_opp_side_para_incorrect.txt"
@@ -776,8 +775,8 @@
     {
       "reason": "rectangle_pgram",
       "status": "verified",
-      "priority": 2,
-      "axioms": "neutral; projection of the audited meaning",
+      "priority": 0,
+      "axioms": "audited meanings plus declared-quadrilateral nondegeneracy (neutral)",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/rectangle_pgram_correct.txt",
         "src/checker/proofs/quadrilaterals/rectangle_pgram_incorrect.txt"
@@ -787,8 +786,8 @@
     {
       "reason": "rhombus_pgram",
       "status": "verified",
-      "priority": 2,
-      "axioms": "neutral; projection of the audited meaning",
+      "priority": 0,
+      "axioms": "audited meanings plus declared-quadrilateral nondegeneracy (neutral)",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/rhombus_pgram_correct.txt",
         "src/checker/proofs/quadrilaterals/rhombus_pgram_incorrect.txt"
@@ -876,8 +875,8 @@
     {
       "reason": "rhombus_consec_sides",
       "status": "verified",
-      "priority": 2,
-      "axioms": "Tarski_euclidean via Playfair alternate interior angles; diagonal ASA at the audited crossing point",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair alternate interior angles; ASA along the diagonal",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/rhombus_consec_sides_correct.txt",
         "src/checker/proofs/quadrilaterals/rhombus_consec_sides_incorrect.txt"
@@ -1075,11 +1074,14 @@
     },
     {
       "reason": "para_transitive",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
-      "fixtures": [],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair; CopR-free re-proof of par_trans",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/para_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/para_transitive_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "con_arc",

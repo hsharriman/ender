@@ -1,0 +1,12 @@
+// fail
+title: "Test: para_transitive (incorrect - no shared line between the two facts)"
+premises:
+pt: A (0, 8, tl), B (10, 8, tr), C (0, 5, l), D (10, 5, r), E (0, 2, bl), F (10, 2, br), G (0, 0, bl), H (10, 0, br)
+[g_1] para(AB, CD)
+[g_2] para(EF, GH)
+-> para(AB, GH)
+
+steps:
+[01] given(g_1) -> para(AB, CD)
+[02] given(g_2) -> para(EF, GH)
+[03] para_transitive(1, 2) -> para(AB, GH)
