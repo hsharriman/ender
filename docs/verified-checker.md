@@ -23,7 +23,10 @@ The slice parses Ender source text and supports:
   `equilat_equiang`, `equiang_equilat`, `con_supplements`,
   `con_supplements_same`, `def_perp`, `def_parallelogram`,
   `pgram_opp_sides`, `pgram_opp_side_para`, `rectangle_pgram`,
-  `rhombus_pgram`, `rhombus_consec_sides`, `altint`, `altext`,
+  `rhombus_pgram`, `rhombus_consec_sides`, `rhombus`, `rhombus_opp_bisect`,
+  `rectangle`, `rect_diag_con`, `pgram_opp_angs`, `pgram_consec_angs`,
+  `ang_bisect_conv`, `def_linear_pair`, `con_complements`,
+  `con_complements_same`, `altint`, `altext`,
   `corresp_ang`, `sameside_ang`, `altint_conv`, `altext_conv`,
   `corresp_ang_conv`, `sameside_ang_conv`, `para_transitive`, `def_radius`,
   `inscribed_semi`, `con_chords_intersect_arcs`, and `tangent_perp`;
@@ -35,12 +38,15 @@ Unsupported statements, reasons, or malformed relevant lines are rejected.
 Coordinates on the `pt:` line are intentionally discarded and do not contribute
 to the theorem's meaning.
 
-Nondegeneracy has exactly two sources, and every rule that needs it draws on
-one of them: a declared triangle, whose vertices are noncollinear, or a
+Nondegeneracy has exactly three sources, and every rule that needs it draws on
+one of them: a declared triangle, whose vertices are noncollinear; a declared
+quadrilateral, whose meaning states all six vertex distinctnesses, so any
+three of its vertices named apart are an angle with nondegenerate rays; or a
 declared angle, whose audited meaning is exactly `AngleWellFormed`. `reflex`
-concludes `ref_ang` only for a declared angle, which is what `conga_refl`
-needs; `Declarations` in `Syntax.v` bundles both because no rule wants one
-without the other.
+concludes `ref_ang` only for such an angle, which is what `conga_refl` needs;
+`Declarations` in `Syntax.v` bundles the declaration kinds because no rule
+wants one without the others. A `seg:` line is audited as `SegmentWellFormed`
+but the kernel discards it, so it is not yet a fourth source.
 
 Triangle congruence is ordered: `con_tri(t_ABC,t_DEF)` means the correspondence
 `A-D`, `B-E`, `C-F`. It comprises the three corresponding side congruences and
@@ -55,8 +61,8 @@ is invariant under renaming its vertices, so a declared triangle may be
 referred to by any permutation of its vertex list.
 
 A triangle criterion may also consume a `con_right` fact where it expects a
-`con_ang` one, provided both angles span the vertices of a declared triangle:
-two right angles with nondegenerate rays are congruent.
+`con_ang` one, provided both angles are declared nondegenerate: two right
+angles with nondegenerate rays are congruent.
 
 The three transitivity rules take two congruence dependencies of the same
 object kind and conclude the congruence of the two unshared objects. The shared
@@ -71,13 +77,13 @@ the audited `right` meaning carries the nondegenerate rays that GeoCoq's
 `l11_16` needs. `perp_con_ang` concludes `con_right` for any two angles whose
 vertex is the foot of the perpendicular and whose rays end on the two
 perpendicular segments — `Perp_at` states exactly that. It may also conclude
-`con_ang`, but only when both angles span a declared triangle: `Perp_at` forces
-neither ray to be nondegenerate, so the declaration is what supplies what
-`l11_16` needs. `def_midpt` reads the two congruent halves straight off the
+`con_ang`, but only when both angles are declared nondegenerate: `Perp_at`
+forces neither ray to be nondegenerate, so the declaration is what supplies
+what `l11_16` needs. `def_midpt` reads the two congruent halves straight off the
 `Midpoint` definition; midpoint statements, like segments, are unoriented.
 `vert_ang` takes no step dependency: it looks up an `intersect_seg` diagram
 premise and concludes either pair of opposite angles at the crossing, provided
-both spanned point triples are declared triangles. `def_ang_bisect` halves its
+both spanned point triples are declared nondegenerate. `def_ang_bisect` halves its
 angle; which endpoint of the ray names the vertex is a condition on point
 names, so the checker decides it rather than assuming it.
 
@@ -118,12 +124,13 @@ catalog lists, since unlike a triangle criterion they cite every part and so
 have no correspondence left to search.
 
 `con_supplements` and `con_supplements_same` come straight from GeoCoq's
-`suppa2__conga123`.  The rest of the angle-arithmetic family is deferred for
-specific reasons, not for lack of time: `con_complements` and its `_same`
-variant need `SAMS` for a pair summing to a right angle, which GeoCoq does not
-provide directly (`bet_suma__sams` only covers a straight sum); and
-`def_linear_pair` and `linear_pair_conv` need a four-case analysis of the
-audited `LinearPairMeaning` ray geometry.
+`suppa2__conga123`, and the two complement rules from `sams2_suma2__conga123`.
+The complement rules were once blocked on obtaining `SAMS` for a pair summing
+to a right angle, which GeoCoq does not derive (`bet_suma__sams` covers only a
+straight sum); the audited `Complementary` meaning now carries it, which is
+also what makes the rules true.  What remains of the family is
+`linear_pair_conv`, which needs a four-case analysis of the audited
+`LinearPairMeaning` ray geometry.
 
 `def_perp` turns a right angle into perpendicularity. `Perp_at` demands that
 *every* point of each line meet at right angles, not just the two the angle
