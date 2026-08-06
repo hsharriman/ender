@@ -108,13 +108,13 @@ Example complete_repository_tutorial_accepts :
 Proof. vm_compute. reflexivity. Qed.
 
 Example certified_rich_report_accepts :
-  (CertifiedAPI.check sas_source).(Audit.FinalAudit.report_verdict) =
-    Audit.FinalAudit.Accepted.
+  (CertifiedAPI.check sas_source).(Audit.report_verdict) =
+    Audit.Accepted.
 Proof. vm_compute. reflexivity. Qed.
 
 Example certified_boolean_is_report_projection : forall source,
   CertifiedAPI.checker source =
-    Audit.FinalAudit.accepted (CertifiedAPI.check source).
+    Audit.accepted (CertifiedAPI.check source).
 Proof. reflexivity. Qed.
 
 Example presentation_parser_retains_untrusted_display_data :
@@ -129,11 +129,11 @@ tri: t_ABC
 steps:
 [01] given(g_1) -> con_seg(AB,AC)" with
   | Some file =>
-      file.(Audit.FinalAudit.presentation_title) = Some "Display title" /\
-      length file.(Audit.FinalAudit.presentation_points) = 2 /\
-      length file.(Audit.FinalAudit.presentation_declarations) = 1 /\
-      length file.(Audit.FinalAudit.presentation_givens) = 1 /\
-      length file.(Audit.FinalAudit.presentation_steps) = 1
+      file.(Audit.presentation_title) = Some "Display title" /\
+      length file.(Audit.presentation_points) = 2 /\
+      length file.(Audit.presentation_declarations) = 1 /\
+      length file.(Audit.presentation_givens) = 1 /\
+      length file.(Audit.presentation_steps) = 1
   | None => False
   end.
 Proof. vm_compute. repeat split; reflexivity. Qed.
@@ -143,7 +143,7 @@ Proof. vm_compute. repeat split; reflexivity. Qed.
 Example public_arc_statement_parses :
   match parse_public_statement
     "con_arc(minor_arc(c_OA,A,B),major_arc(c_OD,D,E))" with
-  | Some (Audit.FinalAudit.ConArc _ _) => true
+  | Some (Audit.ConArc _ _) => true
   | _ => false
   end = true.
 Proof. vm_compute. reflexivity. Qed.
@@ -153,7 +153,7 @@ Example lowercase_point_label_is_rejected :
 Proof. vm_compute. reflexivity. Qed.
 
 Example public_statement_parser_is_complete : forall text statement,
-  Audit.FinalAudit.StatementText text statement ->
+  Audit.StatementText text statement ->
   parse_public_statement text = Some statement.
 Proof. exact parse_public_statement_complete. Qed.
 
@@ -187,18 +187,18 @@ Example complete_wrong_reason_is_proof_rejection :
 Proof. vm_compute. reflexivity. Qed.
 
 Example certified_sss_type_mismatch_is_structured :
-  (CertifiedAPI.check bad_sss_source).(Audit.FinalAudit.report_issues) =
-    [(Audit.FinalAudit.issue 12 "reason_dep_type_mismatch"
-      (Audit.FinalAudit.JsonObject
-        [("reason", Audit.FinalAudit.JsonString "sss");
-         ("index", Audit.FinalAudit.JsonNumber 1);
-         ("ref", Audit.FinalAudit.JsonString "2");
-         ("expectedType", Audit.FinalAudit.JsonString "con_seg");
-         ("allowedTypes", Audit.FinalAudit.JsonArray
-            [Audit.FinalAudit.JsonString "ref_seg"]);
-         ("receivedType", Audit.FinalAudit.JsonString "con_ang");
-         ("steps", Audit.FinalAudit.JsonArray
-            [Audit.FinalAudit.JsonString "4"])]))].
+  (CertifiedAPI.check bad_sss_source).(Audit.report_issues) =
+    [(Audit.issue 12 "reason_dep_type_mismatch"
+      (Audit.JsonObject
+        [("reason", Audit.JsonString "sss");
+         ("index", Audit.JsonNumber 1);
+         ("ref", Audit.JsonString "2");
+         ("expectedType", Audit.JsonString "con_seg");
+         ("allowedTypes", Audit.JsonArray
+            [Audit.JsonString "ref_seg"]);
+         ("receivedType", Audit.JsonString "con_ang");
+         ("steps", Audit.JsonArray
+            [Audit.JsonString "4"])]))].
 Proof. vm_compute. reflexivity. Qed.
 
 (** Transitivity of congruence, for each supported object kind. *)
@@ -354,18 +354,18 @@ Proof. vm_compute. reflexivity. Qed.
 
 Example con_seg_transitive_wrong_kind_is_structured :
   (CertifiedAPI.check con_seg_transitive_wrong_kind_source)
-    .(Audit.FinalAudit.report_issues) =
-    [(Audit.FinalAudit.issue 12 "reason_dep_type_mismatch"
-      (Audit.FinalAudit.JsonObject
-        [("reason", Audit.FinalAudit.JsonString "con_seg_transitive");
-         ("index", Audit.FinalAudit.JsonNumber 1);
-         ("ref", Audit.FinalAudit.JsonString "2");
-         ("expectedType", Audit.FinalAudit.JsonString "con_seg");
-         ("allowedTypes", Audit.FinalAudit.JsonArray
-            [Audit.FinalAudit.JsonString "ref_seg"]);
-         ("receivedType", Audit.FinalAudit.JsonString "con_ang");
-         ("steps", Audit.FinalAudit.JsonArray
-            [Audit.FinalAudit.JsonString "3"])]))].
+    .(Audit.report_issues) =
+    [(Audit.issue 12 "reason_dep_type_mismatch"
+      (Audit.JsonObject
+        [("reason", Audit.JsonString "con_seg_transitive");
+         ("index", Audit.JsonNumber 1);
+         ("ref", Audit.JsonString "2");
+         ("expectedType", Audit.JsonString "con_seg");
+         ("allowedTypes", Audit.JsonArray
+            [Audit.JsonString "ref_seg"]);
+         ("receivedType", Audit.JsonString "con_ang");
+         ("steps", Audit.JsonArray
+            [Audit.JsonString "3"])]))].
 Proof. vm_compute. reflexivity. Qed.
 
 (** Right angles and perpendicularity. *)
@@ -1199,18 +1199,18 @@ Definition ref_ang_undeclared_source := transitive_header "seg: AB
   "[01] reflex() -> ref_ang(a_ABC,a_ABC)
 [02] reflex() -> ref_seg(AB,CD)".
 
-Definition blamed_step (n : string) : list Audit.FinalAudit.Issue :=
-  [Audit.FinalAudit.issue 1 "reason_application_error"
-    (Audit.FinalAudit.JsonObject
-      [("steps", Audit.FinalAudit.JsonArray [Audit.FinalAudit.JsonString n])])].
+Definition blamed_step (n : string) : list Audit.Issue :=
+  [Audit.issue 1 "reason_application_error"
+    (Audit.JsonObject
+      [("steps", Audit.JsonArray [Audit.JsonString n])])].
 
 Example ref_ang_declared_clears_its_step :
-  (CertifiedAPI.check ref_ang_declared_source).(Audit.FinalAudit.report_issues) =
+  (CertifiedAPI.check ref_ang_declared_source).(Audit.report_issues) =
     blamed_step "2".
 Proof. vm_compute. reflexivity. Qed.
 
 Example ref_ang_undeclared_stops_at_its_step :
-  (CertifiedAPI.check ref_ang_undeclared_source).(Audit.FinalAudit.report_issues) =
+  (CertifiedAPI.check ref_ang_undeclared_source).(Audit.report_issues) =
     blamed_step "1".
 Proof. vm_compute. reflexivity. Qed.
 
@@ -1222,7 +1222,7 @@ Definition ref_ang_other_angle_source := transitive_header "ang: a_ABC
 [02] reflex() -> ref_seg(AB,CD)".
 
 Example ref_ang_other_angle_stops_at_its_step :
-  (CertifiedAPI.check ref_ang_other_angle_source).(Audit.FinalAudit.report_issues) =
+  (CertifiedAPI.check ref_ang_other_angle_source).(Audit.report_issues) =
     blamed_step "1".
 Proof. vm_compute. reflexivity. Qed.
 
@@ -1232,7 +1232,7 @@ Proof. vm_compute. reflexivity. Qed.
 
 Definition unsupported_goal_source := common_header "" "right(a_BAC)" "".
 Example parsed_but_unimplemented_goal_rejects :
-  match Audit.ProblemPart.problemPart unsupported_goal_source with
+  match Audit.problemPart unsupported_goal_source with
   | Some part =>
       match parsePublicProblem part with Some _ => true | None => false end
   | None => false
@@ -1256,7 +1256,7 @@ Example bad_dependency_rejects :
 Proof. vm_compute. reflexivity. Qed.
 
 Example problem_part_excludes_coordinates_and_steps :
-  Audit.ProblemPart.problemPart "title: ignored
+  Audit.problemPart "title: ignored
 pt: A (100,200)
 tri: t_ABC
 -> ref_seg(AB,AB)

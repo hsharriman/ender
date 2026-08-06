@@ -6,19 +6,14 @@ From Stdlib Require Import String.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Audit Ender.CompleteChecker.
 
-Module FA := Audit.FinalAudit.
 
-Module CertifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
+Module CertifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
   Definition parseProblem := CompleteVerifiedChecker.parseProblem.
   Definition parsePresentation := CompleteVerifiedChecker.parsePresentation.
   Definition check := CompleteVerifiedChecker.check.
   Definition checker := CompleteVerifiedChecker.checker.
   Definition parser_sound := CompleteVerifiedChecker.parser_sound.
   Definition parser_complete := CompleteVerifiedChecker.parser_complete.
-  Definition meaning
-      `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}
-      (source : string) : option Prop :=
-    @CompleteVerifiedChecker.meaning Tn TnEQD source.
   Definition checker_sound := CompleteVerifiedChecker.checker_sound.
 End CertifiedChecker.
 

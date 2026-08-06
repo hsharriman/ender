@@ -4,39 +4,38 @@ Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Geometry
   Ender.Semantics Ender.Checker Ender.Parser Ender.PresentationParser.
 Import ListNotations.
 Import EnderSyntax.
-Module FA := Audit.FinalAudit.
 Open Scope string_scope.
 
-Definition project_segment (s : FA.SegmentName) : Segment :=
-  segment s.(FA.segment_first) s.(FA.segment_second).
-Definition project_angle (a : FA.AngleName) : Angle :=
-  angle a.(FA.angle_first) a.(FA.angle_vertex) a.(FA.angle_last).
-Definition project_triangle (t : FA.TriangleName) : Triangle :=
-  triangle t.(FA.triangle_first) t.(FA.triangle_second) t.(FA.triangle_third).
+Definition project_segment (s : Audit.SegmentName) : Segment :=
+  segment s.(Audit.segment_first) s.(Audit.segment_second).
+Definition project_angle (a : Audit.AngleName) : Angle :=
+  angle a.(Audit.angle_first) a.(Audit.angle_vertex) a.(Audit.angle_last).
+Definition project_triangle (t : Audit.TriangleName) : Triangle :=
+  triangle t.(Audit.triangle_first) t.(Audit.triangle_second) t.(Audit.triangle_third).
 
 (** Statements usable as premises by the currently implemented kernel.  A
     public [con_tri] premise carries both triangles' noncollinearity together
     with the three side congruences, which is exactly the SSS hypothesis, so
     the kernel's stronger side-and-angle reading of [ConTri] is justified. *)
-Definition project_premise_statement (s : FA.PublicStatement) : option Statement :=
+Definition project_premise_statement (s : Audit.PublicStatement) : option Statement :=
   match s with
-  | FA.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
-  | FA.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
-  | FA.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
-  | FA.RefSeg a b => Some (RefSeg (project_segment a) (project_segment b))
-  | FA.RefAng a b => Some (RefAng (project_angle a) (project_angle b))
-  | FA.Right a => Some (RightAng (project_angle a))
-  | FA.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
-  | FA.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
-  | FA.Midpt s p => Some (MidptOf (project_segment s) p)
-  | FA.IntersectSeg a b p =>
+  | Audit.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
+  | Audit.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
+  | Audit.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
+  | Audit.RefSeg a b => Some (RefSeg (project_segment a) (project_segment b))
+  | Audit.RefAng a b => Some (RefAng (project_angle a) (project_angle b))
+  | Audit.Right a => Some (RightAng (project_angle a))
+  | Audit.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
+  | Audit.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
+  | Audit.Midpt s p => Some (MidptOf (project_segment s) p)
+  | Audit.IntersectSeg a b p =>
       Some (IntersectSeg (project_segment a) (project_segment b) p)
-  | FA.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
-  | FA.OnLine s p => Some (OnLine (project_segment s) p)
-  | FA.Isosceles t => Some (IsoscelesTri (project_triangle t))
-  | FA.Equilateral t => Some (EquilateralTri (project_triangle t))
-  | FA.Equiangular t => Some (EquiangularTri (project_triangle t))
-  | FA.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
+  | Audit.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
+  | Audit.OnLine s p => Some (OnLine (project_segment s) p)
+  | Audit.Isosceles t => Some (IsoscelesTri (project_triangle t))
+  | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
+  | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
+  | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
   | _ => None
   end.
 
@@ -44,27 +43,27 @@ Definition project_premise_statement (s : FA.PublicStatement) : option Statement
     by internal congruence, so this adapter conservatively rejects them.  The
     right-angle and perpendicularity statements below are defined to have
     exactly their audited meanings, so they project in both directions. *)
-Definition project_goal_statement (s : FA.PublicStatement) : option Statement :=
+Definition project_goal_statement (s : Audit.PublicStatement) : option Statement :=
   match s with
-  | FA.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
-  | FA.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
-  | FA.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
-  | FA.Right a => Some (RightAng (project_angle a))
-  | FA.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
-  | FA.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
-  | FA.Midpt s p => Some (MidptOf (project_segment s) p)
-  | FA.IntersectSeg a b p =>
+  | Audit.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
+  | Audit.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
+  | Audit.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
+  | Audit.Right a => Some (RightAng (project_angle a))
+  | Audit.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
+  | Audit.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
+  | Audit.Midpt s p => Some (MidptOf (project_segment s) p)
+  | Audit.IntersectSeg a b p =>
       Some (IntersectSeg (project_segment a) (project_segment b) p)
-  | FA.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
-  | FA.OnLine s p => Some (OnLine (project_segment s) p)
-  | FA.Isosceles t => Some (IsoscelesTri (project_triangle t))
-  | FA.Equilateral t => Some (EquilateralTri (project_triangle t))
-  | FA.Equiangular t => Some (EquiangularTri (project_triangle t))
-  | FA.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
+  | Audit.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
+  | Audit.OnLine s p => Some (OnLine (project_segment s) p)
+  | Audit.Isosceles t => Some (IsoscelesTri (project_triangle t))
+  | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
+  | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
+  | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
   | _ => None
   end.
 
-Fixpoint project_premise_statements (ss : list FA.PublicStatement)
+Fixpoint project_premise_statements (ss : list Audit.PublicStatement)
     : option (list Statement) :=
   match ss with
   | [] => Some []
@@ -75,19 +74,19 @@ Fixpoint project_premise_statements (ss : list FA.PublicStatement)
       end
   end.
 
-Definition projected_triangles (ds : list FA.PublicDeclaration) : list Triangle :=
+Definition projected_triangles (ds : list Audit.PublicDeclaration) : list Triangle :=
   fold_right (fun d rest => match d with
-    | FA.TriangleDeclaration t => project_triangle t :: rest
+    | Audit.TriangleDeclaration t => project_triangle t :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_angles (ds : list FA.PublicDeclaration) : list Angle :=
+Definition projected_angles (ds : list Audit.PublicDeclaration) : list Angle :=
   fold_right (fun d rest => match d with
-    | FA.AngleDeclaration a => project_angle a :: rest
+    | Audit.AngleDeclaration a => project_angle a :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_declarations (ds : list FA.PublicDeclaration) : Declarations :=
+Definition projected_declarations (ds : list Audit.PublicDeclaration) : Declarations :=
   declarations (projected_triangles ds) (projected_angles ds).
 
 Fixpoint statement_list_eqb (a b : list Statement) : bool :=
@@ -118,24 +117,24 @@ Definition declarations_eqb (a b : Declarations) : bool :=
 Definition premise_statements (ps : list Premise) : list Statement :=
   map premise_statement ps.
 
-Definition goal_declarations_valid (goal : FA.PublicStatement)
+Definition goal_declarations_valid (goal : Audit.PublicStatement)
     (decls : Declarations) : bool :=
   match goal with
-  | FA.ConTri a b => triangle_declared decls (project_triangle a) &&
+  | Audit.ConTri a b => triangle_declared decls (project_triangle a) &&
                      triangle_declared decls (project_triangle b)
   | _ => true
   end.
 
-Definition build_kernel_problem (public : FA.PublicProblem)
+Definition build_kernel_problem (public : Audit.PublicProblem)
     (header : ProblemHeader) (steps : list Step) : option Problem :=
-  match project_premise_statements public.(FA.public_premises),
-        project_goal_statement public.(FA.public_conclusion) with
+  match project_premise_statements public.(Audit.public_premises),
+        project_goal_statement public.(Audit.public_conclusion) with
   | Some premises, Some goal =>
-      if declarations_eqb (projected_declarations public.(FA.public_declarations))
+      if declarations_eqb (projected_declarations public.(Audit.public_declarations))
                           header.(header_declarations) &&
          statement_list_eqb premises (premise_statements header.(header_premises)) &&
          statement_eqb goal header.(header_goal) &&
-         goal_declarations_valid public.(FA.public_conclusion)
+         goal_declarations_valid public.(Audit.public_conclusion)
            header.(header_declarations)
       then Some (problem header.(header_declarations) header.(header_premises)
                         goal steps)
@@ -176,29 +175,29 @@ Definition complete_checker (source : string) : bool :=
 (** Rich public reporting façade.  The current vertical slice has no
     step-local recovery yet, so those lists are empty rather than fabricated.
     Their types are already part of the stable audited API. *)
-Definition empty_graph : FA.DependencyGraph :=
-  FA.dependency_graph [] [] [] [].
+Definition empty_graph : Audit.DependencyGraph :=
+  Audit.dependency_graph [] [] [] [].
 
-Definition public_problem_of_source (source : string) : option FA.PublicProblem :=
+Definition public_problem_of_source (source : string) : option Audit.PublicProblem :=
   match problemPart source with
   | Some part => parsePublicProblem part
   | None => None
   end.
 
-Definition public_verdict (result : CheckResult) : FA.Verdict :=
+Definition public_verdict (result : CheckResult) : Audit.Verdict :=
   match result with
-  | ParseFailure => FA.FailedToParseProblem
-  | ProofRejected => FA.RejectedProof
-  | ProofAccepted => FA.Accepted
+  | ParseFailure => Audit.FailedToParseProblem
+  | ProofRejected => Audit.RejectedProof
+  | ProofAccepted => Audit.Accepted
   end.
 
-Definition verdict_diagnostics (result : CheckResult) : list FA.Diagnostic :=
+Definition verdict_diagnostics (result : CheckResult) : list Audit.Diagnostic :=
   match result with
   | ParseFailure =>
-      [FA.diagnostic FA.ProblemParsing FA.DiagnosticError FA.MalformedProblem
+      [Audit.diagnostic Audit.ProblemParsing Audit.DiagnosticError Audit.MalformedProblem
         "the theorem-bearing problem header could not be parsed"]
   | ProofRejected =>
-      [FA.diagnostic FA.ProofChecking FA.DiagnosticError FA.ProofNotAccepted
+      [Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.ProofNotAccepted
         "the proof was not accepted by the verified reason kernel"]
   | ProofAccepted => []
   end.
@@ -256,31 +255,31 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   end.
 
 Definition nat_text (n : nat) : string := NilZero.string_of_uint (Nat.to_uint n).
-Definition json_strings (xs : list string) : list FA.JsonValue :=
-  map FA.JsonString xs.
+Definition json_strings (xs : list string) : list Audit.JsonValue :=
+  map Audit.JsonString xs.
 
 Definition dependency_type_issue (facts : list Statement) (reason : string)
     (index reference : nat) (expected : ExpectedFact) (step_number : nat)
-    : option FA.Issue :=
+    : option Audit.Issue :=
   match lookup_step facts reference with
   | Some received =>
       if fact_has_expected_type expected received then None else
-      Some (FA.issue 12 "reason_dep_type_mismatch" (FA.JsonObject
-        [("reason", FA.JsonString reason);
-         ("index", FA.JsonNumber index);
-         ("ref", FA.JsonString (nat_text reference));
-         ("expectedType", FA.JsonString (expected_function expected));
-         ("allowedTypes", FA.JsonArray (json_strings (allowed_functions expected)));
-         ("receivedType", FA.JsonString (statement_function received));
-         ("steps", FA.JsonArray [FA.JsonString (nat_text step_number)])]))
+      Some (Audit.issue 12 "reason_dep_type_mismatch" (Audit.JsonObject
+        [("reason", Audit.JsonString reason);
+         ("index", Audit.JsonNumber index);
+         ("ref", Audit.JsonString (nat_text reference));
+         ("expectedType", Audit.JsonString (expected_function expected));
+         ("allowedTypes", Audit.JsonArray (json_strings (allowed_functions expected)));
+         ("receivedType", Audit.JsonString (statement_function received));
+         ("steps", Audit.JsonArray [Audit.JsonString (nat_text step_number)])]))
   | None => None
   end.
 
-Definition first_issue (a b : option FA.Issue) : option FA.Issue :=
-  match a with Some issue => Some issue | None => b end.
+Definition first_issue (a b : option Audit.Issue) : option Audit.Issue :=
+  match a with Some _ => a | None => b end.
 
 Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
-    (step_number : nat) : option FA.Issue :=
+    (step_number : nat) : option Audit.Issue :=
   match reason with
   | SAS i j k =>
       first_issue (dependency_type_issue facts "sas" 0 i ExpectedSegment step_number)
@@ -364,27 +363,27 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
   | _ => None
   end.
 
-Definition generic_rejection_issue (step_number : nat) : FA.Issue :=
-  FA.issue 1 "reason_application_error"
-    (FA.JsonObject [("steps", FA.JsonArray [FA.JsonString (nat_text step_number)])]).
+Definition generic_rejection_issue (step_number : nat) : Audit.Issue :=
+  Audit.issue 1 "reason_application_error"
+    (Audit.JsonObject [("steps", Audit.JsonArray [Audit.JsonString (nat_text step_number)])]).
 
 Fixpoint diagnose_steps (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (steps : list Step) (step_number : nat)
-    : list FA.Issue :=
+    : list Audit.Issue :=
   match steps with
   | [] =>
-      [FA.issue 4 "goal_not_reached" (FA.JsonObject [])]
+      [Audit.issue 4 "goal_not_reached" (Audit.JsonObject [])]
   | current :: rest =>
       if rule_valid decls premises facts current.(step_reason) current.(step_conclusion)
       then diagnose_steps decls premises (facts ++ [current.(step_conclusion)])
              rest (S step_number)
       else match reason_dependency_issue facts current.(step_reason) step_number with
-           | Some issue => [issue]
+           | Some reported => [reported]
            | None => [generic_rejection_issue step_number]
            end
   end.
 
-Definition rejected_proof_issues (source : string) : list FA.Issue :=
+Definition rejected_proof_issues (source : string) : list Audit.Issue :=
   let text := list_ascii_of_string source in
   match problemPart source with
   | Some part =>
@@ -399,33 +398,33 @@ Definition rejected_proof_issues (source : string) : list FA.Issue :=
                             [] p.(problem_steps) 1
               | None => [generic_rejection_issue 0]
               end
-          | None => [FA.issue 3 "parser_error" (FA.JsonObject [])]
+          | None => [Audit.issue 3 "parser_error" (Audit.JsonObject [])]
           end
-      | _, _, _ => [FA.issue 3 "parser_error" (FA.JsonObject [])]
+      | _, _, _ => [Audit.issue 3 "parser_error" (Audit.JsonObject [])]
       end
-  | None => [FA.issue 3 "parser_error" (FA.JsonObject [])]
+  | None => [Audit.issue 3 "parser_error" (Audit.JsonObject [])]
   end.
 
-Definition report_issues_for (source : string) (result : CheckResult) : list FA.Issue :=
+Definition report_issues_for (source : string) (result : CheckResult) : list Audit.Issue :=
   match result with ProofRejected => rejected_proof_issues source | _ => [] end.
-Definition report_errors_for (result : CheckResult) : list FA.Issue :=
+Definition report_errors_for (result : CheckResult) : list Audit.Issue :=
   match result with
-  | ParseFailure => [FA.issue 3 "parser_error" (FA.JsonObject [])]
+  | ParseFailure => [Audit.issue 3 "parser_error" (Audit.JsonObject [])]
   | _ => []
   end.
 
-Definition check_report (source : string) : FA.CheckReport :=
+Definition check_report (source : string) : Audit.CheckReport :=
   let result := classify_source source in
-  FA.check_report (public_verdict result) (public_problem_of_source source)
+  Audit.check_report (public_verdict result) (public_problem_of_source source)
     (PresentationParser.parsePresentation source)
-    [] empty_graph [] (FA.goal_report None [] [])
+    [] empty_graph [] (Audit.goal_report None [] [])
     (report_issues_for source result) (report_errors_for result)
     (verdict_diagnostics result).
 
 Lemma check_report_accepted : forall source,
-  FA.accepted (check_report source) = complete_checker source.
+  Audit.accepted (check_report source) = complete_checker source.
 Proof.
-  intro source. unfold check_report, FA.accepted, complete_checker.
+  intro source. unfold check_report, Audit.accepted, complete_checker.
   destruct (classify_source source); reflexivity.
 Qed.
 
@@ -465,10 +464,10 @@ Qed.
 
 Section Bridge.
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
-Variable point : FA.PointName -> Tpoint.
+Variable point : Audit.PointName -> Tpoint.
 
 Lemma projected_triangle_meaning : forall ds,
-  Forall (FA.declarationMeaning point) ds ->
+  Forall (Audit.declarationMeaning point) ds ->
   declarations_well_formed point (projected_declarations ds).
 Proof.
   intros ds Hall. split.
@@ -484,14 +483,14 @@ Qed.
 
 Lemma projected_premise_meaning : forall public internal,
   project_premise_statement public = Some internal ->
-  FA.statementMeaning point public -> interp_statement point internal.
+  Audit.statementMeaning point public -> interp_statement point internal.
 Proof.
   destruct public; cbn; intros internal Hproject Hmeaning; try discriminate;
     injection Hproject as <-; cbn in *; try exact Hmeaning; try tauto.
   (* [con_tri]: the audited meaning supplies noncollinearity and the three
      corresponding sides, so SSS recovers the kernel's angle components. *)
-  unfold FA.TriangleCongruent, FA.TriangleWellFormed, FA.SegmentCongruent,
-    FA.side_ab, FA.side_bc, FA.side_ca, FA.seg_start, FA.seg_end in Hmeaning.
+  unfold Audit.TriangleCongruent, Audit.TriangleWellFormed, Audit.SegmentCongruent,
+    Audit.side_ab, Audit.side_bc, Audit.side_ca, Audit.seg_start, Audit.seg_end in Hmeaning.
   cbn in Hmeaning.
   destruct Hmeaning as [[_ [_ [_ Hncol]]] [_ [Hab [Hbc Hca]]]].
   now apply ender_sss.
@@ -500,7 +499,7 @@ Qed.
 Lemma projected_premises_meaning : forall publics internals premises,
   project_premise_statements publics = Some internals ->
   premise_statements premises = internals ->
-  Forall (FA.statementMeaning point) publics ->
+  Forall (Audit.statementMeaning point) publics ->
   Forall (interp_premise point) premises.
 Proof.
   intros publics. induction publics as [|s rest IH]; intros internals premises Hproject Heq Hall.
@@ -529,7 +528,7 @@ Lemma projected_goal_meaning : forall public internal decls,
   interp_statement point internal ->
   declarations_well_formed point decls ->
   goal_declarations_valid public decls = true ->
-  FA.statementMeaning point public.
+  Audit.statementMeaning point public.
 Proof.
   destruct public; cbn; intros internal decls Hproject Hmeaning Hwf Hdecl;
     try discriminate;
@@ -540,7 +539,7 @@ Proof.
   apply noncol_well_formed in Hwa. apply noncol_well_formed in Hwb.
   unfold triangle_congruence in Hmeaning. cbn in Hmeaning.
   destruct Hmeaning as [Hab [Hbc [Hca Hangles]]].
-  unfold FA.TriangleCongruent. cbn.
+  unfold Audit.TriangleCongruent. cbn.
   exact (conj Hwa (conj Hwb (conj Hab (conj Hbc Hca)))).
 Qed.
 
@@ -552,8 +551,8 @@ Theorem complete_checker_problem_sound : forall source part public,
   complete_checker source = true ->
   forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
   forall (TE : @Tarski_euclidean Tn TnEQD),
-  forall point : FA.PointName -> Tpoint,
-    FA.problemClaim point public.
+  forall point : Audit.PointName -> Tpoint,
+    Audit.problemClaim point public.
 Proof.
   intros source part public Hpart Hpublic Hcheck Tn TnEQD TE point.
   unfold complete_checker, classify_source in Hcheck. rewrite Hpart, Hpublic in Hcheck.
@@ -564,15 +563,15 @@ Proof.
   destruct (parse_step_lines (Parser.split_lines stepText []) []) as [steps|]
     eqn:Hsteps; try discriminate.
   unfold build_kernel_problem in Hcheck.
-  destruct (project_premise_statements (FA.public_premises public)) as [premises|]
+  destruct (project_premise_statements (Audit.public_premises public)) as [premises|]
     eqn:HprojectPremises; try discriminate.
-  destruct (project_goal_statement (FA.public_conclusion public)) as [goal|]
+  destruct (project_goal_statement (Audit.public_conclusion public)) as [goal|]
     eqn:HprojectGoal; try discriminate.
-  destruct (declarations_eqb (projected_declarations (FA.public_declarations public))
+  destruct (declarations_eqb (projected_declarations (Audit.public_declarations public))
               (header_declarations header) &&
             statement_list_eqb premises (premise_statements (header_premises header)) &&
             statement_eqb goal (header_goal header) &&
-            goal_declarations_valid (FA.public_conclusion public)
+            goal_declarations_valid (Audit.public_conclusion public)
               (header_declarations header)) eqn:Hmatches; try discriminate.
   apply andb_true_iff in Hmatches. destruct Hmatches as [Hrest HgoalDeclared].
   apply andb_true_iff in Hrest. destruct Hrest as [Hrest Hgoal].
@@ -580,7 +579,7 @@ Proof.
   apply declarations_eqb_eq in Htriangles.
   apply statement_list_eqb_eq in Hpremises.
   apply statement_eqb_eq in Hgoal.
-  unfold FA.problemClaim. intros Hdeclarations HpublicPremises.
+  unfold Audit.problemClaim. intros Hdeclarations HpublicPremises.
   pose proof (projected_triangle_meaning point _ Hdeclarations) as Hwf.
   rewrite Htriangles in Hwf.
   assert (HkernelPremises :
@@ -598,22 +597,13 @@ Proof.
   eapply projected_goal_meaning; eauto.
 Qed.
 
-Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
+Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
   Definition parseProblem := parsePublicProblem.
   Definition parsePresentation := PresentationParser.parsePresentation.
   Definition check := check_report.
-  Definition checker (source : string) : bool := FA.accepted (check source).
+  Definition checker (source : string) : bool := Audit.accepted (check source).
   Definition parser_sound := parsePublicProblem_sound.
   Definition parser_complete := parsePublicProblem_complete.
-
-  Definition meaning
-      `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}
-      (source : string) : option Prop :=
-    match parseProblem source with
-    | Some p =>
-        Some (forall point : FA.PointName -> Tpoint, FA.problemClaim point p)
-    | None => None
-    end.
 
   Theorem checker_sound : forall source,
     checker source = true ->
@@ -621,14 +611,15 @@ Module CompleteVerifiedChecker <: FA.COMPLETE_VERIFIED_CHECKER.
       forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
       forall (T2D : @Tarski_2D Tn TnEQD),
       forall (TE : @Tarski_euclidean Tn TnEQD),
-        exists claim : Prop, meaning part = Some claim /\ claim.
+      exists problem, parseProblem part = Some problem /\
+        forall point : Audit.PointName -> Tpoint, Audit.problemClaim point problem.
   Proof.
     intros source Hcheck part Hpart Tn TnEQD T2D TE.
-    change (FA.accepted (check_report source) = true) in Hcheck.
+    change (Audit.accepted (check_report source) = true) in Hcheck.
     rewrite check_report_accepted in Hcheck.
-    unfold meaning, parseProblem.
+    unfold parseProblem.
     destruct (parsePublicProblem part) as [public|] eqn:Hpublic.
-    - eexists. split; [reflexivity|].
+    - exists public. split; [reflexivity|].
       intros point. exact (@complete_checker_problem_sound source part public
         Hpart Hpublic Hcheck Tn TnEQD TE point).
     - exfalso. unfold checker, complete_checker, classify_source in Hcheck.

@@ -1,7 +1,6 @@
 From Stdlib Require Import Ascii String List Bool.
 Require Import Ender.Audit Ender.Chars.
 Import ListNotations.
-Import FinalAudit.
 Open Scope string_scope.
 
 Definition PChars := list ascii.
@@ -206,6 +205,23 @@ Definition parse_public_statement_chars (text : PChars) : option PublicStatement
   | None => parse_public_statement_chars_generic text
   end.
 
+(** Decision procedure for the audited [PointNameValid]. *)
+Definition pointNameValid (p : PointName) : bool :=
+  existsb (Ascii.eqb p) (list_ascii_of_string upperCaseLetters).
+Definition pointsValid (points : list PointName) : bool :=
+  forallb pointNameValid points.
+
+Lemma pointsValid_Forall : forall points,
+  pointsValid points = true <-> Forall PointNameValid points.
+Proof.
+  intros points. unfold pointsValid, pointNameValid, PointNameValid.
+  rewrite forallb_forall, Forall_forall.
+  split; intros H p Hin; specialize (H p Hin).
+  - apply existsb_exists in H as [letter [Hletter Heq]].
+    apply Ascii.eqb_eq in Heq. now subst.
+  - apply existsb_exists. exists p. split; [exact H | apply Ascii.eqb_refl].
+Qed.
+
 Definition parse_public_statement (text : string) : option PublicStatement :=
   match parse_public_statement_chars (list_ascii_of_string (normalized text)) with
   | Some statement =>
@@ -240,7 +256,8 @@ Qed.
 Theorem parse_public_statement_complete : forall text statement,
   StatementText text statement -> parse_public_statement text = Some statement.
 Proof.
-  intros text statement [Hvalid Htext]. unfold parse_public_statement.
+  intros text statement [Hvalid Htext]. apply pointsValid_Forall in Hvalid.
+  unfold parse_public_statement.
   rewrite Htext, parse_public_statement_chars_render by exact Hvalid.
   rewrite Hvalid, String.eqb_refl. reflexivity.
 Qed.
@@ -255,7 +272,8 @@ Proof.
     try discriminate.
   destruct (String.eqb (normalized text) (statementText parsed)) eqn:Heq;
     try discriminate.
-  injection H as <-. split; [exact Hvalid|]. now apply String.eqb_eq in Heq.
+  injection H as <-. split; [now apply pointsValid_Forall|].
+  now apply String.eqb_eq in Heq.
 Qed.
 
 Fixpoint parse_segment_declarations (text : PChars) : option (list PublicDeclaration) :=
@@ -404,7 +422,8 @@ Proof.
     proj2 (String.eqb_eq _ _)
       (proj1 (Forall_forall _ _) Htags declaration Hin))).
   unfold declarations_valid. rewrite (proj2 (forallb_forall _ _) (fun declaration Hin =>
-    proj1 (Forall_forall _ _) Hvalid declaration Hin)).
+    proj2 (pointsValid_Forall _)
+      (proj1 (Forall_forall _ _) Hvalid declaration Hin))).
   rewrite String.eqb_refl. reflexivity.
 Qed.
 
@@ -432,33 +451,36 @@ Proof.
   - rewrite forallb_forall in Htags. apply Forall_forall. intros declaration Hin.
     specialize (Htags declaration Hin). now apply String.eqb_eq in Htags.
   - split.
-    + unfold declarations_valid in Hvalid. apply Forall_forall.
-      rewrite forallb_forall in Hvalid. exact Hvalid.
+    + unfold declarations_valid in Hvalid. rewrite forallb_forall in Hvalid.
+      apply Forall_forall. intros declaration Hin.
+      apply pointsValid_Forall. now apply Hvalid.
     + now apply String.eqb_eq in Heq.
 Qed.
 
-Definition HeaderContribution :=
+(** A line contributes one [HeaderContribution]; a whole header adds those up
+    into declarations, premises, and a conclusion at once. *)
+Definition HeaderAccumulator :=
   (list PublicDeclaration * list PublicStatement * option PublicStatement)%type.
 
 Definition parse_public_line (line : string) : option HeaderContribution :=
   match premiseBody line with
   | Some body =>
       match parse_public_statement body with
-      | Some statement => Some ([], [statement], None)
+      | Some statement => Some (StatesPremise statement)
       | None => None
       end
   | None =>
       match goalBody line with
       | Some body =>
           match parse_public_statement body with
-          | Some statement => Some ([], [], Some statement)
+          | Some statement => Some (StatesGoal statement)
           | None => None
           end
       | None =>
           match parse_declaration_line line with
-          | Some declarations => Some (declarations, [], None)
+          | Some declarations => Some (DeclaresObjects declarations)
           | None => if String.eqb (normalized line) ""
-                    then Some ([], [], None) else None
+                    then Some ContributesNothing else None
           end
       end
   end.
@@ -496,18 +518,22 @@ Proof.
     + rewrite (proj2 (String.eqb_eq _ _) H2). reflexivity.
 Qed.
 
-Fixpoint parse_public_lines (lines : list string) : option HeaderContribution :=
+Fixpoint parse_public_lines (lines : list string) : option HeaderAccumulator :=
   match lines with
   | [] => Some ([], [], None)
   | line :: rest =>
       match parse_public_line line, parse_public_lines rest with
-      | Some (lineDeclarations, linePremises, lineGoal),
-        Some (declarations, premises, goal) =>
-          match lineGoal, goal with
-          | Some _, Some _ => None
-          | _, _ => Some (List.app lineDeclarations declarations,
-                          List.app linePremises premises,
-                          match lineGoal with Some s => Some s | None => goal end)
+      | Some contribution, Some (declarations, premises, goal) =>
+          match contribution with
+          | DeclaresObjects lineDeclarations =>
+              Some (List.app lineDeclarations declarations, premises, goal)
+          | StatesPremise statement => Some (declarations, statement :: premises, goal)
+          | StatesGoal statement =>
+              match goal with
+              | Some _ => None
+              | None => Some (declarations, premises, Some statement)
+              end
+          | ContributesNothing => Some (declarations, premises, goal)
           end
       | _, _ => None
       end
@@ -519,27 +545,16 @@ Theorem parse_public_lines_sound : forall lines declarations premises goal,
 Proof.
   induction lines as [|line rest IH]; intros declarations premises goal H; cbn in H.
   - injection H as <- <- <-. constructor.
-  - destruct (parse_public_line line) as [[[lineDeclarations linePremises] lineGoal]|]
-      eqn:Hline; try discriminate.
+  - destruct (parse_public_line line) as [contribution|] eqn:Hline; try discriminate.
     destruct (parse_public_lines rest) as [[[restDeclarations restPremises] restGoal]|]
       eqn:Hrest; try discriminate.
-    destruct lineGoal as [lineStatement|], restGoal as [restStatement|];
-      try discriminate; injection H as <- <- <-.
-    + refine (@MoreHeaderLines line rest lineDeclarations linePremises
-          (Some lineStatement) restDeclarations restPremises None _ _ _).
-      * now eapply parse_public_line_sound.
-      * now apply IH.
-      * right; reflexivity.
-    + refine (@MoreHeaderLines line rest lineDeclarations linePremises
-          None restDeclarations restPremises (Some restStatement) _ _ _).
-      * now eapply parse_public_line_sound.
-      * now apply IH.
-      * left; reflexivity.
-    + refine (@MoreHeaderLines line rest lineDeclarations linePremises
-          None restDeclarations restPremises None _ _ _).
-      * now eapply parse_public_line_sound.
-      * now apply IH.
-      * left; reflexivity.
+    apply parse_public_line_sound in Hline.
+    destruct contribution as [lineDeclarations|statement|statement|].
+    + injection H as <- <- <-. apply DeclarationLines; [exact Hline | now apply IH].
+    + injection H as <- <- <-. apply PremiseLines; [exact Hline | now apply IH].
+    + destruct restGoal as [restStatement|]; try discriminate.
+      injection H as <- <- <-. apply GoalLines; [exact Hline | now apply IH].
+    + injection H as <- <- <-. apply IgnoredLines; [exact Hline | now apply IH].
 Qed.
 
 Theorem parse_public_lines_complete : forall lines declarations premises goal,
@@ -549,9 +564,125 @@ Proof.
   intros lines declarations premises goal H. induction H.
   - reflexivity.
   - cbn. rewrite (parse_public_line_complete line
-      (lineDeclarations, linePremises, lineGoal) H).
-    rewrite IHHeaderLines. destruct lineGoal, goal; cbn in *; try reflexivity.
-    destruct H1; discriminate.
+      (DeclaresObjects lineDeclarations) H).
+    now rewrite IHHeaderLines.
+  - cbn. rewrite (parse_public_line_complete line (StatesPremise statement) H).
+    now rewrite IHHeaderLines.
+  - cbn. rewrite (parse_public_line_complete line (StatesGoal statement) H).
+    now rewrite IHHeaderLines.
+  - cbn. rewrite (parse_public_line_complete line ContributesNothing H).
+    now rewrite IHHeaderLines.
+Qed.
+
+(** The executable form of the audited [LineSplit]: [splitLines] produces a
+    split, and a split is unique, so the two determine each other. *)
+Fixpoint splitLines (source : string) : list string :=
+  match source with
+  | "" => [""]
+  | String c rest =>
+      let lines := splitLines rest in
+      if Ascii.eqb c newlineCharacter then "" :: lines
+      else String c (hd "" lines) :: tl lines
+  end.
+
+Lemma splitLines_nonempty : forall source, splitLines source <> [].
+Proof.
+  intros [|c rest]; cbn; [discriminate|].
+  destruct (Ascii.eqb c newlineCharacter); discriminate.
+Qed.
+
+Lemma concat_cons_char : forall separator c line lines,
+  String.concat separator (String c line :: lines) =
+  String c (String.concat separator (line :: lines)).
+Proof. intros separator c line [|next lines]; reflexivity. Qed.
+
+Lemma concat_cons_nonempty : forall separator line next lines,
+  String.concat separator (line :: next :: lines) =
+  line ++ separator ++ String.concat separator (next :: lines).
+Proof. reflexivity. Qed.
+
+(** The character list of a string exposes its characters one cons at a time,
+    so membership is all these two need. *)
+Lemma no_newline_cons : forall c line,
+  LineUnbroken (String c line) ->
+  c <> newlineCharacter /\ LineUnbroken line.
+Proof.
+  intros c line H. unfold LineUnbroken in *. cbn in H. split.
+  - intros ->. apply H. now left.
+  - intros Hin. apply H. now right.
+Qed.
+
+Lemma no_newline_cons_intro : forall c line,
+  c <> newlineCharacter -> LineUnbroken line -> LineUnbroken (String c line).
+Proof.
+  intros c line Hc Hline. unfold LineUnbroken in *. cbn. intros [Heq|Hin]; [congruence|contradiction].
+Qed.
+
+Lemma splitLines_concat : forall source,
+  String.concat newline (splitLines source) = source.
+Proof.
+  induction source as [|c rest IH]; [reflexivity|]. cbn [splitLines].
+  destruct (splitLines rest) as [|line lines] eqn:Hrest;
+    [now destruct (splitLines_nonempty rest Hrest)|].
+  destruct (Ascii.eqb c newlineCharacter) eqn:Hc.
+  - apply Ascii.eqb_eq in Hc. subst c.
+    rewrite concat_cons_nonempty, IH. reflexivity.
+  - cbn [hd tl]. rewrite concat_cons_char, IH. reflexivity.
+Qed.
+
+Lemma splitLines_no_newline : forall source,
+  Forall LineUnbroken (splitLines source).
+Proof.
+  induction source as [|c rest IH]; cbn [splitLines];
+    [constructor; [unfold LineUnbroken; cbn; tauto|constructor]|].
+  destruct (splitLines rest) as [|line lines] eqn:Hrest;
+    [now destruct (splitLines_nonempty rest Hrest)|].
+  inversion IH as [|? ? Hline Hlines]; subst.
+  destruct (Ascii.eqb c newlineCharacter) eqn:Hc.
+  - constructor; [unfold LineUnbroken; cbn; tauto|exact IH].
+  - cbn [hd tl]. constructor; [|exact Hlines].
+    apply no_newline_cons_intro; [|exact Hline].
+    intros ->. now rewrite Ascii.eqb_refl in Hc.
+Qed.
+
+Lemma splitLines_single : forall line,
+  LineUnbroken line -> splitLines line = [line].
+Proof.
+  induction line as [|c rest IH]; intros H; [reflexivity|].
+  apply no_newline_cons in H as [Hc Hrest]. cbn [splitLines]. rewrite (IH Hrest).
+  destruct (Ascii.eqb c newlineCharacter) eqn:Heq; [|reflexivity].
+  apply Ascii.eqb_eq in Heq. congruence.
+Qed.
+
+Lemma splitLines_app : forall line source,
+  LineUnbroken line ->
+  splitLines (line ++ newline ++ source) = line :: splitLines source.
+Proof.
+  induction line as [|c rest IH]; intros source H.
+  - unfold newline. cbn [String.append splitLines].
+    now rewrite Ascii.eqb_refl.
+  - apply no_newline_cons in H as [Hc Hrest].
+    cbn [String.append splitLines]. rewrite (IH source Hrest).
+    destruct (Ascii.eqb c newlineCharacter) eqn:Heq; [|reflexivity].
+    apply Ascii.eqb_eq in Heq. congruence.
+Qed.
+
+Lemma splitLines_LineSplit : forall source, LineSplit source (splitLines source).
+Proof.
+  intros source. split; [now rewrite splitLines_concat|].
+  split; [apply splitLines_no_newline|apply splitLines_nonempty].
+Qed.
+
+Lemma LineSplit_splitLines : forall source lines,
+  LineSplit source lines -> lines = splitLines source.
+Proof.
+  intros source lines [Hconcat [Hno Hnonempty]]. subst source.
+  destruct lines as [|line lines]; [congruence|clear Hnonempty].
+  revert line Hno. induction lines as [|next lines IH]; intros line Hno;
+    inversion Hno as [|? ? Hline Hlines]; subst.
+  - cbn [String.concat]. now rewrite splitLines_single.
+  - cbn [String.concat]. rewrite splitLines_app by exact Hline.
+    f_equal. now apply IH.
 Qed.
 
 Definition parsePublicProblem (source:string) : option PublicProblem :=
@@ -568,13 +699,17 @@ Proof.
   destruct (parse_public_lines (splitLines source)) as [[[declarations premises] goal]|]
     eqn:Hlines; try discriminate.
   destruct goal as [conclusion|]; try discriminate. injection H as <-.
-  constructor. now eapply parse_public_lines_sound.
+  apply (ProblemGrammarLines source (splitLines source)).
+  - apply splitLines_LineSplit.
+  - now eapply parse_public_lines_sound.
 Qed.
 
 Theorem parsePublicProblem_complete : forall source problem,
   ProblemGrammar source problem -> parsePublicProblem source = Some problem.
 Proof.
-  intros source problem H. inversion H; subst. unfold parsePublicProblem.
+  intros source problem H. inversion H as [? lines ? ? ? Hsplit Hlines]; subst.
+  unfold parsePublicProblem.
+  apply LineSplit_splitLines in Hsplit. subst lines.
   rewrite (parse_public_lines_complete (splitLines source) declarations premises
-    (Some conclusion) H0). reflexivity.
+    (Some conclusion) Hlines). reflexivity.
 Qed.

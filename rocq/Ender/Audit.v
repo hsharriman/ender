@@ -1,17 +1,27 @@
 (** This is the complete human-audit surface for the Ender checker.  It
-    intentionally imports no Ender implementation module. *)
+    intentionally imports no Ender implementation module.
+
+    Five things carry the guarantee, and an auditor can read them in this
+    order: [PublicStatement] is the theorem language; [statementMeaning] and
+    [problemClaim] say what a problem asserts about Tarski geometry;
+    [ProblemGrammar] says which source text states which problem; and
+    [COMPLETE_VERIFIED_CHECKER] binds the implementation to all of them.
+    Everything else here either serves one of those five or is marked as
+    advisory data that no theorem constrains. *)
 From Stdlib Require Import Ascii String List Bool.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Import ListNotations.
 Local Open Scope string_scope.
 
-(** Return precisely the text after the [pt:] line and before [steps:].
+(** * The problem part of a source
+
+    Return precisely the text after the [pt:] line and before [steps:].
 
     Rocq string literals have no escape sequences, so a line feed can only be
     spelled through its [ascii] code. *)
-Module ProblemPart.
 
-Definition newline : string := String "010"%char "".
+Definition newlineCharacter : ascii := "010"%char.
+Definition newline : string := String newlineCharacter "".
 
 (** [String.index 0 marker text] is the position of the first occurrence of
     [marker].  [String.substring start count text] stops at the end of [text]
@@ -40,22 +50,20 @@ Definition problemPart (source : string) : option string :=
       end
   end.
 
-End ProblemPart.
+(** * The complete public theorem language
 
-Export ProblemPart.
-
-(** The complete public theorem language. *)
-Module FinalAudit.
-
-Local Open Scope string_scope.
+    A figure is named by the points it is drawn through. *)
 
 Definition PointName := ascii.
-Record SegmentName := segment_name { segment_first : PointName; segment_second : PointName }.
+Record SegmentName := segment_name {
+  segment_first : PointName; segment_second : PointName
+}.
 Record AngleName := angle_name {
   angle_first : PointName; angle_vertex : PointName; angle_last : PointName
 }.
 Record TriangleName := triangle_name {
-  triangle_first : PointName; triangle_second : PointName; triangle_third : PointName
+  triangle_first : PointName; triangle_second : PointName;
+  triangle_third : PointName
 }.
 Record QuadrilateralName := quadrilateral_name {
   quadrilateral_first : PointName; quadrilateral_second : PointName;
@@ -71,54 +79,53 @@ Record ArcName := arc_name {
 }.
 
 Inductive PublicStatement :=
-| OnLine : SegmentName -> PointName -> PublicStatement
-| Transversal : PointName -> PointName -> PointName -> PointName ->
-    PointName -> PointName -> PointName -> PointName -> PublicStatement
-| IntersectSeg : SegmentName -> SegmentName -> PointName -> PublicStatement
-| TrapezoidPremise : QuadrilateralName -> SegmentName -> SegmentName -> PublicStatement
-| KitePremise : QuadrilateralName -> AngleName -> AngleName -> PublicStatement
-| IsosTrapezoidPremise : QuadrilateralName -> SegmentName -> SegmentName -> PublicStatement
-| Right : AngleName -> PublicStatement
-| ConSeg : SegmentName -> SegmentName -> PublicStatement
-| ConAng : AngleName -> AngleName -> PublicStatement
-| ConTri : TriangleName -> TriangleName -> PublicStatement
-| ConRight : AngleName -> AngleName -> PublicStatement
-| Para : SegmentName -> SegmentName -> PublicStatement
-| Isosceles : TriangleName -> PublicStatement
-| Perp : SegmentName -> SegmentName -> PointName -> PublicStatement
-| Midpt : SegmentName -> PointName -> PublicStatement
-| AngBisect : AngleName -> SegmentName -> PublicStatement
-| Rectangle : QuadrilateralName -> PublicStatement
-| Parallelogram : QuadrilateralName -> PublicStatement
-| Proportion : SegmentName -> SegmentName -> SegmentName -> SegmentName -> PublicStatement
-| SimTri : TriangleName -> TriangleName -> PublicStatement
-| Equilateral : TriangleName -> PublicStatement
-| Supplementary : AngleName -> AngleName -> PublicStatement
-| Complementary : AngleName -> AngleName -> PublicStatement
-| LinearPair : AngleName -> AngleName -> PublicStatement
-| Equiangular : TriangleName -> PublicStatement
-| Circumcenter : PointName -> TriangleName -> PublicStatement
-| Incenter : PointName -> TriangleName -> PublicStatement
-| PerpBisector : SegmentName -> SegmentName -> PointName -> PublicStatement
-| SegBisect : SegmentName -> SegmentName -> PointName -> PublicStatement
-| IsosTrapezoid : QuadrilateralName -> PublicStatement
-| Rhombus : QuadrilateralName -> PublicStatement
-| Tangent : CircleName -> SegmentName -> PointName -> PublicStatement
-| Chord : CircleName -> SegmentName -> PublicStatement
-| ArcStatement : ArcName -> PublicStatement
-| Radius : CircleName -> PointName -> PublicStatement
-| Diameter : CircleName -> SegmentName -> PublicStatement
-| InscribedAngle : CircleName -> AngleName -> PublicStatement
-| RefSeg : SegmentName -> SegmentName -> PublicStatement
-| RefAng : AngleName -> AngleName -> PublicStatement
-| ConArc : ArcName -> ArcName -> PublicStatement.
+| OnLine (s : SegmentName) (p : PointName)
+| Transversal (a b t1 i1 c d t2 i2 : PointName)
+| IntersectSeg (a b : SegmentName) (p : PointName)
+| TrapezoidPremise (q : QuadrilateralName) (a b : SegmentName)
+| KitePremise (q : QuadrilateralName) (a b : AngleName)
+| IsosTrapezoidPremise (q : QuadrilateralName) (a b : SegmentName)
+| Right (a : AngleName)
+| ConSeg (a b : SegmentName)
+| ConAng (a b : AngleName)
+| ConTri (a b : TriangleName)
+| ConRight (a b : AngleName)
+| Para (a b : SegmentName)
+| Isosceles (t : TriangleName)
+| Perp (a b : SegmentName) (p : PointName)
+| Midpt (s : SegmentName) (p : PointName)
+| AngBisect (a : AngleName) (s : SegmentName)
+| Rectangle (q : QuadrilateralName)
+| Parallelogram (q : QuadrilateralName)
+| Proportion (a b c d : SegmentName)
+| SimTri (a b : TriangleName)
+| Equilateral (t : TriangleName)
+| Supplementary (a b : AngleName)
+| Complementary (a b : AngleName)
+| LinearPair (a b : AngleName)
+| Equiangular (t : TriangleName)
+| Circumcenter (p : PointName) (t : TriangleName)
+| Incenter (p : PointName) (t : TriangleName)
+| PerpBisector (a b : SegmentName) (p : PointName)
+| SegBisect (a b : SegmentName) (p : PointName)
+| IsosTrapezoid (q : QuadrilateralName)
+| Rhombus (q : QuadrilateralName)
+| Tangent (c : CircleName) (s : SegmentName) (p : PointName)
+| Chord (c : CircleName) (s : SegmentName)
+| ArcStatement (a : ArcName)
+| Radius (c : CircleName) (p : PointName)
+| Diameter (c : CircleName) (s : SegmentName)
+| InscribedAngle (c : CircleName) (a : AngleName)
+| RefSeg (a b : SegmentName)
+| RefAng (a b : AngleName)
+| ConArc (a b : ArcName).
 
 Inductive PublicDeclaration :=
-| SegmentDeclaration : SegmentName -> PublicDeclaration
-| AngleDeclaration : AngleName -> PublicDeclaration
-| TriangleDeclaration : TriangleName -> PublicDeclaration
-| QuadrilateralDeclaration : QuadrilateralName -> PublicDeclaration
-| CircleDeclaration : CircleName -> PublicDeclaration.
+| SegmentDeclaration (s : SegmentName)
+| AngleDeclaration (a : AngleName)
+| TriangleDeclaration (t : TriangleName)
+| QuadrilateralDeclaration (q : QuadrilateralName)
+| CircleDeclaration (c : CircleName).
 
 Record PublicProblem := public_problem {
   public_declarations : list PublicDeclaration;
@@ -126,45 +133,10 @@ Record PublicProblem := public_problem {
   public_conclusion : PublicStatement
 }.
 
-(** Presentation syntax is intentionally not part of theorem meaning.  Decimal
-    spellings are preserved exactly; JavaScript may interpret them for layout
-    without affecting checker soundness.  Generic calls let the presentation
-    parser retain unsupported and diagram-only vocabulary. *)
-Record SurfaceCall := surface_call {
-  surface_call_name : string;
-  surface_call_arguments : list string
-}.
-Record DisplayPoint := display_point {
-  display_point_name : PointName;
-  display_point_x : string;
-  display_point_y : string;
-  display_point_offset : option string
-}.
-Inductive DisplayObjectKind :=
-| DisplaySegment | DisplayAngle | DisplayTriangle
-| DisplayQuadrilateral | DisplayCircle.
-Record DisplayDeclaration := display_declaration {
-  display_declaration_kind : DisplayObjectKind;
-  display_declaration_objects : list string
-}.
-Record LabeledSurfaceCall := labeled_surface_call {
-  surface_label : string;
-  surface_labeled_call : SurfaceCall
-}.
-Record PresentationStep := presentation_step {
-  presentation_step_label : string;
-  presentation_step_reason : option SurfaceCall;
-  presentation_step_conclusion : option SurfaceCall
-}.
-Record PresentationFile := presentation_file {
-  presentation_title : option string;
-  presentation_points : list DisplayPoint;
-  presentation_declarations : list DisplayDeclaration;
-  presentation_diagram_premises : list LabeledSurfaceCall;
-  presentation_givens : list LabeledSurfaceCall;
-  presentation_goal : option SurfaceCall;
-  presentation_steps : list PresentationStep
-}.
+(** * What a problem means
+
+    A problem is read against an assignment of a Tarski point to every point
+    name; its claim is that the premises entail the conclusion there. *)
 
 Section GeometryMeaning.
 
@@ -176,16 +148,16 @@ Definition seg_end (s : SegmentName) := point s.(segment_second).
 Definition ang_start (a : AngleName) := point a.(angle_first).
 Definition ang_vertex (a : AngleName) := point a.(angle_vertex).
 Definition ang_end (a : AngleName) := point a.(angle_last).
+Definition circ_center (c : CircleName) := point c.(circle_center).
 
 Definition SegmentWellFormed (s : SegmentName) : Prop := seg_start s <> seg_end s.
 Definition AngleWellFormed (a : AngleName) : Prop :=
   ang_start a <> ang_vertex a /\ ang_end a <> ang_vertex a.
 Definition TriangleWellFormed (t : TriangleName) : Prop :=
-  point t.(triangle_first) <> point t.(triangle_second) /\
-  point t.(triangle_second) <> point t.(triangle_third) /\
-  point t.(triangle_third) <> point t.(triangle_first) /\
-  ~ Col (point t.(triangle_first)) (point t.(triangle_second))
-        (point t.(triangle_third)).
+  let A := point t.(triangle_first) in
+  let B := point t.(triangle_second) in
+  let C := point t.(triangle_third) in
+  A <> B /\ B <> C /\ C <> A /\ ~ Col A B C.
 Definition QuadrilateralWellFormed (q : QuadrilateralName) : Prop :=
   let A := point q.(quadrilateral_first) in
   let B := point q.(quadrilateral_second) in
@@ -194,7 +166,7 @@ Definition QuadrilateralWellFormed (q : QuadrilateralName) : Prop :=
   A <> B /\ A <> C /\ A <> D /\ B <> C /\ B <> D /\ C <> D /\
   (exists X, BetS A X C /\ BetS B X D).
 Definition CircleWellFormed (c : CircleName) : Prop :=
-  point c.(circle_center) <> point c.(circle_radius_point).
+  circ_center c <> point c.(circle_radius_point).
 
 Definition SegmentCongruent (a b : SegmentName) : Prop :=
   Cong (seg_start a) (seg_end a) (seg_start b) (seg_end b).
@@ -255,52 +227,56 @@ Definition quad_cd (q : QuadrilateralName) :=
   segment_name q.(quadrilateral_third) q.(quadrilateral_fourth).
 Definition quad_da (q : QuadrilateralName) :=
   segment_name q.(quadrilateral_fourth) q.(quadrilateral_first).
+Definition quad_angle_a (q : QuadrilateralName) :=
+  angle_name q.(quadrilateral_fourth) q.(quadrilateral_first)
+             q.(quadrilateral_second).
+Definition quad_angle_b (q : QuadrilateralName) :=
+  angle_name q.(quadrilateral_first) q.(quadrilateral_second)
+             q.(quadrilateral_third).
+Definition quad_angle_c (q : QuadrilateralName) :=
+  angle_name q.(quadrilateral_second) q.(quadrilateral_third)
+             q.(quadrilateral_fourth).
+Definition quad_angle_d (q : QuadrilateralName) :=
+  angle_name q.(quadrilateral_third) q.(quadrilateral_fourth)
+             q.(quadrilateral_first).
 Definition IsParallelogram (q : QuadrilateralName) : Prop :=
   QuadrilateralWellFormed q /\ Parallel (quad_ab q) (quad_cd q) /\
   Parallel (quad_bc q) (quad_da q).
 Definition IsRectangle (q : QuadrilateralName) : Prop :=
-  IsParallelogram q /\
-  RightAngle (angle_name q.(quadrilateral_fourth)
-                         q.(quadrilateral_first) q.(quadrilateral_second)).
+  IsParallelogram q /\ RightAngle (quad_angle_a q).
 Definition IsRhombus (q : QuadrilateralName) : Prop :=
   IsParallelogram q /\ SegmentCongruent (quad_ab q) (quad_bc q) /\
   SegmentCongruent (quad_bc q) (quad_cd q) /\
   SegmentCongruent (quad_cd q) (quad_da q).
+(** Two names for the same object, as written: a segment may be spelled from
+    either end, an angle from either ray. *)
+Definition SameSegmentName (a b : SegmentName) : Prop :=
+  (a.(segment_first) = b.(segment_first) /\
+   a.(segment_second) = b.(segment_second)) \/
+  (a.(segment_first) = b.(segment_second) /\
+   a.(segment_second) = b.(segment_first)).
 Definition SameAngleName (a b : AngleName) : Prop :=
   a.(angle_vertex) = b.(angle_vertex) /\
   ((a.(angle_first) = b.(angle_first) /\ a.(angle_last) = b.(angle_last)) \/
    (a.(angle_first) = b.(angle_last) /\ a.(angle_last) = b.(angle_first))).
+(** Two angle names, in either assignment, for these two corners. *)
+Definition SameAnglePair (selected1 selected2 first second : AngleName) : Prop :=
+  (SameAngleName selected1 first /\ SameAngleName selected2 second) \/
+  (SameAngleName selected2 first /\ SameAngleName selected1 second).
+
+(** A kite pairs its adjacent sides up in one of two ways: AB with DA and BC
+    with CD, which meet at A and C, or AB with BC and CD with DA, which meet at
+    B and D.  The premise selects the angles at the other two corners, the ones
+    a kite makes congruent. *)
 Definition IsKitePremise
     (q : QuadrilateralName) (selected1 selected2 : AngleName) : Prop :=
   QuadrilateralWellFormed q /\
   ((SegmentCongruent (quad_ab q) (quad_da q) /\
     SegmentCongruent (quad_bc q) (quad_cd q) /\
-    ((SameAngleName selected1
-        (angle_name q.(quadrilateral_first) q.(quadrilateral_second)
-                    q.(quadrilateral_third)) /\
-      SameAngleName selected2
-        (angle_name q.(quadrilateral_third) q.(quadrilateral_fourth)
-                    q.(quadrilateral_first))) \/
-     (SameAngleName selected2
-        (angle_name q.(quadrilateral_first) q.(quadrilateral_second)
-                    q.(quadrilateral_third)) /\
-      SameAngleName selected1
-        (angle_name q.(quadrilateral_third) q.(quadrilateral_fourth)
-                    q.(quadrilateral_first))))) \/
+    SameAnglePair selected1 selected2 (quad_angle_b q) (quad_angle_d q)) \/
    (SegmentCongruent (quad_ab q) (quad_bc q) /\
     SegmentCongruent (quad_cd q) (quad_da q) /\
-    ((SameAngleName selected1
-        (angle_name q.(quadrilateral_fourth) q.(quadrilateral_first)
-                    q.(quadrilateral_second)) /\
-      SameAngleName selected2
-        (angle_name q.(quadrilateral_second) q.(quadrilateral_third)
-                    q.(quadrilateral_fourth))) \/
-     (SameAngleName selected2
-        (angle_name q.(quadrilateral_fourth) q.(quadrilateral_first)
-                    q.(quadrilateral_second)) /\
-      SameAngleName selected1
-        (angle_name q.(quadrilateral_second) q.(quadrilateral_third)
-                    q.(quadrilateral_fourth)))))).
+    SameAnglePair selected1 selected2 (quad_angle_a q) (quad_angle_c q))).
 Definition IsTrapezoid (q : QuadrilateralName) : Prop :=
   QuadrilateralWellFormed q /\
   (Parallel (quad_ab q) (quad_cd q) \/ Parallel (quad_bc q) (quad_da q)).
@@ -311,21 +287,22 @@ Definition IsIsoscelesTrapezoid (q : QuadrilateralName) : Prop :=
 
 Definition OnCircle (c : CircleName) (p : PointName) : Prop :=
   CircleWellFormed c /\
-  Cong (point c.(circle_center)) (point p)
-       (point c.(circle_center)) (point c.(circle_radius_point)).
+  Cong (circ_center c) (point p) (circ_center c) (point c.(circle_radius_point)).
 Definition IsChord (c : CircleName) (s : SegmentName) : Prop :=
-  SegmentWellFormed s /\ OnCircle c s.(segment_first) /\ OnCircle c s.(segment_second).
+  SegmentWellFormed s /\
+  OnCircle c s.(segment_first) /\ OnCircle c s.(segment_second).
 Definition IsDiameter (c : CircleName) (s : SegmentName) : Prop :=
-  IsChord c s /\ Bet (seg_start s) (point c.(circle_center)) (seg_end s).
+  IsChord c s /\ Bet (seg_start s) (circ_center c) (seg_end s).
 Definition IsTangent (c : CircleName) (s : SegmentName) (p : PointName) : Prop :=
   OnCircle c p /\ Col (seg_start s) (seg_end s) (point p) /\
   exists Q, (Q = seg_start s \/ Q = seg_end s) /\ Q <> point p /\
-            Per (point c.(circle_center)) (point p) Q.
+            Per (circ_center c) (point p) Q.
 Definition IsInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
   OnCircle c a.(angle_first) /\ OnCircle c a.(angle_vertex) /\
   OnCircle c a.(angle_last) /\ AngleWellFormed a.
 
-Definition SegmentBisectorAt (bisector target : SegmentName) (p : PointName) : Prop :=
+Definition SegmentBisectorAt
+    (bisector target : SegmentName) (p : PointName) : Prop :=
   Col (seg_start bisector) (seg_end bisector) (point p) /\ MidpointOf target p.
 Definition PerpendicularBisectorAt
     (bisector target : SegmentName) (p : PointName) : Prop :=
@@ -340,25 +317,23 @@ Definition AngleBisector (a : AngleName) (s : SegmentName) : Prop :=
       (angle_name a.(angle_first) a.(angle_vertex) s.(segment_first))
       (angle_name s.(segment_first) a.(angle_vertex) a.(angle_last))).
 Definition IsCircumcenter (p : PointName) (t : TriangleName) : Prop :=
-  TriangleWellFormed t /\
-  Cong (point p) (point t.(triangle_first))
-       (point p) (point t.(triangle_second)) /\
-  Cong (point p) (point t.(triangle_second))
-       (point p) (point t.(triangle_third)).
+  let P := point p in
+  let A := point t.(triangle_first) in
+  let B := point t.(triangle_second) in
+  let C := point t.(triangle_third) in
+  TriangleWellFormed t /\ Cong P A P B /\ Cong P B P C.
 Definition IsIncenter (p : PointName) (t : TriangleName) : Prop :=
+  let P := point p in
+  let A := point t.(triangle_first) in
+  let B := point t.(triangle_second) in
+  let C := point t.(triangle_third) in
   TriangleWellFormed t /\
   AngleBisector (angle_a t) (segment_name t.(triangle_first) p) /\
   AngleBisector (angle_b t) (segment_name t.(triangle_second) p) /\
   AngleBisector (angle_c t) (segment_name t.(triangle_third) p) /\
-  InAngle (point p) (point t.(triangle_third)) (point t.(triangle_first))
-                    (point t.(triangle_second)) /\
-  InAngle (point p) (point t.(triangle_first)) (point t.(triangle_second))
-                    (point t.(triangle_third)) /\
-  InAngle (point p) (point t.(triangle_second)) (point t.(triangle_third))
-                    (point t.(triangle_first)).
+  InAngle P C A B /\ InAngle P A B C /\ InAngle P B C A.
 
-Definition SegmentProportion
-    (a b c d : SegmentName) : Prop :=
+Definition SegmentProportion (a b c d : SegmentName) : Prop :=
   SegmentWellFormed a /\ SegmentWellFormed b /\
   SegmentWellFormed c /\ SegmentWellFormed d /\
   exists O A B C D,
@@ -369,35 +344,31 @@ Definition SegmentProportion
     Out O A B /\ Out O C D /\ Par A C B D.
 
 Definition LinearPairMeaning (a b : AngleName) : Prop :=
-  AngleWellFormed a /\ AngleWellFormed b /\
-  point a.(angle_vertex) = point b.(angle_vertex) /\
-  let V := point a.(angle_vertex) in
-  ((Out V (point a.(angle_first)) (point b.(angle_first)) /\
-    BetS (point a.(angle_last)) V (point b.(angle_last))) \/
-   (Out V (point a.(angle_first)) (point b.(angle_last)) /\
-    BetS (point a.(angle_last)) V (point b.(angle_first))) \/
-   (Out V (point a.(angle_last)) (point b.(angle_first)) /\
-    BetS (point a.(angle_first)) V (point b.(angle_last))) \/
-   (Out V (point a.(angle_last)) (point b.(angle_last)) /\
-    BetS (point a.(angle_first)) V (point b.(angle_first)))).
+  AngleWellFormed a /\ AngleWellFormed b /\ ang_vertex a = ang_vertex b /\
+  let V := ang_vertex a in
+  ((Out V (ang_start a) (ang_start b) /\ BetS (ang_end a) V (ang_end b)) \/
+   (Out V (ang_start a) (ang_end b) /\ BetS (ang_end a) V (ang_start b)) \/
+   (Out V (ang_end a) (ang_start b) /\ BetS (ang_start a) V (ang_end b)) \/
+   (Out V (ang_end a) (ang_end b) /\ BetS (ang_start a) V (ang_start b))).
 
 Definition ArcWellFormed (a : ArcName) : Prop :=
   point a.(arc_first) <> point a.(arc_second) /\
   OnCircle a.(arc_circle) a.(arc_first) /\ OnCircle a.(arc_circle) a.(arc_second).
 Definition ArcCongruent (a b : ArcName) : Prop :=
   ArcWellFormed a /\ ArcWellFormed b /\ a.(arc_kind) = b.(arc_kind) /\
-  CongA (point a.(arc_first)) (point a.(arc_circle).(circle_center)) (point a.(arc_second))
-        (point b.(arc_first)) (point b.(arc_circle).(circle_center)) (point b.(arc_second)).
+  CongA (point a.(arc_first)) (circ_center a.(arc_circle)) (point a.(arc_second))
+        (point b.(arc_first)) (circ_center b.(arc_circle)) (point b.(arc_second)).
 
 Definition statementMeaning (s : PublicStatement) : Prop :=
   match s with
   | OnLine s p => SegmentWellFormed s /\ Col (seg_start s) (seg_end s) (point p)
   | Transversal a b t1 i1 c d t2 i2 =>
-      point a <> point b /\ point c <> point d /\ point t1 <> point t2 /\
-        Col (point a) (point b) (point i1) /\
-        Col (point c) (point d) (point i2) /\
-        Col (point t1) (point t2) (point i1) /\
-        Col (point t1) (point t2) (point i2) /\ point i1 <> point i2
+      let A := point a in let B := point b in
+      let C := point c in let D := point d in
+      let T1 := point t1 in let T2 := point t2 in
+      let I1 := point i1 in let I2 := point i2 in
+      A <> B /\ C <> D /\ T1 <> T2 /\ I1 <> I2 /\
+      Col A B I1 /\ Col C D I2 /\ Col T1 T2 I1 /\ Col T1 T2 I2
   | IntersectSeg a b p => OnSegment a p /\ OnSegment b p
   | TrapezoidPremise q a b => IsTrapezoid q /\ Parallel a b
   | KitePremise q a b => IsKitePremise q a b
@@ -437,15 +408,8 @@ Definition statementMeaning (s : PublicStatement) : Prop :=
   | Radius c p => OnCircle c p
   | Diameter c s => IsDiameter c s
   | InscribedAngle c a => IsInscribedAngle c a
-  | RefSeg a b => ((a.(segment_first) = b.(segment_first) /\
-                     a.(segment_second) = b.(segment_second)) \/
-                    (a.(segment_first) = b.(segment_second) /\
-                     a.(segment_second) = b.(segment_first))) /\
-                   SegmentCongruent a b
-  | RefAng a b => (a.(angle_vertex) = b.(angle_vertex) /\
-                   ((a.(angle_first) = b.(angle_first) /\ a.(angle_last) = b.(angle_last)) \/
-                    (a.(angle_first) = b.(angle_last) /\ a.(angle_last) = b.(angle_first)))) /\
-                  AngleCongruent a b
+  | RefSeg a b => SameSegmentName a b /\ SegmentCongruent a b
+  | RefAng a b => SameAngleName a b /\ AngleCongruent a b
   | ConArc a b => ArcCongruent a b
   end.
 
@@ -465,37 +429,10 @@ Definition problemClaim (p : PublicProblem) : Prop :=
 
 End GeometryMeaning.
 
-(** The public spelling of every statement form is part of the audit. *)
-Definition pointText (p : PointName) : string := String p "".
-Definition segmentText (s : SegmentName) : string :=
-  pointText s.(segment_first) ++ pointText s.(segment_second).
-Definition angleText (a : AngleName) : string :=
-  "a_" ++ pointText a.(angle_first) ++ pointText a.(angle_vertex) ++ pointText a.(angle_last).
-Definition triangleText (t : TriangleName) : string :=
-  "t_" ++ pointText t.(triangle_first) ++ pointText t.(triangle_second) ++ pointText t.(triangle_third).
-Definition quadrilateralText (q : QuadrilateralName) : string :=
-  "q_" ++ pointText q.(quadrilateral_first) ++ pointText q.(quadrilateral_second) ++
-  pointText q.(quadrilateral_third) ++ pointText q.(quadrilateral_fourth).
-Definition circleText (c : CircleName) : string :=
-  "c_" ++ pointText c.(circle_center) ++ pointText c.(circle_radius_point).
-Definition arcText (a : ArcName) : string :=
-  let name := match a.(arc_kind) with MinorArc => "minor_arc" | MajorArc => "major_arc" end in
-  name ++ "(" ++ circleText a.(arc_circle) ++ "," ++ pointText a.(arc_first) ++
-  "," ++ pointText a.(arc_second) ++ ")".
-Definition call (name : string) (arguments : list string) : string :=
-  name ++ "(" ++ String.concat "," arguments ++ ")".
+(** * The public spelling of every statement form
 
-(** Ender's lexical grammar admits exactly one upper-case ASCII letter as a
-    point label.  Keeping this restriction explicit prevents object names from
-    containing punctuation used by the surrounding grammar. *)
-Definition upperCaseLetters : string := "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
-Definition pointNameValid (p : PointName) : bool :=
-  match index 0 (pointText p) upperCaseLetters with
-  | Some _ => true
-  | None => false
-  end.
-Definition pointsValid (points : list PointName) : bool :=
-  forallb pointNameValid points.
+    A figure is spelled as its kind tag followed by its points, so the points
+    it names and the text that names it are read off one list. *)
 
 Definition segmentPoints (s : SegmentName) :=
   [s.(segment_first); s.(segment_second)].
@@ -509,49 +446,28 @@ Definition quadrilateralPoints (q : QuadrilateralName) :=
 Definition circlePoints (c : CircleName) :=
   [c.(circle_center); c.(circle_radius_point)].
 Definition arcPoints (a : ArcName) :=
-  List.app (circlePoints a.(arc_circle)) [a.(arc_first); a.(arc_second)].
+  (circlePoints a.(arc_circle) ++ [a.(arc_first); a.(arc_second)])%list.
 
-Definition statementPoints (s : PublicStatement) : list PointName :=
-  match s with
-  | OnLine a p => List.app (segmentPoints a) [p]
-  | Transversal a b t1 i1 c d t2 i2 => [a;b;t1;i1;c;d;t2;i2]
-  | IntersectSeg a b p => List.app (segmentPoints a) (List.app (segmentPoints b) [p])
-  | TrapezoidPremise q a b | IsosTrapezoidPremise q a b =>
-      List.app (quadrilateralPoints q) (List.app (segmentPoints a) (segmentPoints b))
-  | KitePremise q a b =>
-      List.app (quadrilateralPoints q) (List.app (anglePoints a) (anglePoints b))
-  | Right a => anglePoints a
-  | ConSeg a b | Para a b | RefSeg a b => List.app (segmentPoints a) (segmentPoints b)
-  | ConAng a b | ConRight a b | Supplementary a b | Complementary a b
-  | LinearPair a b | RefAng a b => List.app (anglePoints a) (anglePoints b)
-  | ConTri a b | SimTri a b => List.app (trianglePoints a) (trianglePoints b)
-  | Isosceles t | Equilateral t | Equiangular t => trianglePoints t
-  | Perp a b p | PerpBisector a b p | SegBisect a b p =>
-      List.app (segmentPoints a) (List.app (segmentPoints b) [p])
-  | Midpt a p => List.app (segmentPoints a) [p]
-  | AngBisect a s => List.app (anglePoints a) (segmentPoints s)
-  | Rectangle q | Parallelogram q | IsosTrapezoid q | Rhombus q =>
-      quadrilateralPoints q
-  | Proportion a b c d =>
-      List.app (segmentPoints a) (List.app (segmentPoints b)
-        (List.app (segmentPoints c) (segmentPoints d)))
-  | Circumcenter p t | Incenter p t => p :: trianglePoints t
-  | Tangent c s p => List.app (circlePoints c) (List.app (segmentPoints s) [p])
-  | Chord c s | Diameter c s => List.app (circlePoints c) (segmentPoints s)
-  | ArcStatement a => arcPoints a
-  | Radius c p => List.app (circlePoints c) [p]
-  | InscribedAngle c a => List.app (circlePoints c) (anglePoints a)
-  | ConArc a b => List.app (arcPoints a) (arcPoints b)
-  end.
-
-Definition declarationPoints (d : PublicDeclaration) : list PointName :=
-  match d with
-  | SegmentDeclaration s => segmentPoints s
-  | AngleDeclaration a => anglePoints a
-  | TriangleDeclaration t => trianglePoints t
-  | QuadrilateralDeclaration q => quadrilateralPoints q
-  | CircleDeclaration c => circlePoints c
-  end.
+Definition call (name : string) (arguments : list string) : string :=
+  name ++ "(" ++ String.concat "," arguments ++ ")".
+Definition pointText (p : PointName) : string := String p "".
+Definition segmentText (s : SegmentName) : string :=
+  string_of_list_ascii (segmentPoints s).
+Definition angleText (a : AngleName) : string :=
+  "a_" ++ string_of_list_ascii (anglePoints a).
+Definition triangleText (t : TriangleName) : string :=
+  "t_" ++ string_of_list_ascii (trianglePoints t).
+Definition quadrilateralText (q : QuadrilateralName) : string :=
+  "q_" ++ string_of_list_ascii (quadrilateralPoints q).
+Definition circleText (c : CircleName) : string :=
+  "c_" ++ string_of_list_ascii (circlePoints c).
+Definition arcText (a : ArcName) : string :=
+  let kind := match a.(arc_kind) with
+              | MinorArc => "minor_arc"
+              | MajorArc => "major_arc"
+              end in
+  call kind
+    [circleText a.(arc_circle); pointText a.(arc_first); pointText a.(arc_second)].
 
 Definition statementText (s : PublicStatement) : string :=
   match s with
@@ -559,10 +475,15 @@ Definition statementText (s : PublicStatement) : string :=
   | Transversal a b t1 i1 c d t2 i2 => call "transversal"
       [pointText a; pointText b; pointText t1; pointText i1;
        pointText c; pointText d; pointText t2; pointText i2]
-  | IntersectSeg a b p => call "intersect_seg" [segmentText a; segmentText b; pointText p]
-  | TrapezoidPremise q a b => call "trapezoid_premise" [quadrilateralText q; segmentText a; segmentText b]
-  | KitePremise q a b => call "kite_premise" [quadrilateralText q; angleText a; angleText b]
-  | IsosTrapezoidPremise q a b => call "isos_trapezoid_premise" [quadrilateralText q; segmentText a; segmentText b]
+  | IntersectSeg a b p =>
+      call "intersect_seg" [segmentText a; segmentText b; pointText p]
+  | TrapezoidPremise q a b =>
+      call "trapezoid_premise" [quadrilateralText q; segmentText a; segmentText b]
+  | KitePremise q a b =>
+      call "kite_premise" [quadrilateralText q; angleText a; angleText b]
+  | IsosTrapezoidPremise q a b =>
+      call "isos_trapezoid_premise"
+        [quadrilateralText q; segmentText a; segmentText b]
   | Right a => call "right" [angleText a]
   | ConSeg a b => call "con_seg" [segmentText a; segmentText b]
   | ConAng a b => call "con_ang" [angleText a; angleText b]
@@ -585,8 +506,10 @@ Definition statementText (s : PublicStatement) : string :=
   | Equiangular t => call "equiangular" [triangleText t]
   | Circumcenter p t => call "circumcenter" [pointText p; triangleText t]
   | Incenter p t => call "incenter" [pointText p; triangleText t]
-  | PerpBisector a b p => call "perp_bisector" [segmentText a; segmentText b; pointText p]
-  | SegBisect a b p => call "seg_bisect" [segmentText a; segmentText b; pointText p]
+  | PerpBisector a b p =>
+      call "perp_bisector" [segmentText a; segmentText b; pointText p]
+  | SegBisect a b p =>
+      call "seg_bisect" [segmentText a; segmentText b; pointText p]
   | IsosTrapezoid q => call "isos_trapezoid" [quadrilateralText q]
   | Rhombus q => call "rhombus" [quadrilateralText q]
   | Tangent c s p => call "tangent" [circleText c; segmentText s; pointText p]
@@ -600,17 +523,59 @@ Definition statementText (s : PublicStatement) : string :=
   | ConArc a b => call "con_arc" [arcText a; arcText b]
   end.
 
-(**
-  Declarative grammar.  [StatementText] deliberately specifies accepted text
-  by normalization and rendering rather than by reusing the executable parser.
-*)
+Definition statementPoints (s : PublicStatement) : list PointName :=
+  (match s with
+   | OnLine a p => segmentPoints a ++ [p]
+   | Transversal a b t1 i1 c d t2 i2 => [a; b; t1; i1; c; d; t2; i2]
+   | IntersectSeg a b p => segmentPoints a ++ segmentPoints b ++ [p]
+   | TrapezoidPremise q a b | IsosTrapezoidPremise q a b =>
+       quadrilateralPoints q ++ segmentPoints a ++ segmentPoints b
+   | KitePremise q a b => quadrilateralPoints q ++ anglePoints a ++ anglePoints b
+   | Right a => anglePoints a
+   | ConSeg a b | Para a b | RefSeg a b => segmentPoints a ++ segmentPoints b
+   | ConAng a b | ConRight a b | Supplementary a b | Complementary a b
+   | LinearPair a b | RefAng a b => anglePoints a ++ anglePoints b
+   | ConTri a b | SimTri a b => trianglePoints a ++ trianglePoints b
+   | Isosceles t | Equilateral t | Equiangular t => trianglePoints t
+   | Perp a b p | PerpBisector a b p | SegBisect a b p =>
+       segmentPoints a ++ segmentPoints b ++ [p]
+   | Midpt a p => segmentPoints a ++ [p]
+   | AngBisect a s => anglePoints a ++ segmentPoints s
+   | Rectangle q | Parallelogram q | IsosTrapezoid q | Rhombus q =>
+       quadrilateralPoints q
+   | Proportion a b c d =>
+       segmentPoints a ++ segmentPoints b ++ segmentPoints c ++ segmentPoints d
+   | Circumcenter p t | Incenter p t => p :: trianglePoints t
+   | Tangent c s p => circlePoints c ++ segmentPoints s ++ [p]
+   | Chord c s | Diameter c s => circlePoints c ++ segmentPoints s
+   | ArcStatement a => arcPoints a
+   | Radius c p => circlePoints c ++ [p]
+   | InscribedAngle c a => circlePoints c ++ anglePoints a
+   | ConArc a b => arcPoints a ++ arcPoints b
+   end)%list.
+
+(** * The declarative grammar of the theorem-bearing lines
+
+    [StatementText] and [DeclarationText] deliberately specify the accepted
+    text by normalization and rendering rather than by reusing the executable
+    parser. *)
+
+(** Ender's lexical grammar admits exactly one upper-case ASCII letter as a
+    point label.  Keeping this restriction explicit prevents object names from
+    containing punctuation used by the surrounding grammar. *)
+Definition upperCaseLetters : string := "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
+Definition PointNameValid (p : PointName) : Prop :=
+  In p (list_ascii_of_string upperCaseLetters).
+
+(** A line is read modulo whitespace and any trailing [//] comment. *)
 Definition whitespace (c : ascii) : bool :=
   Ascii.eqb c " "%char || Ascii.eqb c "009"%char || Ascii.eqb c "013"%char.
 Fixpoint removeWhitespace (text : string) : string :=
   match text with
   | "" => ""
   | String c rest =>
-      if whitespace c then removeWhitespace rest else String c (removeWhitespace rest)
+      if whitespace c then removeWhitespace rest
+      else String c (removeWhitespace rest)
   end.
 Fixpoint codeBeforeComment (text : string) : string :=
   match text with
@@ -621,7 +586,7 @@ Fixpoint codeBeforeComment (text : string) : string :=
 Definition normalized (text : string) : string :=
   removeWhitespace (codeBeforeComment text).
 Definition StatementText (text : string) (statement : PublicStatement) : Prop :=
-  pointsValid (statementPoints statement) = true /\
+  Forall PointNameValid (statementPoints statement) /\
   normalized text = statementText statement.
 
 Definition declarationTag (d : PublicDeclaration) : string :=
@@ -640,76 +605,157 @@ Definition declarationObjectText (d : PublicDeclaration) : string :=
   | QuadrilateralDeclaration q => quadrilateralText q
   | CircleDeclaration c => circleText c
   end.
-Definition DeclarationText (text : string) (declarations : list PublicDeclaration) : Prop :=
+Definition declarationPoints (d : PublicDeclaration) : list PointName :=
+  match d with
+  | SegmentDeclaration s => segmentPoints s
+  | AngleDeclaration a => anglePoints a
+  | TriangleDeclaration t => trianglePoints t
+  | QuadrilateralDeclaration q => quadrilateralPoints q
+  | CircleDeclaration c => circlePoints c
+  end.
+Definition DeclarationText (text : string)
+    (declarations : list PublicDeclaration) : Prop :=
   exists first rest,
     declarations = first :: rest /\
-    Forall (fun declaration => declarationTag declaration = declarationTag first) rest /\
-    Forall (fun declaration => pointsValid (declarationPoints declaration) = true)
-      declarations /\
+    Forall (fun d => declarationTag d = declarationTag first) rest /\
+    Forall (fun d => Forall PointNameValid (declarationPoints d)) declarations /\
     normalized text =
-      declarationTag first ++ String.concat "" (map declarationObjectText declarations).
+      declarationTag first ++
+      String.concat "" (map declarationObjectText declarations).
 
-(** Relations for the exact theorem-bearing header language. *)
+(** A premise line labels its statement; a goal line points an arrow at it. *)
 Definition premiseBody (line : string) : option string :=
-  match ProblemPart.before "]" line, ProblemPart.after "]" line with
+  match before "]" line, after "]" line with
   | Some label, Some body =>
       if prefix "[g_" label || prefix "[d_" label then Some body else None
   | _, _ => None
   end.
 
 Definition goalBody (line : string) : option string :=
-  if prefix "->" (normalized line) then ProblemPart.after "->" line else None.
+  if prefix "->" (normalized line) then after "->" line else None.
 
-Inductive HeaderLine : string -> (list PublicDeclaration * list PublicStatement * option PublicStatement) -> Prop :=
+(** A line is exactly one of these.  The kinds are mutually exclusive by
+    construction: a premise label wins over everything, a goal arrow over a
+    declaration, and only a line that is none of the three may be ignored. *)
+Inductive HeaderContribution :=
+| DeclaresObjects (declarations : list PublicDeclaration)
+| StatesPremise (premise : PublicStatement)
+| StatesGoal (goal : PublicStatement)
+| ContributesNothing.
+
+Inductive HeaderLine : string -> HeaderContribution -> Prop :=
 | DeclarationHeaderLine : forall text declarations,
     premiseBody text = None -> goalBody text = None ->
-    DeclarationText text declarations -> HeaderLine text (declarations, [], None)
+    DeclarationText text declarations ->
+    HeaderLine text (DeclaresObjects declarations)
 | PremiseHeaderLine : forall line body statement,
     premiseBody line = Some body -> StatementText body statement ->
-    HeaderLine line ([], [statement], None)
+    HeaderLine line (StatesPremise statement)
 | GoalHeaderLine : forall line body statement,
     premiseBody line = None ->
     goalBody line = Some body -> StatementText body statement ->
-    HeaderLine line ([], [], Some statement)
+    HeaderLine line (StatesGoal statement)
 | IgnoredBlankLine : forall text,
     premiseBody text = None -> goalBody text = None ->
-    normalized text = "" -> HeaderLine text ([], [], None).
+    normalized text = "" -> HeaderLine text ContributesNothing.
 
-Fixpoint splitLines (source : string) : list string :=
-  match source with
-  | "" => [""]
-  | String c rest =>
-      let lines := splitLines rest in
-      if Ascii.eqb c "010"%char then "" :: lines
-      else String c (hd "" lines) :: tl lines
-  end.
+(** A line is text with no line break inside it. *)
+Definition LineUnbroken (line : string) : Prop :=
+  ~ In newlineCharacter (list_ascii_of_string line).
+
+(** The lines of a source: put the newlines back between them and you have the
+    source again.  Every source has at least one line, which is what makes the
+    empty source one empty line rather than no lines at all. *)
+Definition LineSplit (source : string) (lines : list string) : Prop :=
+  source = String.concat newline lines /\
+  Forall LineUnbroken lines /\
+  lines <> [].
 
 Inductive HeaderLines :
     list string -> list PublicDeclaration -> list PublicStatement ->
     option PublicStatement -> Prop :=
 | NoHeaderLines : HeaderLines [] [] [] None
-| MoreHeaderLines : forall line lines lineDeclarations linePremises lineGoal
-                           declarations premises goal,
-    HeaderLine line (lineDeclarations, linePremises, lineGoal) ->
+| DeclarationLines : forall line lines lineDeclarations declarations premises goal,
+    HeaderLine line (DeclaresObjects lineDeclarations) ->
     HeaderLines lines declarations premises goal ->
-    (lineGoal = None \/ goal = None) ->
-    HeaderLines (line :: lines)
-      (lineDeclarations ++ declarations) (linePremises ++ premises)
-      (match lineGoal with Some statement => Some statement | None => goal end).
+    HeaderLines (line :: lines) (lineDeclarations ++ declarations) premises goal
+| PremiseLines : forall line lines statement declarations premises goal,
+    HeaderLine line (StatesPremise statement) ->
+    HeaderLines lines declarations premises goal ->
+    HeaderLines (line :: lines) declarations (statement :: premises) goal
+(** A header states its conclusion once: the rest of the file must have none. *)
+| GoalLines : forall line lines statement declarations premises,
+    HeaderLine line (StatesGoal statement) ->
+    HeaderLines lines declarations premises None ->
+    HeaderLines (line :: lines) declarations premises (Some statement)
+| IgnoredLines : forall line lines declarations premises goal,
+    HeaderLine line ContributesNothing ->
+    HeaderLines lines declarations premises goal ->
+    HeaderLines (line :: lines) declarations premises goal.
 
 Inductive ProblemGrammar : string -> PublicProblem -> Prop :=
-| ProblemGrammarLines : forall source declarations premises conclusion,
-    HeaderLines (splitLines source) declarations premises (Some conclusion) ->
+| ProblemGrammarLines : forall source lines declarations premises conclusion,
+    LineSplit source lines ->
+    HeaderLines lines declarations premises (Some conclusion) ->
     ProblemGrammar source (public_problem declarations premises conclusion).
 
-(** The designated public API.  These data are deliberately independent of the
-    implementation's parser, proof AST, and reason kernel.  [Extract.v] names
-    only the concrete operations in this signature as extraction roots; the
-    distribution layer must likewise expose only those named roots. *)
+(** * The designated public API
+
+    These data are deliberately independent of the implementation's parser,
+    proof AST, and reason kernel.  [Extract.v] names only the concrete
+    operations in this signature as extraction roots; the distribution layer
+    must likewise expose only those named roots. *)
 Inductive Verdict := FailedToParseProblem | RejectedProof | Accepted.
 
+(** Presentation syntax is intentionally not part of theorem meaning.  Decimal
+    spellings are preserved exactly; JavaScript may interpret them for layout
+    without affecting checker soundness.  Generic calls let the presentation
+    parser retain unsupported and diagram-only vocabulary. *)
+Record SurfaceCall := surface_call {
+  surface_call_name : string;
+  surface_call_arguments : list string
+}.
+Record DisplayPoint := display_point {
+  display_point_name : PointName;
+  display_point_x : string;
+  display_point_y : string;
+  display_point_offset : option string
+}.
+Inductive DisplayObjectKind :=
+| DisplaySegment | DisplayAngle | DisplayTriangle
+| DisplayQuadrilateral | DisplayCircle.
+Record DisplayDeclaration := display_declaration {
+  display_declaration_kind : DisplayObjectKind;
+  display_declaration_objects : list string
+}.
+Record LabeledSurfaceCall := labeled_surface_call {
+  surface_label : string;
+  surface_labeled_call : SurfaceCall
+}.
+Record PresentationStep := presentation_step {
+  presentation_step_label : string;
+  presentation_step_reason : option SurfaceCall;
+  presentation_step_conclusion : option SurfaceCall
+}.
+Record PresentationFile := presentation_file {
+  presentation_title : option string;
+  presentation_points : list DisplayPoint;
+  presentation_declarations : list DisplayDeclaration;
+  presentation_diagram_premises : list LabeledSurfaceCall;
+  presentation_givens : list LabeledSurfaceCall;
+  presentation_goal : option SurfaceCall;
+  presentation_steps : list PresentationStep
+}.
+
+(** Everything from here to [CheckReport] is advisory reporting data, carried
+    for the host wrapper's benefit.  No theorem constrains any of it: [checker]
+    projects [report_verdict] alone, through [accepted], and the contract at
+    the end of this file says nothing about the remaining fields.  It is
+    enumerated here because [Extract.v] may name only roots this file declares,
+    not because the checker's guarantee rests on it. *)
 Inductive DiagnosticPhase := ProblemParsing | ProofParsing | ProofChecking.
-Inductive DiagnosticSeverity := DiagnosticInfo | DiagnosticWarning | DiagnosticError.
+Inductive DiagnosticSeverity :=
+| DiagnosticInfo | DiagnosticWarning | DiagnosticError.
 Inductive DiagnosticCode :=
 | MalformedProblem
 | MalformedProof
@@ -756,7 +802,9 @@ Record DependencyGraph := dependency_graph {
   graph_cycles : list (list nat);
   graph_unused_steps : list nat
 }.
-Inductive FactOrigin := PremiseOrigin : string -> FactOrigin | StepOrigin : nat -> FactOrigin.
+Inductive FactOrigin :=
+| PremiseOrigin (label : string)
+| StepOrigin (step : nat).
 Record DuplicateDerivation := duplicate_derivation {
   duplicate_statement : PublicStatement;
   duplicate_first : FactOrigin;
@@ -772,11 +820,11 @@ Record GoalReport := goal_report {
     host wrapper to reconstruct checker facts. *)
 Inductive JsonValue :=
 | JsonNull
-| JsonBool : bool -> JsonValue
-| JsonNumber : nat -> JsonValue
-| JsonString : string -> JsonValue
-| JsonArray : list JsonValue -> JsonValue
-| JsonObject : list (string * JsonValue) -> JsonValue.
+| JsonBool (b : bool)
+| JsonNumber (n : nat)
+| JsonString (s : string)
+| JsonArray (items : list JsonValue)
+| JsonObject (fields : list (string * JsonValue)).
 Record Issue := issue {
   issue_type : nat;
   issue_code : string;
@@ -798,11 +846,12 @@ Record CheckReport := check_report {
 Definition accepted (report : CheckReport) : bool :=
   match report.(report_verdict) with Accepted => true | _ => false end.
 
-(** Final implementation contract.  Soundness says every successfully decoded
-    header has the independently specified grammar above; completeness says
-    every grammatical header is decoded to exactly the specified problem.
-    [check] is the sole rich entrypoint and [checker] is its audited Boolean
-    projection.
+(** * The final implementation contract
+
+    Soundness says every successfully decoded header has the independently
+    specified grammar above; completeness says every grammatical header is
+    decoded to exactly the specified problem.  [check] is the sole rich
+    entrypoint and [checker] is its audited Boolean projection.
 
     Deliberate non-goal: nothing below asserts that a two-dimensional Euclidean
     Tarski geometry exists, so [checker_sound] would hold vacuously if none
@@ -832,22 +881,14 @@ Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parser_complete : forall source problem,
     ProblemGrammar source problem -> parseProblem source = Some problem.
 
-  Definition meaning
-      `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}
-      (source : string) : option Prop :=
-    match parseProblem source with
-    | Some problem =>
-        Some (forall point : PointName -> Tpoint, problemClaim point problem)
-    | None => None
-    end.
-
+  (** Accepting a source commits to a theorem: its problem part parses, and the
+      problem it parses to holds of every assignment of points. *)
   Parameter checker_sound : forall source,
     checker source = true ->
       forall part, problemPart source = Some part ->
       forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
       forall (T2D : @Tarski_2D Tn TnEQD),
       forall (TE : @Tarski_euclidean Tn TnEQD),
-        exists claim : Prop, meaning part = Some claim /\ claim.
+      exists problem, parseProblem part = Some problem /\
+        forall point : PointName -> Tpoint, problemClaim point problem.
 End COMPLETE_VERIFIED_CHECKER.
-
-End FinalAudit.

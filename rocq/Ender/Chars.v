@@ -49,7 +49,7 @@ Fixpoint removeWhitespace (text : chars) : chars :=
   match text with
   | [] => []
   | c :: rest =>
-      if FinalAudit.whitespace c then removeWhitespace rest else c :: removeWhitespace rest
+      if Audit.whitespace c then removeWhitespace rest else c :: removeWhitespace rest
   end.
 
 Fixpoint codeBeforeComment (text : chars) : chars :=
