@@ -390,8 +390,19 @@ Definition LinearPairMeaning (a b : AngleName) : Prop :=
 Definition ArcWellFormed (a : ArcName) : Prop :=
   point a.(arc_first) <> point a.(arc_second) /\
   OnCircle a.(arc_circle) a.(arc_first) /\ OnCircle a.(arc_circle) a.(arc_second).
+(** Textbook arc congruence is equal measure in the same or in congruent
+    circles.  Without the radii conjunct this compared central angles alone,
+    making a sixty-degree arc of any circle "congruent" to a sixty-degree arc
+    of every other, and [con_chords_intersect_arcs] false across circles of
+    different sizes.  With it, [ArcWellFormed] makes all four
+    center-to-endpoint segments congruent, so congruent chords follow from
+    the central angles by SAS.  Same-kind congruence compares the right
+    measures for major arcs too: their reflex measures agree exactly when
+    the central angles do. *)
 Definition ArcCongruent (a b : ArcName) : Prop :=
   ArcWellFormed a /\ ArcWellFormed b /\ a.(arc_kind) = b.(arc_kind) /\
+  Cong (circ_center a.(arc_circle)) (point a.(arc_circle).(circle_radius_point))
+       (circ_center b.(arc_circle)) (point b.(arc_circle).(circle_radius_point)) /\
   CongA (point a.(arc_first)) (circ_center a.(arc_circle)) (point a.(arc_second))
         (point b.(arc_first)) (circ_center b.(arc_circle)) (point b.(arc_second)).
 

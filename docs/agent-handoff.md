@@ -54,7 +54,9 @@ Known limitations relevant to prioritization:
   `Audit.v` decision, like `Transversal` sidedness, which these rules also
   need (same-arc versus opposite-arc separates congruent from supplementary).
   `inscribed_semi` is unaffected: a right angle in a semicircle holds on
-  spheres too;
+  spheres too.  Relatedly, `ArcCongruent` now requires congruent radii,
+  matching the textbook "same or congruent circles" clause; without it,
+  `con_chords_intersect_arcs` was false across circles of different sizes;
 - statement coverage gates whole files: the kernel parser rejects a problem
   outright when any premise line names a statement it cannot decode, so a
   fixture stays out of reach until every statement it declares is supported;
