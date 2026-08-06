@@ -61,6 +61,10 @@ const implemented = new Set([
   "corresp_ang_conv",
   "sameside_ang_conv",
   "para_transitive",
+  "def_radius",
+  "inscribed_semi",
+  "con_chords_intersect_arcs",
+  "tangent_perp",
 ]);
 const partial = new Set();
 const priorityOne = new Set(["ang_bisect_conv"]);
@@ -146,6 +150,14 @@ const entries = catalog.map((reason) => {
         ? "GeoCoq l12_21_b (neutral) with the audited sidedness"
       : reason === "para_transitive"
         ? "Tarski_euclidean via Playfair; CopR-free re-proof of par_trans"
+      : reason === "def_radius"
+        ? "the audited OnCircle congruence (neutral, sphere-safe)"
+      : reason === "inscribed_semi"
+        ? "Thales via existential-triangle-to-rah, axiom-free (Euclidean, sphere-safe)"
+      : reason === "con_chords_intersect_arcs"
+        ? "SAS at the centers from ArcCongruent's radii and central angles (neutral, sphere-safe)"
+      : reason === "tangent_perp"
+        ? "the audited IsTangent Per plus the def_perp realignment machinery (neutral, sphere-safe)"
       : ["base_angle", "base_angle_conv", "equilat_equiang", "equiang_equilat"].includes(
             reason,
           )

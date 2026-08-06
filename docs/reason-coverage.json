@@ -395,10 +395,16 @@
       "priority": 0,
       "axioms": "logical/equality infrastructure",
       "fixtures": [
+        "src/checker/proofs/circles/con_chords_intersect_arcs_correct.txt",
+        "src/checker/proofs/circles/con_chords_intersect_arcs_incorrect.txt",
         "src/checker/proofs/circles/con_inscribed_angs_correct.txt",
         "src/checker/proofs/circles/con_inscribed_angs_incorrect.txt",
         "src/checker/proofs/circles/con_tangents_ext_correct.txt",
         "src/checker/proofs/circles/con_tangents_ext_incorrect.txt",
+        "src/checker/proofs/circles/def_radius_correct.txt",
+        "src/checker/proofs/circles/def_radius_incorrect.txt",
+        "src/checker/proofs/circles/inscribed_semi_correct.txt",
+        "src/checker/proofs/circles/inscribed_semi_incorrect.txt",
         "src/checker/proofs/circles/radius_chord_bisect_conv_correct.txt",
         "src/checker/proofs/circles/radius_chord_bisect_conv_incorrect.txt",
         "src/checker/proofs/circles/radius_chord_bisect_correct.txt",
@@ -944,14 +950,14 @@
     },
     {
       "reason": "tangent_perp",
-      "status": "unimplemented",
-      "priority": 3,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "the audited IsTangent Per plus the def_perp realignment machinery (neutral, sphere-safe)",
       "fixtures": [
         "src/checker/proofs/circles/tangent_perp_correct.txt",
         "src/checker/proofs/circles/tangent_perp_incorrect.txt"
       ],
-      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "tangent_perp_conv",
@@ -1105,14 +1111,16 @@
     },
     {
       "reason": "inscribed_semi",
-      "status": "unimplemented",
-      "priority": 3,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Thales via existential-triangle-to-rah, axiom-free (Euclidean, sphere-safe)",
       "fixtures": [
+        "src/checker/proofs/circles/inscribed_semi_correct.txt",
+        "src/checker/proofs/circles/inscribed_semi_incorrect.txt",
         "src/checker/proofs/circles/reg1.txt",
         "src/checker/proofs/circles/reg1v2.txt"
       ],
-      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "para_con_arcs",
@@ -1124,22 +1132,27 @@
     },
     {
       "reason": "con_chords_intersect_arcs",
-      "status": "unimplemented",
-      "priority": 3,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "SAS at the centers from ArcCongruent's radii and central angles (neutral, sphere-safe)",
       "fixtures": [
+        "src/checker/proofs/circles/con_chords_intersect_arcs_correct.txt",
+        "src/checker/proofs/circles/con_chords_intersect_arcs_incorrect.txt",
         "src/checker/proofs/circles/reg1.txt",
         "src/checker/proofs/circles/reg1v2.txt"
       ],
-      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "def_radius",
-      "status": "unimplemented",
-      "priority": 3,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
-      "fixtures": [],
-      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+      "status": "verified",
+      "priority": 0,
+      "axioms": "the audited OnCircle congruence (neutral, sphere-safe)",
+      "fixtures": [
+        "src/checker/proofs/circles/def_radius_correct.txt",
+        "src/checker/proofs/circles/def_radius_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "tangent_diam_perp",

@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- forty-four reasons are fully verified and none are partial: the `ang:`
+- forty-eight reasons are fully verified and none are partial: the `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
   angles.  The complete-contract adapter still rejects reflexive statements
   in the *goal* position, deliberately (`project_goal_statement`): a `ref_*`
@@ -66,7 +66,16 @@ Known limitations relevant to prioritization:
   `inscribed_semi` is unaffected: a right angle in a semicircle holds on
   spheres too.  Relatedly, `ArcCongruent` now requires congruent radii,
   matching the textbook "same or congruent circles" clause; without it,
-  `con_chords_intersect_arcs` was false across circles of different sizes;
+  `con_chords_intersect_arcs` was false across circles of different sizes.
+  The sphere-safe core of the family is implemented over a kernel circle
+  and arc statement layer (`circ:` declarations; `radius`, `chord`,
+  `diameter`, `tangent`, `inscribed_angle`, the nested arc spellings, and
+  `con_arc`): `def_radius`, `inscribed_semi`, `con_chords_intersect_arcs`,
+  and `tangent_perp` are verified.  `inscribed_semi` gets Thales axiom-free
+  through `existential_triangle__rah` (witnessed by the lower-dimension
+  points and `euclidean_trisuma__bet`) and `rah__thales_postulate` — both
+  GeoCoq spellings of Thales (`midpoint_thales`, `thales_theorem`) rest on
+  `Eqdep.Eq_rect_eq` and are unusable here;
 - statement coverage gates whole files: the kernel parser rejects a problem
   outright when any premise line names a statement it cannot decode, so a
   fixture stays out of reach until every statement it declares is supported;
@@ -100,7 +109,10 @@ Known limitations relevant to prioritization:
   MathComp versions.  See [`verified-checker.md`](verified-checker.md);
 - the rich report schema is fully exported, but most step/graph/suggestion
   fields are intentionally empty until their producers are implemented;
-- arc source is parsed losslessly but the TypeScript renderer has no Arc object;
+- arc source is parsed losslessly but the TypeScript renderer has no Arc
+  object; the presentation adapter passes nested arc arguments through as
+  text rather than failing, while legacy `BR_OB`-style arc tokens still
+  throw on purpose;
 - the public theorem quantifies over decidable point equality and the
   Euclidean assumption even where individual reason lemmas need less; the
   audited statement meanings themselves assume only bare
