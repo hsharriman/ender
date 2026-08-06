@@ -1,5 +1,6 @@
 From Stdlib Require Import List String Bool Lia.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
+Require Import GeoCoq.Main.Tarski_dev.Ch12_parallel.
 Require Import Ender.Syntax Ender.Geometry Ender.Semantics.
 Import ListNotations.
 Import EnderSyntax.
@@ -586,6 +587,86 @@ Fixpoint find_premise (label : string) (premises : list Premise) : option Statem
       else find_premise label rest
   end.
 
+(** * The parallelogram family
+
+    Well-formedness comes from a declared quadrilateral where no dependency
+    supplies it; every side comparison is up to reversal and pair order,
+    which the meaning-level [Par] and [Cong] permutation lemmas justify. *)
+Definition declared_quadrilateral (decls : Declarations)
+    (q : Quadrilateral) : bool :=
+  existsb (quadrilateral_eqb q) decls.(decl_quadrilaterals).
+
+Definition quad_side_ab (q : Quadrilateral) : Segment :=
+  segment q.(quad_a) q.(quad_b).
+Definition quad_side_bc (q : Quadrilateral) : Segment :=
+  segment q.(quad_b) q.(quad_c).
+Definition quad_side_cd (q : Quadrilateral) : Segment :=
+  segment q.(quad_c) q.(quad_d).
+Definition quad_side_da (q : Quadrilateral) : Segment :=
+  segment q.(quad_d) q.(quad_a).
+
+Definition def_parallelogram_rule (decls : Declarations)
+    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | Pgram q, Some (Para s1 s2), Some (Para s3 s4) =>
+      declared_quadrilateral decls q &&
+      ((segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_cd q) &&
+        segment_pair_eqb s3 s4 (quad_side_bc q) (quad_side_da q)) ||
+       (segment_pair_eqb s1 s2 (quad_side_bc q) (quad_side_da q) &&
+        segment_pair_eqb s3 s4 (quad_side_ab q) (quad_side_cd q)))
+  | _, _, _ => false
+  end.
+
+Definition rectangle_pgram_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | Pgram q, Some (Rect r) => quadrilateral_eqb q r
+  | _, _ => false
+  end.
+
+Definition rhombus_pgram_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | Pgram q, Some (Rhomb r) => quadrilateral_eqb q r
+  | _, _ => false
+  end.
+
+Definition pgram_opp_sides_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | ConSeg s1 s2, Some (Pgram q) =>
+      segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_cd q) ||
+      segment_pair_eqb s1 s2 (quad_side_bc q) (quad_side_da q)
+  | _, _ => false
+  end.
+
+Definition rhombus_consec_sides_rule (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | Rhomb q, Some (Pgram r), Some (ConSeg s1 s2) =>
+      quadrilateral_eqb q r &&
+      (segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_bc q) ||
+       segment_pair_eqb s1 s2 (quad_side_bc q) (quad_side_cd q) ||
+       segment_pair_eqb s1 s2 (quad_side_cd q) (quad_side_da q) ||
+       segment_pair_eqb s1 s2 (quad_side_da q) (quad_side_ab q))
+  | _, _, _ => false
+  end.
+
+(** One pair of opposite sides both parallel and congruent.  The conclusion's
+    declared quadrilateral supplies the crossing diagonals that separate a
+    parallelogram from the crossed quadrilateral with the same side facts. *)
+Definition pgram_opp_side_para_rule (decls : Declarations)
+    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | Pgram q, Some (ConSeg c1 c2), Some (Para p1 p2) =>
+      declared_quadrilateral decls q &&
+      ((segment_pair_eqb c1 c2 (quad_side_ab q) (quad_side_cd q) &&
+        segment_pair_eqb p1 p2 (quad_side_ab q) (quad_side_cd q)) ||
+       (segment_pair_eqb c1 c2 (quad_side_bc q) (quad_side_da q) &&
+        segment_pair_eqb p1 p2 (quad_side_bc q) (quad_side_da q)))
+  | _, _, _ => false
+  end.
+
 Definition rule_valid (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
   match r with
@@ -653,6 +734,12 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | ConSupplements i j k => con_supplements facts i j k conclusion
   | ConSupplementsSame i j => con_supplements_same facts i j conclusion
   | DefPerp i => def_perp premises facts i conclusion
+  | DefParallelogram i j => def_parallelogram_rule decls facts i j conclusion
+  | PgramOppSides i => pgram_opp_sides_rule facts i conclusion
+  | PgramOppSidePara i j => pgram_opp_side_para_rule decls facts i j conclusion
+  | RectanglePgram i => rectangle_pgram_rule facts i conclusion
+  | RhombusPgram i => rhombus_pgram_rule facts i conclusion
+  | RhombusConsecSides i j => rhombus_consec_sides_rule facts i j conclusion
   | RHL i j k =>
       match conclusion with
       | ConTri t u => declared_pair decls t u &&
@@ -1672,6 +1759,126 @@ Proof.
     now apply l8_2.
 Qed.
 
+(** Meaning-level transfer for quadrilateral side matching: a side named up
+    to reversal and pair order carries its [Par] or [Cong] fact onto the
+    canonical side segments. *)
+Lemma para_pair_sound : forall s1 s2 a b,
+  segment_pair_eqb s1 s2 a b = true ->
+  Interp (Para s1 s2) ->
+  Par (point a.(seg_start)) (point a.(seg_end))
+      (point b.(seg_start)) (point b.(seg_end)).
+Proof.
+  intros s1 s2 a b Hpair Hpar.
+  cbn in Hpar. unfold Audit.Parallel, seg_name, Audit.seg_start,
+    Audit.seg_end in Hpar. cbn in Hpar.
+  unfold segment_pair_eqb in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [H1 H2];
+    apply segment_u_eqb_cases in H1; apply segment_u_eqb_cases in H2;
+    destruct H1 as [->| ->]; destruct H2 as [->| ->];
+    unfold reverse_segment in Hpar; cbn in Hpar;
+    eauto 6 using par_symmetry, par_left_comm, par_right_comm, par_comm.
+Qed.
+
+Lemma cong_pair_sound : forall s1 s2 a b,
+  segment_pair_eqb s1 s2 a b = true ->
+  Interp (ConSeg s1 s2) ->
+  Cong (point a.(seg_start)) (point a.(seg_end))
+       (point b.(seg_start)) (point b.(seg_end)).
+Proof.
+  intros s1 s2 a b Hpair Hcong. cbn in Hcong.
+  unfold segment_pair_eqb in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [H1 H2];
+    apply segment_u_eqb_cases in H1; apply segment_u_eqb_cases in H2;
+    destruct H1 as [->| ->]; destruct H2 as [->| ->];
+    unfold reverse_segment in Hcong; cbn in Hcong; Cong.
+Qed.
+
+Lemma cong_pair_conclude : forall s1 s2 a b,
+  segment_pair_eqb s1 s2 a b = true ->
+  Cong (point a.(seg_start)) (point a.(seg_end))
+       (point b.(seg_start)) (point b.(seg_end)) ->
+  Interp (ConSeg s1 s2).
+Proof.
+  intros s1 s2 a b Hpair Hcong.
+  cbn. unfold segment_pair_eqb in Hpair. apply orb_true_iff in Hpair.
+  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
+    destruct Hcase as [H1 H2];
+    apply segment_u_eqb_cases in H1; apply segment_u_eqb_cases in H2;
+    destruct H1 as [->| ->]; destruct H2 as [->| ->];
+    unfold reverse_segment; cbn; Cong.
+Qed.
+
+Lemma declared_quadrilateral_sound : forall decls q,
+  declarations_well_formed point decls ->
+  declared_quadrilateral decls q = true ->
+  Audit.QuadrilateralWellFormed point (quad_name q).
+Proof.
+  intros decls q Hwf H. destruct Hwf as [_ [_ Hq]].
+  unfold declared_quadrilateral in H. apply existsb_exists in H.
+  destruct H as [r [Hin Heq]]. apply quadrilateral_eqb_eq in Heq.
+  subst r. now apply Hq.
+Qed.
+
+Lemma def_parallelogram_sound : forall decls facts i j conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  def_parallelogram_rule decls facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros decls facts i j conclusion Hwf Hfacts Hrule.
+  unfold def_parallelogram_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hmatch].
+  assert (Hp1 : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
+  assert (Hp2 : Interp (Para s1 s2)) by (eapply lookup_step_sound; eauto).
+  cbn. unfold Audit.IsParallelogram.
+  apply orb_true_iff in Hmatch;
+    destruct Hmatch as [Hm|Hm]; apply andb_true_iff in Hm;
+    destruct Hm as [HmA HmB];
+    [pose proof (para_pair_sound _ _ _ _ HmA Hp1) as HP1;
+     pose proof (para_pair_sound _ _ _ _ HmB Hp2) as HP2
+    |pose proof (para_pair_sound _ _ _ _ HmB Hp2) as HP1;
+     pose proof (para_pair_sound _ _ _ _ HmA Hp1) as HP2];
+    cbn in HP1, HP2;
+    (split; [eapply declared_quadrilateral_sound; eauto|]);
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn;
+    (split; [exact HP1|exact HP2]).
+Qed.
+
+Lemma rectangle_pgram_sound : forall facts i conclusion,
+  Forall Interp facts -> rectangle_pgram_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule.
+  unfold rectangle_pgram_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  apply quadrilateral_eqb_eq in Hrule. subst.
+  assert (Hr : Interp (Rect q0)) by (eapply lookup_step_sound; eauto).
+  cbn in Hr |- *. exact (proj1 Hr).
+Qed.
+
+Lemma rhombus_pgram_sound : forall facts i conclusion,
+  Forall Interp facts -> rhombus_pgram_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule.
+  unfold rhombus_pgram_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  apply quadrilateral_eqb_eq in Hrule. subst.
+  assert (Hr : Interp (Rhomb q0)) by (eapply lookup_step_sound; eauto).
+  cbn in Hr |- *. exact (proj1 Hr).
+Qed.
+
 (** Everything above holds in neutral geometry.  [third_angle] is the first
     rule that genuinely needs the parallel postulate, so the assumption enters
     here rather than at the top of the section; every lemma stated before this
@@ -1729,6 +1936,133 @@ Proof.
   apply (fact_eqb_sound _ _ Hconclusion).
   destruct c as [[A B C] [D E F]]. cbn in HatA, HatB, Hwt, Hwu |- *.
   now apply ender_third_angle.
+Qed.
+
+Lemma pgram_opp_sides_sound : forall facts i conclusion,
+  Forall Interp facts -> pgram_opp_sides_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule.
+  unfold pgram_opp_sides_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hp : Interp (Pgram q)) by (eapply lookup_step_sound; eauto).
+  cbn in Hp. destruct Hp as [Hwfq [Hpar1 Hpar2]].
+  destruct Hwfq as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
+    cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
+  pose proof (ender_pgram_opp_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2)
+    as [Hc1 Hc2].
+  apply orb_true_iff in Hrule. destruct Hrule as [Hm|Hm].
+  - eapply cong_pair_conclude; [exact Hm|]. cbn. exact Hc1.
+  - eapply cong_pair_conclude; [exact Hm|]. cbn. exact Hc2.
+Qed.
+
+Lemma rhombus_consec_sides_sound : forall facts i j conclusion,
+  Forall Interp facts ->
+  rhombus_consec_sides_rule facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  unfold rhombus_consec_sides_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Heq Hmatch].
+  apply quadrilateral_eqb_eq in Heq. subst.
+  assert (Hp : Interp (Pgram q0)) by (eapply lookup_step_sound; eauto).
+  assert (Hcseg : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
+  cbn in Hp. destruct Hp as [Hwfq [Hpar1 Hpar2]].
+  pose proof Hwfq as Hwfcopy.
+  destruct Hwfcopy as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
+    cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
+  assert (Hadj :
+    Cong (point q0.(quad_a)) (point q0.(quad_b))
+         (point q0.(quad_b)) (point q0.(quad_c)) \/
+    Cong (point q0.(quad_b)) (point q0.(quad_c))
+         (point q0.(quad_c)) (point q0.(quad_d)) \/
+    Cong (point q0.(quad_c)) (point q0.(quad_d))
+         (point q0.(quad_d)) (point q0.(quad_a)) \/
+    Cong (point q0.(quad_d)) (point q0.(quad_a))
+         (point q0.(quad_a)) (point q0.(quad_b))).
+  { apply orb_true_iff in Hmatch. destruct Hmatch as [Hmatch|Hm].
+    2:{ do 3 right.
+        pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
+        cbn in HC. exact HC. }
+    apply orb_true_iff in Hmatch. destruct Hmatch as [Hmatch|Hm].
+    2:{ do 2 right; left.
+        pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
+        cbn in HC. exact HC. }
+    apply orb_true_iff in Hmatch. destruct Hmatch as [Hm|Hm].
+    - left. pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
+      cbn in HC. exact HC.
+    - right; left. pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
+      cbn in HC. exact HC. }
+  pose proof (ender_rhombus_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2 Hadj)
+    as [H1 [H2 H3]].
+  cbn. split; [|split; [|split]].
+  - split; [exact Hwfq|split; [exact Hpar1|exact Hpar2]].
+  - exact H1.
+  - exact H2.
+  - exact H3.
+Qed.
+
+Lemma pgram_opp_side_para_sound : forall decls facts i j conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  pgram_opp_side_para_rule decls facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros decls facts i j conclusion Hwf Hfacts Hrule.
+  unfold pgram_opp_side_para_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hmatch].
+  assert (Hcseg : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
+  assert (Hpara : Interp (Para s1 s2)) by (eapply lookup_step_sound; eauto).
+  pose proof (declared_quadrilateral_sound _ _ Hwf Hdecl) as Hwfq.
+  pose proof Hwfq as Hwfcopy.
+  destruct Hwfcopy as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  cbn in Hncol, HXac, HXbd.
+  cbn. split; [exact Hwfq|].
+  apply orb_true_iff in Hmatch; destruct Hmatch as [Hm|Hm];
+    apply andb_true_iff in Hm; destruct Hm as [HmC HmP];
+    pose proof (cong_pair_sound _ _ _ _ HmC Hcseg) as HC;
+    pose proof (para_pair_sound _ _ _ _ HmP Hpara) as HP;
+    cbn in HC, HP.
+  - assert (Hother : Par (point q.(quad_b)) (point q.(quad_c))
+                         (point q.(quad_d)) (point q.(quad_a)))
+      by (eapply ender_pgram_from_side; eauto).
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
+    split; [exact HP|exact Hother].
+  - assert (HXca : BetS (point q.(quad_c)) X (point q.(quad_a))).
+    { destruct HXac as [Hb [Hd1 Hd2]].
+      repeat split; [now apply between_symmetry| |];
+        intro Heq; [apply Hd2|apply Hd1]; auto. }
+    assert (Hncol2 : ~ Col (point q.(quad_b)) (point q.(quad_c))
+                           (point q.(quad_d))).
+    { destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+        as [Hn _]. exact Hn. }
+    assert (Hother : Par (point q.(quad_c)) (point q.(quad_d))
+                         (point q.(quad_a)) (point q.(quad_b)))
+      by (eapply (ender_pgram_from_side (point q.(quad_b)) (point q.(quad_c))
+                    (point q.(quad_d)) (point q.(quad_a)) X); eauto).
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
+    split; [|exact HP].
+    apply par_symmetry. exact Hother.
 Qed.
 
 Lemma rule_valid_sound : forall decls premises facts reason conclusion,
@@ -1808,6 +2142,12 @@ Proof.
   - eapply con_supplements_sound; eauto.
   - eapply con_supplements_same_sound; eauto.
   - eapply def_perp_sound; eauto.
+  - eapply def_parallelogram_sound; eauto.
+  - eapply pgram_opp_sides_sound; eauto.
+  - eapply pgram_opp_side_para_sound; eauto.
+  - eapply rectangle_pgram_sound; eauto.
+  - eapply rhombus_pgram_sound; eauto.
+  - eapply rhombus_consec_sides_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

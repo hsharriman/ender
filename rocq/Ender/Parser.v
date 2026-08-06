@@ -351,7 +351,13 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "con_supplements_same" text (parse_two ConSupplementsSame)
         (try_call "con_supplements" text (parse_three ConSupplements)
         (try_call "equiang_equilat" text (parse_one EquiangEquilat)
-        None))))))))))))))))))))))))))
+        (try_call "def_parallelogram" text (parse_two DefParallelogram)
+        (try_call "pgram_opp_sides" text (parse_one PgramOppSides)
+        (try_call "pgram_opp_side_para" text (parse_two PgramOppSidePara)
+        (try_call "rectangle_pgram" text (parse_one RectanglePgram)
+        (try_call "rhombus_pgram" text (parse_one RhombusPgram)
+        (try_call "rhombus_consec_sides" text (parse_two RhombusConsecSides)
+        None))))))))))))))))))))))))))))))))
     end
   end.
 

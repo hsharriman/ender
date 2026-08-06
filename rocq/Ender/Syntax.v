@@ -70,7 +70,13 @@ Inductive Reason :=
 | EquiangEquilat : nat -> Reason
 | ConSupplements : nat -> nat -> nat -> Reason
 | ConSupplementsSame : nat -> nat -> Reason
-| DefPerp : nat -> Reason.
+| DefPerp : nat -> Reason
+| DefParallelogram : nat -> nat -> Reason
+| PgramOppSides : nat -> Reason
+| PgramOppSidePara : nat -> nat -> Reason
+| RectanglePgram : nat -> Reason
+| RhombusPgram : nat -> Reason
+| RhombusConsecSides : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.

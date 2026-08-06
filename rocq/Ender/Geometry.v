@@ -2,6 +2,8 @@ Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import GeoCoq.Axioms.parallel_postulates.
 Require Import GeoCoq.Main.Annexes.suma.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.tarski_playfair.
+Require Import GeoCoq.Main.Annexes.quadrilaterals.
+Require Import GeoCoq.Main.Annexes.quadrilaterals_inter_dec.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_alternate_interior_angles.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.alternate_interior_angles_triangle.
 
@@ -174,6 +176,45 @@ Proof.
   apply cong_transitivity with A C; [exact Hab|Cong].
 Qed.
 
+(** In a well-formed quadrilateral, the crossing diagonals promote the single
+    audited [~ Col A B C] to no three vertices collinear: a line through
+    three vertices would have to meet a segment that leaves it at one of the
+    endpoints [BetS] forbids. *)
+Lemma ender_quad_no_three_collinear : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  ~ Col B C D /\ ~ Col C D A /\ ~ Col D A B.
+Proof.
+  intros A B C D X Hncol [HbetAC [HAX HXC]] [HbetBD [HBX HXD]].
+  assert (HcolAXC : Col A X C) by Col.
+  assert (HcolBXD : Col B X D) by Col.
+  assert (HAC : A <> C).
+  { intro Heq. subst C. apply HAX, between_identity. assumption. }
+  assert (HBD : B <> D).
+  { intro Heq. subst D. apply HBX, between_identity. assumption. }
+  assert (HCX : C <> X) by (intro Heq; apply HXC; auto).
+  split; [|split].
+  - intro Hcol.
+    assert (HcolBXC : Col B X C)
+      by (apply (col_transitivity_1 B D X C HBD); Col).
+    assert (Hfinal : Col C B A)
+      by (apply (col_transitivity_1 C X B A HCX); Col).
+    apply Hncol. Col.
+  - intro Hcol.
+    assert (HcolAXD : Col A X D)
+      by (apply (col_transitivity_1 A C X D HAC); Col).
+    assert (HcolXAB : Col X A B)
+      by (apply (col_transitivity_1 X D A B HXD); Col).
+    assert (Hfinal : Col A B C)
+      by (apply (col_transitivity_1 A X B C HAX); Col).
+    apply Hncol. Col.
+  - intro Hcol.
+    assert (HcolBXA : Col B X A)
+      by (apply (col_transitivity_1 B D X A HBD); Col).
+    assert (Hfinal : Col A B C)
+      by (apply (col_transitivity_1 A X B C HAX); Col).
+    apply Hncol. Col.
+Qed.
+
 End EnderGeometry.
 
 (** Rules that genuinely need the parallel postulate live here, in their own
@@ -244,6 +285,103 @@ Proof.
   assert (HangC : CongA B C A B' C' A')
     by (apply (sams2_suma2__conga456 A B C _ _ _ _ _ _ S1 S2 S3); assumption).
   now apply conga_comm.
+Qed.
+
+(** Alternate interior angles across a transversal of parallels, derived
+    through Playfair exactly as [euclidean_trisuma__bet] is: GeoCoq's own
+    [par_2_plg] route depends on [Eqdep.Eq_rect_eq], and this one keeps the
+    development free of axioms. *)
+Lemma ender_alternate_interior : forall A B C D,
+  TS A C B D -> Par A B C D -> CongA B A C D C A.
+Proof.
+  apply playfair__alternate_interior, tarski_s_euclid_implies_playfair.
+  unfold tarski_s_parallel_postulate. exact euclid.
+Qed.
+
+(** Opposite sides of a genuine parallelogram are congruent: the diagonal
+    through the audited crossing point is a transversal of both parallel
+    pairs, and ASA glues the two triangles it cuts. *)
+Lemma ender_pgram_opp_sides : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Par B C D A ->
+  Cong A B C D /\ Cong B C D A.
+Proof.
+  intros A B C D X Hncol HbetsAC HbetsBD Hpab Hpbc.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HbetsAC HbetsBD)
+    as [Hbcd [Hcda Hdab]].
+  destruct HbetsAC as [HbetAC [HAX HXC]].
+  destruct HbetsBD as [HbetBD [HBX HXD]].
+  assert (HcolXAC : Col X A C) by (apply bet_col in HbetAC; Col).
+  assert (Hts : TS A C B D).
+  { repeat split.
+    - intro. apply Hncol. Col.
+    - intro. apply Hcda. Col.
+    - exists X. split; assumption. }
+  assert (Hconga1 : CongA B A C D C A)
+    by (apply ender_alternate_interior; assumption).
+  assert (Hconga2 : CongA B C A D A C).
+  { apply ender_alternate_interior.
+    - apply invert_two_sides. exact Hts.
+    - apply par_right_comm, par_left_comm. exact Hpbc. }
+  assert (Htri : TriangleCongruent A C B C A D).
+  { apply ender_asa.
+    - intro. apply Hncol. Col.
+    - apply conga_comm. exact Hconga1.
+    - apply cong_pseudo_reflexivity.
+    - apply conga_comm. exact Hconga2. }
+  destruct Htri as [_ [Hcb_ad [Hba_dc _]]].
+  split; Cong.
+Qed.
+
+(** A parallelogram with one pair of congruent adjacent sides has all four
+    sides congruent, spelled as the audited [IsRhombus] wants them. *)
+Lemma ender_rhombus_sides : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Par B C D A ->
+  Cong A B B C \/ Cong B C C D \/ Cong C D D A \/ Cong D A A B ->
+  Cong A B B C /\ Cong B C C D /\ Cong C D D A.
+Proof.
+  intros A B C D X Hncol HAC HBD Hab Hbc Hadj.
+  destruct (ender_pgram_opp_sides A B C D X Hncol HAC HBD Hab Hbc)
+    as [Hopp1 Hopp2].
+  assert (Hcd_ab : Cong C D A B) by Cong.
+  assert (Hda_bc : Cong D A B C) by Cong.
+  destruct Hadj as [H|[H|[H|H]]]; repeat split;
+    eauto 7 using cong_transitivity, cong_symmetry,
+      cong_left_commutativity, cong_right_commutativity.
+Qed.
+
+(** One parallel-and-congruent opposite pair, together with the crossing
+    diagonals of a well-formed quadrilateral, is already a parallelogram:
+    the crossing point supplies the [TS] hypothesis of [par_cong_mid_ts],
+    whose midpoint is the shared diagonal midpoint of [Plg]. *)
+Lemma ender_pgram_from_side : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Cong A B C D ->
+  Par B C D A.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar Hcong.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [Hbcd [Hcda Hdab]].
+  destruct HAC as [HbetAC [HAX HXC]]. destruct HBD as [HbetBD [HBX HXD]].
+  assert (HneAC : A <> C).
+  { intro Heq. subst C. apply HAX, between_identity. assumption. }
+  assert (Hstrict : Par_strict A B C D).
+  { destruct Hpar as [Hs|[HneAB [HneCD [Hacd Hbcd']]]]; [assumption|].
+    exfalso. apply Hcda. Col. }
+  assert (HcolXAC : Col X A C) by (apply bet_col in HbetAC; Col).
+  assert (Hts : TS A C B D).
+  { repeat split.
+    - intro. apply Hncol. Col.
+    - intro. apply Hcda. Col.
+    - exists X. split; assumption. }
+  destruct (par_cong_mid_ts A B C D Hstrict Hcong Hts) as [M [Hmac Hmbd]].
+  assert (Hplg : Parallelogram A B C D).
+  { apply plg_to_parallelogram. split; [left; exact HneAC|exists M; auto]. }
+  apply plg_par in Hplg;
+    [|intro Heq; subst B; apply Hncol; Col
+     |intro Heq; subst C; apply Hncol; Col].
+  destruct Hplg as [_ Had]. apply par_symmetry, par_left_comm. exact Had.
 Qed.
 
 End EnderEuclideanGeometry.
