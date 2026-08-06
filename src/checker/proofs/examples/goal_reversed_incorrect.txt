@@ -1,4 +1,4 @@
-// fail
+// fail incomplete
 title: "Test: goal matching (incorrect - goal names a different segment)"
 premises:
 pt: A (0, 0, bl), M (2, 0, b), B (4, 0, br)

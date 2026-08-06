@@ -1,4 +1,4 @@
-// fail
+// fail on step 2
 title: "Test: altint_conv (incorrect - same-side pair is not alternate)"
 premises:
 pt: A (2, 8, t), B (15, 8, t), C (2, 2, b), D (15, 2, b), E (12, 8, tl), F (6, 2, b), T (13, 9, tr), R (5, 1, l)

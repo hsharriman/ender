@@ -1,4 +1,4 @@
-// fail
+// fail on step 2
 title: "Test: con_chords_intersect_arcs (incorrect - conclusion is not the arcs' chords)"
 premises:
 pt: O (5, 5, c), B (3, 8, tl), R (7, 8, tr), Y (8, 3, br), D (2, 3, bl)

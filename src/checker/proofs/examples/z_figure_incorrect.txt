@@ -1,4 +1,4 @@
-// fail
+// fail on step 7
 title: "Z-figure (incorrect - cites angles from the wrong transversal figure)"
 premises:
 pt: E (0, 10, tl), G (6, 4, b), D (10, 10, tr), F (16, 4, br), H (9, 1, b), M (7, 13, t), P (4, 1, bl), Q (12, 13, tr), N (4, 4, l), L (12, 10, r)

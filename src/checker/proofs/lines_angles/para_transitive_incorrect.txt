@@ -1,4 +1,4 @@
-// fail
+// fail on step 3
 title: "Test: para_transitive (incorrect - no shared line between the two facts)"
 premises:
 pt: A (0, 8, tl), B (10, 8, tr), C (0, 5, l), D (10, 5, r), E (0, 2, bl), F (10, 2, br), G (0, 0, bl), H (10, 0, br)
