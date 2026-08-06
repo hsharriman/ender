@@ -72,11 +72,16 @@ Known limitations relevant to prioritization:
 - nondegeneracy comes from declared triangles or declared angles, and nothing
   else (`declared_angle` in `Checker.v`); a rule needing it with no such source
   must fail closed;
-- the kernel does no ray reasoning, so an angle named by a point that merely
-  lies on the right ray is not recognised.  The blocker is gone: `on_line` is
-  now audited as segment membership (`Bet`), matching every corpus diagram,
-  so a premise supplies the `Out` facts ray reasoning needs.  Measured over
-  both corpora the capability would unlock two files;
+- the kernel does ray reasoning where a triangle criterion expects a
+  `con_ang` or `ref_ang` dependency: an expected angle also matches a fact
+  whose ray points are linked to its own through `on_line` diagram premises
+  (`ray_linked` and `angle_ray_matches` in `Checker.v`), with the expected
+  angle required to be declared nondegenerate, the vertex matched exactly,
+  and `out2__conga` carrying the congruence across the renaming — all
+  neutral.  This accepts `examples/overlap.txt` end to end.  The other
+  `on_line`-dependent file (`examples/s2inc1corrected.txt`) is still gated
+  by an unrelated parser issue: a trailing step reference on its premise
+  lines;
 - the parallel-line rules and everything built on them need the Euclidean
   hypothesis.  The mechanism for that now exists: `third_angle` introduces
   `Tarski_euclidean` in `Checker.v` right before its own soundness lemma, so

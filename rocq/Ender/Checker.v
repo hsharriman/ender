@@ -94,54 +94,99 @@ Definition declared_angle (decls : Declarations) (a : Angle) : bool :=
   existsb (fun t => angle_of_triangle t a) decls.(decl_triangles) ||
   existsb (angle_u_eqb a) decls.(decl_angles).
 
+(** [q] names the same ray from [v] as [p]: the names are equal, or an
+    [on_line] diagram premise places one of the two on the segment from [v]
+    through the other.  [on_line] is audited as segment membership, so the
+    premise supplies the betweenness an [Out] fact needs. *)
+Definition on_line_witness (s : Statement) : option (Segment * PointId) :=
+  match s with OnLine t q => Some (t, q) | _ => None end.
+
+Definition ray_linked (premises : list Premise) (v p q : PointId) : bool :=
+  ascii_eqb p q ||
+  existsb (fun pr =>
+    match on_line_witness pr.(premise_statement) with
+    | Some (s, r) =>
+        (segment_u_eqb s (segment v q) && ascii_eqb r p) ||
+        (segment_u_eqb s (segment v p) && ascii_eqb r q)
+    | None => false
+    end) premises.
+
+(** An expected angle may be spelled through any labeled points on its own
+    rays, provided each substitution is justified by an [on_line] diagram
+    premise and the expected angle is declared nondegenerate: [out2__conga]
+    then carries the congruence across the renaming.  The vertex must match
+    exactly, and either ray order is accepted, as everywhere else. *)
+Definition angle_ray_matches (decls : Declarations) (premises : list Premise)
+    (expected actual : Angle) : bool :=
+  angle_u_eqb expected actual ||
+  (declared_angle decls expected &&
+   ascii_eqb expected.(ang_vertex) actual.(ang_vertex) &&
+   ((ray_linked premises expected.(ang_vertex)
+       expected.(ang_left) actual.(ang_left) &&
+     ray_linked premises expected.(ang_vertex)
+       expected.(ang_right) actual.(ang_right)) ||
+    (ray_linked premises expected.(ang_vertex)
+       expected.(ang_left) actual.(ang_right) &&
+     ray_linked premises expected.(ang_vertex)
+       expected.(ang_right) actual.(ang_left)))).
+
 (** A triangle criterion may consume a [con_right] fact where it expects a
     [con_ang] one: two right angles are congruent as soon as both have
-    nondegenerate rays, which declared triangles supply. *)
-Definition dependency_matches (decls : Declarations)
+    nondegenerate rays, which declared triangles supply.  An expected
+    [con_ang] may also be met by a congruence over ray-renamed spellings of
+    its angles, which is what lets overlapping triangles share an angle
+    named through either triangle's own vertices. *)
+Definition dependency_matches (decls : Declarations) (premises : list Premise)
     (expected actual : Statement) : bool :=
   fact_eqb expected actual ||
   match expected, actual with
   | ConAng a b, ConRight c d =>
       angle_u_eqb a c && angle_u_eqb b d &&
       declared_angle decls a && declared_angle decls b
+  | ConAng a b, ConAng c d | ConAng a b, RefAng c d =>
+      (angle_ray_matches decls premises a c &&
+       angle_ray_matches decls premises b d) ||
+      (angle_ray_matches decls premises a d &&
+       angle_ray_matches decls premises b c)
   | _, _ => false
   end.
 
-Definition schema3 (decls : Declarations) (facts : list Statement)
+Definition schema3 (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i j k : nat) (a b c : Statement) : bool :=
   match lookup_step facts i, lookup_step facts j, lookup_step facts k with
   | Some x, Some y, Some z =>
-      dependency_matches decls a x && dependency_matches decls b y &&
-      dependency_matches decls c z
+      dependency_matches decls premises a x && dependency_matches decls premises b y &&
+      dependency_matches decls premises c z
   | _, _, _ => false
   end.
 
-Definition sas_schema decls facts i j k (t u : Triangle) : bool :=
-  schema3 decls facts i j k
+Definition sas_schema decls premises facts i j k (t u : Triangle) : bool :=
+  schema3 decls premises facts i j k
     (ConSeg (side_ab t) (side_ab u))
     (ConAng (angle_a t) (angle_a u))
     (ConSeg (side_ca t) (side_ca u)).
 
-Definition sss_schema decls facts i j k (t u : Triangle) : bool :=
-  schema3 decls facts i j k
+Definition sss_schema decls premises facts i j k (t u : Triangle) : bool :=
+  schema3 decls premises facts i j k
     (ConSeg (side_ab t) (side_ab u))
     (ConSeg (side_bc t) (side_bc u))
     (ConSeg (side_ca t) (side_ca u)).
 
-Definition asa_schema decls facts i j k (t u : Triangle) : bool :=
-  schema3 decls facts i j k
+Definition asa_schema decls premises facts i j k (t u : Triangle) : bool :=
+  schema3 decls premises facts i j k
     (ConAng (angle_a t) (angle_a u))
     (ConSeg (side_ab t) (side_ab u))
     (ConAng (angle_b t) (angle_b u)).
 
 (** The two angles are interchangeable in the citation: swapping them names
     the same three facts, so both orders are accepted. *)
-Definition aas_schema decls facts i j k (t u : Triangle) : bool :=
-  schema3 decls facts i j k
+Definition aas_schema decls premises facts i j k (t u : Triangle) : bool :=
+  schema3 decls premises facts i j k
     (ConAng (angle_c t) (angle_c u))
     (ConAng (angle_b t) (angle_b u))
     (ConSeg (side_ab t) (side_ab u)) ||
-  schema3 decls facts i j k
+  schema3 decls premises facts i j k
     (ConAng (angle_b t) (angle_b u))
     (ConAng (angle_c t) (angle_c u))
     (ConSeg (side_ab t) (side_ab u)).
@@ -151,23 +196,23 @@ Definition aas_schema decls facts i j k (t u : Triangle) : bool :=
     segment congruences, so both readings are accepted; each is separately
     sound.  Two legs are still refused, and the correspondence search already
     covers which leg is cited. *)
-Definition rhl_schema decls facts i j k (t u : Triangle) : bool :=
-  schema3 decls facts i j k
+Definition rhl_schema decls premises facts i j k (t u : Triangle) : bool :=
+  schema3 decls premises facts i j k
     (ConRight (angle_b t) (angle_b u))
     (ConSeg (side_ca t) (side_ca u))
     (ConSeg (side_bc t) (side_bc u)) ||
-  schema3 decls facts i j k
+  schema3 decls premises facts i j k
     (ConRight (angle_b t) (angle_b u))
     (ConSeg (side_bc t) (side_bc u))
     (ConSeg (side_ca t) (side_ca u)).
 
 Definition three_rotations
-    (schema : Declarations -> list Statement -> nat -> nat -> nat ->
+    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
               Triangle -> Triangle -> bool)
-    decls facts i j k t u : bool :=
-  schema decls facts i j k t u ||
-  schema decls facts i j k (rotate_triangle t) (rotate_triangle u) ||
-  schema decls facts i j k (rotate_triangle (rotate_triangle t))
+    decls premises facts i j k t u : bool :=
+  schema decls premises facts i j k t u ||
+  schema decls premises facts i j k (rotate_triangle t) (rotate_triangle u) ||
+  schema decls premises facts i j k (rotate_triangle (rotate_triangle t))
                                (rotate_triangle (rotate_triangle u)).
 
 (** A criterion's dependency order fixes which vertex plays which role, so the
@@ -177,11 +222,11 @@ Definition reverse_triangle (t : Triangle) : Triangle :=
   triangle t.(tri_c) t.(tri_b) t.(tri_a).
 
 Definition six_correspondences
-    (schema : Declarations -> list Statement -> nat -> nat -> nat ->
+    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
               Triangle -> Triangle -> bool)
-    decls facts i j k t u : bool :=
-  three_rotations schema decls facts i j k t u ||
-  three_rotations schema decls facts i j k
+    decls premises facts i j k t u : bool :=
+  three_rotations schema decls premises facts i j k t u ||
+  three_rotations schema decls premises facts i j k
     (reverse_triangle t) (reverse_triangle u).
 
 (** Declaring [t_ABC] asserts that its vertices are noncollinear, and that is
@@ -359,8 +404,6 @@ Definition def_ang_bisect (facts : list Statement) (i : nat)
     the point between the endpoints, so this rule additionally requires an
     [on_line] diagram premise: on a line there is exactly one point equidistant
     from two distinct points. *)
-Definition on_line_witness (s : Statement) : option (Segment * PointId) :=
-  match s with OnLine t q => Some (t, q) | _ => None end.
 
 Definition midpt_conv (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
@@ -383,39 +426,44 @@ Definition midpt_conv (premises : list Premise) (facts : list Statement)
 (** Two angles of a triangle determine the third.  The rule needs both
     triangles, and they are not named by the conclusion, so it searches the
     declared pairs; declaring them is also what rules out degenerate ones. *)
-Definition schema2 (decls : Declarations) (facts : list Statement)
+Definition schema2 (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i j : nat) (a b : Statement) : bool :=
   match lookup_step facts i, lookup_step facts j with
   | Some x, Some y =>
-      dependency_matches decls a x && dependency_matches decls b y
+      dependency_matches decls premises a x && dependency_matches decls premises b y
   | _, _ => false
   end.
 
-Definition third_angle_at (decls : Declarations) (facts : list Statement)
+Definition third_angle_at (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i j : nat) (t u : Triangle) (conclusion : Statement) : bool :=
-  schema2 decls facts i j
+  schema2 decls premises facts i j
     (ConAng (angle_a t) (angle_a u))
     (ConAng (angle_b t) (angle_b u)) &&
   fact_eqb (ConAng (angle_c t) (angle_c u)) conclusion.
 
-Definition third_angle (decls : Declarations) (facts : list Statement)
+Definition third_angle (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i j : nat) (conclusion : Statement) : bool :=
   existsb (fun t => existsb (fun u =>
-      existsb (fun c => third_angle_at decls facts i j (fst c) (snd c) conclusion)
+      existsb (fun c => third_angle_at decls premises facts i j (fst c) (snd c) conclusion)
               (correspondences t u))
     decls.(decl_triangles)) decls.(decl_triangles).
 
-Definition schema6 (decls : Declarations) (facts : list Statement)
+Definition schema6 (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i1 i2 i3 i4 i5 i6 : nat) (a b c d e f : Statement) : bool :=
-  schema3 decls facts i1 i2 i3 a b c &&
-  schema3 decls facts i4 i5 i6 d e f.
+  schema3 decls premises facts i1 i2 i3 a b c &&
+  schema3 decls premises facts i4 i5 i6 d e f.
 
 (** All six corresponding parts, cited explicitly.  The dependency order fixes
     the correspondence, so the six readings of the conclusion are searched as
     they are for the other criteria. *)
-Definition def_con_tri_at (decls : Declarations) (facts : list Statement)
+Definition def_con_tri_at (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i1 i2 i3 i4 i5 i6 : nat) (t u : Triangle) : bool :=
-  schema6 decls facts i1 i2 i3 i4 i5 i6
+  schema6 decls premises facts i1 i2 i3 i4 i5 i6
     (ConSeg (side_ab t) (side_ab u))
     (ConSeg (side_bc t) (side_bc u))
     (ConSeg (side_ca t) (side_ca u))
@@ -423,12 +471,13 @@ Definition def_con_tri_at (decls : Declarations) (facts : list Statement)
     (ConAng (angle_b t) (angle_b u))
     (ConAng (angle_c t) (angle_c u)).
 
-Definition def_con_tri (decls : Declarations) (facts : list Statement)
+Definition def_con_tri (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i1 i2 i3 i4 i5 i6 : nat) (conclusion : Statement) : bool :=
   match conclusion with
   | ConTri t u =>
       declared_pair decls t u &&
-      existsb (fun c => def_con_tri_at decls facts i1 i2 i3 i4 i5 i6
+      existsb (fun c => def_con_tri_at decls premises facts i1 i2 i3 i4 i5 i6
                           (fst c) (snd c))
               (correspondences t u)
   | _ => false
@@ -488,24 +537,26 @@ Definition base_angle_conv (decls : Declarations) (facts : list Statement)
   | None => false
   end.
 
-Definition def_equilateral (decls : Declarations) (facts : list Statement)
+Definition def_equilateral (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i j k : nat) (conclusion : Statement) : bool :=
   match conclusion with
   | EquilateralTri t =>
       triangle_declared decls t &&
-      schema3 decls facts i j k
+      schema3 decls premises facts i j k
         (ConSeg (side_ab t) (side_bc t))
         (ConSeg (side_bc t) (side_ca t))
         (ConSeg (side_ca t) (side_ab t))
   | _ => false
   end.
 
-Definition def_equiangular (decls : Declarations) (facts : list Statement)
+Definition def_equiangular (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
     (i j k : nat) (conclusion : Statement) : bool :=
   match conclusion with
   | EquiangularTri t =>
       triangle_declared decls t &&
-      schema3 decls facts i j k
+      schema3 decls premises facts i j k
         (ConAng (angle_a t) (angle_b t))
         (ConAng (angle_b t) (angle_c t))
         (ConAng (angle_c t) (angle_a t))
@@ -820,25 +871,25 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | SAS i j k =>
       match conclusion with
       | ConTri t u => declared_pair decls t u &&
-          six_correspondences sas_schema decls facts i j k t u
+          six_correspondences sas_schema decls premises facts i j k t u
       | _ => false
       end
   | SSS i j k =>
       match conclusion with
       | ConTri t u => declared_pair decls t u &&
-          six_correspondences sss_schema decls facts i j k t u
+          six_correspondences sss_schema decls premises facts i j k t u
       | _ => false
       end
   | ASA i j k =>
       match conclusion with
       | ConTri t u => declared_pair decls t u &&
-          six_correspondences asa_schema decls facts i j k t u
+          six_correspondences asa_schema decls premises facts i j k t u
       | _ => false
       end
   | AAS i j k =>
       match conclusion with
       | ConTri t u => declared_pair decls t u &&
-          six_correspondences aas_schema decls facts i j k t u
+          six_correspondences aas_schema decls premises facts i j k t u
       | _ => false
       end
   | CPCTC i =>
@@ -855,14 +906,14 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | VertAng label => vert_ang decls premises label conclusion
   | DefAngBisect i => def_ang_bisect facts i conclusion
   | MidptConv i => midpt_conv premises facts i conclusion
-  | ThirdAngle i j => third_angle decls facts i j conclusion
+  | ThirdAngle i j => third_angle decls premises facts i j conclusion
   | DefConTri i1 i2 i3 i4 i5 i6 =>
-      def_con_tri decls facts i1 i2 i3 i4 i5 i6 conclusion
+      def_con_tri decls premises facts i1 i2 i3 i4 i5 i6 conclusion
   | DefIsosceles i => def_isosceles decls facts i conclusion
   | BaseAngle i => base_angle decls facts i conclusion
   | BaseAngleConv i => base_angle_conv decls facts i conclusion
-  | DefEquilateral i j k => def_equilateral decls facts i j k conclusion
-  | DefEquiangular i j k => def_equiangular decls facts i j k conclusion
+  | DefEquilateral i j k => def_equilateral decls premises facts i j k conclusion
+  | DefEquiangular i j k => def_equiangular decls premises facts i j k conclusion
   | EquilatEquiang i => equilat_equiang facts i conclusion
   | EquiangEquilat i => equiang_equilat facts i conclusion
   | ConSupplements i j k => con_supplements facts i j k conclusion
@@ -886,7 +937,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RHL i j k =>
       match conclusion with
       | ConTri t u => declared_pair decls t u &&
-          six_correspondences rhl_schema decls facts i j k t u
+          six_correspondences rhl_schema decls premises facts i j k t u
       | _ => false
       end
   end.
@@ -1062,34 +1113,131 @@ Proof.
     apply (proj2 (angle_u_eqb_well_formed _ _ Heq)). now apply Hwfa.
 Qed.
 
-Lemma dependency_matches_sound : forall decls expected actual,
-  declarations_well_formed point decls ->
-  dependency_matches decls expected actual = true ->
-  Interp actual -> Interp expected.
+Lemma ray_linked_out : forall premises v p q,
+  Forall (interp_premise point) premises ->
+  ray_linked premises v p q = true ->
+  point p <> point v -> point q <> point v ->
+  Out (point v) (point q) (point p).
 Proof.
-  intros decls expected actual Hwf H Hactual.
-  unfold dependency_matches in H. apply orb_true_iff in H.
-  destruct H as [H|H]; [now apply (fact_eqb_sound _ _ H)|].
-  destruct expected; try discriminate. destruct actual; try discriminate.
-  apply andb_true_iff in H. destruct H as [H Hb].
-  apply andb_true_iff in H. destruct H as [H Ha].
-  apply andb_true_iff in H. destruct H as [H1 H2].
-  apply (declared_angle_sound decls _ Hwf) in Ha.
-  apply (declared_angle_sound decls _ Hwf) in Hb.
-  destruct Ha as [Hal Har]. destruct Hb as [Hbl Hbr].
-  destruct Hactual as [Hpa Hpb].
-  apply (proj2 (angle_u_eqb_right _ _ H1)) in Hpa.
-  apply (proj2 (angle_u_eqb_right _ _ H2)) in Hpb.
-  unfold right_angle in Hpa, Hpb.
-  cbn. now apply l11_16.
+  intros premises v p q Hprem Hlink Hp Hq.
+  unfold ray_linked in Hlink. apply orb_true_iff in Hlink.
+  destruct Hlink as [Heq|Hlink].
+  { apply Ascii.eqb_eq in Heq. subst q. apply out_trivial. exact Hp. }
+  apply existsb_exists in Hlink. destruct Hlink as [pr [Hin Hc]].
+  destruct (on_line_witness pr.(premise_statement)) as [[s r]|] eqn:Hwit;
+    try discriminate.
+  assert (Hpremise : pr.(premise_statement) = OnLine s r).
+  { unfold on_line_witness in Hwit.
+    destruct pr.(premise_statement); try discriminate.
+    now injection Hwit as <- <-. }
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr. rewrite Hpremise in Hpr. cbn in Hpr.
+  destruct Hpr as [Hne Hbet].
+  apply orb_true_iff in Hc. destruct Hc as [Hc|Hc];
+    apply andb_true_iff in Hc; destruct Hc as [Hs Hr];
+    apply Ascii.eqb_eq in Hr; subst r;
+    apply segment_u_eqb_cases in Hs;
+    destruct Hs as [-> | ->]; unfold reverse_segment in Hbet; cbn in Hbet.
+  - apply l6_6, bet_out; assumption.
+  - apply l6_6, bet_out; [assumption|].
+    apply between_symmetry. exact Hbet.
+  - apply bet_out; assumption.
+  - apply bet_out; [assumption|].
+    apply between_symmetry. exact Hbet.
 Qed.
 
-Lemma schema3_sound : forall decls facts i j k a b c,
+Lemma angle_ray_matches_sound : forall decls premises e a A B C,
   declarations_well_formed point decls ->
-  Forall Interp facts -> schema3 decls facts i j k a b c = true ->
+  Forall (interp_premise point) premises ->
+  angle_ray_matches decls premises e a = true ->
+  CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right)) A B C ->
+  CongA (point e.(ang_left)) (point e.(ang_vertex)) (point e.(ang_right)) A B C.
+Proof.
+  intros decls premises e a A B C Hwf Hprem Hm Hconga.
+  unfold angle_ray_matches in Hm. apply orb_true_iff in Hm.
+  destruct Hm as [Hu|Hm].
+  { apply angle_u_eqb_cases in Hu. destruct Hu as [->| ->]; [exact Hconga|].
+    unfold reverse_angle. cbn. CongA. }
+  apply andb_true_iff in Hm. destruct Hm as [Hm Hrays].
+  apply andb_true_iff in Hm. destruct Hm as [Hdecl Hvert].
+  apply Ascii.eqb_eq in Hvert.
+  pose proof (declared_angle_sound _ _ Hwf Hdecl) as Hwfe.
+  destruct Hwfe as [Hel Her]. rewrite Hvert in Hel, Her |- *.
+  pose proof Hconga as Hd. destruct Hd as [Hd1 [Hd2 _]].
+  apply orb_true_iff in Hrays; destruct Hrays as [Hr|Hr];
+    apply andb_true_iff in Hr; destruct Hr as [Hr1 Hr2];
+    rewrite Hvert in Hr1, Hr2.
+  - pose proof (ray_linked_out _ _ _ _ Hprem Hr1 Hel Hd1) as Ho1.
+    pose proof (ray_linked_out _ _ _ _ Hprem Hr2 Her Hd2) as Ho2.
+    apply conga_trans with (point a.(ang_left)) (point a.(ang_vertex))
+                           (point a.(ang_right)); [|exact Hconga].
+    apply out2__conga; assumption.
+  - pose proof (ray_linked_out _ _ _ _ Hprem Hr1 Hel Hd2) as Ho1.
+    pose proof (ray_linked_out _ _ _ _ Hprem Hr2 Her Hd1) as Ho2.
+    apply conga_trans with (point a.(ang_right)) (point a.(ang_vertex))
+                           (point a.(ang_left)); [|CongA].
+    apply out2__conga; assumption.
+Qed.
+
+Lemma dependency_matches_sound : forall decls premises expected actual,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  dependency_matches decls premises expected actual = true ->
+  Interp actual -> Interp expected.
+Proof.
+  intros decls premises expected actual Hwf Hprem H Hactual.
+  unfold dependency_matches in H. apply orb_true_iff in H.
+  destruct H as [H|H]; [now apply (fact_eqb_sound _ _ H)|].
+  destruct expected; try discriminate; destruct actual; try discriminate.
+  - (* con_ang matched by a ray-renamed con_ang *)
+    cbn in Hactual |- *.
+    apply orb_true_iff in H; destruct H as [H|H];
+      apply andb_true_iff in H; destruct H as [H1 H2].
+    + apply conga_sym.
+      apply (angle_ray_matches_sound _ _ _ _ _ _ _ Hwf Hprem H2).
+      apply conga_sym.
+      apply (angle_ray_matches_sound _ _ _ _ _ _ _ Hwf Hprem H1).
+      exact Hactual.
+    + apply conga_sym.
+      apply (angle_ray_matches_sound _ _ _ _ _ _ _ Hwf Hprem H2).
+      apply conga_sym.
+      apply (angle_ray_matches_sound _ _ _ _ _ _ _ Hwf Hprem H1).
+      apply conga_sym. exact Hactual.
+  - (* con_ang matched by a ray-renamed ref_ang *)
+    cbn in Hactual |- *.
+    apply orb_true_iff in H; destruct H as [H|H];
+      apply andb_true_iff in H; destruct H as [H1 H2].
+    + apply conga_sym.
+      apply (angle_ray_matches_sound _ _ _ _ _ _ _ Hwf Hprem H2).
+      apply conga_sym.
+      apply (angle_ray_matches_sound _ _ _ _ _ _ _ Hwf Hprem H1).
+      exact Hactual.
+    + apply conga_sym.
+      apply (angle_ray_matches_sound _ _ _ _ _ _ _ Hwf Hprem H2).
+      apply conga_sym.
+      apply (angle_ray_matches_sound _ _ _ _ _ _ _ Hwf Hprem H1).
+      apply conga_sym. exact Hactual.
+  - (* con_ang matched by con_right *)
+    apply andb_true_iff in H. destruct H as [H Hb].
+    apply andb_true_iff in H. destruct H as [H Ha].
+    apply andb_true_iff in H. destruct H as [H1 H2].
+    apply (declared_angle_sound decls _ Hwf) in Ha.
+    apply (declared_angle_sound decls _ Hwf) in Hb.
+    destruct Ha as [Hal Har]. destruct Hb as [Hbl Hbr].
+    destruct Hactual as [Hpa Hpb].
+    apply (proj2 (angle_u_eqb_right _ _ H1)) in Hpa.
+    apply (proj2 (angle_u_eqb_right _ _ H2)) in Hpb.
+    unfold right_angle in Hpa, Hpb.
+    cbn. now apply l11_16.
+Qed.
+
+Lemma schema3_sound : forall decls premises facts i j k a b c,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  Forall Interp facts -> schema3 decls premises facts i j k a b c = true ->
   Interp a /\ Interp b /\ Interp c.
 Proof.
-  intros decls facts i j k a b c Hwf Hall H.
+  intros decls premises facts i j k a b c Hwf Hprem Hall H.
   unfold schema3 in H.
   destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate.
@@ -1131,46 +1279,50 @@ Proof.
   intros Hncol Hcol. apply Hncol. Col.
 Qed.
 
-Lemma sas_schema_sound : forall decls facts i j k t u,
+Lemma sas_schema_sound : forall decls premises facts i j k t u,
   declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
   Forall Interp facts -> triangle_well_formed point t ->
-  sas_schema decls facts i j k t u = true ->
+  sas_schema decls premises facts i j k t u = true ->
   interp_triangle_congruence point t u.
 Proof.
-  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
-  apply schema3_sound in Hschema; [|exact Hdecl|exact Hall]. cbn in Hschema |- *.
+  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
+  apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
   destruct Hschema as [Hs1 [Ha Hs2]]. eapply ender_sas; eauto; Cong.
 Qed.
 
-Lemma sss_schema_sound : forall decls facts i j k t u,
+Lemma sss_schema_sound : forall decls premises facts i j k t u,
   declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
   Forall Interp facts -> triangle_well_formed point t ->
-  sss_schema decls facts i j k t u = true -> interp_triangle_congruence point t u.
+  sss_schema decls premises facts i j k t u = true -> interp_triangle_congruence point t u.
 Proof.
-  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
-  apply schema3_sound in Hschema; [|exact Hdecl|exact Hall]. cbn in Hschema |- *.
+  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
+  apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
   destruct Hschema as [Hs1 [Hs2 Hs3]]. now apply ender_sss.
 Qed.
 
-Lemma asa_schema_sound : forall decls facts i j k t u,
+Lemma asa_schema_sound : forall decls premises facts i j k t u,
   declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
   Forall Interp facts -> triangle_well_formed point t ->
-  asa_schema decls facts i j k t u = true -> interp_triangle_congruence point t u.
+  asa_schema decls premises facts i j k t u = true -> interp_triangle_congruence point t u.
 Proof.
-  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
-  apply schema3_sound in Hschema; [|exact Hdecl|exact Hall]. cbn in Hschema |- *.
+  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
+  apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
   destruct Hschema as [Ha [Hs Hb]]. now apply ender_asa.
 Qed.
 
-Lemma aas_schema_sound : forall decls facts i j k t u,
+Lemma aas_schema_sound : forall decls premises facts i j k t u,
   declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
   Forall Interp facts -> triangle_well_formed point t ->
-  aas_schema decls facts i j k t u = true -> interp_triangle_congruence point t u.
+  aas_schema decls premises facts i j k t u = true -> interp_triangle_congruence point t u.
 Proof.
-  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
+  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
   unfold aas_schema in Hschema. apply orb_true_iff in Hschema.
   assert (Hparts : forall x y z : Statement,
-      schema3 decls facts i j k x y z = true ->
+      schema3 decls premises facts i j k x y z = true ->
       Interp x /\ Interp y /\ Interp z)
     by (intros; eapply schema3_sound; eauto).
   destruct Hschema as [H|H]; apply Hparts in H; cbn in H |- *.
@@ -1178,16 +1330,17 @@ Proof.
   - destruct H as [Hb [Hc Hs]]. apply ender_aas; auto. now apply conga_comm.
 Qed.
 
-Lemma rhl_schema_sound : forall decls facts i j k t u,
+Lemma rhl_schema_sound : forall decls premises facts i j k t u,
   declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
   Forall Interp facts -> triangle_well_formed point t ->
-  rhl_schema decls facts i j k t u = true ->
+  rhl_schema decls premises facts i j k t u = true ->
   interp_triangle_congruence point t u.
 Proof.
-  intros decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hschema.
+  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
   unfold rhl_schema in Hschema. apply orb_true_iff in Hschema.
   assert (Hsides : forall x y z : Statement,
-      schema3 decls facts i j k x y z = true -> Interp x /\ Interp y /\ Interp z)
+      schema3 decls premises facts i j k x y z = true -> Interp x /\ Interp y /\ Interp z)
     by (intros; eapply schema3_sound; eauto).
   assert (Hbuild : Per (point A) (point B) (point C) ->
                    Per (point D) (point E) (point F) ->
@@ -1204,27 +1357,31 @@ Proof.
     destruct H as [[Hper Hper'] [H1 H2]]; now apply Hbuild.
 Qed.
 
-Lemma three_rotations_sound : forall schema decls facts i j k t u,
+Lemma three_rotations_sound : forall schema decls premises facts i j k t u,
   declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
   Forall Interp facts -> triangle_well_formed point t ->
-  (forall decls facts i j k t u,
+  (forall decls premises facts i j k t u,
     declarations_well_formed point decls ->
+    Forall (interp_premise point) premises ->
     Forall Interp facts -> triangle_well_formed point t ->
-    schema decls facts i j k t u = true ->
+    schema decls premises facts i j k t u = true ->
     interp_triangle_congruence point t u) ->
-  three_rotations schema decls facts i j k t u = true ->
+  three_rotations schema decls premises facts i j k t u = true ->
   interp_triangle_congruence point t u.
 Proof.
-  intros schema decls facts i j k t u Hdecl Hall Hwf Hsound H.
+  intros schema decls premises facts i j k t u Hdecl Hprem Hall Hwf Hsound H.
   unfold three_rotations in H. apply orb_true_iff in H. destruct H as [H|H].
   - apply orb_true_iff in H. destruct H as [H|H].
-    + exact (Hsound decls facts i j k t u Hdecl Hall Hwf H).
+    + exact (Hsound decls premises facts i j k t u Hdecl Hprem Hall Hwf H).
     + apply triangle_congruent_rotate_back.
-      exact (Hsound decls facts i j k (rotate_triangle t) (rotate_triangle u)
-               Hdecl Hall (rotated_well_formed t Hwf) H).
+      exact (Hsound decls premises facts i j k (rotate_triangle t)
+               (rotate_triangle u) Hdecl Hprem Hall
+               (rotated_well_formed t Hwf) H).
   - apply triangle_congruent_rotate_back. apply triangle_congruent_rotate_back.
-    exact (Hsound decls facts i j k (rotate_triangle (rotate_triangle t))
-             (rotate_triangle (rotate_triangle u)) Hdecl Hall
+    exact (Hsound decls premises facts i j k
+             (rotate_triangle (rotate_triangle t))
+             (rotate_triangle (rotate_triangle u)) Hdecl Hprem Hall
              (rotated_well_formed _ (rotated_well_formed t Hwf)) H).
 Qed.
 
@@ -1235,25 +1392,28 @@ Proof.
   intros Hncol Hcol. apply Hncol. Col.
 Qed.
 
-Lemma six_correspondences_sound : forall schema decls facts i j k t u,
+Lemma six_correspondences_sound : forall schema decls premises facts i j k t u,
   declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
   Forall Interp facts -> triangle_well_formed point t ->
-  (forall decls facts i j k t u,
+  (forall decls premises facts i j k t u,
     declarations_well_formed point decls ->
+    Forall (interp_premise point) premises ->
     Forall Interp facts -> triangle_well_formed point t ->
-    schema decls facts i j k t u = true ->
+    schema decls premises facts i j k t u = true ->
     interp_triangle_congruence point t u) ->
-  six_correspondences schema decls facts i j k t u = true ->
+  six_correspondences schema decls premises facts i j k t u = true ->
   interp_triangle_congruence point t u.
 Proof.
-  intros schema decls facts i j k [A B C] [D E F] Hdecl Hall Hwf Hsound H.
+  intros schema decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hsound H.
   unfold six_correspondences in H. apply orb_true_iff in H. destruct H as [H|H].
   - eapply three_rotations_sound; eauto.
   - apply triangle_congruent_reverse.
     change (interp_triangle_congruence point
               (reverse_triangle (triangle A B C)) (reverse_triangle (triangle D E F))).
     eapply three_rotations_sound;
-      [exact Hdecl|exact Hall|now apply reversed_well_formed|exact Hsound|exact H].
+      [exact Hdecl|exact Hprem|exact Hall|now apply reversed_well_formed
+      |exact Hsound|exact H].
 Qed.
 
 Lemma cpctc_sound : forall t u conclusion,
@@ -1574,29 +1734,32 @@ Proof.
   contradiction.
 Qed.
 
-Lemma schema6_sound : forall decls facts i1 i2 i3 i4 i5 i6 a b c d e f,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  schema6 decls facts i1 i2 i3 i4 i5 i6 a b c d e f = true ->
+Lemma schema6_sound : forall decls premises facts i1 i2 i3 i4 i5 i6 a b c d e f,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  schema6 decls premises facts i1 i2 i3 i4 i5 i6 a b c d e f = true ->
   Interp a /\ Interp b /\ Interp c /\ Interp d /\ Interp e /\ Interp f.
 Proof.
-  intros decls facts i1 i2 i3 i4 i5 i6 a b c d e f Hwf Hall H.
+  intros decls premises facts i1 i2 i3 i4 i5 i6 a b c d e f Hwf Hprem Hall H.
   unfold schema6 in H. apply andb_true_iff in H. destruct H as [H1 H2].
-  apply (schema3_sound _ _ _ _ _ _ _ _ Hwf Hall) in H1.
-  apply (schema3_sound _ _ _ _ _ _ _ _ Hwf Hall) in H2. tauto.
+  apply (schema3_sound _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in H1.
+  apply (schema3_sound _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in H2. tauto.
 Qed.
 
-Lemma def_con_tri_sound : forall decls facts i1 i2 i3 i4 i5 i6 conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  def_con_tri decls facts i1 i2 i3 i4 i5 i6 conclusion = true ->
+Lemma def_con_tri_sound : forall decls premises facts i1 i2 i3 i4 i5 i6
+    conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  def_con_tri decls premises facts i1 i2 i3 i4 i5 i6 conclusion = true ->
   Interp conclusion.
 Proof.
-  intros decls facts i1 i2 i3 i4 i5 i6 conclusion Hwf Hall Hrule.
+  intros decls premises facts i1 i2 i3 i4 i5 i6 conclusion Hwf Hprem Hall Hrule.
   unfold def_con_tri in Hrule. destruct conclusion; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [_ Hrule].
   apply existsb_exists in Hrule. destruct Hrule as [c [Hin Hmatch]].
   change (Interp (ConTri t t0)). apply (correspondences_congruent t t0 c Hin).
   unfold def_con_tri_at in Hmatch.
-  apply (schema6_sound _ _ _ _ _ _ _ _ _ _ _ _ _ _ Hwf Hall) in Hmatch.
+  apply (schema6_sound _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in Hmatch.
   destruct (fst c) as [A B C]; destruct (snd c) as [D E F].
   cbn in Hmatch |- *. unfold interp_triangle_congruence, triangle_congruence.
   cbn. tauto.
@@ -1662,29 +1825,31 @@ Proof.
   now apply ender_base_angle_conv.
 Qed.
 
-Lemma def_equilateral_sound : forall decls facts i j k conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  def_equilateral decls facts i j k conclusion = true -> Interp conclusion.
+Lemma def_equilateral_sound : forall decls premises facts i j k conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  def_equilateral decls premises facts i j k conclusion = true -> Interp conclusion.
 Proof.
-  intros decls facts i j k conclusion Hwf Hall Hrule.
+  intros decls premises facts i j k conclusion Hwf Hprem Hall Hrule.
   unfold def_equilateral in Hrule. destruct conclusion; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hschema].
   apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
   apply triangle_well_formed_nondegenerate in Hdeclared.
-  apply (schema3_sound _ _ _ _ _ _ _ _ Hwf Hall) in Hschema.
+  apply (schema3_sound _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in Hschema.
   destruct t as [A B C]. cbn in Hschema, Hdeclared |- *. tauto.
 Qed.
 
-Lemma def_equiangular_sound : forall decls facts i j k conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  def_equiangular decls facts i j k conclusion = true -> Interp conclusion.
+Lemma def_equiangular_sound : forall decls premises facts i j k conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  def_equiangular decls premises facts i j k conclusion = true -> Interp conclusion.
 Proof.
-  intros decls facts i j k conclusion Hwf Hall Hrule.
+  intros decls premises facts i j k conclusion Hwf Hprem Hall Hrule.
   unfold def_equiangular in Hrule. destruct conclusion; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hschema].
   apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
   apply triangle_well_formed_nondegenerate in Hdeclared.
-  apply (schema3_sound _ _ _ _ _ _ _ _ Hwf Hall) in Hschema.
+  apply (schema3_sound _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in Hschema.
   destruct t as [A B C]. cbn in Hschema, Hdeclared |- *.
   destruct Hschema as [Hab [Hbc _]]. split; [exact Hdeclared|].
   split; CongA.
@@ -2267,12 +2432,13 @@ Qed.
     point is free of it. *)
 Context {TE : @Tarski_euclidean Tn TnEQD}.
 
-Lemma schema2_sound : forall decls facts i j a b,
+Lemma schema2_sound : forall decls premises facts i j a b,
   declarations_well_formed point decls ->
-  Forall Interp facts -> schema2 decls facts i j a b = true ->
+  Forall (interp_premise point) premises ->
+  Forall Interp facts -> schema2 decls premises facts i j a b = true ->
   Interp a /\ Interp b.
 Proof.
-  intros decls facts i j a b Hwf Hall H. unfold schema2 in H.
+  intros decls premises facts i j a b Hwf Hprem Hall H. unfold schema2 in H.
   destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate.
   apply andb_true_iff in H. destruct H as [Ha Hb].
@@ -2298,12 +2464,14 @@ Proof.
   contradiction.
 Qed.
 
-Lemma third_angle_sound : forall decls facts i j conclusion,
+Lemma third_angle_sound : forall decls premises facts i j conclusion,
   declarations_well_formed point decls ->
-  Forall Interp facts -> third_angle decls facts i j conclusion = true ->
+  Forall (interp_premise point) premises ->
+  Forall Interp facts ->
+  third_angle decls premises facts i j conclusion = true ->
   Interp conclusion.
 Proof.
-  intros decls facts i j conclusion Hwf Hall Hrule.
+  intros decls premises facts i j conclusion Hwf Hprem Hall Hrule.
   unfold third_angle in Hrule.
   apply existsb_exists in Hrule. destruct Hrule as [t [Hint Hrule]].
   apply existsb_exists in Hrule. destruct Hrule as [u [Hinu Hrule]].
@@ -2313,7 +2481,7 @@ Proof.
   pose proof (correspondences_well_formed t u c Hinc (Hwft t Hint) (Hwft u Hinu))
     as [Hwt Hwu].
   apply andb_true_iff in Hmatch. destruct Hmatch as [Hdeps Hconclusion].
-  apply (schema2_sound _ _ _ _ _ _ Hwf Hall) in Hdeps.
+  apply (schema2_sound _ _ _ _ _ _ _ Hwf Hprem Hall) in Hdeps.
   destruct Hdeps as [HatA HatB].
   apply (fact_eqb_sound _ _ Hconclusion).
   destruct c as [[A B C] [D E F]]. cbn in HatA, HatB, Hwt, Hwu |- *.
@@ -2631,22 +2799,22 @@ Proof.
     apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
     eapply six_correspondences_sound;
-      [exact Hwf|exact Hfacts|exact Ht|exact sas_schema_sound|exact Hschema].
+      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact sas_schema_sound|exact Hschema].
   - destruct conclusion; try discriminate.
     apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
     eapply six_correspondences_sound;
-      [exact Hwf|exact Hfacts|exact Ht|exact sss_schema_sound|exact Hschema].
+      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact sss_schema_sound|exact Hschema].
   - destruct conclusion; try discriminate.
     apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
     eapply six_correspondences_sound;
-      [exact Hwf|exact Hfacts|exact Ht|exact asa_schema_sound|exact Hschema].
+      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact asa_schema_sound|exact Hschema].
   - destruct conclusion; try discriminate.
     apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
     eapply six_correspondences_sound;
-      [exact Hwf|exact Hfacts|exact Ht|exact aas_schema_sound|exact Hschema].
+      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact aas_schema_sound|exact Hschema].
   - destruct (lookup_step facts n) as [dependency|] eqn:Hlookup; try discriminate.
     destruct dependency; try discriminate.
     change (is_cpctc_fact t t0 conclusion = true) in Hvalid.
@@ -2664,7 +2832,7 @@ Proof.
     apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
     eapply six_correspondences_sound;
-      [exact Hwf|exact Hfacts|exact Ht|exact rhl_schema_sound|exact Hschema].
+      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact rhl_schema_sound|exact Hschema].
   - eapply midpt_conv_sound; eauto.
   - eapply third_angle_sound; eauto.
   - eapply def_con_tri_sound; eauto.
