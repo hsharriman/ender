@@ -99,10 +99,16 @@ all corpus files through the extracted API.
   conservative fail-closed schema: the congruent dependency must name exactly
   the two halves induced by the outer angle and shared ray in the conclusion.
 - **Priority 2:** ordinary triangle, line, and quadrilateral curriculum rules.
-  The triangle-shape group is done; the largest remaining clusters are the
-  parallel-line rules (which need the `para` and `transversal` statements and
-  the Euclidean context `third_angle` already established) and the
-  quadrilateral rules built on them.
+  The triangle-shape and parallel-line groups are done, and the forward
+  quadrilateral rules with them. What is left is mostly converses
+  (`pgram_opp_sides_conv`, `pgram_opp_angs_conv`, `pgram_consec_angs_conv`,
+  `rect_diag_con_conv`, `rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv`),
+  which conclude a quadrilateral statement and so must establish its
+  well-formedness rather than read it off a dependency; the diagonal rules
+  (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`), whose
+  conclusions name the crossing point, so a proof that does not state where
+  the diagonals meet leaves it unconstrained; the trapezoid and kite angle
+  rules; and `linear_pair_conv` and `perp_bisector`.
 - **Priority 3:** circles/arcs, similarity, centers, or historically ambiguous
   catalog entries. Resolve their semantics and side conditions before coding.
   Two of them are not merely deferred: `con_inscribed_angs` and
