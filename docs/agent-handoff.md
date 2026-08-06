@@ -31,18 +31,30 @@ Known limitations relevant to prioritization:
 - goal matching is still exact (`statement_eqb`), so a derived fact spelled
   with a reversed angle or segment will not close an otherwise identical goal
   even though step-to-step matching accepts it;
-- the two largest remaining clusters are both blocked on `Audit.v` decisions
-  rather than on effort, and in the same way — a statement whose audited
-  meaning is too weak to support the rules that cite it.  `pgram_opp_sides` is
-  actually *false* as audited (collinear counterexample in
-  [`verified-checker.md`](verified-checker.md)); it needs a non-degeneracy
-  conjunct on `IsParallelogram`.  The definitional-projection parallelogram
-  rules are provable today but need quadrilateral objects in the kernel, which
-  do not exist yet;
+- `QuadrilateralWellFormed` now includes `~ Col` on the first three vertices,
+  which rules out the interleaved-collinear quadrilaterals that once made
+  `pgram_opp_sides` *false* as audited (historical counterexample in
+  [`verified-checker.md`](verified-checker.md)).  The whole parallelogram
+  family is now provable in principle but needs quadrilateral objects in the
+  kernel, which do not exist yet;
 - the parallel-line family is blocked on an `Audit.v` decision, not on effort:
   the audited `Transversal` meaning records no sidedness, and alternate,
   corresponding, and same-side angles differ by nothing else.  See
   [`verified-checker.md`](verified-checker.md);
+- the inscribed-angle congruence rules (`con_inscribed_angs`, `inscribed_angs`)
+  are false as audited in Euclidean models of dimension three or more: the
+  audited `OnCircle` is equidistance from the center, which is a sphere, and
+  vertices off a common circle see the same chord at different angles.  With
+  `Tarski_2D` gone from the public theorem they cannot be implemented as
+  audited.  The dimension-free fix mirrors GeoCoq itself: its
+  `Annexes/inscribed_angle.v` proves the needed lemmas under
+  `Tarski_euclidean` alone with explicit `Coplanar` hypotheses (only
+  `chord_par_diam` sits in its `Tarski_2D` section), so the audited circle
+  meanings need coplanarity conjuncts when this family is implemented — an
+  `Audit.v` decision, like `Transversal` sidedness, which these rules also
+  need (same-arc versus opposite-arc separates congruent from supplementary).
+  `inscribed_semi` is unaffected: a right angle in a semicircle holds on
+  spheres too;
 - statement coverage gates whole files: the kernel parser rejects a problem
   outright when any premise line names a statement it cannot decode, so a
   fixture stays out of reach until every statement it declares is supported;

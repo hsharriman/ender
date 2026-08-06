@@ -290,28 +290,29 @@ silently.
 
 The parallelogram family, which is the next largest cluster and includes the
 most-used unimplemented reason in the textbook corpus (`pgram_opp_sides`, 12
-uses), is blocked the same way, and more sharply: **`pgram_opp_sides` is false
+uses), was blocked more sharply still: **`pgram_opp_sides` used to be false
 as audited, not merely unproven.** `IsParallelogram q` is
 `QuadrilateralWellFormed q` plus two `Parallel` facts, and GeoCoq's `Par`
 admits collinear segments — its second disjunct is
-`A <> B /\ C <> D /\ Col A C D /\ Col B C D`. Take `A`, `B`, `C`, `D` at
-`0`, `1`, `5`, `7` on one line: all six distinctness conditions hold, the
-diagonals "cross" at `3` (`BetS A 3 C` and `BetS B 3 D`), and both `Par` facts
-hold by that second disjunct — so the quadrilateral is an audited
-parallelogram. But `|AB| = 1` and `|CD| = 2`.
+`A <> B /\ C <> D /\ Col A C D /\ Col B C D`. Four interleaved points on one
+line (say `0`, `1`, `5`, `7`) used to satisfy well-formedness — the diagonals
+"cross" at `3` — and both `Par` facts by that second disjunct, giving an
+audited "parallelogram" with `|AB| = 1` and `|CD| = 2`.
 
-GeoCoq offers no way around this, because congruence is an *input* to its
-notion of parallelogram rather than an output: both disjuncts of
-`Parallelogram` carry `Cong A B A' B'`, and the only bridge from two `Par`
-facts, `par_2_plg`, requires `~ Col A B C`. Adding a non-degeneracy conjunct to
-`IsParallelogram` — `~ Col` on three of the vertices would do — makes
-`pgram_opp_sides` provable via `par_2_plg` and `plg_cong`, and unblocks the
-rules built on it.
+`QuadrilateralWellFormed` now carries a `~ Col` conjunct on the first three
+vertices, which closes that hole for every quadrilateral statement at once
+(parallelogram, trapezoid, kite, rhombus): the crossing-diagonals condition
+already forbade exactly-three-collinear vertices, so one `~ Col` yields no
+three vertices collinear, and either degenerate `Par` disjunct would force all
+four onto one line. Both `Par` facts in a well-formed parallelogram are
+therefore strict, and `pgram_opp_sides` is expected provable via GeoCoq's
+`par_2_plg` (which wants exactly that `~ Col`) and `plg_cong`, both under the
+`Tarski_euclidean` hypothesis the final theorem already provides.
 
-What stays provable under the audit as it stands is the definitional-projection
+Also provable is the definitional-projection
 subset: `def_parallelogram`, `pgram_opp_side_para`, `rectangle_pgram`,
 `rhombus_pgram`, and `rhombus_consec_sides` all just assemble or take apart the
-audited definitions. Those need quadrilateral objects in the kernel — a
+audited definitions. All of these need quadrilateral objects in the kernel — a
 `Quadrilateral` type, `quad:` declaration parsing, and the well-formedness
 projection triangles already have — which does not exist yet.
 

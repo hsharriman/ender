@@ -162,12 +162,23 @@ Definition TriangleWellFormed (t : TriangleName) : Prop :=
   let B := point t.(triangle_second) in
   let C := point t.(triangle_third) in
   A <> B /\ B <> C /\ C <> A /\ ~ Col A B C.
+(** The diagonal condition says the name lists the vertices of a convex
+    quadrilateral in cyclic order: the diagonals of the named figure cross.
+    It also does almost all of the non-degeneracy work by itself.  If exactly
+    three vertices were collinear, the crossing point would lie both on their
+    line and on a segment that meets that line only at one endpoint, and
+    [BetS] excludes the endpoints.  The one configuration it admits is all
+    four vertices interleaved on a single line — which satisfies both [Par]
+    disjuncts vacuously and once made [pgram_opp_sides] false — so the
+    [~ Col] conjunct removes exactly that configuration, and no three
+    vertices of a well-formed quadrilateral are collinear. *)
 Definition QuadrilateralWellFormed (q : QuadrilateralName) : Prop :=
   let A := point q.(quadrilateral_first) in
   let B := point q.(quadrilateral_second) in
   let C := point q.(quadrilateral_third) in
   let D := point q.(quadrilateral_fourth) in
   A <> B /\ A <> C /\ A <> D /\ B <> C /\ B <> D /\ C <> D /\
+  ~ Col A B C /\
   (exists X, BetS A X C /\ BetS B X D).
 Definition CircleWellFormed (c : CircleName) : Prop :=
   circ_center c <> point c.(circle_radius_point).
@@ -246,8 +257,16 @@ Definition quad_angle_d (q : QuadrilateralName) :=
 Definition IsParallelogram (q : QuadrilateralName) : Prop :=
   QuadrilateralWellFormed q /\ Parallel (quad_ab q) (quad_cd q) /\
   Parallel (quad_bc q) (quad_da q).
+(** All four corners are stated even though, in a Euclidean plane, one right
+    corner of a parallelogram forces the other three.  These meanings are read
+    in bare neutral geometry, where that inference is unavailable: a
+    hyperbolic Lambert quadrilateral is a parallelogram in the sense above
+    with right corners and an acute one.  Stating all four keeps the
+    definition a plain restatement of the textbook one. *)
 Definition IsRectangle (q : QuadrilateralName) : Prop :=
-  IsParallelogram q /\ RightAngle (quad_angle_a q).
+  IsParallelogram q /\ RightAngle (quad_angle_a q) /\
+  RightAngle (quad_angle_b q) /\ RightAngle (quad_angle_c q) /\
+  RightAngle (quad_angle_d q).
 Definition IsRhombus (q : QuadrilateralName) : Prop :=
   IsParallelogram q /\ SegmentCongruent (quad_ab q) (quad_bc q) /\
   SegmentCongruent (quad_bc q) (quad_cd q) /\
@@ -297,7 +316,10 @@ Definition IsChord (c : CircleName) (s : SegmentName) : Prop :=
   OnCircle c s.(segment_first) /\ OnCircle c s.(segment_second).
 Definition IsDiameter (c : CircleName) (s : SegmentName) : Prop :=
   IsChord c s /\ Bet (seg_start s) (circ_center c) (seg_end s).
+(** A degenerate segment is collinear with every point, so the tangent must
+    be a genuine segment for [Col] to place it on a line at all. *)
 Definition IsTangent (c : CircleName) (s : SegmentName) (p : PointName) : Prop :=
+  SegmentWellFormed s /\
   OnCircle c p /\ Col (seg_start s) (seg_end s) (point p) /\
   exists Q, (Q = seg_start s \/ Q = seg_end s) /\ Q <> point p /\
             Per (circ_center c) (point p) Q.
@@ -305,8 +327,11 @@ Definition IsInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
   OnCircle c a.(angle_first) /\ OnCircle c a.(angle_vertex) /\
   OnCircle c a.(angle_last) /\ AngleWellFormed a.
 
+(** As with [IsTangent], the bisector must be a genuine segment: a degenerate
+    one is collinear with every point. *)
 Definition SegmentBisectorAt
     (bisector target : SegmentName) (p : PointName) : Prop :=
+  SegmentWellFormed bisector /\
   Col (seg_start bisector) (seg_end bisector) (point p) /\ MidpointOf target p.
 Definition PerpendicularBisectorAt
     (bisector target : SegmentName) (p : PointName) : Prop :=
@@ -337,6 +362,13 @@ Definition IsIncenter (p : PointName) (t : TriangleName) : Prop :=
   AngleBisector (angle_c t) (segment_name t.(triangle_third) p) /\
   InAngle P C A B /\ InAngle P A B C /\ InAngle P B C A.
 
+(** The classical intercept figure: lay the four lengths along two rays from
+    a common vertex and ask the connecting segments to be parallel.  The two
+    rays must span — without [~ Col O A C], placing both pairs on a single
+    line satisfies [Par] by its collinear disjunct and would make any four
+    segments "proportional".  With it, a degenerate [Par] would need a point
+    of one ray's line on the other's, which only the excluded vertex could
+    be, so only genuinely parallel connecting segments remain. *)
 Definition SegmentProportion (a b c d : SegmentName) : Prop :=
   SegmentWellFormed a /\ SegmentWellFormed b /\
   SegmentWellFormed c /\ SegmentWellFormed d /\
@@ -345,7 +377,7 @@ Definition SegmentProportion (a b c d : SegmentName) : Prop :=
     Cong O B (seg_start b) (seg_end b) /\
     Cong O C (seg_start c) (seg_end c) /\
     Cong O D (seg_start d) (seg_end d) /\
-    Out O A B /\ Out O C D /\ Par A C B D.
+    Out O A B /\ Out O C D /\ ~ Col O A C /\ Par A C B D.
 
 Definition LinearPairMeaning (a b : AngleName) : Prop :=
   AngleWellFormed a /\ AngleWellFormed b /\ ang_vertex a = ang_vertex b /\
@@ -381,6 +413,13 @@ Definition statementMeaning (s : PublicStatement) : Prop :=
   | ConSeg a b => SegmentCongruent a b
   | ConAng a b => AngleCongruent a b
   | ConTri a b => TriangleCongruent a b
+  (* Deliberately weaker than [Right]: no well-formedness is asserted, and
+     with a degenerate ray [Per] holds vacuously, so this does not entail
+     [ConAng].  The weakness is load-bearing: the checker concludes
+     [con_right] from a bare perpendicularity, where nothing makes the named
+     rays nondegenerate, and every passage from [con_right] to genuine angle
+     congruence instead demands declared objects ([perp_con_ang] and
+     [dependency_matches] in [Checker.v]). *)
   | ConRight a b => RightAngle a /\ RightAngle b
   | Para a b => Parallel a b
   | Isosceles t => IsoscelesTriangle t
