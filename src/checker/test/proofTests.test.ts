@@ -114,6 +114,8 @@ const OUTCOME_ENFORCED = new Set([
   "quadrilaterals/pgram_opp_side_para_incorrect.txt",
   "quadrilaterals/pgram_opp_sides_correct.txt",
   "quadrilaterals/pgram_opp_sides_incorrect.txt",
+  "quadrilaterals/rect_diag_con_correct.txt",
+  "quadrilaterals/rect_diag_con_incorrect.txt",
   "quadrilaterals/rectangle_def_correct.txt",
   "quadrilaterals/rectangle_def_incorrect.txt",
   "quadrilaterals/rectangle_pgram_correct.txt",

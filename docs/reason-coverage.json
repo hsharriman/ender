@@ -829,14 +829,14 @@
     },
     {
       "reason": "rect_diag_con",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "SAS between two right corners over the Euclidean opposite-sides theorem",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/rect_diag_con_correct.txt",
         "src/checker/proofs/quadrilaterals/rect_diag_con_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "rect_diag_con_conv",

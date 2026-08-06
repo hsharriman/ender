@@ -1231,6 +1231,31 @@ Example rhombus_opp_bisect_side_rejects :
   complete_checker rhombus_opp_bisect_side_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A rectangle's two diagonals are congruent; its opposite sides are too,
+    but that is not what this reason concludes. *)
+Definition rect_diag_con_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rectangle(q_ABCD)
+"
+  "con_seg(AC,BD)"
+  "[01] given(g_1) -> rectangle(q_ABCD)
+[02] rect_diag_con(1) -> con_seg(AC,BD)".
+
+Definition rect_diag_con_sides_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rectangle(q_ABCD)
+"
+  "con_seg(AB,CD)"
+  "[01] given(g_1) -> rectangle(q_ABCD)
+[02] rect_diag_con(1) -> con_seg(AB,CD)".
+
+Example rect_diag_con_accepts :
+  complete_checker rect_diag_con_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rect_diag_con_sides_rejects :
+  complete_checker rect_diag_con_sides_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Rectangle corners are mutually congruent and opposite sides are
     congruent; a diagonal ray is not a corner. *)
 Definition rectangle_def_angle_source := transitive_header

@@ -516,6 +516,36 @@ Proof.
   split; Cong.
 Qed.
 
+(** Both diagonals of the audited rectangle have the same length.  Either
+    diagonal completes a triangle on one of the sides, and those two triangles
+    agree side-angle-side: they share that side, their other legs are the
+    parallelogram's congruent opposite sides, and the corners between are two
+    of the rectangle's right angles. *)
+Lemma ender_rect_diagonals : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Par B C D A ->
+  Per D A B -> Per A B C ->
+  Cong A C B D.
+Proof.
+  intros A B C D X Hncol HbetsAC HbetsBD Hpab Hpbc HperA HperB.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HbetsAC HbetsBD)
+    as [_ [_ Hdab]].
+  destruct (ender_pgram_opp_sides A B C D X Hncol HbetsAC HbetsBD Hpab Hpbc)
+    as [_ Hbc_da].
+  apply not_col_distincts in Hncol. destruct Hncol as [Hncol [HAB [HBC _]]].
+  apply not_col_distincts in Hdab. destruct Hdab as [_ [HDA [_ HDB]]].
+  assert (Hcorners : CongA A B C B A D).
+  { apply l11_16;
+      [exact HperB|exact HAB|now apply not_eq_sym
+      |now apply l8_2|now apply not_eq_sym|exact HDA]. }
+  destruct (ender_sas B A C A B D) as [_ [Hdiagonals _]];
+    [intro; apply Hncol; Col
+    |apply cong_pseudo_reflexivity
+    |exact Hcorners
+    |now apply cong_right_commutativity
+    |exact Hdiagonals].
+Qed.
+
 (** Opposite angles of the audited parallelogram.  Noncollinearity promotes
     the first broad [Par] relation to GeoCoq's strict one; the second parallel
     pair then supplies [Plg], whose standard angle theorem gives both pairs. *)

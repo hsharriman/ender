@@ -815,6 +815,17 @@ Definition rhombus_opp_bisect_rule (facts : list Statement) (i : nat)
   | _, _ => false
   end.
 
+(** The two diagonals of a rectangle are congruent -- the diagonals, and
+    nothing else: a pair of opposite sides is congruent too, but that is
+    [pgram_opp_sides]. *)
+Definition rect_diag_con_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (Rect q) =>
+      fact_eqb (ConSeg (quad_diagonal_ac q) (quad_diagonal_bd q)) conclusion
+  | _ => false
+  end.
+
 (** A midpoint named on a rectangle side names the same ray from either
     endpoint as the opposite endpoint.  Unlike general ray matching this
     witness is a proved fact, rather than an unaudited diagram premise. *)
@@ -1175,6 +1186,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RhombusConsecSides i j => rhombus_consec_sides_rule facts i j conclusion
   | RhombusDef i => rhombus_def_rule facts i conclusion
   | RhombusOppBisect i => rhombus_opp_bisect_rule facts i conclusion
+  | RectDiagCon i => rect_diag_con_rule facts i conclusion
   | RectangleDef i => rectangle_def_rule facts i conclusion
   | AltInt i => altint_rule premises facts i conclusion
   | AltExt i => altext_rule premises facts i conclusion
@@ -3439,6 +3451,26 @@ Proof.
   - eapply rectangle_angle_matches_sound; [exact Hfacts|exact Hwd|exact Hrd|exact Hm].
 Qed.
 
+Lemma rect_diag_con_sound : forall facts i conclusion,
+  Forall Interp facts -> rect_diag_con_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule. unfold rect_diag_con_rule in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hr : Interp (Rect q)) by (eapply lookup_step_sound; eauto).
+  cbn in Hr. destruct Hr as [[Hwf [Hpar1 Hpar2]] [Hra [Hrb _]]].
+  destruct Hwf as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  unfold Audit.Parallel, Audit.RightAngle, Audit.quad_ab, Audit.quad_bc,
+    Audit.quad_cd, Audit.quad_da, Audit.quad_angle_a, Audit.quad_angle_b,
+    Audit.seg_start, Audit.seg_end, Audit.ang_start, Audit.ang_vertex,
+    Audit.ang_end in Hpar1, Hpar2, Hra, Hrb;
+    cbn in Hpar1, Hpar2, Hra, Hrb, Hncol, HXac, HXbd.
+  apply (fact_eqb_sound _ _ Hrule). cbn.
+  exact (ender_rect_diagonals _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2 Hra Hrb).
+Qed.
+
 Lemma rectangle_def_sound : forall facts i conclusion,
   Forall Interp facts -> rectangle_def_rule facts i conclusion = true ->
   Interp conclusion.
@@ -3823,6 +3855,7 @@ Proof.
   - eapply rhombus_consec_sides_sound; eauto.
   - eapply rhombus_def_sound; eauto.
   - eapply rhombus_opp_bisect_sound; eauto.
+  - eapply rect_diag_con_sound; eauto.
   - eapply rectangle_def_sound; eauto.
   - eapply altint_sound; eauto.
   - eapply altext_sound; eauto.

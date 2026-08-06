@@ -456,6 +456,9 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
   | RhombusOppBisect i =>
       dependency_type_issue facts "rhombus_opp_bisect" 0 i ExpectedRhombus
         step_number
+  | RectDiagCon i =>
+      dependency_type_issue facts "rect_diag_con" 0 i ExpectedRectangle
+        step_number
   | RectangleDef i =>
       dependency_type_issue facts "rectangle" 0 i ExpectedRectangle step_number
   | DefIsosceles i =>
