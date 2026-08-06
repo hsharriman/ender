@@ -1200,6 +1200,30 @@ ang: a_FEH a_FGE
   "[01] given(g_1) -> rectangle(q_EFGH)
 [02] rectangle(1) -> con_ang(a_FEH,a_FGE)".
 
+Definition rectangle_def_midpoint_rays_source := transitive_header
+  "tri: t_FEJ t_JGH
+quad: q_EFGH
+"
+  "[g_1] rectangle(q_EFGH)
+[g_2] midpt(EH,J)
+"
+  "con_right(a_FEJ,a_JHG)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] given(g_2) -> midpt(EH,J)
+[03] rectangle(1) -> con_right(a_FEJ,a_JHG)".
+
+Definition rectangle_def_unrelated_midpoint_source := transitive_header
+  "tri: t_FEJ t_JGH
+quad: q_EFGH
+"
+  "[g_1] rectangle(q_EFGH)
+[g_2] midpt(KL,J)
+"
+  "con_right(a_FEJ,a_JHG)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] given(g_2) -> midpt(KL,J)
+[03] rectangle(1) -> con_right(a_FEJ,a_JHG)".
+
 Example rectangle_def_angle_accepts :
   complete_checker rectangle_def_angle_source = true.
 Proof. vm_compute. reflexivity. Qed.
@@ -1208,6 +1232,12 @@ Example rectangle_def_side_accepts :
 Proof. vm_compute. reflexivity. Qed.
 Example rectangle_def_noncorner_rejects :
   complete_checker rectangle_def_noncorner_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example rectangle_def_midpoint_rays_accepts :
+  complete_checker rectangle_def_midpoint_rays_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rectangle_def_unrelated_midpoint_rejects :
+  complete_checker rectangle_def_unrelated_midpoint_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
 (** A right angle at a point of a line makes the two lines perpendicular

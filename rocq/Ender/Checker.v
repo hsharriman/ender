@@ -775,18 +775,44 @@ Definition rhombus_def_rule (facts : list Statement) (i : nat)
   | _ => false
   end.
 
-Definition rectangle_corner (q : Quadrilateral) (a : Angle) : bool :=
-  angle_u_eqb a (quad_corner_a q) || angle_u_eqb a (quad_corner_b q) ||
-  angle_u_eqb a (quad_corner_c q) || angle_u_eqb a (quad_corner_d q).
+(** A midpoint named on a rectangle side names the same ray from either
+    endpoint as the opposite endpoint.  Unlike general ray matching this
+    witness is a proved fact, rather than an unaudited diagram premise. *)
+Definition midpoint_ray_linked (facts : list Statement)
+    (v p q : PointId) : bool :=
+  ascii_eqb p q ||
+  existsb (fun st =>
+    match st with
+    | MidptOf s m => ascii_eqb q m && segment_u_eqb s (segment v p)
+    | _ => false
+    end) facts.
+
+Definition rectangle_angle_matches (facts : list Statement)
+    (expected actual : Angle) : bool :=
+  ascii_eqb expected.(ang_vertex) actual.(ang_vertex) &&
+  ((midpoint_ray_linked facts expected.(ang_vertex)
+      expected.(ang_left) actual.(ang_left) &&
+    midpoint_ray_linked facts expected.(ang_vertex)
+      expected.(ang_right) actual.(ang_right)) ||
+   (midpoint_ray_linked facts expected.(ang_vertex)
+      expected.(ang_left) actual.(ang_right) &&
+    midpoint_ray_linked facts expected.(ang_vertex)
+      expected.(ang_right) actual.(ang_left))).
+
+Definition rectangle_corner_matches (facts : list Statement)
+    (q : Quadrilateral) (a : Angle) : bool :=
+  rectangle_angle_matches facts (quad_corner_a q) a ||
+  rectangle_angle_matches facts (quad_corner_b q) a ||
+  rectangle_angle_matches facts (quad_corner_c q) a ||
+  rectangle_angle_matches facts (quad_corner_d q) a.
 
 (** A rectangle has four right, mutually congruent corners and congruent
-    opposite sides.  This core names the actual quadrilateral vertices; ray
-    renaming through points on a side is handled separately. *)
+    opposite sides.  Corner rays may be named by proved midpoints on a side. *)
 Definition rectangle_def_rule (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
   match lookup_step facts i, conclusion with
   | Some (Rect q), ConRight a b | Some (Rect q), ConAng a b =>
-      rectangle_corner q a && rectangle_corner q b
+      rectangle_corner_matches facts q a && rectangle_corner_matches facts q b
   | Some (Rect q), ConSeg a b =>
       segment_pair_eqb a b (quad_side_ab q) (quad_side_cd q) ||
       segment_pair_eqb a b (quad_side_bc q) (quad_side_da q)
@@ -3061,18 +3087,79 @@ Proof.
     apply (fact_eqb_sound _ _ Heq); assumption.
 Qed.
 
-Lemma rectangle_corner_sound : forall q a,
+Lemma midpoint_ray_linked_out : forall facts v p q,
+  Forall Interp facts ->
+  point p <> point v ->
+  midpoint_ray_linked facts v p q = true ->
+  Out (point v) (point q) (point p).
+Proof.
+  intros facts v p q Hfacts Hp Hlink.
+  unfold midpoint_ray_linked in Hlink. apply orb_true_iff in Hlink.
+  destruct Hlink as [Heq|Hlink].
+  { apply Ascii.eqb_eq in Heq. subst q. apply out_trivial. exact Hp. }
+  apply existsb_exists in Hlink. destruct Hlink as [st [Hin Hst]].
+  destruct st; try discriminate.
+  apply andb_true_iff in Hst. destruct Hst as [Hq Hseg].
+  apply Ascii.eqb_eq in Hq. subst p0.
+  pose proof ((proj1 (Forall_forall _ _)) Hfacts (MidptOf s q) Hin) as Hmid.
+  cbn in Hmid. apply segment_u_eqb_cases in Hseg.
+  destruct Hseg as [Hseg|Hseg]; subst s; cbn in Hmid.
+  - destruct (midpoint_distinct_1 (point q) (point v) (point p)
+      (swap_diff _ _ Hp) Hmid)
+      as [Hqv _].
+    apply bet_out; [exact Hqv|exact (proj1 Hmid)].
+  - unfold reverse_segment in Hmid. cbn in Hmid.
+    destruct (midpoint_distinct_1 (point q) (point p) (point v)
+      Hp Hmid) as [Hqp Hqv].
+    apply bet_out_1; [exact Hqv|exact (proj1 Hmid)].
+Qed.
+
+Lemma rectangle_angle_matches_sound : forall facts e a,
+  Forall Interp facts ->
+  angle_well_formed point e -> right_angle point e ->
+  rectangle_angle_matches facts e a = true ->
+  angle_well_formed point a /\ right_angle point a.
+Proof.
+  intros facts [el ev er] [al av ar] Hfacts [Hel Her] Hright Hmatch.
+  cbn in Hel, Her, Hright, Hmatch |- *.
+  unfold rectangle_angle_matches in Hmatch.
+  apply andb_true_iff in Hmatch. destruct Hmatch as [Hv Hrays].
+  pose proof (proj1 (Ascii.eqb_eq ev av) Hv) as Heq. subst av.
+  apply orb_true_iff in Hrays; destruct Hrays as [Hrays|Hrays];
+    apply andb_true_iff in Hrays; destruct Hrays as [Hl Hr].
+  - pose proof (midpoint_ray_linked_out facts _ _ _ Hfacts Hel Hl) as Hol.
+    pose proof (midpoint_ray_linked_out facts _ _ _ Hfacts Her Hr) as Hor.
+    destruct (out_distinct _ _ _ Hol) as [Hal _].
+    destruct (out_distinct _ _ _ Hor) as [Har _].
+    split; [exact (conj Hal Har)|].
+    apply Per_perm, l8_3 with (A := point er);
+      [apply Per_perm, l8_3 with (A := point el);
+       [exact Hright|exact Hel|apply out_col in Hol; Col]
+      |exact Her|apply out_col in Hor; Col].
+  - pose proof (midpoint_ray_linked_out facts _ _ _ Hfacts Hel Hl) as Hol.
+    pose proof (midpoint_ray_linked_out facts _ _ _ Hfacts Her Hr) as Hor.
+    destruct (out_distinct _ _ _ Hol) as [Har _].
+    destruct (out_distinct _ _ _ Hor) as [Hal _].
+    split; [exact (conj Hal Har)|].
+    apply l8_3 with (A := point er);
+      [apply Per_perm, l8_3 with (A := point el);
+       [exact Hright|exact Hel|apply out_col in Hol; Col]
+      |exact Her|apply out_col in Hor; Col].
+Qed.
+
+Lemma rectangle_corner_sound : forall facts q a,
+  Forall Interp facts ->
   Audit.QuadrilateralWellFormed point (quad_name q) ->
   right_angle point (quad_corner_a q) ->
   right_angle point (quad_corner_b q) ->
   right_angle point (quad_corner_c q) ->
   right_angle point (quad_corner_d q) ->
-  rectangle_corner q a = true ->
+  rectangle_corner_matches facts q a = true ->
   angle_well_formed point a /\ right_angle point a.
 Proof.
-  intros [A B C D] a Hwf Hra Hrb Hrc Hrd Hmatch.
+  intros facts [A B C D] a Hfacts Hwf Hra Hrb Hrc Hrd Hmatch.
   unfold quad_name, Audit.QuadrilateralWellFormed in Hwf. cbn in Hwf.
-  unfold rectangle_corner in Hmatch. cbn in Hra, Hrb, Hrc, Hrd, Hmatch |- *.
+  unfold rectangle_corner_matches in Hmatch. cbn in Hra, Hrb, Hrc, Hrd, Hmatch |- *.
   destruct Hwf as [HAB [HAC [HAD [HBC [HBD [HCD _]]]]]].
   assert (Hwa : angle_well_formed point
       (quad_corner_a (quadrilateral A B C D))) by
@@ -3087,12 +3174,11 @@ Proof.
       (quad_corner_d (quadrilateral A B C D))) by
     (unfold angle_well_formed; cbn; split; congruence).
   repeat rewrite orb_true_iff in Hmatch.
-  destruct Hmatch as [[[Hm|Hm]|Hm]|Hm]; apply angle_u_eqb_cases in Hm;
-    destruct Hm as [Heq|Heq]; subst a.
-  all: try (split; assumption).
-  all: unfold reverse_angle; split;
-    [unfold angle_well_formed in Hwa, Hwb, Hwc, Hwd |- *;
-     cbn in Hwa, Hwb, Hwc, Hwd |- *; tauto|now apply l8_2].
+  destruct Hmatch as [[[Hm|Hm]|Hm]|Hm].
+  - eapply rectangle_angle_matches_sound; [exact Hfacts|exact Hwa|exact Hra|exact Hm].
+  - eapply rectangle_angle_matches_sound; [exact Hfacts|exact Hwb|exact Hrb|exact Hm].
+  - eapply rectangle_angle_matches_sound; [exact Hfacts|exact Hwc|exact Hrc|exact Hm].
+  - eapply rectangle_angle_matches_sound; [exact Hfacts|exact Hwd|exact Hrd|exact Hm].
 Qed.
 
 Lemma rectangle_def_sound : forall facts i conclusion,
@@ -3117,14 +3203,14 @@ Proof.
     + eapply cong_pair_conclude; [exact Hm|]. cbn. exact Hc1.
     + eapply cong_pair_conclude; [exact Hm|]. cbn. exact Hc2.
   - apply andb_true_iff in Hrule. destruct Hrule as [Ha Hb].
-    pose proof (rectangle_corner_sound q a Hwf Hra Hrb Hrc Hrd Ha) as [Hwa Hra'].
-    pose proof (rectangle_corner_sound q a0 Hwf Hra Hrb Hrc Hrd Hb) as [Hwb Hrb'].
+    pose proof (rectangle_corner_sound facts q a Hfacts Hwf Hra Hrb Hrc Hrd Ha) as [Hwa Hra'].
+    pose proof (rectangle_corner_sound facts q a0 Hfacts Hwf Hra Hrb Hrc Hrd Hb) as [Hwb Hrb'].
     cbn in Hwa, Hwb, Hra', Hrb' |- *.
     destruct Hwa as [Hwa1 Hwa2]. destruct Hwb as [Hwb1 Hwb2].
     now apply l11_16.
   - apply andb_true_iff in Hrule. destruct Hrule as [Ha Hb].
-    pose proof (rectangle_corner_sound q a Hwf Hra Hrb Hrc Hrd Ha) as [_ Hra'].
-    pose proof (rectangle_corner_sound q a0 Hwf Hra Hrb Hrc Hrd Hb) as [_ Hrb'].
+    pose proof (rectangle_corner_sound facts q a Hfacts Hwf Hra Hrb Hrc Hrd Ha) as [_ Hra'].
+    pose proof (rectangle_corner_sound facts q a0 Hfacts Hwf Hra Hrb Hrc Hrd Hb) as [_ Hrb'].
     exact (conj Hra' Hrb').
 Qed.
 
