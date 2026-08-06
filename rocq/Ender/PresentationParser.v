@@ -6,11 +6,13 @@ Open Scope string_scope.
 
 Definition C := list ascii.
 
+(** [rev'] is [rev_append], which is linear.  [List.rev] is the naive
+    quadratic definition, which would cost a line its length squared. *)
 Fixpoint split_lines (text current : C) : list C :=
   match text with
-  | [] => [rev current]
+  | [] => [rev' current]
   | c :: rest => if Ascii.eqb c "010"%char
-      then rev current :: split_lines rest []
+      then rev' current :: split_lines rest []
       else split_lines rest (c :: current)
   end.
 
@@ -24,7 +26,7 @@ Fixpoint take_call_prefix (text : C) (depth : nat) (seen_open : bool)
       else if Ascii.eqb c ")"%char then
         match depth with
         | O => None
-        | S O => if seen_open then Some (rev (c :: acc)) else None
+        | S O => if seen_open then Some (rev' (c :: acc)) else None
         | S depth' => take_call_prefix rest depth' seen_open (c :: acc)
         end
       else take_call_prefix rest depth seen_open (c :: acc)
@@ -128,7 +130,7 @@ Definition parse_points_line (line : C) : option (list FA.DisplayPoint) :=
 Definition strip_quotes (text : C) : C :=
   match text with
   | "034"%char :: rest =>
-      match rev rest with "034"%char :: middle => rev middle | _ => text end
+      match rev' rest with "034"%char :: middle => rev' middle | _ => text end
   | _ => text
   end.
 
@@ -137,7 +139,7 @@ Fixpoint trim_left (text : C) : C :=
   | c :: rest => if FA.whitespace c then trim_left rest else text
   | [] => []
   end.
-Definition trim (text : C) : C := rev (trim_left (rev (trim_left text))).
+Definition trim (text : C) : C := rev' (trim_left (rev' (trim_left text))).
 
 Definition parse_title_line (line : C) : option string :=
   match Chars.find_after (list_ascii_of_string "title:") line with
@@ -223,7 +225,7 @@ Definition parse_presentation_line (line : C) (state : PresentationState)
   else if Chars.starts_with (list_ascii_of_string "pt:") compact then
     match parse_points_line line with
     | Some points => Some (presentation_state state.(ps_in_steps) state.(ps_title)
-        (rev points ++ state.(ps_points)) state.(ps_declarations)
+        (rev' points ++ state.(ps_points)) state.(ps_declarations)
         state.(ps_diagram) state.(ps_givens) state.(ps_goal) state.(ps_steps))
     | None => None
     end
@@ -287,8 +289,8 @@ Definition parsePresentation (source : string) : option FA.PresentationFile :=
   match parse_presentation_lines
     (split_lines (list_ascii_of_string source) []) initial_presentation_state with
   | Some state => Some (FA.presentation_file state.(ps_title)
-      (rev state.(ps_points)) (rev state.(ps_declarations))
-      (rev state.(ps_diagram)) (rev state.(ps_givens)) state.(ps_goal)
-      (rev state.(ps_steps)))
+      (rev' state.(ps_points)) (rev' state.(ps_declarations))
+      (rev' state.(ps_diagram)) (rev' state.(ps_givens)) state.(ps_goal)
+      (rev' state.(ps_steps)))
   | None => None
   end.

@@ -26,7 +26,7 @@ Fixpoint split_arguments_aux (depth : nat) (current : PChars)
   match text with
   | [] =>
       match depth with
-      | O => Some (rev (rev current :: arguments))
+      | O => Some (rev' (rev' current :: arguments))
       | _ => None
       end
   | c :: rest =>
@@ -39,7 +39,7 @@ Fixpoint split_arguments_aux (depth : nat) (current : PChars)
         end
       else if Ascii.eqb c ","%char then
         match depth with
-        | O => split_arguments_aux O [] (rev current :: arguments) rest
+        | O => split_arguments_aux O [] (rev' current :: arguments) rest
         | _ => split_arguments_aux depth (c :: current) arguments rest
         end
       else split_arguments_aux depth (c :: current) arguments rest
@@ -52,9 +52,9 @@ Definition parse_call (text : PChars) : option (PChars * list PChars) :=
   match Chars.take_before ["("%char] text,
         Chars.find_after ["("%char] text with
   | Some name, Some after_open =>
-      match rev after_open with
+      match rev' after_open with
       | ")"%char :: reversed_body =>
-          match split_arguments (rev reversed_body) with
+          match split_arguments (rev' reversed_body) with
           | Some arguments => Some (name, arguments)
           | None => None
           end

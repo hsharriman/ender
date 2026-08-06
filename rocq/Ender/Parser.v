@@ -57,19 +57,19 @@ Fixpoint take_until (stop : ascii) (text : chars) : chars :=
 
 Fixpoint split_lines (text current : chars) : list chars :=
   match text with
-  | [] => [rev current]
+  | [] => [rev' current]
   | c :: rest =>
       if Ascii.eqb c "010"%char
-      then rev current :: split_lines rest []
+      then rev' current :: split_lines rest []
       else split_lines rest (c :: current)
   end.
 
 Fixpoint split_on (separator : ascii) (text current : chars) : list chars :=
   match text with
-  | [] => [rev current]
+  | [] => [rev' current]
   | c :: rest =>
       if Ascii.eqb c separator
-      then rev current :: split_on separator rest []
+      then rev' current :: split_on separator rest []
       else split_on separator rest (c :: current)
   end.
 
@@ -111,8 +111,8 @@ Definition strip_call (name : string) (text : chars) : option chars :=
   let prefix := list_ascii_of_string (name ++ "(") in
   if starts_with prefix text then
     let body := drop_chars (length prefix) text in
-    match rev body with
-    | ")"%char :: reversed => Some (rev reversed)
+    match rev' body with
+    | ")"%char :: reversed => Some (rev' reversed)
     | _ => None
     end
   else None.
