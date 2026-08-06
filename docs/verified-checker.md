@@ -145,8 +145,8 @@ That proposition states:
 ```text
 problemPart source = Some part
 and checker source = true
-imply that meaning part returns a proposition which holds in every supported
-two-dimensional Euclidean Tarski geometry.
+imply that meaning part returns a proposition which holds in every Euclidean
+Tarski geometry, of any dimension.
 ```
 
 [PublicParser.v](../rocq/Ender/PublicParser.v) implements all audited declaration
@@ -166,11 +166,17 @@ Rocq
 cannot establish that the deliberately chosen public meanings match a reader's
 intent; this is why those meanings remain in the audit file.
 
-The geometry is parametric over GeoCoq's
-`Tarski_neutral_dimensionless_with_decidable_point_equality`, rather than a
-particular Cartesian model.  Every reason but `third_angle` is proved in that
-neutral setting; `third_angle` additionally assumes `Tarski_euclidean`, which
-the audited final theorem already provides. [Geometry.v](../rocq/Ender/Geometry.v) derives the
+The geometry is parametric over GeoCoq's Tarski axiom classes rather than a
+particular Cartesian model.  The audited statement meanings are stated over
+bare `Tarski_neutral_dimensionless` — no decidable point equality, no upper
+dimension bound, no parallel postulate.  The soundness proofs additionally
+assume `Tarski_neutral_dimensionless_with_decidable_point_equality`, since
+GeoCoq's lemma library case-splits on point equality throughout.  Every reason
+but `third_angle` is proved in that neutral setting; `third_angle` additionally
+assumes `Tarski_euclidean`, which the audited final theorem already provides.
+No rule needs an upper dimension axiom, so the final theorem posits none:
+`Tarski_2D` appears nowhere, and acceptance commits to the entailment in
+Euclidean Tarski models of every dimension. [Geometry.v](../rocq/Ender/Geometry.v) derives the
 four triangle criteria from GeoCoq's existing neutral-geometry lemmas and makes
 CPCTC a projection from ordered triangle congruence. The pinned upstream source
 is [GeoCoq commit `90d8ce4`](https://github.com/GeoCoq/GeoCoq/commit/90d8ce484b32e0568b106c85d7e15be719a40180).
@@ -181,9 +187,10 @@ precisely because those hypotheses are not axioms, so it cannot speak to
 whether any model satisfies them. Nothing here exhibits one, so `checker_sound`
 would hold vacuously if none did.
 
-It does not: GeoCoq builds a two-dimensional Euclidean Tarski model over any
-real-closed field in `Algebraic/POF_to_Tarski.v` (`Rcf_to_T2D`,
-`Rcf_to_T_euclidean`). Adopting it was attempted and is preserved on the
+It does not: GeoCoq builds a Euclidean Tarski model over any real-closed
+field in `Algebraic/POF_to_Tarski.v` (`Rcf_to_T_euclidean`; the same file's
+`Rcf_to_T2D` shows the model is two-dimensional, though the theorem no longer
+asks for that). Adopting it was attempted and is preserved on the
 `rocq-9-migration-model-attempt` branch; `rocq-9-migration` now carries only
 the compiler migration that attempt was built on. That attempt works as far as
 it goes — the whole development builds on Rocq 9 with **no source changes**,

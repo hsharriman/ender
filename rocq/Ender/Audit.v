@@ -140,7 +140,11 @@ Record PublicProblem := public_problem {
 
 Section GeometryMeaning.
 
-Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
+(** Every meaning below is stated in bare neutral dimensionless Tarski
+    geometry: no decidable point equality, no upper dimension bound, no
+    parallel postulate.  Those assumptions belong to proving entailments, not
+    to stating them, so they appear only in [checker_sound]. *)
+Context {Tn : Tarski_neutral_dimensionless}.
 Variable point : PointName -> Tpoint.
 
 Definition seg_start (s : SegmentName) := point s.(segment_first).
@@ -853,20 +857,27 @@ Definition accepted (report : CheckReport) : bool :=
     decoded to exactly the specified problem.  [check] is the sole rich
     entrypoint and [checker] is its audited Boolean projection.
 
-    Deliberate non-goal: nothing below asserts that a two-dimensional Euclidean
-    Tarski geometry exists, so [checker_sound] would hold vacuously if none
-    did.  GeoCoq exhibits one over any real-closed field in
-    [Algebraic/POF_to_Tarski.v] ([Rcf_to_T2D], [Rcf_to_T_euclidean]), and that
-    file does build here on Rocq 9 (see the [rocq-9-migration] branch), but the
-    model cannot be instantiated: doing so needs a concrete real-closed field,
-    and GeoCoq's algebraic layer and MathComp's real-closed library currently
+    Deliberate non-assumption: [checker_sound] posits no upper dimension
+    axiom.  Every implemented rule is proved in neutral geometry except
+    [third_angle], which needs the parallel postulate, so the claim holds in
+    Euclidean Tarski models of every dimension, not only planes.  Should a
+    future rule genuinely require planarity, [Tarski_2D] would have to be
+    reintroduced here, visibly.
+
+    Deliberate non-goal: nothing below asserts that a Euclidean Tarski
+    geometry exists, so [checker_sound] would hold vacuously if none did.
+    GeoCoq exhibits one over any real-closed field in
+    [Algebraic/POF_to_Tarski.v] ([Rcf_to_T_euclidean]), and that file does
+    build here on Rocq 9 (see the [rocq-9-migration] branch), but the model
+    cannot be instantiated: doing so needs a concrete real-closed field, and
+    GeoCoq's algebraic layer and MathComp's real-closed library currently
     require disjoint MathComp versions.  See [docs/verified-checker.md].
 
     Turning non-vacuity into a checked guarantee then means adding one
     obligation to the module type below:
 
       Parameter models_exist : exists Tn TnEQD,
-        inhabited (@Tarski_2D Tn TnEQD) /\ inhabited (@Tarski_euclidean Tn TnEQD).
+        inhabited (@Tarski_euclidean Tn TnEQD).
 
     stated existentially so that no particular model enters this file, and
     discharged in the implementation.  Adding it before the model is actually
@@ -887,7 +898,6 @@ Module Type COMPLETE_VERIFIED_CHECKER.
     checker source = true ->
       forall part, problemPart source = Some part ->
       forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
-      forall (T2D : @Tarski_2D Tn TnEQD),
       forall (TE : @Tarski_euclidean Tn TnEQD),
       exists problem, parseProblem part = Some problem /\
         forall point : PointName -> Tpoint, problemClaim point problem.

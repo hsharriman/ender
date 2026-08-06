@@ -609,12 +609,11 @@ Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
     checker source = true ->
       forall part, problemPart source = Some part ->
       forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
-      forall (T2D : @Tarski_2D Tn TnEQD),
       forall (TE : @Tarski_euclidean Tn TnEQD),
       exists problem, parseProblem part = Some problem /\
         forall point : Audit.PointName -> Tpoint, Audit.problemClaim point problem.
   Proof.
-    intros source Hcheck part Hpart Tn TnEQD T2D TE.
+    intros source Hcheck part Hpart Tn TnEQD TE.
     change (Audit.accepted (check_report source) = true) in Hcheck.
     rewrite check_report_accepted in Hcheck.
     unfold parseProblem.

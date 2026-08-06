@@ -55,11 +55,16 @@ Known limitations relevant to prioritization:
   `Col` -- a third statement weaker than the diagram it describes.  Measured
   over both corpora the capability would unlock two files, both needing that
   change first, so it is not worth building ahead of the decision;
-- the parallel-line rules and everything built on them need Euclidean or
-  2-dimensional hypotheses.  The mechanism for that now exists: `third_angle`
-  introduces `Tarski_euclidean` in `Checker.v` right before its own soundness
-  lemma, so the rules above it stay visibly neutral.  Prefer a GeoCoq route
-  that keeps `Print Assumptions` clean; `nix flake check` now enforces it;
+- the parallel-line rules and everything built on them need the Euclidean
+  hypothesis.  The mechanism for that now exists: `third_angle` introduces
+  `Tarski_euclidean` in `Checker.v` right before its own soundness lemma, so
+  the rules above it stay visibly neutral.  Prefer a GeoCoq route that keeps
+  `Print Assumptions` clean; `nix flake check` now enforces it.  The relevant
+  GeoCoq lemmas carry sidedness hypotheses (`TS`/`OS`) rather than an upper
+  dimension axiom, and `Tarski_2D` has been removed from the public theorem
+  entirely — a rule that genuinely needed planarity would require
+  reintroducing it in `Audit.v`, which changes what the checker claims and is
+  not a decision to take silently;
 - the checker theorem is not shown to be non-vacuous: no model of the geometry
   hypotheses is exhibited.  GeoCoq has one and it compiles on Rocq 9 (branch
   `rocq-9-migration`), but instantiating it needs a real-closed field, and
@@ -68,5 +73,7 @@ Known limitations relevant to prioritization:
 - the rich report schema is fully exported, but most step/graph/suggestion
   fields are intentionally empty until their producers are implemented;
 - arc source is parsed losslessly but the TypeScript renderer has no Arc object;
-- the public theorem currently quantifies over the project-wide GeoCoq 2D and
-  Euclidean assumptions even where individual reason lemmas need less.
+- the public theorem quantifies over decidable point equality and the
+  Euclidean assumption even where individual reason lemmas need less; the
+  audited statement meanings themselves assume only bare
+  `Tarski_neutral_dimensionless`, and `Tarski_2D` appears nowhere.
