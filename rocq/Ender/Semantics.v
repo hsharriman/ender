@@ -117,6 +117,8 @@ Definition statement_meaning (s : Statement) : Prop :=
       Audit.Parallel point (seg_name a) (seg_name b)
   | KiteP q a b =>
       Audit.IsKitePremise point (quad_name q) (ang_name a) (ang_name b)
+  | Transv a b t1 i1 c d t2 i2 =>
+      Audit.TransversalConfiguration point a b t1 i1 c d t2 i2
   end.
 
 Definition segment_points (s : Segment) :=

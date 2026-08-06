@@ -1294,5 +1294,24 @@ Proof. vm_compute. reflexivity. Qed.
 Example complete_quad_layer_accepts : complete_checker quad_layer_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** The transversal statement parses as a diagram premise and feeds a goal
+    through a [given] step. *)
+Definition transversal_layer_source := "title: transversal statement
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2), T (13,9), R (5,1)
+[d_1] transversal(A, B, T, E, C, D, R, F)
+[g_1] para(AB, CD)
+-> para(AB, CD)
+
+steps:
+[01] given(g_1) -> para(AB, CD)".
+
+Example transversal_layer_accepts :
+  check_source transversal_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_transversal_layer_accepts :
+  complete_checker transversal_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.

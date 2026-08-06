@@ -396,6 +396,25 @@ Definition LinearPairMeaning (a b : AngleName) : Prop :=
    (Out V (ang_end a) (ang_start b) /\ BetS (ang_start a) V (ang_end b)) \/
    (Out V (ang_end a) (ang_end b) /\ BetS (ang_start a) V (ang_start b))).
 
+(** The eight arguments of a transversal statement name the whole drawn
+    figure: [a] and [b] flank the crossing [i1] on the first line, [c] and
+    [d] flank [i2] on the second, and [t1], [t2] extend the transversal
+    strictly beyond [i1] and [i2], naming the exterior angles.  The strict
+    betweenness conjuncts state that order, and the one-side conjunct fixes
+    which flanking points share a side of the transversal -- the datum that
+    separates alternate from corresponding from same-side angle pairs.  [OS]
+    also places [A] and [C] strictly off the transversal, which keeps both
+    lines genuinely transverse to it; every collinearity and distinctness of
+    the earlier, weaker reading is derivable from these five conjuncts. *)
+Definition TransversalConfiguration (a b t1 i1 c d t2 i2 : PointName) : Prop :=
+  let A := point a in let B := point b in
+  let C := point c in let D := point d in
+  let T1 := point t1 in let T2 := point t2 in
+  let I1 := point i1 in let I2 := point i2 in
+  BetS T1 I1 I2 /\ BetS I1 I2 T2 /\
+  BetS A I1 B /\ BetS C I2 D /\
+  OS I1 I2 A C.
+
 Definition ArcWellFormed (a : ArcName) : Prop :=
   point a.(arc_first) <> point a.(arc_second) /\
   OnCircle a.(arc_circle) a.(arc_first) /\ OnCircle a.(arc_circle) a.(arc_second).
@@ -420,24 +439,8 @@ Definition statementMeaning (s : PublicStatement) : Prop :=
   (* Every corpus diagram places the named point on the drawn segment, so
      the meaning is endpoint-inclusive betweenness, not mere collinearity. *)
   | OnLine s p => SegmentWellFormed s /\ OnSegment s p
-  (* The eight arguments name the whole drawn figure: [a] and [b] flank the
-     crossing [i1] on the first line, [c] and [d] flank [i2] on the second,
-     and [t1], [t2] extend the transversal strictly beyond [i1] and [i2],
-     naming the exterior angles.  The strict betweenness conjuncts state
-     that order, and the one-side conjunct fixes which flanking points share
-     a side of the transversal -- the datum that separates alternate from
-     corresponding from same-side angle pairs.  [OS] also places [A] and [C]
-     strictly off the transversal, which keeps both lines genuinely
-     transverse to it; every collinearity and distinctness of the earlier,
-     weaker reading is derivable from these five conjuncts. *)
   | Transversal a b t1 i1 c d t2 i2 =>
-      let A := point a in let B := point b in
-      let C := point c in let D := point d in
-      let T1 := point t1 in let T2 := point t2 in
-      let I1 := point i1 in let I2 := point i2 in
-      BetS T1 I1 I2 /\ BetS I1 I2 T2 /\
-      BetS A I1 B /\ BetS C I2 D /\
-      OS I1 I2 A C
+      TransversalConfiguration a b t1 i1 c d t2 i2
   | IntersectSeg a b p => OnSegment a p /\ OnSegment b p
   | TrapezoidPremise q a b => IsTrapezoid q /\ Parallel a b
   | KitePremise q a b => IsKitePremise q a b

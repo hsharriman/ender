@@ -53,6 +53,8 @@ Definition project_premise_statement (s : Audit.PublicStatement) : option Statem
               (project_segment a) (project_segment b))
   | Audit.KitePremise q a b =>
       Some (KiteP (project_quadrilateral q) (project_angle a) (project_angle b))
+  | Audit.Transversal a b t1 i1 c d t2 i2 =>
+      Some (Transv a b t1 i1 c d t2 i2)
   | _ => None
   end.
 
@@ -264,6 +266,7 @@ Definition statement_function (s : Statement) : string :=
   | IsosTrap _ => "isos_trapezoid" | TrapPremise _ _ _ => "trapezoid_premise"
   | IsosTrapPremise _ _ _ => "isos_trapezoid_premise"
   | KiteP _ _ _ => "kite_premise"
+  | Transv _ _ _ _ _ _ _ _ => "transversal"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=

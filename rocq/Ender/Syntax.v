@@ -42,7 +42,9 @@ Inductive Statement :=
 | IsosTrap : Quadrilateral -> Statement
 | TrapPremise : Quadrilateral -> Segment -> Segment -> Statement
 | IsosTrapPremise : Quadrilateral -> Segment -> Segment -> Statement
-| KiteP : Quadrilateral -> Angle -> Angle -> Statement.
+| KiteP : Quadrilateral -> Angle -> Angle -> Statement
+| Transv : PointId -> PointId -> PointId -> PointId ->
+           PointId -> PointId -> PointId -> PointId -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -143,6 +145,10 @@ Definition statement_eqb (x y : Statement) : bool :=
       quadrilateral_eqb q r && segment_eqb a c && segment_eqb b d
   | KiteP q a b, KiteP r c d =>
       quadrilateral_eqb q r && angle_eqb a c && angle_eqb b d
+  | Transv a b t1 i1 c d t2 i2, Transv a' b' t1' i1' c' d' t2' i2' =>
+      ascii_eqb a a' && ascii_eqb b b' && ascii_eqb t1 t1' &&
+      ascii_eqb i1 i1' && ascii_eqb c c' && ascii_eqb d d' &&
+      ascii_eqb t2 t2' && ascii_eqb i2 i2'
   | _, _ => false
   end.
 

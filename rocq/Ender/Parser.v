@@ -231,6 +231,12 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
         end
     | _ => None
     end in
+  let parse_transversal body :=
+    match split_on ","%char body [] with
+    | [[a]; [b]; [t1]; [i1]; [c]; [d]; [t2]; [i2]] =>
+        Some (Transv a b t1 i1 c d t2 i2)
+    | _ => None
+    end in
   try_call "con_seg" text (parse_segments ConSeg)
   (try_call "ref_seg" text (parse_segments RefSeg)
   (try_call "con_ang" text (parse_angles ConAng)
@@ -255,7 +261,8 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "trapezoid_premise" text (parse_quad_segments TrapPremise)
   (try_call "isos_trapezoid_premise" text (parse_quad_segments IsosTrapPremise)
   (try_call "kite_premise" text (parse_quad_angles KiteP)
-    None))))))))))))))))))))))).
+  (try_call "transversal" text parse_transversal
+    None)))))))))))))))))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
