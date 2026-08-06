@@ -36,9 +36,10 @@ Known limitations relevant to prioritization:
 - `QuadrilateralWellFormed` now includes `~ Col` on the first three vertices,
   which rules out the interleaved-collinear quadrilaterals that once made
   `pgram_opp_sides` *false* as audited (historical counterexample in
-  [`verified-checker.md`](verified-checker.md)).  The whole parallelogram
-  family is now provable in principle but needs quadrilateral objects in the
-  kernel, which do not exist yet;
+  [`verified-checker.md`](verified-checker.md)).  The core of the family is
+  implemented and verified over the kernel quadrilateral layer; the
+  diagonal-heavy remainder (`pgram_diag_bisect`, kite and trapezoid rules)
+  is still fail-closed;
 - the parallel-line family is implemented and verified: `altint`, `altext`,
   `corresp_ang`, `sameside_ang`, their converses, and `para_transitive`.
   The forwards are Euclidean (Playfair alternate interior angles); the

@@ -10,16 +10,23 @@ The slice parses Ender source text and supports:
 
 - statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
   `con_right`, `perp`, `midpt`, `intersect_seg`, `ang_bisect`, `on_line`,
-  `isosceles`, `equilateral`, `equiangular`, and `supplementary`;
+  `isosceles`, `equilateral`, `equiangular`, `supplementary`, `para`,
+  `parallelogram`, `rectangle`, `rhombus`, `isos_trapezoid`,
+  `trapezoid_premise`, `isos_trapezoid_premise`, `kite_premise`, and
+  `transversal`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `rhl`, `cpctc`,
   `def_con_tri`, `con_seg_transitive`, `con_ang_transitive`,
   `con_tri_transitive`, `def_con_right`, `perp_con_ang`, `def_midpt`,
   `midpt_conv`, `vert_ang`, `def_ang_bisect`, `third_angle`, `def_isosceles`,
   `base_angle`, `base_angle_conv`, `def_equilateral`, `def_equiangular`,
   `equilat_equiang`, `equiang_equilat`, `con_supplements`,
-  `con_supplements_same`, and `def_perp`;
-- one-character point names, named premises, triangle and angle declarations,
-  numbered steps, and exact step dependencies.
+  `con_supplements_same`, `def_perp`, `def_parallelogram`,
+  `pgram_opp_sides`, `pgram_opp_side_para`, `rectangle_pgram`,
+  `rhombus_pgram`, `rhombus_consec_sides`, `altint`, `altext`,
+  `corresp_ang`, `sameside_ang`, `altint_conv`, `altext_conv`,
+  `corresp_ang_conv`, `sameside_ang_conv`, and `para_transitive`;
+- one-character point names, named premises, triangle, angle, and
+  quadrilateral declarations, numbered steps, and exact step dependencies.
 
 Unsupported statements, reasons, or malformed relevant lines are rejected.
 Coordinates on the `pt:` line are intentionally discarded and do not contribute
@@ -84,10 +91,12 @@ point between the endpoints, so it additionally requires an `on_line` diagram
 premise: on a line there is exactly one point equidistant from two distinct
 points (GeoCoq `l7_20`).
 
-`third_angle` is the only implemented rule that needs the parallel postulate.
-Its assumption is introduced in `Checker.v` immediately before its soundness
-lemma rather than at the top of the section, so every lemma stated above that
-point is visibly free of it. GeoCoq's own Euclidean angle-sum theorem routes
+`third_angle` was the first implemented rule to need the parallel postulate;
+the forward parallel-line rules, `para_transitive`, `pgram_opp_sides`,
+`pgram_opp_side_para`, and `rhombus_consec_sides` now share it.  The
+assumption is introduced in `Checker.v` immediately before the first
+Euclidean soundness lemma rather than at the top of the section, so every
+lemma stated above that point is visibly free of it. GeoCoq's own Euclidean angle-sum theorem routes
 through `l12_21_a`, which rests on `Eqdep.Eq_rect_eq`;
 `euclidean_trisuma__bet` in `Geometry.v` goes through Playfair instead, which
 keeps the development free of axioms. `nix flake check` fails if
