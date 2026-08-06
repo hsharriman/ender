@@ -3,11 +3,7 @@ import {
   VerifiedStepReport,
 } from "checker/verified/presentationTypes";
 
-/**
- * One line summarizing the whole report: the verdict, then the two things the
- * reader most often wants next -- which step the goal was reached at, and
- * which steps nothing depends on.
- */
+/** One line: the verdict, then where the goal was reached if it was. */
 export function summarizeReport(report: VerifiedCheckReport): string {
   const verdict =
     report.verdict === "accepted"
@@ -15,23 +11,61 @@ export function summarizeReport(report: VerifiedCheckReport): string {
       : report.verdict === "failed_to_parse_problem"
         ? "The problem could not be parsed."
         : "Rejected by the verified checker.";
-  const parts: string[] = [];
-  if (report.goal.provedBy !== null) {
-    parts.push(`goal reached at step ${report.goal.provedBy}`);
+  return report.goal.provedBy === null
+    ? verdict
+    : `${verdict} (goal reached at step ${report.goal.provedBy})`;
+}
+
+/**
+ * The proof-wide findings, in the order a reader can act on them: what went
+ * wrong with the goal, which steps failed, which were left unjudged, and then
+ * the structural remarks about the proof as a whole.
+ */
+export function reportFindings(report: VerifiedCheckReport): string[] {
+  const findings: string[] = [];
+  for (const diagnostic of report.goal.diagnostics) {
+    findings.push(`Goal: ${diagnostic.message}`);
   }
-  const firstRejected = report.steps.find((s) => s.status === "rejected");
-  if (firstRejected) parts.push(`first failure at step ${firstRejected.number}`);
-  if (report.graph.unusedSteps.length) {
-    parts.push(`nothing uses step ${report.graph.unusedSteps.join(", ")}`);
+  const listed = (status: VerifiedStepReport["status"]) =>
+    report.steps.filter((step) => step.status === status).map((s) => s.number);
+  const rejected = listed("rejected");
+  if (rejected.length) {
+    findings.push(`Rejected step${plural(rejected)}: ${rejected.join(", ")}`);
   }
-  if (report.duplicates.length) {
-    parts.push(
-      `${report.duplicates.length} fact${
-        report.duplicates.length === 1 ? "" : "s"
-      } derived twice`,
+  const blocked = listed("blocked");
+  if (blocked.length) {
+    findings.push(
+      `Not judged, because a cited step was not accepted: ${blocked.join(", ")}`,
     );
   }
-  return parts.length ? `${verdict} (${parts.join("; ")})` : verdict;
+  if (report.graph.cycles.length) {
+    findings.push(
+      `Cycles: ${report.graph.cycles
+        .map((cycle) => cycle.join(" -> "))
+        .join(" | ")}`,
+    );
+  }
+  if (report.graph.unusedSteps.length) {
+    findings.push(`Unused steps: ${report.graph.unusedSteps.join(", ")}`);
+  }
+  for (const duplicate of report.duplicates) {
+    findings.push(
+      `${duplicate.statement} derived twice: ${originText(
+        duplicate.first,
+      )} and ${originText(duplicate.again)}`,
+    );
+  }
+  return findings;
+}
+
+function plural(items: unknown[]): string {
+  return items.length === 1 ? "" : "s";
+}
+
+function originText(
+  origin: VerifiedCheckReport["duplicates"][number]["first"],
+): string {
+  return origin.kind === "premise" ? origin.label : `step ${origin.step}`;
 }
 
 /**

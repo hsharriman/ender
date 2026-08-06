@@ -11,6 +11,7 @@ import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/pr
 import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
 import {
   buildAnnotatedLines,
+  reportFindings,
   summarizeReport,
 } from "interface/core/reportAnnotations";
 import { Component, createRef } from "react";
@@ -190,10 +191,13 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
         ]);
         if (generation !== this.proofParseGeneration) return;
         const proof = presentationToProofObj(presentation);
-        const nextProofIssues = [...report.issues, ...report.errors].map(
-          (issue) =>
-            `${issue.code}${issue.details === undefined ? "" : `: ${JSON.stringify(issue.details)}`}`,
-        );
+        const nextProofIssues = [
+          ...reportFindings(report),
+          ...[...report.issues, ...report.errors].map(
+            (issue) =>
+              `${issue.code}${issue.details === undefined ? "" : `: ${JSON.stringify(issue.details)}`}`,
+          ),
+        ];
         // Only a rejected step is the reader's problem; a blocked one is
         // waiting on the step above it, and marking it wrong would send them
         // to the wrong line.

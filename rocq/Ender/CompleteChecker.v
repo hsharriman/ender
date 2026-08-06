@@ -698,40 +698,128 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | DefConTri i j k l m n => [i; j; k; l; m; n]
   end.
 
+Definition nat_eqb_report (a b : nat) : bool := Nat.eqb a b.
+
 Definition step_failure_diagnostic : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.InvalidReason
     "the verified reason kernel did not accept this step".
 
-Fixpoint step_reports (decls : Declarations) (premises : list Premise)
-    (facts : list Statement) (steps : list (string * Step))
-    (number : nat) (blocked : bool) : list Audit.StepReport :=
+Definition step_blocked_diagnostic : Audit.Diagnostic :=
+  Audit.diagnostic Audit.ProofChecking Audit.DiagnosticWarning
+    Audit.MissingDependency
+    "a step this one cites was not accepted, so this step was not judged".
+
+(** Every step is checked on its own, exactly as the kernel would check it.
+    What a failure does to the steps *after* it is decided by the graph rather
+    than by position: a step that cites one which was not accepted is
+    [StepBlocked], because its input was never established, and a step that
+    cites nothing broken is judged on its own merits however far down it
+    sits.  Marking everything below a failure would send the reader to lines
+    that are perfectly fine. *)
+Definition dependency_blocked (statuses : list (nat * Audit.StepStatus))
+    (dependencies : list nat) : bool :=
+  existsb (fun d =>
+    match find (fun entry => nat_eqb_report (fst entry) d) statuses with
+    | Some (_, Audit.StepAccepted) => false
+    | Some _ => true
+    | None => false
+    end) dependencies.
+
+Fixpoint step_statuses (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (steps : list Step) (number : nat)
+    (statuses : list (nat * Audit.StepStatus))
+    : list (nat * Audit.StepStatus) :=
+  match steps with
+  | [] => statuses
+  | current :: rest =>
+      let status :=
+        if negb (rule_valid decls premises facts current.(step_reason)
+                   current.(step_conclusion))
+        then Audit.StepRejected
+        else if dependency_blocked statuses
+                  (reason_dependencies current.(step_reason))
+        then Audit.StepBlocked
+        else Audit.StepAccepted in
+      step_statuses decls premises (List.app facts [current.(step_conclusion)])
+        rest (S number) (List.app statuses [(number, status)])
+  end.
+
+Definition status_of (statuses : list (nat * Audit.StepStatus)) (number : nat)
+    : Audit.StepStatus :=
+  match find (fun entry => nat_eqb_report (fst entry) number) statuses with
+  | Some (_, status) => status
+  | None => Audit.StepBlocked
+  end.
+
+Fixpoint step_reports (statuses : list (nat * Audit.StepStatus))
+    (steps : list (string * Step)) (number : nat) : list Audit.StepReport :=
   match steps with
   | [] => []
   | (source, current) :: rest =>
-      let valid :=
-        rule_valid decls premises facts current.(step_reason)
-          current.(step_conclusion) in
-      let status :=
-        if blocked then Audit.StepBlocked
-        else if valid then Audit.StepAccepted else Audit.StepRejected in
+      let status := status_of statuses number in
       Audit.step_report number source (Some (reason_name current.(step_reason)))
         (Some (public_of_statement current.(step_conclusion))) status
         (reason_dependencies current.(step_reason)) []
         (match status with
          | Audit.StepRejected => [step_failure_diagnostic]
-         | _ => []
+         | Audit.StepBlocked => [step_blocked_diagnostic]
+         | Audit.StepAccepted => []
          end) []
-      :: step_reports decls premises (facts ++ [current.(step_conclusion)])
-           rest (S number) (blocked || negb valid)
+      :: step_reports statuses rest (S number)
   end.
 
-Definition nat_eqb_report (a b : nat) : bool := Nat.eqb a b.
+Definition successors (edges : list (nat * nat)) (node : nat) : list nat :=
+  map snd (filter (fun e => nat_eqb_report (fst e) node) edges).
 
-(** Steps form a directed acyclic graph by construction: a dependency index
-    reaches into the facts proved before the step, so it can only name an
-    earlier one, and [graph_cycles] is therefore always empty.
+(** The path is the search stack, so meeting a node already on it closes a
+    cycle, and the cycle is the tail of the path from that node onward. *)
+Fixpoint cycle_tail (node : nat) (path : list nat) : list nat :=
+  match path with
+  | [] => []
+  | x :: rest => if nat_eqb_report x node then x :: rest else cycle_tail node rest
+  end.
 
-    A step is unused when nothing cites it and it does not state the goal.
+(** Depth-first search bounded by the node count, which is enough fuel to
+    reach any node on a simple path and keeps the recursion structural. *)
+Fixpoint find_cycle (edges : list (nat * nat)) (fuel : nat) (path : list nat)
+    (node : nat) : option (list nat) :=
+  match fuel with
+  | O => None
+  | S remaining =>
+      if existsb (nat_eqb_report node) path then Some (cycle_tail node path)
+      else
+        let extended := List.app path [node] in
+        let fix scan (candidates : list nat) : option (list nat) :=
+          match candidates with
+          | [] => None
+          | next :: rest =>
+              match find_cycle edges remaining extended next with
+              | Some found => Some found
+              | None => scan rest
+              end
+          end in
+        scan (successors edges node)
+  end.
+
+Definition same_cycle (a b : list nat) : bool :=
+  Nat.eqb (List.length a) (List.length b) &&
+  forallb (fun x => existsb (nat_eqb_report x) b) a.
+
+(** A step may only cite facts proved before it, so an accepted proof has no
+    cycles.  A rejected one can: the edges are the step numbers as written,
+    and a proof that cites forwards -- or in a ring -- is exactly the case
+    worth naming rather than leaving the reader to find. *)
+Definition graph_cycles (nodes : list nat) (edges : list (nat * nat))
+    : list (list nat) :=
+  fold_left (fun found node =>
+    match find_cycle edges (S (List.length nodes)) [] node with
+    | Some cycle =>
+        if existsb (same_cycle cycle) found then found
+        else List.app found [cycle]
+    | None => found
+    end) nodes [].
+
+(** A step is unused when nothing cites it and it does not state the goal.
     Whether that step was *accepted* is beside the point here -- a failed last
     step is the one the writer was trying to finish on, not a stray. *)
 Definition step_graph (reports : list Audit.StepReport) (stated_by : option nat)
@@ -744,7 +832,7 @@ Definition step_graph (reports : list Audit.StepReport) (stated_by : option nat)
   let cited n := existsb (fun e => nat_eqb_report (fst e) n) edges in
   let goal_step n :=
     match stated_by with Some g => nat_eqb_report g n | None => false end in
-  Audit.dependency_graph nodes edges []
+  Audit.dependency_graph nodes edges (graph_cycles nodes edges)
     (filter (fun n => negb (cited n || goal_step n)) nodes).
 
 (** A fact proved twice.  Sameness is the checker's own [fact_eqb], so a
@@ -790,43 +878,46 @@ Definition premise_facts (premises : list Premise)
   map (fun p => (Audit.PremiseOrigin p.(premise_label), p.(premise_statement)))
       premises.
 
-(** Which step first states the goal, read exactly as the checker reads it.
-    Only the steps before the first failure are offered: a step the kernel
-    rejected proves nothing, so pointing at it as the one that reached the
-    goal would be the report's own version of accepting a bad proof. *)
-Fixpoint goal_proved_by (goal : Statement) (steps : list Step) (number : nat)
+(** Which step states the goal, matched exactly as the checker matches it.
+    With [require_accepted], the step must also stand up: [provedBy] names the
+    step the goal *rests on*, so a rejected step -- or one whose own input was
+    never established -- cannot be it.  Reporting the two separately tells
+    apart the two ways a proof falls short: never stating the goal, and
+    stating it on a step that did not hold. *)
+Fixpoint goal_stated_by (goal : Statement) (steps : list Step) (number : nat)
+    (statuses : list (nat * Audit.StepStatus)) (require_accepted : bool)
     : option nat :=
   match steps with
   | [] => None
   | current :: rest =>
-      if fact_eqb goal current.(step_conclusion) then Some number
-      else goal_proved_by goal rest (S number)
-  end.
-
-Fixpoint accepted_prefix (decls : Declarations) (premises : list Premise)
-    (facts : list Statement) (steps : list Step) : nat :=
-  match steps with
-  | [] => O
-  | current :: rest =>
-      if rule_valid decls premises facts current.(step_reason)
-           current.(step_conclusion)
-      then S (accepted_prefix decls premises
-                (facts ++ [current.(step_conclusion)]) rest)
-      else O
+      let usable :=
+        if require_accepted then
+          match status_of statuses number with
+          | Audit.StepAccepted => true
+          | _ => false
+          end
+        else true in
+      if usable && fact_eqb goal current.(step_conclusion) then Some number
+      else goal_stated_by goal rest (S number) statuses require_accepted
   end.
 
 Definition goal_missing_diagnostic : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
-    "no accepted step states the goal".
+    "no step states the goal".
 
-Definition goal_report_for (p : Problem) : Audit.GoalReport :=
-  let reached :=
-    firstn (accepted_prefix p.(problem_declarations) p.(problem_premises) []
-              p.(problem_steps))
-      p.(problem_steps) in
-  match goal_proved_by p.(problem_goal) reached 1 with
+Definition goal_unproved_diagnostic : Audit.Diagnostic :=
+  Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
+    "the step that states the goal was not accepted".
+
+Definition goal_report_for (p : Problem)
+    (statuses : list (nat * Audit.StepStatus)) : Audit.GoalReport :=
+  match goal_stated_by p.(problem_goal) p.(problem_steps) 1 statuses true with
   | Some n => Audit.goal_report (Some n) [] []
-  | None => Audit.goal_report None [goal_missing_diagnostic] []
+  | None =>
+      match goal_stated_by p.(problem_goal) p.(problem_steps) 1 statuses false with
+      | Some _ => Audit.goal_report None [goal_unproved_diagnostic] []
+      | None => Audit.goal_report None [goal_missing_diagnostic] []
+      end
   end.
 
 (** Keep each step's own source line beside it, so a report can quote the line
@@ -862,12 +953,14 @@ Definition report_content (source : string)
           | Some sourced =>
               match build_kernel_problem public header (map snd sourced) with
               | Some p =>
-                  let reports :=
-                    step_reports p.(problem_declarations) p.(problem_premises)
-                      [] sourced 1 false in
-                  let goal := goal_report_for p in
+                  let statuses :=
+                    step_statuses p.(problem_declarations) p.(problem_premises)
+                      [] p.(problem_steps) 1 [] in
+                  let reports := step_reports statuses sourced 1 in
+                  let goal := goal_report_for p statuses in
                   let stated :=
-                    goal_proved_by p.(problem_goal) p.(problem_steps) 1 in
+                    goal_stated_by p.(problem_goal) p.(problem_steps) 1
+                      statuses false in
                   (reports, step_graph reports stated,
                    duplicate_scan (premise_facts p.(problem_premises))
                      (numbered_step_facts p.(problem_steps) 1),

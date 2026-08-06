@@ -9,6 +9,7 @@ import {
 import { presentationContent } from "../../interface/core/grammarToLayout/presentationContent";
 import {
   buildAnnotatedLines,
+  reportFindings,
   summarizeReport,
 } from "../../interface/core/reportAnnotations";
 import { VerifiedCheckOutput } from "../verified/presentationTypes";
@@ -277,7 +278,7 @@ describe("extracted Rocq API corpus tests", () => {
     expect(report.duplicates).toEqual([]);
   });
 
-  test("blames one step and blocks nothing after it", async () => {
+  test("blames the step that failed", async () => {
     const source = readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8");
     const report = await checkVerifiedReportNode(source);
     expect(report.verdict).toBe("rejected_proof");
@@ -288,10 +289,68 @@ describe("extracted Rocq API corpus tests", () => {
       "rejected",
     ]);
     expect(report.steps[3].diagnostics.length).toBeGreaterThan(0);
-    // The goal is stated by the rejected step, so nothing proved it, but it is
-    // not a stray step either.
+    // The goal is stated by the rejected step, so nothing proved it -- which
+    // is a different complaint from never stating it at all.
     expect(report.goal.provedBy).toBeNull();
+    expect(report.goal.diagnostics[0].message).toBe(
+      "the step that states the goal was not accepted",
+    );
     expect(report.graph.unusedSteps).toEqual([]);
+  });
+
+  // A step that cites the failure is unjudgeable; a step that does not is
+  // still judged on its own merits, however far below the failure it sits.
+  const dependentAndIndependent = `// fail on step 2
+title: "One bad step, one dependent, one independent"
+premises:
+pt: A (0, 0, t), B (1, 0, t), C (2, 0, t), D (3, 0, t)
+tri: t_ABC t_ADC
+[g_1] con_seg(AB,AD)
+[g_2] con_ang(a_BAC,a_DAC)
+-> con_seg(AB,AD)
+
+steps:
+[01] given(g_1) -> con_seg(AB,AD)
+[02] sss(1, 1, 1) -> con_tri(t_ABC,t_ADC)
+[03] cpctc(2) -> con_seg(BC,DC)
+[04] given(g_2) -> con_ang(a_BAC,a_DAC)
+[05] reflex() -> ref_seg(AC,AC)
+`;
+
+  test("blocks only the steps that cite a failure", async () => {
+    const report = await checkVerifiedReportNode(dependentAndIndependent);
+    expect(report.steps.map((step) => step.status)).toEqual([
+      "accepted",
+      "rejected",
+      "blocked",
+      "accepted",
+      "accepted",
+    ]);
+    expect(report.steps[2].diagnostics[0].message).toContain("not judged");
+  });
+
+  // Citing forwards always fails, but the graph still shows the ring, which
+  // is the useful thing to say about it.
+  const cyclic = `// fail on step 1
+title: "Cyclic citation"
+premises:
+pt: A (0, 0, t), B (1, 0, t), C (2, 0, t), D (3, 0, t)
+tri: t_ABC t_ADC
+[g_1] con_seg(AB,AD)
+-> con_tri(t_ABC,t_ADC)
+
+steps:
+[01] cpctc(2) -> con_seg(AB,AD)
+[02] cpctc(1) -> con_ang(a_BAC,a_DAC)
+`;
+
+  test("reports a citation cycle", async () => {
+    const report = await checkVerifiedReportNode(cyclic);
+    expect(report.graph.edges).toEqual([
+      [2, 1],
+      [1, 2],
+    ]);
+    expect(report.graph.cycles).toEqual([[1, 2]]);
   });
 
   test("summarizes a report the way the harness shows it", async () => {
@@ -301,13 +360,16 @@ describe("extracted Rocq API corpus tests", () => {
     expect(summarizeReport(accepted)).toBe(
       "Accepted by the verified checker. (goal reached at step 4)",
     );
+    expect(reportFindings(accepted)).toEqual([]);
 
     const rejected = await checkVerifiedReportNode(
       readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8"),
     );
-    expect(summarizeReport(rejected)).toBe(
-      "Rejected by the verified checker. (first failure at step 4)",
-    );
+    expect(summarizeReport(rejected)).toBe("Rejected by the verified checker.");
+    expect(reportFindings(rejected)).toEqual([
+      "Goal: the step that states the goal was not accepted",
+      "Rejected step: 4",
+    ]);
   });
 
   test("marks the failed step and only the failed step", async () => {
