@@ -442,6 +442,16 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
     | Some i => Some (constructor i)
     | None => None
     end in
+  (** Historical parallel-angle proofs sometimes also cite the diagram
+      transversal after the step dependency.  The executable rule already
+      searches and validates the transversal premise, so this second token is
+      compatibility metadata rather than an additional logical dependency. *)
+  let parse_one_with_diagram constructor body :=
+    match split_on ","%char body [] with
+    | [one] => parse_one constructor one
+    | [one; _diagram] => parse_one constructor one
+    | _ => None
+    end in
   match strip_call "given" text with
   | Some label => Some (Given (string_of_list_ascii label))
   | None => match strip_call "reflex" text with
@@ -485,14 +495,14 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "rhombus_consec_sides" text (parse_two RhombusConsecSides)
         (try_call "rhombus" text (parse_one RhombusDef)
         (try_call "rectangle" text (parse_one RectangleDef)
-        (try_call "altint_conv" text (parse_one AltIntConv)
-        (try_call "altint" text (parse_one AltInt)
-        (try_call "altext_conv" text (parse_one AltExtConv)
-        (try_call "altext" text (parse_one AltExt)
-        (try_call "corresp_ang_conv" text (parse_one CorrespAngConv)
-        (try_call "corresp_ang" text (parse_one CorrespAng)
-        (try_call "sameside_ang_conv" text (parse_one SamesideAngConv)
-        (try_call "sameside_ang" text (parse_one SamesideAng)
+        (try_call "altint_conv" text (parse_one_with_diagram AltIntConv)
+        (try_call "altint" text (parse_one_with_diagram AltInt)
+        (try_call "altext_conv" text (parse_one_with_diagram AltExtConv)
+        (try_call "altext" text (parse_one_with_diagram AltExt)
+        (try_call "corresp_ang_conv" text (parse_one_with_diagram CorrespAngConv)
+        (try_call "corresp_ang" text (parse_one_with_diagram CorrespAng)
+        (try_call "sameside_ang_conv" text (parse_one_with_diagram SamesideAngConv)
+        (try_call "sameside_ang" text (parse_one_with_diagram SamesideAng)
         (try_call "para_transitive" text (parse_two ParaTrans)
         (try_call "def_radius" text (parse_one DefRadius)
         (try_call "inscribed_semi" text (parse_one InscribedSemi)

@@ -48,8 +48,8 @@ The parity categories deliberately distinguish:
 - `unsupported-reason`: contains at least one unimplemented reason; and
 - `parse-failure`: the theorem-bearing problem could not be decoded.
 
-Four proofs across the two corpora are marked `// pass` but land in
-`rejected-supported-slice`, all for the same reason: a triangle-congruence step
+Eight proof occurrences across the two corpora are marked `// pass` but land
+in `rejected-supported-slice` because a triangle-congruence step
 names a correspondence its own argument does not establish, while the `cpctc`
 step that follows relies on the correct one. The legacy checker evidently matched the two triangles up to
 independent permutation, which is exactly what makes `con_tri` unsound as an
@@ -60,30 +60,32 @@ ordered claim.
 - `examples/s1c3.txt` step 7 concludes `con_tri(t_QRP,t_MRN)` from an ASA
   argument establishing `P-M`, `R-R`, `Q-N`; its step 8 then reads `con_seg(QR,
   RN)` off the correspondence the argument actually proves.
+- `examples/s2c1.txt` step 6 concludes `con_tri(t_FEJ,t_JGH)` although its SAS
+  dependencies establish the correspondence `F-G`, `E-H`, `J-J`; step 7 uses
+  that actual correspondence to conclude `con_seg(FJ,GJ)`.
 - `geo-proof-dataset` `holt_s4-3_cio4_c1.txt` concludes `con_tri(t_JKN,t_MLN)`
   where the SSS argument gives `t_LMN` — the last two vertices transposed.
 - `geo-proof-dataset` `holt_s4-6_exer9_c1.txt` concludes `con_tri(t_WXZ,t_YZX)`
   where the argument gives `t_YXZ`.
 
-A fifth, `examples/overlap.txt`, is marked `// pass` and is *not* a defect. Its
-ASA step cites `ref_ang(a_EGD,a_EGD)` as the angle at `G` for triangles
-`t_EHG` and `t_DFG`. That is sound only once ray `GH` is identified with ray
-`GD`, which needs `Out G H D` — and the audited `on_line` supplies only
-`Col`, which permits `H` on the far side of `G`, where the angle is the
-supplement instead. So this is a third instance of the same shape as the
-`Transversal` and `IsParallelogram` gaps: a statement whose audited meaning is
-weaker than the diagram it describes. `on_line` would need `Bet`, or a
-same-ray condition, to support it.
+The bundled `s1c3`, `s2c1`, and `s2c2` defects are duplicated in the textbook
+corpus, producing the other three occurrences.
 
-The ray reasoning itself is straightforward once a premise supplies `Out`
-(GeoCoq's `out2__conga`), and `intersect_seg` does supply betweenness — but
-measured across both corpora it would unlock only the two copies of
-`overlap.txt`, and those need the `on_line` change anyway. It is not worth
-building ahead of that decision.
+`on_line` has since been strengthened to endpoint-inclusive segment membership,
+and the kernel transports angle congruence across its same-ray spellings with
+GeoCoq's `out2__conga`.  The same proved transport now recognizes points placed
+on a segment by `midpt` and `intersect_seg`; this accepts the historical
+alternate-interior converse proofs without relaxing ordered triangle claims.
 
-The four above are fixture defects, not missing reasons. Correspondence search already
+The eight occurrences above are fixture defects, not missing reasons. Correspondence search already
 covers all six readings of a conclusion, and permuting the two triangles
 independently would defeat the point of an ordered `con_tri`; do not widen it.
+
+Two other textbook vertical-angle proofs remain fail-closed because they
+declare segments but no triangle or angle that supplies nondegenerate rays.
+Another old quadrilateral proof spells a syntactically degenerate transversal;
+these require fixture or audited-statement decisions, not permissive reason
+matching.
 
 The manifest is generated from the untrusted metadata catalog, but its status
 overrides reflect the actual constructors in `rocq/Ender/Syntax.v`. Updating a

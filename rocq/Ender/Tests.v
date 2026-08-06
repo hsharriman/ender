@@ -1485,6 +1485,55 @@ Example complete_transversal_layer_accepts :
   complete_checker transversal_layer_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Historical files may retain an explicit diagram label after the logical
+    step dependency.  The rule still validates the actual transversal. *)
+Definition labelled_altint_source := "title: labelled alternate angles
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2), T (13,9), R (5,1)
+[d_01] transversal(A,B,T,E,C,D,R,F)
+[g_1] para(AB,CD)
+-> con_ang(a_AEF,a_DFE)
+
+steps:
+[01] given(g_1) -> para(AB,CD)
+[02] altint(1,d_01) -> con_ang(a_AEF,a_DFE)".
+
+Example labelled_altint_accepts :
+  complete_checker labelled_altint_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A point known to lie on the transversal segment may spell the same ray
+    in a converse proof. *)
+Definition intersect_ray_altint_conv_source := "title: intersection ray spelling
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2), T (13,9), R (5,1), X (9,5), G (9,1), H (9,9)
+[d_01] transversal(A,B,T,E,C,D,R,F)
+[d_02] intersect_seg(EF,GH,X)
+[g_1] con_ang(a_AEX,a_DFE)
+-> para(AB,CD)
+
+steps:
+[01] given(g_1) -> con_ang(a_AEX,a_DFE)
+[02] altint_conv(1) -> para(AB,CD)".
+
+Definition unlinked_ray_altint_conv_source := "title: unlinked ray spelling
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2), T (13,9), R (5,1), X (9,5)
+[d_01] transversal(A,B,T,E,C,D,R,F)
+[g_1] con_ang(a_AEX,a_DFE)
+-> para(AB,CD)
+
+steps:
+[01] given(g_1) -> con_ang(a_AEX,a_DFE)
+[02] altint_conv(1) -> para(AB,CD)".
+
+Example intersect_ray_altint_conv_accepts :
+  complete_checker intersect_ray_altint_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example unlinked_ray_altint_conv_rejects :
+  complete_checker unlinked_ray_altint_conv_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** The circle statement layer: a circle declaration, premises of every new
     form including the nested arc spelling, a [def_radius] step, and a
     congruent-radii goal, through both checker paths. *)

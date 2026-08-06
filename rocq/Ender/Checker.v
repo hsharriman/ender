@@ -122,18 +122,27 @@ Definition declared_angle (decls : Declarations) (a : Angle) : bool :=
     [on_line] diagram premise places one of the two on the segment from [v]
     through the other.  [on_line] is audited as segment membership, so the
     premise supplies the betweenness an [Out] fact needs. *)
+Definition on_segment_match (v p q : PointId) (s : Segment) (r : PointId) : bool :=
+  ((segment_u_eqb s (segment v q) && ascii_eqb r p) ||
+   (segment_u_eqb s (segment v p) && ascii_eqb r q)).
+
+(** Diagram statements and midpoint givens all carry endpoint-inclusive
+    segment membership.  Treat their named interior point uniformly when
+    deciding whether two spellings name the same ray. *)
+Definition statement_ray_linked (v p q : PointId) (s : Statement) : bool :=
+  match s with
+  | OnLine t r | MidptOf t r => on_segment_match v p q t r
+  | IntersectSeg t u r =>
+      on_segment_match v p q t r || on_segment_match v p q u r
+  | _ => false
+  end.
+
 Definition on_line_witness (s : Statement) : option (Segment * PointId) :=
   match s with OnLine t q => Some (t, q) | _ => None end.
 
 Definition ray_linked (premises : list Premise) (v p q : PointId) : bool :=
   ascii_eqb p q ||
-  existsb (fun pr =>
-    match on_line_witness pr.(premise_statement) with
-    | Some (s, r) =>
-        (segment_u_eqb s (segment v q) && ascii_eqb r p) ||
-        (segment_u_eqb s (segment v p) && ascii_eqb r q)
-    | None => false
-    end) premises.
+  existsb (fun pr => statement_ray_linked v p q pr.(premise_statement)) premises.
 
 (** An expected angle may be spelled through any labeled points on its own
     rays, provided each substitution is justified by an [on_line] diagram
@@ -873,6 +882,28 @@ Definition transversal_lines_match (s1 s2 : Segment)
   (line_name_matches s1 a b i1 && line_name_matches s2 c d i2) ||
   (line_name_matches s2 a b i1 && line_name_matches s1 c d i2).
 
+(** A historical proof may name a transversal ray by an interior point
+    supplied by [on_line], [midpt], or [intersect_seg].  This matcher is used
+    when the transversal configuration itself supplies nondegeneracy. *)
+Definition angle_ray_spelling (premises : list Premise)
+    (expected actual : Angle) : bool :=
+  ascii_eqb expected.(ang_vertex) actual.(ang_vertex) &&
+  ((ray_linked premises expected.(ang_vertex)
+      expected.(ang_left) actual.(ang_left) &&
+    ray_linked premises expected.(ang_vertex)
+      expected.(ang_right) actual.(ang_right)) ||
+   (ray_linked premises expected.(ang_vertex)
+      expected.(ang_left) actual.(ang_right) &&
+    ray_linked premises expected.(ang_vertex)
+      expected.(ang_right) actual.(ang_left))).
+
+Definition conga_ray_pair (premises : list Premise)
+    (expected1 expected2 actual1 actual2 : Angle) : bool :=
+  (angle_ray_spelling premises expected1 actual1 &&
+   angle_ray_spelling premises expected2 actual2) ||
+  (angle_ray_spelling premises expected1 actual2 &&
+   angle_ray_spelling premises expected2 actual1).
+
 Definition altint_pair (a b i1 c d i2 : PointId) (x y : Angle) : bool :=
   angle_pair_eqb x y (angle a i1 i2) (angle d i2 i1) ||
   angle_pair_eqb x y (angle b i1 i2) (angle c i2 i1).
@@ -934,7 +965,9 @@ Definition altint_conv_rule (premises : list Premise) (facts : list Statement)
   | Para s1 s2, Some (ConAng x y) =>
       transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
         transversal_lines_match s1 s2 a b i1 c d i2 &&
-        altint_pair a b i1 c d i2 x y) premises
+        (altint_pair a b i1 c d i2 x y ||
+         conga_ray_pair premises (angle a i1 i2) (angle d i2 i1) x y ||
+         conga_ray_pair premises (angle b i1 i2) (angle c i2 i1) x y)) premises
   | _, _ => false
   end.
 
@@ -1320,26 +1353,14 @@ Proof.
     apply (proj2 (angle_u_eqb_well_formed _ _ Heq)). now apply Hwfa.
 Qed.
 
-Lemma ray_linked_out : forall premises v p q,
-  Forall (interp_premise point) premises ->
-  ray_linked premises v p q = true ->
+Lemma on_segment_match_out : forall v p q s r,
+  Bet (point s.(seg_start)) (point r) (point s.(seg_end)) ->
+  on_segment_match v p q s r = true ->
   point p <> point v -> point q <> point v ->
   Out (point v) (point q) (point p).
 Proof.
-  intros premises v p q Hprem Hlink Hp Hq.
-  unfold ray_linked in Hlink. apply orb_true_iff in Hlink.
-  destruct Hlink as [Heq|Hlink].
-  { apply Ascii.eqb_eq in Heq. subst q. apply out_trivial. exact Hp. }
-  apply existsb_exists in Hlink. destruct Hlink as [pr [Hin Hc]].
-  destruct (on_line_witness pr.(premise_statement)) as [[s r]|] eqn:Hwit;
-    try discriminate.
-  assert (Hpremise : pr.(premise_statement) = OnLine s r).
-  { unfold on_line_witness in Hwit.
-    destruct pr.(premise_statement); try discriminate.
-    now injection Hwit as <- <-. }
-  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
-  unfold interp_premise in Hpr. rewrite Hpremise in Hpr. cbn in Hpr.
-  destruct Hpr as [Hne Hbet].
+  intros v p q s r Hbet Hc Hp Hq.
+  unfold on_segment_match in Hc.
   apply orb_true_iff in Hc. destruct Hc as [Hc|Hc];
     apply andb_true_iff in Hc; destruct Hc as [Hs Hr];
     apply Ascii.eqb_eq in Hr; subst r;
@@ -1351,6 +1372,31 @@ Proof.
   - apply bet_out; assumption.
   - apply bet_out; [assumption|].
     apply between_symmetry. exact Hbet.
+Qed.
+
+Lemma ray_linked_out : forall premises v p q,
+  Forall (interp_premise point) premises ->
+  ray_linked premises v p q = true ->
+  point p <> point v -> point q <> point v ->
+  Out (point v) (point q) (point p).
+Proof.
+  intros premises v p q Hprem Hlink Hp Hq.
+  unfold ray_linked in Hlink. apply orb_true_iff in Hlink.
+  destruct Hlink as [Heq|Hlink].
+  { apply Ascii.eqb_eq in Heq. subst q. apply out_trivial. exact Hp. }
+  apply existsb_exists in Hlink. destruct Hlink as [pr [Hin Hc]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr.
+  destruct pr.(premise_statement); try discriminate;
+    cbn in Hpr, Hc.
+  - destruct Hpr as [Hbet _].
+    eapply on_segment_match_out; [exact Hbet|exact Hc|exact Hp|exact Hq].
+  - destruct Hpr as [Hbet1 Hbet2]. apply orb_true_iff in Hc.
+    destruct Hc as [Hc|Hc].
+    + eapply on_segment_match_out; [exact Hbet1|exact Hc|exact Hp|exact Hq].
+    + eapply on_segment_match_out; [exact Hbet2|exact Hc|exact Hp|exact Hq].
+  - destruct Hpr as [_ Hbet].
+    eapply on_segment_match_out; [exact Hbet|exact Hc|exact Hp|exact Hq].
 Qed.
 
 Lemma angle_ray_matches_sound : forall decls premises e a A B C,
@@ -1384,6 +1430,59 @@ Proof.
     apply conga_trans with (point a.(ang_right)) (point a.(ang_vertex))
                            (point a.(ang_left)); [|CongA].
     apply out2__conga; assumption.
+Qed.
+
+Lemma angle_ray_spelling_bridge : forall premises e a,
+  Forall (interp_premise point) premises ->
+  angle_well_formed point e -> angle_well_formed point a ->
+  angle_ray_spelling premises e a = true ->
+  CongA (point e.(ang_left)) (point e.(ang_vertex)) (point e.(ang_right))
+        (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right)).
+Proof.
+  intros premises [el ev er] [al av ar] Hprem [Hel Her] [Hal Har] Hm.
+  cbn in Hel, Her, Hal, Har, Hm |- *.
+  unfold angle_ray_spelling in Hm. cbn in Hm.
+  apply andb_true_iff in Hm. destruct Hm as [Hv Hrays].
+  apply Ascii.eqb_eq in Hv. subst av.
+  apply orb_true_iff in Hrays; destruct Hrays as [Hr|Hr];
+    apply andb_true_iff in Hr; destruct Hr as [Hr1 Hr2].
+  - pose proof (ray_linked_out premises _ _ _ Hprem Hr1 Hel Hal) as Ho1.
+    pose proof (ray_linked_out premises _ _ _ Hprem Hr2 Her Har) as Ho2.
+    apply out2__conga; assumption.
+  - pose proof (ray_linked_out premises _ _ _ Hprem Hr1 Hel Har) as Ho1.
+    pose proof (ray_linked_out premises _ _ _ Hprem Hr2 Her Hal) as Ho2.
+    apply conga_trans with (point ar) (point ev) (point al).
+    + apply out2__conga; assumption.
+    + CongA.
+Qed.
+
+Lemma conga_ray_pair_sound : forall premises e1 e2 a1 a2,
+  Forall (interp_premise point) premises ->
+  angle_well_formed point e1 -> angle_well_formed point e2 ->
+  conga_ray_pair premises e1 e2 a1 a2 = true ->
+  CongA (point a1.(ang_left)) (point a1.(ang_vertex)) (point a1.(ang_right))
+        (point a2.(ang_left)) (point a2.(ang_vertex)) (point a2.(ang_right)) ->
+  CongA (point e1.(ang_left)) (point e1.(ang_vertex)) (point e1.(ang_right))
+        (point e2.(ang_left)) (point e2.(ang_vertex)) (point e2.(ang_right)).
+Proof.
+  intros premises e1 e2 a1 a2 Hprem He1 He2 Hmatch Hconga.
+  pose proof Hconga as Hwf1. destruct Hwf1 as [Ha1l [Ha1r _]].
+  pose proof (conga_sym _ _ _ _ _ _ Hconga) as Hwf2.
+  destruct Hwf2 as [Ha2l [Ha2r _]].
+  assert (Ha1 : angle_well_formed point a1) by exact (conj Ha1l Ha1r).
+  assert (Ha2 : angle_well_formed point a2) by exact (conj Ha2l Ha2r).
+  unfold conga_ray_pair in Hmatch. apply orb_true_iff in Hmatch.
+  destruct Hmatch as [Hmatch|Hmatch];
+    apply andb_true_iff in Hmatch; destruct Hmatch as [Hm1 Hm2].
+  - pose proof (angle_ray_spelling_bridge _ _ _ Hprem He1 Ha1 Hm1) as H1.
+    pose proof (angle_ray_spelling_bridge _ _ _ Hprem He2 Ha2 Hm2) as H2.
+    eapply conga_trans; [exact H1|]. eapply conga_trans; [exact Hconga|].
+    now apply conga_sym.
+  - pose proof (angle_ray_spelling_bridge _ _ _ Hprem He1 Ha2 Hm1) as H1.
+    pose proof (angle_ray_spelling_bridge _ _ _ Hprem He2 Ha1 Hm2) as H2.
+    eapply conga_trans; [exact H1|].
+    eapply conga_trans; [exact (conga_sym _ _ _ _ _ _ Hconga)|].
+    exact (conga_sym _ _ _ _ _ _ H2).
 Qed.
 
 Lemma dependency_matches_sound : forall decls premises expected actual,
@@ -2726,12 +2825,25 @@ Proof.
   apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
   apply (transversal_para_conclude _ _ _ _ _ _ _ _ Hlines Hbab Hbcd).
   apply (ender_transversal_master_conv (point pi1) (point pi2)); try assumption.
-  unfold altint_pair in Hpairs. apply orb_true_iff in Hpairs.
-  destruct Hpairs as [Hm|Hm].
+  pose proof Hbt1 as [_ [_ Hi12]].
+  pose proof Hbab as [_ [Hai1 _]].
+  pose proof Hbcd as [_ [_ Hi2d]].
+  assert (Hwf1a : angle_well_formed point (angle pa pi1 pi2))
+    by (cbn; split; [exact Hai1|exact (swap_diff _ _ Hi12)]).
+  assert (Hwf1b : angle_well_formed point (angle pd pi2 pi1))
+    by (cbn; split; [exact (swap_diff _ _ Hi2d)|exact Hi12]).
+  assert (Hwf2a : angle_well_formed point (angle pb pi1 pi2)).
+  { pose proof Hbab as [_ [_ Hi1b]]. cbn; split; [exact (swap_diff _ _ Hi1b)|exact (swap_diff _ _ Hi12)]. }
+  assert (Hwf2b : angle_well_formed point (angle pc pi2 pi1)).
+  { pose proof Hbcd as [_ [Hci2 _]]. cbn; split; [exact Hci2|exact Hi12]. }
+  unfold altint_pair in Hpairs. repeat rewrite orb_true_iff in Hpairs.
+  destruct Hpairs as [[[Hm|Hm]|Hm]|Hm].
   - left. pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC.
     cbn in HC. exact HC.
   - right. pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC.
     cbn in HC. exact HC.
+  - left. exact (conga_ray_pair_sound _ _ _ _ _ Hprem Hwf1a Hwf1b Hm Hconga).
+  - right. exact (conga_ray_pair_sound _ _ _ _ _ Hprem Hwf2a Hwf2b Hm Hconga).
 Qed.
 
 Lemma altext_conv_sound : forall premises facts i conclusion,
