@@ -24,10 +24,12 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- twenty-eight reasons are fully verified, and none are partial; `reflex` is the only partial one,
-  and its `ref_ang` conclusion is blocked only because the kernel discards the
-  `ang:` declaration line, whose audited meaning is exactly the
-  `AngleWellFormed` that `conga_refl` needs;
+- twenty-nine reasons are fully verified and none are partial: the `ang:`
+  declaration line is read, so `reflex` concludes `ref_ang` for declared
+  angles.  The complete-contract adapter still rejects reflexive statements
+  in the *goal* position, deliberately (`project_goal_statement`): a `ref_*`
+  goal would demand the same-name half of the audited meaning, and no
+  textbook proof states one as its goal;
 - goal matching is still exact (`statement_eqb`), so a derived fact spelled
   with a reversed angle or segment will not close an otherwise identical goal
   even though step-to-step matching accepts it;
