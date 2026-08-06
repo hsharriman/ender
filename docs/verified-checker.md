@@ -322,14 +322,19 @@ therefore strict, and `pgram_opp_sides` is expected provable via GeoCoq's
 `par_2_plg` (which wants exactly that `~ Col`) and `plg_cong`, both under the
 `Tarski_euclidean` hypothesis the final theorem already provides.
 
-Also provable is the definitional-projection
-subset: `def_parallelogram`, `pgram_opp_side_para`, `rectangle_pgram`,
-`rhombus_pgram`, and `rhombus_consec_sides` all just assemble or take apart the
-audited definitions. The kernel now has the quadrilateral layer these need —
-a `Quadrilateral` type, `quad:` declaration parsing and projection, and
-kernel statements for `para` and every quadrilateral form, whose meanings are
-the audited meanings verbatim so the bridge is definitional. The rules
-themselves are next.
+The core of the family is now verified: `def_parallelogram`,
+`pgram_opp_sides`, `pgram_opp_side_para`, `rectangle_pgram`, `rhombus_pgram`,
+and `rhombus_consec_sides`, over a kernel quadrilateral layer (a
+`Quadrilateral` type, `quad:` declaration parsing and projection, and kernel
+statements for `para` and every quadrilateral form) whose meanings are the
+audited meanings verbatim, so the bridge is definitional. One route note for
+future rules: GeoCoq's `par_2_plg` depends on `Eqdep.Eq_rect_eq`, so
+opposite-sides congruence is proved through the Playfair-derived alternate
+interior angles instead (`ender_alternate_interior` in `Geometry.v`), with
+ASA along the diagonal through the audited crossing point; `par_cong_mid_ts`,
+`plg_to_parallelogram`, and `plg_par` are axiom-clean and stay in use.
+The diagonal-heavy remainder (`pgram_diag_bisect`, the kite rules, the
+trapezoid rules) is still fail-closed.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and

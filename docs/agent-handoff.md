@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- twenty-nine reasons are fully verified and none are partial: the `ang:`
+- thirty-five reasons are fully verified and none are partial: the `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
   angles.  The complete-contract adapter still rejects reflexive statements
   in the *goal* position, deliberately (`project_goal_statement`): a `ref_*`
