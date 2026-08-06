@@ -325,9 +325,11 @@ Two things gate that growth, in this order. Statement coverage comes first:
 the kernel parser rejects a problem outright when any premise line names a
 statement it cannot decode, so a whole fixture stays out of reach until every
 statement it declares is supported. Nondegeneracy comes second: declared
-triangles are currently the only source of it, so a rule that needs
-nondegenerate rays and has no declared triangle to draw on must fail closed,
-as `reflex` on `ref_ang` and `perp_con_ang` on `con_ang` do.
+triangles, quadrilaterals, and angles are the only sources of it, so a rule
+that needs nondegenerate rays and has none of those to draw on must fail
+closed, as `reflex` on `ref_ang` and `perp_con_ang` on `con_ang` do.  A
+declared quadrilateral covers any three of its vertices, consecutive or not,
+because its meaning states all six distinctnesses.
 
 The largest remaining cluster is the parallel-line family — `altint`,
 `altint_conv`, `altext`, `corresp_ang`, `sameside_ang` and their converses,

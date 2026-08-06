@@ -113,11 +113,27 @@ Definition angle_of_triangle (t : Triangle) (a : Angle) : bool :=
   angle_eqb a (angle t.(tri_a) t.(tri_c) t.(tri_b)) ||
   angle_eqb a (angle t.(tri_b) t.(tri_c) t.(tri_a)).
 
-(** An angle is nondegenerate if it spans a declared triangle's vertices, or if
-    it is itself declared on an [ang:] line -- the audited meaning of an angle
-    declaration is exactly [AngleWellFormed]. *)
+(** A declared quadrilateral asserts that its four vertices are pairwise
+    distinct, so any three of them, named apart, are an angle with
+    nondegenerate rays.  Unlike a triangle, the three need not be consecutive:
+    distinctness is all a well-formed angle wants, and every pair of vertices
+    has it. *)
+Definition quad_vertices (q : Quadrilateral) : list PointId :=
+  [q.(quad_a); q.(quad_b); q.(quad_c); q.(quad_d)].
+
+Definition angle_of_quadrilateral (q : Quadrilateral) (a : Angle) : bool :=
+  let vertex p := existsb (ascii_eqb p) (quad_vertices q) in
+  vertex a.(ang_left) && vertex a.(ang_vertex) && vertex a.(ang_right) &&
+  negb (ascii_eqb a.(ang_left) a.(ang_vertex)) &&
+  negb (ascii_eqb a.(ang_right) a.(ang_vertex)).
+
+(** An angle is nondegenerate if it spans a declared triangle's vertices, if it
+    names three vertices of a declared quadrilateral, or if it is itself
+    declared on an [ang:] line -- the audited meaning of an angle declaration
+    is exactly [AngleWellFormed]. *)
 Definition declared_angle (decls : Declarations) (a : Angle) : bool :=
   existsb (fun t => angle_of_triangle t a) decls.(decl_triangles) ||
+  existsb (fun q => angle_of_quadrilateral q a) decls.(decl_quadrilaterals) ||
   existsb (angle_u_eqb a) decls.(decl_angles).
 
 (** [q] names the same ray from [v] as [p]: the names are equal, or an
@@ -1451,12 +1467,29 @@ Proof.
   unfold reverse_angle, angle_well_formed; cbn. tauto.
 Qed.
 
+(** Two vertices of a well-formed quadrilateral named apart are apart: the
+    audited meaning states all six distinctnesses. *)
+Lemma quad_vertex_distinct : forall q x y,
+  Audit.QuadrilateralWellFormed point (quad_name q) ->
+  In x (quad_vertices q) -> In y (quad_vertices q) -> x <> y ->
+  point x <> point y.
+Proof.
+  intros q x y Hwf Hx Hy Hne.
+  destruct Hwf as [HAB [HAC [HAD [HBC [HBD [HCD _]]]]]].
+  cbn in HAB, HAC, HAD, HBC, HBD, HCD.
+  unfold quad_vertices in Hx, Hy; cbn in Hx, Hy.
+  destruct Hx as [<-|[<-|[<-|[<-|[]]]]];
+    destruct Hy as [<-|[<-|[<-|[<-|[]]]]];
+    solve [now contradiction Hne | assumption | now apply not_eq_sym].
+Qed.
+
 Lemma declared_angle_sound : forall decls a,
   declarations_well_formed point decls ->
   declared_angle decls a = true -> angle_well_formed point a.
 Proof.
-  intros decls a [Hwft Hwfa] H. unfold declared_angle in H.
-  apply orb_true_iff in H. destruct H as [H|H].
+  intros decls a Hwf H. pose proof Hwf as [Hwft [Hwfa [Hwfq _]]].
+  unfold declared_angle in H. apply orb_true_iff in H.
+  destruct H as [H|H]; [apply orb_true_iff in H; destruct H as [H|H]|].
   - (* spans the vertices of a declared triangle *)
     apply existsb_exists in H. destruct H as [t [Hin Hangle]].
     pose proof (Hwft t Hin) as Hncol.
@@ -1468,6 +1501,22 @@ Proof.
     unfold angle_well_formed.
     repeat match goal with H : _ \/ _ |- _ => destruct H as [H|H] end;
       apply angle_eqb_eq in Hangle; subst; cbn; split; auto.
+  - (* names three vertices of a declared quadrilateral, apart from each other *)
+    apply existsb_exists in H. destruct H as [q [Hin Hnames]].
+    pose proof (Hwfq q Hin) as Hq.
+    unfold angle_of_quadrilateral in Hnames.
+    apply andb_true_iff in Hnames; destruct Hnames as [Hnames Hright].
+    apply andb_true_iff in Hnames; destruct Hnames as [Hnames Hleft].
+    apply andb_true_iff in Hnames; destruct Hnames as [Hnames Hin3].
+    apply andb_true_iff in Hnames; destruct Hnames as [Hin1 Hin2].
+    assert (Hmember : forall p, existsb (ascii_eqb p) (quad_vertices q) = true ->
+        In p (quad_vertices q)).
+    { intros p Hp. apply existsb_exists in Hp. destruct Hp as [v [Hv Heq]].
+      unfold ascii_eqb in Heq. apply Ascii.eqb_eq in Heq. now subst v. }
+    assert (Hapart : forall x y, negb (ascii_eqb x y) = true -> x <> y).
+    { intros x y Hxy Heq. unfold ascii_eqb in Hxy.
+      rewrite Heq, Ascii.eqb_refl in Hxy. discriminate. }
+    split; apply (quad_vertex_distinct q); auto using Hmember, Hapart.
   - (* declared directly on an [ang:] line *)
     apply existsb_exists in H. destruct H as [b [Hin Heq]].
     apply (proj2 (angle_u_eqb_well_formed _ _ Heq)). now apply Hwfa.

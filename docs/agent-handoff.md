@@ -49,11 +49,7 @@ Known limitations relevant to prioritization:
   ray by the crossing point instead (`geo-proof-dataset`
   `holt_s6-4_exer17_c1`, and the bundled `examples/rhombusOutside.txt`) needs
   the far point to be distinct from the vertex, which today's kernel has no
-  declaration to draw it from: `seg:` lines are audited as
-  `SegmentWellFormed` but the kernel discards them.  Carrying them into
-  `Declarations` would be a pure implementation change -- the audited meaning
-  is already there -- and is the cheapest way to widen nondegeneracy beyond
-  declared triangles and angles.  `rect_diag_con` is verified too, by SAS
+  declaration to draw it from.  `rect_diag_con` is verified too, by SAS
   between two of the right corners over the Euclidean opposite-sides
   theorem, and `pgram_consec_angs` through GeoCoq's
   `consecutive_interior_angles_postulate`: the shared side is a transversal
@@ -98,9 +94,13 @@ Known limitations relevant to prioritization:
 - statement coverage gates whole files: the kernel parser rejects a problem
   outright when any premise line names a statement it cannot decode, so a
   fixture stays out of reach until every statement it declares is supported;
-- nondegeneracy comes from declared triangles or declared angles, and nothing
-  else (`declared_angle` in `Checker.v`); a rule needing it with no such source
-  must fail closed;
+- nondegeneracy comes from declared triangles, declared quadrilaterals, and
+  declared angles, and nothing else (`declared_angle` in `Checker.v`); a rule
+  needing it with no such source must fail closed.  A quadrilateral supplies
+  it for any three of its vertices, consecutive or not, since its audited
+  meaning states all six distinctnesses and a well-formed angle wants only
+  two.  `seg:` lines are audited as `SegmentWellFormed` but the kernel still
+  discards them, which is the next cheap widening;
 - the kernel does ray reasoning where a triangle criterion expects a
   `con_ang` or `ref_ang` dependency: an expected angle also matches a fact
   whose ray points are linked to its own through `on_line` diagram premises

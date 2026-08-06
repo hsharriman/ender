@@ -1311,6 +1311,27 @@ Definition pgram_consec_angs_opposite_source := transitive_header "quad: q_ABCD
   "[01] given(g_1) -> parallelogram(q_ABCD)
 [02] pgram_consec_angs(1) -> supplementary(a_ABC,a_CDA)".
 
+(** A declared quadrilateral supplies nondegenerate rays for any three of its
+    vertices, consecutive or not; a point outside it supplies none. *)
+Definition quad_declared_angle_source := transitive_header "quad: q_ABCD
+"
+  ""
+  "con_ang(a_ABD,a_ABD)"
+  "[01] reflex() -> ref_ang(a_ABD,a_ABD)".
+
+Definition quad_declared_angle_outside_source := transitive_header "quad: q_ABCD
+"
+  ""
+  "con_ang(a_ABE,a_ABE)"
+  "[01] reflex() -> ref_ang(a_ABE,a_ABE)".
+
+Example quad_declared_angle_accepts :
+  complete_checker quad_declared_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example quad_declared_angle_outside_rejects :
+  complete_checker quad_declared_angle_outside_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example pgram_consec_angs_accepts :
   complete_checker pgram_consec_angs_source = true.
 Proof. vm_compute. reflexivity. Qed.
