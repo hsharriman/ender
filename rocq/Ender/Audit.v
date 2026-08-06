@@ -23,10 +23,6 @@ Local Open Scope string_scope.
 Definition newlineCharacter : ascii := "010"%char.
 Definition newline : string := String newlineCharacter "".
 
-(** [String.index 0 marker text] is the position of the first occurrence of
-    [marker].  [String.substring start count text] stops at the end of [text]
-    when fewer than [count] characters remain, so [String.length text] as the
-    count means "everything from [start] onwards". *)
 Definition after (marker text : string) : option string :=
   match index 0 marker text with
   | Some start =>
@@ -162,16 +158,9 @@ Definition TriangleWellFormed (t : TriangleName) : Prop :=
   let B := point t.(triangle_second) in
   let C := point t.(triangle_third) in
   A <> B /\ B <> C /\ C <> A /\ ~ Col A B C.
-(** The diagonal condition says the name lists the vertices of a convex
-    quadrilateral in cyclic order: the diagonals of the named figure cross.
-    It also does almost all of the non-degeneracy work by itself.  If exactly
-    three vertices were collinear, the crossing point would lie both on their
-    line and on a segment that meets that line only at one endpoint, and
-    [BetS] excludes the endpoints.  The one configuration it admits is all
-    four vertices interleaved on a single line — which satisfies both [Par]
-    disjuncts vacuously and once made [pgram_opp_sides] false — so the
-    [~ Col] conjunct removes exactly that configuration, and no three
-    vertices of a well-formed quadrilateral are collinear. *)
+(** Crossing diagonals put the vertices in cyclic convex order.  The [~ Col]
+    conjunct excludes the remaining case in which all four vertices are
+    interleaved on one line. *)
 Definition QuadrilateralWellFormed (q : QuadrilateralName) : Prop :=
   let A := point q.(quadrilateral_first) in
   let B := point q.(quadrilateral_second) in
@@ -257,12 +246,8 @@ Definition quad_angle_d (q : QuadrilateralName) :=
 Definition IsParallelogram (q : QuadrilateralName) : Prop :=
   QuadrilateralWellFormed q /\ Parallel (quad_ab q) (quad_cd q) /\
   Parallel (quad_bc q) (quad_da q).
-(** All four corners are stated even though, in a Euclidean plane, one right
-    corner of a parallelogram forces the other three.  These meanings are read
-    in bare neutral geometry, where that inference is unavailable: a
-    hyperbolic Lambert quadrilateral is a parallelogram in the sense above
-    with right corners and an acute one.  Stating all four keeps the
-    definition a plain restatement of the textbook one. *)
+(** All four corners are stated because one right corner of a parallelogram
+    does not force the others in bare neutral geometry. *)
 Definition IsRectangle (q : QuadrilateralName) : Prop :=
   IsParallelogram q /\ RightAngle (quad_angle_a q) /\
   RightAngle (quad_angle_b q) /\ RightAngle (quad_angle_c q) /\
@@ -282,7 +267,6 @@ Definition SameAngleName (a b : AngleName) : Prop :=
   a.(angle_vertex) = b.(angle_vertex) /\
   ((a.(angle_first) = b.(angle_first) /\ a.(angle_last) = b.(angle_last)) \/
    (a.(angle_first) = b.(angle_last) /\ a.(angle_last) = b.(angle_first))).
-(** Two angle names, in either assignment, for these two corners. *)
 Definition SameAnglePair (selected1 selected2 first second : AngleName) : Prop :=
   (SameAngleName selected1 first /\ SameAngleName selected2 second) \/
   (SameAngleName selected2 first /\ SameAngleName selected1 second).
@@ -303,14 +287,8 @@ Definition IsKitePremise
 Definition IsTrapezoid (q : QuadrilateralName) : Prop :=
   QuadrilateralWellFormed q /\
   (Parallel (quad_ab q) (quad_cd q) \/ Parallel (quad_bc q) (quad_da q)).
-(** Stated through congruent diagonals rather than congruent legs.  "Legs
-    congruent" admits every oblique parallelogram — one pair of parallel
-    sides makes it a trapezoid, and its legs are congruent automatically —
-    which falsifies the base-angle theorems; "legs congruent and not
-    parallel" instead excludes the rectangles those theorems include.
-    Congruent diagonals is the characterization that keeps every catalog
-    trapezoid rule true, and the catalog itself states it as a biconditional
-    ([isos_trap_con_diags]). *)
+(** Congruent diagonals avoid the inclusive/exclusive-trapezoid problems of
+    congruent legs and match the catalog biconditional [isos_trap_con_diags]. *)
 Definition IsIsoscelesTrapezoid (q : QuadrilateralName) : Prop :=
   IsTrapezoid q /\
   SegmentCongruent
@@ -332,31 +310,15 @@ Definition IsTangent (c : CircleName) (s : SegmentName) (p : PointName) : Prop :
   OnCircle c p /\ Col (seg_start s) (seg_end s) (point p) /\
   exists Q, (Q = seg_start s \/ Q = seg_end s) /\ Q <> point p /\
             Per (circ_center c) (point p) Q.
-(** This says which points are on the circle and nothing about which arc the
-    vertex is on, because the surface syntax it reads carries nothing more:
-    [inscribed_angle(c_OA, a_APB)] names a circle and an angle.
-
-    That is enough for [inscribed_semi], whose chord is a diameter and whose
-    conclusion is the same from either arc.  It is *not* enough to compare two
-    inscribed angles on one chord: they are congruent when their vertices
-    share an arc and supplementary when they do not, so no rule can conclude
-    congruence from two of these premises, in any dimension.  Strengthening
-    this meaning cannot fix it either -- the missing fact is a relation
-    between the two vertices, not a property of one angle.
-
-    So [con_inscribed_angs] and [inscribed_angs] stay fail-closed by decision,
-    not by omission.  Admitting them needs the language to gain a way to say
-    the two vertices share an arc: a same-side premise form, or an
-    [inscribed_angle] spelling that names its intercepted arc.  Both change
-    the surface syntax, which is a decision about the curriculum this checker
-    serves rather than about its geometry.  See
-    [docs/verified-checker.md]. *)
+(** The syntax names no intercepted arc or same-side relation.  It therefore
+    supports [inscribed_semi], whose answer is independent of the vertex's
+    arc, but [con_inscribed_angs] and [inscribed_angs] deliberately remain
+    fail-closed.  See [docs/verified-checker.md]. *)
 Definition IsInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
   OnCircle c a.(angle_first) /\ OnCircle c a.(angle_vertex) /\
   OnCircle c a.(angle_last) /\ AngleWellFormed a.
 
-(** As with [IsTangent], the bisector must be a genuine segment: a degenerate
-    one is collinear with every point. *)
+(** As with [IsTangent], the bisector must be a genuine segment. *)
 Definition SegmentBisectorAt
     (bisector target : SegmentName) (p : PointName) : Prop :=
   SegmentWellFormed bisector /\
@@ -390,13 +352,9 @@ Definition IsIncenter (p : PointName) (t : TriangleName) : Prop :=
   AngleBisector (angle_c t) (segment_name t.(triangle_third) p) /\
   InAngle P C A B /\ InAngle P A B C /\ InAngle P B C A.
 
-(** The classical intercept figure: lay the four lengths along two rays from
-    a common vertex and ask the connecting segments to be parallel.  The two
-    rays must span — without [~ Col O A C], placing both pairs on a single
-    line satisfies [Par] by its collinear disjunct and would make any four
-    segments "proportional".  With it, a degenerate [Par] would need a point
-    of one ray's line on the other's, which only the excluded vertex could
-    be, so only genuinely parallel connecting segments remain. *)
+(** The four lengths lie on two rays from a common vertex, with parallel
+    connecting segments.  The [~ Col O A C] conjunct prevents [Par]'s
+    collinear disjunct from making arbitrary lengths proportional. *)
 Definition SegmentProportion (a b c d : SegmentName) : Prop :=
   SegmentWellFormed a /\ SegmentWellFormed b /\
   SegmentWellFormed c /\ SegmentWellFormed d /\
@@ -415,16 +373,10 @@ Definition LinearPairMeaning (a b : AngleName) : Prop :=
    (Out V (ang_end a) (ang_start b) /\ BetS (ang_start a) V (ang_end b)) \/
    (Out V (ang_end a) (ang_end b) /\ BetS (ang_start a) V (ang_start b))).
 
-(** The eight arguments of a transversal statement name the whole drawn
-    figure: [a] and [b] flank the crossing [i1] on the first line, [c] and
-    [d] flank [i2] on the second, and [t1], [t2] extend the transversal
-    strictly beyond [i1] and [i2], naming the exterior angles.  The strict
-    betweenness conjuncts state that order, and the one-side conjunct fixes
-    which flanking points share a side of the transversal -- the datum that
-    separates alternate from corresponding from same-side angle pairs.  [OS]
-    also places [A] and [C] strictly off the transversal, which keeps both
-    lines genuinely transverse to it; every collinearity and distinctness of
-    the earlier, weaker reading is derivable from these five conjuncts. *)
+(** The eight arguments name the ordered transversal figure: [a], [b] flank
+    [i1], [c], [d] flank [i2], and [t1], [t2] extend beyond the intersections.
+    [OS] identifies which flanking points share a side of the transversal and
+    keeps both crossed lines genuinely transverse to it. *)
 Definition TransversalConfiguration (a b t1 i1 c d t2 i2 : PointName) : Prop :=
   let A := point a in let B := point b in
   let C := point c in let D := point d in
@@ -437,15 +389,9 @@ Definition TransversalConfiguration (a b t1 i1 c d t2 i2 : PointName) : Prop :=
 Definition ArcWellFormed (a : ArcName) : Prop :=
   point a.(arc_first) <> point a.(arc_second) /\
   OnCircle a.(arc_circle) a.(arc_first) /\ OnCircle a.(arc_circle) a.(arc_second).
-(** Textbook arc congruence is equal measure in the same or in congruent
-    circles.  Without the radii conjunct this compared central angles alone,
-    making a sixty-degree arc of any circle "congruent" to a sixty-degree arc
-    of every other, and [con_chords_intersect_arcs] false across circles of
-    different sizes.  With it, [ArcWellFormed] makes all four
-    center-to-endpoint segments congruent, so congruent chords follow from
-    the central angles by SAS.  Same-kind congruence compares the right
-    measures for major arcs too: their reflex measures agree exactly when
-    the central angles do. *)
+(** Arc congruence requires congruent circles as well as equal central angles;
+    otherwise equal-angle arcs of different radii would compare equal.
+    Matching [ArcKind] makes the central-angle test valid for major arcs too. *)
 Definition ArcCongruent (a b : ArcName) : Prop :=
   ArcWellFormed a /\ ArcWellFormed b /\ a.(arc_kind) = b.(arc_kind) /\
   Cong (circ_center a.(arc_circle)) (point a.(arc_circle).(circle_radius_point))
@@ -468,13 +414,9 @@ Definition statementMeaning (s : PublicStatement) : Prop :=
   | ConSeg a b => SegmentCongruent a b
   | ConAng a b => AngleCongruent a b
   | ConTri a b => TriangleCongruent a b
-  (* Deliberately weaker than [Right]: no well-formedness is asserted, and
-     with a degenerate ray [Per] holds vacuously, so this does not entail
-     [ConAng].  The weakness is load-bearing: the checker concludes
-     [con_right] from a bare perpendicularity, where nothing makes the named
-     rays nondegenerate, and every passage from [con_right] to genuine angle
-     congruence instead demands declared objects ([perp_con_ang] and
-     [dependency_matches] in [Checker.v]). *)
+  (* Deliberately weaker than [Right]: [con_right] follows from bare
+     perpendicularity, which need not make the named rays nondegenerate.
+     Converting it to [ConAng] separately requires declared objects. *)
   | ConRight a b => RightAngle a /\ RightAngle b
   | Para a b => Parallel a b
   | Isosceles t => IsoscelesTriangle t
@@ -489,21 +431,9 @@ Definition statementMeaning (s : PublicStatement) : Prop :=
   | Supplementary a b =>
       SuppA (ang_start a) (ang_vertex a) (ang_end a)
             (ang_start b) (ang_vertex b) (ang_end b)
-  (* [Per] alone is satisfiable by degenerate names ([Per X Y Y] holds for
-     every X and Y), but [SumA] ends in [CongA _ _ _ X Y Z], whose definition
-     forces [X <> Y] and [Z <> Y].  With those, [Per X Y Z] is a genuine
-     right angle: on a line through [Y], only [Y] itself is equidistant from
-     [Z] and its reflection across [Y].
-
-     [SAMS] is what makes the two angles *together* a right angle.  [SumA]
-     alone wraps around: laying a 100 degree angle onto a 170 degree one
-     leaves 270 degrees, which as an angle reads back as 90, so without
-     [SAMS] those two would be complementary.  The wrap also breaks the
-     textbook inference this meaning exists to license, and not only in
-     spirit: a null angle and a straight angle would both be complements of
-     a right angle, so congruent complements would have to be congruent to
-     each other.  [Supplementary] needs no such conjunct because [SuppA] is
-     already the tight notion. *)
+  (* [SumA]'s resulting [CongA] makes [Per X Y Z] nondegenerate; [SAMS]
+     excludes wraparound sums.  [SuppA] already enforces the corresponding
+     restriction for supplementary angles. *)
   | Complementary a b => exists X Y Z,
       Per X Y Z /\
       SAMS (ang_start a) (ang_vertex a) (ang_end a)
@@ -683,7 +613,6 @@ Definition upperCaseLetters : string := "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
 Definition PointNameValid (p : PointName) : Prop :=
   In p (list_ascii_of_string upperCaseLetters).
 
-(** A line is read modulo whitespace and any trailing [//] comment. *)
 Definition whitespace (c : ascii) : bool :=
   Ascii.eqb c " "%char || Ascii.eqb c "009"%char || Ascii.eqb c "013"%char.
 Fixpoint removeWhitespace (text : string) : string :=
@@ -739,7 +668,6 @@ Definition DeclarationText (text : string)
       declarationTag first ++
       String.concat "" (map declarationObjectText declarations).
 
-(** A premise line labels its statement; a goal line points an arrow at it. *)
 Definition premiseBody (line : string) : option string :=
   match before "]" line, after "]" line with
   | Some label, Some body =>
@@ -750,9 +678,7 @@ Definition premiseBody (line : string) : option string :=
 Definition goalBody (line : string) : option string :=
   if prefix "->" (normalized line) then after "->" line else None.
 
-(** A line is exactly one of these.  The kinds are mutually exclusive by
-    construction: a premise label wins over everything, a goal arrow over a
-    declaration, and only a line that is none of the three may be ignored. *)
+(** Classification precedence makes the cases mutually exclusive. *)
 Inductive HeaderContribution :=
 | DeclaresObjects (declarations : list PublicDeclaration)
 | StatesPremise (premise : PublicStatement)
@@ -775,7 +701,6 @@ Inductive HeaderLine : string -> HeaderContribution -> Prop :=
     premiseBody text = None -> goalBody text = None ->
     normalized text = "" -> HeaderLine text ContributesNothing.
 
-(** A line is text with no line break inside it. *)
 Definition LineUnbroken (line : string) : Prop :=
   ~ In newlineCharacter (list_ascii_of_string line).
 
@@ -799,7 +724,6 @@ Inductive HeaderLines :
     HeaderLine line (StatesPremise statement) ->
     HeaderLines lines declarations premises goal ->
     HeaderLines (line :: lines) declarations (statement :: premises) goal
-(** A header states its conclusion once: the rest of the file must have none. *)
 | GoalLines : forall line lines statement declarations premises,
     HeaderLine line (StatesGoal statement) ->
     HeaderLines lines declarations premises None ->
@@ -969,47 +893,15 @@ Definition accepted (report : CheckReport) : bool :=
     decoded to exactly the specified problem.  [check] is the sole rich
     entrypoint and [checker] is its audited Boolean projection.
 
-    Deliberate assumption: [checker_sound] reads its problem in a Euclidean
-    *plane*.  Almost every implemented rule is proved without either the
-    parallel postulate or the upper dimension axiom, and the ones that need
-    them say so where they are proved; the two binders here are what the
-    claim as a whole is allowed to use.
+    [checker_sound] deliberately assumes a Euclidean plane.  [Tarski_2D] is
+    needed because [OnCircle] denotes a sphere in higher dimensions, where
+    the inscribed-angle theorems are false; acceptance therefore makes no
+    claim about higher-dimensional Euclidean models.
 
-    [Tarski_2D] earns its place through the circles.  The audited [OnCircle]
-    is equidistance from a center, which in three dimensions is a sphere, and
-    vertices spread over a sphere see the same chord at different angles --
-    so the inscribed-angle theorems are outright false without a dimension
-    bound.  The alternative is to write [Coplanar] conjuncts into the circle
-    meanings, as GeoCoq's own [Annexes/inscribed_angle.v] does.  That is
-    strictly worse here, because a statement meaning is not only assumed but
-    also *proved*: it is what a rule concluding that statement, and what a
-    proof whose goal is that statement, must establish.  A student's planar
-    proof would then be rejected for never having derived a coplanarity it
-    could not have thought to state.  Assuming the plane once, visibly, keeps
-    the statement meanings the plain textbook ones.
-
-    What this gives up is stated plainly: acceptance no longer commits to
-    anything about Euclidean models of higher dimension.  No rule below the
-    circles needs that, so nothing else changes.
-
-    Deliberate non-goal: nothing below asserts that a Euclidean Tarski
-    geometry exists, so [checker_sound] would hold vacuously if none did.
-    GeoCoq exhibits one over any real-closed field in
-    [Algebraic/POF_to_Tarski.v] ([Rcf_to_T_euclidean]), and that file does
-    build here on Rocq 9 (see the [rocq-9-migration] branch), but the model
-    cannot be instantiated: doing so needs a concrete real-closed field, and
-    GeoCoq's algebraic layer and MathComp's real-closed library currently
-    require disjoint MathComp versions.  See [docs/verified-checker.md].
-
-    Turning non-vacuity into a checked guarantee then means adding one
-    obligation to the module type below:
-
-      Parameter models_exist : exists Tn TnEQD,
-        inhabited (@Tarski_2D Tn TnEQD) /\ inhabited (@Tarski_euclidean Tn TnEQD).
-
-    stated existentially so that no particular model enters this file, and
-    discharged in the implementation.  Adding it before the model is actually
-    built would only make the contract uninhabitable. *)
+    Nothing here asserts that such a geometry exists, so soundness alone does
+    not rule out vacuity.  GeoCoq supplies a model construction, but current
+    library-version constraints prevent instantiating it here.  See
+    [docs/verified-checker.md]. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parseProblem : string -> option PublicProblem.
   Parameter parsePresentation : string -> option PresentationFile.
