@@ -30,9 +30,10 @@ Known limitations relevant to prioritization:
   in the *goal* position, deliberately (`project_goal_statement`): a `ref_*`
   goal would demand the same-name half of the audited meaning, and no
   textbook proof states one as its goal;
-- goal matching is still exact (`statement_eqb`), so a derived fact spelled
-  with a reversed angle or segment will not close an otherwise identical goal
-  even though step-to-step matching accepts it;
+- goal matching accepts the same unoriented spellings step-to-step matching
+  does (`fact_eqb`): segments and angles up to reversal, symmetric pairs up
+  to swap, and `ref_*` facts standing in for their `con_*` forms; `con_tri`
+  stays ordered-exact per the correspondence semantics;
 - `QuadrilateralWellFormed` now includes `~ Col` on the first three vertices,
   which rules out the interleaved-collinear quadrilaterals that once made
   `pgram_opp_sides` *false* as audited (historical counterexample in

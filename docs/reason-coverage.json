@@ -134,6 +134,8 @@
       "priority": 0,
       "axioms": "GeoCoq Midpoint definition",
       "fixtures": [
+        "src/checker/proofs/examples/goal_reversed_correct.txt",
+        "src/checker/proofs/examples/goal_reversed_incorrect.txt",
         "src/checker/proofs/examples/s1c3.txt",
         "src/checker/proofs/examples/s2c1.txt"
       ],
@@ -408,6 +410,8 @@
         "src/checker/proofs/circles/tangent_perp_correct.txt",
         "src/checker/proofs/circles/tangent_perp_incorrect.txt",
         "src/checker/proofs/examples/buggypgram_opp_angs.txt",
+        "src/checker/proofs/examples/goal_reversed_correct.txt",
+        "src/checker/proofs/examples/goal_reversed_incorrect.txt",
         "src/checker/proofs/examples/inscribed_angles.txt",
         "src/checker/proofs/examples/overlap.txt",
         "src/checker/proofs/examples/rhombusOutside.txt",

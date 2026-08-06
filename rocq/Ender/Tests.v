@@ -1313,5 +1313,23 @@ Example complete_transversal_layer_accepts :
   complete_checker transversal_layer_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** The goal is closed by a derived fact spelled with reversed segments,
+    under exactly the spellings step-to-step matching accepts. *)
+Definition reversed_goal_source := "title: reversed goal spelling
+premises:
+pt: A (0,0), M (2,0), B (4,0)
+[g_1] midpt(AB, M)
+-> con_seg(MA, BM)
+
+steps:
+[01] given(g_1) -> midpt(AB, M)
+[02] def_midpt(1) -> con_seg(AM, MB)".
+
+Example reversed_goal_accepts : check_source reversed_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_reversed_goal_accepts :
+  complete_checker reversed_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.

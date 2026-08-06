@@ -70,6 +70,21 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | EquiangularTri a, EquiangularTri b => triangle_eqb a b
   (* [SuppA] is symmetric and unaffected by reversing either angle. *)
   | Supplementary a b, Supplementary c d => angle_pair_eqb a b c d
+  (* [Par] is symmetric and unaffected by reversing either segment. *)
+  | Para a b, Para c d => segment_pair_eqb a b c d
+  (* Quadrilateral names fix the cyclic order their meanings read sides from,
+     so they match exactly; the same for the transversal's labeled figure. *)
+  | Pgram a, Pgram b | Rect a, Rect b | Rhomb a, Rhomb b
+  | IsosTrap a, IsosTrap b => quadrilateral_eqb a b
+  | TrapPremise q a b, TrapPremise r c d
+  | IsosTrapPremise q a b, IsosTrapPremise r c d =>
+      quadrilateral_eqb q r && segment_eqb a c && segment_eqb b d
+  | KiteP q a b, KiteP r c d =>
+      quadrilateral_eqb q r && angle_eqb a c && angle_eqb b d
+  | Transv a b t1 i1 c d t2 i2, Transv a' b' t1' i1' c' d' t2' i2' =>
+      ascii_eqb a a' && ascii_eqb b b' && ascii_eqb t1 t1' &&
+      ascii_eqb i1 i1' && ascii_eqb c c' && ascii_eqb d d' &&
+      ascii_eqb t2 t2' && ascii_eqb i2 i2'
   | _, _ => false
   end.
 
@@ -951,9 +966,14 @@ Fixpoint check_steps decls premises facts steps : option (list Statement) :=
       else None
   end.
 
+(** The goal is closed by any derived fact carrying the same geometry, under
+    exactly the spellings step-to-step matching accepts: segments and angles
+    up to reversal, symmetric pairs up to swap, and [ref_*] facts standing in
+    for their [con_*] forms.  [fact_eqb_sound] is the justification, and it
+    keeps [con_tri] ordered-exact, as the correspondence semantics demand. *)
 Definition check_problem (p : Problem) : bool :=
   match check_steps p.(problem_declarations) p.(problem_premises) [] p.(problem_steps) with
-  | Some facts => existsb (statement_eqb p.(problem_goal)) facts
+  | Some facts => existsb (fact_eqb p.(problem_goal)) facts
   | None => false
   end.
 
@@ -1027,9 +1047,18 @@ Proof.
       unfold reverse_angle, right_angle; cbn;
       split; intros [Hx Hy]; split;
       solve [assumption | now apply l8_2]. }
+  assert (Hparf : forall a b c d, segment_pair_eqb a b c d = true ->
+      (Interp (Para a b) <-> Interp (Para c d))).
+  { intros a b c d H. unfold segment_pair_eqb in H. apply orb_true_iff in H.
+    destruct H as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
+      apply segment_u_eqb_cases in H1; apply segment_u_eqb_cases in H2;
+      destruct H1 as [H1|H1]; destruct H2 as [H2|H2]; subst;
+      cbn; unfold Audit.Parallel, seg_name, Audit.seg_start, Audit.seg_end,
+        reverse_segment; cbn; split; intro;
+      eauto 6 using par_symmetry, par_left_comm, par_right_comm, par_comm. }
   destruct expected, actual; cbn; try discriminate; intros H;
     try (now apply Hpair); try (now apply Hangles); try (now apply Hrights);
-    try (now apply Hsupp);
+    try (now apply Hsupp); try (now apply Hparf);
     try (apply andb_true_iff in H; destruct H as [H ?];
          apply andb_true_iff in H; destruct H as [H ?];
          now apply perp_at_realign);
@@ -1045,6 +1074,8 @@ Proof.
         apply segment_u_eqb_cases in Heq; destruct Heq as [Heq|Heq]
     | Heq : angle_eqb _ _ = true |- _ => apply angle_eqb_eq in Heq
     | Heq : triangle_eqb _ _ = true |- _ => apply triangle_eqb_eq in Heq
+    | Heq : quadrilateral_eqb _ _ = true |- _ =>
+        apply quadrilateral_eqb_eq in Heq
     | Heq : ascii_eqb _ _ = true |- _ => apply Ascii.eqb_eq in Heq
     end; subst;
     (* residual cases: a midpoint, an angle bisector, or an on-line witness
@@ -2889,8 +2920,8 @@ Proof.
   destruct (check_steps (problem_declarations p) (problem_premises p) []
             (problem_steps p)) as [facts|] eqn:Hsteps; try discriminate.
   apply existsb_exists in Hcheck. destruct Hcheck as [goal [Hin Heq]].
-  apply statement_eqb_eq in Heq. subst goal.
   pose proof (check_steps_sound _ _ _ _ _ Hwf Hprem (Forall_nil _) Hsteps) as Hall.
+  apply (proj2 (fact_eqb_sound _ _ Heq)).
   eapply Forall_forall; eauto.
 Qed.
 
