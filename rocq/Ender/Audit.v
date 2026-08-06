@@ -474,10 +474,23 @@ Definition statementMeaning (s : PublicStatement) : Prop :=
      every X and Y), but [SumA] ends in [CongA _ _ _ X Y Z], whose definition
      forces [X <> Y] and [Z <> Y].  With those, [Per X Y Z] is a genuine
      right angle: on a line through [Y], only [Y] itself is equidistant from
-     [Z] and its reflection across [Y]. *)
+     [Z] and its reflection across [Y].
+
+     [SAMS] is what makes the two angles *together* a right angle.  [SumA]
+     alone wraps around: laying a 100 degree angle onto a 170 degree one
+     leaves 270 degrees, which as an angle reads back as 90, so without
+     [SAMS] those two would be complementary.  The wrap also breaks the
+     textbook inference this meaning exists to license, and not only in
+     spirit: a null angle and a straight angle would both be complements of
+     a right angle, so congruent complements would have to be congruent to
+     each other.  [Supplementary] needs no such conjunct because [SuppA] is
+     already the tight notion. *)
   | Complementary a b => exists X Y Z,
-      Per X Y Z /\ SumA (ang_start a) (ang_vertex a) (ang_end a)
-                         (ang_start b) (ang_vertex b) (ang_end b) X Y Z
+      Per X Y Z /\
+      SAMS (ang_start a) (ang_vertex a) (ang_end a)
+           (ang_start b) (ang_vertex b) (ang_end b) /\
+      SumA (ang_start a) (ang_vertex a) (ang_end a)
+           (ang_start b) (ang_vertex b) (ang_end b) X Y Z
   | LinearPair a b => LinearPairMeaning a b
   | Equiangular t => EquiangularTriangle t
   | Circumcenter p t => IsCircumcenter p t
@@ -937,12 +950,28 @@ Definition accepted (report : CheckReport) : bool :=
     decoded to exactly the specified problem.  [check] is the sole rich
     entrypoint and [checker] is its audited Boolean projection.
 
-    Deliberate non-assumption: [checker_sound] posits no upper dimension
-    axiom.  Every implemented rule is proved in neutral geometry except
-    [third_angle], which needs the parallel postulate, so the claim holds in
-    Euclidean Tarski models of every dimension, not only planes.  Should a
-    future rule genuinely require planarity, [Tarski_2D] would have to be
-    reintroduced here, visibly.
+    Deliberate assumption: [checker_sound] reads its problem in a Euclidean
+    *plane*.  Almost every implemented rule is proved without either the
+    parallel postulate or the upper dimension axiom, and the ones that need
+    them say so where they are proved; the two binders here are what the
+    claim as a whole is allowed to use.
+
+    [Tarski_2D] earns its place through the circles.  The audited [OnCircle]
+    is equidistance from a center, which in three dimensions is a sphere, and
+    vertices spread over a sphere see the same chord at different angles --
+    so the inscribed-angle theorems are outright false without a dimension
+    bound.  The alternative is to write [Coplanar] conjuncts into the circle
+    meanings, as GeoCoq's own [Annexes/inscribed_angle.v] does.  That is
+    strictly worse here, because a statement meaning is not only assumed but
+    also *proved*: it is what a rule concluding that statement, and what a
+    proof whose goal is that statement, must establish.  A student's planar
+    proof would then be rejected for never having derived a coplanarity it
+    could not have thought to state.  Assuming the plane once, visibly, keeps
+    the statement meanings the plain textbook ones.
+
+    What this gives up is stated plainly: acceptance no longer commits to
+    anything about Euclidean models of higher dimension.  No rule below the
+    circles needs that, so nothing else changes.
 
     Deliberate non-goal: nothing below asserts that a Euclidean Tarski
     geometry exists, so [checker_sound] would hold vacuously if none did.
@@ -957,7 +986,7 @@ Definition accepted (report : CheckReport) : bool :=
     obligation to the module type below:
 
       Parameter models_exist : exists Tn TnEQD,
-        inhabited (@Tarski_euclidean Tn TnEQD).
+        inhabited (@Tarski_2D Tn TnEQD) /\ inhabited (@Tarski_euclidean Tn TnEQD).
 
     stated existentially so that no particular model enters this file, and
     discharged in the implementation.  Adding it before the model is actually
@@ -978,6 +1007,7 @@ Module Type COMPLETE_VERIFIED_CHECKER.
     checker source = true ->
       forall part, problemPart source = Some part ->
       forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
+      forall (T2D : @Tarski_2D Tn TnEQD),
       forall (TE : @Tarski_euclidean Tn TnEQD),
       exists problem, parseProblem part = Some problem /\
         forall point : PointName -> Tpoint, problemClaim point problem.

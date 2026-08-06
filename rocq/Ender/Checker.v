@@ -1,6 +1,7 @@
 From Stdlib Require Import List String Bool Lia.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import GeoCoq.Main.Tarski_dev.Ch12_parallel.
+Require Import GeoCoq.Main.Annexes.suma.
 Require Import Ender.Syntax Ender.Geometry Ender.Semantics.
 Import ListNotations.
 Import EnderSyntax.
@@ -69,7 +70,8 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | IsoscelesTri a, IsoscelesTri b | EquilateralTri a, EquilateralTri b
   | EquiangularTri a, EquiangularTri b => triangle_eqb a b
   (* [SuppA] is symmetric and unaffected by reversing either angle. *)
-  | Supplementary a b, Supplementary c d => angle_pair_eqb a b c d
+  | Supplementary a b, Supplementary c d
+  | Complementary a b, Complementary c d => angle_pair_eqb a b c d
   (* [Par] is symmetric and unaffected by reversing either segment. *)
   | Para a b, Para c d => segment_pair_eqb a b c d
   (* Quadrilateral names fix the cyclic order their meanings read sides from,
@@ -652,6 +654,32 @@ Definition con_supplements_same (facts : list Statement) (i j : nat)
   | _, _ => false
   end.
 
+(** The same two rules for complements.  [SAMS] in the audited meaning is
+    what makes them hold: without it the shared right angle could be reached
+    from either side, and a null angle would be a complement of the same
+    angle a straight one is. *)
+Definition con_complements (facts : list Statement) (i j k : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j, lookup_step facts k with
+  | Some (Complementary a b), Some (Complementary c d), Some witness =>
+      (fact_eqb (ConAng b d) witness && fact_eqb (ConAng a c) conclusion) ||
+      (fact_eqb (ConAng b c) witness && fact_eqb (ConAng a d) conclusion) ||
+      (fact_eqb (ConAng a d) witness && fact_eqb (ConAng b c) conclusion) ||
+      (fact_eqb (ConAng a c) witness && fact_eqb (ConAng b d) conclusion)
+  | _, _, _ => false
+  end.
+
+Definition con_complements_same (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j with
+  | Some (Complementary a b), Some (Complementary c d) =>
+      (angle_u_eqb d b && fact_eqb (ConAng a c) conclusion) ||
+      (angle_u_eqb c b && fact_eqb (ConAng a d) conclusion) ||
+      (angle_u_eqb d a && fact_eqb (ConAng b c) conclusion) ||
+      (angle_u_eqb c a && fact_eqb (ConAng b d) conclusion)
+  | _, _ => false
+  end.
+
 Definition def_linear_pair (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
   match lookup_step facts i with
@@ -1175,6 +1203,8 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | EquiangEquilat i => equiang_equilat facts i conclusion
   | ConSupplements i j k => con_supplements facts i j k conclusion
   | ConSupplementsSame i j => con_supplements_same facts i j conclusion
+  | ConComplements i j k => con_complements facts i j k conclusion
+  | ConComplementsSame i j => con_complements_same facts i j conclusion
   | DefLinearPair i => def_linear_pair facts i conclusion
   | DefPerp i => def_perp premises facts i conclusion
   | DefParallelogram i j => def_parallelogram_rule decls facts i j conclusion
@@ -1289,6 +1319,36 @@ Proof.
             | now apply suppa_sym, suppa_left_comm
             | now apply suppa_sym, suppa_right_comm
             | now apply suppa_sym, suppa_comm ]. }
+  assert (Hcomp : forall a b c d, angle_pair_eqb a b c d = true ->
+      (Interp (Complementary a b) <-> Interp (Complementary c d))).
+  { assert (Hsym : forall x y : Angle, x = y \/ x = reverse_angle y ->
+        y = x \/ y = reverse_angle x).
+    { intros x y [Heq|Heq]; subst; [now left|right; destruct y; reflexivity]. }
+    assert (Hswap : forall a b,
+        Interp (Complementary a b) -> Interp (Complementary b a)).
+    { intros a b [X [Y [Z [Hper [Hsams Hsuma]]]]]. exists X, Y, Z.
+      split; [exact Hper|split; [now apply sams_sym|now apply suma_sym]]. }
+    assert (Hone : forall a b c d,
+        (a = c \/ a = reverse_angle c) -> (b = d \/ b = reverse_angle d) ->
+        Interp (Complementary a b) -> Interp (Complementary c d)).
+    { intros a b c d Ha Hb [X [Y [Z [Hper [Hsams Hsuma]]]]].
+      exists X, Y, Z. split; [exact Hper|].
+      destruct Ha as [Ha|Ha]; destruct Hb as [Hb|Hb]; subst;
+        unfold reverse_angle in Hsams, Hsuma; cbn in Hsams, Hsuma |- *;
+        split;
+        solve [ exact Hsams | exact Hsuma
+              | now apply sams_left_comm | now apply suma_left_comm
+              | now apply sams_right_comm | now apply suma_middle_comm
+              | now apply sams_comm
+              | now apply suma_left_comm, suma_middle_comm ]. }
+    intros a b c d H. unfold angle_pair_eqb in H. apply orb_true_iff in H.
+    destruct H as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
+      apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
+      split; intro Hs.
+    - now apply (Hone a b).
+    - apply (Hone c d); [now apply Hsym|now apply Hsym|exact Hs].
+    - apply Hswap in Hs. now apply (Hone b a).
+    - apply Hswap. apply (Hone c d); [now apply Hsym|now apply Hsym|exact Hs]. }
   assert (Hrights : forall a b c d, angle_pair_eqb a b c d = true ->
       ((right_angle point a /\ right_angle point b) <->
        (right_angle point c /\ right_angle point d))).
@@ -1310,7 +1370,7 @@ Proof.
       eauto 6 using par_symmetry, par_left_comm, par_right_comm, par_comm. }
   destruct expected, actual; cbn; try discriminate; intros H;
     try (now apply Hpair); try (now apply Hangles); try (now apply Hrights);
-    try (now apply Hsupp); try (now apply Hparf);
+    try (now apply Hsupp); try (now apply Hcomp); try (now apply Hparf);
     try (apply andb_true_iff in H; destruct H as [H ?];
          apply andb_true_iff in H; destruct H as [H ?];
          now apply perp_at_realign);
@@ -2339,6 +2399,134 @@ Proof.
   - apply (supplements_transfer a0 a a1 a2); [now apply suppa_sym|exact Hs2|exact Hw].
   - apply (supplements_transfer a0 a a2 a1);
       [now apply suppa_sym|now apply suppa_sym|exact Hw].
+Qed.
+
+Lemma complement_sym : forall a b,
+  Interp (Complementary a b) -> Interp (Complementary b a).
+Proof.
+  intros a b [X [Y [Z [Hper [Hsams Hsuma]]]]]. cbn in Hsams, Hsuma |- *.
+  exists X, Y, Z.
+  split; [exact Hper|split; [now apply sams_sym|now apply suma_sym]].
+Qed.
+
+Lemma complement_realign : forall c b d,
+  angle_u_eqb d b = true ->
+  Interp (Complementary c d) -> Interp (Complementary c b).
+Proof.
+  intros c b d H [X [Y [Z [Hper [Hsams Hsuma]]]]].
+  apply angle_u_eqb_cases in H. destruct H as [Heq|Heq]; subst d.
+  { exists X, Y, Z. auto. }
+  unfold reverse_angle in Hsams, Hsuma. cbn in Hsams, Hsuma |- *.
+  exists X, Y, Z.
+  split; [exact Hper
+         |split; [now apply sams_right_comm|now apply suma_middle_comm]].
+Qed.
+
+(** Both complement rules cancel the shared angle out of two sums that reach
+    a right angle.  All right angles are congruent, so the two sums can be
+    made to reach the *same* one, and [SAMS] is exactly the hypothesis
+    GeoCoq's cancellation law wants. *)
+Lemma complements_transfer : forall x y z w,
+  Interp (Complementary x y) -> Interp (Complementary z w) ->
+  Interp (ConAng y w) -> Interp (ConAng x z).
+Proof.
+  intros x y z w [X1 [Y1 [Z1 [Hper1 [Hsams1 Hsuma1]]]]]
+                 [X2 [Y2 [Z2 [Hper2 [Hsams2 Hsuma2]]]]] Hyw.
+  cbn in Hsams1, Hsuma1, Hsams2, Hsuma2, Hyw |- *.
+  pose proof (suma_distincts _ _ _ _ _ _ _ _ _ Hsuma1) as Hd1.
+  pose proof (suma_distincts _ _ _ _ _ _ _ _ _ Hsuma2) as Hd2.
+  spliter.
+  assert (Hright : CongA X2 Y2 Z2 X1 Y1 Z1)
+    by (apply l11_16; auto; now apply not_eq_sym).
+  assert (Hwy : CongA (point (ang_left w)) (point (ang_vertex w))
+                      (point (ang_right w))
+                      (point (ang_left y)) (point (ang_vertex y))
+                      (point (ang_right y))) by (now apply conga_sym).
+  assert (Hzz : CongA (point (ang_left z)) (point (ang_vertex z))
+                      (point (ang_right z))
+                      (point (ang_left z)) (point (ang_vertex z))
+                      (point (ang_right z)))
+    by (apply conga_refl; auto using not_eq_sym).
+  assert (Hsuma2' : SumA (point (ang_left z)) (point (ang_vertex z))
+                         (point (ang_right z))
+                         (point (ang_left y)) (point (ang_vertex y))
+                         (point (ang_right y)) X1 Y1 Z1)
+    by (eapply conga3_suma__suma;
+          [exact Hsuma2|exact Hzz|exact Hwy|exact Hright]).
+  assert (Hsams2' : SAMS (point (ang_left z)) (point (ang_vertex z))
+                         (point (ang_right z))
+                         (point (ang_left y)) (point (ang_vertex y))
+                         (point (ang_right y)))
+    by (eapply conga2_sams__sams; [exact Hzz|exact Hwy|exact Hsams2]).
+  now apply (sams2_suma2__conga123 _ _ _ _ _ _ (point (ang_left y))
+               (point (ang_vertex y)) (point (ang_right y)) X1 Y1 Z1).
+Qed.
+
+Lemma complementary_second_refl : forall x y,
+  Interp (Complementary x y) -> Interp (ConAng y y).
+Proof.
+  intros x y [X [Y [Z [_ [_ Hsuma]]]]]. cbn in Hsuma |- *.
+  pose proof (suma_distincts _ _ _ _ _ _ _ _ _ Hsuma) as Hd. spliter.
+  apply conga_refl; auto using not_eq_sym.
+Qed.
+
+Lemma con_complements_sound : forall facts i j k conclusion,
+  Forall Interp facts -> con_complements facts i j k conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j k conclusion Hall Hrule. unfold con_complements in Hrule.
+  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
+  destruct first; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
+  destruct second; try discriminate.
+  destruct (lookup_step facts k) as [witness|] eqn:Hwitness; try discriminate.
+  assert (Hc1 : Interp (Complementary a a0)) by (eapply lookup_step_sound; eauto).
+  assert (Hc2 : Interp (Complementary a1 a2)) by (eapply lookup_step_sound; eauto).
+  assert (Hw : Interp witness) by (eapply lookup_step_sound; eauto).
+  repeat rewrite orb_true_iff in Hrule.
+  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hcongruent Hconclusion];
+    apply (fact_eqb_sound _ _ Hcongruent) in Hw;
+    apply (fact_eqb_sound _ _ Hconclusion).
+  - now apply (complements_transfer a a0 a1 a2).
+  - apply (complements_transfer a a0 a2 a1);
+      [exact Hc1|now apply complement_sym|exact Hw].
+  - apply (complements_transfer a0 a a1 a2);
+      [now apply complement_sym|exact Hc2|exact Hw].
+  - apply (complements_transfer a0 a a2 a1);
+      [now apply complement_sym|now apply complement_sym|exact Hw].
+Qed.
+
+Lemma con_complements_same_sound : forall facts i j conclusion,
+  Forall Interp facts -> con_complements_same facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hall Hrule. unfold con_complements_same in Hrule.
+  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
+  destruct first; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
+  destruct second; try discriminate.
+  assert (Hc1 : Interp (Complementary a a0)) by (eapply lookup_step_sound; eauto).
+  assert (Hc2 : Interp (Complementary a1 a2)) by (eapply lookup_step_sound; eauto).
+  (* the shared angle may sit in either slot of either dependency; realign it
+     into the second slot of both, then cancel it *)
+  assert (Hcancel : forall x y z : Angle,
+      Interp (Complementary x y) -> Interp (Complementary z y) ->
+      Interp (ConAng x z)).
+  { intros x y z Hx Hz. apply (complements_transfer x y z y);
+      [exact Hx|exact Hz|now apply (complementary_second_refl z)]. }
+  repeat rewrite orb_true_iff in Hrule.
+  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hshared Hconclusion];
+    apply (fact_eqb_sound _ _ Hconclusion).
+  - apply Hcancel with (y := a0);
+      [exact Hc1|now apply (complement_realign a1 a0 a2)].
+  - apply Hcancel with (y := a0); [exact Hc1|].
+    apply (complement_realign a2 a0 a1); [exact Hshared|now apply complement_sym].
+  - apply Hcancel with (y := a);
+      [now apply complement_sym|now apply (complement_realign a1 a a2)].
+  - apply Hcancel with (y := a); [now apply complement_sym|].
+    apply (complement_realign a2 a a1); [exact Hshared|now apply complement_sym].
 Qed.
 
 Lemma linear_pair_is_supplementary : forall a b,
@@ -3844,6 +4032,8 @@ Proof.
   - eapply equiang_equilat_sound; eauto.
   - eapply con_supplements_sound; eauto.
   - eapply con_supplements_same_sound; eauto.
+  - eapply con_complements_sound; eauto.
+  - eapply con_complements_same_sound; eauto.
   - eapply def_linear_pair_sound; eauto.
   - eapply def_perp_sound; eauto.
   - eapply def_parallelogram_sound; eauto.

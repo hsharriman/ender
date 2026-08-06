@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- fifty-five reasons are fully verified and none are partial. The conservative
+- fifty-seven reasons are fully verified and none are partial. The conservative
   `ang_bisect_conv` rule requires its congruent dependency to name exactly the
   two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
@@ -67,19 +67,18 @@ Known limitations relevant to prioritization:
   `altint(2,d_01)` are accepted; the diagram label is compatibility metadata,
   while the rule still searches and validates the actual transversal;
 - the inscribed-angle congruence rules (`con_inscribed_angs`, `inscribed_angs`)
-  are false as audited in Euclidean models of dimension three or more: the
-  audited `OnCircle` is equidistance from the center, which is a sphere, and
-  vertices off a common circle see the same chord at different angles.  With
-  `Tarski_2D` gone from the public theorem they cannot be implemented as
-  audited.  The dimension-free fix mirrors GeoCoq itself: its
-  `Annexes/inscribed_angle.v` proves the needed lemmas under
-  `Tarski_euclidean` alone with explicit `Coplanar` hypotheses (only
-  `chord_par_diam` sits in its `Tarski_2D` section), so the audited circle
-  meanings need coplanarity conjuncts when this family is implemented — an
-  `Audit.v` decision, like `Transversal` sidedness, which these rules also
-  need (same-arc versus opposite-arc separates congruent from supplementary).
-  `inscribed_semi` is unaffected: a right angle in a semicircle holds on
-  spheres too.  Relatedly, `ArcCongruent` now requires congruent radii,
+  are false in Euclidean models of dimension three or more: the audited
+  `OnCircle` is equidistance from the center, which is a sphere, and vertices
+  off a common circle see the same chord at different angles.  `Tarski_2D` is
+  back in the public theorem for exactly this reason, so they are now
+  implementable; what remains for them is `Transversal`-style sidedness, since
+  same-arc versus opposite-arc is what separates congruent from supplementary.
+  The alternative — coplanarity conjuncts in the circle meanings, as GeoCoq's
+  own `Annexes/inscribed_angle.v` uses — was considered and rejected: a
+  statement meaning is proved as well as assumed, so a planar student proof
+  would be rejected for never having derived a coplanarity it could not have
+  known to state.  `inscribed_semi` never needed either: a right angle in a
+  semicircle holds on spheres too.  Relatedly, `ArcCongruent` now requires congruent radii,
   matching the textbook "same or congruent circles" clause; without it,
   `con_chords_intersect_arcs` was false across circles of different sizes.
   The sphere-safe core of the family is implemented over a kernel circle
@@ -113,10 +112,10 @@ Known limitations relevant to prioritization:
   the rules above it stay visibly neutral.  Prefer a GeoCoq route that keeps
   `Print Assumptions` clean; `nix flake check` now enforces it.  The relevant
   GeoCoq lemmas carry sidedness hypotheses (`TS`/`OS`) rather than an upper
-  dimension axiom, and `Tarski_2D` has been removed from the public theorem
-  entirely — a rule that genuinely needed planarity would require
-  reintroducing it in `Audit.v`, which changes what the checker claims and is
-  not a decision to take silently;
+  dimension axiom, so nothing in that family needs the plane.  `Tarski_2D` is
+  nevertheless assumed by the public theorem, for the circles alone; keep
+  using it the same way `Tarski_euclidean` is used, introducing it in
+  `Checker.v` only above the rules that genuinely need it;
 - the checker theorem is not shown to be non-vacuous: no model of the geometry
   hypotheses is exhibited.  GeoCoq has one and it compiles on Rocq 9 (branch
   `rocq-9-migration`), but instantiating it needs a real-closed field, and
@@ -128,7 +127,13 @@ Known limitations relevant to prioritization:
   object; the presentation adapter passes nested arc arguments through as
   text rather than failing, while legacy `BR_OB`-style arc tokens still
   throw on purpose;
-- the public theorem quantifies over decidable point equality and the
-  Euclidean assumption even where individual reason lemmas need less; the
-  audited statement meanings themselves assume only bare
-  `Tarski_neutral_dimensionless`, and `Tarski_2D` appears nowhere.
+- the public theorem quantifies over decidable point equality, the Euclidean
+  assumption, and `Tarski_2D` even where individual reason lemmas need less;
+  the audited statement meanings themselves still assume only bare
+  `Tarski_neutral_dimensionless`;
+- `Complementary` now carries a `SAMS` conjunct, so it means what a textbook
+  means: the two angles *together* make the right angle.  Without it `SumA`
+  wraps, 170 degrees and 100 degrees would be complementary, and
+  `con_complements` would be false — a null angle and a straight angle would
+  both be complements of a right angle.  Both complement rules are verified
+  over that conjunct through `sams2_suma2__conga123`.

@@ -108,6 +108,15 @@ Definition statement_meaning (s : Statement) : Prop :=
   | Supplementary a b =>
       SuppA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
             (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
+  (* The audited meaning verbatim: [SAMS] is what says the two together make
+     the right angle, rather than wrapping past it. *)
+  | Complementary a b => exists X Y Z,
+      Per X Y Z /\
+      SAMS (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
+           (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right)) /\
+      SumA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
+           (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
+           X Y Z
   | LinearPair a b => Audit.LinearPairMeaning point (ang_name a) (ang_name b)
   | Para a b => Audit.Parallel point (seg_name a) (seg_name b)
   | Pgram q => Audit.IsParallelogram point (quad_name q)

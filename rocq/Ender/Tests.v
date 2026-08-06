@@ -1249,6 +1249,50 @@ Definition rect_diag_con_sides_source := transitive_header "quad: q_ABCD
   "[01] given(g_1) -> rectangle(q_ABCD)
 [02] rect_diag_con(1) -> con_seg(AB,CD)".
 
+(** Complements of congruent angles are congruent, and so are two complements
+    of the same angle; a shared angle is what the second rule needs. *)
+Definition con_complements_source := transitive_header "ang: a_ABC a_CBD a_EFG a_GFH
+"
+  "[g_1] complementary(a_ABC,a_CBD)
+[g_2] complementary(a_EFG,a_GFH)
+[g_3] con_ang(a_CBD,a_GFH)
+"
+  "con_ang(a_ABC,a_EFG)"
+  "[01] given(g_1) -> complementary(a_ABC,a_CBD)
+[02] given(g_2) -> complementary(a_EFG,a_GFH)
+[03] given(g_3) -> con_ang(a_CBD,a_GFH)
+[04] con_complements(1,2,3) -> con_ang(a_ABC,a_EFG)".
+
+Definition con_complements_same_source := transitive_header "ang: a_ABC a_CBD a_DBE
+"
+  "[g_1] complementary(a_ABC,a_CBD)
+[g_2] complementary(a_DBE,a_CBD)
+"
+  "con_ang(a_ABC,a_DBE)"
+  "[01] given(g_1) -> complementary(a_ABC,a_CBD)
+[02] given(g_2) -> complementary(a_DBE,a_CBD)
+[03] con_complements_same(1,2) -> con_ang(a_ABC,a_DBE)".
+
+Definition con_complements_unshared_source := transitive_header "ang: a_ABC a_CBD a_DBE a_EBF
+"
+  "[g_1] complementary(a_ABC,a_CBD)
+[g_2] complementary(a_DBE,a_EBF)
+"
+  "con_ang(a_ABC,a_DBE)"
+  "[01] given(g_1) -> complementary(a_ABC,a_CBD)
+[02] given(g_2) -> complementary(a_DBE,a_EBF)
+[03] con_complements_same(1,2) -> con_ang(a_ABC,a_DBE)".
+
+Example con_complements_accepts :
+  complete_checker con_complements_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_complements_same_accepts :
+  complete_checker con_complements_same_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_complements_unshared_rejects :
+  complete_checker con_complements_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example rect_diag_con_accepts :
   complete_checker rect_diag_con_source = true.
 Proof. vm_compute. reflexivity. Qed.

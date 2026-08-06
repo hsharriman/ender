@@ -187,9 +187,17 @@ assume `Tarski_neutral_dimensionless_with_decidable_point_equality`, since
 GeoCoq's lemma library case-splits on point equality throughout.  Every reason
 but `third_angle` is proved in that neutral setting; `third_angle` additionally
 assumes `Tarski_euclidean`, which the audited final theorem already provides.
-No rule needs an upper dimension axiom, so the final theorem posits none:
-`Tarski_2D` appears nowhere, and acceptance commits to the entailment in
-Euclidean Tarski models of every dimension. [Geometry.v](../rocq/Ender/Geometry.v) derives the
+No rule outside the circles needs an upper dimension axiom, but the final
+theorem does assume `Tarski_2D`: the audited `OnCircle` is equidistance from a
+center, which in three dimensions is a sphere, and the inscribed-angle
+theorems are false there.  The alternative is `Coplanar` conjuncts in the
+circle meanings, which GeoCoq's own `Annexes/inscribed_angle.v` uses.  That
+is worse here, because a statement meaning is not only assumed but proved: it
+is what a rule concluding that statement, and a proof whose goal is that
+statement, must establish, so a planar student proof would be rejected for
+never having derived a coplanarity it could not have known to state.  What
+assuming the plane gives up is stated plainly in `Audit.v`: acceptance no
+longer commits to anything about Euclidean models of higher dimension. [Geometry.v](../rocq/Ender/Geometry.v) derives the
 four triangle criteria from GeoCoq's existing neutral-geometry lemmas and makes
 CPCTC a projection from ordered triangle congruence. The pinned upstream source
 is [GeoCoq commit `90d8ce4`](https://github.com/GeoCoq/GeoCoq/commit/90d8ce484b32e0568b106c85d7e15be719a40180).

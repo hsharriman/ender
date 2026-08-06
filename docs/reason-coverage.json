@@ -373,25 +373,25 @@
     },
     {
       "reason": "con_complements",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq sams2_suma2__conga123 over the audited SAMS conjunct",
       "fixtures": [
         "src/checker/proofs/lines_angles/con_complements_correct.txt",
         "src/checker/proofs/lines_angles/con_complements_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "con_complements_same",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq sams2_suma2__conga123 over the audited SAMS conjunct",
       "fixtures": [
         "src/checker/proofs/lines_angles/con_complements_same_correct.txt",
         "src/checker/proofs/lines_angles/con_complements_same_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "perp_bisector",

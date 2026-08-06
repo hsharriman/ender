@@ -305,6 +305,7 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "equilateral" text (parse_shape EquilateralTri)
   (try_call "equiangular" text (parse_shape EquiangularTri)
   (try_call "supplementary" text (parse_angles Supplementary)
+  (try_call "complementary" text (parse_angles Complementary)
   (try_call "linear_pair" text (parse_angles LinearPair)
   (try_call "para" text (parse_segments Para)
   (try_call "parallelogram" text (parse_quad_shape Pgram)
@@ -379,7 +380,7 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
          end
      | _ => None
      end)
-    None))))))))))))))))))))))))))))))))).
+    None)))))))))))))))))))))))))))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -485,6 +486,8 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "def_perp" text (parse_one DefPerp)
         (try_call "con_supplements_same" text (parse_two ConSupplementsSame)
         (try_call "con_supplements" text (parse_three ConSupplements)
+        (try_call "con_complements_same" text (parse_two ConComplementsSame)
+        (try_call "con_complements" text (parse_three ConComplements)
         (try_call "def_linear_pair" text (parse_one DefLinearPair)
         (try_call "equiang_equilat" text (parse_one EquiangEquilat)
         (try_call "def_parallelogram" text (parse_two DefParallelogram)
@@ -511,7 +514,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "inscribed_semi" text (parse_one InscribedSemi)
         (try_call "con_chords_intersect_arcs" text (parse_one ConChordsArcs)
         (try_call "tangent_perp" text (parse_two TangentPerp)
-        None))))))))))))))))))))))))))))))))))))))))))))))))))))
+        None))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

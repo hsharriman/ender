@@ -44,6 +44,8 @@ const implemented = new Set([
   "equiang_equilat",
   "con_supplements",
   "con_supplements_same",
+  "con_complements",
+  "con_complements_same",
   "def_linear_pair",
   "def_perp",
   "perp_con_ang",
@@ -187,6 +189,8 @@ const entries = catalog.map((reason) => {
         ? "audited meaning plus declared-triangle nondegeneracy"
       : ["con_supplements", "con_supplements_same"].includes(reason)
         ? "GeoCoq suppa2__conga123 and conga2_suppa__suppa"
+      : ["con_complements", "con_complements_same"].includes(reason)
+        ? "GeoCoq sams2_suma2__conga123 over the audited SAMS conjunct"
       : reason === "def_perp"
         ? "GeoCoq per_perp_in and perp_in_col_perp_in"
       : reason === "given"

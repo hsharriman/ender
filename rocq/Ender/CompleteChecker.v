@@ -47,6 +47,7 @@ Definition project_premise_statement (s : Audit.PublicStatement) : option Statem
   | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
   | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
   | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
+  | Audit.Complementary a b => Some (Complementary (project_angle a) (project_angle b))
   | Audit.LinearPair a b => Some (LinearPair (project_angle a) (project_angle b))
   | Audit.Para a b => Some (Para (project_segment a) (project_segment b))
   | Audit.Parallelogram q => Some (Pgram (project_quadrilateral q))
@@ -100,6 +101,7 @@ Definition project_goal_statement (s : Audit.PublicStatement) : option Statement
   | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
   | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
   | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
+  | Audit.Complementary a b => Some (Complementary (project_angle a) (project_angle b))
   | Audit.LinearPair a b => Some (LinearPair (project_angle a) (project_angle b))
   | Audit.Para a b => Some (Para (project_segment a) (project_segment b))
   | Audit.Parallelogram q => Some (Pgram (project_quadrilateral q))
@@ -294,6 +296,7 @@ Inductive ExpectedFact :=
 | ExpectedRight | ExpectedPerpendicular | ExpectedMidpoint
 | ExpectedAngleBisector | ExpectedConRight
 | ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary
+| ExpectedComplementary
 | ExpectedLinearPair | ExpectedRhombus | ExpectedRectangle.
 
 Definition statement_function (s : Statement) : string :=
@@ -306,6 +309,7 @@ Definition statement_function (s : Statement) : string :=
   | AngBisectOf _ _ => "ang_bisect" | OnLine _ _ => "on_line"
   | IsoscelesTri _ => "isosceles" | EquilateralTri _ => "equilateral"
   | EquiangularTri _ => "equiangular" | Supplementary _ _ => "supplementary"
+  | Complementary _ _ => "complementary"
   | LinearPair _ _ => "linear_pair"
   | Para _ _ => "para" | Pgram _ => "parallelogram"
   | Rect _ => "rectangle" | Rhomb _ => "rhombus"
@@ -328,6 +332,7 @@ Definition expected_function (expected : ExpectedFact) : string :=
   | ExpectedEquilateral => "equilateral"
   | ExpectedEquiangular => "equiangular"
   | ExpectedSupplementary => "supplementary"
+  | ExpectedComplementary => "complementary"
   | ExpectedLinearPair => "linear_pair"
   | ExpectedRhombus => "rhombus"
   | ExpectedRectangle => "rectangle"
@@ -340,6 +345,7 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular
   | ExpectedMidpoint | ExpectedAngleBisector | ExpectedConRight
   | ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary => []
+  | ExpectedComplementary => []
   | ExpectedLinearPair => []
   | ExpectedRhombus => []
   | ExpectedRectangle => []
@@ -356,6 +362,7 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedEquilateral, EquilateralTri _
   | ExpectedEquiangular, EquiangularTri _
   | ExpectedSupplementary, Supplementary _ _ => true
+  | ExpectedComplementary, Complementary _ _ => true
   | ExpectedLinearPair, LinearPair _ _ => true
   | ExpectedRhombus, Rhomb _ => true
   | ExpectedRectangle, Rect _ => true
@@ -757,11 +764,12 @@ Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
     checker source = true ->
       forall part, problemPart source = Some part ->
       forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
+      forall (T2D : @Tarski_2D Tn TnEQD),
       forall (TE : @Tarski_euclidean Tn TnEQD),
       exists problem, parseProblem part = Some problem /\
         forall point : Audit.PointName -> Tpoint, Audit.problemClaim point problem.
   Proof.
-    intros source Hcheck part Hpart Tn TnEQD TE.
+    intros source Hcheck part Hpart Tn TnEQD T2D TE.
     change (Audit.accepted (check_report source) = true) in Hcheck.
     rewrite check_report_accepted in Hcheck.
     unfold parseProblem.
