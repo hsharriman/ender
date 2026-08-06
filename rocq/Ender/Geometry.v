@@ -516,6 +516,23 @@ Proof.
   split; Cong.
 Qed.
 
+(** Opposite angles of the audited parallelogram.  Noncollinearity promotes
+    the first broad [Par] relation to GeoCoq's strict one; the second parallel
+    pair then supplies [Plg], whose standard angle theorem gives both pairs. *)
+Lemma ender_pgram_opp_angles : forall A B C D,
+  A <> B /\ A <> C /\ B <> C -> ~ Col A B C ->
+  Par A B C D -> Par B C D A ->
+  CongA A B C C D A /\ CongA B C D D A B.
+Proof.
+  intros A B C D Hdistinct Hncol Hab Hbc.
+  assert (Hstrict : Par_strict A B C D).
+  { apply par_not_col_strict with C; [exact Hab|Col|exact Hncol]. }
+  assert (Hplg : Plg A B C D).
+  { apply pars_par_plg; [exact Hstrict|Par]. }
+  apply plg_conga; [exact Hdistinct|].
+  now apply plg_to_parallelogram.
+Qed.
+
 (** A parallelogram with one pair of congruent adjacent sides has all four
     sides congruent, spelled as the audited [IsRhombus] wants them. *)
 Lemma ender_rhombus_sides : forall A B C D X,

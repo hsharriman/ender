@@ -1147,6 +1147,30 @@ Example def_linear_pair_mixed_rejects :
   complete_checker def_linear_pair_mixed_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A parallelogram exposes exactly its two pairs of opposite corners. *)
+Definition pgram_opp_angles_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] parallelogram(q_ABCD)
+"
+  "con_ang(a_ABC,a_CDA)"
+  "[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_opp_angs(1) -> con_ang(a_ABC,a_CDA)".
+
+Definition pgram_consecutive_angles_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] parallelogram(q_ABCD)
+"
+  "con_ang(a_ABC,a_BCD)"
+  "[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_opp_angs(1) -> con_ang(a_ABC,a_BCD)".
+
+Example pgram_opp_angles_accepts :
+  complete_checker pgram_opp_angles_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_consecutive_angles_rejects :
+  complete_checker pgram_consecutive_angles_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** A rhombus exposes every pair from its four-side congruence chain. *)
 Definition rhombus_def_source := transitive_header "quad: q_ABCD
 "

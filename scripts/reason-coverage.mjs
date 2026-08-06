@@ -50,6 +50,7 @@ const implemented = new Set([
   "reflex",
   "def_parallelogram",
   "pgram_opp_sides",
+  "pgram_opp_angs",
   "pgram_opp_side_para",
   "rectangle_pgram",
   "rhombus_pgram",
