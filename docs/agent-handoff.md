@@ -24,7 +24,9 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- forty-eight reasons are fully verified and none are partial: the `ang:`
+- forty-nine reasons are fully verified and none are partial. The conservative
+  `ang_bisect_conv` rule requires its congruent dependency to name exactly the
+  two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
   angles.  The complete-contract adapter still rejects reflexive statements
   in the *goal* position, deliberately (`project_goal_statement`): a `ref_*`

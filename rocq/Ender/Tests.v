@@ -665,6 +665,59 @@ Example def_ang_bisect_detached_rejects :
   complete_checker def_ang_bisect_detached_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** The converse accepts only the ray syntactically shared by the two
+    congruent halves of the concluded outer angle. *)
+Definition ang_bisect_conv_source := transitive_header "ang: a_ABC a_ABD a_DBC
+"
+  "[g_1] con_ang(a_ABD,a_DBC)
+"
+  "ang_bisect(a_ABC,BD)"
+  "[01] given(g_1) -> con_ang(a_ABD,a_DBC)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC,BD)".
+
+Definition ang_bisect_conv_reversed_source := transitive_header
+  "ang: a_ABC a_ABD a_DBC
+"
+  "[g_1] con_ang(a_ABD,a_DBC)
+"
+  "ang_bisect(a_ABC,DB)"
+  "[01] given(g_1) -> con_ang(a_ABD,a_DBC)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC,DB)".
+
+(** A different segment cannot be inferred from the congruence. *)
+Definition ang_bisect_conv_wrong_ray_source := transitive_header
+  "ang: a_ABC a_ABD a_DBC
+"
+  "[g_1] con_ang(a_ABD,a_DBC)
+"
+  "ang_bisect(a_ABC,BE)"
+  "[01] given(g_1) -> con_ang(a_ABD,a_DBC)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC,BE)".
+
+(** Nor can congruent angles that do not form the named halves establish a
+    bisector. *)
+Definition ang_bisect_conv_unrelated_source := transitive_header
+  "ang: a_ABC a_EFG a_HIJ
+"
+  "[g_1] con_ang(a_EFG,a_HIJ)
+"
+  "ang_bisect(a_ABC,BD)"
+  "[01] given(g_1) -> con_ang(a_EFG,a_HIJ)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC,BD)".
+
+Example ang_bisect_conv_accepts :
+  complete_checker ang_bisect_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example ang_bisect_conv_reversed_accepts :
+  complete_checker ang_bisect_conv_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example ang_bisect_conv_wrong_ray_rejects :
+  complete_checker ang_bisect_conv_wrong_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example ang_bisect_conv_unrelated_rejects :
+  complete_checker ang_bisect_conv_unrelated_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Right-hypotenuse-leg, in both of the dependency orders the corpus uses. *)
 Definition rhl_hypotenuse_first_source := transitive_header "tri: t_KLM t_MNK
 "

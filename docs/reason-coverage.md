@@ -93,9 +93,9 @@ all corpus files through the extracted API.
 ## Priority policy
 
 - **Priority 1:** foundational, frequently reused facts with comparatively
-  local semantics. All but `ang_bisect_conv` are now implemented; that one
-  needs a decision about what fixes the bisecting ray, since the audited
-  `AngleBisector` names it and a congruence of the two halves does not.
+  local semantics. This group is complete. `ang_bisect_conv` uses a
+  conservative fail-closed schema: the congruent dependency must name exactly
+  the two halves induced by the outer angle and shared ray in the conclusion.
 - **Priority 2:** ordinary triangle, line, and quadrilateral curriculum rules.
   The triangle-shape group is done; the largest remaining clusters are the
   parallel-line rules (which need the `para` and `transversal` statements and

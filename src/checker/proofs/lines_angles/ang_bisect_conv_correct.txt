@@ -1,0 +1,12 @@
+// pass
+title: "Test: ang_bisect_conv (correct - shared ray bisects the outer angle)"
+premises:
+pt: A (1, 5, l), B (5, 1, b), C (9, 5, r), D (5, 5, t)
+seg: BD
+ang: a_ABC a_ABD a_DBC
+[g_1] con_ang(a_ABD, a_DBC)
+-> ang_bisect(a_ABC, BD)
+
+steps:
+[01] given(g_1) -> con_ang(a_ABD, a_DBC)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC, BD)

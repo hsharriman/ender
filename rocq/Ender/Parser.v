@@ -460,6 +460,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
       (try_call "vert_ang" text
         (fun body => Some (VertAng (string_of_list_ascii body)))
         (try_call "def_ang_bisect" text (parse_one DefAngBisect)
+        (try_call "ang_bisect_conv" text (parse_one AngBisectConv)
         (try_call "rhl" text (parse_three RHL)
         (try_call "midpt_conv" text (parse_one MidptConv)
         (try_call "third_angle" text (parse_two ThirdAngle)
@@ -493,7 +494,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "inscribed_semi" text (parse_one InscribedSemi)
         (try_call "con_chords_intersect_arcs" text (parse_one ConChordsArcs)
         (try_call "tangent_perp" text (parse_two TangentPerp)
-        None)))))))))))))))))))))))))))))))))))))))))))))
+        None))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

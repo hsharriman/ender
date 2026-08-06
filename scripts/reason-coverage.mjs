@@ -30,6 +30,7 @@ const implemented = new Set([
   "def_midpt",
   "vert_ang",
   "def_ang_bisect",
+  "ang_bisect_conv",
   "rhl",
   "midpt_conv",
   "third_angle",
@@ -130,6 +131,8 @@ const entries = catalog.map((reason) => {
         ? "GeoCoq l11_14 (vertical angles)"
       : reason === "def_ang_bisect"
         ? "audited AngleBisector meaning"
+      : reason === "ang_bisect_conv"
+        ? "audited AngleBisector meaning; syntactic shared-ray schema"
       : reason === "rhl"
         ? "GeoCoq cong2_per2__cong_3 (neutral geometry)"
       : reason === "midpt_conv"

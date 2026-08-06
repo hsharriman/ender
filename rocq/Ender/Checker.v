@@ -424,6 +424,24 @@ Definition def_ang_bisect (facts : list Statement) (i : nat)
   | _ => false
   end.
 
+(** Conservative converse of the angle-bisector definition.  The conclusion
+    fixes both the outer angle and the named ray; the dependency must be
+    exactly the two halves induced by that ray, modulo the unoriented angle
+    symmetries accepted by [fact_eqb]. *)
+Definition ang_bisect_conv (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | AngBisectOf a s, Some dependency =>
+      let halves far :=
+        ConAng (angle a.(ang_left) a.(ang_vertex) far)
+               (angle far a.(ang_vertex) a.(ang_right)) in
+      (ascii_eqb s.(seg_start) a.(ang_vertex) &&
+        fact_eqb (halves s.(seg_end)) dependency) ||
+      (ascii_eqb s.(seg_end) a.(ang_vertex) &&
+        fact_eqb (halves s.(seg_start)) dependency)
+  | _, _ => false
+  end.
+
 (** Converse of the midpoint definition.  Congruent halves alone do not place
     the point between the endpoints, so this rule additionally requires an
     [on_line] diagram premise: on a line there is exactly one point equidistant
@@ -994,6 +1012,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | DefMidpt i => def_midpt facts i conclusion
   | VertAng label => vert_ang decls premises label conclusion
   | DefAngBisect i => def_ang_bisect facts i conclusion
+  | AngBisectConv i => ang_bisect_conv facts i conclusion
   | MidptConv i => midpt_conv premises facts i conclusion
   | ThirdAngle i j => third_angle decls premises facts i j conclusion
   | DefConTri i1 i2 i3 i4 i5 i6 =>
@@ -1779,6 +1798,22 @@ Proof.
   - assert (Hsame : s.(seg_start) = s.(seg_end)) by congruence.
     rewrite Hsame. exact Hc.
   - exact Hc.
+Qed.
+
+Lemma ang_bisect_conv_sound : forall facts i conclusion,
+  Forall Interp facts -> ang_bisect_conv facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule. unfold ang_bisect_conv in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  assert (Hdependency : Interp dependency) by (eapply lookup_step_sound; eauto).
+  apply orb_true_iff in Hrule; destruct Hrule as [Hcase|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hvertex Heq];
+    unfold ascii_eqb in Hvertex; apply Ascii.eqb_eq in Hvertex;
+    apply (fact_eqb_sound _ _ Heq) in Hdependency; cbn in Hdependency |- *.
+  - left. split; [exact Hvertex|exact Hdependency].
+  - right. split; [exact Hvertex|exact Hdependency].
 Qed.
 
 Lemma on_line_u_sound : forall s t p q,
@@ -3231,6 +3266,7 @@ Proof.
   - eapply def_midpt_sound; eauto.
   - eapply vert_ang_sound; eauto.
   - eapply def_ang_bisect_sound; eauto.
+  - eapply ang_bisect_conv_sound; eauto.
   - destruct conclusion; try discriminate.
     apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].

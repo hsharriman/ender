@@ -455,6 +455,8 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
   | DefAngBisect i =>
       dependency_type_issue facts "def_ang_bisect" 0 i ExpectedAngleBisector
         step_number
+  | AngBisectConv i =>
+      dependency_type_issue facts "ang_bisect_conv" 0 i ExpectedAngle step_number
   | _ => None
   end.
 

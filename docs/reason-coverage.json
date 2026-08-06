@@ -26,7 +26,9 @@
         "src/checker/proofs/examples/s2c2.txt",
         "src/checker/proofs/examples/s2inc1corrected.txt",
         "src/checker/proofs/examples/s2inc2.txt",
-        "src/checker/proofs/examples/tutorial.txt"
+        "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt"
       ],
       "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
@@ -94,7 +96,9 @@
         "src/checker/proofs/examples/s2c2.txt",
         "src/checker/proofs/examples/s2inc1.txt",
         "src/checker/proofs/examples/s2inc1corrected.txt",
-        "src/checker/proofs/examples/s2inc2.txt"
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt"
       ],
       "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
@@ -114,7 +118,9 @@
         "src/checker/proofs/examples/s2inc1.txt",
         "src/checker/proofs/examples/s2inc1corrected.txt",
         "src/checker/proofs/examples/tutinc.txt",
-        "src/checker/proofs/examples/tutorial.txt"
+        "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt"
       ],
       "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
@@ -175,6 +181,8 @@
         "src/checker/proofs/examples/s1c1.txt",
         "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
         "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt",
         "src/checker/proofs/lines_angles/altint_conv_correct.txt",
         "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
       ],
@@ -186,6 +194,8 @@
       "priority": 0,
       "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
       "fixtures": [
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt",
         "src/checker/proofs/lines_angles/altint_correct.txt",
         "src/checker/proofs/lines_angles/altint_incorrect.txt"
       ],
@@ -267,11 +277,14 @@
     },
     {
       "reason": "ang_bisect_conv",
-      "status": "unimplemented",
-      "priority": 1,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
-      "fixtures": [],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited AngleBisector meaning; syntactic shared-ray schema",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/ang_bisect_conv_correct.txt",
+        "src/checker/proofs/lines_angles/ang_bisect_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "def_con_right",
@@ -440,12 +453,16 @@
         "src/checker/proofs/examples/transversal_sameside.txt",
         "src/checker/proofs/examples/tutinc.txt",
         "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt",
         "src/checker/proofs/lines_angles/altext_correct.txt",
         "src/checker/proofs/lines_angles/altext_incorrect.txt",
         "src/checker/proofs/lines_angles/altint_conv_correct.txt",
         "src/checker/proofs/lines_angles/altint_conv_incorrect.txt",
         "src/checker/proofs/lines_angles/altint_correct.txt",
         "src/checker/proofs/lines_angles/altint_incorrect.txt",
+        "src/checker/proofs/lines_angles/ang_bisect_conv_correct.txt",
+        "src/checker/proofs/lines_angles/ang_bisect_conv_incorrect.txt",
         "src/checker/proofs/lines_angles/con_ang_transitive_correct.txt",
         "src/checker/proofs/lines_angles/con_ang_transitive_incorrect.txt",
         "src/checker/proofs/lines_angles/con_complements_correct.txt",
