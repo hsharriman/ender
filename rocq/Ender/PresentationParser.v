@@ -1,5 +1,5 @@
 From Stdlib Require Import Ascii String List Bool Nat.
-Require Import Ender.Audit Ender.PublicParser.
+Require Import Ender.Audit Ender.Chars Ender.PublicParser.
 Import ListNotations.
 Module FA := Audit.FinalAudit.
 Open Scope string_scope.
@@ -31,7 +31,7 @@ Fixpoint take_call_prefix (text : C) (depth : nat) (seen_open : bool)
   end.
 
 Definition surface_call_of_chars (text : C) : option FA.SurfaceCall :=
-  let compact := FA.removeWhitespace (FA.codeBeforeComment text) in
+  let compact := Chars.removeWhitespace (Chars.codeBeforeComment text) in
   match take_call_prefix compact 0 false [] with
   | None => None
   | Some call_text => match parse_call call_text with
@@ -74,8 +74,8 @@ Definition declaration_tokens (kind : FA.DisplayObjectKind) (text : C)
 
 Definition parse_declaration (prefix : string) (kind : FA.DisplayObjectKind)
     (line : C) : option FA.DisplayDeclaration :=
-  let compact := FA.removeWhitespace (FA.codeBeforeComment line) in
-  match Audit.ProblemPart.find_after (list_ascii_of_string prefix) compact with
+  let compact := Chars.removeWhitespace (Chars.codeBeforeComment line) in
+  match Chars.find_after (list_ascii_of_string prefix) compact with
   | Some body =>
       match declaration_tokens kind body with
       | Some objects => Some (FA.display_declaration kind objects)
@@ -91,8 +91,8 @@ Fixpoint parse_points_chars_aux (fuel : nat) (text : C)
   | O, _ => None
   | S fuel', ","%char :: rest => parse_points_chars_aux fuel' rest
   | S fuel', label :: "("%char :: rest =>
-      match Audit.ProblemPart.take_before [")"%char] rest,
-            Audit.ProblemPart.find_after [")"%char] rest with
+      match Chars.take_before [")"%char] rest,
+            Chars.find_after [")"%char] rest with
       | Some placement, Some remaining =>
           match split_arguments placement with
           | Some [x; y] =>
@@ -119,8 +119,8 @@ Definition parse_points_chars (text : C) : option (list FA.DisplayPoint) :=
   parse_points_chars_aux (length text) text.
 
 Definition parse_points_line (line : C) : option (list FA.DisplayPoint) :=
-  let compact := FA.removeWhitespace (FA.codeBeforeComment line) in
-  match Audit.ProblemPart.find_after (list_ascii_of_string "pt:") compact with
+  let compact := Chars.removeWhitespace (Chars.codeBeforeComment line) in
+  match Chars.find_after (list_ascii_of_string "pt:") compact with
   | Some body => parse_points_chars body
   | None => None
   end.
@@ -140,7 +140,7 @@ Fixpoint trim_left (text : C) : C :=
 Definition trim (text : C) : C := rev (trim_left (rev (trim_left text))).
 
 Definition parse_title_line (line : C) : option string :=
-  match Audit.ProblemPart.find_after (list_ascii_of_string "title:") line with
+  match Chars.find_after (list_ascii_of_string "title:") line with
   | Some title => Some (string_of_list_ascii (strip_quotes (trim title)))
   | None => None
   end.
@@ -148,8 +148,8 @@ Definition parse_title_line (line : C) : option string :=
 Definition labeled_body (line : C) : option (string * C) :=
   match line with
   | "["%char :: rest =>
-      match Audit.ProblemPart.take_before ["]"%char] rest,
-            Audit.ProblemPart.find_after ["]"%char] rest with
+      match Chars.take_before ["]"%char] rest,
+            Chars.find_after ["]"%char] rest with
       | Some label, Some body => Some (string_of_list_ascii label, body)
       | _, _ => None
       end
@@ -167,7 +167,7 @@ Definition parse_labeled_call (line : C) : option FA.LabeledSurfaceCall :=
   end.
 
 Definition parse_goal_line (line : C) : option FA.SurfaceCall :=
-  match Audit.ProblemPart.find_after (list_ascii_of_string "->") line with
+  match Chars.find_after (list_ascii_of_string "->") line with
   | Some body => surface_call_of_chars body
   | None => None
   end.
@@ -175,8 +175,8 @@ Definition parse_goal_line (line : C) : option FA.SurfaceCall :=
 Definition parse_step_line (line : C) : option FA.PresentationStep :=
   match labeled_body line with
   | Some (label, body) =>
-      match Audit.ProblemPart.take_before (list_ascii_of_string "->") body,
-            Audit.ProblemPart.find_after (list_ascii_of_string "->") body with
+      match Chars.take_before (list_ascii_of_string "->") body,
+            Chars.find_after (list_ascii_of_string "->") body with
       | Some reason, Some conclusion =>
           Some (FA.presentation_step label (surface_call_of_chars reason)
             (surface_call_of_chars conclusion))
@@ -208,38 +208,38 @@ Definition add_declaration (state : PresentationState)
 
 Definition parse_presentation_line (line : C) (state : PresentationState)
     : option PresentationState :=
-  let compact := FA.removeWhitespace (FA.codeBeforeComment line) in
-  if Audit.ProblemPart.starts_with (list_ascii_of_string "steps:") compact then
+  let compact := Chars.removeWhitespace (Chars.codeBeforeComment line) in
+  if Chars.starts_with (list_ascii_of_string "steps:") compact then
     Some (presentation_state true state.(ps_title) state.(ps_points)
       state.(ps_declarations) state.(ps_diagram) state.(ps_givens)
       state.(ps_goal) state.(ps_steps))
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "title:") compact then
+  else if Chars.starts_with (list_ascii_of_string "title:") compact then
     match parse_title_line line with
     | Some title => Some (presentation_state state.(ps_in_steps) (Some title)
         state.(ps_points) state.(ps_declarations) state.(ps_diagram)
         state.(ps_givens) state.(ps_goal) state.(ps_steps))
     | None => None
     end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "pt:") compact then
+  else if Chars.starts_with (list_ascii_of_string "pt:") compact then
     match parse_points_line line with
     | Some points => Some (presentation_state state.(ps_in_steps) state.(ps_title)
         (rev points ++ state.(ps_points)) state.(ps_declarations)
         state.(ps_diagram) state.(ps_givens) state.(ps_goal) state.(ps_steps))
     | None => None
     end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "tri:") compact then
+  else if Chars.starts_with (list_ascii_of_string "tri:") compact then
     match parse_declaration "tri:" FA.DisplayTriangle line with
     | Some d => Some (add_declaration state d) | None => None end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "quad:") compact then
+  else if Chars.starts_with (list_ascii_of_string "quad:") compact then
     match parse_declaration "quad:" FA.DisplayQuadrilateral line with
     | Some d => Some (add_declaration state d) | None => None end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "seg:") compact then
+  else if Chars.starts_with (list_ascii_of_string "seg:") compact then
     match parse_declaration "seg:" FA.DisplaySegment line with
     | Some d => Some (add_declaration state d) | None => None end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "ang:") compact then
+  else if Chars.starts_with (list_ascii_of_string "ang:") compact then
     match parse_declaration "ang:" FA.DisplayAngle line with
     | Some d => Some (add_declaration state d) | None => None end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "circ:") compact then
+  else if Chars.starts_with (list_ascii_of_string "circ:") compact then
     match parse_declaration "circ:" FA.DisplayCircle line with
     | Some d => Some (add_declaration state d) | None => None end
   else if state.(ps_in_steps) then
@@ -249,21 +249,21 @@ Definition parse_presentation_line (line : C) (state : PresentationState)
         state.(ps_goal) (step :: state.(ps_steps)))
     | None => Some state
     end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "[d_") compact then
+  else if Chars.starts_with (list_ascii_of_string "[d_") compact then
     match parse_labeled_call line with
     | Some call => Some (presentation_state false state.(ps_title) state.(ps_points)
         state.(ps_declarations) (call :: state.(ps_diagram)) state.(ps_givens)
         state.(ps_goal) state.(ps_steps))
     | None => None
     end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "[g_") compact then
+  else if Chars.starts_with (list_ascii_of_string "[g_") compact then
     match parse_labeled_call line with
     | Some call => Some (presentation_state false state.(ps_title) state.(ps_points)
         state.(ps_declarations) state.(ps_diagram) (call :: state.(ps_givens))
         state.(ps_goal) state.(ps_steps))
     | None => None
     end
-  else if Audit.ProblemPart.starts_with (list_ascii_of_string "->") compact then
+  else if Chars.starts_with (list_ascii_of_string "->") compact then
     match parse_goal_line line with
     | Some goal => Some (presentation_state false state.(ps_title) state.(ps_points)
         state.(ps_declarations) state.(ps_diagram) state.(ps_givens)

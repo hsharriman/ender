@@ -1,5 +1,5 @@
 ROCQFLAGS := -Q Ender Ender
-MODULES := Audit PublicParser PresentationParser Syntax Geometry Semantics Checker Parser CompleteChecker CertifiedAPI Tests Extract
+MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Semantics Checker Parser CompleteChecker CertifiedAPI Tests Extract
 VOFILES := $(addprefix Ender/,$(addsuffix .vo,$(MODULES)))
 
 .PHONY: all proofs test extract clean
@@ -15,10 +15,13 @@ extract: Ender/Extract.vo
 Ender/Audit.vo: Ender/Audit.v
 	rocq compile $(ROCQFLAGS) $<
 
+Ender/Chars.vo: Ender/Chars.v Ender/Audit.vo
+	rocq compile $(ROCQFLAGS) $<
+
 Ender/Syntax.vo: Ender/Syntax.v Ender/Audit.vo
 	rocq compile $(ROCQFLAGS) $<
 
-Ender/PublicParser.vo: Ender/PublicParser.v Ender/Audit.vo
+Ender/PublicParser.vo: Ender/PublicParser.v Ender/Audit.vo Ender/Chars.vo
 	rocq compile $(ROCQFLAGS) $<
 
 Ender/PresentationParser.vo: Ender/PresentationParser.v Ender/PublicParser.vo

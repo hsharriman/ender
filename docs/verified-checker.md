@@ -156,6 +156,11 @@ and [Semantics.v](../rocq/Ender/Semantics.v) contain the internal representation
 and compatibility semantics for the currently executable reason subset.
 [CompleteChecker.v](../rocq/Ender/CompleteChecker.v) supplies the fail-closed
 adapter, proves the semantic bridge, and inhabits `COMPLETE_VERIFIED_CHECKER`.
+[Chars.v](../rocq/Ender/Chars.v) holds the character-list helpers those parsers
+destructure text with. It is implementation-side and no claim rests on it: the
+audit file states every lexical notion over `string` using `String.prefix`,
+`String.index`, and `String.substring`, so it names one text representation and
+converts nowhere.
 The extracted native and Wasm programs now run that complete-contract checker.
 Rocq
 cannot establish that the deliberately chosen public meanings match a reader's

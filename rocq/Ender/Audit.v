@@ -5,55 +5,38 @@ Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Import ListNotations.
 Local Open Scope string_scope.
 
-(** Return precisely the text after the [pt:] line and before [steps:]. *)
+(** Return precisely the text after the [pt:] line and before [steps:].
+
+    Rocq string literals have no escape sequences, so a line feed can only be
+    spelled through its [ascii] code. *)
 Module ProblemPart.
 
-Definition chars := list ascii.
+Definition newline : string := String "010"%char "".
 
-Fixpoint starts_with (prefix text : chars) : bool :=
-  match prefix, text with
-  | [], _ => true
-  | _, [] => false
-  | p :: ps, c :: cs => if Ascii.eqb p c then starts_with ps cs else false
+(** [String.index 0 marker text] is the position of the first occurrence of
+    [marker].  [String.substring start count text] stops at the end of [text]
+    when fewer than [count] characters remain, so [String.length text] as the
+    count means "everything from [start] onwards". *)
+Definition after (marker text : string) : option string :=
+  match index 0 marker text with
+  | Some start =>
+      Some (substring (start + String.length marker) (String.length text) text)
+  | None => None
   end.
 
-Fixpoint drop_chars (n : nat) (text : chars) : chars :=
-  match n, text with
-  | O, _ => text
-  | S _, [] => []
-  | S n', _ :: rest => drop_chars n' rest
-  end.
-
-Fixpoint find_after (marker text : chars) : option chars :=
-  match text with
-  | [] => if starts_with marker [] then Some [] else None
-  | _ :: rest =>
-      if starts_with marker text then Some (drop_chars (length marker) text)
-      else find_after marker rest
-  end.
-
-Fixpoint take_before (marker text : chars) : option chars :=
-  match text with
-  | [] => if starts_with marker [] then Some [] else None
-  | c :: rest =>
-      if starts_with marker text then Some []
-      else match take_before marker rest with
-           | Some prefix => Some (c :: prefix)
-           | None => None
-           end
+Definition before (marker text : string) : option string :=
+  match index 0 marker text with
+  | Some start => Some (substring 0 start text)
+  | None => None
   end.
 
 Definition problemPart (source : string) : option string :=
-  match find_after (list_ascii_of_string "pt:") (list_ascii_of_string source) with
+  match after "pt:" source with
   | None => None
-  | Some after_pt =>
-      match find_after ["010"%char] after_pt with
+  | Some afterPoints =>
+      match after newline afterPoints with
       | None => None
-      | Some after_coordinates =>
-          match take_before (list_ascii_of_string "steps:") after_coordinates with
-          | Some part => Some (string_of_list_ascii part)
-          | None => None
-          end
+      | Some afterCoordinates => before "steps:" afterCoordinates
       end
   end.
 
@@ -483,7 +466,7 @@ Definition problemClaim (p : PublicProblem) : Prop :=
 End GeometryMeaning.
 
 (** The public spelling of every statement form is part of the audit. *)
-Definition pointText (p : PointName) : string := string_of_list_ascii [p].
+Definition pointText (p : PointName) : string := String p "".
 Definition segmentText (s : SegmentName) : string :=
   pointText s.(segment_first) ++ pointText s.(segment_second).
 Definition angleText (a : AngleName) : string :=
@@ -505,10 +488,12 @@ Definition call (name : string) (arguments : list string) : string :=
 (** Ender's lexical grammar admits exactly one upper-case ASCII letter as a
     point label.  Keeping this restriction explicit prevents object names from
     containing punctuation used by the surrounding grammar. *)
-Definition upperCaseLetters : list ascii :=
-  list_ascii_of_string "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
+Definition upperCaseLetters : string := "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
 Definition pointNameValid (p : PointName) : bool :=
-  existsb (Ascii.eqb p) upperCaseLetters.
+  match index 0 (pointText p) upperCaseLetters with
+  | Some _ => true
+  | None => false
+  end.
 Definition pointsValid (points : list PointName) : bool :=
   forallb pointNameValid points.
 
@@ -621,22 +606,23 @@ Definition statementText (s : PublicStatement) : string :=
 *)
 Definition whitespace (c : ascii) : bool :=
   Ascii.eqb c " "%char || Ascii.eqb c "009"%char || Ascii.eqb c "013"%char.
-Fixpoint removeWhitespace (text : list ascii) : list ascii :=
+Fixpoint removeWhitespace (text : string) : string :=
   match text with
-  | [] => []
-  | c :: rest => if whitespace c then removeWhitespace rest else c :: removeWhitespace rest
+  | "" => ""
+  | String c rest =>
+      if whitespace c then removeWhitespace rest else String c (removeWhitespace rest)
   end.
-Fixpoint codeBeforeComment (text : list ascii) : list ascii :=
+Fixpoint codeBeforeComment (text : string) : string :=
   match text with
-  | "/"%char :: "/"%char :: _ => []
-  | c :: rest => c :: codeBeforeComment rest
-  | [] => []
+  | String "/"%char (String "/"%char _) => ""
+  | String c rest => String c (codeBeforeComment rest)
+  | "" => ""
   end.
-Definition normalized (text : string) : list ascii :=
-  removeWhitespace (codeBeforeComment (list_ascii_of_string text)).
+Definition normalized (text : string) : string :=
+  removeWhitespace (codeBeforeComment text).
 Definition StatementText (text : string) (statement : PublicStatement) : Prop :=
   pointsValid (statementPoints statement) = true /\
-  normalized text = list_ascii_of_string (statementText statement).
+  normalized text = statementText statement.
 
 Definition declarationTag (d : PublicDeclaration) : string :=
   match d with
@@ -660,30 +646,19 @@ Definition DeclarationText (text : string) (declarations : list PublicDeclaratio
     Forall (fun declaration => declarationTag declaration = declarationTag first) rest /\
     Forall (fun declaration => pointsValid (declarationPoints declaration) = true)
       declarations /\
-    normalized text = list_ascii_of_string
-      (declarationTag first ++ String.concat "" (map declarationObjectText declarations)).
+    normalized text =
+      declarationTag first ++ String.concat "" (map declarationObjectText declarations).
 
 (** Relations for the exact theorem-bearing header language. *)
 Definition premiseBody (line : string) : option string :=
-  let text := list_ascii_of_string line in
-  match ProblemPart.take_before ["]"%char] text,
-        ProblemPart.find_after ["]"%char] text with
+  match ProblemPart.before "]" line, ProblemPart.after "]" line with
   | Some label, Some body =>
-      if ProblemPart.starts_with (list_ascii_of_string "[g_") label ||
-         ProblemPart.starts_with (list_ascii_of_string "[d_") label
-      then Some (string_of_list_ascii body) else None
+      if prefix "[g_" label || prefix "[d_" label then Some body else None
   | _, _ => None
   end.
 
 Definition goalBody (line : string) : option string :=
-  let compact := normalized line in
-  if ProblemPart.starts_with (list_ascii_of_string "->") compact
-  then match ProblemPart.find_after (list_ascii_of_string "->")
-                                    (list_ascii_of_string line) with
-       | Some body => Some (string_of_list_ascii body)
-       | None => None
-       end
-  else None.
+  if prefix "->" (normalized line) then ProblemPart.after "->" line else None.
 
 Inductive HeaderLine : string -> (list PublicDeclaration * list PublicStatement * option PublicStatement) -> Prop :=
 | DeclarationHeaderLine : forall text declarations,
@@ -698,18 +673,16 @@ Inductive HeaderLine : string -> (list PublicDeclaration * list PublicStatement 
     HeaderLine line ([], [], Some statement)
 | IgnoredBlankLine : forall text,
     premiseBody text = None -> goalBody text = None ->
-    normalized text = [] -> HeaderLine text ([], [], None).
+    normalized text = "" -> HeaderLine text ([], [], None).
 
-Fixpoint splitLineChars (text current : list ascii) : list (list ascii) :=
-  match text with
-  | [] => [rev current]
-  | c :: rest =>
-      if Ascii.eqb c "010"%char
-      then rev current :: splitLineChars rest []
-      else splitLineChars rest (c :: current)
+Fixpoint splitLines (source : string) : list string :=
+  match source with
+  | "" => [""]
+  | String c rest =>
+      let lines := splitLines rest in
+      if Ascii.eqb c "010"%char then "" :: lines
+      else String c (hd "" lines) :: tl lines
   end.
-Definition splitLines (source : string) : list string :=
-  map string_of_list_ascii (splitLineChars (list_ascii_of_string source) []).
 
 Inductive HeaderLines :
     list string -> list PublicDeclaration -> list PublicStatement ->

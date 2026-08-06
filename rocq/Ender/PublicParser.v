@@ -1,5 +1,5 @@
 From Stdlib Require Import Ascii String List Bool.
-Require Import Ender.Audit.
+Require Import Ender.Audit Ender.Chars.
 Import ListNotations.
 Import FinalAudit.
 Open Scope string_scope.
@@ -49,8 +49,8 @@ Definition split_arguments (text : PChars) : option (list PChars) :=
   match text with [] => Some [] | _ => split_arguments_aux O [] [] text end.
 
 Definition parse_call (text : PChars) : option (PChars * list PChars) :=
-  match ProblemPart.take_before ["("%char] text,
-        ProblemPart.find_after ["("%char] text with
+  match Chars.take_before ["("%char] text,
+        Chars.find_after ["("%char] text with
   | Some name, Some after_open =>
       match rev after_open with
       | ")"%char :: reversed_body =>
@@ -207,11 +207,10 @@ Definition parse_public_statement_chars (text : PChars) : option PublicStatement
   end.
 
 Definition parse_public_statement (text : string) : option PublicStatement :=
-  let input := normalized text in
-  match parse_public_statement_chars input with
+  match parse_public_statement_chars (list_ascii_of_string (normalized text)) with
   | Some statement =>
       if pointsValid (statementPoints statement) then
-        if chars_eqb input (list_ascii_of_string (statementText statement))
+        if String.eqb (normalized text) (statementText statement)
         then Some statement else None
       else None
   | None => None
@@ -243,21 +242,20 @@ Theorem parse_public_statement_complete : forall text statement,
 Proof.
   intros text statement [Hvalid Htext]. unfold parse_public_statement.
   rewrite Htext, parse_public_statement_chars_render by exact Hvalid.
-  rewrite Hvalid, (proj2 (chars_eqb_eq _ _) eq_refl). reflexivity.
+  rewrite Hvalid, String.eqb_refl. reflexivity.
 Qed.
 
 Theorem parse_public_statement_sound : forall text statement,
   parse_public_statement text = Some statement -> StatementText text statement.
 Proof.
   intros text statement H. unfold parse_public_statement in H.
-  destruct (parse_public_statement_chars (normalized text)) as [parsed|] eqn:Hparsed;
-    try discriminate.
+  destruct (parse_public_statement_chars (list_ascii_of_string (normalized text)))
+    as [parsed|] eqn:Hparsed; try discriminate.
   destruct (pointsValid (statementPoints parsed)) eqn:Hvalid; cbn in H;
     try discriminate.
-  destruct (chars_eqb (normalized text)
-             (list_ascii_of_string (statementText parsed))) eqn:Heq;
+  destruct (String.eqb (normalized text) (statementText parsed)) eqn:Heq;
     try discriminate.
-  injection H as <-. split; [exact Hvalid|]. now apply chars_eqb_eq in Heq.
+  injection H as <-. split; [exact Hvalid|]. now apply String.eqb_eq in Heq.
 Qed.
 
 Fixpoint parse_segment_declarations (text : PChars) : option (list PublicDeclaration) :=
@@ -337,14 +335,14 @@ Qed.
 
 Definition parse_declaration_line_raw_chars (text : PChars)
     : option (list PublicDeclaration) :=
-  if ProblemPart.starts_with (list_ascii_of_string "seg:") text then parse_segment_declarations(ProblemPart.drop_chars 4 text) else
-  if ProblemPart.starts_with (list_ascii_of_string "ang:") text then parse_angle_declarations(ProblemPart.drop_chars 4 text) else
-  if ProblemPart.starts_with (list_ascii_of_string "tri:") text then parse_triangle_declarations(ProblemPart.drop_chars 4 text) else
-  if ProblemPart.starts_with (list_ascii_of_string "quad:") text then parse_quad_declarations(ProblemPart.drop_chars 5 text) else
-  if ProblemPart.starts_with (list_ascii_of_string "circ:") text then parse_circle_declarations(ProblemPart.drop_chars 5 text) else None.
+  if Chars.starts_with (list_ascii_of_string "seg:") text then parse_segment_declarations(Chars.drop_chars 4 text) else
+  if Chars.starts_with (list_ascii_of_string "ang:") text then parse_angle_declarations(Chars.drop_chars 4 text) else
+  if Chars.starts_with (list_ascii_of_string "tri:") text then parse_triangle_declarations(Chars.drop_chars 4 text) else
+  if Chars.starts_with (list_ascii_of_string "quad:") text then parse_quad_declarations(Chars.drop_chars 5 text) else
+  if Chars.starts_with (list_ascii_of_string "circ:") text then parse_circle_declarations(Chars.drop_chars 5 text) else None.
 
 Definition parse_declaration_line_raw (line : string) : option (list PublicDeclaration) :=
-  parse_declaration_line_raw_chars (normalized line).
+  parse_declaration_line_raw_chars (list_ascii_of_string (normalized line)).
 
 Lemma parse_declaration_line_raw_chars_render : forall first rest,
   Forall (fun declaration => declarationTag declaration = declarationTag first) rest ->
@@ -383,7 +381,7 @@ Definition parse_declaration_line (line : string) : option (list PublicDeclarati
       match declarations_text declarations with
       | Some rendered =>
           if declarations_valid declarations then
-            if chars_eqb (normalized line) (list_ascii_of_string rendered)
+            if String.eqb (normalized line) rendered
             then Some declarations else None
           else None
       | None => None
@@ -407,7 +405,7 @@ Proof.
       (proj1 (Forall_forall _ _) Htags declaration Hin))).
   unfold declarations_valid. rewrite (proj2 (forallb_forall _ _) (fun declaration Hin =>
     proj1 (Forall_forall _ _) Hvalid declaration Hin)).
-  rewrite (proj2 (chars_eqb_eq _ _) eq_refl). reflexivity.
+  rewrite String.eqb_refl. reflexivity.
 Qed.
 
 Theorem parse_declaration_line_sound : forall line declarations,
@@ -425,10 +423,9 @@ Proof.
   destruct (declarations_valid (first :: rest))
     eqn:Hvalid.
   2: discriminate.
-  destruct (chars_eqb (normalized line)
-    (list_ascii_of_string
-      (declarationTag first ++
-       String.concat "" (map declarationObjectText (first :: rest)))))
+  destruct (String.eqb (normalized line)
+    (declarationTag first ++
+     String.concat "" (map declarationObjectText (first :: rest))))
     eqn:Heq; try discriminate.
   cbn in Heq. injection H as <-.
   exists first, rest. split; [reflexivity|]. split.
@@ -437,7 +434,7 @@ Proof.
   - split.
     + unfold declarations_valid in Hvalid. apply Forall_forall.
       rewrite forallb_forall in Hvalid. exact Hvalid.
-    + now apply chars_eqb_eq in Heq.
+    + now apply String.eqb_eq in Heq.
 Qed.
 
 Definition HeaderContribution :=
@@ -460,7 +457,7 @@ Definition parse_public_line (line : string) : option HeaderContribution :=
       | None =>
           match parse_declaration_line line with
           | Some declarations => Some (declarations, [], None)
-          | None => if chars_eqb (normalized line) []
+          | None => if String.eqb (normalized line) ""
                     then Some ([], [], None) else None
           end
       end
@@ -478,9 +475,9 @@ Proof.
         try discriminate. injection H as <-. econstructor; eauto using parse_public_statement_sound.
     + destruct (parse_declaration_line line) as [declarations|] eqn:Hdeclarations.
       * injection H as <-. constructor; eauto using parse_declaration_line_sound.
-      * destruct (chars_eqb (normalized line) []) eqn:Hblank; try discriminate.
+      * destruct (String.eqb (normalized line) "") eqn:Hblank; try discriminate.
         injection H as <-. apply IgnoredBlankLine; try assumption.
-        exact (proj1 (chars_eqb_eq _ _) Hblank).
+        exact (proj1 (String.eqb_eq _ _) Hblank).
 Qed.
 
 Theorem parse_public_line_complete : forall line contribution,
@@ -496,7 +493,7 @@ Proof.
     + exfalso. apply parse_declaration_line_sound in Hdeclaration.
       destruct Hdeclaration as [first [rest [_ [_ [_ Htext]]]]].
       rewrite H2 in Htext. destruct first; discriminate.
-    + rewrite (proj2 (chars_eqb_eq _ _) H2). reflexivity.
+    + rewrite (proj2 (String.eqb_eq _ _) H2). reflexivity.
 Qed.
 
 Fixpoint parse_public_lines (lines : list string) : option HeaderContribution :=
