@@ -303,10 +303,19 @@ Definition IsKitePremise
 Definition IsTrapezoid (q : QuadrilateralName) : Prop :=
   QuadrilateralWellFormed q /\
   (Parallel (quad_ab q) (quad_cd q) \/ Parallel (quad_bc q) (quad_da q)).
+(** Stated through congruent diagonals rather than congruent legs.  "Legs
+    congruent" admits every oblique parallelogram — one pair of parallel
+    sides makes it a trapezoid, and its legs are congruent automatically —
+    which falsifies the base-angle theorems; "legs congruent and not
+    parallel" instead excludes the rectangles those theorems include.
+    Congruent diagonals is the characterization that keeps every catalog
+    trapezoid rule true, and the catalog itself states it as a biconditional
+    ([isos_trap_con_diags]). *)
 Definition IsIsoscelesTrapezoid (q : QuadrilateralName) : Prop :=
   IsTrapezoid q /\
-  (SegmentCongruent (quad_bc q) (quad_da q) \/
-   SegmentCongruent (quad_ab q) (quad_cd q)).
+  SegmentCongruent
+    (segment_name q.(quadrilateral_first) q.(quadrilateral_third))
+    (segment_name q.(quadrilateral_second) q.(quadrilateral_fourth)).
 
 Definition OnCircle (c : CircleName) (p : PointName) : Prop :=
   CircleWellFormed c /\
@@ -445,6 +454,11 @@ Definition statementMeaning (s : PublicStatement) : Prop :=
   | Supplementary a b =>
       SuppA (ang_start a) (ang_vertex a) (ang_end a)
             (ang_start b) (ang_vertex b) (ang_end b)
+  (* [Per] alone is satisfiable by degenerate names ([Per X Y Y] holds for
+     every X and Y), but [SumA] ends in [CongA _ _ _ X Y Z], whose definition
+     forces [X <> Y] and [Z <> Y].  With those, [Per X Y Z] is a genuine
+     right angle: on a line through [Y], only [Y] itself is equidistant from
+     [Z] and its reflection across [Y]. *)
   | Complementary a b => exists X Y Z,
       Per X Y Z /\ SumA (ang_start a) (ang_vertex a) (ang_end a)
                          (ang_start b) (ang_vertex b) (ang_end b) X Y Z
