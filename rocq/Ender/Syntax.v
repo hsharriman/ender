@@ -96,6 +96,7 @@ Inductive Reason :=
 | RectanglePgram : nat -> Reason
 | RhombusPgram : nat -> Reason
 | RhombusConsecSides : nat -> nat -> Reason
+| RhombusDef : nat -> Reason
 | AltInt : nat -> Reason
 | AltExt : nat -> Reason
 | CorrespAng : nat -> Reason

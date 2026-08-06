@@ -294,7 +294,7 @@ Inductive ExpectedFact :=
 | ExpectedRight | ExpectedPerpendicular | ExpectedMidpoint
 | ExpectedAngleBisector | ExpectedConRight
 | ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary
-| ExpectedLinearPair.
+| ExpectedLinearPair | ExpectedRhombus.
 
 Definition statement_function (s : Statement) : string :=
   match s with
@@ -329,6 +329,7 @@ Definition expected_function (expected : ExpectedFact) : string :=
   | ExpectedEquiangular => "equiangular"
   | ExpectedSupplementary => "supplementary"
   | ExpectedLinearPair => "linear_pair"
+  | ExpectedRhombus => "rhombus"
   end.
 
 Definition allowed_functions (expected : ExpectedFact) : list string :=
@@ -339,6 +340,7 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedMidpoint | ExpectedAngleBisector | ExpectedConRight
   | ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary => []
   | ExpectedLinearPair => []
+  | ExpectedRhombus => []
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -353,6 +355,7 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedEquiangular, EquiangularTri _
   | ExpectedSupplementary, Supplementary _ _ => true
   | ExpectedLinearPair, LinearPair _ _ => true
+  | ExpectedRhombus, Rhomb _ => true
   | _, _ => false
   end.
 
@@ -445,6 +448,8 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
            ExpectedSupplementary step_number)
   | DefLinearPair i =>
       dependency_type_issue facts "def_linear_pair" 0 i ExpectedLinearPair step_number
+  | RhombusDef i =>
+      dependency_type_issue facts "rhombus" 0 i ExpectedRhombus step_number
   | DefIsosceles i =>
       dependency_type_issue facts "def_isosceles" 0 i ExpectedSegment step_number
   | BaseAngle i =>

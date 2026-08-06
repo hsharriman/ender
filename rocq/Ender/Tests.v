@@ -1147,6 +1147,29 @@ Example def_linear_pair_mixed_rejects :
   complete_checker def_linear_pair_mixed_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A rhombus exposes every pair from its four-side congruence chain. *)
+Definition rhombus_def_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "con_seg(AB,DA)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus(1) -> con_seg(AB,DA)".
+
+Definition rhombus_def_diagonal_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "con_seg(AB,AC)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus(1) -> con_seg(AB,AC)".
+
+Example rhombus_def_accepts : complete_checker rhombus_def_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_def_diagonal_rejects :
+  complete_checker rhombus_def_diagonal_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** A right angle at a point of a line makes the two lines perpendicular
     there.  The [on_line] premise is what carries the right angle from the ray
     to the whole line. *)

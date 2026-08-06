@@ -54,6 +54,7 @@ const implemented = new Set([
   "rectangle_pgram",
   "rhombus_pgram",
   "rhombus_consec_sides",
+  "rhombus",
   "altint",
   "altext",
   "corresp_ang",
@@ -146,6 +147,8 @@ const entries = catalog.map((reason) => {
         ? "audited meanings plus declared-quadrilateral nondegeneracy (neutral)"
       : ["pgram_opp_sides", "rhombus_consec_sides"].includes(reason)
         ? "Tarski_euclidean via Playfair alternate interior angles; ASA along the diagonal"
+      : reason === "rhombus"
+        ? "audited IsRhombus congruence chain (neutral)"
       : reason === "pgram_opp_side_para"
         ? "GeoCoq par_cong_mid_ts; the audited crossing diagonals supply its TS"
       : ["altint", "altext", "corresp_ang", "sameside_ang"].includes(reason)

@@ -752,6 +752,21 @@ Definition rhombus_consec_sides_rule (facts : list Statement) (i j : nat)
   | _, _, _ => false
   end.
 
+(** The audited rhombus meaning carries a congruence chain around all four
+    sides.  Expose every unordered pair, not merely adjacent pairs. *)
+Definition rhombus_def_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (Rhomb q) =>
+      fact_eqb (ConSeg (quad_side_ab q) (quad_side_bc q)) conclusion ||
+      fact_eqb (ConSeg (quad_side_bc q) (quad_side_cd q)) conclusion ||
+      fact_eqb (ConSeg (quad_side_cd q) (quad_side_da q)) conclusion ||
+      fact_eqb (ConSeg (quad_side_ab q) (quad_side_cd q)) conclusion ||
+      fact_eqb (ConSeg (quad_side_ab q) (quad_side_da q)) conclusion ||
+      fact_eqb (ConSeg (quad_side_bc q) (quad_side_da q)) conclusion
+  | _ => false
+  end.
+
 (** One pair of opposite sides both parallel and congruent.  The conclusion's
     declared quadrilateral supplies the crossing diagonals that separate a
     parallelogram from the crossed quadrilateral with the same side facts. *)
@@ -1041,6 +1056,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RectanglePgram i => rectangle_pgram_rule facts i conclusion
   | RhombusPgram i => rhombus_pgram_rule facts i conclusion
   | RhombusConsecSides i j => rhombus_consec_sides_rule facts i j conclusion
+  | RhombusDef i => rhombus_def_rule facts i conclusion
   | AltInt i => altint_rule premises facts i conclusion
   | AltExt i => altext_rule premises facts i conclusion
   | CorrespAng i => corresp_ang_rule premises facts i conclusion
@@ -2995,6 +3011,29 @@ Proof.
   - exact H3.
 Qed.
 
+Lemma rhombus_def_sound : forall facts i conclusion,
+  Forall Interp facts -> rhombus_def_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule. unfold rhombus_def_rule in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hr : Interp (Rhomb q)) by (eapply lookup_step_sound; eauto).
+  cbn in Hr. destruct Hr as [_ [Hab [Hbc Hcd]]].
+  assert (Hab' : Interp (ConSeg (quad_side_ab q) (quad_side_bc q))) by exact Hab.
+  assert (Hbc' : Interp (ConSeg (quad_side_bc q) (quad_side_cd q))) by exact Hbc.
+  assert (Hcd' : Interp (ConSeg (quad_side_cd q) (quad_side_da q))) by exact Hcd.
+  assert (Hac : Interp (ConSeg (quad_side_ab q) (quad_side_cd q))).
+  { cbn in Hab', Hbc' |- *. eapply cong_transitivity; eauto. }
+  assert (Had : Interp (ConSeg (quad_side_ab q) (quad_side_da q))).
+  { cbn in Hac, Hcd' |- *. eapply cong_transitivity; eauto. }
+  assert (Hbd : Interp (ConSeg (quad_side_bc q) (quad_side_da q))).
+  { cbn in Hbc', Hcd' |- *. eapply cong_transitivity; eauto. }
+  repeat rewrite orb_true_iff in Hrule.
+  destruct Hrule as [[[[[Heq|Heq]|Heq]|Heq]|Heq]|Heq];
+    apply (fact_eqb_sound _ _ Heq); assumption.
+Qed.
+
 Lemma pgram_opp_side_para_sound : forall decls facts i j conclusion,
   declarations_well_formed point decls -> Forall Interp facts ->
   pgram_opp_side_para_rule decls facts i j conclusion = true ->
@@ -3343,6 +3382,7 @@ Proof.
   - eapply rectangle_pgram_sound; eauto.
   - eapply rhombus_pgram_sound; eauto.
   - eapply rhombus_consec_sides_sound; eauto.
+  - eapply rhombus_def_sound; eauto.
   - eapply altint_sound; eauto.
   - eapply altext_sound; eauto.
   - eapply corresp_ang_sound; eauto.
