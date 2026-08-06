@@ -85,6 +85,15 @@ Definition fact_eqb (expected actual : Statement) : bool :=
       ascii_eqb a a' && ascii_eqb b b' && ascii_eqb t1 t1' &&
       ascii_eqb i1 i1' && ascii_eqb c c' && ascii_eqb d d' &&
       ascii_eqb t2 t2' && ascii_eqb i2 i2'
+  | RadiusOf c p, RadiusOf c' p' => circle_eqb c c' && ascii_eqb p p'
+  | ChordOf c s, ChordOf c' s' | DiameterOf c s, DiameterOf c' s' =>
+      circle_eqb c c' && segment_eqb s s'
+  | TangentAt c s p, TangentAt c' s' p' =>
+      circle_eqb c c' && segment_eqb s s' && ascii_eqb p p'
+  | InscribedAngleOf c a, InscribedAngleOf c' a' =>
+      circle_eqb c c' && angle_eqb a a'
+  | ArcOf a, ArcOf a' => arc_eqb a a'
+  | ConArc a b, ConArc a' b' => arc_eqb a a' && arc_eqb b b'
   | _, _ => false
   end.
 
@@ -867,6 +876,60 @@ Definition para_transitive_rule (facts : list Statement) (i j : nat)
   | _, _, _ => false
   end.
 
+(** * The sphere-safe circle family
+
+    These rules are sound for the audited meanings in Euclidean models of
+    every dimension: none of them compares angles at distinct circle points,
+    which is the operation that fails on a sphere and stays deferred. *)
+Definition inscribed_witness (s : Statement) : option (Circle * Angle) :=
+  match s with InscribedAngleOf c a => Some (c, a) | _ => None end.
+
+Definition def_radius_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | ConSeg s1 s2, Some (RadiusOf c p) =>
+      segment_pair_eqb s1 s2 (segment c.(circle_c) p)
+                             (segment c.(circle_c) c.(circle_r))
+  | _, _ => false
+  end.
+
+(** The angle sits in a semicircle: its two ray points name the diameter's
+    endpoints, and an [inscribed_angle] diagram premise places its vertex on
+    the circle. *)
+Definition inscribed_semi_rule (premises : list Premise)
+    (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | RightAng a, Some (DiameterOf c s) =>
+      segment_u_eqb (segment a.(ang_left) a.(ang_right)) s &&
+      existsb (fun pr =>
+        match inscribed_witness pr.(premise_statement) with
+        | Some (c', a') => circle_eqb c c' && angle_u_eqb a a'
+        | None => false
+        end) premises
+  | _, _ => false
+  end.
+
+Definition con_chords_arcs_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | ConSeg s1 s2, Some (ConArc x y) =>
+      segment_pair_eqb s1 s2 (segment x.(arc_p1) x.(arc_p2))
+                             (segment y.(arc_p1) y.(arc_p2))
+  | _, _ => false
+  end.
+
+(** The radius dependency names the point of tangency, anchoring the radius
+    segment's spelling; the tangent fact itself carries the geometry. *)
+Definition tangent_perp_rule (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | PerpAt s1 s2 q, Some (TangentAt c s p), Some (RadiusOf c' p') =>
+      circle_eqb c c' && ascii_eqb p' p && ascii_eqb q p &&
+      ((segment_u_eqb s1 s && segment_u_eqb s2 (segment c.(circle_c) p)) ||
+       (segment_u_eqb s2 s && segment_u_eqb s1 (segment c.(circle_c) p)))
+  | _, _, _ => false
+  end.
+
 Definition rule_valid (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
   match r with
@@ -949,6 +1012,10 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | CorrespAngConv i => corresp_ang_conv_rule premises facts i conclusion
   | SamesideAngConv i => sameside_ang_conv_rule premises facts i conclusion
   | ParaTrans i j => para_transitive_rule facts i j conclusion
+  | DefRadius i => def_radius_rule facts i conclusion
+  | InscribedSemi i => inscribed_semi_rule premises facts i conclusion
+  | ConChordsArcs i => con_chords_arcs_rule facts i conclusion
+  | TangentPerp i j => tangent_perp_rule facts i j conclusion
   | RHL i j k =>
       match conclusion with
       | ConTri t u => declared_pair decls t u &&
@@ -1076,6 +1143,8 @@ Proof.
     | Heq : triangle_eqb _ _ = true |- _ => apply triangle_eqb_eq in Heq
     | Heq : quadrilateral_eqb _ _ = true |- _ =>
         apply quadrilateral_eqb_eq in Heq
+    | Heq : circle_eqb _ _ = true |- _ => apply circle_eqb_eq in Heq
+    | Heq : arc_eqb _ _ = true |- _ => apply arc_eqb_eq in Heq
     | Heq : ascii_eqb _ _ = true |- _ => apply Ascii.eqb_eq in Heq
     end; subst;
     (* residual cases: a midpoint, an angle bisector, or an on-line witness
@@ -2032,15 +2101,19 @@ Proof.
   - rewrite Hx. cbn. now rewrite Ascii.eqb_refl.
 Qed.
 
-Lemma def_perp_core : forall u s p x y,
+(** The core of [def_perp], stated over bare collinearity so that rules whose
+    premises place the foot on the line without betweenness — tangency, for
+    one — can reuse it. *)
+Lemma perp_core_col : forall u s p x y,
   point x <> point p -> point y <> point p ->
   Per (point x) (point p) (point y) ->
   endpoint_of p u = true -> endpoint_of y u = true ->
-  endpoint_of x s = true -> Interp (OnLine s p) -> Interp (PerpAt u s p).
+  endpoint_of x s = true ->
+  point s.(seg_start) <> point s.(seg_end) ->
+  Col (point s.(seg_start)) (point s.(seg_end)) (point p) ->
+  Interp (PerpAt u s p).
 Proof.
-  intros u s p x y Hx Hy Hper Hpu Hyu Hxs Hline.
-  cbn in Hline. destruct Hline as [Hne Hbet].
-  pose proof (bet_col _ _ _ Hbet) as Hcol.
+  intros u s p x y Hx Hy Hper Hpu Hyu Hxs Hne Hcol.
   assert (Hbase : Perp_at (point p) (point p) (point y) (point x) (point p))
     by (apply perp_in_sym, per_perp_in; auto).
   assert (Hspec : point x <> point (other_endpoint x s) /\
@@ -2058,6 +2131,18 @@ Proof.
     | now apply other_endpoint_spec
     | unfold ascii_eqb; apply Ascii.eqb_refl
     | exact Hext ].
+Qed.
+
+Lemma def_perp_core : forall u s p x y,
+  point x <> point p -> point y <> point p ->
+  Per (point x) (point p) (point y) ->
+  endpoint_of p u = true -> endpoint_of y u = true ->
+  endpoint_of x s = true -> Interp (OnLine s p) -> Interp (PerpAt u s p).
+Proof.
+  intros u s p x y Hx Hy Hper Hpu Hyu Hxs Hline.
+  cbn in Hline. destruct Hline as [Hne Hbet].
+  pose proof (bet_col _ _ _ Hbet) as Hcol.
+  apply (perp_core_col u s p x y); try assumption. Col.
 Qed.
 
 Lemma def_perp_sound : forall premises facts i conclusion,
@@ -2457,6 +2542,114 @@ Proof.
     cbn in HC. exact HC.
 Qed.
 
+Lemma def_radius_sound : forall facts i conclusion,
+  Forall Interp facts -> def_radius_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule.
+  unfold def_radius_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hr : Interp (RadiusOf c p)) by (eapply lookup_step_sound; eauto).
+  cbn in Hr. destruct Hr as [Hwf Hcong]. cbn in Hcong.
+  eapply cong_pair_conclude; [exact Hrule|]. cbn. exact Hcong.
+Qed.
+
+Lemma con_chords_arcs_sound : forall facts i conclusion,
+  Forall Interp facts -> con_chords_arcs_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule.
+  unfold con_chords_arcs_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  assert (Hc : Interp (ConArc a a0)) by (eapply lookup_step_sound; eauto).
+  cbn in Hc.
+  destruct Hc as [Hwf1 [Hwf2 [Hkind [Hrad Hconga]]]].
+  destruct Hwf1 as [Hne1 [Hon11 Hon12]].
+  destruct Hwf2 as [Hne2 [Hon21 Hon22]].
+  destruct Hon11 as [_ HcX1]. destruct Hon12 as [_ HcY1].
+  destruct Hon21 as [_ HcX2]. destruct Hon22 as [_ HcY2].
+  cbn in HcX1, HcY1, HcX2, HcY2, Hrad, Hconga.
+  assert (HOX : Cong (point (a.(arc_circ)).(circle_c)) (point a.(arc_p1))
+                     (point (a0.(arc_circ)).(circle_c)) (point a0.(arc_p1))).
+  { apply cong_transitivity with (point (a.(arc_circ)).(circle_c))
+        (point (a.(arc_circ)).(circle_r)); [exact HcX1|].
+    apply cong_transitivity with (point (a0.(arc_circ)).(circle_c))
+        (point (a0.(arc_circ)).(circle_r)); [exact Hrad|Cong]. }
+  assert (HOY : Cong (point (a.(arc_circ)).(circle_c)) (point a.(arc_p2))
+                     (point (a0.(arc_circ)).(circle_c)) (point a0.(arc_p2))).
+  { apply cong_transitivity with (point (a.(arc_circ)).(circle_c))
+        (point (a.(arc_circ)).(circle_r)); [exact HcY1|].
+    apply cong_transitivity with (point (a0.(arc_circ)).(circle_c))
+        (point (a0.(arc_circ)).(circle_r)); [exact Hrad|Cong]. }
+  destruct (l11_49 (point a.(arc_p1)) (point (a.(arc_circ)).(circle_c))
+              (point a.(arc_p2)) (point a0.(arc_p1))
+              (point (a0.(arc_circ)).(circle_c)) (point a0.(arc_p2))
+              Hconga HOX HOY) as [Hchord _].
+  eapply cong_pair_conclude; [exact Hrule|]. cbn. exact Hchord.
+Qed.
+
+Lemma tangent_perp_sound : forall facts i j conclusion,
+  Forall Interp facts -> tangent_perp_rule facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  unfold tangent_perp_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hor].
+  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hqp].
+  apply andb_true_iff in Hrule. destruct Hrule as [Hcirc Hpp].
+  unfold ascii_eqb in Hqp. apply Ascii.eqb_eq in Hqp. subst p.
+  assert (Ht : Interp (TangentAt c s1 p0)) by (eapply lookup_step_sound; eauto).
+  cbn in Ht. destruct Ht as [Hsegwf [Honp [Hcol HQ]]].
+  destruct Honp as [Hcwf Hcongp]. cbn in Hcwf, Hcongp, Hsegwf, Hcol.
+  assert (Hpp1 : ascii_eqb p0 p0 = true)
+    by (unfold ascii_eqb; apply Ascii.eqb_refl).
+  assert (HOp : point (c.(circle_c)) <> point p0).
+  { intro Heq. apply Hcwf.
+    rewrite <- Heq in Hcongp.
+    apply (cong_identity _ _ (point c.(circle_c))). Cong. }
+  destruct HQ as [Q [Hdisj [HQne HPer]]].
+  assert (Hcore : Interp (PerpAt (segment c.(circle_c) p0) s1 p0)).
+  { destruct Hdisj as [HQ1|HQ2].
+    - apply (perp_core_col _ _ _ s1.(seg_start) c.(circle_c)).
+      + rewrite HQ1 in HQne. exact HQne.
+      + exact HOp.
+      + apply l8_2. rewrite HQ1 in HPer. exact HPer.
+      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
+        now rewrite orb_true_r.
+      + unfold endpoint_of, ascii_eqb. cbn. now rewrite Ascii.eqb_refl.
+      + unfold endpoint_of, ascii_eqb. now rewrite Ascii.eqb_refl.
+      + exact Hsegwf.
+      + exact Hcol.
+    - apply (perp_core_col _ _ _ s1.(seg_end) c.(circle_c)).
+      + rewrite HQ2 in HQne. exact HQne.
+      + exact HOp.
+      + apply l8_2. rewrite HQ2 in HPer. exact HPer.
+      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
+        now rewrite orb_true_r.
+      + unfold endpoint_of, ascii_eqb. cbn. now rewrite Ascii.eqb_refl.
+      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
+        now rewrite orb_true_r.
+      + exact Hsegwf.
+      + exact Hcol. }
+  apply orb_true_iff in Hor. destruct Hor as [Hcase|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [H1 H2].
+  - assert (Hsw : Interp (PerpAt s1 (segment c.(circle_c) p0) p0)).
+    { cbn in Hcore |- *. apply perp_in_sym. exact Hcore. }
+    exact (proj2 (perp_at_realign s s0 s1 (segment c.(circle_c) p0) p0 p0
+                    H1 H2 Hpp1) Hsw).
+  - exact (proj2 (perp_at_realign s s0 (segment c.(circle_c) p0) s1 p0 p0
+                    H2 H1 Hpp1) Hcore).
+Qed.
+
 (** Everything above holds in neutral geometry.  [third_angle] is the first
     rule that genuinely needs the parallel postulate, so the assumption enters
     here rather than at the top of the section; every lemma stated before this
@@ -2800,6 +2993,65 @@ Proof.
     now apply par_symmetry.
 Qed.
 
+Lemma inscribed_semi_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  inscribed_semi_rule premises facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold inscribed_semi_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hends Hex].
+  assert (Hd : Interp (DiameterOf c s)) by (eapply lookup_step_sound; eauto).
+  cbn in Hd. destruct Hd as [[Hswf [Hon1 Hon2]] Hbet].
+  destruct Hon1 as [_ Hc1]. destruct Hon2 as [_ Hc2].
+  cbn in Hc1, Hc2, Hbet, Hswf.
+  apply existsb_exists in Hex. destruct Hex as [pr [Hin Hw]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr.
+  destruct (inscribed_witness pr.(premise_statement)) as [[c' a']|] eqn:Hwit;
+    try discriminate.
+  assert (Hps : pr.(premise_statement) = InscribedAngleOf c' a').
+  { unfold inscribed_witness in Hwit.
+    destruct pr.(premise_statement); try discriminate.
+    now injection Hwit as <- <-. }
+  rewrite Hps in Hpr. cbn in Hpr.
+  apply andb_true_iff in Hw. destruct Hw as [Hceq Haeq].
+  apply circle_eqb_eq in Hceq. subst c'.
+  destruct Hpr as [HonA [HonV [HonB Hawf]]].
+  destruct HonV as [_ HcV]. cbn in HcV, Hawf.
+  assert (Hmid : Midpoint (point (c.(circle_c)))
+                   (point s.(seg_start)) (point s.(seg_end))).
+  { split; [exact Hbet|].
+    assert (Hse : Cong (point (c.(circle_c))) (point s.(seg_start))
+                       (point (c.(circle_c))) (point s.(seg_end))).
+    { apply cong_transitivity with (point (c.(circle_c)))
+          (point (c.(circle_r))); [exact Hc1|Cong]. }
+    Cong. }
+  apply angle_u_eqb_cases in Haeq.
+  assert (HOV : Cong (point (c.(circle_c))) (point s.(seg_start))
+                     (point (c.(circle_c))) (point (a.(ang_vertex)))).
+  { assert (Hvx : point (a.(ang_vertex)) = point (a'.(ang_vertex)))
+      by (destruct Haeq as [->| ->]; reflexivity).
+    rewrite Hvx.
+    apply cong_transitivity with (point (c.(circle_c)))
+        (point (c.(circle_r))); [exact Hc1|Cong]. }
+  assert (Hper : Per (point s.(seg_start)) (point (a.(ang_vertex)))
+                     (point s.(seg_end))).
+  { apply (ender_thales _ _ _ (point (c.(circle_c)))); assumption. }
+  cbn. split.
+  - destruct Haeq as [->| ->]; cbn in Hawf |- *.
+    + exact Hawf.
+    + unfold reverse_angle. cbn. destruct Hawf as [Hl Hr]. split; assumption.
+  - apply segment_u_eqb_cases in Hends. destruct Hends as [Hends|Hends].
+    + rewrite <- Hends in Hper. cbn in Hper.
+      unfold right_angle. exact Hper.
+    + unfold reverse_segment in Hends. injection Hends as Hl Hr.
+      unfold right_angle. rewrite Hl, Hr. apply l8_2. exact Hper.
+Qed.
+
 Lemma rule_valid_sound : forall decls premises facts reason conclusion,
   declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -2892,6 +3144,10 @@ Proof.
   - eapply corresp_ang_conv_sound; eauto.
   - eapply sameside_ang_conv_sound; eauto.
   - eapply para_trans_sound; eauto.
+  - eapply def_radius_sound; eauto.
+  - eapply inscribed_semi_sound; eauto.
+  - eapply con_chords_arcs_sound; eauto.
+  - eapply tangent_perp_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

@@ -14,6 +14,11 @@ Record Triangle := triangle { tri_a : PointId; tri_b : PointId; tri_c : PointId 
 Record Quadrilateral := quadrilateral {
   quad_a : PointId; quad_b : PointId; quad_c : PointId; quad_d : PointId
 }.
+Record Circle := circle { circle_c : PointId; circle_r : PointId }.
+Record Arc := arc {
+  arc_k : Audit.ArcKind; arc_circ : Circle;
+  arc_p1 : PointId; arc_p2 : PointId
+}.
 
 Inductive Statement :=
 | ConSeg : Segment -> Segment -> Statement
@@ -44,7 +49,16 @@ Inductive Statement :=
 | IsosTrapPremise : Quadrilateral -> Segment -> Segment -> Statement
 | KiteP : Quadrilateral -> Angle -> Angle -> Statement
 | Transv : PointId -> PointId -> PointId -> PointId ->
-           PointId -> PointId -> PointId -> PointId -> Statement.
+           PointId -> PointId -> PointId -> PointId -> Statement
+(** Circle statements.  As with the quadrilaterals, kernel meanings are the
+    audited meanings verbatim (see [Semantics.v]). *)
+| RadiusOf : Circle -> PointId -> Statement
+| ChordOf : Circle -> Segment -> Statement
+| DiameterOf : Circle -> Segment -> Statement
+| TangentAt : Circle -> Segment -> PointId -> Statement
+| InscribedAngleOf : Circle -> Angle -> Statement
+| ArcOf : Arc -> Statement
+| ConArc : Arc -> Arc -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -87,7 +101,11 @@ Inductive Reason :=
 | AltExtConv : nat -> Reason
 | CorrespAngConv : nat -> Reason
 | SamesideAngConv : nat -> Reason
-| ParaTrans : nat -> nat -> Reason.
+| ParaTrans : nat -> nat -> Reason
+| DefRadius : nat -> Reason
+| InscribedSemi : nat -> Reason
+| ConChordsArcs : nat -> Reason
+| TangentPerp : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
@@ -97,7 +115,8 @@ Record Step := step { step_reason : Reason; step_conclusion : Statement }.
 Record Declarations := declarations {
   decl_triangles : list Triangle;
   decl_angles : list Angle;
-  decl_quadrilaterals : list Quadrilateral
+  decl_quadrilaterals : list Quadrilateral;
+  decl_circles : list Circle
 }.
 
 Record ProblemHeader := problem_header {
@@ -126,6 +145,19 @@ Definition triangle_eqb (x y : Triangle) : bool :=
 Definition quadrilateral_eqb (x y : Quadrilateral) : bool :=
   ascii_eqb x.(quad_a) y.(quad_a) && ascii_eqb x.(quad_b) y.(quad_b) &&
   ascii_eqb x.(quad_c) y.(quad_c) && ascii_eqb x.(quad_d) y.(quad_d).
+
+Definition circle_eqb (x y : Circle) : bool :=
+  ascii_eqb x.(circle_c) y.(circle_c) && ascii_eqb x.(circle_r) y.(circle_r).
+
+Definition arc_kind_eqb (x y : Audit.ArcKind) : bool :=
+  match x, y with
+  | Audit.MinorArc, Audit.MinorArc | Audit.MajorArc, Audit.MajorArc => true
+  | _, _ => false
+  end.
+
+Definition arc_eqb (x y : Arc) : bool :=
+  arc_kind_eqb x.(arc_k) y.(arc_k) && circle_eqb x.(arc_circ) y.(arc_circ) &&
+  ascii_eqb x.(arc_p1) y.(arc_p1) && ascii_eqb x.(arc_p2) y.(arc_p2).
 
 Definition statement_eqb (x y : Statement) : bool :=
   match x, y with
@@ -158,6 +190,15 @@ Definition statement_eqb (x y : Statement) : bool :=
       ascii_eqb a a' && ascii_eqb b b' && ascii_eqb t1 t1' &&
       ascii_eqb i1 i1' && ascii_eqb c c' && ascii_eqb d d' &&
       ascii_eqb t2 t2' && ascii_eqb i2 i2'
+  | RadiusOf c p, RadiusOf c' p' => circle_eqb c c' && ascii_eqb p p'
+  | ChordOf c s, ChordOf c' s' | DiameterOf c s, DiameterOf c' s' =>
+      circle_eqb c c' && segment_eqb s s'
+  | TangentAt c s p, TangentAt c' s' p' =>
+      circle_eqb c c' && segment_eqb s s' && ascii_eqb p p'
+  | InscribedAngleOf c a, InscribedAngleOf c' a' =>
+      circle_eqb c c' && angle_eqb a a'
+  | ArcOf a, ArcOf a' => arc_eqb a a'
+  | ConArc a b, ConArc a' b' => arc_eqb a a' && arc_eqb b b'
   | _, _ => false
   end.
 
@@ -193,6 +234,31 @@ Proof.
   - intros H. inversion H. repeat split; reflexivity.
 Qed.
 
+Lemma circle_eqb_eq : forall x y, circle_eqb x y = true <-> x = y.
+Proof.
+  intros [a b] [c d].
+  change (Ascii.eqb a c && Ascii.eqb b d = true <-> circle a b = circle c d).
+  rewrite andb_true_iff, !Ascii.eqb_eq.
+  split.
+  - intros [-> ->]. reflexivity.
+  - intros H. inversion H. split; reflexivity.
+Qed.
+
+Lemma arc_kind_eqb_eq : forall x y, arc_kind_eqb x y = true <-> x = y.
+Proof.
+  intros [|] [|]; cbn; split; intro H; congruence.
+Qed.
+
+Lemma arc_eqb_eq : forall x y, arc_eqb x y = true <-> x = y.
+Proof.
+  intros [k c a b] [k' c' a' b']. unfold arc_eqb. cbn.
+  rewrite !andb_true_iff, arc_kind_eqb_eq, circle_eqb_eq.
+  unfold ascii_eqb. rewrite !Ascii.eqb_eq.
+  split.
+  - intros [[[-> ->] ->] ->]. reflexivity.
+  - intros H. inversion H. repeat split; reflexivity.
+Qed.
+
 Lemma quadrilateral_eqb_eq : forall x y, quadrilateral_eqb x y = true <-> x = y.
 Proof.
   intros [a b c d] [e f g h].
@@ -208,7 +274,7 @@ Lemma statement_eqb_eq : forall x y, statement_eqb x y = true <-> x = y.
 Proof.
   destruct x, y; cbn; unfold ascii_eqb;
     rewrite ?andb_true_iff, ?segment_eqb_eq, ?angle_eqb_eq, ?triangle_eqb_eq,
-      ?quadrilateral_eqb_eq, ?Ascii.eqb_eq;
+      ?quadrilateral_eqb_eq, ?circle_eqb_eq, ?arc_eqb_eq, ?Ascii.eqb_eq;
     split; intro H; solve [discriminate | intuition congruence].
 Qed.
 

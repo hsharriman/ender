@@ -48,6 +48,10 @@ Definition ang_name (a : Angle) : Audit.AngleName :=
   Audit.angle_name a.(ang_left) a.(ang_vertex) a.(ang_right).
 Definition quad_name (q : Quadrilateral) : Audit.QuadrilateralName :=
   Audit.quadrilateral_name q.(quad_a) q.(quad_b) q.(quad_c) q.(quad_d).
+Definition circ_name (c : Circle) : Audit.CircleName :=
+  Audit.circle_name c.(circle_c) c.(circle_r).
+Definition arc_names (a : Arc) : Audit.ArcName :=
+  Audit.arc_name a.(arc_k) (circ_name a.(arc_circ)) a.(arc_p1) a.(arc_p2).
 
 Definition statement_meaning (s : Statement) : Prop :=
   match s with
@@ -119,6 +123,14 @@ Definition statement_meaning (s : Statement) : Prop :=
       Audit.IsKitePremise point (quad_name q) (ang_name a) (ang_name b)
   | Transv a b t1 i1 c d t2 i2 =>
       Audit.TransversalConfiguration point a b t1 i1 c d t2 i2
+  | RadiusOf c p => Audit.OnCircle point (circ_name c) p
+  | ChordOf c s => Audit.IsChord point (circ_name c) (seg_name s)
+  | DiameterOf c s => Audit.IsDiameter point (circ_name c) (seg_name s)
+  | TangentAt c s p => Audit.IsTangent point (circ_name c) (seg_name s) p
+  | InscribedAngleOf c a =>
+      Audit.IsInscribedAngle point (circ_name c) (ang_name a)
+  | ArcOf a => Audit.ArcWellFormed point (arc_names a)
+  | ConArc a b => Audit.ArcCongruent point (arc_names a) (arc_names b)
   end.
 
 Definition segment_points (s : Segment) :=
@@ -154,6 +166,8 @@ Definition declarations_well_formed (d : Declarations) : Prop :=
   (forall t, In t d.(decl_triangles) -> triangle_well_formed t) /\
   (forall a, In a d.(decl_angles) -> angle_well_formed a) /\
   (forall q, In q d.(decl_quadrilaterals) ->
-     Audit.QuadrilateralWellFormed point (quad_name q)).
+     Audit.QuadrilateralWellFormed point (quad_name q)) /\
+  (forall c, In c d.(decl_circles) ->
+     Audit.CircleWellFormed point (circ_name c)).
 
 End EnderSemantics.

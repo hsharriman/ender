@@ -17,6 +17,13 @@ Definition project_quadrilateral (q : Audit.QuadrilateralName) : Quadrilateral :
   quadrilateral q.(Audit.quadrilateral_first) q.(Audit.quadrilateral_second)
                 q.(Audit.quadrilateral_third) q.(Audit.quadrilateral_fourth).
 
+Definition project_circle (c : Audit.CircleName) : Circle :=
+  circle c.(Audit.circle_center) c.(Audit.circle_radius_point).
+
+Definition project_arc (a : Audit.ArcName) : Arc :=
+  arc a.(Audit.arc_kind) (project_circle a.(Audit.arc_circle))
+      a.(Audit.arc_first) a.(Audit.arc_second).
+
 (** Statements usable as premises by the currently implemented kernel.  A
     public [con_tri] premise carries both triangles' noncollinearity together
     with the three side congruences, which is exactly the SSS hypothesis, so
@@ -55,6 +62,16 @@ Definition project_premise_statement (s : Audit.PublicStatement) : option Statem
       Some (KiteP (project_quadrilateral q) (project_angle a) (project_angle b))
   | Audit.Transversal a b t1 i1 c d t2 i2 =>
       Some (Transv a b t1 i1 c d t2 i2)
+  | Audit.Radius c p => Some (RadiusOf (project_circle c) p)
+  | Audit.Chord c s => Some (ChordOf (project_circle c) (project_segment s))
+  | Audit.Diameter c s =>
+      Some (DiameterOf (project_circle c) (project_segment s))
+  | Audit.Tangent c s p =>
+      Some (TangentAt (project_circle c) (project_segment s) p)
+  | Audit.InscribedAngle c a =>
+      Some (InscribedAngleOf (project_circle c) (project_angle a))
+  | Audit.ArcStatement a => Some (ArcOf (project_arc a))
+  | Audit.ConArc a b => Some (ConArc (project_arc a) (project_arc b))
   | _ => None
   end.
 
@@ -87,6 +104,16 @@ Definition project_goal_statement (s : Audit.PublicStatement) : option Statement
   | Audit.Rectangle q => Some (Rect (project_quadrilateral q))
   | Audit.Rhombus q => Some (Rhomb (project_quadrilateral q))
   | Audit.IsosTrapezoid q => Some (IsosTrap (project_quadrilateral q))
+  | Audit.Radius c p => Some (RadiusOf (project_circle c) p)
+  | Audit.Chord c s => Some (ChordOf (project_circle c) (project_segment s))
+  | Audit.Diameter c s =>
+      Some (DiameterOf (project_circle c) (project_segment s))
+  | Audit.Tangent c s p =>
+      Some (TangentAt (project_circle c) (project_segment s) p)
+  | Audit.InscribedAngle c a =>
+      Some (InscribedAngleOf (project_circle c) (project_angle a))
+  | Audit.ArcStatement a => Some (ArcOf (project_arc a))
+  | Audit.ConArc a b => Some (ConArc (project_arc a) (project_arc b))
   | _ => None
   end.
 
@@ -120,9 +147,16 @@ Definition projected_quadrilaterals (ds : list Audit.PublicDeclaration)
     | _ => rest
     end) [] ds.
 
+Definition projected_circles (ds : list Audit.PublicDeclaration)
+    : list Circle :=
+  fold_right (fun d rest => match d with
+    | Audit.CircleDeclaration c => project_circle c :: rest
+    | _ => rest
+    end) [] ds.
+
 Definition projected_declarations (ds : list Audit.PublicDeclaration) : Declarations :=
   declarations (projected_triangles ds) (projected_angles ds)
-               (projected_quadrilaterals ds).
+               (projected_quadrilaterals ds) (projected_circles ds).
 
 Fixpoint statement_list_eqb (a b : list Statement) : bool :=
   match a, b with
@@ -152,10 +186,18 @@ Fixpoint quadrilateral_list_eqb (a b : list Quadrilateral) : bool :=
   | _, _ => false
   end.
 
+Fixpoint circle_list_eqb (a b : list Circle) : bool :=
+  match a, b with
+  | [], [] => true
+  | x :: xs, y :: ys => circle_eqb x y && circle_list_eqb xs ys
+  | _, _ => false
+  end.
+
 Definition declarations_eqb (a b : Declarations) : bool :=
   triangle_list_eqb a.(decl_triangles) b.(decl_triangles) &&
   angle_list_eqb a.(decl_angles) b.(decl_angles) &&
-  quadrilateral_list_eqb a.(decl_quadrilaterals) b.(decl_quadrilaterals).
+  quadrilateral_list_eqb a.(decl_quadrilaterals) b.(decl_quadrilaterals) &&
+  circle_list_eqb a.(decl_circles) b.(decl_circles).
 
 Definition premise_statements (ps : list Premise) : list Statement :=
   map premise_statement ps.
@@ -267,6 +309,10 @@ Definition statement_function (s : Statement) : string :=
   | IsosTrapPremise _ _ _ => "isos_trapezoid_premise"
   | KiteP _ _ _ => "kite_premise"
   | Transv _ _ _ _ _ _ _ _ => "transversal"
+  | RadiusOf _ _ => "radius" | ChordOf _ _ => "chord"
+  | DiameterOf _ _ => "diameter" | TangentAt _ _ _ => "tangent"
+  | InscribedAngleOf _ _ => "inscribed_angle"
+  | ArcOf _ => "arc" | ConArc _ _ => "con_arc"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
@@ -512,12 +558,20 @@ Proof.
   - intros H. inversion H. auto.
 Qed.
 
+Lemma circle_list_eqb_eq : forall a b, circle_list_eqb a b = true <-> a = b.
+Proof.
+  induction a as [|x xs IH]; destruct b as [|y ys]; cbn; try easy.
+  rewrite andb_true_iff, circle_eqb_eq, IH. split.
+  - intros [-> ->]. reflexivity.
+  - intros H. inversion H. auto.
+Qed.
+
 Lemma declarations_eqb_eq : forall a b, declarations_eqb a b = true <-> a = b.
 Proof.
-  intros [t1 a1 q1] [t2 a2 q2]. unfold declarations_eqb. cbn.
+  intros [t1 a1 q1 c1] [t2 a2 q2 c2]. unfold declarations_eqb. cbn.
   rewrite !andb_true_iff, triangle_list_eqb_eq, angle_list_eqb_eq,
-    quadrilateral_list_eqb_eq. split.
-  - intros [[-> ->] ->]. reflexivity.
+    quadrilateral_list_eqb_eq, circle_list_eqb_eq. split.
+  - intros [[[-> ->] ->] ->]. reflexivity.
   - intros H. inversion H. auto.
 Qed.
 
@@ -529,7 +583,7 @@ Lemma projected_triangle_meaning : forall ds,
   Forall (Audit.declarationMeaning point) ds ->
   declarations_well_formed point (projected_declarations ds).
 Proof.
-  intros ds Hall. split; [|split].
+  intros ds Hall. split; [|split; [|split]].
   - intros t Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
     + contradiction.
     + destruct d; cbn in *; try now apply IH.
@@ -539,6 +593,10 @@ Proof.
     + destruct d; cbn in *; try now apply IH.
       destruct Hin as [<-|Hin]; [exact Hd|now apply IH].
   - intros qd Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
+    + contradiction.
+    + destruct d; cbn in *; try now apply IH.
+      destruct Hin as [<-|Hin]; [exact Hd|now apply IH].
+  - intros cd Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
     + contradiction.
     + destruct d; cbn in *; try now apply IH.
       destruct Hin as [<-|Hin]; [exact Hd|now apply IH].

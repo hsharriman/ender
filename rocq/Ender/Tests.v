@@ -1313,6 +1313,32 @@ Example complete_transversal_layer_accepts :
   complete_checker transversal_layer_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** The circle statement layer: a circle declaration, premises of every new
+    form including the nested arc spelling, a [def_radius] step, and a
+    congruent-radii goal, through both checker paths. *)
+Definition circle_layer_source := "title: circle statements
+premises:
+pt: O (5,5), A (5,9), B (9,5), C (1,5), P (5,1)
+circ: c_OA
+[g_1] radius(c_OA, B)
+[g_2] chord(c_OA, AB)
+[g_3] diameter(c_OA, AP)
+[g_4] tangent(c_OA, CB, A)
+[g_5] inscribed_angle(c_OA, a_ABP)
+[g_6] con_arc(minor_arc(c_OA, A, B), minor_arc(c_OA, B, P))
+[g_7] minor_arc(c_OA, A, B)
+-> con_seg(OB, OA)
+
+steps:
+[01] given(g_1) -> radius(c_OA, B)
+[02] def_radius(1) -> con_seg(OB, OA)".
+
+Example circle_layer_accepts : check_source circle_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_circle_layer_accepts :
+  complete_checker circle_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
 (** The goal is closed by a derived fact spelled with reversed segments,
     under exactly the spellings step-to-step matching accepts. *)
 Definition reversed_goal_source := "title: reversed goal spelling

@@ -8,6 +8,8 @@ Require Import GeoCoq.Main.Annexes.quadrilaterals.
 Require Import GeoCoq.Main.Annexes.quadrilaterals_inter_dec.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_alternate_interior_angles.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.alternate_interior_angles_triangle.
+Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.existential_triangle_rah.
+Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.rah_thales_postulate.
 
 Section EnderGeometry.
 
@@ -755,6 +757,30 @@ Proof.
   - split; [exact HneAI1|]. exists B.
     split; [exact HbetAB|].
     apply conga_sym, conga_comm. exact Hm2.
+Qed.
+
+(** Thales' circle theorem, through the postulate web rather than GeoCoq's
+    [midpoint_thales] or [thales_theorem], whose proofs rest on
+    [Eqdep.Eq_rect_eq] (through [cop_par_perp__perp] and [right_saccheris]
+    respectively).  The right-Saccheri hypothesis follows cleanly from the
+    existence of one triangle with straight angle sum, witnessed by the
+    lower-dimension points and [euclidean_trisuma__bet]. *)
+Lemma ender_rah : postulate_of_right_saccheri_quadrilaterals.
+Proof.
+  apply existential_triangle__rah.
+  assert (Hncol : ~ Col PA PB PC) by exact lower_dim.
+  assert (Hd := Hncol). apply not_col_distincts in Hd.
+  destruct Hd as [_ [HAB [HBC HAC]]].
+  destruct (ex_trisuma PA PB PC) as [P [Q [R Htri]]]; auto.
+  exists PA, PB, PC, P, Q, R.
+  split; [exact Hncol|]. split; [exact Htri|].
+  exact (euclidean_trisuma__bet _ _ _ _ _ _ Htri).
+Qed.
+
+Lemma ender_thales : forall A B C M,
+  Midpoint M A B -> Cong M A M C -> Per A C B.
+Proof.
+  exact (rah__thales_postulate ender_rah).
 Qed.
 
 End EnderEuclideanGeometry.
