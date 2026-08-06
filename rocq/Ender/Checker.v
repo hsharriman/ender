@@ -643,6 +643,13 @@ Definition con_supplements_same (facts : list Statement) (i j : nat)
   | _, _ => false
   end.
 
+Definition def_linear_pair (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (LinearPair a b) => fact_eqb (Supplementary a b) conclusion
+  | _ => false
+  end.
+
 (** A right angle at [p] whose rays reach the two lines makes them
     perpendicular at [p].  [Perp_at] additionally demands that the whole of
     each line meet at right angles, so the [on_line] premise is what lets the
@@ -1026,6 +1033,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | EquiangEquilat i => equiang_equilat facts i conclusion
   | ConSupplements i j k => con_supplements facts i j k conclusion
   | ConSupplementsSame i j => con_supplements_same facts i j conclusion
+  | DefLinearPair i => def_linear_pair facts i conclusion
   | DefPerp i => def_perp premises facts i conclusion
   | DefParallelogram i j => def_parallelogram_rule decls facts i j conclusion
   | PgramOppSides i => pgram_opp_sides_rule facts i conclusion
@@ -2118,6 +2126,49 @@ Proof.
   - apply (supplements_transfer a0 a a1 a2); [now apply suppa_sym|exact Hs2|exact Hw].
   - apply (supplements_transfer a0 a a2 a1);
       [now apply suppa_sym|now apply suppa_sym|exact Hw].
+Qed.
+
+Lemma linear_pair_is_supplementary : forall a b,
+  Interp (LinearPair a b) -> Interp (Supplementary a b).
+Proof.
+  intros [AL AV AR] [BL BV BR] H. cbn in H |- *.
+  unfold Audit.LinearPairMeaning, Audit.AngleWellFormed, ang_name, Audit.ang_start,
+    Audit.ang_vertex, Audit.ang_end in H. cbn in H.
+  destruct H as [[HAL HAV] [[HBL HBV] [Hvertex Hcases]]].
+  rewrite <- Hvertex in *. destruct Hcases as [Hcase|[Hcase|[Hcase|Hcase]]];
+    destruct Hcase as [Hout Hbet]; destruct Hbet as [Hbet [Hbet1 Hbet2]].
+  - eapply conga2_suppa__suppa.
+    + apply conga_refl; auto.
+    + apply out2__conga; [exact (l6_6 _ _ _ Hout)|apply out_trivial; exact HBV].
+    + apply suppa_left_comm.
+      now apply (bet__suppa (point AR) (point AV) (point AL) (point BR)).
+  - eapply conga2_suppa__suppa.
+    + apply conga_refl; auto.
+    + apply conga_right_comm, out2__conga;
+        [exact (l6_6 _ _ _ Hout)|apply out_trivial; exact HBL].
+    + apply suppa_left_comm.
+      now apply (bet__suppa (point AR) (point AV) (point AL) (point BL)).
+  - eapply conga2_suppa__suppa.
+    + apply conga_refl; auto.
+    + apply out2__conga; [exact (l6_6 _ _ _ Hout)|apply out_trivial; exact HBV].
+    + now apply (bet__suppa (point AL) (point AV) (point AR) (point BR)).
+  - eapply conga2_suppa__suppa.
+    + apply conga_refl; auto.
+    + apply conga_right_comm, out2__conga;
+        [exact (l6_6 _ _ _ Hout)|apply out_trivial; exact HBL].
+    + now apply (bet__suppa (point AL) (point AV) (point AR) (point BL)).
+Qed.
+
+Lemma def_linear_pair_sound : forall facts i conclusion,
+  Forall Interp facts -> def_linear_pair facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hall Hrule. unfold def_linear_pair in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  apply (fact_eqb_sound _ _ Hrule).
+  apply linear_pair_is_supplementary.
+  eapply lookup_step_sound; eauto.
 Qed.
 
 Lemma endpoints_determine : forall u p y, p <> y ->
@@ -3284,6 +3335,7 @@ Proof.
   - eapply equiang_equilat_sound; eauto.
   - eapply con_supplements_sound; eauto.
   - eapply con_supplements_same_sound; eauto.
+  - eapply def_linear_pair_sound; eauto.
   - eapply def_perp_sound; eauto.
   - eapply def_parallelogram_sound; eauto.
   - eapply pgram_opp_sides_sound; eauto.

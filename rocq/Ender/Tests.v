@@ -1121,6 +1121,32 @@ Example con_supplements_same_unshared_rejects :
   complete_checker con_supplements_same_unshared_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A syntactic linear pair is supplementary; another pair cannot be mixed
+    into the conclusion. *)
+Definition def_linear_pair_source := transitive_header "ang: a_ACD a_DCB
+"
+  "[g_1] linear_pair(a_ACD,a_DCB)
+"
+  "supplementary(a_ACD,a_DCB)"
+  "[01] given(g_1) -> linear_pair(a_ACD,a_DCB)
+[02] def_linear_pair(1) -> supplementary(a_ACD,a_DCB)".
+
+Definition def_linear_pair_mixed_source := transitive_header
+  "ang: a_ACD a_DCB a_ECB
+"
+  "[g_1] linear_pair(a_ACD,a_DCB)
+"
+  "supplementary(a_ACD,a_ECB)"
+  "[01] given(g_1) -> linear_pair(a_ACD,a_DCB)
+[02] def_linear_pair(1) -> supplementary(a_ACD,a_ECB)".
+
+Example def_linear_pair_accepts :
+  complete_checker def_linear_pair_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_linear_pair_mixed_rejects :
+  complete_checker def_linear_pair_mixed_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** A right angle at a point of a line makes the two lines perpendicular
     there.  The [on_line] premise is what carries the right angle from the ray
     to the whole line. *)

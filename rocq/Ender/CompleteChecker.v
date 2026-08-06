@@ -47,6 +47,7 @@ Definition project_premise_statement (s : Audit.PublicStatement) : option Statem
   | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
   | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
   | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
+  | Audit.LinearPair a b => Some (LinearPair (project_angle a) (project_angle b))
   | Audit.Para a b => Some (Para (project_segment a) (project_segment b))
   | Audit.Parallelogram q => Some (Pgram (project_quadrilateral q))
   | Audit.Rectangle q => Some (Rect (project_quadrilateral q))
@@ -99,6 +100,7 @@ Definition project_goal_statement (s : Audit.PublicStatement) : option Statement
   | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
   | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
   | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
+  | Audit.LinearPair a b => Some (LinearPair (project_angle a) (project_angle b))
   | Audit.Para a b => Some (Para (project_segment a) (project_segment b))
   | Audit.Parallelogram q => Some (Pgram (project_quadrilateral q))
   | Audit.Rectangle q => Some (Rect (project_quadrilateral q))
@@ -291,7 +293,8 @@ Inductive ExpectedFact :=
 | ExpectedSegment | ExpectedAngle | ExpectedTriangle
 | ExpectedRight | ExpectedPerpendicular | ExpectedMidpoint
 | ExpectedAngleBisector | ExpectedConRight
-| ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary.
+| ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary
+| ExpectedLinearPair.
 
 Definition statement_function (s : Statement) : string :=
   match s with
@@ -303,6 +306,7 @@ Definition statement_function (s : Statement) : string :=
   | AngBisectOf _ _ => "ang_bisect" | OnLine _ _ => "on_line"
   | IsoscelesTri _ => "isosceles" | EquilateralTri _ => "equilateral"
   | EquiangularTri _ => "equiangular" | Supplementary _ _ => "supplementary"
+  | LinearPair _ _ => "linear_pair"
   | Para _ _ => "para" | Pgram _ => "parallelogram"
   | Rect _ => "rectangle" | Rhomb _ => "rhombus"
   | IsosTrap _ => "isos_trapezoid" | TrapPremise _ _ _ => "trapezoid_premise"
@@ -324,6 +328,7 @@ Definition expected_function (expected : ExpectedFact) : string :=
   | ExpectedEquilateral => "equilateral"
   | ExpectedEquiangular => "equiangular"
   | ExpectedSupplementary => "supplementary"
+  | ExpectedLinearPair => "linear_pair"
   end.
 
 Definition allowed_functions (expected : ExpectedFact) : list string :=
@@ -333,6 +338,7 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedTriangle | ExpectedRight | ExpectedPerpendicular
   | ExpectedMidpoint | ExpectedAngleBisector | ExpectedConRight
   | ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary => []
+  | ExpectedLinearPair => []
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -346,6 +352,7 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedEquilateral, EquilateralTri _
   | ExpectedEquiangular, EquiangularTri _
   | ExpectedSupplementary, Supplementary _ _ => true
+  | ExpectedLinearPair, LinearPair _ _ => true
   | _, _ => false
   end.
 
@@ -436,6 +443,8 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
            ExpectedSupplementary step_number)
         (dependency_type_issue facts "con_supplements_same" 1 j
            ExpectedSupplementary step_number)
+  | DefLinearPair i =>
+      dependency_type_issue facts "def_linear_pair" 0 i ExpectedLinearPair step_number
   | DefIsosceles i =>
       dependency_type_issue facts "def_isosceles" 0 i ExpectedSegment step_number
   | BaseAngle i =>

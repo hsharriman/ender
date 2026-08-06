@@ -44,6 +44,7 @@ const implemented = new Set([
   "equiang_equilat",
   "con_supplements",
   "con_supplements_same",
+  "def_linear_pair",
   "def_perp",
   "perp_con_ang",
   "reflex",
@@ -133,6 +134,8 @@ const entries = catalog.map((reason) => {
         ? "audited AngleBisector meaning"
       : reason === "ang_bisect_conv"
         ? "audited AngleBisector meaning; syntactic shared-ray schema"
+      : reason === "def_linear_pair"
+        ? "GeoCoq neutral angle theory (bet__suppa and ray transport)"
       : reason === "rhl"
         ? "GeoCoq cong2_per2__cong_3 (neutral geometry)"
       : reason === "midpt_conv"

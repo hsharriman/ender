@@ -37,6 +37,7 @@ Inductive Statement :=
 | EquilateralTri : Triangle -> Statement
 | EquiangularTri : Triangle -> Statement
 | Supplementary : Angle -> Angle -> Statement
+| LinearPair : Angle -> Angle -> Statement
 (** Quadrilateral and parallelism statements.  Kernel meanings for these are
     the audited meanings verbatim (see [Semantics.v]), so the two layers
     cannot drift. *)
@@ -87,6 +88,7 @@ Inductive Reason :=
 | EquiangEquilat : nat -> Reason
 | ConSupplements : nat -> nat -> nat -> Reason
 | ConSupplementsSame : nat -> nat -> Reason
+| DefLinearPair : nat -> Reason
 | DefPerp : nat -> Reason
 | DefParallelogram : nat -> nat -> Reason
 | PgramOppSides : nat -> Reason
@@ -179,6 +181,7 @@ Definition statement_eqb (x y : Statement) : bool :=
   | IsoscelesTri a, IsoscelesTri b | EquilateralTri a, EquilateralTri b
   | EquiangularTri a, EquiangularTri b => triangle_eqb a b
   | Supplementary a b, Supplementary c d => angle_eqb a c && angle_eqb b d
+  | LinearPair a b, LinearPair c d => angle_eqb a c && angle_eqb b d
   | Para a b, Para c d => segment_eqb a c && segment_eqb b d
   | Pgram a, Pgram b | Rect a, Rect b | Rhomb a, Rhomb b
   | IsosTrap a, IsosTrap b => quadrilateral_eqb a b

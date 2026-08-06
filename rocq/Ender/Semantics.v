@@ -108,6 +108,7 @@ Definition statement_meaning (s : Statement) : Prop :=
   | Supplementary a b =>
       SuppA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
             (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
+  | LinearPair a b => Audit.LinearPairMeaning point (ang_name a) (ang_name b)
   | Para a b => Audit.Parallel point (seg_name a) (seg_name b)
   | Pgram q => Audit.IsParallelogram point (quad_name q)
   | Rect q => Audit.IsRectangle point (quad_name q)
