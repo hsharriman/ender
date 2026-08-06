@@ -1269,5 +1269,30 @@ steps:
 ".
 Proof. vm_compute. reflexivity. Qed.
 
+(** The quadrilateral statement layer: declarations, premises of every new
+    form, a [given] step, and a [parallelogram] goal, through both checker
+    paths. *)
+Definition quad_layer_source := "title: quadrilateral statements
+premises:
+pt: A (0,0), B (4,0), C (6,3), D (2,3)
+quad: q_ABCD
+[g_1] parallelogram(q_ABCD)
+[g_2] trapezoid_premise(q_ABCD, AB, CD)
+[g_3] kite_premise(q_ABCD, a_ABC, a_ADC)
+[g_4] para(AB, CD)
+[g_5] rhombus(q_ABCD)
+[g_6] isos_trapezoid_premise(q_ABCD, AB, CD)
+[g_7] rectangle(q_ABCD)
+[g_8] isos_trapezoid(q_ABCD)
+-> parallelogram(q_ABCD)
+
+steps:
+[01] given(g_1) -> parallelogram(q_ABCD)".
+
+Example quad_layer_accepts : check_source quad_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_quad_layer_accepts : complete_checker quad_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.

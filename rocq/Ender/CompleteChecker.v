@@ -13,6 +13,10 @@ Definition project_angle (a : Audit.AngleName) : Angle :=
 Definition project_triangle (t : Audit.TriangleName) : Triangle :=
   triangle t.(Audit.triangle_first) t.(Audit.triangle_second) t.(Audit.triangle_third).
 
+Definition project_quadrilateral (q : Audit.QuadrilateralName) : Quadrilateral :=
+  quadrilateral q.(Audit.quadrilateral_first) q.(Audit.quadrilateral_second)
+                q.(Audit.quadrilateral_third) q.(Audit.quadrilateral_fourth).
+
 (** Statements usable as premises by the currently implemented kernel.  A
     public [con_tri] premise carries both triangles' noncollinearity together
     with the three side congruences, which is exactly the SSS hypothesis, so
@@ -36,13 +40,29 @@ Definition project_premise_statement (s : Audit.PublicStatement) : option Statem
   | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
   | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
   | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
+  | Audit.Para a b => Some (Para (project_segment a) (project_segment b))
+  | Audit.Parallelogram q => Some (Pgram (project_quadrilateral q))
+  | Audit.Rectangle q => Some (Rect (project_quadrilateral q))
+  | Audit.Rhombus q => Some (Rhomb (project_quadrilateral q))
+  | Audit.IsosTrapezoid q => Some (IsosTrap (project_quadrilateral q))
+  | Audit.TrapezoidPremise q a b =>
+      Some (TrapPremise (project_quadrilateral q)
+              (project_segment a) (project_segment b))
+  | Audit.IsosTrapezoidPremise q a b =>
+      Some (IsosTrapPremise (project_quadrilateral q)
+              (project_segment a) (project_segment b))
+  | Audit.KitePremise q a b =>
+      Some (KiteP (project_quadrilateral q) (project_angle a) (project_angle b))
   | _ => None
   end.
 
 (** Reflexive goals carry extra public same-object meaning not supplied merely
     by internal congruence, so this adapter conservatively rejects them.  The
     right-angle and perpendicularity statements below are defined to have
-    exactly their audited meanings, so they project in both directions. *)
+    exactly their audited meanings, so they project in both directions.  The
+    quadrilateral shapes and [para] carry the audited meanings verbatim, so
+    they too project both ways; the [*_premise] forms are premise-only
+    surface vocabulary and stay out of goals. *)
 Definition project_goal_statement (s : Audit.PublicStatement) : option Statement :=
   match s with
   | Audit.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
@@ -60,6 +80,11 @@ Definition project_goal_statement (s : Audit.PublicStatement) : option Statement
   | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
   | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
   | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
+  | Audit.Para a b => Some (Para (project_segment a) (project_segment b))
+  | Audit.Parallelogram q => Some (Pgram (project_quadrilateral q))
+  | Audit.Rectangle q => Some (Rect (project_quadrilateral q))
+  | Audit.Rhombus q => Some (Rhomb (project_quadrilateral q))
+  | Audit.IsosTrapezoid q => Some (IsosTrap (project_quadrilateral q))
   | _ => None
   end.
 
@@ -86,8 +111,16 @@ Definition projected_angles (ds : list Audit.PublicDeclaration) : list Angle :=
     | _ => rest
     end) [] ds.
 
+Definition projected_quadrilaterals (ds : list Audit.PublicDeclaration)
+    : list Quadrilateral :=
+  fold_right (fun d rest => match d with
+    | Audit.QuadrilateralDeclaration q => project_quadrilateral q :: rest
+    | _ => rest
+    end) [] ds.
+
 Definition projected_declarations (ds : list Audit.PublicDeclaration) : Declarations :=
-  declarations (projected_triangles ds) (projected_angles ds).
+  declarations (projected_triangles ds) (projected_angles ds)
+               (projected_quadrilaterals ds).
 
 Fixpoint statement_list_eqb (a b : list Statement) : bool :=
   match a, b with
@@ -110,9 +143,17 @@ Fixpoint angle_list_eqb (a b : list Angle) : bool :=
   | _, _ => false
   end.
 
+Fixpoint quadrilateral_list_eqb (a b : list Quadrilateral) : bool :=
+  match a, b with
+  | [], [] => true
+  | x :: xs, y :: ys => quadrilateral_eqb x y && quadrilateral_list_eqb xs ys
+  | _, _ => false
+  end.
+
 Definition declarations_eqb (a b : Declarations) : bool :=
   triangle_list_eqb a.(decl_triangles) b.(decl_triangles) &&
-  angle_list_eqb a.(decl_angles) b.(decl_angles).
+  angle_list_eqb a.(decl_angles) b.(decl_angles) &&
+  quadrilateral_list_eqb a.(decl_quadrilaterals) b.(decl_quadrilaterals).
 
 Definition premise_statements (ps : list Premise) : list Statement :=
   map premise_statement ps.
@@ -218,6 +259,11 @@ Definition statement_function (s : Statement) : string :=
   | AngBisectOf _ _ => "ang_bisect" | OnLine _ _ => "on_line"
   | IsoscelesTri _ => "isosceles" | EquilateralTri _ => "equilateral"
   | EquiangularTri _ => "equiangular" | Supplementary _ _ => "supplementary"
+  | Para _ _ => "para" | Pgram _ => "parallelogram"
+  | Rect _ => "rectangle" | Rhomb _ => "rhombus"
+  | IsosTrap _ => "isos_trapezoid" | TrapPremise _ _ _ => "trapezoid_premise"
+  | IsosTrapPremise _ _ _ => "isos_trapezoid_premise"
+  | KiteP _ _ _ => "kite_premise"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
@@ -454,11 +500,21 @@ Proof.
   - intros H. inversion H. auto.
 Qed.
 
+Lemma quadrilateral_list_eqb_eq : forall a b,
+  quadrilateral_list_eqb a b = true <-> a = b.
+Proof.
+  induction a as [|x xs IH]; destruct b as [|y ys]; cbn; try easy.
+  rewrite andb_true_iff, quadrilateral_eqb_eq, IH. split.
+  - intros [-> ->]. reflexivity.
+  - intros H. inversion H. auto.
+Qed.
+
 Lemma declarations_eqb_eq : forall a b, declarations_eqb a b = true <-> a = b.
 Proof.
-  intros [t1 a1] [t2 a2]. unfold declarations_eqb. cbn.
-  rewrite andb_true_iff, triangle_list_eqb_eq, angle_list_eqb_eq. split.
-  - intros [-> ->]. reflexivity.
+  intros [t1 a1 q1] [t2 a2 q2]. unfold declarations_eqb. cbn.
+  rewrite !andb_true_iff, triangle_list_eqb_eq, angle_list_eqb_eq,
+    quadrilateral_list_eqb_eq. split.
+  - intros [[-> ->] ->]. reflexivity.
   - intros H. inversion H. auto.
 Qed.
 
@@ -470,12 +526,16 @@ Lemma projected_triangle_meaning : forall ds,
   Forall (Audit.declarationMeaning point) ds ->
   declarations_well_formed point (projected_declarations ds).
 Proof.
-  intros ds Hall. split.
+  intros ds Hall. split; [|split].
   - intros t Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
     + contradiction.
     + destruct d; cbn in *; try now apply IH.
       destruct Hin as [<-|Hin]; [exact (proj2 (proj2 (proj2 Hd)))|now apply IH].
-  - intros a Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
+  - intros an Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
+    + contradiction.
+    + destruct d; cbn in *; try now apply IH.
+      destruct Hin as [<-|Hin]; [exact Hd|now apply IH].
+  - intros qd Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
     + contradiction.
     + destruct d; cbn in *; try now apply IH.
       destruct Hin as [<-|Hin]; [exact Hd|now apply IH].

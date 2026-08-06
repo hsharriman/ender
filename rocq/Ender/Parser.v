@@ -89,6 +89,14 @@ Fixpoint angle_tokens (text : chars) : list Angle :=
   | [] => []
   end.
 
+Fixpoint quad_tokens (text : chars) : list Quadrilateral :=
+  match text with
+  | "q"%char :: "_"%char :: a :: b :: c :: d :: rest =>
+      quadrilateral a b c d :: quad_tokens rest
+  | _ :: rest => quad_tokens rest
+  | [] => []
+  end.
+
 Definition parse_segment (text : chars) : option Segment :=
   match text with
   | [a; b] => Some (segment a b)
@@ -104,6 +112,12 @@ Definition parse_angle (text : chars) : option Angle :=
 Definition parse_triangle (text : chars) : option Triangle :=
   match text with
   | ["t"%char; "_"%char; a; b; c] => Some (triangle a b c)
+  | _ => None
+  end.
+
+Definition parse_quadrilateral (text : chars) : option Quadrilateral :=
+  match text with
+  | ["q"%char; "_"%char; a; b; c; d] => Some (quadrilateral a b c d)
   | _ => None
   end.
 
@@ -194,6 +208,29 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
     | _ => None
     end in
   let parse_perp := parse_perp_like PerpAt in
+  let parse_quad_shape constructor body :=
+    match parse_quadrilateral body with
+    | Some q => Some (constructor q)
+    | None => None
+    end in
+  let parse_quad_segments constructor body :=
+    match split_on ","%char body [] with
+    | [q; a; b] =>
+        match parse_quadrilateral q, parse_segment a, parse_segment b with
+        | Some x, Some y, Some z => Some (constructor x y z)
+        | _, _, _ => None
+        end
+    | _ => None
+    end in
+  let parse_quad_angles constructor body :=
+    match split_on ","%char body [] with
+    | [q; a; b] =>
+        match parse_quadrilateral q, parse_angle a, parse_angle b with
+        | Some x, Some y, Some z => Some (constructor x y z)
+        | _, _, _ => None
+        end
+    | _ => None
+    end in
   try_call "con_seg" text (parse_segments ConSeg)
   (try_call "ref_seg" text (parse_segments RefSeg)
   (try_call "con_ang" text (parse_angles ConAng)
@@ -209,7 +246,16 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "isosceles" text (parse_shape IsoscelesTri)
   (try_call "equilateral" text (parse_shape EquilateralTri)
   (try_call "equiangular" text (parse_shape EquiangularTri)
-  (try_call "supplementary" text (parse_angles Supplementary) None))))))))))))))).
+  (try_call "supplementary" text (parse_angles Supplementary)
+  (try_call "para" text (parse_segments Para)
+  (try_call "parallelogram" text (parse_quad_shape Pgram)
+  (try_call "rectangle" text (parse_quad_shape Rect)
+  (try_call "rhombus" text (parse_quad_shape Rhomb)
+  (try_call "isos_trapezoid" text (parse_quad_shape IsosTrap)
+  (try_call "trapezoid_premise" text (parse_quad_segments TrapPremise)
+  (try_call "isos_trapezoid_premise" text (parse_quad_segments IsosTrapPremise)
+  (try_call "kite_premise" text (parse_quad_angles KiteP)
+    None))))))))))))))))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -351,6 +397,7 @@ Definition parse_step (line : chars) : option Step :=
 Record HeaderState := header_state {
   hs_triangles : list Triangle;
   hs_angles : list Angle;
+  hs_quadrilaterals : list Quadrilateral;
   hs_premises : list Premise;
   hs_goal : option Statement
 }.
@@ -364,16 +411,24 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
       if starts_with (list_ascii_of_string "tri:") compact then
         parse_header_lines rest
           (header_state (state.(hs_triangles) ++ point_tokens line)
-                        state.(hs_angles) state.(hs_premises) state.(hs_goal))
+                        state.(hs_angles) state.(hs_quadrilaterals)
+                        state.(hs_premises) state.(hs_goal))
       else if starts_with (list_ascii_of_string "ang:") compact then
         parse_header_lines rest
           (header_state state.(hs_triangles)
                         (state.(hs_angles) ++ angle_tokens line)
+                        state.(hs_quadrilaterals)
+                        state.(hs_premises) state.(hs_goal))
+      else if starts_with (list_ascii_of_string "quad:") compact then
+        parse_header_lines rest
+          (header_state state.(hs_triangles) state.(hs_angles)
+                        (state.(hs_quadrilaterals) ++ quad_tokens line)
                         state.(hs_premises) state.(hs_goal))
       else if starts_with ["["%char] compact then
         match parse_labeled_premise line with
         | Some prem => parse_header_lines rest
             (header_state state.(hs_triangles) state.(hs_angles)
+                          state.(hs_quadrilaterals)
                           (state.(hs_premises) ++ [prem]) state.(hs_goal))
         | None => None
         end
@@ -383,6 +438,7 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
             match parse_statement_chars goal_text with
             | Some goal => parse_header_lines rest
                 (header_state state.(hs_triangles) state.(hs_angles)
+                              state.(hs_quadrilaterals)
                               state.(hs_premises) (Some goal))
             | None => None
             end
@@ -406,12 +462,13 @@ Fixpoint parse_step_lines (lines : list chars) (steps : list Step) : option (lis
 
 Definition parseProblemPart (part : string) : option ProblemHeader :=
   match parse_header_lines (split_lines (list_ascii_of_string part) [])
-                           (header_state [] [] [] None) with
+                           (header_state [] [] [] [] None) with
   | Some header =>
       match header.(hs_goal) with
       | Some goal =>
           Some (problem_header
-                  (declarations header.(hs_triangles) header.(hs_angles))
+                  (declarations header.(hs_triangles) header.(hs_angles)
+                                header.(hs_quadrilaterals))
                   header.(hs_premises) goal)
       | None => None
       end

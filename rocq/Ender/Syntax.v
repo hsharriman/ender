@@ -11,6 +11,9 @@ Definition PointId := ascii.
 Record Segment := segment { seg_start : PointId; seg_end : PointId }.
 Record Angle := angle { ang_left : PointId; ang_vertex : PointId; ang_right : PointId }.
 Record Triangle := triangle { tri_a : PointId; tri_b : PointId; tri_c : PointId }.
+Record Quadrilateral := quadrilateral {
+  quad_a : PointId; quad_b : PointId; quad_c : PointId; quad_d : PointId
+}.
 
 Inductive Statement :=
 | ConSeg : Segment -> Segment -> Statement
@@ -28,7 +31,18 @@ Inductive Statement :=
 | IsoscelesTri : Triangle -> Statement
 | EquilateralTri : Triangle -> Statement
 | EquiangularTri : Triangle -> Statement
-| Supplementary : Angle -> Angle -> Statement.
+| Supplementary : Angle -> Angle -> Statement
+(** Quadrilateral and parallelism statements.  Kernel meanings for these are
+    the audited meanings verbatim (see [Semantics.v]), so the two layers
+    cannot drift. *)
+| Para : Segment -> Segment -> Statement
+| Pgram : Quadrilateral -> Statement
+| Rect : Quadrilateral -> Statement
+| Rhomb : Quadrilateral -> Statement
+| IsosTrap : Quadrilateral -> Statement
+| TrapPremise : Quadrilateral -> Segment -> Segment -> Statement
+| IsosTrapPremise : Quadrilateral -> Segment -> Segment -> Statement
+| KiteP : Quadrilateral -> Angle -> Angle -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -65,7 +79,8 @@ Record Step := step { step_reason : Reason; step_conclusion : Statement }.
     the others too: they are the kernel's only source of nondegeneracy. *)
 Record Declarations := declarations {
   decl_triangles : list Triangle;
-  decl_angles : list Angle
+  decl_angles : list Angle;
+  decl_quadrilaterals : list Quadrilateral
 }.
 
 Record ProblemHeader := problem_header {
@@ -91,6 +106,10 @@ Definition triangle_eqb (x y : Triangle) : bool :=
   ascii_eqb x.(tri_a) y.(tri_a) && ascii_eqb x.(tri_b) y.(tri_b) &&
   ascii_eqb x.(tri_c) y.(tri_c).
 
+Definition quadrilateral_eqb (x y : Quadrilateral) : bool :=
+  ascii_eqb x.(quad_a) y.(quad_a) && ascii_eqb x.(quad_b) y.(quad_b) &&
+  ascii_eqb x.(quad_c) y.(quad_c) && ascii_eqb x.(quad_d) y.(quad_d).
+
 Definition statement_eqb (x y : Statement) : bool :=
   match x, y with
   | ConSeg a b, ConSeg c d | RefSeg a b, RefSeg c d =>
@@ -110,6 +129,14 @@ Definition statement_eqb (x y : Statement) : bool :=
   | IsoscelesTri a, IsoscelesTri b | EquilateralTri a, EquilateralTri b
   | EquiangularTri a, EquiangularTri b => triangle_eqb a b
   | Supplementary a b, Supplementary c d => angle_eqb a c && angle_eqb b d
+  | Para a b, Para c d => segment_eqb a c && segment_eqb b d
+  | Pgram a, Pgram b | Rect a, Rect b | Rhomb a, Rhomb b
+  | IsosTrap a, IsosTrap b => quadrilateral_eqb a b
+  | TrapPremise q a b, TrapPremise r c d
+  | IsosTrapPremise q a b, IsosTrapPremise r c d =>
+      quadrilateral_eqb q r && segment_eqb a c && segment_eqb b d
+  | KiteP q a b, KiteP r c d =>
+      quadrilateral_eqb q r && angle_eqb a c && angle_eqb b d
   | _, _ => false
   end.
 
@@ -145,11 +172,22 @@ Proof.
   - intros H. inversion H. repeat split; reflexivity.
 Qed.
 
+Lemma quadrilateral_eqb_eq : forall x y, quadrilateral_eqb x y = true <-> x = y.
+Proof.
+  intros [a b c d] [e f g h].
+  change (Ascii.eqb a e && Ascii.eqb b f && Ascii.eqb c g && Ascii.eqb d h
+            = true <-> quadrilateral a b c d = quadrilateral e f g h).
+  rewrite !andb_true_iff, !Ascii.eqb_eq.
+  split.
+  - intros [[[-> ->] ->] ->]. reflexivity.
+  - intros H. inversion H. repeat split; reflexivity.
+Qed.
+
 Lemma statement_eqb_eq : forall x y, statement_eqb x y = true <-> x = y.
 Proof.
   destruct x, y; cbn; unfold ascii_eqb;
     rewrite ?andb_true_iff, ?segment_eqb_eq, ?angle_eqb_eq, ?triangle_eqb_eq,
-      ?Ascii.eqb_eq;
+      ?quadrilateral_eqb_eq, ?Ascii.eqb_eq;
     split; intro H; solve [discriminate | intuition congruence].
 Qed.
 

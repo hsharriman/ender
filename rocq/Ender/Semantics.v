@@ -39,6 +39,16 @@ Definition triangle_nondegenerate (t : Triangle) : Prop :=
   point t.(tri_c) <> point t.(tri_a) /\
   ~ Col (point t.(tri_a)) (point t.(tri_b)) (point t.(tri_c)).
 
+(** Kernel names converted to audited names.  The quadrilateral and
+    parallelism statements below carry the audited meanings verbatim through
+    these conversions, so the two layers cannot drift. *)
+Definition seg_name (s : Segment) : Audit.SegmentName :=
+  Audit.segment_name s.(seg_start) s.(seg_end).
+Definition ang_name (a : Angle) : Audit.AngleName :=
+  Audit.angle_name a.(ang_left) a.(ang_vertex) a.(ang_right).
+Definition quad_name (q : Quadrilateral) : Audit.QuadrilateralName :=
+  Audit.quadrilateral_name q.(quad_a) q.(quad_b) q.(quad_c) q.(quad_d).
+
 Definition statement_meaning (s : Statement) : Prop :=
   match s with
   | ConSeg a b | RefSeg a b =>
@@ -94,6 +104,19 @@ Definition statement_meaning (s : Statement) : Prop :=
   | Supplementary a b =>
       SuppA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
             (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
+  | Para a b => Audit.Parallel point (seg_name a) (seg_name b)
+  | Pgram q => Audit.IsParallelogram point (quad_name q)
+  | Rect q => Audit.IsRectangle point (quad_name q)
+  | Rhomb q => Audit.IsRhombus point (quad_name q)
+  | IsosTrap q => Audit.IsIsoscelesTrapezoid point (quad_name q)
+  | TrapPremise q a b =>
+      Audit.IsTrapezoid point (quad_name q) /\
+      Audit.Parallel point (seg_name a) (seg_name b)
+  | IsosTrapPremise q a b =>
+      Audit.IsIsoscelesTrapezoid point (quad_name q) /\
+      Audit.Parallel point (seg_name a) (seg_name b)
+  | KiteP q a b =>
+      Audit.IsKitePremise point (quad_name q) (ang_name a) (ang_name b)
   end.
 
 Definition segment_points (s : Segment) :=
@@ -127,6 +150,8 @@ Qed.
 
 Definition declarations_well_formed (d : Declarations) : Prop :=
   (forall t, In t d.(decl_triangles) -> triangle_well_formed t) /\
-  (forall a, In a d.(decl_angles) -> angle_well_formed a).
+  (forall a, In a d.(decl_angles) -> angle_well_formed a) /\
+  (forall q, In q d.(decl_quadrilaterals) ->
+     Audit.QuadrilateralWellFormed point (quad_name q)).
 
 End EnderSemantics.

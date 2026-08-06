@@ -325,9 +325,11 @@ therefore strict, and `pgram_opp_sides` is expected provable via GeoCoq's
 Also provable is the definitional-projection
 subset: `def_parallelogram`, `pgram_opp_side_para`, `rectangle_pgram`,
 `rhombus_pgram`, and `rhombus_consec_sides` all just assemble or take apart the
-audited definitions. All of these need quadrilateral objects in the kernel — a
-`Quadrilateral` type, `quad:` declaration parsing, and the well-formedness
-projection triangles already have — which does not exist yet.
+audited definitions. The kernel now has the quadrilateral layer these need —
+a `Quadrilateral` type, `quad:` declaration parsing and projection, and
+kernel statements for `para` and every quadrilateral form, whose meanings are
+the audited meanings verbatim so the bridge is definitional. The rules
+themselves are next.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and
