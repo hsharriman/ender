@@ -21,11 +21,12 @@ npm start
 
 This starts the UI at [http://localhost:3000/ender/](http://localhost:3000/ender/) (the dev server redirects `/` to `/ender/`).
 
-Open **ProofObj Harness** from the app to edit proofs live. Verified checker
-issues appear in the proof-wide issues list. `enderCheckReport` additionally
-returns per-step status, each step's dependencies, the dependency graph with
-its unused steps, facts derived twice, and which step reached the goal; the
-harness does not render those yet.
+Open **ProofObj Harness** from the app to edit proofs live. The verified
+checker's report drives the editor: the step it rejected is marked in red,
+steps after it are marked amber because they were never judged, and hovering
+either shows the reason, the steps it cited, and why. The status line adds
+where the goal was reached, which steps nothing depends on, and how many facts
+were derived twice.
 
 ### CLI proof checker
 

@@ -7,6 +7,10 @@ import {
   parsePresentationNode,
 } from "../verified/nodeWasmLoader";
 import { presentationContent } from "../../interface/core/grammarToLayout/presentationContent";
+import {
+  buildAnnotatedLines,
+  summarizeReport,
+} from "../../interface/core/reportAnnotations";
 import { VerifiedCheckOutput } from "../verified/presentationTypes";
 
 const PROOFS_DIR = join(__dirname, "../proofs");
@@ -288,6 +292,36 @@ describe("extracted Rocq API corpus tests", () => {
     // not a stray step either.
     expect(report.goal.provedBy).toBeNull();
     expect(report.graph.unusedSteps).toEqual([]);
+  });
+
+  test("summarizes a report the way the harness shows it", async () => {
+    const accepted = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/tutorial.txt"), "utf8"),
+    );
+    expect(summarizeReport(accepted)).toBe(
+      "Accepted by the verified checker. (goal reached at step 4)",
+    );
+
+    const rejected = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8"),
+    );
+    expect(summarizeReport(rejected)).toBe(
+      "Rejected by the verified checker. (first failure at step 4)",
+    );
+  });
+
+  test("marks the failed step and only the failed step", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    const unaccepted = new Map(
+      report.steps
+        .filter((step) => step.status !== "accepted")
+        .map((step) => [String(step.number), step] as const),
+    );
+    const marked = buildAnnotatedLines(source, unaccepted)
+      .filter((line) => line.status !== undefined)
+      .map((line) => [line.text.trim().slice(0, 4), line.status]);
+    expect(marked).toEqual([["[04]", "rejected"]]);
   });
 
   test("reports a fact derived twice", async () => {

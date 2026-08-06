@@ -133,8 +133,10 @@ Known limitations relevant to prioritization:
   written to stay honest about its own limits: steps after the first failure
   are `blocked` rather than judged, and `provedBy` skips a step the kernel
   rejected even when that step states the goal.  `suggestions` and
-  `diagramDependencies` are still empty, and no interface renders any of this
-  yet;
+  `diagramDependencies` are still empty.  The harness renders the rest;
+  `summarizeReport` and `buildAnnotatedLines` in
+  `src/interface/core/reportAnnotations.ts` are the display logic, kept out of
+  the React component so they can be tested against real reports;
 - arc source is parsed losslessly but the TypeScript renderer has no Arc
   object; the presentation adapter passes nested arc arguments through as
   text rather than failing, while legacy `BR_OB`-style arc tokens still
