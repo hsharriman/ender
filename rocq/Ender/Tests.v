@@ -1293,6 +1293,31 @@ Example con_complements_unshared_rejects :
   complete_checker con_complements_unshared_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Corners of a parallelogram that share a side are supplementary; opposite
+    corners are congruent, which is a different reason. *)
+Definition pgram_consec_angs_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] parallelogram(q_ABCD)
+"
+  "supplementary(a_ABC,a_BCD)"
+  "[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_consec_angs(1) -> supplementary(a_ABC,a_BCD)".
+
+Definition pgram_consec_angs_opposite_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] parallelogram(q_ABCD)
+"
+  "supplementary(a_ABC,a_CDA)"
+  "[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_consec_angs(1) -> supplementary(a_ABC,a_CDA)".
+
+Example pgram_consec_angs_accepts :
+  complete_checker pgram_consec_angs_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_consec_angs_opposite_rejects :
+  complete_checker pgram_consec_angs_opposite_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example rect_diag_con_accepts :
   complete_checker rect_diag_con_source = true.
 Proof. vm_compute. reflexivity. Qed.

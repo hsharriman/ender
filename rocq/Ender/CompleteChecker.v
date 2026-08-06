@@ -297,7 +297,8 @@ Inductive ExpectedFact :=
 | ExpectedAngleBisector | ExpectedConRight
 | ExpectedEquilateral | ExpectedEquiangular | ExpectedSupplementary
 | ExpectedComplementary
-| ExpectedLinearPair | ExpectedRhombus | ExpectedRectangle.
+| ExpectedLinearPair | ExpectedRhombus | ExpectedRectangle
+| ExpectedParallelogram.
 
 Definition statement_function (s : Statement) : string :=
   match s with
@@ -336,6 +337,7 @@ Definition expected_function (expected : ExpectedFact) : string :=
   | ExpectedLinearPair => "linear_pair"
   | ExpectedRhombus => "rhombus"
   | ExpectedRectangle => "rectangle"
+  | ExpectedParallelogram => "parallelogram"
   end.
 
 Definition allowed_functions (expected : ExpectedFact) : list string :=
@@ -349,6 +351,7 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedLinearPair => []
   | ExpectedRhombus => []
   | ExpectedRectangle => []
+  | ExpectedParallelogram => []
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -366,6 +369,7 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedLinearPair, LinearPair _ _ => true
   | ExpectedRhombus, Rhomb _ => true
   | ExpectedRectangle, Rect _ => true
+  | ExpectedParallelogram, Pgram _ => true
   | _, _ => false
   end.
 
@@ -465,6 +469,9 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
         step_number
   | RectDiagCon i =>
       dependency_type_issue facts "rect_diag_con" 0 i ExpectedRectangle
+        step_number
+  | PgramConsecAngs i =>
+      dependency_type_issue facts "pgram_consec_angs" 0 i ExpectedParallelogram
         step_number
   | RectangleDef i =>
       dependency_type_issue facts "rectangle" 0 i ExpectedRectangle step_number

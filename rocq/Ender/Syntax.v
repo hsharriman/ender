@@ -96,6 +96,7 @@ Inductive Reason :=
 | DefParallelogram : nat -> nat -> Reason
 | PgramOppSides : nat -> Reason
 | PgramOppAngles : nat -> Reason
+| PgramConsecAngs : nat -> Reason
 | PgramOppSidePara : nat -> nat -> Reason
 | RectanglePgram : nat -> Reason
 | RhombusPgram : nat -> Reason

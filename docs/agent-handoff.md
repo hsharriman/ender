@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- fifty-seven reasons are fully verified and none are partial. The conservative
+- fifty-eight reasons are fully verified and none are partial. The conservative
   `ang_bisect_conv` rule requires its congruent dependency to name exactly the
   two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
@@ -55,7 +55,10 @@ Known limitations relevant to prioritization:
   is already there -- and is the cheapest way to widen nondegeneracy beyond
   declared triangles and angles.  `rect_diag_con` is verified too, by SAS
   between two of the right corners over the Euclidean opposite-sides
-  theorem.  The rest of the diagonal-heavy remainder (`pgram_diag_bisect`,
+  theorem, and `pgram_consec_angs` through GeoCoq's
+  `consecutive_interior_angles_postulate`: the shared side is a transversal
+  of the other two, and the crossing diagonals put the two far corners on
+  one side of it.  The rest of the diagonal-heavy remainder (`pgram_diag_bisect`,
   kite and trapezoid rules) is still fail-closed;
 - the parallel-line family is implemented and verified: `altint`, `altext`,
   `corresp_ang`, `sameside_ang`, their converses, and `para_transitive`.

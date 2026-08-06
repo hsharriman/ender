@@ -4,6 +4,7 @@ Require Import GeoCoq.Main.Annexes.suma.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.tarski_playfair.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_par_trans.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_alternate_interior_angles.
+Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.alternate_interior_angles_consecutive_interior_angles.
 Require Import GeoCoq.Main.Annexes.quadrilaterals.
 Require Import GeoCoq.Main.Annexes.quadrilaterals_inter_dec.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_alternate_interior_angles.
@@ -561,6 +562,49 @@ Proof.
   { apply pars_par_plg; [exact Hstrict|Par]. }
   apply plg_conga; [exact Hdistinct|].
   now apply plg_to_parallelogram.
+Qed.
+
+Lemma ender_bets_sym : forall A X C, BetS A X C -> BetS C X A.
+Proof.
+  intros A X C [Hbet [H1 H2]]. repeat split;
+    [now apply between_symmetry|now apply not_eq_sym|now apply not_eq_sym].
+Qed.
+
+(** Consecutive interior angles between parallels, Euclidean by the same
+    Playfair route the alternate interior angles take. *)
+Lemma ender_consecutive_interior : forall A B C D,
+  OS B C A D -> Par A B C D -> SuppA A B C B C D.
+Proof.
+  apply alternate_interior__consecutive_interior,
+    playfair__alternate_interior, tarski_s_euclid_implies_playfair.
+  unfold tarski_s_parallel_postulate. exact euclid.
+Qed.
+
+(** Two corners of the audited parallelogram that share a side are
+    supplementary.  The shared side is a transversal of the other two, which
+    are parallel, and the crossing diagonals are what put the two far corners
+    on one side of it: each is on the same ray from an end of the shared side
+    as the crossing point is. *)
+Lemma ender_pgram_consec_angles : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D -> Par A B C D ->
+  SuppA A B C B C D.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [Hbcd _].
+  destruct HAC as [HbetAC [HAX HXC]].
+  destruct HBD as [HbetBD [HBX HXD]].
+  assert (HcolBXD : Col B X D) by Col.
+  assert (HncolBCX : ~ Col B C X) by (intro; apply Hbcd; ColR).
+  assert (HosX : OS B C X D)
+    by (apply out_one_side; [now left|apply bet_out; auto]).
+  assert (HosA : OS B C A X).
+  { apply one_side_symmetry, invert_one_side, out_one_side;
+      [right; intro; apply Hncol; Col
+      |apply bet_out; [now apply not_eq_sym
+                      |now apply between_symmetry]]. }
+  apply ender_consecutive_interior; [|exact Hpar].
+  apply one_side_transitivity with X; assumption.
 Qed.
 
 (** A parallelogram with one pair of congruent adjacent sides has all four

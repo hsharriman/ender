@@ -810,6 +810,20 @@ Definition rhombus_consec_sides_rule (facts : list Statement) (i j : nat)
   | _, _, _ => false
   end.
 
+(** Two corners of a parallelogram that share a side are supplementary.  Only
+    consecutive pairs: opposite corners are congruent instead, which is
+    [pgram_opp_angs]. *)
+Definition pgram_consec_angs_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (Pgram q) =>
+      fact_eqb (Supplementary (quad_corner_a q) (quad_corner_b q)) conclusion ||
+      fact_eqb (Supplementary (quad_corner_b q) (quad_corner_c q)) conclusion ||
+      fact_eqb (Supplementary (quad_corner_c q) (quad_corner_d q)) conclusion ||
+      fact_eqb (Supplementary (quad_corner_d q) (quad_corner_a q)) conclusion
+  | _ => false
+  end.
+
 (** The audited rhombus meaning carries a congruence chain around all four
     sides.  Expose every unordered pair, not merely adjacent pairs. *)
 Definition rhombus_def_rule (facts : list Statement) (i : nat)
@@ -1210,6 +1224,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | DefParallelogram i j => def_parallelogram_rule decls facts i j conclusion
   | PgramOppSides i => pgram_opp_sides_rule facts i conclusion
   | PgramOppAngles i => pgram_opp_angles_rule facts i conclusion
+  | PgramConsecAngs i => pgram_consec_angs_rule facts i conclusion
   | PgramOppSidePara i j => pgram_opp_side_para_rule decls facts i j conclusion
   | RectanglePgram i => rectangle_pgram_rule facts i conclusion
   | RhombusPgram i => rhombus_pgram_rule facts i conclusion
@@ -3639,6 +3654,37 @@ Proof.
   - eapply rectangle_angle_matches_sound; [exact Hfacts|exact Hwd|exact Hrd|exact Hm].
 Qed.
 
+Lemma pgram_consec_angs_sound : forall facts i conclusion,
+  Forall Interp facts -> pgram_consec_angs_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule.
+  unfold pgram_consec_angs_rule in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hp : Interp (Pgram q)) by (eapply lookup_step_sound; eauto).
+  cbn in Hp. destruct Hp as [Hwf [Hpar1 Hpar2]].
+  destruct Hwf as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
+    cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
+  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    as [Hbcd [Hcda Hdab]].
+  (* one instance of the theorem per side of the figure, reading the four
+     vertices from that side's own starting corner *)
+  repeat rewrite orb_true_iff in Hrule.
+  destruct Hrule as [[[Hm|Hm]|Hm]|Hm]; apply (fact_eqb_sound _ _ Hm); cbn.
+  - apply (ender_pgram_consec_angles _ _ _ _ X Hdab
+             (ender_bets_sym _ _ _ HXbd) HXac (par_symmetry _ _ _ _ Hpar2)).
+  - apply (ender_pgram_consec_angles _ _ _ _ X Hncol HXac HXbd Hpar1).
+  - apply (ender_pgram_consec_angles _ _ _ _ X Hbcd HXbd
+             (ender_bets_sym _ _ _ HXac) Hpar2).
+  - apply (ender_pgram_consec_angles _ _ _ _ X Hcda
+             (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd)
+             (par_symmetry _ _ _ _ Hpar1)).
+Qed.
+
 Lemma rect_diag_con_sound : forall facts i conclusion,
   Forall Interp facts -> rect_diag_con_rule facts i conclusion = true ->
   Interp conclusion.
@@ -4039,6 +4085,7 @@ Proof.
   - eapply def_parallelogram_sound; eauto.
   - eapply pgram_opp_sides_sound; eauto.
   - eapply pgram_opp_angles_sound; eauto.
+  - eapply pgram_consec_angs_sound; eauto.
   - eapply pgram_opp_side_para_sound; eauto.
   - eapply rectangle_pgram_sound; eauto.
   - eapply rhombus_pgram_sound; eauto.
