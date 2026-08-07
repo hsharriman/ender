@@ -1361,6 +1361,63 @@ Example quad_declared_angle_outside_rejects :
   complete_checker quad_declared_angle_outside_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Both opposite side pairs congruent make a parallelogram; one pair does
+    not, and a right corner of a parallelogram makes it a rectangle. *)
+Definition pgram_opp_sides_conv_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(BC,DA)
+"
+  "parallelogram(q_ABCD)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(BC,DA)
+[03] pgram_opp_sides_conv(1,2) -> parallelogram(q_ABCD)".
+
+Definition pgram_opp_sides_conv_one_pair_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(AB,CD)
+"
+  "parallelogram(q_ABCD)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(AB,CD)
+[03] pgram_opp_sides_conv(1,2) -> parallelogram(q_ABCD)".
+
+Definition rect_pgram_ang_source := transitive_header "quad: q_ABCD
+ang: a_ABC
+"
+  "[g_1] right(a_ABC)
+[g_2] parallelogram(q_ABCD)
+"
+  "rectangle(q_ABCD)"
+  "[01] given(g_1) -> right(a_ABC)
+[02] given(g_2) -> parallelogram(q_ABCD)
+[03] rect_pgram_ang(1,2) -> rectangle(q_ABCD)".
+
+Definition rect_pgram_ang_diagonal_source := transitive_header "quad: q_ABCD
+ang: a_ABD
+"
+  "[g_1] right(a_ABD)
+[g_2] parallelogram(q_ABCD)
+"
+  "rectangle(q_ABCD)"
+  "[01] given(g_1) -> right(a_ABD)
+[02] given(g_2) -> parallelogram(q_ABCD)
+[03] rect_pgram_ang(1,2) -> rectangle(q_ABCD)".
+
+Example pgram_opp_sides_conv_accepts :
+  complete_checker pgram_opp_sides_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_opp_sides_conv_one_pair_rejects :
+  complete_checker pgram_opp_sides_conv_one_pair_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example rect_pgram_ang_accepts :
+  complete_checker rect_pgram_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rect_pgram_ang_diagonal_rejects :
+  complete_checker rect_pgram_ang_diagonal_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example pgram_consec_angs_accepts :
   complete_checker pgram_consec_angs_source = true.
 Proof. vm_compute. reflexivity. Qed.

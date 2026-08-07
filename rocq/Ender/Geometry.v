@@ -570,6 +570,22 @@ Proof.
     [now apply between_symmetry|now apply not_eq_sym|now apply not_eq_sym].
 Qed.
 
+(** An angle supplementary to a right angle is right.  [SuppA] lays the two
+    along a straight angle, so the second is congruent to the first's
+    continuation, and a continuation of a right angle is right. *)
+Lemma ender_suppa_per : forall A B C D E F,
+  SuppA A B C D E F -> Per D E F -> Per A B C.
+Proof.
+  intros A B C D E F [HneAB [A' [Hbet Hconga]]] Hper.
+  assert (HperA' : Per C B A') by (apply (l11_17 D E F); assumption).
+  pose proof (conga_distinct D E F C B A' Hconga) as [_ [_ [HneCB HneBA']]].
+  apply l8_2, (l11_17 C B A'); [exact HperA'|].
+  apply l11_18_1;
+    [now apply between_symmetry
+    |now apply not_eq_sym|now apply not_eq_sym|now apply not_eq_sym
+    |exact HperA'].
+Qed.
+
 (** Consecutive interior angles between parallels, Euclidean by the same
     Playfair route the alternate interior angles take. *)
 Lemma ender_consecutive_interior : forall A B C D,
@@ -605,6 +621,50 @@ Proof.
                       |now apply between_symmetry]]. }
   apply ender_consecutive_interior; [|exact Hpar].
   apply one_side_transitivity with X; assumption.
+Qed.
+
+(** One right corner makes a parallelogram a rectangle: the opposite corner is
+    congruent to it, and each neighbour is supplementary to it. *)
+Lemma ender_pgram_right_corner : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Par B C D A -> Per A B C ->
+  Per D A B /\ Per A B C /\ Per B C D /\ Per C D A.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar1 Hpar2 Hper.
+  pose proof Hncol as Hncol'. apply not_col_distincts in Hncol'.
+  destruct Hncol' as [_ [HAB [HBC HACne]]].
+  destruct (ender_pgram_opp_angles A B C D (conj HAB (conj HACne HBC))
+              Hncol Hpar1 Hpar2) as [Hopp1 Hopp2].
+  assert (HperCDA : Per C D A) by (apply (l11_17 A B C); assumption).
+  assert (HperBCD : Per B C D).
+  { apply (ender_suppa_per _ _ _ A B C);
+      [apply suppa_sym, (ender_pgram_consec_angles A B C D X); assumption
+      |exact Hper]. }
+  assert (HperDAB : Per D A B) by (apply (l11_17 B C D); assumption).
+  auto.
+Qed.
+
+(** Both pairs of opposite sides congruent make a parallelogram: the diagonal
+    cuts two triangles that agree side for side, so the alternate interior
+    angles it makes are congruent, and the crossing point is the [TS] that
+    [l12_21_b] turns them back into a parallel with -- all neutral. *)
+Lemma ender_pgram_from_opposite_sides : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Cong A B C D -> Cong B C D A ->
+  Par A B C D.
+Proof.
+  intros A B C D X Hncol HAC HBD Hab Hbc.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [_ [Hcda _]].
+  destruct HAC as [HbetAC [HAX HXC]]. destruct HBD as [HbetBD [HBX HXD]].
+  assert (Hts : TS A C B D).
+  { repeat split.
+    - intro. apply Hncol. Col.
+    - intro. apply Hcda. Col.
+    - exists X. split; [Col|assumption]. }
+  destruct (ender_sss A B C C D A) as [_ [_ [_ [Hangle _]]]];
+    [exact Hncol|exact Hab|exact Hbc|apply cong_pseudo_reflexivity|].
+  now apply l12_21_b.
 Qed.
 
 (** A parallelogram with one pair of congruent adjacent sides has all four

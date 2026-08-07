@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- fifty-eight reasons are fully verified and none are partial. The conservative
+- sixty reasons are fully verified and none are partial. The conservative
   `ang_bisect_conv` rule requires its congruent dependency to name exactly the
   two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
@@ -56,7 +56,14 @@ Known limitations relevant to prioritization:
   theorem, and `pgram_consec_angs` through GeoCoq's
   `consecutive_interior_angles_postulate`: the shared side is a transversal
   of the other two, and the crossing diagonals put the two far corners on
-  one side of it.  The rest of the diagonal-heavy remainder (`pgram_diag_bisect`,
+  one side of it.  `pgram_opp_sides_conv` is the first verified converse, and
+  shows what the rest of them need: its conclusion is a quadrilateral
+  statement, so the well-formedness cannot be read off a dependency and comes
+  from the declaration instead, while the parallels come from SSS along the
+  diagonal and `l12_21_b` -- neutral, unlike the forward direction.
+  `rect_pgram_ang` composes the opposite-corner and consecutive-corner
+  theorems: one right corner forces its opposite by congruence and its two
+  neighbours by supplementarity.  The rest of the diagonal-heavy remainder (`pgram_diag_bisect`,
   kite and trapezoid rules) is still fail-closed;
 - the parallel-line family is implemented and verified: `altint`, `altext`,
   `corresp_ang`, `sameside_ang`, their converses, and `para_transitive`.

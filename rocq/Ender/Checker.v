@@ -860,6 +860,33 @@ Definition pgram_consec_angs_rule (facts : list Statement) (i : nat)
   | _ => false
   end.
 
+(** Both pairs of opposite sides congruent make a parallelogram.  The
+    conclusion is a quadrilateral statement, so unlike a rule that reads one
+    off a dependency this one must supply the well-formedness itself, and the
+    declaration is where that comes from. *)
+Definition pgram_opp_sides_conv_rule (decls : Declarations)
+    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | Pgram q, Some (ConSeg a b), Some (ConSeg c d) =>
+      declared_quadrilateral decls q &&
+      ((segment_pair_eqb a b (quad_side_ab q) (quad_side_cd q) &&
+        segment_pair_eqb c d (quad_side_bc q) (quad_side_da q)) ||
+       (segment_pair_eqb a b (quad_side_bc q) (quad_side_da q) &&
+        segment_pair_eqb c d (quad_side_ab q) (quad_side_cd q)))
+  | _, _, _ => false
+  end.
+
+(** One right corner of a parallelogram makes it a rectangle. *)
+Definition rect_pgram_ang_rule (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | Rect q, Some (RightAng a), Some (Pgram r) =>
+      quadrilateral_eqb q r &&
+      (angle_u_eqb a (quad_corner_a q) || angle_u_eqb a (quad_corner_b q) ||
+       angle_u_eqb a (quad_corner_c q) || angle_u_eqb a (quad_corner_d q))
+  | _, _, _ => false
+  end.
+
 (** The audited rhombus meaning carries a congruence chain around all four
     sides.  Expose every unordered pair, not merely adjacent pairs. *)
 Definition rhombus_def_rule (facts : list Statement) (i : nat)
@@ -1282,6 +1309,8 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | PgramOppSides i => pgram_opp_sides_rule facts i conclusion
   | PgramOppAngles i => pgram_opp_angles_rule facts i conclusion
   | PgramConsecAngs i => pgram_consec_angs_rule facts i conclusion
+  | PgramOppSidesConv i j => pgram_opp_sides_conv_rule decls facts i j conclusion
+  | RectPgramAng i j => rect_pgram_ang_rule facts i j conclusion
   | PgramOppSidePara i j => pgram_opp_side_para_rule decls facts i j conclusion
   | RectanglePgram i => rectangle_pgram_rule facts i conclusion
   | RhombusPgram i => rhombus_pgram_rule facts i conclusion
@@ -3843,6 +3872,118 @@ Proof.
              (par_symmetry _ _ _ _ Hpar1)).
 Qed.
 
+Lemma pgram_opp_sides_conv_sound : forall decls facts i j conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  pgram_opp_sides_conv_rule decls facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros decls facts i j conclusion Hdecls Hfacts Hrule.
+  unfold pgram_opp_sides_conv_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [first|] eqn:Hi; try discriminate.
+  destruct first; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hj; try discriminate.
+  destruct second; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hmatch].
+  assert (Hs1 : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
+  assert (Hs2 : Interp (ConSeg s1 s2)) by (eapply lookup_step_sound; eauto).
+  pose proof (declared_quadrilateral_sound _ _ Hdecls Hdeclared) as Hwf.
+  pose proof Hwf as Hwfcopy.
+  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
+  (* both opposite pairs, whichever order the two dependencies came in *)
+  assert (Hsides :
+    Cong (point q.(quad_a)) (point q.(quad_b))
+         (point q.(quad_c)) (point q.(quad_d)) /\
+    Cong (point q.(quad_b)) (point q.(quad_c))
+         (point q.(quad_d)) (point q.(quad_a))).
+  { apply orb_true_iff in Hmatch. destruct Hmatch as [Hm|Hm];
+      apply andb_true_iff in Hm; destruct Hm as [Hm1 Hm2].
+    - split; [exact (cong_pair_sound _ _ _ _ Hm1 Hs1)
+             |exact (cong_pair_sound _ _ _ _ Hm2 Hs2)].
+    - split; [exact (cong_pair_sound _ _ _ _ Hm2 Hs2)
+             |exact (cong_pair_sound _ _ _ _ Hm1 Hs1)]. }
+  destruct Hsides as [Hab Hbc].
+  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    as [Hbcd _].
+  cbn. split; [exact Hwf|]. split.
+  - exact (ender_pgram_from_opposite_sides _ _ _ _ X Hncol HXac HXbd Hab Hbc).
+  - apply (ender_pgram_from_opposite_sides _ _ _ _ X Hbcd HXbd
+             (ender_bets_sym _ _ _ HXac) Hbc).
+    now apply cong_symmetry.
+Qed.
+
+Lemma rect_pgram_ang_sound : forall facts i j conclusion,
+  Forall Interp facts -> rect_pgram_ang_rule facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  unfold rect_pgram_ang_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [first|] eqn:Hi; try discriminate.
+  destruct first; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hj; try discriminate.
+  destruct second; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Heq Hcorner].
+  apply quadrilateral_eqb_eq in Heq. subst q0.
+  assert (Hright : Interp (RightAng a)) by (eapply lookup_step_sound; eauto).
+  assert (Hp : Interp (Pgram q)) by (eapply lookup_step_sound; eauto).
+  destruct Hright as [_ Hper]. unfold right_angle in Hper.
+  cbn in Hp. destruct Hp as [Hwf [Hpar1 Hpar2]].
+  pose proof Hwf as Hwfcopy.
+  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
+    cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
+  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    as [Hbcd [Hcda Hdab]].
+  (* whichever corner was declared right, rotate the figure so that it is the
+     one the theorem takes, and read the four right angles back off *)
+  assert (Hcorners :
+    Per (point q.(quad_d)) (point q.(quad_a)) (point q.(quad_b)) /\
+    Per (point q.(quad_a)) (point q.(quad_b)) (point q.(quad_c)) /\
+    Per (point q.(quad_b)) (point q.(quad_c)) (point q.(quad_d)) /\
+    Per (point q.(quad_c)) (point q.(quad_d)) (point q.(quad_a))).
+  { repeat rewrite orb_true_iff in Hcorner.
+    destruct Hcorner as [[[Ha|Ha]|Ha]|Ha];
+      apply angle_u_eqb_cases in Ha; unfold reverse_angle in Ha;
+      destruct Ha as [Ha|Ha]; subst a; cbn in Hper.
+    - destruct (ender_pgram_right_corner _ _ _ _ X Hdab
+                  (ender_bets_sym _ _ _ HXbd) HXac
+                  (par_symmetry _ _ _ _ Hpar2) Hpar1 Hper) as [H1 [H2 [H3 H4]]].
+      auto.
+    - destruct (ender_pgram_right_corner _ _ _ _ X Hdab
+                  (ender_bets_sym _ _ _ HXbd) HXac
+                  (par_symmetry _ _ _ _ Hpar2) Hpar1 (l8_2 _ _ _ Hper))
+        as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ender_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
+                  Hper) as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ender_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
+                  (l8_2 _ _ _ Hper)) as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ender_pgram_right_corner _ _ _ _ X Hbcd HXbd
+                  (ender_bets_sym _ _ _ HXac) Hpar2
+                  (par_symmetry _ _ _ _ Hpar1) Hper) as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ender_pgram_right_corner _ _ _ _ X Hbcd HXbd
+                  (ender_bets_sym _ _ _ HXac) Hpar2
+                  (par_symmetry _ _ _ _ Hpar1) (l8_2 _ _ _ Hper))
+        as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ender_pgram_right_corner _ _ _ _ X Hcda
+                  (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd)
+                  (par_symmetry _ _ _ _ Hpar1) (par_symmetry _ _ _ _ Hpar2)
+                  Hper) as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ender_pgram_right_corner _ _ _ _ X Hcda
+                  (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd)
+                  (par_symmetry _ _ _ _ Hpar1) (par_symmetry _ _ _ _ Hpar2)
+                  (l8_2 _ _ _ Hper)) as [H1 [H2 [H3 H4]]]. auto. }
+  destruct Hcorners as [Hpa [Hpb [Hpc Hpd]]].
+  cbn. unfold Audit.RightAngle, Audit.quad_angle_a, Audit.quad_angle_b,
+    Audit.quad_angle_c, Audit.quad_angle_d, Audit.ang_start, Audit.ang_vertex,
+    Audit.ang_end, quad_name; cbn.
+  split; [exact (conj Hwf (conj Hpar1 Hpar2))|].
+  split; [exact Hpa|]. split; [exact Hpb|]. split; [exact Hpc|exact Hpd].
+Qed.
+
 Lemma rect_diag_con_sound : forall facts i conclusion,
   Forall Interp facts -> rect_diag_con_rule facts i conclusion = true ->
   Interp conclusion.
@@ -4244,6 +4385,8 @@ Proof.
   - eapply pgram_opp_sides_sound; eauto.
   - eapply pgram_opp_angles_sound; eauto.
   - eapply pgram_consec_angs_sound; eauto.
+  - eapply pgram_opp_sides_conv_sound; eauto.
+  - eapply rect_pgram_ang_sound; eauto.
   - eapply pgram_opp_side_para_sound; eauto.
   - eapply rectangle_pgram_sound; eauto.
   - eapply rhombus_pgram_sound; eauto.

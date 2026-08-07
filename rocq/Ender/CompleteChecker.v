@@ -488,6 +488,18 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
   | PgramConsecAngs i =>
       dependency_type_issue facts "pgram_consec_angs" 0 i ExpectedParallelogram
         step_number
+  | PgramOppSidesConv i j =>
+      first_issue
+        (dependency_type_issue facts "pgram_opp_sides_conv" 0 i ExpectedSegment
+           step_number)
+        (dependency_type_issue facts "pgram_opp_sides_conv" 1 j ExpectedSegment
+           step_number)
+  | RectPgramAng i j =>
+      first_issue
+        (dependency_type_issue facts "rect_pgram_ang" 0 i ExpectedRight
+           step_number)
+        (dependency_type_issue facts "rect_pgram_ang" 1 j ExpectedParallelogram
+           step_number)
   | RectangleDef i =>
       dependency_type_issue facts "rectangle" 0 i ExpectedRectangle step_number
   | DefIsosceles i =>
@@ -670,6 +682,8 @@ Definition reason_name (r : Reason) : string :=
   | PgramOppSides _ => "pgram_opp_sides"
   | PgramOppAngles _ => "pgram_opp_angs"
   | PgramConsecAngs _ => "pgram_consec_angs"
+  | PgramOppSidesConv _ _ => "pgram_opp_sides_conv"
+  | RectPgramAng _ _ => "rect_pgram_ang"
   | PgramOppSidePara _ _ => "pgram_opp_side_para"
   | RectanglePgram _ => "rectangle_pgram"
   | RhombusPgram _ => "rhombus_pgram"
@@ -703,6 +717,7 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
   | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
   | DefRadius i | InscribedSemi i | ConChordsArcs i => [i]
+  | PgramOppSidesConv i j | RectPgramAng i j
   | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
   | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
   | DefParallelogram i j | PgramOppSidePara i j | RhombusConsecSides i j

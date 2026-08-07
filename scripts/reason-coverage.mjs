@@ -54,6 +54,8 @@ const implemented = new Set([
   "pgram_opp_sides",
   "pgram_opp_angs",
   "pgram_consec_angs",
+  "pgram_opp_sides_conv",
+  "rect_pgram_ang",
   "pgram_opp_side_para",
   "rectangle_pgram",
   "rhombus_pgram",
@@ -162,6 +164,10 @@ const entries = catalog.map((reason) => {
         ? "SAS between two right corners over the Euclidean opposite-sides theorem"
       : reason === "pgram_consec_angs"
         ? "GeoCoq consecutive_interior_angles_postulate, Playfair-derived"
+      : reason === "pgram_opp_sides_conv"
+        ? "SSS along the diagonal, then GeoCoq l12_21_b (neutral)"
+      : reason === "rect_pgram_ang"
+        ? "the opposite and consecutive corner theorems, plus l11_17 and l11_18_1"
       : reason === "rectangle"
         ? "audited IsRectangle corners; opposite sides via Euclidean parallelogram theorem"
       : reason === "pgram_opp_side_para"
