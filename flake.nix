@@ -32,6 +32,9 @@
         stdlib = pkgs.rocqPackages_9_1.stdlib;
         # Rocq 9 still installs to `lib/coq`, whatever the tools are called.
         rocqLib = "lib/coq/${rocq.coq-version}/user-contrib";
+        # One Node for the web package and the dev shell, so a build that works
+        # in one works in the other.
+        nodejs = pkgs.nodejs_24;
 
         mkGeoCoqPart = { pname, configure, dependencies ? [], patches ? [] }:
           pkgs.stdenvNoCC.mkDerivation {
@@ -161,6 +164,87 @@
           '';
         };
 
+        # `importNpmLock` builds `node_modules` from the `integrity` hashes
+        # already recorded in package-lock.json, so nothing here has to be
+        # regenerated when a dependency changes -- updating the lock file is the
+        # whole update.
+        # Passing the two files rather than `npmRoot = ./.` keeps the whole
+        # repository out of this derivation's inputs.
+        npmSources = pkgs.importNpmLock {
+          package = pkgs.lib.importJSON ./package.json;
+          packageLock = pkgs.lib.importJSON ./package-lock.json;
+        };
+
+        webApp = pkgs.buildNpmPackage {
+          pname = "ender-web";
+          version = "0.1.0";
+          # Only what `vite build` reads, so that editing a proof script or the
+          # Rocq sources does not invalidate this.
+          src = pkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = pkgs.lib.fileset.unions [
+              ./index.html
+              ./package.json
+              ./package-lock.json
+              ./postcss.config.js
+              ./public
+              ./src
+              ./tailwind.config.js
+              ./tsconfig.json
+              ./vite.config.ts
+            ];
+          };
+          inherit nodejs;
+          npmDeps = npmSources;
+          inherit (pkgs.importNpmLock) npmConfigHook;
+          # The one input the npm build cannot produce itself.
+          ENDER_CHECKER_WASM_DIR = "${wasmChecker}/share/ender-checker-wasm";
+          # `vite.config.ts` sets `base: "/ender/"` for GitHub Pages, so the
+          # bundle only resolves its assets under that path.  Install it at that
+          # path instead of rebuilding with a different base, so what gets served
+          # here is byte-for-byte what gets deployed.
+          installPhase = ''
+            runHook preInstall
+            mkdir -p "$out/share/ender-web"
+            cp -r dist "$out/share/ender-web/ender"
+            runHook postInstall
+          '';
+        };
+
+        # The app is built for GitHub Pages, where `/ender` is the site root, so
+        # a bare file server leaves `/` a 404.  Send it where the app actually
+        # lives rather than making that the reader's problem.
+        serveConfig = pkgs.writeText "ender-serve.toml" ''
+          [advanced]
+
+          [[advanced.redirects]]
+          source = "/"
+          destination = "/ender/"
+          kind = 302
+        '';
+
+        # Serving the bundle is the missing half of `nix build .#ender-web`: a
+        # `dist` in the store is not something anyone can open.  Proof checking
+        # runs in the browser against the Wasm checker, so this needs no backend
+        # -- but the solver and feedback agents do, and they are not part of it.
+        serveApp = pkgs.writeShellApplication {
+          name = "ender-serve";
+          runtimeInputs = [ pkgs.static-web-server ];
+          text = ''
+            port="''${1:-3000}"
+            echo "Ender is at http://localhost:$port/ender/" >&2
+            echo "The solver and feedback agents need the Python backend and are" >&2
+            echo "not served here; see README.md." >&2
+            # `/ender/harness` and `/ender/examples` are React Router paths with
+            # no file behind them, so unmatched requests have to reach the app
+            # rather than a 404 page.
+            exec static-web-server --host 127.0.0.1 --port "$port" \
+              --root ${webApp}/share/ender-web \
+              --page-fallback ${webApp}/share/ender-web/ender/index.html \
+              --config-file ${serveConfig}
+          '';
+        };
+
         tutorialOutput = pkgs.writeText "ender-tutorial-output.json" ''
           {
             "isCorrect": true,
@@ -232,17 +316,27 @@
           inherit geocoqCoinc geocoqAxioms geocoqMain verifiedProofs;
           ender-checker = nativeChecker;
           ender-checker-wasm = wasmChecker;
+          ender-web = webApp;
           default = nativeChecker;
         };
 
         checks = {
           proofs = verifiedProofs;
           integration = integrationTests;
+          web = webApp;
         };
 
-        apps.default = {
-          type = "app";
-          program = "${nativeChecker}/bin/ender-checker";
+        apps = {
+          default = {
+            type = "app";
+            program = "${nativeChecker}/bin/ender-checker";
+            meta.description = "Check a proof file with the verified checker";
+          };
+          serve = {
+            type = "app";
+            program = "${serveApp}/bin/ender-serve";
+            meta.description = "Serve the Ender web interface on localhost";
+          };
         };
 
         # The shell supplies dependencies and tools only -- never a prebuilt
@@ -264,7 +358,7 @@
             pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
             pkgs.ocamlPackages.yojson pkgs.ocamlPackages.js_of_ocaml
             pkgs.ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
-            pkgs.nodejs_24 pkgs.jq
+            nodejs pkgs.jq
           ];
           ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") [
             stdlib geocoqCoinc geocoqAxioms geocoqMain

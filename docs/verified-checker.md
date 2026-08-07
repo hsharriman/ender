@@ -304,7 +304,15 @@ and these cannot. From the repository root:
 nix flake check -L
 nix run . -- src/checker/proofs/examples/tutorial.txt
 nix build .#ender-checker-wasm
+nix run .#serve
 ```
+
+`nix run .#serve` builds the web interface around that Wasm bundle and serves it
+at [http://localhost:3000/ender/](http://localhost:3000/ender/), which is the
+whole checker with no other setup: acceptance is decided in the browser by the
+extracted kernel, not by a server. Its npm dependencies come from
+`importNpmLock`, which reuses the `integrity` hashes already in
+`package-lock.json`, so `flake.nix` carries no dependency hash of its own.
 
 `nix flake check` kernel-checks the Rocq development, runs positive and negative
 Rocq examples, extracts the checker, builds native and Wasm versions, and runs

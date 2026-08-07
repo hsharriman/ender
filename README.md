@@ -1,5 +1,21 @@
 # Ender
 
+## Try it without installing anything
+
+If you have [Nix](https://nixos.org/download/) with flakes enabled, one command
+builds Ender and serves it:
+
+```bash
+nix run github:hsharriman/ender#serve
+```
+
+Then open [http://localhost:3000/ender/](http://localhost:3000/ender/) (pass a
+different port as an argument). Proof checking runs entirely in the browser
+against the verified Wasm checker, so nothing else is needed — but the LLM
+solver and feedback agents are not included, because they need the Python
+backend and an OpenAI key. For those, and for any development, use the setup
+below.
+
 ## Run the Project
 
 ### Prerequisites
