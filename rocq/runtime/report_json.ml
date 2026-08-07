@@ -166,27 +166,6 @@ let step_status_name = function
   | EnderChecker.StepRejected -> "rejected"
   | EnderChecker.StepBlocked -> "blocked"
 
-let slot_status_name = function
-  | EnderChecker.SlotSatisfied -> "satisfied"
-  | EnderChecker.SlotMissing -> "missing"
-  | EnderChecker.SlotConflicting -> "conflicting"
-
-let suggestion_slot_json slot =
-  `Assoc
-    [ ("status", `String (slot_status_name slot.EnderChecker.suggestion_slot_status))
-    ; ("description", `String (text slot.EnderChecker.suggestion_slot_description))
-    ; ("sources", `List (List.map (fun n -> `Int n)
-        slot.EnderChecker.suggestion_slot_sources))
-    ]
-
-let suggestion_json suggestion =
-  `Assoc
-    [ ("reason", `String (text suggestion.EnderChecker.suggestion_reason))
-    ; ("slots", `List (List.map suggestion_slot_json
-        suggestion.EnderChecker.suggestion_slots))
-    ; ("complete", `Bool suggestion.EnderChecker.suggestion_complete)
-    ]
-
 let step_report_json step =
   `Assoc
     [ ("number", `Int step.EnderChecker.step_number)
@@ -202,8 +181,6 @@ let step_report_json step =
         step.EnderChecker.step_diagram_dependencies))
     ; ("diagnostics", `List (List.map diagnostic_json
         step.EnderChecker.step_diagnostics))
-    ; ("suggestions", `List (List.map suggestion_json
-        step.EnderChecker.step_suggestions))
     ]
 
 let graph_json graph =
@@ -238,8 +215,6 @@ let goal_json goal =
         goal.EnderChecker.goal_proved_by)
     ; ("diagnostics", `List (List.map diagnostic_json
         goal.EnderChecker.goal_diagnostics))
-    ; ("suggestions", `List (List.map suggestion_json
-        goal.EnderChecker.goal_suggestions))
     ]
 
 let report_json report =

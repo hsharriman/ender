@@ -14,6 +14,7 @@ import {
   reportFindings,
   summarizeReport,
 } from "interface/core/reportAnnotations";
+import { waysToProve } from "interface/core/waysToProve";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -212,12 +213,17 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             .map((step) => String(step.number)),
         );
 
+        // The editor draws a mini-figure per step from the parts its reason
+        // relates; the checker has no opinion on these.
+        const ctx = presentationContent(proof);
+        for (const step of proof.steps) step.waysToProve = waysToProve(step, ctx);
+
         this.setState((prev) => ({
           unacceptedSteps: unaccepted,
           proofWideIssues: nextProofIssues,
           statusMessage: summarizeReport(report),
           lastGoodProof: proof,
-          lastGoodCtx: presentationContent(proof),
+          lastGoodCtx: ctx,
           incorrectSteps: rejected,
           proofParseSucceeded: true,
           parseVersion: prev.parseVersion + 1,

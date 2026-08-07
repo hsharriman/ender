@@ -803,7 +803,7 @@ Fixpoint step_reports (statuses : list (nat * Audit.StepStatus))
          | Audit.StepRejected => [step_failure_diagnostic]
          | Audit.StepBlocked => [step_blocked_diagnostic]
          | Audit.StepAccepted => []
-         end) []
+         end)
       :: step_reports statuses rest (S number)
   end.
 
@@ -954,11 +954,11 @@ Definition goal_unproved_diagnostic (number : nat) : Audit.Diagnostic :=
 Definition goal_report_for (p : Problem)
     (statuses : list (nat * Audit.StepStatus)) : Audit.GoalReport :=
   match goal_stated_by p.(problem_goal) p.(problem_steps) 1 statuses true with
-  | Some n => Audit.goal_report (Some n) [] []
+  | Some n => Audit.goal_report (Some n) []
   | None =>
       match goal_stated_by p.(problem_goal) p.(problem_steps) 1 statuses false with
-      | Some n => Audit.goal_report None [goal_unproved_diagnostic n] []
-      | None => Audit.goal_report None [goal_missing_diagnostic] []
+      | Some n => Audit.goal_report None [goal_unproved_diagnostic n]
+      | None => Audit.goal_report None [goal_missing_diagnostic]
       end
   end.
 
@@ -983,7 +983,7 @@ Fixpoint parse_sourced_step_lines (lines : list chars)
 Definition report_content (source : string)
     : list Audit.StepReport * Audit.DependencyGraph *
       list Audit.DuplicateDerivation * Audit.GoalReport :=
-  let empty := ([], empty_graph, [], Audit.goal_report None [] []) in
+  let empty := ([], empty_graph, [], Audit.goal_report None []) in
   let text := list_ascii_of_string source in
   match problemPart source with
   | Some part =>

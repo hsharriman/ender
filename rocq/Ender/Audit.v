@@ -814,17 +814,6 @@ Record Diagnostic := diagnostic {
 }.
 
 Inductive StepStatus := StepAccepted | StepRejected | StepBlocked.
-Inductive SuggestionSlotStatus := SlotSatisfied | SlotMissing | SlotConflicting.
-Record SuggestionSlot := suggestion_slot {
-  suggestion_slot_status : SuggestionSlotStatus;
-  suggestion_slot_description : string;
-  suggestion_slot_sources : list nat
-}.
-Record ProofSuggestion := proof_suggestion {
-  suggestion_reason : string;
-  suggestion_slots : list SuggestionSlot;
-  suggestion_complete : bool
-}.
 Record StepReport := step_report {
   step_number : nat;
   step_source : string;
@@ -833,8 +822,7 @@ Record StepReport := step_report {
   step_status : StepStatus;
   step_dependencies : list nat;
   step_diagram_dependencies : list PublicStatement;
-  step_diagnostics : list Diagnostic;
-  step_suggestions : list ProofSuggestion
+  step_diagnostics : list Diagnostic
 }.
 Record DependencyGraph := dependency_graph {
   graph_nodes : list nat;
@@ -852,8 +840,7 @@ Record DuplicateDerivation := duplicate_derivation {
 }.
 Record GoalReport := goal_report {
   goal_proved_by : option nat;
-  goal_diagnostics : list Diagnostic;
-  goal_suggestions : list ProofSuggestion
+  goal_diagnostics : list Diagnostic
 }.
 (** JSON-shaped values preserve the extensible [details] object of Ender's
     existing TypeScript [ErrorDetails] interface without asking the unverified

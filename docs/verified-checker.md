@@ -31,9 +31,14 @@ The slice parses Ender source text and supports:
   `corresp_ang`, `sameside_ang`, `altint_conv`, `altext_conv`,
   `corresp_ang_conv`, `sameside_ang_conv`, `para_transitive`, `def_radius`,
   `inscribed_semi`, `con_chords_intersect_arcs`, and `tangent_perp`;
-- one-character point names, named premises, triangle, angle,
+- one-character point names, named premises, segment, triangle, angle,
   quadrilateral, and circle declarations, numbered steps, and exact step
   dependencies.
+
+The report carries no suggestions.  Editor hints about which parts a reason
+would relate read the untrusted reason catalog and the display geometry, which
+the audited surface deliberately excludes, so they are computed in TypeScript
+(`src/interface/core/waysToProve.ts`) rather than mechanized and reported.
 
 Unsupported statements, reasons, or malformed relevant lines are rejected.
 Coordinates on the `pt:` line are intentionally discarded and do not contribute

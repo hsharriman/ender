@@ -41,15 +41,6 @@ export type VerifiedDiagnostic = {
   code: string;
   message: string;
 };
-export type VerifiedSuggestion = {
-  reason: string;
-  slots: Array<{
-    status: "satisfied" | "missing" | "conflicting";
-    description: string;
-    sources: number[];
-  }>;
-  complete: boolean;
-};
 export type VerifiedStepReport = {
   number: number;
   source: string;
@@ -59,7 +50,6 @@ export type VerifiedStepReport = {
   dependencies: number[];
   diagramDependencies: string[];
   diagnostics: VerifiedDiagnostic[];
-  suggestions: VerifiedSuggestion[];
 };
 export type VerifiedCheckReport = {
   verdict: "failed_to_parse_problem" | "rejected_proof" | "accepted";
@@ -84,7 +74,6 @@ export type VerifiedCheckReport = {
   goal: {
     provedBy: number | null;
     diagnostics: VerifiedDiagnostic[];
-    suggestions: VerifiedSuggestion[];
   };
   issues: VerifiedIssue[];
   errors: VerifiedIssue[];
