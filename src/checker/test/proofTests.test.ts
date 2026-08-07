@@ -418,6 +418,16 @@ steps:
     ]);
   });
 
+  test("names the premise that placed a ray on a diagonal", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/rhombusOutside.txt"), "utf8"),
+    );
+    const bisect = report.steps.find(
+      (step) => step.reason === "rhombus_opp_bisect",
+    )!;
+    expect(bisect.diagramDependencies).toEqual(["on_line(PR,T)"]);
+  });
+
   test("reports a fact derived twice", async () => {
     const source = readFileSync(
       join(PROOFS_DIR, "examples/s1c1_dupe_stmts.txt"),

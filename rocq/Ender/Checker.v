@@ -1015,6 +1015,18 @@ Definition bisector_ray (decls : Declarations) (premises : list Premise)
     (ascii_eqb s.(seg_end) vertex &&
        ray_linked premises vertex opposite s.(seg_start)))).
 
+(** The premise that placed the far end of the ray on the diagonal, when the
+    ray was not spelled as the diagonal itself. *)
+Definition bisector_ray_used (decls : Declarations) (premises : list Premise)
+    (s : Segment) (vertex opposite : PointId) : option Statement :=
+  if segment_u_eqb s (segment vertex opposite) then None
+  else if negb (declared_segment decls s) then None
+  else if ascii_eqb s.(seg_start) vertex then
+    ray_link_witness premises vertex opposite s.(seg_end)
+  else if ascii_eqb s.(seg_end) vertex then
+    ray_link_witness premises vertex opposite s.(seg_start)
+  else None.
+
 Definition rhombus_opp_bisect_rule (decls : Declarations)
     (premises : list Premise) (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
@@ -1306,16 +1318,22 @@ Definition def_radius_rule (facts : list Statement) (i : nat)
 (** The angle sits in a semicircle: its two ray points name the diameter's
     endpoints, and an [inscribed_angle] diagram premise places its vertex on
     the circle. *)
+Definition inscribed_angle_premise (c : Circle) (a : Angle) (pr : Premise) : bool :=
+  match inscribed_witness pr.(premise_statement) with
+  | Some (c', a') => circle_eqb c c' && angle_u_eqb a a'
+  | None => false
+  end.
+
+Definition inscribed_angle_premise_used (premises : list Premise) (c : Circle)
+    (a : Angle) : option Statement :=
+  premise_witness (inscribed_angle_premise c a) premises.
+
 Definition inscribed_semi_rule (premises : list Premise)
     (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | RightAng a, Some (DiameterOf c s) =>
       segment_u_eqb (segment a.(ang_left) a.(ang_right)) s &&
-      existsb (fun pr =>
-        match inscribed_witness pr.(premise_statement) with
-        | Some (c', a') => circle_eqb c c' && angle_u_eqb a a'
-        | None => false
-        end) premises
+      premise_found (inscribed_angle_premise c a) premises
   | _, _ => false
   end.
 
@@ -1361,6 +1379,27 @@ Definition rule_diagram_premises (decls : Declarations) (premises : list Premise
   let dependency := fun (i : nat) => lookup_step facts i in
   match reason with
   | VertAng label => one (vert_ang_witness decls premises label conclusion)
+  | InscribedSemi i =>
+      match conclusion, dependency i with
+      | RightAng a, Some (DiameterOf c _) =>
+          one (inscribed_angle_premise_used premises c a)
+      | _, _ => []
+      end
+  | RhombusOppBisect i =>
+      match conclusion, dependency i with
+      | AngBisectOf a s, Some (Rhomb q) =>
+          (* the same four corner readings the rule tries, in the same order *)
+          if angle_u_eqb a (quad_corner_a q) then
+            one (bisector_ray_used decls premises s q.(quad_a) q.(quad_c))
+          else if angle_u_eqb a (quad_corner_c q) then
+            one (bisector_ray_used decls premises s q.(quad_c) q.(quad_a))
+          else if angle_u_eqb a (quad_corner_b q) then
+            one (bisector_ray_used decls premises s q.(quad_b) q.(quad_d))
+          else if angle_u_eqb a (quad_corner_d q) then
+            one (bisector_ray_used decls premises s q.(quad_d) q.(quad_b))
+          else []
+      | _, _ => []
+      end
   | MidptConv _ =>
       match conclusion with
       | MidptOf s p => one (on_line_premise_used premises s p)
@@ -4574,7 +4613,9 @@ Proof.
   cbn in Hd. destruct Hd as [[Hswf [Hon1 Hon2]] Hbet].
   destruct Hon1 as [_ Hc1]. destruct Hon2 as [_ Hc2].
   cbn in Hc1, Hc2, Hbet, Hswf.
+  rewrite premise_found_existsb in Hex.
   apply existsb_exists in Hex. destruct Hex as [pr [Hin Hw]].
+  unfold inscribed_angle_premise in Hw.
   pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
   unfold interp_premise in Hpr.
   destruct (inscribed_witness pr.(premise_statement)) as [[c' a']|] eqn:Hwit;
