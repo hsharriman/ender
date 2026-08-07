@@ -274,6 +274,7 @@
             echo "Ender is at http://localhost:$port/ender/" >&2
             echo "The solver and feedback agents need the Python backend and are" >&2
             echo "not served here; see README.md." >&2
+            echo "Use Ctrl+C to stop this server." >&2
             # `/ender/harness` and `/ender/examples` are React Router paths with
             # no file behind them, so unmatched requests have to reach the app
             # rather than a 404 page.
