@@ -1920,3 +1920,4 @@ Proof. vm_compute. reflexivity. Qed.
 
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.
+Print Assumptions CertifiedAPI.euclidean_plane_exists.

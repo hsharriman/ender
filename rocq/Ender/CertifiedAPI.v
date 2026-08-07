@@ -15,6 +15,8 @@ Module CertifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
   Definition parser_sound := CompleteVerifiedChecker.parser_sound.
   Definition parser_complete := CompleteVerifiedChecker.parser_complete.
   Definition checker_sound := CompleteVerifiedChecker.checker_sound.
+  Definition euclidean_plane_exists :=
+    CompleteVerifiedChecker.euclidean_plane_exists.
 End CertifiedChecker.
 
 (** These are the only executable roots exported by [Extract.v]. *)
@@ -28,7 +30,9 @@ Definition checker := CertifiedChecker.checker.
 Definition parser_sound := CertifiedChecker.parser_sound.
 Definition parser_complete := CertifiedChecker.parser_complete.
 Definition checker_sound := CertifiedChecker.checker_sound.
+Definition euclidean_plane_exists := CertifiedChecker.euclidean_plane_exists.
 
 Print Assumptions parser_sound.
 Print Assumptions parser_complete.
 Print Assumptions checker_sound.
+Print Assumptions euclidean_plane_exists.

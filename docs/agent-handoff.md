@@ -139,11 +139,15 @@ Known limitations relevant to prioritization:
   nevertheless assumed by the public theorem, for the circles alone; keep
   using it the same way `Tarski_euclidean` is used, introducing it in
   `Checker.v` only above the rules that genuinely need it;
-- the checker theorem is not shown to be non-vacuous: no model of the geometry
-  hypotheses is exhibited.  GeoCoq has one and it compiles on Rocq 9 (branch
-  `rocq-9-migration`), but instantiating it needs a real-closed field, and
-  GeoCoq's algebraic layer and MathComp's real-closed library want disjoint
-  MathComp versions.  See [`verified-checker.md`](verified-checker.md);
+- the checker theorem is shown to be non-vacuous, and by the contract rather
+  than beside it: `COMPLETE_VERIFIED_CHECKER` demands
+  `euclidean_plane_exists` next to `checker_sound`, so an implementation that
+  cannot exhibit a plane does not typecheck.  `CompleteChecker.v` discharges
+  it with the plane over the real algebraic numbers that `Ender/Model.v`
+  builds from GeoCoq's algebraic model construction, which
+  `nix/geocoq-algebraic-mathcomp25.patch` repairs for MathComp 2.5.  The
+  obligation is in `Prop`, so extraction is unaffected, and `make test`
+  covers its axiom check.  See [`verified-checker.md`](verified-checker.md);
 - the rich report is produced, not merely exported, and reaches the parity the
   legacy TypeScript checker had: per-step status, reason name, conclusion,
   source line and dependencies; the dependency graph with its cycles and

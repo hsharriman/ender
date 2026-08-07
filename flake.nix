@@ -32,6 +32,27 @@
         stdlib = pkgs.rocqPackages_9_1.stdlib;
         # Rocq 9 still installs to `lib/coq`, whatever the tools are called.
         rocqLib = "lib/coq/${rocq.coq-version}/user-contrib";
+        # GeoCoq's algebraic model construction is written in MathComp, so the
+        # non-vacuity witness needs MathComp on the load path.  MathComp 2.5
+        # splits itself across one package per layer and none of them
+        # re-exports the others' `.vo` files, so every layer the construction
+        # touches is named here rather than pulled in through `mathcomp`, which
+        # ships only `mathcomp/all`.  `mathcomp-real-closed` supplies
+        # `realalg`, the concrete real closed field the model is built over.
+        mathcomp = with pkgs.rocqPackages_9_1; [
+          mathcomp-boot mathcomp-order mathcomp-fingroup mathcomp-algebra
+          mathcomp-solvable mathcomp-field mathcomp-character
+          mathcomp-bigenough mathcomp-finmap mathcomp-real-closed
+          hierarchy-builder rocq-elpi
+        ];
+        # The OCaml that compiles the extracted checker has to be the one Rocq
+        # itself was built with, because `rocq-elpi` is an OCaml plugin and
+        # propagates that compiler's findlib.  A dev shell holding both it and
+        # `pkgs.ocamlPackages` puts two findlibs on `OCAMLPATH`, and nixpkgs'
+        # findlib setup hook refuses to build such a shell at all.  Taking the
+        # set from `rocq` rather than naming a version keeps the two in step on
+        # their own.
+        ocamlPackages = rocq.ocamlPackages;
         # One Node for the web package and the dev shell, so a build that works
         # in one works in the other.
         nodejs = pkgs.nodejs_24;
@@ -83,6 +104,18 @@
           dependencies = [ geocoqCoinc geocoqAxioms ];
         };
 
+        # `Algebraic/POF_to_Tarski.v` builds a Euclidean plane over any real
+        # closed field, which is what makes `checker_sound` non-vacuous.
+        # Upstream wrote it against MathComp 2.4 and it does not compile
+        # against the 2.5 this Nixpkgs ships; the patch carries the three fixes
+        # and trims the layer to the two files the model needs.
+        geocoqAlgebraic = mkGeoCoqPart {
+          pname = "geocoq-algebraic";
+          configure = "configure-algebraic.sh";
+          dependencies = [ geocoqCoinc geocoqAxioms geocoqMain ] ++ mathcomp;
+          patches = [ ./nix/geocoq-algebraic-mathcomp25.patch ];
+        };
+
         verifiedProofs = pkgs.stdenvNoCC.mkDerivation {
           pname = "ender-verified-proofs";
           version = "0.1.0";
@@ -90,13 +123,19 @@
           strictDeps = true;
           nativeBuildInputs = [
             rocq pkgs.gnumake stdlib geocoqCoinc geocoqAxioms geocoqMain
-          ];
-          buildInputs = [ stdlib ];
-          ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") [
-            stdlib geocoqCoinc geocoqAxioms geocoqMain
-          ]);
+            geocoqAlgebraic
+          ] ++ mathcomp;
+          # Rocq-elpi is an OCaml plugin, and `CertifiedAPI.v` loads it through
+          # Hierarchy Builder.  Its findlib dependencies reach `OCAMLPATH` from
+          # `buildInputs`, so naming MathComp only as a native input would put
+          # the `.vo` files on the load path but leave the plugin unloadable.
+          buildInputs = [ stdlib ] ++ mathcomp;
+          ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") ([
+            stdlib geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
+          ] ++ mathcomp));
           # `make test` kernel-checks the development and fails if any proof has
-          # come to rest on an axiom.
+          # come to rest on an axiom -- including the non-vacuity witness, which
+          # `CertifiedAPI.v` now discharges as part of the audited contract.
           buildPhase = ''
             runHook preBuild
             make -j$NIX_BUILD_CORES test extract
@@ -124,9 +163,9 @@
           strictDeps = true;
           nativeBuildInputs = [
             pkgs.stdenv.cc pkgs.gnumake
-            pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
+            ocamlPackages.ocaml ocamlPackages.findlib
           ];
-          buildInputs = [ pkgs.ocamlPackages.yojson ];
+          buildInputs = [ ocamlPackages.yojson ];
           makeFlags = [
             "EXTRACTED=${verifiedProofs}/share/ender/extracted"
           ];
@@ -146,12 +185,12 @@
           strictDeps = true;
           nativeBuildInputs = [
             pkgs.gnumake
-            pkgs.ocamlPackages.ocaml
-            pkgs.ocamlPackages.findlib
-            pkgs.ocamlPackages."wasm_of_ocaml-compiler"
+            ocamlPackages.ocaml
+            ocamlPackages.findlib
+            ocamlPackages."wasm_of_ocaml-compiler"
             pkgs.binaryen
           ];
-          buildInputs = [ pkgs.ocamlPackages.yojson pkgs.ocamlPackages.js_of_ocaml ];
+          buildInputs = [ ocamlPackages.yojson ocamlPackages.js_of_ocaml ];
           makeFlags = [
             "EXTRACTED=${verifiedProofs}/share/ender/extracted"
           ];
@@ -313,7 +352,8 @@
         '';
       in {
         packages = {
-          inherit geocoqCoinc geocoqAxioms geocoqMain verifiedProofs;
+          inherit geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
+            verifiedProofs;
           ender-checker = nativeChecker;
           ender-checker-wasm = wasmChecker;
           ender-web = webApp;
@@ -346,7 +386,7 @@
         # without Nix follows the same steps with their own toolchain.
         devShells.default = pkgs.mkShell {
           packages = [
-            rocq stdlib geocoqCoinc geocoqAxioms geocoqMain
+            rocq stdlib geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
             # VsRocq's language server loads the `.vo` files of whatever it is
             # editing, and those are locked to the compiler that built them, so
             # it has to be the one matching `rocq` above rather than whichever
@@ -355,14 +395,14 @@
             # enough; see README.md.
             pkgs.rocqPackages_9_1.vsrocq-language-server
             pkgs.gnumake pkgs.stdenv.cc
-            pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
-            pkgs.ocamlPackages.yojson pkgs.ocamlPackages.js_of_ocaml
-            pkgs.ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
+            ocamlPackages.ocaml ocamlPackages.findlib
+            ocamlPackages.yojson ocamlPackages.js_of_ocaml
+            ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
             nodejs pkgs.jq
-          ];
-          ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") [
-            stdlib geocoqCoinc geocoqAxioms geocoqMain
-          ]);
+          ] ++ mathcomp;
+          ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") ([
+            stdlib geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
+          ] ++ mathcomp));
           # A convenience only: `make -C rocq native` puts the binary here, and
           # the Node, Vite, and script loaders find that directory on their own,
           # so nothing depends on this being set.

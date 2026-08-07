@@ -885,9 +885,10 @@ Definition accepted (report : CheckReport) : bool :=
     the inscribed-angle theorems are false; acceptance therefore makes no
     claim about higher-dimensional Euclidean models.
 
-    Nothing here asserts that such a geometry exists, so soundness alone does
-    not rule out vacuity.  GeoCoq supplies a model construction, but current
-    library-version constraints prevent instantiating it here.  See
+    Soundness alone does not rule out vacuity: it quantifies those hypotheses
+    rather than asserting them, and a checker accepting every source would
+    satisfy it were there no geometry to satisfy them.  So an implementation
+    owes a witness too, and [euclidean_plane_exists] below demands one.  See
     [docs/verified-checker.md]. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parseProblem : string -> option PublicProblem.
@@ -909,4 +910,17 @@ Module Type COMPLETE_VERIFIED_CHECKER.
       forall (TE : @Tarski_euclidean Tn TnEQD),
       exists problem, parseProblem part = Some problem /\
         forall point : PointName -> Tpoint, problemClaim point problem.
+
+  (** The geometry [checker_sound] quantifies over is inhabited, so acceptance
+      claims something.  The binders are the ones [checker_sound] introduces,
+      in the same order; the body is three points that are not collinear,
+      which is what makes the witness a plane a figure can be drawn in rather
+      than a structure satisfying the axioms for want of any points. *)
+  Parameter euclidean_plane_exists :
+    exists (Tn : Tarski_neutral_dimensionless)
+           (TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality Tn)
+           (T2D : @Tarski_2D Tn TnEQD)
+           (TE : @Tarski_euclidean Tn TnEQD)
+           (A B C : @Tpoint Tn),
+      ~ @Col Tn A B C.
 End COMPLETE_VERIFIED_CHECKER.

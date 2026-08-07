@@ -1,5 +1,5 @@
 ROCQFLAGS := -Q Ender Ender
-MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Semantics Checker Parser CompleteChecker CertifiedAPI Tests
+MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Semantics Checker Parser Model CompleteChecker CertifiedAPI Tests
 VOFILES := $(addprefix Ender/,$(addsuffix .vo,$(MODULES)))
 
 # Everything this Makefile writes goes under $(BUILD); nothing lands beside the
@@ -71,7 +71,12 @@ Ender/Checker.vo: Ender/Checker.v Ender/Syntax.vo Ender/Geometry.vo Ender/Semant
 Ender/Parser.vo: Ender/Parser.v Ender/Syntax.vo Ender/Semantics.vo Ender/Checker.vo
 	rocq compile $(ROCQFLAGS) $<
 
-Ender/CompleteChecker.vo: Ender/CompleteChecker.v Ender/Parser.vo Ender/PublicParser.vo Ender/PresentationParser.vo
+# The only module needing MathComp and GeoCoq's algebraic layer on the load
+# path; it reaches the rest of the build solely through CompleteChecker.vo.
+Ender/Model.vo: Ender/Model.v
+	rocq compile $(ROCQFLAGS) $<
+
+Ender/CompleteChecker.vo: Ender/CompleteChecker.v Ender/Parser.vo Ender/PublicParser.vo Ender/PresentationParser.vo Ender/Model.vo
 	rocq compile $(ROCQFLAGS) $<
 
 Ender/CertifiedAPI.vo: Ender/CertifiedAPI.v Ender/CompleteChecker.vo
@@ -80,7 +85,8 @@ Ender/CertifiedAPI.vo: Ender/CertifiedAPI.v Ender/CompleteChecker.vo
 # Tests.v ends in `Print Assumptions`, which reports "Axioms:" only when a proof
 # rests on one.  Some GeoCoq Euclidean routes do (see euclidean_trisuma__bet in
 # Geometry.v), so enforce the result here rather than leave it to whoever reads
-# the log.
+# the log.  The last of those lines is the non-vacuity witness, which needs the
+# check as much as the theorems do: a plane exhibited on an axiom is no plane.
 Ender/Tests.vo: Ender/Tests.v Ender/CertifiedAPI.vo
 	@mkdir -p $(BUILD)
 	rocq compile $(ROCQFLAGS) $< > $(BUILD)/tests.log 2>&1; \

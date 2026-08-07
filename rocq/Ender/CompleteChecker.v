@@ -2,6 +2,11 @@ From Stdlib Require Import Ascii List String Bool Numbers.DecimalString.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Geometry
   Ender.Semantics Ender.Checker Ender.Parser Ender.PresentationParser.
+(** Required but deliberately not imported: [Model.v] is written in MathComp,
+    whose [ssreflect] replaces the [rewrite] this file's proofs use.  Loading
+    it without importing keeps its plane reachable by qualified name and its
+    notations and tactics out of the way. *)
+Require Ender.Model.
 Import ListNotations.
 Import EnderSyntax.
 Open Scope string_scope.
@@ -1274,5 +1279,23 @@ Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
         Hpart Hpublic Hcheck Tn TnEQD TE point).
     - exfalso. unfold checker, complete_checker, classify_source in Hcheck.
       rewrite Hpart, Hpublic in Hcheck. discriminate.
+  Qed.
+
+  (** The plane [Model.v] builds over the real algebraic numbers.  Its three
+      [lower_dim] points are the non-collinear triple, since [Col] is exactly
+      the disjunction that field negates. *)
+  Lemma euclidean_plane_exists :
+    exists (Tn : Tarski_neutral_dimensionless)
+           (TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality Tn)
+           (T2D : @Tarski_2D Tn TnEQD)
+           (TE : @Tarski_euclidean Tn TnEQD)
+           (A B C : @Tpoint Tn),
+      ~ @Col Tn A B C.
+  Proof.
+    exists Ender.Model.PlaneTn, Ender.Model.PlanePED,
+      Ender.Model.Plane2D, Ender.Model.PlaneEuclid.
+    exists (@PA Ender.Model.PlaneTn), (@PB Ender.Model.PlaneTn),
+      (@PC Ender.Model.PlaneTn).
+    exact (@lower_dim Ender.Model.PlaneTn).
   Qed.
 End CompleteVerifiedChecker.

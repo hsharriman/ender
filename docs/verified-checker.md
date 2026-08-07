@@ -242,28 +242,78 @@ is [GeoCoq commit `90d8ce4`](https://github.com/GeoCoq/GeoCoq/commit/90d8ce484b3
 The theorem is conditional on the geometry hypotheses, which are universally
 quantified rather than asserted — `Print Assumptions` reports no axioms
 precisely because those hypotheses are not axioms, so it cannot speak to
-whether any model satisfies them. Nothing here exhibits one, so `checker_sound`
-would hold vacuously if none did.
+whether any model satisfies them. `checker_sound` would hold vacuously if none
+did.
 
-It does not: GeoCoq builds a Euclidean Tarski model over any real-closed
-field in `Algebraic/POF_to_Tarski.v` (`Rcf_to_T_euclidean`; the same file's
-`Rcf_to_T2D` shows the model is two-dimensional, though the theorem no longer
-asks for that). Adopting it was attempted and is preserved on the
-`rocq-9-migration-model-attempt` branch; `rocq-9-migration` now carries only
-the compiler migration that attempt was built on. That attempt works as far as
-it goes — the whole development builds on Rocq 9 with **no source changes**,
-still axiom-free — but it does not close this gap, for a reason worth recording
-so nobody retries it blindly:
+So the contract demands a model as well as the theorem. Alongside
+`checker_sound`, `COMPLETE_VERIFIED_CHECKER` requires
+`euclidean_plane_exists`, whose binders are `checker_sound`'s own and whose
+body is three points that are not collinear:
 
-- GeoCoq's algebraic layer needs **MathComp 2.4**. On 2.5 it fails at
-  `POF_to_Tarski.v` line 1134, identically under Coq 8.20 and Rocq 9, so that
-  breakage tracks the library rather than the compiler. Upstream's port (merged
-  2025-11-17, reverted the next day as PRs 52 and 53) targets 2.4 and is
-  required even to get that far: the reverted tree does not build on Rocq 9 at
-  all, since Rocq 9 split out the standard library.
-- Instantiating the model needs a concrete real-closed field, which means
-  `mathcomp-real-closed`. In this nixpkgs, real-closed 2.0.5 requires
-  `mathcomp.all_boot`, introduced in **MathComp 2.5**.
+```coq
+Parameter euclidean_plane_exists :
+  exists (Tn : Tarski_neutral_dimensionless)
+         (TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality Tn)
+         (T2D : @Tarski_2D Tn TnEQD)
+         (TE : @Tarski_euclidean Tn TnEQD)
+         (A B C : @Tpoint Tn),
+    ~ @Col Tn A B C.
+```
+
+`CompleteChecker.v` discharges it, so an implementation of the contract that
+cannot exhibit a plane does not typecheck — non-vacuity is not a side check
+that could be forgotten. The plane comes from
+[`Model.v`](../rocq/Ender/Model.v): GeoCoq builds a Euclidean Tarski model
+over any real-closed field in `Algebraic/POF_to_Tarski.v`, and `Model.v`
+instantiates it at `realalg`, the real algebraic numbers, in dimension two:
+
+```coq
+Definition PlaneTn  : Tarski_neutral_dimensionless := @Rcf_to_T RA 0.
+Definition PlanePED : ..._with_decidable_point_equality PlaneTn := @Rcf_to_T_PED RA 0.
+Definition Plane2D  : @Tarski_2D PlaneTn PlanePED := @Rcf_to_T2D RA.
+Definition PlaneEuclid : @Tarski_euclidean PlaneTn PlanePED := @Rcf_to_T_euclidean RA 0.
+```
+
+The non-collinear triple is `PA`, `PB`, `PC` with the `lower_dim` field every
+Tarski structure carries; `Col` is by definition the disjunction it negates.
+
+`Model.v` is a separate file for one reason: it is written in MathComp, whose
+`ssreflect` replaces the `rewrite` the implementation's proofs use.
+`CompleteChecker.v` therefore writes `Require Ender.Model` without `Import`,
+which keeps the plane reachable by qualified name and the notations and
+tactics out of scope. The obligation is in `Prop`, so extraction erases it and
+the extracted OCaml is unchanged by any of this.
+
+`Tests.v` ends with `Print Assumptions` on the discharged obligation, and the
+`make test` rule fails on any `Axioms:` line, so the witness cannot quietly
+decay into one. There is no separate `make model` target: the model is part of
+the contract now, and `make test` covers it.
+
+Getting there needed GeoCoq's algebraic layer to compile against the MathComp
+this nixpkgs ships, which upstream's tree does not do. That layer was written
+against **MathComp 2.4**; on 2.5 it fails three ways, all repaired by
+[`nix/geocoq-algebraic-mathcomp25.patch`](../nix/geocoq-algebraic-mathcomp25.patch):
+
+- MathComp 2.5 moved `mathcomp/ssreflect/*` to `mathcomp/boot/*`, so the file's
+  fully qualified `Require Import mathcomp.ssreflect.ssreflect` finds nothing.
+  `From mathcomp Require Import ssreflect` resolves under either layout.
+- Its local dot-product notation `'[ u , v ]` collides with a MathComp 2.5
+  notation already fixed at level 0. Renamed to `dotp[ u , v ]`.
+- Two rewrite chains no longer apply — in `col_2D'`, whose `mulrBl` step wants
+  a `1 *` factor a preceding `mul1r` no longer inserts on both sides, and in
+  `cong_perp`, which threads a longer chain through `subr_eq`. Both are
+  replaced by proofs of the same statements that go through the algebra
+  directly rather than through a fragile sequence of rewrites.
+
+The patch also trims the layer's configure script to `coplanarity.v` and
+`POF_to_Tarski.v`, the two files the model needs; the rest of `Algebraic` is
+not built and has not been checked against 2.5.
+
+An earlier attempt is preserved on the `rocq-9-migration-model-attempt`
+branch. Its conclusion — that GeoCoq's algebraic layer and
+`mathcomp-real-closed` want disjoint MathComp versions — does not hold on this
+nixpkgs pin, where MathComp 2.5.0 and real-closed 2.0.5 are mutually
+consistent and the only obstacle was the layer's own incompatibility with 2.5.
 
 `on_line(s, p)` now means `SegmentWellFormed s /\ OnSegment s p`: the corpus
 uses it for a point on the drawn segment, not an arbitrary point on its
@@ -272,11 +322,9 @@ transport through `out2__conga`.  The executable checker uses the same proved
 transport for midpoint and segment-intersection witnesses when historical
 proofs spell a transversal ray by an interior point.
 
-The two requirements are disjoint. Closing the gap therefore needs one of:
-GeoCoq's algebraic layer ported to MathComp 2.5 (the line-1134 work upstream
-has not done), a real-closed release that works against 2.4, or upstream
-re-landing its port against a newer MathComp. `Audit.v` records the obligation
-that would then close it.
+What the witness does not do is bound how *loose* the audited meanings are: it
+rules out their being empty, which is the failure mode soundness cannot
+detect, and says nothing about whether they say what a reader intends.
 
 Extraction and compilation add a conventional trusted-computing boundary:
 Rocq's kernel checks the proof, while Rocq extraction, the OCaml compiler, and
