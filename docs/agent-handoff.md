@@ -154,11 +154,16 @@ Known limitations relevant to prioritization:
   judged however far below the failure it sits.  `provedBy` names the step the
   goal *rests on*, so it skips a rejected or blocked step, and the goal
   diagnostic distinguishes never stating the goal from stating it on a step
-  that did not hold.  `diagramDependencies` is still empty; `suggestions` is
-  gone from the audited schema, because the thing that filled it on `main`
-  reads the untrusted reason catalog and the display geometry -- neither of
-  which the kernel has, and neither of which it should acquire to compute a
-  hint.  That producer lives in `src/interface/core/waysToProve.ts` now.
+  that did not hold.  `diagramDependencies` names the premise a step
+  consulted, taken from the same search the rule runs: a rule that reaches the
+  diagram is `premise_found` of a search and the report is `premise_witness` of
+  it, so the two cannot disagree.  Rules that reach the diagram only through
+  dependency matching report none, since no witness comes back out of the
+  correspondence search.  `suggestions` is gone from the audited schema, because
+  the thing that filled it on `main` reads the untrusted reason catalog and the
+  display geometry -- neither of which the kernel has, and neither of which it
+  should acquire to compute a hint.  That producer lives in
+  `src/interface/core/waysToProve.ts` now.
   The harness renders the rest; `summarizeReport`, `reportFindings`, and
   `buildAnnotatedLines` in `src/interface/core/reportAnnotations.ts` are the
   display logic, kept out of the React component so they can be tested against

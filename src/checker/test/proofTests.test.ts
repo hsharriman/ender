@@ -395,6 +395,29 @@ steps:
     expect(marked).toEqual([["[04]", "rejected"]]);
   });
 
+  test("names the diagram premise a step consulted", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/s1c1_dupe_stmts.txt"), "utf8"),
+    );
+    // vert_ang takes no step dependency: what it uses is the crossing premise.
+    const vertAng = report.steps.find((step) => step.reason === "vert_ang")!;
+    expect(vertAng.dependencies).toEqual([]);
+    expect(vertAng.diagramDependencies).toEqual(["intersect_seg(AB,CD,M)"]);
+    // A step that consults no diagram premise says so.
+    const given = report.steps.find((step) => step.reason === "given")!;
+    expect(given.diagramDependencies).toEqual([]);
+  });
+
+  test("names the transversal a parallel-line rule validated", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "lines_angles/altint_correct.txt"), "utf8"),
+    );
+    const altint = report.steps.find((step) => step.reason === "altint")!;
+    expect(altint.diagramDependencies).toEqual([
+      "transversal(A,B,T,E,C,D,R,F)",
+    ]);
+  });
+
   test("reports a fact derived twice", async () => {
     const source = readFileSync(
       join(PROOFS_DIR, "examples/s1c1_dupe_stmts.txt"),

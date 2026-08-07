@@ -190,9 +190,39 @@ Definition statement_ray_linked (v p q : PointId) (s : Statement) : bool :=
 Definition on_line_witness (s : Statement) : option (Segment * PointId) :=
   match s with OnLine t q => Some (t, q) | _ => None end.
 
+(** Searching the diagram premises yields the premise that was found, not
+    merely the fact that one exists.  A rule needs only the bit, and takes it
+    as [premise_found]; a report that says which premise a step consulted needs
+    the premise itself.  Both come from the same search, so the two cannot
+    disagree about what a rule used. *)
+Definition premise_witness (p : Premise -> bool) (premises : list Premise)
+    : option Statement :=
+  match find p premises with
+  | Some pr => Some pr.(premise_statement)
+  | None => None
+  end.
+
+Definition premise_found (p : Premise -> bool) (premises : list Premise) : bool :=
+  match premise_witness p premises with Some _ => true | None => false end.
+
+Lemma premise_found_existsb : forall p premises,
+  premise_found p premises = existsb p premises.
+Proof.
+  intros p premises. unfold premise_found, premise_witness.
+  induction premises as [|pr rest IH]; [reflexivity|].
+  cbn. destruct (p pr); [reflexivity|exact IH].
+Qed.
+
+Definition ray_link_premise (v p q : PointId) (pr : Premise) : bool :=
+  statement_ray_linked v p q pr.(premise_statement).
+
 Definition ray_linked (premises : list Premise) (v p q : PointId) : bool :=
-  ascii_eqb p q ||
-  existsb (fun pr => statement_ray_linked v p q pr.(premise_statement)) premises.
+  ascii_eqb p q || premise_found (ray_link_premise v p q) premises.
+
+Definition ray_link_witness (premises : list Premise) (v p q : PointId)
+    : option Statement :=
+  if ascii_eqb p q then None
+  else premise_witness (ray_link_premise v p q) premises.
 
 (** An expected angle may be spelled through any labeled points on its own
     rays, provided each substitution is justified by an [on_line] diagram
@@ -457,14 +487,21 @@ Definition vertical_angle_pair (decls : Declarations) (s t : Segment)
   opposite (angle s.(seg_start) p t.(seg_end))
            (angle s.(seg_end) p t.(seg_start)).
 
+Definition vert_ang_premise (decls : Declarations) (label : string)
+    (conclusion : Statement) (pr : Premise) : bool :=
+  (String.eqb label EmptyString || String.eqb label pr.(premise_label)) &&
+  match pr.(premise_statement) with
+  | IntersectSeg s t p => vertical_angle_pair decls s t p conclusion
+  | _ => false
+  end.
+
 Definition vert_ang (decls : Declarations) (premises : list Premise)
     (label : string) (conclusion : Statement) : bool :=
-  existsb (fun pr =>
-             (String.eqb label EmptyString || String.eqb label pr.(premise_label)) &&
-             match pr.(premise_statement) with
-             | IntersectSeg s t p => vertical_angle_pair decls s t p conclusion
-             | _ => false
-             end) premises.
+  premise_found (vert_ang_premise decls label conclusion) premises.
+
+Definition vert_ang_witness (decls : Declarations) (premises : list Premise)
+    (label : string) (conclusion : Statement) : option Statement :=
+  premise_witness (vert_ang_premise decls label conclusion) premises.
 
 (** An angle bisector halves its angle.  The audited meaning is a disjunction
     over which endpoint of the ray names the vertex, and that is a condition on
@@ -506,6 +543,18 @@ Definition ang_bisect_conv (facts : list Statement) (i : nat)
     [on_line] diagram premise: on a line there is exactly one point equidistant
     from two distinct points. *)
 
+(** [midpt_conv] and [def_perp] both want the same thing of the diagram: an
+    [on_line] premise placing this point on this segment. *)
+Definition on_line_premise (s : Segment) (p : PointId) (pr : Premise) : bool :=
+  match on_line_witness pr.(premise_statement) with
+  | Some (t, q) => segment_u_eqb s t && ascii_eqb p q
+  | None => false
+  end.
+
+Definition on_line_premise_used (premises : list Premise) (s : Segment)
+    (p : PointId) : option Statement :=
+  premise_witness (on_line_premise s p) premises.
+
 Definition midpt_conv (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion with
@@ -514,11 +563,7 @@ Definition midpt_conv (premises : list Premise) (facts : list Statement)
       | Some dependency =>
           fact_eqb (ConSeg (segment s.(seg_start) p) (segment p s.(seg_end)))
                    dependency &&
-          existsb (fun pr =>
-                     match on_line_witness pr.(premise_statement) with
-                     | Some (t, q) => segment_u_eqb s t && ascii_eqb p q
-                     | None => false
-                     end) premises
+          premise_found (on_line_premise s p) premises
       | None => false
       end
   | _ => false
@@ -754,11 +799,7 @@ Definition def_perp (premises : list Premise) (facts : list Statement)
           ascii_eqb a.(ang_vertex) p &&
           (def_perp_shape u s p a.(ang_left) a.(ang_right) ||
            def_perp_shape u s p a.(ang_right) a.(ang_left)) &&
-          existsb (fun pr =>
-                     match on_line_witness pr.(premise_statement) with
-                     | Some (t, q) => segment_u_eqb s t && ascii_eqb p q
-                     | None => false
-                     end) premises
+          premise_found (on_line_premise s p) premises
       | _ => false
       end
   | _ => false
@@ -1074,15 +1115,26 @@ Definition transversal_witness (s : Statement)
   | _ => None
   end.
 
+Definition transversal_premise
+    (check : PointId -> PointId -> PointId -> PointId ->
+             PointId -> PointId -> PointId -> PointId -> bool)
+    (pr : Premise) : bool :=
+  match transversal_witness pr.(premise_statement) with
+  | Some (a, b, t1, i1, c, d, t2, i2) => check a b t1 i1 c d t2 i2
+  | None => false
+  end.
+
 Definition transversal_premise_check
     (check : PointId -> PointId -> PointId -> PointId ->
              PointId -> PointId -> PointId -> PointId -> bool)
     (premises : list Premise) : bool :=
-  existsb (fun pr =>
-    match transversal_witness pr.(premise_statement) with
-    | Some (a, b, t1, i1, c, d, t2, i2) => check a b t1 i1 c d t2 i2
-    | None => false
-    end) premises.
+  premise_found (transversal_premise check) premises.
+
+Definition transversal_premise_used
+    (check : PointId -> PointId -> PointId -> PointId ->
+             PointId -> PointId -> PointId -> PointId -> bool)
+    (premises : list Premise) : option Statement :=
+  premise_witness (transversal_premise check) premises.
 
 (** A segment names a transversal's line when it matches, up to reversal,
     the flanking pair or either flank joined to the crossing point, which the
@@ -1136,55 +1188,66 @@ Definition sameside_pair (a b i1 c d i2 : PointId) (x y : Angle) : bool :=
   angle_pair_eqb x y (angle b i1 i2) (angle i1 i2 d) ||
   angle_pair_eqb x y (angle a i1 i2) (angle i1 i2 c).
 
+Definition altint_check (s1 s2 : Segment) (x y : Angle)
+    (a b t1 i1 c d t2 i2 : PointId) : bool :=
+  transversal_lines_match s1 s2 a b i1 c d i2 && altint_pair a b i1 c d i2 x y.
+
 Definition altint_rule (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | ConAng x y, Some (Para s1 s2) =>
-      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
-        transversal_lines_match s1 s2 a b i1 c d i2 &&
-        altint_pair a b i1 c d i2 x y) premises
+      transversal_premise_check (altint_check s1 s2 x y) premises
   | _, _ => false
   end.
+
+Definition altext_check (s1 s2 : Segment) (x y : Angle)
+    (a b t1 i1 c d t2 i2 : PointId) : bool :=
+  transversal_lines_match s1 s2 a b i1 c d i2 && altext_pair a b t1 i1 c d t2 i2 x y.
 
 Definition altext_rule (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | ConAng x y, Some (Para s1 s2) =>
-      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
-        transversal_lines_match s1 s2 a b i1 c d i2 &&
-        altext_pair a b t1 i1 c d t2 i2 x y) premises
+      transversal_premise_check (altext_check s1 s2 x y) premises
   | _, _ => false
   end.
+
+Definition corresp_ang_check (s1 s2 : Segment) (x y : Angle)
+    (a b t1 i1 c d t2 i2 : PointId) : bool :=
+  transversal_lines_match s1 s2 a b i1 c d i2 && corresp_pair a b t1 i1 c d t2 i2 x y.
 
 Definition corresp_ang_rule (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | ConAng x y, Some (Para s1 s2) =>
-      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
-        transversal_lines_match s1 s2 a b i1 c d i2 &&
-        corresp_pair a b t1 i1 c d t2 i2 x y) premises
+      transversal_premise_check (corresp_ang_check s1 s2 x y) premises
   | _, _ => false
   end.
+
+Definition sameside_ang_check (s1 s2 : Segment) (x y : Angle)
+    (a b t1 i1 c d t2 i2 : PointId) : bool :=
+  transversal_lines_match s1 s2 a b i1 c d i2 && sameside_pair a b i1 c d i2 x y.
 
 Definition sameside_ang_rule (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | Supplementary x y, Some (Para s1 s2) =>
-      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
-        transversal_lines_match s1 s2 a b i1 c d i2 &&
-        sameside_pair a b i1 c d i2 x y) premises
+      transversal_premise_check (sameside_ang_check s1 s2 x y) premises
   | _, _ => false
   end.
+
+Definition altint_conv_check (premises : list Premise) (s1 s2 : Segment)
+    (x y : Angle) (a b t1 i1 c d t2 i2 : PointId) : bool :=
+  transversal_lines_match s1 s2 a b i1 c d i2 &&
+  (altint_pair a b i1 c d i2 x y ||
+   conga_ray_pair premises (angle a i1 i2) (angle d i2 i1) x y ||
+   conga_ray_pair premises (angle b i1 i2) (angle c i2 i1) x y).
 
 Definition altint_conv_rule (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | Para s1 s2, Some (ConAng x y) =>
-      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
-        transversal_lines_match s1 s2 a b i1 c d i2 &&
-        (altint_pair a b i1 c d i2 x y ||
-         conga_ray_pair premises (angle a i1 i2) (angle d i2 i1) x y ||
-         conga_ray_pair premises (angle b i1 i2) (angle c i2 i1) x y)) premises
+      transversal_premise_check (altint_conv_check premises s1 s2 x y) premises
   | _, _ => false
   end.
 
@@ -1192,9 +1255,7 @@ Definition altext_conv_rule (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | Para s1 s2, Some (ConAng x y) =>
-      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
-        transversal_lines_match s1 s2 a b i1 c d i2 &&
-        altext_pair a b t1 i1 c d t2 i2 x y) premises
+      transversal_premise_check (altext_check s1 s2 x y) premises
   | _, _ => false
   end.
 
@@ -1202,9 +1263,7 @@ Definition corresp_ang_conv_rule (premises : list Premise)
     (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | Para s1 s2, Some (ConAng x y) =>
-      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
-        transversal_lines_match s1 s2 a b i1 c d i2 &&
-        corresp_pair a b t1 i1 c d t2 i2 x y) premises
+      transversal_premise_check (corresp_ang_check s1 s2 x y) premises
   | _, _ => false
   end.
 
@@ -1212,9 +1271,7 @@ Definition sameside_ang_conv_rule (premises : list Premise)
     (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | Para s1 s2, Some (Supplementary x y) =>
-      transversal_premise_check (fun a b t1 i1 c d t2 i2 =>
-        transversal_lines_match s1 s2 a b i1 c d i2 &&
-        sameside_pair a b i1 c d i2 x y) premises
+      transversal_premise_check (sameside_ang_check s1 s2 x y) premises
   | _, _ => false
   end.
 
@@ -1281,6 +1338,83 @@ Definition tangent_perp_rule (facts : list Statement) (i j : nat)
       ((segment_u_eqb s1 s && segment_u_eqb s2 (segment c.(circle_c) p)) ||
        (segment_u_eqb s2 s && segment_u_eqb s1 (segment c.(circle_c) p)))
   | _, _, _ => false
+  end.
+
+(** Which diagram premises a step actually consulted.  Each entry comes from
+    the same search the rule itself runs -- the rule is [premise_found] of it
+    and this is [premise_witness] of it -- so the report cannot claim a premise
+    the rule did not use, nor miss one it did.
+
+    Rules that reach the diagram only through dependency matching, where a
+    triangle criterion transports an angle along an [on_line] premise, are not
+    covered: the premise is consumed several layers down inside a search over
+    correspondences, and no witness comes back out.  Those steps report no
+    diagram premises rather than a guess. *)
+Definition rule_diagram_premises (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (reason : Reason) (conclusion : Statement)
+    : list Statement :=
+  let one := fun (w : option Statement) =>
+    match w with Some s => [s] | None => [] end in
+  let transversal := fun (check : PointId -> PointId -> PointId -> PointId ->
+                                  PointId -> PointId -> PointId -> PointId -> bool) =>
+    one (transversal_premise_used check premises) in
+  let dependency := fun (i : nat) => lookup_step facts i in
+  match reason with
+  | VertAng label => one (vert_ang_witness decls premises label conclusion)
+  | MidptConv _ =>
+      match conclusion with
+      | MidptOf s p => one (on_line_premise_used premises s p)
+      | _ => []
+      end
+  | DefPerp _ =>
+      match conclusion with
+      | PerpAt _ s p => one (on_line_premise_used premises s p)
+      | _ => []
+      end
+  | AltInt i =>
+      match conclusion, dependency i with
+      | ConAng x y, Some (Para s1 s2) => transversal (altint_check s1 s2 x y)
+      | _, _ => []
+      end
+  | AltExt i =>
+      match conclusion, dependency i with
+      | ConAng x y, Some (Para s1 s2) => transversal (altext_check s1 s2 x y)
+      | _, _ => []
+      end
+  | CorrespAng i =>
+      match conclusion, dependency i with
+      | ConAng x y, Some (Para s1 s2) => transversal (corresp_ang_check s1 s2 x y)
+      | _, _ => []
+      end
+  | SamesideAng i =>
+      match conclusion, dependency i with
+      | Supplementary x y, Some (Para s1 s2) =>
+          transversal (sameside_ang_check s1 s2 x y)
+      | _, _ => []
+      end
+  | AltIntConv i =>
+      match conclusion, dependency i with
+      | Para s1 s2, Some (ConAng x y) =>
+          transversal (altint_conv_check premises s1 s2 x y)
+      | _, _ => []
+      end
+  | AltExtConv i =>
+      match conclusion, dependency i with
+      | Para s1 s2, Some (ConAng x y) => transversal (altext_check s1 s2 x y)
+      | _, _ => []
+      end
+  | CorrespAngConv i =>
+      match conclusion, dependency i with
+      | Para s1 s2, Some (ConAng x y) => transversal (corresp_ang_check s1 s2 x y)
+      | _, _ => []
+      end
+  | SamesideAngConv i =>
+      match conclusion, dependency i with
+      | Para s1 s2, Some (Supplementary x y) =>
+          transversal (sameside_ang_check s1 s2 x y)
+      | _, _ => []
+      end
+  | _ => []
   end.
 
 Definition rule_valid (decls : Declarations) (premises : list Premise)
@@ -1694,9 +1828,9 @@ Proof.
   unfold ray_linked in Hlink. apply orb_true_iff in Hlink.
   destruct Hlink as [Heq|Hlink].
   { apply Ascii.eqb_eq in Heq. subst q. apply out_trivial. exact Hp. }
-  apply existsb_exists in Hlink. destruct Hlink as [pr [Hin Hc]].
+  rewrite premise_found_existsb in Hlink. apply existsb_exists in Hlink. destruct Hlink as [pr [Hin Hc]].
   pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
-  unfold interp_premise in Hpr.
+  unfold interp_premise in Hpr. unfold ray_link_premise in Hc.
   destruct pr.(premise_statement); try discriminate;
     cbn in Hpr, Hc.
   - destruct Hpr as [Hbet _].
@@ -2252,8 +2386,9 @@ Lemma vert_ang_sound : forall decls premises label conclusion,
   vert_ang decls premises label conclusion = true -> Interp conclusion.
 Proof.
   intros decls premises label conclusion Hwf Hprem Hrule.
-  unfold vert_ang in Hrule. apply existsb_exists in Hrule.
-  destruct Hrule as [pr [Hin Hmatch]].
+  unfold vert_ang in Hrule. rewrite premise_found_existsb in Hrule.
+  apply existsb_exists in Hrule.
+  destruct Hrule as [pr [Hin Hmatch]]. unfold vert_ang_premise in Hmatch.
   apply andb_true_iff in Hmatch. destruct Hmatch as [_ Hmatch].
   pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
                 Hprem pr Hin) as Hpr.
@@ -2323,7 +2458,9 @@ Proof.
   apply andb_true_iff in Hrule. destruct Hrule as [Hhalves Hon].
   assert (Hdep : Interp dependency) by (eapply lookup_step_sound; eauto).
   apply (fact_eqb_sound _ _ Hhalves) in Hdep. cbn in Hdep.
+  rewrite premise_found_existsb in Hon.
   apply existsb_exists in Hon. destruct Hon as [pr [Hin Hmatch]].
+  unfold on_line_premise in Hmatch.
   pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
                 Hprem pr Hin) as Hpr.
   unfold interp_premise in Hpr.
@@ -2861,7 +2998,9 @@ Proof.
   cbn in Hright. destruct Hright as [[Hleft Hright] Hper].
   unfold right_angle in Hper.
   (* the [on_line] premise, realigned onto the conclusion's own segment *)
+  rewrite premise_found_existsb in Hon.
   apply existsb_exists in Hon. destruct Hon as [pr [Hin Hmatch]].
+  unfold on_line_premise in Hmatch.
   pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
                 Hprem pr Hin) as Hpr.
   unfold interp_premise in Hpr.
@@ -3230,7 +3369,9 @@ Lemma transversal_premise_sound : forall premises check,
 Proof.
   intros premises check Hprem Hcheck.
   unfold transversal_premise_check in Hcheck.
+  rewrite premise_found_existsb in Hcheck.
   apply existsb_exists in Hcheck. destruct Hcheck as [pr [Hin Hc]].
+  unfold transversal_premise in Hc.
   pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
   unfold interp_premise in Hpr.
   destruct (transversal_witness pr.(premise_statement))

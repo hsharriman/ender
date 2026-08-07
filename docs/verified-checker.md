@@ -35,6 +35,15 @@ The slice parses Ender source text and supports:
   quadrilateral, and circle declarations, numbered steps, and exact step
   dependencies.
 
+Every rule that consults the diagram searches the premises for a specific one,
+and that search now yields the premise rather than a bit: the rule is
+`premise_found` of it and the report's `diagramDependencies` is
+`premise_witness` of the same search, so a report cannot name a premise the
+rule did not use.  Rules that reach the diagram only through dependency
+matching -- a triangle criterion transporting an angle along an `on_line`
+premise -- report none, because the premise is consumed inside a search over
+correspondences and no witness comes back out.
+
 The report carries no suggestions.  Editor hints about which parts a reason
 would relate read the untrusted reason catalog and the display geometry, which
 the audited surface deliberately excludes, so they are computed in TypeScript

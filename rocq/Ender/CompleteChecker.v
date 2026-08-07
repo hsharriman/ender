@@ -790,7 +790,8 @@ Definition status_of (statuses : list (nat * Audit.StepStatus)) (number : nat)
   | None => Audit.StepBlocked
   end.
 
-Fixpoint step_reports (statuses : list (nat * Audit.StepStatus))
+Fixpoint step_reports (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (statuses : list (nat * Audit.StepStatus))
     (steps : list (string * Step)) (number : nat) : list Audit.StepReport :=
   match steps with
   | [] => []
@@ -798,13 +799,17 @@ Fixpoint step_reports (statuses : list (nat * Audit.StepStatus))
       let status := status_of statuses number in
       Audit.step_report number source (Some (reason_name current.(step_reason)))
         (Some (public_of_statement current.(step_conclusion))) status
-        (reason_dependencies current.(step_reason)) []
+        (reason_dependencies current.(step_reason))
+        (map public_of_statement
+           (rule_diagram_premises decls premises facts
+              current.(step_reason) current.(step_conclusion)))
         (match status with
          | Audit.StepRejected => [step_failure_diagnostic]
          | Audit.StepBlocked => [step_blocked_diagnostic]
          | Audit.StepAccepted => []
          end)
-      :: step_reports statuses rest (S number)
+      :: step_reports decls premises
+           (List.app facts [current.(step_conclusion)]) statuses rest (S number)
   end.
 
 Definition successors (edges : list (nat * nat)) (node : nat) : list nat :=
@@ -998,7 +1003,9 @@ Definition report_content (source : string)
                   let statuses :=
                     step_statuses p.(problem_declarations) p.(problem_premises)
                       [] p.(problem_steps) 1 [] in
-                  let reports := step_reports statuses sourced 1 in
+                  let reports :=
+                    step_reports p.(problem_declarations) p.(problem_premises)
+                      [] statuses sourced 1 in
                   let goal := goal_report_for p statuses in
                   let stated :=
                     goal_stated_by p.(problem_goal) p.(problem_steps) 1
