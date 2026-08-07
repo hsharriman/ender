@@ -20,7 +20,7 @@ the new one says no.
 |---|---|---|
 | Triangle correspondence not established | 8 | proof file |
 | Degenerate `transversal` premise | 6 | proof file |
-| Statement spelled in vocabulary the language does not have | 6 | proof file, or the language |
+| Statement spelled in vocabulary the language does not have | 7 | proof file, or the language |
 | Truncated proof labelled `// pass` | 2 | proof file |
 | Quadrilateral named but not declared | 1 | proof file |
 | Point named on no premise | 1 | proof file |
@@ -29,7 +29,7 @@ the new one says no.
 | Premise line carries a trailing step reference | 1 | proof file, or the grammar |
 | Reason not yet implemented | 24 | the checker, and only time |
 
-The first nine rows are the ones needing a decision: 27 files. The last row is
+The first nine rows are the ones needing a decision: 28 files. The last row is
 work not yet done, listed separately at the end.
 
 ## Triangle correspondence not established — 8 files
@@ -86,7 +86,7 @@ from same-side angles, and those have different conclusions.
 
 **Decision:** respell the six premises with the figure's actual points.
 
-## Statement spelled in vocabulary the language does not have — 6 files
+## Statement spelled in vocabulary the language does not have — 7 files
 
 Four different spellings, all rejected before checking begins:
 
