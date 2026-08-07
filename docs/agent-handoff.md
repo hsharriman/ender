@@ -24,7 +24,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- sixty reasons are fully verified and none are partial. The conservative
+- sixty-one reasons are fully verified and none are partial. The conservative
   `ang_bisect_conv` rule requires its congruent dependency to name exactly the
   two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
@@ -63,7 +63,10 @@ Known limitations relevant to prioritization:
   diagonal and `l12_21_b` -- neutral, unlike the forward direction.
   `rect_pgram_ang` composes the opposite-corner and consecutive-corner
   theorems: one right corner forces its opposite by congruence and its two
-  neighbours by supplementarity.  The rest of the diagonal-heavy remainder (`pgram_diag_bisect`,
+  neighbours by supplementarity.  `pgram_consec_angs_conv` inverts the
+  consecutive-corner theorem, and neutrally: continuing one of the two sides
+  past their shared corner turns the supplement into an alternate interior
+  angle, which `l12_21_b` reads back as the parallel.  The rest of the diagonal-heavy remainder (`pgram_diag_bisect`,
   kite and trapezoid rules) is still fail-closed;
 - the parallel-line family is implemented and verified: `altint`, `altext`,
   `corresp_ang`, `sameside_ang`, their converses, and `para_transitive`.

@@ -601,11 +601,13 @@ Qed.
     are parallel, and the crossing diagonals are what put the two far corners
     on one side of it: each is on the same ray from an end of the shared side
     as the crossing point is. *)
-Lemma ender_pgram_consec_angles : forall A B C D X,
-  ~ Col A B C -> BetS A X C -> BetS B X D -> Par A B C D ->
-  SuppA A B C B C D.
+(** The two corners at either end of a side are on one side of it, which is
+    what the crossing diagonals are for: each far corner lies on the same ray
+    from an end of that side as the crossing point does. *)
+Lemma ender_quad_same_side : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D -> OS B C A D.
 Proof.
-  intros A B C D X Hncol HAC HBD Hpar.
+  intros A B C D X Hncol HAC HBD.
   destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [Hbcd _].
   destruct HAC as [HbetAC [HAX HXC]].
@@ -619,8 +621,53 @@ Proof.
       [right; intro; apply Hncol; Col
       |apply bet_out; [now apply not_eq_sym
                       |now apply between_symmetry]]. }
-  apply ender_consecutive_interior; [|exact Hpar].
   apply one_side_transitivity with X; assumption.
+Qed.
+
+Lemma ender_pgram_consec_angles : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D -> Par A B C D ->
+  SuppA A B C B C D.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar.
+  apply ender_consecutive_interior;
+    [exact (ender_quad_same_side A B C D X Hncol HAC HBD)|exact Hpar].
+Qed.
+
+(** The converse, and neutral where the forward direction is not: continue one
+    of the two sides past their shared corner, and the supplement makes the
+    far corner congruent to the continuation.  That is an alternate interior
+    pair, which [l12_21_b] turns into the parallel. *)
+Lemma ender_pgram_from_consec_angles : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  SuppA A B C B C D -> Par A B C D.
+Proof.
+  intros A B C D X Hncol HAC HBD Hsuppa.
+  pose proof (ender_quad_same_side A B C D X Hncol HAC HBD) as Hos.
+  pose proof Hncol as Hdistinct. apply not_col_distincts in Hdistinct.
+  destruct Hdistinct as [_ [HAB [HBC _]]].
+  destruct (segment_construction A B A B) as [A' [HbetA' Hcong]].
+  assert (HneBA' : B <> A').
+  { intro Heq. subst A'. apply HAB, (cong_identity A B B).
+    now apply cong_symmetry. }
+  assert (Hlinear : SuppA A B C C B A')
+    by (apply bet__suppa; assumption).
+  assert (Hconga : CongA B C D C B A')
+    by (apply (suppa2__conga456 A B C); assumption).
+  assert (Hts : TS B C A A').
+  { repeat split.
+    - intro. apply Hncol. Col.
+    - intro Hcol. apply Hncol.
+      apply (col3 B A' A B C HneBA');
+        [apply bet_col in HbetA'; Col|Col|Col].
+    - exists B. split; [Col|exact HbetA']. }
+  assert (HtsD : TS B C A' D)
+    by (apply l9_2, (l9_8_2 B C A D A'); [exact Hts|exact Hos]).
+  assert (Hpar : Par B A' C D)
+    by (apply l12_21_b; [exact HtsD|apply conga_comm, conga_sym, Hconga]).
+  apply par_left_comm, (par_col_par_2 B A' C D A);
+    [now apply not_eq_sym
+    |apply bet_col in HbetA'; Col
+    |exact Hpar].
 Qed.
 
 (** One right corner makes a parallelogram a rectangle: the opposite corner is

@@ -98,6 +98,7 @@ Inductive Reason :=
 | PgramOppAngles : nat -> Reason
 | PgramConsecAngs : nat -> Reason
 | PgramOppSidesConv : nat -> nat -> Reason
+| PgramConsecAngsConv : nat -> nat -> Reason
 | RectPgramAng : nat -> nat -> Reason
 | PgramOppSidePara : nat -> nat -> Reason
 | RectanglePgram : nat -> Reason

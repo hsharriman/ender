@@ -502,6 +502,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "def_parallelogram" text (parse_two DefParallelogram)
         (try_call "pgram_opp_sides" text (parse_one PgramOppSides)
         (try_call "pgram_opp_angs" text (parse_one PgramOppAngles)
+        (try_call "pgram_consec_angs_conv" text (parse_two PgramConsecAngsConv)
         (try_call "pgram_consec_angs" text (parse_one PgramConsecAngs)
         (try_call "pgram_opp_sides_conv" text (parse_two PgramOppSidesConv)
         (try_call "rect_pgram_ang" text (parse_two RectPgramAng)
@@ -526,7 +527,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "inscribed_semi" text (parse_one InscribedSemi)
         (try_call "con_chords_intersect_arcs" text (parse_one ConChordsArcs)
         (try_call "tangent_perp" text (parse_two TangentPerp)
-        None)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+        None))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

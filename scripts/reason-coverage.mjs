@@ -55,6 +55,7 @@ const implemented = new Set([
   "pgram_opp_angs",
   "pgram_consec_angs",
   "pgram_opp_sides_conv",
+  "pgram_consec_angs_conv",
   "rect_pgram_ang",
   "pgram_opp_side_para",
   "rectangle_pgram",
@@ -166,6 +167,8 @@ const entries = catalog.map((reason) => {
         ? "GeoCoq consecutive_interior_angles_postulate, Playfair-derived"
       : reason === "pgram_opp_sides_conv"
         ? "SSS along the diagonal, then GeoCoq l12_21_b (neutral)"
+      : reason === "pgram_consec_angs_conv"
+        ? "the supplement continued past its corner, then l12_21_b (neutral)"
       : reason === "rect_pgram_ang"
         ? "the opposite and consecutive corner theorems, plus l11_17 and l11_18_1"
       : reason === "rectangle"

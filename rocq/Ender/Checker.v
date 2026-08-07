@@ -876,6 +876,32 @@ Definition pgram_opp_sides_conv_rule (decls : Declarations)
   | _, _, _ => false
   end.
 
+(** Two corners supplementary to a third make a parallelogram: each
+    supplementary pair shares a side, and that side is the transversal of the
+    two the pair forces parallel.  The shared corner may sit on either side of
+    either dependency, as [SuppA] is symmetric. *)
+Definition consec_pair_eqb (a b : Angle) (first second : Angle) : bool :=
+  fact_eqb (Supplementary first second) (Supplementary a b).
+
+Definition pgram_consec_angs_conv_rule (decls : Declarations)
+    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | Pgram q, Some (Supplementary a b), Some (Supplementary c d) =>
+      let along_ab := consec_pair_eqb a b (quad_corner_a q) (quad_corner_b q) in
+      let along_bc := consec_pair_eqb a b (quad_corner_b q) (quad_corner_c q) in
+      let along_cd := consec_pair_eqb a b (quad_corner_c q) (quad_corner_d q) in
+      let along_da := consec_pair_eqb a b (quad_corner_d q) (quad_corner_a q) in
+      let along_ab' := consec_pair_eqb c d (quad_corner_a q) (quad_corner_b q) in
+      let along_bc' := consec_pair_eqb c d (quad_corner_b q) (quad_corner_c q) in
+      let along_cd' := consec_pair_eqb c d (quad_corner_c q) (quad_corner_d q) in
+      let along_da' := consec_pair_eqb c d (quad_corner_d q) (quad_corner_a q) in
+      declared_quadrilateral decls q &&
+      (* one pair from each of the two side directions *)
+      (((along_bc || along_da) && (along_ab' || along_cd')) ||
+       ((along_ab || along_cd) && (along_bc' || along_da')))
+  | _, _, _ => false
+  end.
+
 (** One right corner of a parallelogram makes it a rectangle. *)
 Definition rect_pgram_ang_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
@@ -1310,6 +1336,8 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | PgramOppAngles i => pgram_opp_angles_rule facts i conclusion
   | PgramConsecAngs i => pgram_consec_angs_rule facts i conclusion
   | PgramOppSidesConv i j => pgram_opp_sides_conv_rule decls facts i j conclusion
+  | PgramConsecAngsConv i j =>
+      pgram_consec_angs_conv_rule decls facts i j conclusion
   | RectPgramAng i j => rect_pgram_ang_rule facts i j conclusion
   | PgramOppSidePara i j => pgram_opp_side_para_rule decls facts i j conclusion
   | RectanglePgram i => rectangle_pgram_rule facts i conclusion
@@ -3913,6 +3941,60 @@ Proof.
     now apply cong_symmetry.
 Qed.
 
+Lemma pgram_consec_angs_conv_sound : forall decls facts i j conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  pgram_consec_angs_conv_rule decls facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros decls facts i j conclusion Hdecls Hfacts Hrule.
+  unfold pgram_consec_angs_conv_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [first|] eqn:Hi; try discriminate.
+  destruct first; try discriminate.
+  destruct (lookup_step facts j) as [second|] eqn:Hj; try discriminate.
+  destruct second; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hmatch].
+  assert (Hs1 : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
+  assert (Hs2 : Interp (Supplementary a1 a2)) by (eapply lookup_step_sound; eauto).
+  pose proof (declared_quadrilateral_sound _ _ Hdecls Hdeclared) as Hwf.
+  pose proof Hwf as Hwfcopy.
+  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
+  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    as [Hbcd [Hcda Hdab]].
+  (* one supplementary pair per side direction, in either order and with the
+     shared corner in either slot *)
+  assert (Hsides : forall x y : Angle, Interp (Supplementary x y) ->
+    (consec_pair_eqb x y (quad_corner_b q) (quad_corner_c q) = true \/
+     consec_pair_eqb x y (quad_corner_d q) (quad_corner_a q) = true) ->
+    Interp (Para (quad_side_ab q) (quad_side_cd q))).
+  { intros x y Hxy [Hm|Hm]; apply (proj2 (fact_eqb_sound _ _ Hm)) in Hxy;
+      cbn in Hxy |- *; unfold Audit.Parallel, seg_name, Audit.seg_start,
+      Audit.seg_end; cbn.
+    - exact (ender_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd Hxy).
+    - apply par_symmetry.
+      apply (ender_pgram_from_consec_angles _ _ _ _ X Hcda
+               (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd) Hxy). }
+  assert (Hsides' : forall x y : Angle, Interp (Supplementary x y) ->
+    (consec_pair_eqb x y (quad_corner_a q) (quad_corner_b q) = true \/
+     consec_pair_eqb x y (quad_corner_c q) (quad_corner_d q) = true) ->
+    Interp (Para (quad_side_bc q) (quad_side_da q))).
+  { intros x y Hxy [Hm|Hm]; apply (proj2 (fact_eqb_sound _ _ Hm)) in Hxy;
+      cbn in Hxy |- *; unfold Audit.Parallel, seg_name, Audit.seg_start,
+      Audit.seg_end; cbn.
+    - apply par_symmetry.
+      apply (ender_pgram_from_consec_angles _ _ _ _ X Hdab
+               (ender_bets_sym _ _ _ HXbd) HXac Hxy).
+    - exact (ender_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
+               (ender_bets_sym _ _ _ HXac) Hxy). }
+  cbn. split; [exact Hwf|].
+  apply orb_true_iff in Hmatch. destruct Hmatch as [Hm|Hm];
+    apply andb_true_iff in Hm; destruct Hm as [Hm1 Hm2];
+    apply orb_true_iff in Hm1; apply orb_true_iff in Hm2.
+  - split; [exact (Hsides _ _ Hs1 Hm1)|exact (Hsides' _ _ Hs2 Hm2)].
+  - split; [exact (Hsides _ _ Hs2 Hm2)|exact (Hsides' _ _ Hs1 Hm1)].
+Qed.
+
 Lemma rect_pgram_ang_sound : forall facts i j conclusion,
   Forall Interp facts -> rect_pgram_ang_rule facts i j conclusion = true ->
   Interp conclusion.
@@ -4386,6 +4468,7 @@ Proof.
   - eapply pgram_opp_angles_sound; eauto.
   - eapply pgram_consec_angs_sound; eauto.
   - eapply pgram_opp_sides_conv_sound; eauto.
+  - eapply pgram_consec_angs_conv_sound; eauto.
   - eapply rect_pgram_ang_sound; eauto.
   - eapply pgram_opp_side_para_sound; eauto.
   - eapply rectangle_pgram_sound; eauto.

@@ -25,7 +25,7 @@ The slice parses Ender source text and supports:
   `pgram_opp_sides`, `pgram_opp_side_para`, `rectangle_pgram`,
   `rhombus_pgram`, `rhombus_consec_sides`, `rhombus`, `rhombus_opp_bisect`,
   `rectangle`, `rect_diag_con`, `rect_pgram_ang`, `pgram_opp_angs`,
-  `pgram_consec_angs`, `pgram_opp_sides_conv`,
+  `pgram_consec_angs`, `pgram_opp_sides_conv`, `pgram_consec_angs_conv`,
   `ang_bisect_conv`, `def_linear_pair`, `con_complements`,
   `con_complements_same`, `altint`, `altext`,
   `corresp_ang`, `sameside_ang`, `altint_conv`, `altext_conv`,

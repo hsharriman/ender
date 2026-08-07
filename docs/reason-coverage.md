@@ -101,12 +101,13 @@ all corpus files through the extracted API.
 - **Priority 2:** ordinary triangle, line, and quadrilateral curriculum rules.
   The triangle-shape and parallel-line groups are done, and the forward
   quadrilateral rules with them. What is left is mostly converses
-  (`pgram_opp_angs_conv`, `pgram_consec_angs_conv`, `rect_diag_con_conv`,
-  `rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv`), which conclude a
-  quadrilateral statement and so must establish its well-formedness rather
-  than read it off a dependency -- `pgram_opp_sides_conv` shows the shape:
-  the declaration supplies well-formedness, SSS along the diagonal supplies
-  the angles, and `l12_21_b` turns those back into parallels; the diagonal rules
+  (`pgram_opp_angs_conv`, `rect_diag_con_conv`, `rhombus_diag_perp_conv`,
+  `rhombus_opp_bisect_conv`), which conclude a quadrilateral statement and so
+  must establish its well-formedness rather than read it off a dependency --
+  `pgram_opp_sides_conv` and `pgram_consec_angs_conv` show the shape: the
+  declaration supplies well-formedness, the diagonal or a continued side
+  supplies an alternate interior pair, and `l12_21_b` turns that back into a
+  parallel, neutrally; the diagonal rules
   (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`), whose
   conclusions name the crossing point, so a proof that does not state where
   the diagonals meet leaves it unconstrained; the trapezoid and kite angle

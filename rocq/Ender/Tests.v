@@ -1405,6 +1405,35 @@ ang: a_ABD
 [02] given(g_2) -> parallelogram(q_ABCD)
 [03] rect_pgram_ang(1,2) -> rectangle(q_ABCD)".
 
+(** Two corners supplementary to a third make a parallelogram; two pairs
+    along the same side direction do not. *)
+Definition pgram_consec_angs_conv_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] supplementary(a_ABC,a_BCD)
+[g_2] supplementary(a_ABC,a_DAB)
+"
+  "parallelogram(q_ABCD)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_BCD)
+[02] given(g_2) -> supplementary(a_ABC,a_DAB)
+[03] pgram_consec_angs_conv(1,2) -> parallelogram(q_ABCD)".
+
+Definition pgram_consec_angs_conv_one_side_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] supplementary(a_ABC,a_BCD)
+[g_2] supplementary(a_CDA,a_DAB)
+"
+  "parallelogram(q_ABCD)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_BCD)
+[02] given(g_2) -> supplementary(a_CDA,a_DAB)
+[03] pgram_consec_angs_conv(1,2) -> parallelogram(q_ABCD)".
+
+Example pgram_consec_angs_conv_accepts :
+  complete_checker pgram_consec_angs_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_consec_angs_conv_one_side_rejects :
+  complete_checker pgram_consec_angs_conv_one_side_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example pgram_opp_sides_conv_accepts :
   complete_checker pgram_opp_sides_conv_source = true.
 Proof. vm_compute. reflexivity. Qed.
