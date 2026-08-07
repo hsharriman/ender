@@ -115,6 +115,15 @@ Definition parse_triangle (text : chars) : option Triangle :=
   | _ => None
   end.
 
+(** The audited parser reads a [seg:] line with its spaces removed as
+    consecutive character pairs, so a kernel header must decode it the same
+    way or [declarations_eqb] will refuse the problem. *)
+Fixpoint seg_tokens (text : chars) : list Segment :=
+  match text with
+  | a :: b :: rest => segment a b :: seg_tokens rest
+  | _ => []
+  end.
+
 Fixpoint circ_tokens (text : chars) : list Circle :=
   match text with
   | "c"%char :: "_"%char :: a :: b :: rest =>
@@ -563,6 +572,7 @@ Record HeaderState := header_state {
   hs_angles : list Angle;
   hs_quadrilaterals : list Quadrilateral;
   hs_circles : list Circle;
+  hs_segments : list Segment;
   hs_premises : list Premise;
   hs_goal : option Statement
 }.
@@ -577,32 +587,40 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
         parse_header_lines rest
           (header_state (state.(hs_triangles) ++ point_tokens line)
                         state.(hs_angles) state.(hs_quadrilaterals)
-                        state.(hs_circles)
+                        state.(hs_circles) state.(hs_segments)
                         state.(hs_premises) state.(hs_goal))
       else if starts_with (list_ascii_of_string "ang:") compact then
         parse_header_lines rest
           (header_state state.(hs_triangles)
                         (state.(hs_angles) ++ angle_tokens line)
                         state.(hs_quadrilaterals)
-                        state.(hs_circles)
+                        state.(hs_circles) state.(hs_segments)
                         state.(hs_premises) state.(hs_goal))
       else if starts_with (list_ascii_of_string "quad:") compact then
         parse_header_lines rest
           (header_state state.(hs_triangles) state.(hs_angles)
                         (state.(hs_quadrilaterals) ++ quad_tokens line)
-                        state.(hs_circles)
+                        state.(hs_circles) state.(hs_segments)
+                        state.(hs_premises) state.(hs_goal))
+      else if starts_with (list_ascii_of_string "seg:") compact then
+        parse_header_lines rest
+          (header_state state.(hs_triangles) state.(hs_angles)
+                        state.(hs_quadrilaterals) state.(hs_circles)
+                        (state.(hs_segments) ++ seg_tokens (drop_chars 4 compact))
                         state.(hs_premises) state.(hs_goal))
       else if starts_with (list_ascii_of_string "circ:") compact then
         parse_header_lines rest
           (header_state state.(hs_triangles) state.(hs_angles)
                         state.(hs_quadrilaterals)
                         (state.(hs_circles) ++ circ_tokens line)
+                        state.(hs_segments)
                         state.(hs_premises) state.(hs_goal))
       else if starts_with ["["%char] compact then
         match parse_labeled_premise line with
         | Some prem => parse_header_lines rest
             (header_state state.(hs_triangles) state.(hs_angles)
                           state.(hs_quadrilaterals) state.(hs_circles)
+                          state.(hs_segments)
                           (state.(hs_premises) ++ [prem]) state.(hs_goal))
         | None => None
         end
@@ -613,6 +631,7 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
             | Some goal => parse_header_lines rest
                 (header_state state.(hs_triangles) state.(hs_angles)
                               state.(hs_quadrilaterals) state.(hs_circles)
+                              state.(hs_segments)
                               state.(hs_premises) (Some goal))
             | None => None
             end
@@ -636,14 +655,14 @@ Fixpoint parse_step_lines (lines : list chars) (steps : list Step) : option (lis
 
 Definition parseProblemPart (part : string) : option ProblemHeader :=
   match parse_header_lines (split_lines (list_ascii_of_string part) [])
-                           (header_state [] [] [] [] [] None) with
+                           (header_state [] [] [] [] [] [] None) with
   | Some header =>
       match header.(hs_goal) with
       | Some goal =>
           Some (problem_header
                   (declarations header.(hs_triangles) header.(hs_angles)
                                 header.(hs_quadrilaterals)
-                                header.(hs_circles))
+                                header.(hs_circles) header.(hs_segments))
                   header.(hs_premises) goal)
       | None => None
       end

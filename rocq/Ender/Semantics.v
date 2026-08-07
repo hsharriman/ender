@@ -178,6 +178,9 @@ Definition declarations_well_formed (d : Declarations) : Prop :=
   (forall q, In q d.(decl_quadrilaterals) ->
      Audit.QuadrilateralWellFormed point (quad_name q)) /\
   (forall c, In c d.(decl_circles) ->
-     Audit.CircleWellFormed point (circ_name c)).
+     Audit.CircleWellFormed point (circ_name c)) /\
+  (* A [seg:] line is audited as [SegmentWellFormed]: its endpoints differ. *)
+  (forall s, In s d.(decl_segments) ->
+     point s.(seg_start) <> point s.(seg_end)).
 
 End EnderSemantics.

@@ -71,6 +71,7 @@ const OUTCOME_ENFORCED = new Set([
   "examples/goal_reversed_correct.txt",
   "examples/goal_reversed_incorrect.txt",
   "examples/overlap.txt",
+  "examples/rhombusOutside.txt",
   "examples/s1c1.txt",
   "examples/s1c1incomplete.txt",
   "examples/s1c2.txt",
@@ -293,7 +294,7 @@ describe("extracted Rocq API corpus tests", () => {
     // is a different complaint from never stating it at all.
     expect(report.goal.provedBy).toBeNull();
     expect(report.goal.diagnostics[0].message).toBe(
-      "the step that states the goal was not accepted",
+      "step 4 states the goal but was not accepted",
     );
     expect(report.graph.unusedSteps).toEqual([]);
   });
@@ -367,7 +368,7 @@ steps:
     );
     expect(summarizeReport(rejected)).toBe("Rejected by the verified checker.");
     expect(reportFindings(rejected)).toEqual([
-      "Goal: the step that states the goal was not accepted",
+      "Goal: step 4 states the goal but was not accepted",
       "Rejected step: 4",
     ]);
   });

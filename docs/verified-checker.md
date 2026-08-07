@@ -38,15 +38,17 @@ Unsupported statements, reasons, or malformed relevant lines are rejected.
 Coordinates on the `pt:` line are intentionally discarded and do not contribute
 to the theorem's meaning.
 
-Nondegeneracy has exactly three sources, and every rule that needs it draws on
+Nondegeneracy has exactly four sources, and every rule that needs it draws on
 one of them: a declared triangle, whose vertices are noncollinear; a declared
 quadrilateral, whose meaning states all six vertex distinctnesses, so any
-three of its vertices named apart are an angle with nondegenerate rays; or a
-declared angle, whose audited meaning is exactly `AngleWellFormed`. `reflex`
-concludes `ref_ang` only for such an angle, which is what `conga_refl` needs;
-`Declarations` in `Syntax.v` bundles the declaration kinds because no rule
-wants one without the others. A `seg:` line is audited as `SegmentWellFormed`
-but the kernel discards it, so it is not yet a fourth source.
+three of its vertices named apart are an angle with nondegenerate rays; a
+declared angle, whose audited meaning is exactly `AngleWellFormed`; or a
+declared segment, whose meaning is that its two ends are different points.
+`reflex` concludes `ref_ang` only for a nondegenerate angle, which is what
+`conga_refl` needs, and `rhombus_opp_bisect` reads a bisecting ray named by a
+point along the diagonal only when a `seg:` line says that point is not the
+corner itself. `Declarations` in `Syntax.v` bundles the declaration kinds
+because no rule wants one without the others.
 
 Triangle congruence is ordered: `con_tri(t_ABC,t_DEF)` means the correspondence
 `A-D`, `B-E`, `C-F`. It comprises the three corresponding side congruences and
@@ -331,12 +333,10 @@ theorems.
 Two things gate that growth, in this order. Statement coverage comes first:
 the kernel parser rejects a problem outright when any premise line names a
 statement it cannot decode, so a whole fixture stays out of reach until every
-statement it declares is supported. Nondegeneracy comes second: declared
-triangles, quadrilaterals, and angles are the only sources of it, so a rule
-that needs nondegenerate rays and has none of those to draw on must fail
-closed, as `reflex` on `ref_ang` and `perp_con_ang` on `con_ang` do.  A
-declared quadrilateral covers any three of its vertices, consecutive or not,
-because its meaning states all six distinctnesses.
+statement it declares is supported. Nondegeneracy comes second: the four
+declaration kinds are its only sources, so a rule that needs nondegenerate
+rays and has none of them to draw on must fail closed, as `reflex` on
+`ref_ang` and `perp_con_ang` on `con_ang` do.
 
 The largest remaining cluster is the parallel-line family — `altint`,
 `altint_conv`, `altext`, `corresp_ang`, `sameside_ang` and their converses,

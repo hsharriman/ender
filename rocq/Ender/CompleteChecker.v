@@ -158,9 +158,16 @@ Definition projected_circles (ds : list Audit.PublicDeclaration)
     | _ => rest
     end) [] ds.
 
+Definition projected_segments (ds : list Audit.PublicDeclaration) : list Segment :=
+  fold_right (fun d rest => match d with
+    | Audit.SegmentDeclaration s => project_segment s :: rest
+    | _ => rest
+    end) [] ds.
+
 Definition projected_declarations (ds : list Audit.PublicDeclaration) : Declarations :=
   declarations (projected_triangles ds) (projected_angles ds)
-               (projected_quadrilaterals ds) (projected_circles ds).
+               (projected_quadrilaterals ds) (projected_circles ds)
+               (projected_segments ds).
 
 Fixpoint statement_list_eqb (a b : list Statement) : bool :=
   match a, b with
@@ -197,11 +204,19 @@ Fixpoint circle_list_eqb (a b : list Circle) : bool :=
   | _, _ => false
   end.
 
+Fixpoint segment_list_eqb (a b : list Segment) : bool :=
+  match a, b with
+  | [], [] => true
+  | x :: xs, y :: ys => segment_eqb x y && segment_list_eqb xs ys
+  | _, _ => false
+  end.
+
 Definition declarations_eqb (a b : Declarations) : bool :=
   triangle_list_eqb a.(decl_triangles) b.(decl_triangles) &&
   angle_list_eqb a.(decl_angles) b.(decl_angles) &&
   quadrilateral_list_eqb a.(decl_quadrilaterals) b.(decl_quadrilaterals) &&
-  circle_list_eqb a.(decl_circles) b.(decl_circles).
+  circle_list_eqb a.(decl_circles) b.(decl_circles) &&
+  segment_list_eqb a.(decl_segments) b.(decl_segments).
 
 Definition premise_statements (ps : list Premise) : list Statement :=
   map premise_statement ps.
@@ -905,9 +920,12 @@ Definition goal_missing_diagnostic : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
     "no step states the goal".
 
-Definition goal_unproved_diagnostic : Audit.Diagnostic :=
+(** Naming the step keeps what the legacy checker reported separately -- which
+    step states the goal, whether or not it holds -- recoverable from a report
+    whose [goal_proved_by] deliberately omits it. *)
+Definition goal_unproved_diagnostic (number : nat) : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
-    "the step that states the goal was not accepted".
+    ("step " ++ nat_text number ++ " states the goal but was not accepted").
 
 Definition goal_report_for (p : Problem)
     (statuses : list (nat * Audit.StepStatus)) : Audit.GoalReport :=
@@ -915,7 +933,7 @@ Definition goal_report_for (p : Problem)
   | Some n => Audit.goal_report (Some n) [] []
   | None =>
       match goal_stated_by p.(problem_goal) p.(problem_steps) 1 statuses false with
-      | Some _ => Audit.goal_report None [goal_unproved_diagnostic] []
+      | Some n => Audit.goal_report None [goal_unproved_diagnostic n] []
       | None => Audit.goal_report None [goal_missing_diagnostic] []
       end
   end.
@@ -1034,12 +1052,20 @@ Proof.
   - intros H. inversion H. auto.
 Qed.
 
+Lemma segment_list_eqb_eq : forall a b, segment_list_eqb a b = true <-> a = b.
+Proof.
+  induction a as [|x xs IH]; destruct b as [|y ys]; cbn; try easy.
+  rewrite andb_true_iff, segment_eqb_eq, IH. split.
+  - intros [-> ->]. reflexivity.
+  - intros H. inversion H. auto.
+Qed.
+
 Lemma declarations_eqb_eq : forall a b, declarations_eqb a b = true <-> a = b.
 Proof.
-  intros [t1 a1 q1 c1] [t2 a2 q2 c2]. unfold declarations_eqb. cbn.
+  intros [t1 a1 q1 c1 s1] [t2 a2 q2 c2 s2]. unfold declarations_eqb. cbn.
   rewrite !andb_true_iff, triangle_list_eqb_eq, angle_list_eqb_eq,
-    quadrilateral_list_eqb_eq, circle_list_eqb_eq. split.
-  - intros [[[-> ->] ->] ->]. reflexivity.
+    quadrilateral_list_eqb_eq, circle_list_eqb_eq, segment_list_eqb_eq. split.
+  - intros [[[[-> ->] ->] ->] ->]. reflexivity.
   - intros H. inversion H. auto.
 Qed.
 
@@ -1051,7 +1077,7 @@ Lemma projected_triangle_meaning : forall ds,
   Forall (Audit.declarationMeaning point) ds ->
   declarations_well_formed point (projected_declarations ds).
 Proof.
-  intros ds Hall. split; [|split; [|split]].
+  intros ds Hall. split; [|split; [|split; [|split]]].
   - intros t Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
     + contradiction.
     + destruct d; cbn in *; try now apply IH.
@@ -1065,6 +1091,10 @@ Proof.
     + destruct d; cbn in *; try now apply IH.
       destruct Hin as [<-|Hin]; [exact Hd|now apply IH].
   - intros cd Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
+    + contradiction.
+    + destruct d; cbn in *; try now apply IH.
+      destruct Hin as [<-|Hin]; [exact Hd|now apply IH].
+  - intros sd Hin. induction Hall as [|d rest Hd Hrest IH]; cbn in Hin.
     + contradiction.
     + destruct d; cbn in *; try now apply IH.
       destruct Hin as [<-|Hin]; [exact Hd|now apply IH].

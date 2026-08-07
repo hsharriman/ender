@@ -23,6 +23,20 @@ Definition segment_pair_eqb (a b c d : Segment) : bool :=
   (segment_u_eqb a c && segment_u_eqb b d) ||
   (segment_u_eqb a d && segment_u_eqb b c).
 
+Lemma segment_u_eqb_refl : forall s, segment_u_eqb s s = true.
+Proof.
+  intros [a b]. unfold segment_u_eqb, segment_eqb, ascii_eqb. cbn.
+  apply orb_true_iff. left. apply andb_true_iff. split; apply Ascii.eqb_refl.
+Qed.
+
+Lemma segment_u_eqb_reverse : forall a b,
+  segment_u_eqb (segment a b) (segment b a) = true.
+Proof.
+  intros a b. unfold segment_u_eqb, segment_eqb, reverse_segment, ascii_eqb.
+  cbn. apply orb_true_iff. right.
+  apply andb_true_iff. split; apply Ascii.eqb_refl.
+Qed.
+
 Lemma segment_u_eqb_cases : forall a b, segment_u_eqb a b = true ->
   a = b \/ a = reverse_segment b.
 Proof.
@@ -765,6 +779,12 @@ Definition quad_corner_c (q : Quadrilateral) : Angle :=
   angle q.(quad_b) q.(quad_c) q.(quad_d).
 Definition quad_corner_d (q : Quadrilateral) : Angle :=
   angle q.(quad_c) q.(quad_d) q.(quad_a).
+(** A [seg:] line is audited as [SegmentWellFormed], so a declared segment is
+    a source of the one fact a ray needs: that its two ends are different
+    points. *)
+Definition declared_segment (decls : Declarations) (s : Segment) : bool :=
+  existsb (segment_u_eqb s) decls.(decl_segments).
+
 Definition quad_diagonal_ac (q : Quadrilateral) : Segment :=
   segment q.(quad_a) q.(quad_c).
 Definition quad_diagonal_bd (q : Quadrilateral) : Segment :=
@@ -862,14 +882,35 @@ Definition rhombus_def_rule (facts : list Statement) (i : nat)
     end of the named diagonal is bisected by it.  The audited
     [AngleBisector] already reads the far endpoint of the segment as the ray
     the halves are measured to, and that endpoint is the opposite corner. *)
-Definition rhombus_opp_bisect_rule (facts : list Statement) (i : nat)
+(** The ray may also be spelled by a point along the diagonal rather than by
+    the opposite corner -- the crossing point, or a point beyond it -- which
+    is how the corpus writes it when the figure labels that point.  Such a
+    segment must run from the corner, its far end must name the same ray as
+    the diagonal does, and it must be declared, since [out2__conga] carries
+    the halves across the renaming only if that end is not the corner
+    itself. *)
+Definition bisector_ray (decls : Declarations) (premises : list Premise)
+    (s : Segment) (vertex opposite : PointId) : bool :=
+  segment_u_eqb s (segment vertex opposite) ||
+  (declared_segment decls s &&
+   ((ascii_eqb s.(seg_start) vertex &&
+       ray_linked premises vertex opposite s.(seg_end)) ||
+    (ascii_eqb s.(seg_end) vertex &&
+       ray_linked premises vertex opposite s.(seg_start)))).
+
+Definition rhombus_opp_bisect_rule (decls : Declarations)
+    (premises : list Premise) (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
   | AngBisectOf a s, Some (Rhomb q) =>
-      (segment_u_eqb s (quad_diagonal_ac q) &&
-        (angle_u_eqb a (quad_corner_a q) || angle_u_eqb a (quad_corner_c q))) ||
-      (segment_u_eqb s (quad_diagonal_bd q) &&
-        (angle_u_eqb a (quad_corner_b q) || angle_u_eqb a (quad_corner_d q)))
+      (angle_u_eqb a (quad_corner_a q) &&
+         bisector_ray decls premises s q.(quad_a) q.(quad_c)) ||
+      (angle_u_eqb a (quad_corner_c q) &&
+         bisector_ray decls premises s q.(quad_c) q.(quad_a)) ||
+      (angle_u_eqb a (quad_corner_b q) &&
+         bisector_ray decls premises s q.(quad_b) q.(quad_d)) ||
+      (angle_u_eqb a (quad_corner_d q) &&
+         bisector_ray decls premises s q.(quad_d) q.(quad_b))
   | _, _ => false
   end.
 
@@ -1246,7 +1287,8 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RhombusPgram i => rhombus_pgram_rule facts i conclusion
   | RhombusConsecSides i j => rhombus_consec_sides_rule facts i j conclusion
   | RhombusDef i => rhombus_def_rule facts i conclusion
-  | RhombusOppBisect i => rhombus_opp_bisect_rule facts i conclusion
+  | RhombusOppBisect i =>
+      rhombus_opp_bisect_rule decls premises facts i conclusion
   | RectDiagCon i => rect_diag_con_rule facts i conclusion
   | RectangleDef i => rectangle_def_rule facts i conclusion
   | AltInt i => altint_rule premises facts i conclusion
@@ -3560,11 +3602,74 @@ Proof.
     solve [exact Hcong | now apply conga_comm, conga_sym].
 Qed.
 
-Lemma rhombus_opp_bisect_sound : forall facts i conclusion,
-  Forall Interp facts -> rhombus_opp_bisect_rule facts i conclusion = true ->
+Lemma declared_segment_sound : forall decls s,
+  declarations_well_formed point decls ->
+  declared_segment decls s = true ->
+  point s.(seg_start) <> point s.(seg_end).
+Proof.
+  intros decls s Hwf H. destruct Hwf as [_ [_ [_ [_ Hwfs]]]].
+  unfold declared_segment in H. apply existsb_exists in H.
+  destruct H as [d [Hin Heq]]. pose proof (Hwfs d Hin) as Hd.
+  apply segment_u_eqb_cases in Heq.
+  destruct Heq as [Heq|Heq]; subst s; [exact Hd|].
+  unfold reverse_segment. cbn. now apply not_eq_sym.
+Qed.
+
+(** The halves measured to the opposite corner are the halves measured to any
+    point on the same ray from this one. *)
+Lemma bisect_transport : forall p v q c w,
+  point p <> point v -> point q <> point v ->
+  Out (point v) (point w) (point c) ->
+  CongA (point p) (point v) (point c) (point c) (point v) (point q) ->
+  CongA (point p) (point v) (point w) (point w) (point v) (point q).
+Proof.
+  intros p v q c w Hp Hq Hout Hhalves.
+  apply conga_trans with (point c) (point v) (point q).
+  - apply conga_trans with (point p) (point v) (point c); [|exact Hhalves].
+    apply conga_sym, out2__conga; [now apply out_trivial|exact Hout].
+  - apply out2__conga; [exact Hout|now apply out_trivial].
+Qed.
+
+Lemma bisect_ray_conclude : forall decls premises a s v p q c,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  angle_u_eqb a (angle p v q) = true ->
+  bisector_ray decls premises s v c = true ->
+  point p <> point v -> point q <> point v -> point c <> point v ->
+  CongA (point p) (point v) (point c) (point c) (point v) (point q) ->
+  Interp (AngBisectOf a s).
+Proof.
+  intros decls premises a s v p q c Hwf Hprem Hangle Hray Hp Hq Hc Hhalves.
+  unfold bisector_ray in Hray. apply orb_true_iff in Hray.
+  destruct Hray as [Hdiagonal|Hlinked].
+  { exact (bisect_conclude a s v p q c Hangle Hdiagonal Hhalves). }
+  apply andb_true_iff in Hlinked. destruct Hlinked as [Hdeclared Hends].
+  pose proof (declared_segment_sound _ _ Hwf Hdeclared) as Hdistinct.
+  destruct s as [start finish]; cbn in Hdistinct.
+  apply orb_true_iff in Hends.
+  destruct Hends as [Hend|Hend]; apply andb_true_iff in Hend;
+    destruct Hend as [Hvertex Hlink]; cbn in Hvertex, Hlink;
+    unfold ascii_eqb in Hvertex; apply Ascii.eqb_eq in Hvertex; subst.
+  - assert (Hout : Out (point v) (point finish) (point c))
+      by (apply (ray_linked_out premises v c finish Hprem Hlink Hc);
+          now apply not_eq_sym).
+    exact (bisect_conclude a (segment v finish) v p q finish Hangle
+             (segment_u_eqb_refl _) (bisect_transport p v q c finish Hp Hq Hout Hhalves)).
+  - assert (Hout : Out (point v) (point start) (point c))
+      by (apply (ray_linked_out premises v c start Hprem Hlink Hc); exact Hdistinct).
+    exact (bisect_conclude a (segment start v) v p q start Hangle
+             (segment_u_eqb_reverse _ _)
+             (bisect_transport p v q c start Hp Hq Hout Hhalves)).
+Qed.
+
+Lemma rhombus_opp_bisect_sound : forall decls premises facts i conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  Forall Interp facts ->
+  rhombus_opp_bisect_rule decls premises facts i conclusion = true ->
   Interp conclusion.
 Proof.
-  intros facts i conclusion Hfacts Hrule.
+  intros decls premises facts i conclusion Hdecls Hprem Hfacts Hrule.
   unfold rhombus_opp_bisect_rule in Hrule.
   destruct conclusion; try discriminate.
   destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
@@ -3583,27 +3688,31 @@ Proof.
   { apply (cong_transitivity _ _ (point q.(quad_c)) (point q.(quad_d)));
       [now apply (cong_transitivity _ _ (point q.(quad_b)) (point q.(quad_c)))
       |exact Hcd]. }
-  apply orb_true_iff in Hrule.
-  destruct Hrule as [Hcase|Hcase]; apply andb_true_iff in Hcase;
-    destruct Hcase as [Hs Ha]; apply orb_true_iff in Ha;
-    destruct Ha as [Ha|Ha].
-  (* diagonal AC bisects the corners at A and at C *)
-  - apply (bisect_conclude _ _ q.(quad_a) q.(quad_d) q.(quad_b) q.(quad_c) Ha Hs).
+  repeat rewrite orb_true_iff in Hrule.
+  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
+    apply andb_true_iff in Hcase; destruct Hcase as [Ha Hray].
+  (* each diagonal bisects the two corners it runs between *)
+  - apply (bisect_ray_conclude decls premises _ _ q.(quad_a) q.(quad_d)
+             q.(quad_b) q.(quad_c) Hdecls Hprem Ha Hray);
+      [now apply not_eq_sym|now apply not_eq_sym|now apply not_eq_sym|].
     apply ender_two_pairs_bisect; auto.
     + apply cong_symmetry, cong_right_commutativity, Hda.
     + apply cong_right_commutativity, cong_symmetry, Hbc.
-  - apply (bisect_conclude _ _ q.(quad_c) q.(quad_b) q.(quad_d) q.(quad_a) Ha
-             (segment_u_eqb_flip _ _ _ Hs)).
+  - apply (bisect_ray_conclude decls premises _ _ q.(quad_c) q.(quad_b)
+             q.(quad_d) q.(quad_a) Hdecls Hprem Ha Hray);
+      [exact HBC|now apply not_eq_sym|exact HAC|].
     apply ender_two_pairs_bisect; auto.
     + apply cong_left_commutativity, Hbc.
     + apply cong_right_commutativity, Hda.
-  (* and diagonal BD the corners at B and at D *)
-  - apply (bisect_conclude _ _ q.(quad_b) q.(quad_a) q.(quad_c) q.(quad_d) Ha Hs).
+  - apply (bisect_ray_conclude decls premises _ _ q.(quad_b) q.(quad_a)
+             q.(quad_c) q.(quad_d) Hdecls Hprem Ha Hray);
+      [exact HAB|now apply not_eq_sym|now apply not_eq_sym|].
     apply ender_two_pairs_bisect; auto.
     + apply cong_left_commutativity, Hab.
     + apply cong_symmetry, cong_left_commutativity, Hcd.
-  - apply (bisect_conclude _ _ q.(quad_d) q.(quad_c) q.(quad_a) q.(quad_b) Ha
-             (segment_u_eqb_flip _ _ _ Hs)).
+  - apply (bisect_ray_conclude decls premises _ _ q.(quad_d) q.(quad_c)
+             q.(quad_a) q.(quad_b) Hdecls Hprem Ha Hray);
+      [exact HCD|now apply not_eq_sym|exact HBD|].
     apply ender_two_pairs_bisect; auto.
     + apply cong_left_commutativity, Hcd.
     + apply cong_symmetry, cong_left_commutativity, Hab.

@@ -48,8 +48,10 @@ Known limitations relevant to prioritization:
   the diagonal only as literally spelled -- a proof that names the corner's
   ray by the crossing point instead (`geo-proof-dataset`
   `holt_s6-4_exer17_c1`, and the bundled `examples/rhombusOutside.txt`) needs
-  the far point to be distinct from the vertex, which today's kernel has no
-  declaration to draw it from.  `rect_diag_con` is verified too, by SAS
+  the far point to be distinct from the vertex, which a `seg:` declaration now
+  supplies, so both of those are accepted.  `holt_s6-4_cio4_c1` stays rejected
+  and should: the point it names is not placed on the diagonal by any premise.
+  `rect_diag_con` is verified too, by SAS
   between two of the right corners over the Euclidean opposite-sides
   theorem, and `pgram_consec_angs` through GeoCoq's
   `consecutive_interior_angles_postulate`: the shared side is a transversal
@@ -94,13 +96,13 @@ Known limitations relevant to prioritization:
 - statement coverage gates whole files: the kernel parser rejects a problem
   outright when any premise line names a statement it cannot decode, so a
   fixture stays out of reach until every statement it declares is supported;
-- nondegeneracy comes from declared triangles, declared quadrilaterals, and
-  declared angles, and nothing else (`declared_angle` in `Checker.v`); a rule
-  needing it with no such source must fail closed.  A quadrilateral supplies
-  it for any three of its vertices, consecutive or not, since its audited
-  meaning states all six distinctnesses and a well-formed angle wants only
-  two.  `seg:` lines are audited as `SegmentWellFormed` but the kernel still
-  discards them, which is the next cheap widening;
+- nondegeneracy comes from declared triangles, quadrilaterals, angles, and
+  segments, and nothing else; a rule needing it with no such source must fail
+  closed.  A quadrilateral supplies it for any three of its vertices,
+  consecutive or not, since its audited meaning states all six distinctnesses
+  and a well-formed angle wants only two (`declared_angle`).  A `seg:` line is
+  audited as `SegmentWellFormed`, which is exactly the one fact a ray needs --
+  that its ends differ (`declared_segment`);
 - the kernel does ray reasoning where a triangle criterion expects a
   `con_ang` or `ref_ang` dependency: an expected angle also matches a fact
   whose ray points are linked to its own through `on_line` diagram premises

@@ -128,7 +128,8 @@ Record Declarations := declarations {
   decl_triangles : list Triangle;
   decl_angles : list Angle;
   decl_quadrilaterals : list Quadrilateral;
-  decl_circles : list Circle
+  decl_circles : list Circle;
+  decl_segments : list Segment
 }.
 
 Record ProblemHeader := problem_header {

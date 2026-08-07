@@ -1221,6 +1221,35 @@ Definition rhombus_opp_bisect_side_source := transitive_header "quad: q_ABCD
   "[01] given(g_1) -> rhombus(q_ABCD)
 [02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AB)".
 
+(** The ray may be named by a point along the diagonal instead of by the
+    opposite corner.  That needs the point to be distinct from the corner,
+    which only a [seg:] declaration supplies. *)
+Definition rhombus_opp_bisect_ray_source := transitive_header "quad: q_ABCD
+seg: AE
+"
+  "[d_1] on_line(AC,E)
+[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_DAB,AE)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AE)".
+
+Definition rhombus_opp_bisect_undeclared_ray_source := transitive_header "quad: q_ABCD
+"
+  "[d_1] on_line(AC,E)
+[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_DAB,AE)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AE)".
+
+Example rhombus_opp_bisect_ray_accepts :
+  complete_checker rhombus_opp_bisect_ray_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_opp_bisect_undeclared_ray_rejects :
+  complete_checker rhombus_opp_bisect_undeclared_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example rhombus_opp_bisect_accepts :
   complete_checker rhombus_opp_bisect_source = true.
 Proof. vm_compute. reflexivity. Qed.
