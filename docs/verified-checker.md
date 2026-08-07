@@ -39,14 +39,17 @@ Every rule that consults the diagram searches the premises for a specific one,
 and that search now yields the premise rather than a bit: the rule is
 `premise_found` of it and the report's `diagramDependencies` is
 `premise_witness` of the same search, so a report cannot name a premise the
-rule did not use.  Rules that reach the diagram only through dependency
-matching -- a triangle criterion transporting an angle along an `on_line`
-premise -- report none, because the premise is consumed inside a search over
-correspondences and no witness comes back out.  Measured over the corpus, the
-accepted proofs declare forty diagram premises between them and thirty-five are
-named by the step that used them; four of the remaining five are that nested
-case (`examples/overlap.txt` and `holt_s4-5_ex3_c1.txt`), and the fifth is a
-premise no rule consults at all.
+rule did not use.  That holds for the nested case too: a triangle criterion
+transports an angle along an `on_line` premise from inside a search over six
+correspondences, and the search returns the premises whichever reading won, so
+the step names them.  Two dependencies leaning on one premise report it once.
+
+Measured over the corpus, the accepted proofs declare forty diagram premises
+between them and thirty-nine are named by the step that used them.  The
+fortieth is `on_line(RM,X)` in `holt_s6-4_exer17_c1.txt`, which no rule
+consults: its angles span declared triangles, so nothing needs to transport a
+ray, and the distinctness it might have supplied comes from a `seg:` line
+instead.  Reporting nothing for it is correct.
 
 The report carries no suggestions.  Editor hints about which parts a reason
 would relate read the untrusted reason catalog and the display geometry, which

@@ -157,11 +157,12 @@ Known limitations relevant to prioritization:
   that did not hold.  `diagramDependencies` names the premise a step
   consulted, taken from the same search the rule runs: a rule that reaches the
   diagram is `premise_found` of a search and the report is `premise_witness` of
-  it, so the two cannot disagree.  Rules that reach the diagram only through
-  dependency matching report none, since no witness comes back out of the
-  correspondence search: thirty-five of the forty diagram premises the accepted
-  corpus declares are named by the step that used them, four of the rest are
-  that nested case, and the last is a premise nothing consults.  `suggestions` is gone from the audited schema, because
+  it, so the two cannot disagree.  The chain runs all the way down: a
+  triangle criterion that transports an angle along an `on_line` premise gets
+  that premise back out of the correspondence search, since the search returns
+  the premises of whichever reading won.  Thirty-nine of the forty diagram
+  premises the accepted corpus declares are named by the step that used them;
+  the fortieth is one no rule consults.  `suggestions` is gone from the audited schema, because
   the thing that filled it on `main` reads the untrusted reason catalog and the
   display geometry -- neither of which the kernel has, and neither of which it
   should acquire to compute a hint.  That producer lives in

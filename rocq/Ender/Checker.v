@@ -229,19 +229,42 @@ Definition ray_link_witness (premises : list Premise) (v p q : PointId)
     premise and the expected angle is declared nondegenerate: [out2__conga]
     then carries the congruence across the renaming.  The vertex must match
     exactly, and either ray order is accepted, as everywhere else. *)
+(** Matching an angle through renamed rays consults the diagram, so the match
+    yields the premises it leaned on: none when the two spellings agree
+    outright, and otherwise the [on_line]-family premises that linked each ray.
+    [angle_ray_matches] is this having succeeded, so the bit and the premises
+    can never come apart. *)
+Definition ray_pair_used (premises : list Premise) (v p q p' q' : PointId)
+    : option (list Statement) :=
+  if ray_linked premises v p p' && ray_linked premises v q q'
+  then Some (match ray_link_witness premises v p p' with
+             | Some w => [w] | None => [] end ++
+             match ray_link_witness premises v q q' with
+             | Some w => [w] | None => [] end)
+  else None.
+
+Definition angle_ray_used (decls : Declarations) (premises : list Premise)
+    (expected actual : Angle) : option (list Statement) :=
+  if angle_u_eqb expected actual then Some []
+  else if negb (declared_angle decls expected &&
+                ascii_eqb expected.(ang_vertex) actual.(ang_vertex))
+  then None
+  else match ray_pair_used premises expected.(ang_vertex)
+               expected.(ang_left) expected.(ang_right)
+               actual.(ang_left) actual.(ang_right) with
+       | Some used => Some used
+       | None =>
+           ray_pair_used premises expected.(ang_vertex)
+             expected.(ang_left) expected.(ang_right)
+             actual.(ang_right) actual.(ang_left)
+       end.
+
 Definition angle_ray_matches (decls : Declarations) (premises : list Premise)
     (expected actual : Angle) : bool :=
-  angle_u_eqb expected actual ||
-  (declared_angle decls expected &&
-   ascii_eqb expected.(ang_vertex) actual.(ang_vertex) &&
-   ((ray_linked premises expected.(ang_vertex)
-       expected.(ang_left) actual.(ang_left) &&
-     ray_linked premises expected.(ang_vertex)
-       expected.(ang_right) actual.(ang_right)) ||
-    (ray_linked premises expected.(ang_vertex)
-       expected.(ang_left) actual.(ang_right) &&
-     ray_linked premises expected.(ang_vertex)
-       expected.(ang_right) actual.(ang_left)))).
+  match angle_ray_used decls premises expected actual with
+  | Some _ => true
+  | None => false
+  end.
 
 (** A triangle criterion may consume a [con_right] fact where it expects a
     [con_ang] one: two right angles are congruent as soon as both have
@@ -249,30 +272,108 @@ Definition angle_ray_matches (decls : Declarations) (premises : list Premise)
     [con_ang] may also be met by a congruence over ray-renamed spellings of
     its angles, which is what lets overlapping triangles share an angle
     named through either triangle's own vertices. *)
+Definition angle_pair_used (decls : Declarations) (premises : list Premise)
+    (a b c d : Angle) : option (list Statement) :=
+  match angle_ray_used decls premises a c, angle_ray_used decls premises b d with
+  | Some x, Some y => Some (x ++ y)
+  | _, _ =>
+      match angle_ray_used decls premises a d, angle_ray_used decls premises b c with
+      | Some x, Some y => Some (x ++ y)
+      | _, _ => None
+      end
+  end.
+
+Definition dependency_used (decls : Declarations) (premises : list Premise)
+    (expected actual : Statement) : option (list Statement) :=
+  if fact_eqb expected actual then Some []
+  else
+    match expected, actual with
+    | ConAng a b, ConRight c d =>
+        if angle_u_eqb a c && angle_u_eqb b d &&
+           declared_angle decls a && declared_angle decls b
+        then Some [] else None
+    | ConAng a b, ConAng c d | ConAng a b, RefAng c d =>
+        angle_pair_used decls premises a b c d
+    | _, _ => None
+    end.
+
 Definition dependency_matches (decls : Declarations) (premises : list Premise)
     (expected actual : Statement) : bool :=
-  fact_eqb expected actual ||
-  match expected, actual with
-  | ConAng a b, ConRight c d =>
-      angle_u_eqb a c && angle_u_eqb b d &&
-      declared_angle decls a && declared_angle decls b
-  | ConAng a b, ConAng c d | ConAng a b, RefAng c d =>
-      (angle_ray_matches decls premises a c &&
-       angle_ray_matches decls premises b d) ||
-      (angle_ray_matches decls premises a d &&
-       angle_ray_matches decls premises b c)
-  | _, _ => false
+  match dependency_used decls premises expected actual with
+  | Some _ => true
+  | None => false
+  end.
+
+Lemma dependency_matches_unfold : forall decls premises expected actual,
+  dependency_matches decls premises expected actual =
+  (fact_eqb expected actual ||
+   match expected, actual with
+   | ConAng a b, ConRight c d =>
+       angle_u_eqb a c && angle_u_eqb b d &&
+       declared_angle decls a && declared_angle decls b
+   | ConAng a b, ConAng c d | ConAng a b, RefAng c d =>
+       (angle_ray_matches decls premises a c &&
+        angle_ray_matches decls premises b d) ||
+       (angle_ray_matches decls premises a d &&
+        angle_ray_matches decls premises b c)
+   | _, _ => false
+   end).
+Proof.
+  intros decls premises expected actual.
+  unfold dependency_matches, dependency_used, angle_pair_used,
+    angle_ray_matches.
+  destruct (fact_eqb expected actual); [reflexivity|].
+  destruct expected; destruct actual; try reflexivity;
+    try (destruct (angle_u_eqb _ _); cbn; try reflexivity);
+    repeat (match goal with
+            | |- context [angle_ray_used ?d ?p ?x ?y] =>
+                destruct (angle_ray_used d p x y)
+            | |- context [angle_u_eqb ?x ?y] => destruct (angle_u_eqb x y)
+            | |- context [declared_angle ?d ?x] => destruct (declared_angle d x)
+            end; cbn); reflexivity.
+Qed.
+
+Definition schema3_used (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
+    (i j k : nat) (a b c : Statement) : option (list Statement) :=
+  match lookup_step facts i, lookup_step facts j, lookup_step facts k with
+  | Some x, Some y, Some z =>
+      match dependency_used decls premises a x,
+            dependency_used decls premises b y,
+            dependency_used decls premises c z with
+      | Some p, Some q, Some r => Some (p ++ q ++ r)
+      | _, _, _ => None
+      end
+  | _, _, _ => None
   end.
 
 Definition schema3 (decls : Declarations) (premises : list Premise)
     (facts : list Statement)
     (i j k : nat) (a b c : Statement) : bool :=
+  match schema3_used decls premises facts i j k a b c with
+  | Some _ => true
+  | None => false
+  end.
+
+Lemma schema3_unfold : forall decls premises facts i j k a b c,
+  schema3 decls premises facts i j k a b c =
   match lookup_step facts i, lookup_step facts j, lookup_step facts k with
   | Some x, Some y, Some z =>
-      dependency_matches decls premises a x && dependency_matches decls premises b y &&
+      dependency_matches decls premises a x &&
+      dependency_matches decls premises b y &&
       dependency_matches decls premises c z
   | _, _, _ => false
   end.
+Proof.
+  intros decls premises facts i j k a b c.
+  unfold schema3, schema3_used, dependency_matches.
+  destruct (lookup_step facts i); [|reflexivity].
+  destruct (lookup_step facts j); [|reflexivity].
+  destruct (lookup_step facts k); [|reflexivity].
+  destruct (dependency_used decls premises a s);
+    destruct (dependency_used decls premises b s0);
+    destruct (dependency_used decls premises c s1); reflexivity.
+Qed.
 
 Definition sas_schema decls premises facts i j k (t u : Triangle) : bool :=
   schema3 decls premises facts i j k
@@ -341,6 +442,70 @@ Definition six_correspondences
   three_rotations schema decls premises facts i j k t u ||
   three_rotations schema decls premises facts i j k
     (reverse_triangle t) (reverse_triangle u).
+
+(** The same search, keeping the premises the winning correspondence used.  It
+    tries the readings in the order the rule tries them, so it finds the same
+    one. *)
+Definition first_used {A : Type} (f : A -> option (list Statement)) (xs : list A)
+    : option (list Statement) :=
+  fold_right (fun x rest => match f x with Some p => Some p | None => rest end)
+    None xs.
+
+Definition six_correspondences_used
+    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
+              Triangle -> Triangle -> option (list Statement))
+    decls premises facts i j k t u : option (list Statement) :=
+  first_used (fun c => schema decls premises facts i j k (fst c) (snd c))
+    [(t, u);
+     (rotate_triangle t, rotate_triangle u);
+     (rotate_triangle (rotate_triangle t), rotate_triangle (rotate_triangle u));
+     (reverse_triangle t, reverse_triangle u);
+     (rotate_triangle (reverse_triangle t), rotate_triangle (reverse_triangle u));
+     (rotate_triangle (rotate_triangle (reverse_triangle t)),
+      rotate_triangle (rotate_triangle (reverse_triangle u)))].
+
+Definition either_used (a b : option (list Statement)) : option (list Statement) :=
+  match a with Some p => Some p | None => b end.
+
+Definition asa_schema_used decls premises facts i j k (t u : Triangle) :=
+  schema3_used decls premises facts i j k
+    (ConAng (angle_a t) (angle_a u))
+    (ConSeg (side_ab t) (side_ab u))
+    (ConAng (angle_b t) (angle_b u)).
+
+Definition aas_schema_used decls premises facts i j k (t u : Triangle) :=
+  either_used
+    (schema3_used decls premises facts i j k
+      (ConAng (angle_c t) (angle_c u))
+      (ConAng (angle_b t) (angle_b u))
+      (ConSeg (side_ab t) (side_ab u)))
+    (schema3_used decls premises facts i j k
+      (ConAng (angle_b t) (angle_b u))
+      (ConAng (angle_c t) (angle_c u))
+      (ConSeg (side_ab t) (side_ab u))).
+
+Definition rhl_schema_used decls premises facts i j k (t u : Triangle) :=
+  either_used
+    (schema3_used decls premises facts i j k
+      (ConRight (angle_b t) (angle_b u))
+      (ConSeg (side_ca t) (side_ca u))
+      (ConSeg (side_bc t) (side_bc u)))
+    (schema3_used decls premises facts i j k
+      (ConRight (angle_b t) (angle_b u))
+      (ConSeg (side_bc t) (side_bc u))
+      (ConSeg (side_ca t) (side_ca u))).
+
+Definition sas_schema_used decls premises facts i j k (t u : Triangle) :=
+  schema3_used decls premises facts i j k
+    (ConSeg (side_ab t) (side_ab u))
+    (ConAng (angle_a t) (angle_a u))
+    (ConSeg (side_ca t) (side_ca u)).
+
+Definition sss_schema_used decls premises facts i j k (t u : Triangle) :=
+  schema3_used decls premises facts i j k
+    (ConSeg (side_ab t) (side_ab u))
+    (ConSeg (side_bc t) (side_bc u))
+    (ConSeg (side_ca t) (side_ca u)).
 
 (** Declaring [t_ABC] asserts that its vertices are noncollinear, and that is
     invariant under renaming the triangle's vertices. *)
@@ -1368,17 +1533,69 @@ Definition tangent_perp_rule (facts : list Statement) (i j : nat)
     covered: the premise is consumed several layers down inside a search over
     correspondences, and no witness comes back out.  Those steps report no
     diagram premises rather than a guess. *)
-Definition rule_diagram_premises (decls : Declarations) (premises : list Premise)
-    (facts : list Statement) (reason : Reason) (conclusion : Statement)
+(** Two dependencies of one step may lean on the same premise; the step used
+    it once. *)
+Fixpoint dedup_statements (seen : list Statement) (rest : list Statement)
     : list Statement :=
+  match rest with
+  | [] => []
+  | s :: tail =>
+      if existsb (statement_eqb s) seen
+      then dedup_statements seen tail
+      else s :: dedup_statements (s :: seen) tail
+  end.
+
+Definition rule_diagram_premises_raw (decls : Declarations)
+    (premises : list Premise) (facts : list Statement) (reason : Reason)
+    (conclusion : Statement) : list Statement :=
   let one := fun (w : option Statement) =>
     match w with Some s => [s] | None => [] end in
+  let all := fun (w : option (list Statement)) =>
+    match w with Some ss => ss | None => [] end in
   let transversal := fun (check : PointId -> PointId -> PointId -> PointId ->
                                   PointId -> PointId -> PointId -> PointId -> bool) =>
     one (transversal_premise_used check premises) in
   let dependency := fun (i : nat) => lookup_step facts i in
   match reason with
   | VertAng label => one (vert_ang_witness decls premises label conclusion)
+  (* A triangle criterion reaches the diagram when it transports an angle
+     along an [on_line] premise to match a dependency; the correspondence
+     search returns the premises whichever reading won. *)
+  | SAS i j k =>
+      match conclusion with
+      | ConTri t u =>
+          all (six_correspondences_used sas_schema_used decls premises facts
+                 i j k t u)
+      | _ => []
+      end
+  | SSS i j k =>
+      match conclusion with
+      | ConTri t u =>
+          all (six_correspondences_used sss_schema_used decls premises facts
+                 i j k t u)
+      | _ => []
+      end
+  | ASA i j k =>
+      match conclusion with
+      | ConTri t u =>
+          all (six_correspondences_used asa_schema_used decls premises facts
+                 i j k t u)
+      | _ => []
+      end
+  | AAS i j k =>
+      match conclusion with
+      | ConTri t u =>
+          all (six_correspondences_used aas_schema_used decls premises facts
+                 i j k t u)
+      | _ => []
+      end
+  | RHL i j k =>
+      match conclusion with
+      | ConTri t u =>
+          all (six_correspondences_used rhl_schema_used decls premises facts
+                 i j k t u)
+      | _ => []
+      end
   | InscribedSemi i =>
       match conclusion, dependency i with
       | RightAng a, Some (DiameterOf c _) =>
@@ -1455,6 +1672,12 @@ Definition rule_diagram_premises (decls : Declarations) (premises : list Premise
       end
   | _ => []
   end.
+
+Definition rule_diagram_premises (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (reason : Reason) (conclusion : Statement)
+    : list Statement :=
+  dedup_statements []
+    (rule_diagram_premises_raw decls premises facts reason conclusion).
 
 Definition rule_valid (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
@@ -1882,6 +2105,30 @@ Proof.
     eapply on_segment_match_out; [exact Hbet|exact Hc|exact Hp|exact Hq].
 Qed.
 
+(** The premises-yielding definition decides exactly what the plain reading of
+    the rule says it does. *)
+Lemma angle_ray_matches_unfold : forall decls premises e a,
+  angle_ray_matches decls premises e a =
+  (angle_u_eqb e a ||
+   (declared_angle decls e &&
+    ascii_eqb e.(ang_vertex) a.(ang_vertex) &&
+    ((ray_linked premises e.(ang_vertex) e.(ang_left) a.(ang_left) &&
+      ray_linked premises e.(ang_vertex) e.(ang_right) a.(ang_right)) ||
+     (ray_linked premises e.(ang_vertex) e.(ang_left) a.(ang_right) &&
+      ray_linked premises e.(ang_vertex) e.(ang_right) a.(ang_left))))).
+Proof.
+  intros decls premises e a.
+  unfold angle_ray_matches, angle_ray_used, ray_pair_used.
+  destruct (angle_u_eqb e a); [reflexivity|cbn].
+  destruct (declared_angle decls e); [|reflexivity].
+  destruct (ascii_eqb e.(ang_vertex) a.(ang_vertex)); [cbn|reflexivity].
+  destruct (ray_linked premises e.(ang_vertex) e.(ang_left) a.(ang_left));
+    destruct (ray_linked premises e.(ang_vertex) e.(ang_right) a.(ang_right));
+    destruct (ray_linked premises e.(ang_vertex) e.(ang_left) a.(ang_right));
+    destruct (ray_linked premises e.(ang_vertex) e.(ang_right) a.(ang_left));
+    reflexivity.
+Qed.
+
 Lemma angle_ray_matches_sound : forall decls premises e a A B C,
   declarations_well_formed point decls ->
   Forall (interp_premise point) premises ->
@@ -1890,7 +2137,7 @@ Lemma angle_ray_matches_sound : forall decls premises e a A B C,
   CongA (point e.(ang_left)) (point e.(ang_vertex)) (point e.(ang_right)) A B C.
 Proof.
   intros decls premises e a A B C Hwf Hprem Hm Hconga.
-  unfold angle_ray_matches in Hm. apply orb_true_iff in Hm.
+  rewrite angle_ray_matches_unfold in Hm. apply orb_true_iff in Hm.
   destruct Hm as [Hu|Hm].
   { apply angle_u_eqb_cases in Hu. destruct Hu as [->| ->]; [exact Hconga|].
     unfold reverse_angle. cbn. CongA. }
@@ -1975,7 +2222,7 @@ Lemma dependency_matches_sound : forall decls premises expected actual,
   Interp actual -> Interp expected.
 Proof.
   intros decls premises expected actual Hwf Hprem H Hactual.
-  unfold dependency_matches in H. apply orb_true_iff in H.
+  rewrite dependency_matches_unfold in H. apply orb_true_iff in H.
   destruct H as [H|H]; [now apply (fact_eqb_sound _ _ H)|].
   destruct expected; try discriminate; destruct actual; try discriminate.
   - (* con_ang matched by a ray-renamed con_ang *)
@@ -2027,7 +2274,7 @@ Lemma schema3_sound : forall decls premises facts i j k a b c,
   Interp a /\ Interp b /\ Interp c.
 Proof.
   intros decls premises facts i j k a b c Hwf Hprem Hall H.
-  unfold schema3 in H.
+  rewrite schema3_unfold in H.
   destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate.
   destruct (lookup_step facts k) as [z|] eqn:Hz; try discriminate.

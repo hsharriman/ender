@@ -428,6 +428,19 @@ steps:
     expect(bisect.diagramDependencies).toEqual(["on_line(PR,T)"]);
   });
 
+  test("names the premises a triangle criterion transported an angle along", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/overlap.txt"), "utf8"),
+    );
+    const asa = report.steps.find((step) => step.reason === "asa")!;
+    // Reached from inside the correspondence search, two layers down, and
+    // reported once each however many dependencies leaned on them.
+    expect(asa.diagramDependencies.slice().sort()).toEqual([
+      "on_line(DG,H)",
+      "on_line(EG,F)",
+    ]);
+  });
+
   test("reports a fact derived twice", async () => {
     const source = readFileSync(
       join(PROOFS_DIR, "examples/s1c1_dupe_stmts.txt"),
