@@ -233,6 +233,22 @@ describe("extracted Rocq API corpus tests", () => {
     expect(presentationContent(proof)).toBeDefined();
   });
 
+  // Cheaper than a theorem and enough: a report can only name a premise the
+  // problem actually states, and that is checkable on every file we have.
+  test.each(proofFiles)("%s reports only real premises", async (filePath) => {
+    const report = await checkVerifiedReportNode(readFileSync(filePath, "utf8"));
+    const stated = new Set(report.problem?.premises ?? []);
+    for (const step of report.steps) {
+      for (const premise of step.diagramDependencies) {
+        expect(stated).toContain(premise);
+      }
+      // Each is named once however many dependencies leaned on it.
+      expect(new Set(step.diagramDependencies).size).toBe(
+        step.diagramDependencies.length,
+      );
+    }
+  });
+
   test("exports every audited rich-report field", async () => {
     const source = readFileSync(join(PROOFS_DIR, "examples/tutorial.txt"), "utf8");
     const report = await checkVerifiedReportNode(source);

@@ -51,6 +51,11 @@ consults: its angles span declared triangles, so nothing needs to transport a
 ray, and the distinctness it might have supplied comes from a `seg:` line
 instead.  Reporting nothing for it is correct.
 
+No theorem constrains these fields, and none should: that a report never names
+a premise the problem does not state is checkable by running the checker over
+every file in the corpus, which the test suite does.  Mechanizing belongs to
+the claims no amount of running could establish.
+
 The report carries no suggestions.  Editor hints about which parts a reason
 would relate read the untrusted reason catalog and the display geometry, which
 the audited surface deliberately excludes, so they are computed in TypeScript
