@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import {
@@ -5,6 +6,15 @@ import {
   VerifiedCheckOutput,
   VerifiedCheckReport,
 } from "./presentationTypes";
+
+// Where `make -C rocq wasm` leaves its output.  Resolved against this file
+// rather than the working directory so that the checker is found from any
+// subdirectory.  ENDER_CHECKER_WASM_DIR overrides it, which is how a Nix-built
+// bundle or a container image gets used instead.
+const defaultWasmDirectory = path.resolve(
+  __dirname,
+  "../../../rocq/_build/wasm",
+);
 
 type WasmGlobals = typeof globalThis & {
   enderCheckProof?: (source: string) => string;
@@ -17,10 +27,12 @@ let initialization: Promise<WasmGlobals> | undefined;
 const initialize = async (): Promise<WasmGlobals> => {
   if (initialization) return initialization;
   initialization = (async () => {
-    const directory = process.env.ENDER_CHECKER_WASM_DIR;
-    if (!directory) {
+    const directory =
+      process.env.ENDER_CHECKER_WASM_DIR ?? defaultWasmDirectory;
+    if (!fs.existsSync(path.join(directory, "ender-checker-api.js"))) {
       throw new Error(
-        "ENDER_CHECKER_WASM_DIR is required; run this command inside `nix develop`",
+        `no verified checker in ${directory}; build it with \`make -C rocq wasm\`` +
+          " or point ENDER_CHECKER_WASM_DIR at one",
       );
     }
     // The generated js_of_ocaml loader is CommonJS.  Loading it through a

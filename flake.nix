@@ -92,19 +92,11 @@
           ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") [
             stdlib geocoqCoinc geocoqAxioms geocoqMain
           ]);
+          # `make test` kernel-checks the development and fails if any proof has
+          # come to rest on an axiom.
           buildPhase = ''
             runHook preBuild
-            set -o pipefail
-            make -j$NIX_BUILD_CORES test extract 2>&1 | tee build.log
-            # Tests.v ends in `Print Assumptions`; those report "Axioms:" only
-            # when a proof rests on one.  Some GeoCoq Euclidean routes do (see
-            # euclidean_trisuma__bet in Geometry.v), so enforce rather than
-            # merely print the result.
-            if grep -q '^Axioms:' build.log; then
-              echo "the verified checker now depends on an axiom:" >&2
-              grep -A3 '^Axioms:' build.log >&2
-              exit 1
-            fi
+            make -j$NIX_BUILD_CORES test extract
             runHook postBuild
           '';
           installPhase = ''
@@ -117,32 +109,29 @@
           '';
         };
 
+        # Both runtimes run the same `rocq/Makefile` rules a developer runs, with
+        # `EXTRACTED` pointed at the proof build's extraction, so neither needs a
+        # Rocq toolchain and neither repeats the kernel check.  Keeping the
+        # commands in the Makefile rather than here is what stops these packages
+        # from drifting away from what the dev shell produces.
         nativeChecker = pkgs.stdenvNoCC.mkDerivation {
           pname = "ender-checker";
           version = "0.1.0";
-          dontUnpack = true;
+          src = ./rocq;
           strictDeps = true;
           nativeBuildInputs = [
-            pkgs.stdenv.cc pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
+            pkgs.stdenv.cc pkgs.gnumake
+            pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
           ];
           buildInputs = [ pkgs.ocamlPackages.yojson ];
-          buildPhase = ''
-            runHook preBuild
-            cp ${verifiedProofs}/share/ender/extracted/EnderChecker.ml .
-            cp ${verifiedProofs}/share/ender/extracted/EnderChecker.mli .
-            cp ${./rocq/runtime/main.ml} main.ml
-            cp ${./rocq/runtime/report_json.ml} report_json.ml
-            ocamlfind ocamlopt -package yojson -c EnderChecker.mli
-            ocamlfind ocamlopt -package yojson -c EnderChecker.ml
-            ocamlfind ocamlopt -package yojson -c report_json.ml
-            ocamlfind ocamlopt -package yojson -linkpkg -o ender-checker \
-              EnderChecker.cmx report_json.cmx main.ml
-            runHook postBuild
-          '';
+          makeFlags = [
+            "EXTRACTED=${verifiedProofs}/share/ender/extracted"
+          ];
+          buildFlags = [ "native" ];
           installPhase = ''
             runHook preInstall
             mkdir -p "$out/bin"
-            cp ender-checker "$out/bin/"
+            cp _build/bin/ender-checker "$out/bin/"
             runHook postInstall
           '';
         };
@@ -150,43 +139,24 @@
         wasmChecker = pkgs.stdenvNoCC.mkDerivation {
           pname = "ender-checker-wasm";
           version = "0.1.0";
-          dontUnpack = true;
+          src = ./rocq;
           strictDeps = true;
           nativeBuildInputs = [
+            pkgs.gnumake
             pkgs.ocamlPackages.ocaml
             pkgs.ocamlPackages.findlib
             pkgs.ocamlPackages."wasm_of_ocaml-compiler"
             pkgs.binaryen
           ];
           buildInputs = [ pkgs.ocamlPackages.yojson pkgs.ocamlPackages.js_of_ocaml ];
-          buildPhase = ''
-            runHook preBuild
-            cp ${verifiedProofs}/share/ender/extracted/EnderChecker.ml .
-            cp ${verifiedProofs}/share/ender/extracted/EnderChecker.mli .
-            cp ${./rocq/runtime/main.ml} main.ml
-            cp ${./rocq/runtime/report_json.ml} report_json.ml
-            cp ${./rocq/runtime/wasm_api.ml} wasm_api.ml
-            ocamlfind ocamlc -package yojson -c EnderChecker.mli
-            ocamlfind ocamlc -package yojson -c EnderChecker.ml
-            ocamlfind ocamlc -package yojson -c report_json.ml
-            ocamlfind ocamlc -package yojson -linkpkg -o ender-checker.byte \
-              EnderChecker.cmo report_json.cmo main.ml
-            wasm_of_ocaml ender-checker.byte -o ender-checker.js
-            ocamlfind ocamlc -package yojson,js_of_ocaml -c wasm_api.ml
-            ocamlfind ocamlc -package yojson,js_of_ocaml -linkpkg \
-              -o ender-checker-api.byte EnderChecker.cmo report_json.cmo wasm_api.cmo
-            wasm_of_ocaml ender-checker-api.byte -o ender-checker-api.js
-            substituteInPlace ender-checker-api.js \
-              --replace-fail 'require.main.filename' '__filename'
-            runHook postBuild
-          '';
+          makeFlags = [
+            "EXTRACTED=${verifiedProofs}/share/ender/extracted"
+          ];
+          buildFlags = [ "wasm" ];
           installPhase = ''
             runHook preInstall
-            mkdir -p "$out/share/ender-checker-wasm"
-            cp ender-checker.js "$out/share/ender-checker-wasm/"
-            cp -r ender-checker.assets "$out/share/ender-checker-wasm/"
-            cp ender-checker-api.js "$out/share/ender-checker-wasm/"
-            cp -r ender-checker-api.assets "$out/share/ender-checker-wasm/"
+            mkdir -p "$out/share"
+            cp -r _build/wasm "$out/share/ender-checker-wasm"
             runHook postInstall
           '';
         };
@@ -275,6 +245,11 @@
           program = "${nativeChecker}/bin/ender-checker";
         };
 
+        # The shell supplies dependencies and tools only -- never a prebuilt
+        # piece of this repository.  Everything under `rocq/` is compiled from
+        # the working tree by `make -C rocq`, so an edit to a `.v` file cannot
+        # be masked by an artifact Nix built from an older commit, and someone
+        # without Nix follows the same steps with their own toolchain.
         devShells.default = pkgs.mkShell {
           packages = [
             rocq stdlib geocoqCoinc geocoqAxioms geocoqMain
@@ -285,16 +260,21 @@
             # PATH over its own, so launching the editor from this shell is
             # enough; see README.md.
             pkgs.rocqPackages_9_1.vsrocq-language-server
-            pkgs.gnumake pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
-            pkgs.ocamlPackages.yojson
+            pkgs.gnumake pkgs.stdenv.cc
+            pkgs.ocamlPackages.ocaml pkgs.ocamlPackages.findlib
+            pkgs.ocamlPackages.yojson pkgs.ocamlPackages.js_of_ocaml
             pkgs.ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
-            pkgs.nodejs_24 nativeChecker
+            pkgs.nodejs_24 pkgs.jq
           ];
           ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") [
             stdlib geocoqCoinc geocoqAxioms geocoqMain
           ]);
-          ENDER_CHECKER_WASM_DIR =
-            "${wasmChecker}/share/ender-checker-wasm";
+          # A convenience only: `make -C rocq native` puts the binary here, and
+          # the Node, Vite, and script loaders find that directory on their own,
+          # so nothing depends on this being set.
+          shellHook = ''
+            export PATH="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/rocq/_build/bin:$PATH"
+          '';
         };
       });
 }

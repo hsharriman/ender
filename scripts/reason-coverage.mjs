@@ -222,7 +222,10 @@ const entries = catalog.map((reason) => {
   return { reason, status, priority, axioms, fixtures: reasonFiles.get(reason) ?? [], note };
 });
 
-const checker = process.env.ENDER_CHECKER ?? "ender-checker";
+// `make -C rocq native` builds this; ENDER_CHECKER overrides it with any other
+// `ender-checker`, including one from `nix build`.
+const checker =
+  process.env.ENDER_CHECKER ?? join(root, "rocq/_build/bin/ender-checker");
 const classify = (file) => {
   const source = readFileSync(file, "utf8");
   const applications = applicationsIn(source);

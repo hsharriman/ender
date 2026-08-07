@@ -25,6 +25,7 @@ development environment:
 
 ```sh
 nix develop
+make -C rocq native
 npm run reasonCoverage -- --write
 ```
 

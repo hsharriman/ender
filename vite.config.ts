@@ -3,8 +3,19 @@ import fs from "fs";
 import path from "path";
 import { defineConfig, Plugin } from "vite";
 
+// Where `make -C rocq wasm` leaves its output; ENDER_CHECKER_WASM_DIR overrides
+// it, which is how a Nix-built bundle or a container image gets used instead.
+const wasmDirectory = (): string | undefined => {
+  const directory =
+    process.env.ENDER_CHECKER_WASM_DIR ??
+    path.resolve(__dirname, "rocq/_build/wasm");
+  return fs.existsSync(path.join(directory, "ender-checker-api.js"))
+    ? directory
+    : undefined;
+};
+
 const verifiedCheckerAssets = (): Plugin => {
-  const directory = process.env.ENDER_CHECKER_WASM_DIR;
+  const directory = wasmDirectory();
   const files = directory
     ? (fs.readdirSync(directory, { recursive: true, encoding: "utf8" }) as string[]).filter((entry) =>
         fs.statSync(path.join(directory, entry)).isFile(),
@@ -31,7 +42,8 @@ const verifiedCheckerAssets = (): Plugin => {
     generateBundle() {
       if (!directory) {
         throw new Error(
-          "ENDER_CHECKER_WASM_DIR is required; run the build inside `nix develop`",
+          "no verified checker to bundle; build it with `make -C rocq wasm`" +
+            " or point ENDER_CHECKER_WASM_DIR at one",
         );
       }
       for (const entry of files) {

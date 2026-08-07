@@ -50,6 +50,7 @@ to obtain parity.
 
 ```sh
 nix develop
+make -C rocq
 npm run reasonCoverage -- --write
 npm test -- --runInBand
 npm run build

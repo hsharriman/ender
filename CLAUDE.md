@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
+make -C rocq                       # Build the verified checker into rocq/_build/ (needed first)
 npm start                          # Dev server at http://localhost:3000/ender/
 npm run build                      # tsc typecheck + Vite production build to dist/
 npm test                           # Run Jest tests (single file: src/checker/test/proofTests.test.ts)
@@ -53,7 +54,9 @@ metadata, not executable checking rules. The audited contract is
 
 Change theorem syntax, semantics, and checking in Rocq. Change the presentation
 parser and TypeScript adapter when display syntax changes. See `README.md` for
-the concise checklist. Unsupported reasons must fail closed.
+the concise checklist. Unsupported reasons must fail closed. Rerun `make -C rocq`
+after any `rocq/` edit; the TypeScript side loads the artifacts in
+`rocq/_build/`, so an unbuilt edit has no effect on anything but the Rocq files.
 
 ## Proof File Format
 

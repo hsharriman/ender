@@ -6,12 +6,45 @@
 
 - Node.js 23+
 - npm
+- The verified checker, built once (see [below](#building-the-verified-checker))
 
 Install dependencies once:
 
 ```bash
 npm install
 ```
+
+### Building the verified checker
+
+Every proof is parsed and checked by extracted Rocq code, so the UI, the CLI,
+the tests, and the HTTP server all need that checker built before they work:
+
+```bash
+make -C rocq
+```
+
+That kernel-checks the Rocq development, extracts it to OCaml, and compiles both
+a native binary (`rocq/_build/bin/ender-checker`) and a Wasm bundle
+(`rocq/_build/wasm/`). Everything that consumes the checker looks in those two
+directories by default; `ENDER_CHECKER` and `ENDER_CHECKER_WASM_DIR` override
+them.
+
+Rebuild it after editing anything under `rocq/`. `make` tracks the dependencies,
+so it recompiles only what an edit affects, and `make -C rocq clean` starts over.
+Individual targets are `proofs`, `test`, `extract`, `native`, and `wasm`.
+
+This needs Rocq 9.1, the GeoCoq layers it builds against, OCaml with `yojson`
+and `js_of_ocaml`, and `wasm_of_ocaml`. The [Nix flake](flake.nix) provides all
+of them:
+
+```bash
+nix develop
+make -C rocq
+```
+
+Without Nix, install those yourself; the build steps are the same. See
+[`docs/verified-checker.md`](docs/verified-checker.md) for the fully reproducible
+Nix packages, which build the same artifacts end to end.
 
 ### Interface (React app)
 
@@ -34,7 +67,6 @@ steps, and facts derived twice.
 Run the checker on one proof file:
 
 ```bash
-nix develop
 npm run checkProof -- src/checker/proofs/examples/tutorial.txt
 ```
 
@@ -73,6 +105,10 @@ Both `backend` and `interface` also mount an external, read-only volume named `p
 ### Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
+- The verified checker built on the host with `make -C rocq wasm`. The images
+  copy `rocq/_build/wasm/` in; the bundle is portable, so it does not have to be
+  rebuilt per platform, but the `checker` and `interface` services cannot run
+  without it.
 - A `.env` file in the repo root with your OpenAI API key (copy from `.env.example`):
 
 ```bash

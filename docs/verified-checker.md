@@ -283,10 +283,22 @@ Rocq's kernel checks the proof, while Rocq extraction, the OCaml compiler, and
 `wasm_of_ocaml` produce the executable artifacts. The geometric proof terms are
 erased from those artifacts; runtime checking is ordinary computation.
 
+## Building it
+
+`rocq/Makefile` holds the build: it kernel-checks the development, enforces that
+no proof rests on an axiom, extracts to OCaml, and compiles the native and Wasm
+runtimes. `make -C rocq` from the repository root runs all of it, into
+`rocq/_build/`, using whatever Rocq, OCaml, and `wasm_of_ocaml` are on the
+`PATH`. The [Nix development shell](../flake.nix) supplies those tools and
+GeoCoq; nothing else about it is required.
+
 ## Reproducible build
 
-The [Nix flake](../flake.nix) pins Nixpkgs, GeoCoq, and the build tooling. From
-the repository root:
+The [Nix flake](../flake.nix) pins Nixpkgs, GeoCoq, and the build tooling, and
+its packages run the same Makefile rules over a clean checkout, so they cannot
+drift from what the development shell produces. They are the authoritative
+build: an in-tree `make` can be fooled by a stale artifact or a tool version,
+and these cannot. From the repository root:
 
 ```sh
 nix flake check -L
