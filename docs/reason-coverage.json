@@ -929,14 +929,14 @@
     },
     {
       "reason": "kite_opp_con_ang",
-      "status": "unimplemented",
-      "priority": 2,
-      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "SSS across the diagonal the congruent sides meet at (neutral)",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/kite_opp_con_ang_correct.txt",
         "src/checker/proofs/quadrilaterals/kite_opp_con_ang_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "isos_trap_base_angs",

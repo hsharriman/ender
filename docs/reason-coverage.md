@@ -110,8 +110,11 @@ all corpus files through the extracted API.
   parallel, neutrally; the diagonal rules
   (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`), whose
   conclusions name the crossing point, so a proof that does not state where
-  the diagonals meet leaves it unconstrained; the trapezoid and kite angle
-  rules; and `linear_pair_conv` and `perp_bisector`.
+  the diagonals meet leaves it unconstrained; the trapezoid
+  rules; and `linear_pair_conv` and `perp_bisector`.  None of them unblocks a
+  textbook proof any more: the corpus proofs still rejected are held up by the
+  circle family or by defects in the proof files themselves, not by a missing
+  curriculum rule.
 - **Priority 3:** circles/arcs, similarity, centers, or historically ambiguous
   catalog entries. Resolve their semantics and side conditions before coding.
   Two of them are not merely deferred: `con_inscribed_angs` and

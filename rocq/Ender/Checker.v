@@ -54,6 +54,14 @@ Definition angle_u_eqb (a b : Angle) : bool :=
 Definition angle_pair_eqb (a b c d : Angle) : bool :=
   (angle_u_eqb a c && angle_u_eqb b d) || (angle_u_eqb a d && angle_u_eqb b c).
 
+Lemma angle_u_eqb_intro : forall a b,
+  a = b \/ a = reverse_angle b -> angle_u_eqb a b = true.
+Proof.
+  intros a b [Heq|Heq]; subst a; unfold angle_u_eqb, angle_eqb, reverse_angle,
+    ascii_eqb; cbn; apply orb_true_iff; [left|right];
+    repeat (apply andb_true_iff; split); apply Ascii.eqb_refl.
+Qed.
+
 Lemma angle_u_eqb_cases : forall a b, angle_u_eqb a b = true ->
   a = b \/ a = reverse_angle b.
 Proof.
@@ -141,13 +149,23 @@ Definition angle_of_quadrilateral (q : Quadrilateral) (a : Angle) : bool :=
   negb (ascii_eqb a.(ang_left) a.(ang_vertex)) &&
   negb (ascii_eqb a.(ang_right) a.(ang_vertex)).
 
+(** A [seg:] line is audited as [SegmentWellFormed], so a declared segment is
+    a source of the one fact a ray needs: that its two ends are different
+    points. *)
+Definition declared_segment (decls : Declarations) (s : Segment) : bool :=
+  existsb (segment_u_eqb s) decls.(decl_segments).
+
 (** An angle is nondegenerate if it spans a declared triangle's vertices, if it
-    names three vertices of a declared quadrilateral, or if it is itself
-    declared on an [ang:] line -- the audited meaning of an angle declaration
-    is exactly [AngleWellFormed]. *)
+    names three vertices of a declared quadrilateral, if both of its rays are
+    declared segments -- which is the same two distinctness facts, written the
+    way a figure with no triangle in it usually declares them -- or if it is
+    itself declared on an [ang:] line, whose audited meaning is exactly
+    [AngleWellFormed]. *)
 Definition declared_angle (decls : Declarations) (a : Angle) : bool :=
   existsb (fun t => angle_of_triangle t a) decls.(decl_triangles) ||
   existsb (fun q => angle_of_quadrilateral q a) decls.(decl_quadrilaterals) ||
+  (declared_segment decls (segment a.(ang_left) a.(ang_vertex)) &&
+   declared_segment decls (segment a.(ang_right) a.(ang_vertex))) ||
   existsb (angle_u_eqb a) decls.(decl_angles).
 
 (** [q] names the same ray from [v] as [p]: the names are equal, or an
@@ -779,11 +797,6 @@ Definition quad_corner_c (q : Quadrilateral) : Angle :=
   angle q.(quad_b) q.(quad_c) q.(quad_d).
 Definition quad_corner_d (q : Quadrilateral) : Angle :=
   angle q.(quad_c) q.(quad_d) q.(quad_a).
-(** A [seg:] line is audited as [SegmentWellFormed], so a declared segment is
-    a source of the one fact a ray needs: that its two ends are different
-    points. *)
-Definition declared_segment (decls : Declarations) (s : Segment) : bool :=
-  existsb (segment_u_eqb s) decls.(decl_segments).
 
 Definition quad_diagonal_ac (q : Quadrilateral) : Segment :=
   segment q.(quad_a) q.(quad_c).
@@ -874,6 +887,16 @@ Definition pgram_opp_sides_conv_rule (decls : Declarations)
        (segment_pair_eqb a b (quad_side_bc q) (quad_side_da q) &&
         segment_pair_eqb c d (quad_side_ab q) (quad_side_cd q)))
   | _, _, _ => false
+  end.
+
+(** A kite's premise already names which pair of opposite angles it makes
+    congruent -- the pair between the two pairs of congruent sides -- so the
+    rule reads the conclusion straight off it. *)
+Definition kite_opp_con_ang_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (KiteP _ a b) => fact_eqb (ConAng a b) conclusion
+  | _ => false
   end.
 
 (** Two corners supplementary to a third make a parallelogram: each
@@ -1335,6 +1358,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | PgramOppSides i => pgram_opp_sides_rule facts i conclusion
   | PgramOppAngles i => pgram_opp_angles_rule facts i conclusion
   | PgramConsecAngs i => pgram_consec_angs_rule facts i conclusion
+  | KiteOppConAng i => kite_opp_con_ang_rule facts i conclusion
   | PgramOppSidesConv i j => pgram_opp_sides_conv_rule decls facts i j conclusion
   | PgramConsecAngsConv i j =>
       pgram_consec_angs_conv_rule decls facts i j conclusion
@@ -1582,13 +1606,27 @@ Proof.
     solve [now contradiction Hne | assumption | now apply not_eq_sym].
 Qed.
 
+Lemma declared_segment_sound : forall decls s,
+  declarations_well_formed point decls ->
+  declared_segment decls s = true ->
+  point s.(seg_start) <> point s.(seg_end).
+Proof.
+  intros decls s Hwf H. destruct Hwf as [_ [_ [_ [_ Hwfs]]]].
+  unfold declared_segment in H. apply existsb_exists in H.
+  destruct H as [d [Hin Heq]]. pose proof (Hwfs d Hin) as Hd.
+  apply segment_u_eqb_cases in Heq.
+  destruct Heq as [Heq|Heq]; subst s; [exact Hd|].
+  unfold reverse_segment. cbn. now apply not_eq_sym.
+Qed.
+
 Lemma declared_angle_sound : forall decls a,
   declarations_well_formed point decls ->
   declared_angle decls a = true -> angle_well_formed point a.
 Proof.
   intros decls a Hwf H. pose proof Hwf as [Hwft [Hwfa [Hwfq _]]].
   unfold declared_angle in H. apply orb_true_iff in H.
-  destruct H as [H|H]; [apply orb_true_iff in H; destruct H as [H|H]|].
+  destruct H as [H|H]; [apply orb_true_iff in H; destruct H as [H|H];
+    [apply orb_true_iff in H; destruct H as [H|H]|]|].
   - (* spans the vertices of a declared triangle *)
     apply existsb_exists in H. destruct H as [t [Hin Hangle]].
     pose proof (Hwft t Hin) as Hncol.
@@ -1616,6 +1654,10 @@ Proof.
     { intros x y Hxy Heq. unfold ascii_eqb in Hxy.
       rewrite Heq, Ascii.eqb_refl in Hxy. discriminate. }
     split; apply (quad_vertex_distinct q); auto using Hmember, Hapart.
+  - (* both rays are declared segments *)
+    apply andb_true_iff in H. destruct H as [Hleft Hright].
+    split; [exact (declared_segment_sound _ _ Hwf Hleft)
+           |exact (declared_segment_sound _ _ Hwf Hright)].
   - (* declared directly on an [ang:] line *)
     apply existsb_exists in H. destruct H as [b [Hin Heq]].
     apply (proj2 (angle_u_eqb_well_formed _ _ Heq)). now apply Hwfa.
@@ -3659,18 +3701,6 @@ Proof.
     solve [exact Hcong | now apply conga_comm, conga_sym].
 Qed.
 
-Lemma declared_segment_sound : forall decls s,
-  declarations_well_formed point decls ->
-  declared_segment decls s = true ->
-  point s.(seg_start) <> point s.(seg_end).
-Proof.
-  intros decls s Hwf H. destruct Hwf as [_ [_ [_ [_ Hwfs]]]].
-  unfold declared_segment in H. apply existsb_exists in H.
-  destruct H as [d [Hin Heq]]. pose proof (Hwfs d Hin) as Hd.
-  apply segment_u_eqb_cases in Heq.
-  destruct Heq as [Heq|Heq]; subst s; [exact Hd|].
-  unfold reverse_segment. cbn. now apply not_eq_sym.
-Qed.
 
 (** The halves measured to the opposite corner are the halves measured to any
     point on the same ray from this one. *)
@@ -3939,6 +3969,71 @@ Proof.
   - apply (ender_pgram_from_opposite_sides _ _ _ _ X Hbcd HXbd
              (ender_bets_sym _ _ _ HXac) Hbc).
     now apply cong_symmetry.
+Qed.
+
+(** An audited angle name that names the same angle as a kernel one is that
+    angle, or its reversal -- the audited condition is on point names. *)
+Definition kernel_angle (u : Audit.AngleName) : Angle :=
+  angle u.(Audit.angle_first) u.(Audit.angle_vertex) u.(Audit.angle_last).
+
+Lemma same_angle_name_cases : forall (x : Angle) (u : Audit.AngleName),
+  Audit.SameAngleName (ang_name x) u ->
+  x = kernel_angle u \/ x = reverse_angle (kernel_angle u).
+Proof.
+  intros [xl xv xr] [ul uv ur] [Hv [[H1 H2]|[H1 H2]]]; cbn in *; subst;
+    [left|right]; reflexivity.
+Qed.
+
+Lemma kite_opp_con_ang_sound : forall facts i conclusion,
+  Forall Interp facts -> kite_opp_con_ang_rule facts i conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts Hrule.
+  unfold kite_opp_con_ang_rule in Hrule.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hk : Interp (KiteP q a a0)) by (eapply lookup_step_sound; eauto).
+  cbn in Hk. destruct Hk as [Hwf Hcase].
+  pose proof Hwf as Hwfcopy.
+  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
+  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    as [_ [_ Hdab]].
+  apply (proj1 (fact_eqb_sound _ _ Hrule)).
+  (* the premise names which two corners it makes congruent, up to how each is
+     spelled, so read the congruence off those two and transport *)
+  assert (Hselected : forall (x y : Angle) (u v : Audit.AngleName),
+      Audit.SameAnglePair (ang_name x) (ang_name y) u v ->
+      Interp (ConAng (kernel_angle u) (kernel_angle v)) ->
+      Interp (ConAng x y)).
+  { intros x y u v [[Hx Hy]|[Hy Hx]] Hconga;
+      apply same_angle_name_cases in Hx; apply same_angle_name_cases in Hy;
+      apply (conga_pair_conclude _ _ (kernel_angle u) (kernel_angle v));
+      try exact Hconga; unfold angle_pair_eqb; apply orb_true_iff;
+      [left|right]; apply andb_true_iff; split; now apply angle_u_eqb_intro. }
+  unfold Audit.SegmentCongruent, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.quad_angle_a, Audit.quad_angle_b, Audit.quad_angle_c,
+    Audit.quad_angle_d, Audit.seg_start, Audit.seg_end, quad_name in Hcase.
+  destruct Hcase as [[Hs1 [Hs2 Hpair]]|[Hs1 [Hs2 Hpair]]]; cbn in Hs1, Hs2, Hpair;
+    apply (Hselected _ _ _ _ Hpair); cbn.
+  - (* congruent sides meet at A and at C, so the corners at B and D agree *)
+    destruct (ender_sss (point q.(quad_a)) (point q.(quad_b)) (point q.(quad_c))
+                (point q.(quad_a)) (point q.(quad_d)) (point q.(quad_c)))
+      as [_ [_ [_ [_ [Hangle _]]]]].
+    + exact Hncol.
+    + now apply cong_right_commutativity.
+    + now apply cong_right_commutativity.
+    + apply cong_reflexivity.
+    + now apply conga_right_comm.
+  - (* congruent sides meet at B and at D, so the corners at A and C agree *)
+    destruct (ender_sss (point q.(quad_a)) (point q.(quad_b)) (point q.(quad_d))
+                (point q.(quad_c)) (point q.(quad_b)) (point q.(quad_d)))
+      as [_ [_ [_ [Hangle _]]]].
+    + intro. apply Hdab. Col.
+    + now apply cong_right_commutativity.
+    + apply cong_reflexivity.
+    + apply cong_right_commutativity, cong_symmetry, Hs2.
+    + now apply conga_left_comm.
 Qed.
 
 Lemma pgram_consec_angs_conv_sound : forall decls facts i j conclusion,
@@ -4467,6 +4562,7 @@ Proof.
   - eapply pgram_opp_sides_sound; eauto.
   - eapply pgram_opp_angles_sound; eauto.
   - eapply pgram_consec_angs_sound; eauto.
+  - eapply kite_opp_con_ang_sound; eauto.
   - eapply pgram_opp_sides_conv_sound; eauto.
   - eapply pgram_consec_angs_conv_sound; eauto.
   - eapply rect_pgram_ang_sound; eauto.

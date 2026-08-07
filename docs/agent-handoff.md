@@ -112,7 +112,9 @@ Known limitations relevant to prioritization:
   consecutive or not, since its audited meaning states all six distinctnesses
   and a well-formed angle wants only two (`declared_angle`).  A `seg:` line is
   audited as `SegmentWellFormed`, which is exactly the one fact a ray needs --
-  that its ends differ (`declared_segment`);
+  that its ends differ (`declared_segment`) -- and two of them sharing a vertex
+  are an angle's two rays, which is how a figure with no triangle in it
+  declares its angles nondegenerate;
 - the kernel does ray reasoning where a triangle criterion expects a
   `con_ang` or `ref_ang` dependency: an expected angle also matches a fact
   whose ray points are linked to its own through `on_line` diagram premises

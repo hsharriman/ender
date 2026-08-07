@@ -1354,6 +1354,28 @@ Definition quad_declared_angle_outside_source := transitive_header "quad: q_ABCD
   "con_ang(a_ABE,a_ABE)"
   "[01] reflex() -> ref_ang(a_ABE,a_ABE)".
 
+(** An angle's two rays are two segments, so declaring both is declaring the
+    angle nondegenerate -- which is how a figure with no triangle in it says
+    so. *)
+Definition segment_declared_angle_source := transitive_header "seg: AB CB
+"
+  ""
+  "con_ang(a_ABC,a_ABC)"
+  "[01] reflex() -> ref_ang(a_ABC,a_ABC)".
+
+Definition segment_declared_angle_one_ray_source := transitive_header "seg: AB
+"
+  ""
+  "con_ang(a_ABC,a_ABC)"
+  "[01] reflex() -> ref_ang(a_ABC,a_ABC)".
+
+Example segment_declared_angle_accepts :
+  complete_checker segment_declared_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example segment_declared_angle_one_ray_rejects :
+  complete_checker segment_declared_angle_one_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Example quad_declared_angle_accepts :
   complete_checker quad_declared_angle_source = true.
 Proof. vm_compute. reflexivity. Qed.
@@ -1426,6 +1448,33 @@ Definition pgram_consec_angs_conv_one_side_source := transitive_header "quad: q_
   "[01] given(g_1) -> supplementary(a_ABC,a_BCD)
 [02] given(g_2) -> supplementary(a_CDA,a_DAB)
 [03] pgram_consec_angs_conv(1,2) -> parallelogram(q_ABCD)".
+
+(** A kite premise names the pair of corners it makes congruent; the other
+    pair is not congruent and the rule does not conclude it. *)
+Definition kite_opp_con_ang_source := transitive_header "quad: q_ABCD
+ang: a_DAB a_BCD
+"
+  "[g_1] kite_premise(q_ABCD,a_DAB,a_BCD)
+"
+  "con_ang(a_DAB,a_BCD)"
+  "[01] given(g_1) -> kite_premise(q_ABCD,a_DAB,a_BCD)
+[02] kite_opp_con_ang(1) -> con_ang(a_DAB,a_BCD)".
+
+Definition kite_opp_con_ang_other_pair_source := transitive_header "quad: q_ABCD
+ang: a_DAB a_BCD
+"
+  "[g_1] kite_premise(q_ABCD,a_DAB,a_BCD)
+"
+  "con_ang(a_ABC,a_CDA)"
+  "[01] given(g_1) -> kite_premise(q_ABCD,a_DAB,a_BCD)
+[02] kite_opp_con_ang(1) -> con_ang(a_ABC,a_CDA)".
+
+Example kite_opp_con_ang_accepts :
+  complete_checker kite_opp_con_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example kite_opp_con_ang_other_pair_rejects :
+  complete_checker kite_opp_con_ang_other_pair_source = false.
+Proof. vm_compute. reflexivity. Qed.
 
 Example pgram_consec_angs_conv_accepts :
   complete_checker pgram_consec_angs_conv_source = true.

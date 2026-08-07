@@ -690,6 +690,7 @@ Definition reason_name (r : Reason) : string :=
   | PgramConsecAngs _ => "pgram_consec_angs"
   | PgramOppSidesConv _ _ => "pgram_opp_sides_conv"
   | PgramConsecAngsConv _ _ => "pgram_consec_angs_conv"
+  | KiteOppConAng _ => "kite_opp_con_ang"
   | RectPgramAng _ _ => "rect_pgram_ang"
   | PgramOppSidePara _ _ => "pgram_opp_side_para"
   | RectanglePgram _ => "rectangle_pgram"
@@ -719,7 +720,8 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | CPCTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
   | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
   | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
-  | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | RectanglePgram i
+  | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | KiteOppConAng i
+  | RectanglePgram i
   | RhombusPgram i | RhombusDef i | RhombusOppBisect i | RectDiagCon i
   | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
   | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
