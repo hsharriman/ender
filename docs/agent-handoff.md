@@ -6,6 +6,10 @@ remaining long-tail objective is to implement verified reasons.
 
 Start here:
 
+0. If the question is why a particular corpus proof is rejected, read
+   [`corpus-disagreements.md`](corpus-disagreements.md) first: most of them
+   are defects in the proof file rather than missing capability, and it says
+   which.
 1. Read [`verified-checker.md`](verified-checker.md) for the trust boundary.
 2. Read [`reason-coverage.md`](reason-coverage.md) and select a priority-1 rule.
 3. Follow [`reason-development.md`](reason-development.md) exactly.
