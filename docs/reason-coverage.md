@@ -107,11 +107,13 @@ all corpus files through the extracted API.
   `perp_bisector`.  Each converse concludes a quadrilateral statement and so
   must establish its well-formedness rather than read it off a dependency;
   the declaration is where that comes from, exactly as in
-  `pgram_opp_sides_conv`.  Three remain, none of them mere wiring:
-  `pgram_opp_angs_conv` needs `LtA` monotonicity to halve a quadrilateral's
-  angle sum, and the two trapezoid base-angle directions need the classical
-  complete-the-parallelogram construction that makes a trapezoid's legs
-  congruent exactly when its base angles are.  The forward diagonal rules
+  `pgram_opp_sides_conv`.  `pgram_opp_angs_conv` and
+  `isos_trap_base_angs_conv` join them through angle and length *ordering*
+  rather than cancellation -- see [`verified-checker.md`](verified-checker.md).
+  One is left: `isos_trap_base_angs`, the direction from base angles to
+  diagonals, which the crossing point does not decide and which needs the
+  classical complete-the-parallelogram construction.  The forward diagonal
+  rules
   (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`) name the
   crossing point in their conclusions, so a proof that does not state where
   the diagonals meet leaves it unconstrained -- writing those rules will not

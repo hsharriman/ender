@@ -33,9 +33,9 @@ The slice parses Ender source text and supports:
   `corresp_ang_conv`, `sameside_ang_conv`, `para_transitive`, `def_radius`,
   `inscribed_semi`, `con_chords_intersect_arcs`, `tangent_perp`,
   `tangent_perp_conv`, `con_tangents_ext`, `radius_chord_bisect`,
-  `perp_bisector`, `isos_trap_con_diags`, `pgram_diag_bisect_conv`,
-  `rect_diag_con_conv`, `rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv`,
-  and `aa_sim`;
+  `perp_bisector`, `isos_trap_con_diags`, `isos_trap_base_angs_conv`,
+  `pgram_diag_bisect_conv`, `pgram_opp_angs_conv`, `rect_diag_con_conv`,
+  `rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv`, and `aa_sim`;
 - one-character point names, named premises, segment, triangle, angle,
   quadrilateral, and circle declarations, numbered steps, and exact step
   dependencies.
@@ -579,16 +579,31 @@ bisected halves into an isosceles triangle through the alternate interior
 angles the diagonal makes.  `isos_trap_con_diags` needs no geometry at all:
 congruent diagonals *are* the audited meaning of an isosceles trapezoid.
 
+Two rules join them by *ordering* rather than by cancellation, which is what
+the audited meanings leave for them.  `pgram_opp_angs_conv` needs the
+quadrilateral's corners to sum to two straight angles and then halved, and
+`SumA` cancellation cannot halve; instead each diagonal splits the two corners
+it runs between (`inangle__suma` off the audited crossing point), the two
+triangles it makes have the same angle sum, and if one half were the larger
+the opposite-corner hypothesis would make its partner larger too --
+`sams_lea_lta123_suma2__lta` and `or_lta2_conga` turn that into a
+contradiction, so the halves agree and the consecutive corners are
+supplementary.  `isos_trap_base_angs_conv` runs the same shape on lengths:
+congruent diagonals plus the alternate interior angles make the triangle the
+crossing cuts off one parallel side isosceles exactly when the other one is,
+by `l11_44_2_a` and `bet2_lt2__lt`.
+
 The forward diagonal rules (`pgram_diag_bisect`, `rhombus_diag_perp`,
 `kite_diag_perp`) are still fail-closed, and their fixtures would not be
 accepted if they were written, because each concludes about a crossing point
 its file never places; see
-[`corpus-disagreements.md`](corpus-disagreements.md).  So are the two
-trapezoid base-angle directions and `pgram_opp_angs_conv`, which are true but
-want geometry the development does not have: the classical
-complete-the-parallelogram construction for the trapezoid legs, and `LtA`
-monotonicity to halve a quadrilateral's angle sum for the parallelogram
-converse.
+[`corpus-disagreements.md`](corpus-disagreements.md).  So is
+`isos_trap_base_angs`, the one direction the crossing point does not decide:
+going from the base angles to the diagonals, every relation the crossing
+offers is satisfied by the non-isosceles figure too, so the classical
+auxiliary construction (complete the parallelogram on a leg, then read the
+isosceles triangle it leaves) is needed, and placing that point is the
+work.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and

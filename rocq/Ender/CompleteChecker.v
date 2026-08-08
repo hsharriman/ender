@@ -731,7 +731,9 @@ Definition reason_name (r : Reason) : string :=
   | RadiusChordBisect _ _ _ => "radius_chord_bisect"
   | PerpBisect _ _ => "perp_bisector"
   | IsosTrapConDiags _ _ => "isos_trap_con_diags"
+  | IsosTrapBaseAngsConv _ => "isos_trap_base_angs_conv"
   | PgramDiagBisectConv _ _ => "pgram_diag_bisect_conv"
+  | PgramOppAngsConv _ _ => "pgram_opp_angs_conv"
   | RectDiagConConv _ _ => "rect_diag_con_conv"
   | RhombusDiagPerpConv _ _ => "rhombus_diag_perp_conv"
   | RhombusOppBisectConv _ _ _ => "rhombus_opp_bisect_conv"
@@ -751,14 +753,16 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | RhombusPgram i | RhombusDef i | RhombusOppBisect i | RectDiagCon i
   | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
   | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
-  | DefRadius i | InscribedSemi i | ConChordsArcs i => [i]
+  | DefRadius i | InscribedSemi i | ConChordsArcs i
+  | IsosTrapBaseAngsConv i => [i]
   | PgramOppSidesConv i j | PgramConsecAngsConv i j | RectPgramAng i j
   | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
   | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
   | DefParallelogram i j | PgramOppSidePara i j | RhombusConsecSides i j
   | ParaTrans i j | TangentPerp i j | TangentPerpConv i j
   | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
-  | PgramDiagBisectConv i j | RectDiagConConv i j | RhombusDiagPerpConv i j
+  | PgramDiagBisectConv i j | PgramOppAngsConv i j
+  | RectDiagConConv i j | RhombusDiagPerpConv i j
   | AASim i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
   | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k

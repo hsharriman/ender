@@ -129,7 +129,9 @@ Inductive Reason :=
 | RadiusChordBisect : nat -> nat -> nat -> Reason
 | PerpBisect : nat -> nat -> Reason
 | IsosTrapConDiags : nat -> nat -> Reason
+| IsosTrapBaseAngsConv : nat -> Reason
 | PgramDiagBisectConv : nat -> nat -> Reason
+| PgramOppAngsConv : nat -> nat -> Reason
 | RectDiagConConv : nat -> nat -> Reason
 | RhombusDiagPerpConv : nat -> nat -> Reason
 | RhombusOppBisectConv : nat -> nat -> nat -> Reason

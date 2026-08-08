@@ -900,6 +900,253 @@ Proof.
   right. right. left. Cong.
 Qed.
 
+(** The diagonal from [A] runs inside the corner there, so the corner is the
+    sum of the two halves it cuts. *)
+Lemma ender_quad_corner_split : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  SumA D A C C A B D A B /\ SAMS D A C C A B.
+Proof.
+  intros A B C D X Hncol HAC HBD.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [Hbcd [Hcda Hdab]].
+  pose proof HAC as HACcopy. destruct HACcopy as [HbetAC [HAX HXC]].
+  pose proof HBD as HBDcopy. destruct HBDcopy as [HbetBD [HBX HXD]].
+  apply not_col_distincts in Hdab. destruct Hdab as [_ [HDA [HAB HDB]]].
+  apply not_col_distincts in Hncol. destruct Hncol as [_ [_ [_ HAC']]].
+  assert (Hin : InAngle C D A B).
+  { repeat split; [now apply not_eq_sym|now apply not_eq_sym
+                  |now apply not_eq_sym|].
+    exists X. split; [now apply between_symmetry|right].
+    repeat split; [now apply not_eq_sym|now apply not_eq_sym|now left]. }
+  split; [now apply inangle__suma|now apply inangle__sams].
+Qed.
+
+(** The two angles of a triangle other than the one at [B] sum to its
+    supplement: the Euclidean triangle sum, regrouped so that the angle to be
+    cancelled is the one added last. *)
+Lemma ender_triangle_other_two : forall A B C G H I,
+  ~ Col A B C -> SumA B C A C A B G H I -> SuppA G H I A B C.
+Proof.
+  intros A B C G H I Hncol Hsum.
+  apply not_col_distincts in Hncol. destruct Hncol as [_ [HAB [HBC HCA]]].
+  destruct (ex_trisuma B C A) as [P [Q [R Htri]]];
+    [assumption|now apply not_eq_sym|now apply not_eq_sym|].
+  pose proof Htri as Htricopy.
+  destruct Htricopy as [G0 [H0 [I0 [Hsum0 Hsum1]]]].
+  assert (Hconga : CongA G H I G0 H0 I0)
+    by (apply (suma2__conga B C A C A B); assumption).
+  apply (conga2_suppa__suppa G0 H0 I0 A B C);
+    [now apply conga_sym
+    |apply conga_refl; [assumption|now apply not_eq_sym]
+    |].
+  apply (bet_suma__suppa _ _ _ _ _ _ P Q R); [exact Hsum1|].
+  now apply (euclidean_trisuma__bet B C A P Q R).
+Qed.
+
+(** Both pairs of opposite corners congruent make consecutive corners
+    supplementary, which is what the parallel needs.  Each diagonal cuts the
+    two corners it runs between into halves, and the two triangles it makes
+    have the same angle sum, so the halves at one end of the diagonal are
+    congruent to the ones at the other.  Only *ordering* shows that, not
+    cancellation: if one half were the larger the opposite-corner hypothesis
+    would make its partner the larger too, and then the two triangles could
+    not have the same angle sum. *)
+Lemma ender_quad_opposite_angles : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  CongA D A B B C D -> CongA A B C C D A ->
+  SuppA A B C B C D.
+Proof.
+  intros A B C D X Hncol HAC HBD HopA HopB.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [Hbcd [Hcda Hdab]].
+  destruct (ender_quad_corner_split A B C D X Hncol HAC HBD)
+    as [HsumA HsamsA].
+  destruct (ender_quad_corner_split C D A B X Hcda
+              (ender_bets_sym _ _ _ HAC) (ender_bets_sym _ _ _ HBD))
+    as [HsumC HsamsC].
+  pose proof Hncol as Hd1. apply not_col_distincts in Hd1.
+  destruct Hd1 as [_ [HAB [HBC HACne]]].
+  pose proof Hcda as Hd2. apply not_col_distincts in Hd2.
+  destruct Hd2 as [_ [HCD [HDA _]]].
+  (* the two halves each diagonal end is cut into, summed *)
+  destruct (ex_suma B C A C A B) as [G [H [I HsumG]]];
+    auto using not_eq_sym.
+  destruct (ex_suma D C A C A D) as [G' [H' [I' HsumG'']]];
+    auto using not_eq_sym.
+  destruct (suma_distincts B C A C A B G H I HsumG)
+    as [_ [_ [_ [_ [HGH HHI]]]]].
+  destruct (suma_distincts D C A C A D G' H' I' HsumG'')
+    as [_ [_ [_ [_ [HGH' HHI']]]]].
+  assert (HsumG' : SumA A C D D A C G' H' I').
+  { apply (conga3_suma__suma D C A C A D G' H' I');
+      [exact HsumG''
+      |apply conga_pseudo_refl; auto using not_eq_sym
+      |apply conga_pseudo_refl; auto using not_eq_sym
+      |apply conga_refl; auto using not_eq_sym]. }
+  (* both sums are the supplement of the same corner *)
+  pose proof (ender_triangle_other_two A B C G H I Hncol HsumG) as HsuppG.
+  assert (HsuppG' : SuppA G' H' I' A B C).
+  { apply (conga2_suppa__suppa G' H' I' A D C);
+      [apply conga_refl; auto using not_eq_sym
+      |apply conga_sym, (conga_trans A B C C D A A D C);
+         [exact HopB|apply conga_pseudo_refl; auto using not_eq_sym]
+      |apply (ender_triangle_other_two A D C);
+         [intro; apply Hcda; Col|exact HsumG'']]. }
+  assert (Hhalves : CongA G H I G' H' I')
+    by (apply (suppa2__conga123 _ _ _ A B C); assumption).
+  assert (HsamsGA : SAMS B C A C A B)
+    by (apply sams123231; auto using not_eq_sym).
+  destruct (or_lta2_conga D A C B C A) as [Hlt|[Hlt|Hcong]];
+    auto using not_eq_sym.
+  - (* the half at A is the smaller, so its partner at C is the larger, and
+       the two triangle sums cannot then agree *)
+    exfalso.
+    assert (Hother : LtA A C D C A B).
+    { apply (sams_lea_lta123_suma2__lta456 B C A A C D B C D D A C C A B D A B);
+        [exact Hlt|apply conga__lea, conga_sym, HopA|exact HsamsC
+        |exact HsumC|exact HsumA]. }
+    assert (Hbigger : LtA G' H' I' G H I).
+    { apply (sams_lea_lta123_suma2__lta D A C A C D G' H' I' B C A C A B G H I);
+        [exact Hlt|now apply lta__lea|exact HsamsGA
+        |now apply suma_sym|exact HsumG]. }
+    apply (lta__nlea _ _ _ _ _ _ Hbigger), conga__lea, Hhalves.
+  - exfalso.
+    assert (Hother : LtA C A B A C D).
+    { apply (sams_lea_lta123_suma2__lta456 D A C C A B D A B B C A A C D B C D);
+        [exact Hlt|apply conga__lea, HopA|exact HsamsA
+        |exact HsumA|exact HsumC]. }
+    assert (HsamsAC : SAMS D A C A C D)
+      by (apply sams123231; auto using not_eq_sym).
+    assert (Hbigger : LtA G H I G' H' I').
+    { apply (sams_lea_lta123_suma2__lta B C A C A B G H I D A C A C D G' H' I');
+        [exact Hlt|now apply lta__lea|exact HsamsAC
+        |exact HsumG|now apply suma_sym]. }
+    apply (lta__nlea _ _ _ _ _ _ Hbigger), conga__lea, conga_sym, Hhalves.
+  - (* congruent halves: the corner sums cancel, and the two sums agree *)
+    assert (Hsecond : CongA C A B A C D).
+    { apply (sams2_suma2__conga456 B C A _ _ _ _ _ _ B C D);
+        [exact HsamsGA|exact HsamsC
+        |apply (conga3_suma__suma D A C C A B D A B);
+           [exact HsumA|exact Hcong
+           |apply conga_refl; auto using not_eq_sym
+           |exact HopA]
+        |exact HsumC]. }
+    apply suppa_sym.
+    apply (conga2_suppa__suppa G H I A B C);
+      [|apply conga_refl; auto using not_eq_sym|exact HsuppG].
+    apply (suma2__conga B C A C A B); [exact HsumG|].
+    apply (conga3_suma__suma B C A A C D B C D);
+      [exact HsumC
+      |apply conga_refl; auto using not_eq_sym
+      |now apply conga_sym
+      |apply conga_refl; auto using not_eq_sym].
+Qed.
+
+(** In a trapezoid the two diagonals are congruent exactly when the base
+    angles are, and both readings come from the crossing point: the parallel
+    sides make the alternate interior angles at the two ends of each diagonal
+    congruent, so the triangle the crossing cuts off one parallel side is
+    isosceles exactly when the one it cuts off the other is.  This is the
+    congruent-diagonals direction. *)
+Lemma ender_isos_trap_base_angles : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Cong A C B D ->
+  CongA D A B A B C.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar Hdiag.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [Hbcd [Hcda Hdab]].
+  pose proof Hncol as Hd1. apply not_col_distincts in Hd1.
+  destruct Hd1 as [_ [HAB [HBC HACne]]].
+  pose proof Hcda as Hd2. apply not_col_distincts in Hd2.
+  destruct Hd2 as [_ [HCD [HDA _]]].
+  pose proof HAC as HACc. destruct HACc as [HbetAC [HAX HXC]].
+  pose proof HBD as HBDc. destruct HBDc as [HbetBD [HBX HXD]].
+  assert (HcolXAC : Col X A C) by (apply bet_col in HbetAC; Col).
+  assert (HcolXBD : Col X B D) by (apply bet_col in HbetBD; Col).
+  assert (HoutAC : Out A X C)
+    by (apply bet_out; [now apply not_eq_sym|assumption]).
+  assert (HoutCA : Out C X A)
+    by (apply bet_out; [assumption|now apply between_symmetry]).
+  assert (HoutBD : Out B X D)
+    by (apply bet_out; [now apply not_eq_sym|assumption]).
+  assert (HoutDB : Out D X B)
+    by (apply bet_out; [assumption|now apply between_symmetry]).
+  (* neither diagonal end lies on the other diagonal *)
+  assert (HncolXAB : ~ Col X A B).
+  { intro Hcol. apply Hncol.
+    apply (col3 A X); [auto using not_eq_sym|Col|Col|Col]. }
+  assert (HncolXCD : ~ Col X C D).
+  { intro Hcol. apply Hcda.
+    apply (col3 C X); [auto using not_eq_sym|Col|Col|Col]. }
+  (* each half-diagonal names the same ray as the whole one *)
+  assert (HangA : CongA X A B C A B)
+    by (apply out2__conga; [now apply l6_6|apply out_trivial; auto]).
+  assert (HangB : CongA X B A D B A)
+    by (apply out2__conga; [now apply l6_6
+                           |apply out_trivial; auto using not_eq_sym]).
+  assert (HangC : CongA X C D A C D)
+    by (apply out2__conga; [now apply l6_6|apply out_trivial; auto]).
+  assert (HangD : CongA X D C B D C)
+    by (apply out2__conga; [now apply l6_6
+                           |apply out_trivial; auto using not_eq_sym]).
+  (* the alternate interior angles each diagonal makes *)
+  assert (Hts1 : TS A C B D).
+  { repeat split; [intro; apply Hncol; Col|intro; apply Hcda; Col|].
+    exists X. split; assumption. }
+  assert (Hts2 : TS B D A C).
+  { repeat split; [intro; apply Hdab; Col|intro; apply Hbcd; Col|].
+    exists X. split; [Col|assumption]. }
+  assert (Hu : CongA C A B A C D).
+  { apply conga_comm, ender_alternate_interior; assumption. }
+  assert (Hv : CongA D B A B D C).
+  { apply conga_comm, ender_alternate_interior; [exact Hts2|Par]. }
+  destruct (or_lt_cong_gt X A X B) as [Hlt|[Hgt|Hcong]].
+  - (* the near half at A is the shorter, so the far half at C is too, and
+       the diagonals cannot then agree *)
+    exfalso.
+    assert (Hnear : LtA X B A X A B)
+      by (apply l11_44_2_a; [intro; apply HncolXAB; Col|exact Hlt]).
+    assert (Hfar : LtA X D C X C D).
+    { apply (conga_preserves_lta B D C A C D);
+        [now apply conga_sym|now apply conga_sym|].
+      apply (conga_preserves_lta D B A C A B);
+        [exact Hv|exact Hu|].
+      apply (conga_preserves_lta X B A X A B);
+        [exact HangB|exact HangA|exact Hnear]. }
+    apply (cong__nlt A C B D Hdiag).
+    apply (bet2_lt2__lt X X B D A C);
+      [assumption|assumption|exact Hlt|].
+    apply (l11_44_2_b D X C). exact Hfar.
+  - exfalso.
+    assert (Hnear : LtA X A B X B A)
+      by (apply (l11_44_2_a B X A); [intro; apply HncolXAB; Col|exact Hgt]).
+    assert (Hfar : LtA X C D X D C).
+    { apply (conga_preserves_lta A C D B D C);
+        [now apply conga_sym|now apply conga_sym|].
+      apply (conga_preserves_lta C A B D B A);
+        [exact Hu|exact Hv|].
+      apply (conga_preserves_lta X A B X B A);
+        [exact HangA|exact HangB|exact Hnear]. }
+    apply (cong__nlt B D A C (cong_symmetry _ _ _ _ Hdiag)).
+    apply (bet2_lt2__lt X X A C B D);
+      [assumption|assumption|exact Hgt|].
+    apply (l11_44_2_b C X D). exact Hfar.
+  - (* congruent halves: the near triangle is isosceles, and the two halves
+       of the figure then agree side-angle-side *)
+    assert (Hbase : CongA X A B X B A)
+      by (apply ender_base_angle; [intro; apply HncolXAB; Col|exact Hcong]).
+    assert (Hcorner : CongA C A B D B A).
+    { apply (conga_trans C A B X B A);
+        [apply (conga_trans C A B X A B);
+           [now apply conga_sym|exact Hbase]
+        |exact HangB]. }
+    destruct (ender_sas A B C B A D) as [_ [_ [_ [_ [Hangle _]]]]];
+      [exact Hncol|apply cong_pseudo_reflexivity|now apply conga_comm
+      |exact Hdiag|].
+    apply conga_left_comm, conga_sym, Hangle.
+Qed.
+
 Lemma ender_playfair : playfair_s_postulate.
 Proof.
   apply tarski_s_euclid_implies_playfair.

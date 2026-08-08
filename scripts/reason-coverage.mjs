@@ -89,6 +89,8 @@ const implemented = new Set([
   "rhombus_diag_perp_conv",
   "rhombus_opp_bisect_conv",
   "aa_sim",
+  "pgram_opp_angs_conv",
+  "isos_trap_base_angs_conv",
 ]);
 const partial = new Set();
 const priorityOne = new Set(["ang_bisect_conv"]);

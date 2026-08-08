@@ -535,13 +535,16 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "radius_chord_bisect" text (parse_three RadiusChordBisect)
         (try_call "perp_bisector" text (parse_two PerpBisect)
         (try_call "isos_trap_con_diags" text (parse_two IsosTrapConDiags)
+        (try_call "isos_trap_base_angs_conv" text
+          (parse_one IsosTrapBaseAngsConv)
         (try_call "pgram_diag_bisect_conv" text (parse_two PgramDiagBisectConv)
+        (try_call "pgram_opp_angs_conv" text (parse_two PgramOppAngsConv)
         (try_call "rect_diag_con_conv" text (parse_two RectDiagConConv)
         (try_call "rhombus_diag_perp_conv" text (parse_two RhombusDiagPerpConv)
         (try_call "rhombus_opp_bisect_conv" text
           (parse_three RhombusOppBisectConv)
         (try_call "aa_sim" text (parse_two AASim)
-        None)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+        None)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

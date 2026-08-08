@@ -741,14 +741,14 @@
     },
     {
       "reason": "pgram_opp_angs_conv",
-      "status": "unimplemented",
-      "priority": 2,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_correct.txt",
         "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "pgram_opp_side_para",
@@ -951,14 +951,14 @@
     },
     {
       "reason": "isos_trap_base_angs_conv",
-      "status": "unimplemented",
-      "priority": 2,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_correct.txt",
         "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "isos_trap_con_diags",
