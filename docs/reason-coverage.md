@@ -100,22 +100,26 @@ all corpus files through the extracted API.
   conservative fail-closed schema: the congruent dependency must name exactly
   the two halves induced by the outer angle and shared ray in the conclusion.
 - **Priority 2:** ordinary triangle, line, and quadrilateral curriculum rules.
-  The triangle-shape and parallel-line groups are done, and the forward
-  quadrilateral rules with them. What is left is mostly converses
-  (`pgram_opp_angs_conv`, `rect_diag_con_conv`, `rhombus_diag_perp_conv`,
-  `rhombus_opp_bisect_conv`), which conclude a quadrilateral statement and so
-  must establish its well-formedness rather than read it off a dependency --
-  `pgram_opp_sides_conv` and `pgram_consec_angs_conv` show the shape: the
-  declaration supplies well-formedness, the diagonal or a continued side
-  supplies an alternate interior pair, and `l12_21_b` turns that back into a
-  parallel, neutrally; the diagonal rules
-  (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`), whose
-  conclusions name the crossing point, so a proof that does not state where
-  the diagonals meet leaves it unconstrained; the trapezoid
-  rules; and `linear_pair_conv` and `perp_bisector`.  None of them unblocks a
-  textbook proof any more: the corpus proofs still rejected are held up by the
-  circle family or by defects in the proof files themselves, not by a missing
-  curriculum rule.
+  The triangle-shape and parallel-line groups are done, the forward
+  quadrilateral rules with them, and now the diagonal converses
+  (`rect_diag_con_conv`, `rhombus_diag_perp_conv`, `pgram_diag_bisect_conv`,
+  `rhombus_opp_bisect_conv`) together with `isos_trap_con_diags` and
+  `perp_bisector`.  Each converse concludes a quadrilateral statement and so
+  must establish its well-formedness rather than read it off a dependency;
+  the declaration is where that comes from, exactly as in
+  `pgram_opp_sides_conv`.  Three remain, none of them mere wiring:
+  `pgram_opp_angs_conv` needs `LtA` monotonicity to halve a quadrilateral's
+  angle sum, and the two trapezoid base-angle directions need the classical
+  complete-the-parallelogram construction that makes a trapezoid's legs
+  congruent exactly when its base angles are.  The forward diagonal rules
+  (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`) name the
+  crossing point in their conclusions, so a proof that does not state where
+  the diagonals meet leaves it unconstrained -- writing those rules will not
+  accept the current fixtures.  `linear_pair_conv` is false as spelled and is
+  written up as an open question in
+  [`verified-checker.md`](verified-checker.md).  None of these unblocks a
+  textbook proof: the corpus proofs still rejected are held up by defects in
+  the proof files themselves, not by a missing curriculum rule.
 - **Priority 3:** circles/arcs, similarity, centers, or historically ambiguous
   catalog entries. Resolve their semantics and side conditions before coding.
   Two of them are not merely deferred: `con_inscribed_angs` and
@@ -124,6 +128,12 @@ all corpus files through the extracted API.
   answer flips between congruent and supplementary across arcs. They are
   blocked on a surface-syntax decision, written up under "Open question" in
   [`verified-checker.md`](verified-checker.md). Skip them.
+  `radius_chord_bisect_conv` is a third: its catalog conclusion, `radius`,
+  claims the far end of the bisector lies on the circle, which its premises do
+  not entail.  The rest of the tangent and chord family
+  (`tangent_perp_conv`, `con_tangents_ext`, `radius_chord_bisect`) is verified,
+  as is `aa_sim`, whose audited similarity is the three angle congruences and
+  so follows from the third-angle theorem already proved for `third_angle`.
 
 Fixture count is evidence, not a semantic specification. The audited meanings
 in `rocq/Ender/Audit.v` and a reason's explicit theorem are authoritative.

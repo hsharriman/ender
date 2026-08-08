@@ -46,6 +46,8 @@ Definition seg_name (s : Segment) : Audit.SegmentName :=
   Audit.segment_name s.(seg_start) s.(seg_end).
 Definition ang_name (a : Angle) : Audit.AngleName :=
   Audit.angle_name a.(ang_left) a.(ang_vertex) a.(ang_right).
+Definition tri_name (t : Triangle) : Audit.TriangleName :=
+  Audit.triangle_name t.(tri_a) t.(tri_b) t.(tri_c).
 Definition quad_name (q : Quadrilateral) : Audit.QuadrilateralName :=
   Audit.quadrilateral_name q.(quad_a) q.(quad_b) q.(quad_c) q.(quad_d).
 Definition circ_name (c : Circle) : Audit.CircleName :=
@@ -62,6 +64,9 @@ Definition statement_meaning (s : Statement) : Prop :=
       CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
             (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
   | ConTri a b => triangle_congruence a b
+  (* The audited meaning verbatim, so the two layers cannot drift: similarity
+     is the three corresponding angle congruences, on two genuine triangles. *)
+  | SimTri a b => Audit.TriangleSimilar point (tri_name a) (tri_name b)
   | RightAng a => angle_well_formed a /\ right_angle a
   | ConRight a b => right_angle a /\ right_angle b
   | PerpAt a b p =>
@@ -80,6 +85,12 @@ Definition statement_meaning (s : Statement) : Prop :=
       (s.(seg_end) = a.(ang_vertex) /\
         CongA (point a.(ang_left)) (point a.(ang_vertex)) (point s.(seg_start))
               (point s.(seg_start)) (point a.(ang_vertex)) (point a.(ang_right)))
+  (* The audited [SegmentBisectorAt]: the bisector is a genuine segment whose
+     line carries the point, and the point halves the target. *)
+  | SegBisectOf b t p =>
+      point b.(seg_start) <> point b.(seg_end) /\
+      Col (point b.(seg_start)) (point b.(seg_end)) (point p) /\
+      Midpoint (point p) (point t.(seg_start)) (point t.(seg_end))
   | OnLine s p =>
       point s.(seg_start) <> point s.(seg_end) /\
       Bet (point s.(seg_start)) (point p) (point s.(seg_end))

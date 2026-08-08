@@ -79,6 +79,16 @@ const implemented = new Set([
   "inscribed_semi",
   "con_chords_intersect_arcs",
   "tangent_perp",
+  "tangent_perp_conv",
+  "con_tangents_ext",
+  "radius_chord_bisect",
+  "perp_bisector",
+  "isos_trap_con_diags",
+  "pgram_diag_bisect_conv",
+  "rect_diag_con_conv",
+  "rhombus_diag_perp_conv",
+  "rhombus_opp_bisect_conv",
+  "aa_sim",
 ]);
 const partial = new Set();
 const priorityOne = new Set(["ang_bisect_conv"]);

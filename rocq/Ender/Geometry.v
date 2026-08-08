@@ -399,6 +399,34 @@ Proof.
     + apply conga_sym. exact Hconga'.
 Qed.
 
+(** Two tangent segments drawn to a circle from one outside point.  Each meets
+    its radius at a right angle, so the two right triangles share the segment
+    from the centre to that point and have congruent radii for their other
+    legs; [cong2_per2__cong] cancels those and leaves the tangents equal. *)
+Lemma ender_tangents_congruent : forall O E A B,
+  Per E A O -> Per E B O -> Cong A O B O -> Cong A E B E.
+Proof.
+  intros O E A B HperA HperB Hradii.
+  apply (cong2_per2__cong E A O E B O);
+    [exact HperA|exact HperB|apply cong_reflexivity|exact Hradii].
+Qed.
+
+(** A radius perpendicular to a chord bisects it.  The foot cuts the chord
+    into two legs of right triangles that share the leg running to the centre
+    and whose hypotenuses are both radii, so the legs are congruent, and a
+    point on the line congruent to both endpoints is their midpoint. *)
+Lemma ender_chord_foot_midpoint : forall O P E F,
+  E <> F -> Col E P F -> Per E P O -> Per F P O -> Cong O E O F ->
+  Midpoint P E F.
+Proof.
+  intros O P E F Hne Hcol HperE HperF Hradii.
+  assert (Hhalves : Cong P E P F).
+  { apply (cong2_per2__cong E P O F P O);
+      [exact HperE|exact HperF|Cong|apply cong_reflexivity]. }
+  destruct (l7_20 P E F ltac:(Col) Hhalves) as [Heq|Hmid];
+    [contradiction|exact Hmid].
+Qed.
+
 End EnderGeometry.
 
 (** Rules that genuinely need the parallel postulate live here, in their own
@@ -469,6 +497,33 @@ Proof.
   assert (HangC : CongA B C A B' C' A')
     by (apply (sams2_suma2__conga456 A B C _ _ _ _ _ _ S1 S2 S3); assumption).
   now apply conga_comm.
+Qed.
+
+(** The audited parallelogram in GeoCoq's own spelling.  Noncollinearity
+    promotes the first [Par] to the strict relation, and the second then
+    supplies the shared diagonal midpoint. *)
+Lemma ender_pgram_plg : forall A B C D,
+  ~ Col A B C -> Par A B C D -> Par B C D A -> Plg A B C D.
+Proof.
+  intros A B C D Hncol Hab Hbc.
+  assert (Hstrict : Par_strict A B C D).
+  { apply par_not_col_strict with C; [exact Hab|Col|exact Hncol]. }
+  apply pars_par_plg; [exact Hstrict|Par].
+Qed.
+
+(** The converse of the diagonal-bisection theorem, read off GeoCoq's own
+    midpoint spelling of the figure: two segments that share a
+    midpoint are the diagonals of a parallelogram. *)
+Lemma ender_pgram_from_diagonal_midpoint : forall A B C D M,
+  ~ Col A B C -> Midpoint M A C -> Midpoint M B D ->
+  Par A B C D /\ Par B C D A.
+Proof.
+  intros A B C D M Hncol Hac Hbd.
+  pose proof Hncol as Hdistinct. apply not_col_distincts in Hdistinct.
+  destruct Hdistinct as [_ [HAB [HBC HAC]]].
+  assert (Hplg : Parallelogram A B C D) by (apply (mid_plg A B C D M); auto).
+  destruct (plg_par A B C D HAB HBC Hplg) as [Hab Had].
+  split; [exact Hab|apply par_symmetry, par_left_comm, Had].
 Qed.
 
 (** Alternate interior angles across a transversal of parallels, derived
@@ -763,6 +818,86 @@ Proof.
     [|intro Heq; subst B; apply Hncol; Col
      |intro Heq; subst C; apply Hncol; Col].
   destruct Hplg as [_ Had]. apply par_symmetry, par_left_comm. exact Had.
+Qed.
+
+(** Congruent diagonals make a parallelogram a rectangle.  Each diagonal cuts
+    a triangle off the shared side, and those two triangles agree side for
+    side, so the two corners on that side are congruent -- and being
+    consecutive corners they are also supplementary, which leaves them
+    right. *)
+Lemma ender_pgram_con_diagonals_right : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Par B C D A -> Cong A C B D ->
+  Per D A B /\ Per A B C /\ Per B C D /\ Per C D A.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar1 Hpar2 Hdiag.
+  destruct (ender_pgram_opp_sides A B C D X Hncol HAC HBD Hpar1 Hpar2)
+    as [_ Hbc_da].
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [_ [_ Hdab]].
+  pose proof Hncol as Hdistinct. apply not_col_distincts in Hdistinct.
+  destruct Hdistinct as [_ [HAB [HBC _]]].
+  destruct (ender_sss A B C B A D) as [_ [_ [_ [_ [Hcorners _]]]]];
+    [exact Hncol|apply cong_pseudo_reflexivity|Cong|Cong|].
+  assert (Hsupp : SuppA D A B A B C).
+  { apply (ender_pgram_consec_angles D A B C X Hdab
+             (ender_bets_sym _ _ _ HBD) HAC (par_symmetry _ _ _ _ Hpar2)). }
+  assert (Hsame : CongA D A B A B C)
+    by (apply conga_left_comm, conga_sym, Hcorners).
+  assert (Hper : Per A B C).
+  { apply suppa__per, (conga2_suppa__suppa D A B A B C);
+      [exact Hsame
+      |apply conga_refl; [exact HAB|now apply not_eq_sym]
+      |exact Hsupp]. }
+  exact (ender_pgram_right_corner A B C D X Hncol HAC HBD Hpar1 Hpar2 Hper).
+Qed.
+
+(** Perpendicular diagonals make a parallelogram a rhombus.  GeoCoq's
+    [perp_rmb] wants the figure in its own midpoint spelling and returns one
+    pair of congruent adjacent sides; [ender_rhombus_sides] spreads that
+    around the audited chain. *)
+Lemma ender_pgram_perp_diagonals_rhombus : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Par B C D A -> Perp A C B D ->
+  Cong A B B C /\ Cong B C C D /\ Cong C D D A.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar1 Hpar2 Hperp.
+  assert (Hplg : Plg A B C D)
+    by (apply ender_pgram_plg; assumption).
+  destruct (perp_rmb A B C D Hplg Hperp) as [_ Hadjacent].
+  apply (ender_rhombus_sides A B C D X); auto.
+Qed.
+
+(** One diagonal of a parallelogram bisecting the corner it leaves makes the
+    parallelogram a rhombus.  The diagonal is a transversal of one pair of
+    parallel sides, so the half it cuts off at the far corner is congruent to
+    the half at the near one; with the bisected halves congruent too, the
+    triangle on that diagonal has congruent base angles. *)
+Lemma ender_pgram_bisector_rhombus : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> Par B C D A -> CongA B A C C A D ->
+  Cong A B B C /\ Cong B C C D /\ Cong C D D A.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar1 Hpar2 Hbisects.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [_ [Hcda _]].
+  pose proof HAC as HACcopy. destruct HACcopy as [HbetAC [HAX HXC]].
+  pose proof HBD as HBDcopy. destruct HBDcopy as [HbetBD [HBX HXD]].
+  assert (HcolXAC : Col X A C) by (apply bet_col in HbetAC; Col).
+  assert (Hts : TS A C B D).
+  { repeat split.
+    - intro. apply Hncol. Col.
+    - intro. apply Hcda. Col.
+    - exists X. split; assumption. }
+  assert (Halt : CongA B A C D C A)
+    by (apply ender_alternate_interior; assumption).
+  assert (Hbase : CongA D A C D C A).
+  { apply conga_left_comm.
+    apply (conga_trans C A D B A C D C A); [now apply conga_sym|exact Halt]. }
+  assert (Hlegs : Cong D A D C).
+  { apply ender_base_angle_conv; [intro; apply Hcda; Col|exact Hbase]. }
+  apply (ender_rhombus_sides A B C D X); auto.
+  right. right. left. Cong.
 Qed.
 
 Lemma ender_playfair : playfair_s_postulate.

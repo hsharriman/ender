@@ -13,8 +13,8 @@ The slice parses Ender source text and supports:
   `isosceles`, `equilateral`, `equiangular`, `supplementary`, `para`,
   `parallelogram`, `rectangle`, `rhombus`, `isos_trapezoid`,
   `trapezoid_premise`, `isos_trapezoid_premise`, `kite_premise`,
-  `transversal`, `radius`, `chord`, `diameter`, `tangent`,
-  `inscribed_angle`, `minor_arc`, `major_arc`, and `con_arc`;
+  `transversal`, `radius`, `chord`, `diameter`, `tangent`, `seg_bisect`,
+  `sim_tri`, `inscribed_angle`, `minor_arc`, `major_arc`, and `con_arc`;
 - reasons `given`, `reflex`, `sas`, `sss`, `asa`, `aas`, `rhl`, `cpctc`,
   `def_con_tri`, `con_seg_transitive`, `con_ang_transitive`,
   `con_tri_transitive`, `def_con_right`, `perp_con_ang`, `def_midpt`,
@@ -31,7 +31,11 @@ The slice parses Ender source text and supports:
   `con_complements_same`, `altint`, `altext`,
   `corresp_ang`, `sameside_ang`, `altint_conv`, `altext_conv`,
   `corresp_ang_conv`, `sameside_ang_conv`, `para_transitive`, `def_radius`,
-  `inscribed_semi`, `con_chords_intersect_arcs`, and `tangent_perp`;
+  `inscribed_semi`, `con_chords_intersect_arcs`, `tangent_perp`,
+  `tangent_perp_conv`, `con_tangents_ext`, `radius_chord_bisect`,
+  `perp_bisector`, `isos_trap_con_diags`, `pgram_diag_bisect_conv`,
+  `rect_diag_con_conv`, `rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv`,
+  and `aa_sim`;
 - one-character point names, named premises, segment, triangle, angle,
   quadrilateral, and circle declarations, numbered steps, and exact step
   dependencies.
@@ -427,6 +431,46 @@ Whichever is chosen, the rules also need the arc-kind side condition that
 separates congruent from supplementary, in the same way `Transversal`
 sidedness does for the parallel-line family.
 
+## Open question: what `radius_chord_bisect_conv` concludes
+
+The same shape, found while working through the circle family. The catalog
+reads "the perpendicular bisector of a chord is a radius of the circle", and
+the corpus renders that as
+
+```
+[g_1] perp_bisector(OT, AB, M)
+[g_2] chord(c_OR, AB)
+[03] radius_chord_bisect_conv(1,2) -> radius(c_OR, T)
+```
+
+`radius(c_OR, T)` means `Cong O T O R`: the far end of the bisector segment is
+**on the circle**. That does not follow, and no strengthening of the premises
+will make it: slide `T` further out along the same line and every premise still
+holds. What the theorem actually says is that the bisector *passes through the
+centre*, and the audited language has no conclusion form for it —
+`on_line(OT, O)` is `Bet O O T`, which is trivially true and says nothing.
+Either the language grows a way to state "this segment's line carries the
+centre", or the reason is retired. Until then it stays fail-closed, at the cost
+of `circles/radius_chord_bisect_conv_correct.txt` and
+`DS holt_s11-2_exer43_c1.txt`.
+
+## Open question: where `linear_pair_conv` gets its adjacency
+
+`supplementary(a, b)` is `SuppA`, a relation between two angle *measures*: it
+holds of angles at different vertices in different parts of the plane.
+`linear_pair(a, b)` additionally asserts the drawn figure — a shared ray and
+`BetS` on the two outer ones. So `supplementary -> linear_pair` is false as
+spelled, and the catalog knows it: the body says "if two **adjacent** angles
+are supplementary" while the entry lists `supplementary` as the only
+dependency.
+
+The adjacency has to come from somewhere. A diagram premise would do it
+(`on_line(AB, C)` for `a_ACD` and `a_DCB`), but then the `supplementary`
+dependency is doing no work — the premise alone already gives the linear pair.
+So the honest choice is between giving the reason a diagram dependency and
+accepting that it is really a diagram rule, or dropping it. It costs
+`lines_angles/linear_pair_conv_correct.txt` either way until then.
+
 ## Next work
 
 The complete declaration and statement parser, its soundness and completeness
@@ -519,9 +563,32 @@ diagonal cuts a rhombus into have three pairs of congruent sides, so `l11_51`
 gives the corner halves at either end, neutrally.  `rect_diag_con` reads a
 diagonal as the third side of a triangle on one of the rectangle's sides:
 the two such triangles agree side-angle-side, since the corners between are
-right angles and the legs are the Euclidean opposite sides.  The diagonal-heavy
-remainder (`pgram_diag_bisect`, the kite rules, the trapezoid rules) is still
-fail-closed.
+right angles and the legs are the Euclidean opposite sides.
+
+The three diagonal converses are verified too, each by translating the audited
+figure into GeoCoq's midpoint spelling once (`ender_pgram_plg`) and then using
+its own quadrilateral library: `rect_diag_con_conv` through the two triangles a
+diagonal cuts off the shared side, which agree side for side and so make the
+two consecutive corners congruent as well as supplementary, hence right;
+`rhombus_diag_perp_conv` through `perp_rmb`; and `pgram_diag_bisect_conv`
+through `mid_plg` and `plg_par`, which are axiom-clean where `plg_per_rect` and
+`rect_per` are not.  `rhombus_opp_bisect_conv` reads the bisected corner
+against each of the four rotations of the quadrilateral's name — the audited
+parallelogram says the same thing about every one of them — and turns the
+bisected halves into an isosceles triangle through the alternate interior
+angles the diagonal makes.  `isos_trap_con_diags` needs no geometry at all:
+congruent diagonals *are* the audited meaning of an isosceles trapezoid.
+
+The forward diagonal rules (`pgram_diag_bisect`, `rhombus_diag_perp`,
+`kite_diag_perp`) are still fail-closed, and their fixtures would not be
+accepted if they were written, because each concludes about a crossing point
+its file never places; see
+[`corpus-disagreements.md`](corpus-disagreements.md).  So are the two
+trapezoid base-angle directions and `pgram_opp_angs_conv`, which are true but
+want geometry the development does not have: the classical
+complete-the-parallelogram construction for the trapezoid legs, and `LtA`
+monotonicity to halve a quadrilateral's angle sum for the parallelogram
+converse.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and

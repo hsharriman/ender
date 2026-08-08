@@ -24,6 +24,7 @@ Inductive Statement :=
 | ConSeg : Segment -> Segment -> Statement
 | ConAng : Angle -> Angle -> Statement
 | ConTri : Triangle -> Triangle -> Statement
+| SimTri : Triangle -> Triangle -> Statement
 | RefSeg : Segment -> Segment -> Statement
 | RefAng : Angle -> Angle -> Statement
 | RightAng : Angle -> Statement
@@ -32,6 +33,7 @@ Inductive Statement :=
 | MidptOf : Segment -> PointId -> Statement
 | IntersectSeg : Segment -> Segment -> PointId -> Statement
 | AngBisectOf : Angle -> Segment -> Statement
+| SegBisectOf : Segment -> Segment -> PointId -> Statement
 | OnLine : Segment -> PointId -> Statement
 | IsoscelesTri : Triangle -> Statement
 | EquilateralTri : Triangle -> Statement
@@ -121,7 +123,17 @@ Inductive Reason :=
 | DefRadius : nat -> Reason
 | InscribedSemi : nat -> Reason
 | ConChordsArcs : nat -> Reason
-| TangentPerp : nat -> nat -> Reason.
+| TangentPerp : nat -> nat -> Reason
+| TangentPerpConv : nat -> nat -> Reason
+| ConTangentsExt : nat -> nat -> Reason
+| RadiusChordBisect : nat -> nat -> nat -> Reason
+| PerpBisect : nat -> nat -> Reason
+| IsosTrapConDiags : nat -> nat -> Reason
+| PgramDiagBisectConv : nat -> nat -> Reason
+| RectDiagConConv : nat -> nat -> Reason
+| RhombusDiagPerpConv : nat -> nat -> Reason
+| RhombusOppBisectConv : nat -> nat -> nat -> Reason
+| AASim : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
@@ -182,7 +194,8 @@ Definition statement_eqb (x y : Statement) : bool :=
       segment_eqb a c && segment_eqb b d
   | ConAng a b, ConAng c d | RefAng a b, RefAng c d =>
       angle_eqb a c && angle_eqb b d
-  | ConTri a b, ConTri c d => triangle_eqb a c && triangle_eqb b d
+  | ConTri a b, ConTri c d | SimTri a b, SimTri c d =>
+      triangle_eqb a c && triangle_eqb b d
   | RightAng a, RightAng b => angle_eqb a b
   | ConRight a b, ConRight c d => angle_eqb a c && angle_eqb b d
   | PerpAt a b p, PerpAt c d q =>
@@ -191,6 +204,8 @@ Definition statement_eqb (x y : Statement) : bool :=
   | IntersectSeg a b p, IntersectSeg c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | AngBisectOf a b, AngBisectOf c d => angle_eqb a c && segment_eqb b d
+  | SegBisectOf a b p, SegBisectOf c d q =>
+      segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | OnLine a p, OnLine b q => segment_eqb a b && ascii_eqb p q
   | IsoscelesTri a, IsoscelesTri b | EquilateralTri a, EquilateralTri b
   | EquiangularTri a, EquiangularTri b => triangle_eqb a b

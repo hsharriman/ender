@@ -38,6 +38,7 @@ Definition project_premise_statement (s : Audit.PublicStatement) : option Statem
   | Audit.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
   | Audit.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
   | Audit.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
+  | Audit.SimTri a b => Some (SimTri (project_triangle a) (project_triangle b))
   | Audit.RefSeg a b => Some (RefSeg (project_segment a) (project_segment b))
   | Audit.RefAng a b => Some (RefAng (project_angle a) (project_angle b))
   | Audit.Right a => Some (RightAng (project_angle a))
@@ -47,6 +48,8 @@ Definition project_premise_statement (s : Audit.PublicStatement) : option Statem
   | Audit.IntersectSeg a b p =>
       Some (IntersectSeg (project_segment a) (project_segment b) p)
   | Audit.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
+  | Audit.SegBisect b t p =>
+      Some (SegBisectOf (project_segment b) (project_segment t) p)
   | Audit.OnLine s p => Some (OnLine (project_segment s) p)
   | Audit.Isosceles t => Some (IsoscelesTri (project_triangle t))
   | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
@@ -101,6 +104,8 @@ Definition project_goal_statement (s : Audit.PublicStatement) : option Statement
   | Audit.IntersectSeg a b p =>
       Some (IntersectSeg (project_segment a) (project_segment b) p)
   | Audit.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
+  | Audit.SegBisect b t p =>
+      Some (SegBisectOf (project_segment b) (project_segment t) p)
   | Audit.OnLine s p => Some (OnLine (project_segment s) p)
   | Audit.Isosceles t => Some (IsoscelesTri (project_triangle t))
   | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
@@ -113,6 +118,7 @@ Definition project_goal_statement (s : Audit.PublicStatement) : option Statement
   | Audit.Rectangle q => Some (Rect (project_quadrilateral q))
   | Audit.Rhombus q => Some (Rhomb (project_quadrilateral q))
   | Audit.IsosTrapezoid q => Some (IsosTrap (project_quadrilateral q))
+  | Audit.SimTri a b => Some (SimTri (project_triangle a) (project_triangle b))
   | Audit.Radius c p => Some (RadiusOf (project_circle c) p)
   | Audit.Chord c s => Some (ChordOf (project_circle c) (project_segment s))
   | Audit.Diameter c s =>
@@ -323,11 +329,13 @@ Inductive ExpectedFact :=
 Definition statement_function (s : Statement) : string :=
   match s with
   | ConSeg _ _ => "con_seg" | ConAng _ _ => "con_ang"
-  | ConTri _ _ => "con_tri" | RefSeg _ _ => "ref_seg"
+  | ConTri _ _ => "con_tri" | SimTri _ _ => "sim_tri"
+  | RefSeg _ _ => "ref_seg"
   | RefAng _ _ => "ref_ang" | RightAng _ => "right"
   | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
   | MidptOf _ _ => "midpt" | IntersectSeg _ _ _ => "intersect_seg"
-  | AngBisectOf _ _ => "ang_bisect" | OnLine _ _ => "on_line"
+  | AngBisectOf _ _ => "ang_bisect" | SegBisectOf _ _ _ => "seg_bisect"
+  | OnLine _ _ => "on_line"
   | IsoscelesTri _ => "isosceles" | EquilateralTri _ => "equilateral"
   | EquiangularTri _ => "equiangular" | Supplementary _ _ => "supplementary"
   | Complementary _ _ => "complementary"
@@ -616,6 +624,7 @@ Definition public_of_statement (s : Statement) : Audit.PublicStatement :=
   | ConSeg a b => Audit.ConSeg (unproject_segment a) (unproject_segment b)
   | ConAng a b => Audit.ConAng (unproject_angle a) (unproject_angle b)
   | ConTri a b => Audit.ConTri (unproject_triangle a) (unproject_triangle b)
+  | SimTri a b => Audit.SimTri (unproject_triangle a) (unproject_triangle b)
   | RefSeg a b => Audit.RefSeg (unproject_segment a) (unproject_segment b)
   | RefAng a b => Audit.RefAng (unproject_angle a) (unproject_angle b)
   | RightAng a => Audit.Right (unproject_angle a)
@@ -625,6 +634,8 @@ Definition public_of_statement (s : Statement) : Audit.PublicStatement :=
   | IntersectSeg a b p =>
       Audit.IntersectSeg (unproject_segment a) (unproject_segment b) p
   | AngBisectOf a s => Audit.AngBisect (unproject_angle a) (unproject_segment s)
+  | SegBisectOf b t p =>
+      Audit.SegBisect (unproject_segment b) (unproject_segment t) p
   | OnLine s p => Audit.OnLine (unproject_segment s) p
   | IsoscelesTri t => Audit.Isosceles (unproject_triangle t)
   | EquilateralTri t => Audit.Equilateral (unproject_triangle t)
@@ -715,6 +726,16 @@ Definition reason_name (r : Reason) : string :=
   | InscribedSemi _ => "inscribed_semi"
   | ConChordsArcs _ => "con_chords_intersect_arcs"
   | TangentPerp _ _ => "tangent_perp"
+  | TangentPerpConv _ _ => "tangent_perp_conv"
+  | ConTangentsExt _ _ => "con_tangents_ext"
+  | RadiusChordBisect _ _ _ => "radius_chord_bisect"
+  | PerpBisect _ _ => "perp_bisector"
+  | IsosTrapConDiags _ _ => "isos_trap_con_diags"
+  | PgramDiagBisectConv _ _ => "pgram_diag_bisect_conv"
+  | RectDiagConConv _ _ => "rect_diag_con_conv"
+  | RhombusDiagPerpConv _ _ => "rhombus_diag_perp_conv"
+  | RhombusOppBisectConv _ _ _ => "rhombus_opp_bisect_conv"
+  | AASim _ _ => "aa_sim"
   end.
 
 (** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
@@ -735,9 +756,13 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
   | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
   | DefParallelogram i j | PgramOppSidePara i j | RhombusConsecSides i j
-  | ParaTrans i j | TangentPerp i j => [i; j]
+  | ParaTrans i j | TangentPerp i j | TangentPerpConv i j
+  | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
+  | PgramDiagBisectConv i j | RectDiagConConv i j | RhombusDiagPerpConv i j
+  | AASim i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
   | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
+  | RadiusChordBisect i j k | RhombusOppBisectConv i j k
   | ConComplements i j k => [i; j; k]
   | DefConTri i j k l m n => [i; j; k; l; m; n]
   end.

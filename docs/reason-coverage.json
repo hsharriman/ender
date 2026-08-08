@@ -395,14 +395,14 @@
     },
     {
       "reason": "perp_bisector",
-      "status": "unimplemented",
-      "priority": 2,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/lines_angles/perp_bisector_correct.txt",
         "src/checker/proofs/lines_angles/perp_bisector_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "given",
@@ -630,14 +630,14 @@
     },
     {
       "reason": "aa_sim",
-      "status": "unimplemented",
-      "priority": 3,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/triangles/aa_sim_correct.txt",
         "src/checker/proofs/triangles/aa_sim_incorrect.txt"
       ],
-      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "sss_sim",
@@ -796,14 +796,14 @@
     },
     {
       "reason": "pgram_diag_bisect_conv",
-      "status": "unimplemented",
-      "priority": 2,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_correct.txt",
         "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "rectangle_pgram",
@@ -840,14 +840,14 @@
     },
     {
       "reason": "rect_diag_con_conv",
-      "status": "unimplemented",
-      "priority": 2,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/rect_diag_con_conv_correct.txt",
         "src/checker/proofs/quadrilaterals/rect_diag_con_conv_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "rect_pgram_ang",
@@ -873,25 +873,25 @@
     },
     {
       "reason": "rhombus_diag_perp_conv",
-      "status": "unimplemented",
-      "priority": 2,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_correct.txt",
         "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "rhombus_opp_bisect_conv",
-      "status": "unimplemented",
-      "priority": 2,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_correct.txt",
         "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "rhombus_opp_bisect",
@@ -962,14 +962,14 @@
     },
     {
       "reason": "isos_trap_con_diags",
-      "status": "unimplemented",
-      "priority": 2,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/quadrilaterals/isos_trap_con_diags_correct.txt",
         "src/checker/proofs/quadrilaterals/isos_trap_con_diags_incorrect.txt"
       ],
-      "note": "No executable Rocq rule yet; fail-closed."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "tangent_perp",
@@ -984,36 +984,36 @@
     },
     {
       "reason": "tangent_perp_conv",
-      "status": "unimplemented",
-      "priority": 3,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/circles/tangent_perp_conv_correct.txt",
         "src/checker/proofs/circles/tangent_perp_conv_incorrect.txt"
       ],
-      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "con_tangents_ext",
-      "status": "unimplemented",
-      "priority": 3,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/circles/con_tangents_ext_correct.txt",
         "src/checker/proofs/circles/con_tangents_ext_incorrect.txt"
       ],
-      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "radius_chord_bisect",
-      "status": "unimplemented",
-      "priority": 3,
+      "status": "verified",
+      "priority": 0,
       "axioms": "to determine from the weakest supporting GeoCoq theorem",
       "fixtures": [
         "src/checker/proofs/circles/radius_chord_bisect_correct.txt",
         "src/checker/proofs/circles/radius_chord_bisect_incorrect.txt"
       ],
-      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
     },
     {
       "reason": "radius_chord_bisect_conv",

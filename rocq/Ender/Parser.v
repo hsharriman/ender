@@ -308,6 +308,8 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "perp" text parse_perp
   (try_call "midpt" text parse_midpt
   (try_call "intersect_seg" text (parse_perp_like IntersectSeg)
+  (try_call "seg_bisect" text (parse_perp_like SegBisectOf)
+  (try_call "sim_tri" text (parse_triangles SimTri)
   (try_call "ang_bisect" text parse_ang_bisect
   (try_call "on_line" text (parse_point_at OnLine)
   (try_call "isosceles" text (parse_shape IsoscelesTri)
@@ -389,7 +391,7 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
          end
      | _ => None
      end)
-    None)))))))))))))))))))))))))))))))))).
+    None)))))))))))))))))))))))))))))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -527,8 +529,19 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "def_radius" text (parse_one DefRadius)
         (try_call "inscribed_semi" text (parse_one InscribedSemi)
         (try_call "con_chords_intersect_arcs" text (parse_one ConChordsArcs)
+        (try_call "tangent_perp_conv" text (parse_two TangentPerpConv)
         (try_call "tangent_perp" text (parse_two TangentPerp)
-        None)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+        (try_call "con_tangents_ext" text (parse_two ConTangentsExt)
+        (try_call "radius_chord_bisect" text (parse_three RadiusChordBisect)
+        (try_call "perp_bisector" text (parse_two PerpBisect)
+        (try_call "isos_trap_con_diags" text (parse_two IsosTrapConDiags)
+        (try_call "pgram_diag_bisect_conv" text (parse_two PgramDiagBisectConv)
+        (try_call "rect_diag_con_conv" text (parse_two RectDiagConConv)
+        (try_call "rhombus_diag_perp_conv" text (parse_two RhombusDiagPerpConv)
+        (try_call "rhombus_opp_bisect_conv" text
+          (parse_three RhombusOppBisectConv)
+        (try_call "aa_sim" text (parse_two AASim)
+        None)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

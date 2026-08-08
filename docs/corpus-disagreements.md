@@ -17,6 +17,13 @@ checker that is always a parse failure. For the legacy checker it is either a
 parse failure (4 files) or a thrown exception during context construction
 (6 files); both are grouped as "no verdict" because neither yields an answer.
 
+Thirteen files have left this document since it was first written: the
+`aa_sim`, `con_tangents_ext`, `isos_trap_con_diags`, `perp_bisector`,
+`pgram_diag_bisect_conv`, `radius_chord_bisect`, `rect_diag_con_conv`,
+`rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv` and `tangent_perp_conv`
+rules are now verified, and the ten fixtures and three textbook proofs that
+were waiting on them are accepted. The counts below are current.
+
 Two invariants hold across the whole corpus and are worth stating up front:
 
 - **No file marked `// fail` is accepted by the verified checker,** in either
@@ -34,58 +41,77 @@ Rows are the legacy checker, columns the verified one.
 |---|---|---|---|---|
 | **no verdict** | 4 | 3 | 3 | 10 |
 | **rejects** | 8 | 82 | 4 | 94 |
-| **accepts** | 3 | 36 | 125 | 164 |
-| **total** | 15 | 121 | 132 | 268 |
+| **accepts** | 3 | 23 | 138 | 164 |
+| **total** | 15 | 108 | 145 | 268 |
 
-**211 files agree** (the diagonal); **57 disagree**. 41 of the 57 are bundled
-fixtures and 16 are textbook proofs.
+**224 files agree** (the diagonal); **44 disagree**. 31 of the 44 are bundled
+fixtures and 13 are textbook proofs.
 
 The six off-diagonal cells are the six sections that follow. Reproduction
 instructions are in the [appendix](#appendix-reproducing-the-table).
 
-## Legacy accepts, verified rejects — 36 files
+## Legacy accepts, verified rejects — 23 files
 
-The largest cell by far. 24 of the 36 are waiting on rules that are not written
-yet, 11 need a decision, and 1 is a bug in the legacy checker.
+The largest cell by far. 11 of the 23 are still waiting on a rule, 11 need a
+decision, and 1 is a bug in the legacy checker.
 
-### Reason not yet implemented — 24 files
+### Reason not yet implemented — 11 files
 
 These fail only because the reason has no executable Rocq rule, so the step's
-reason does not parse and the step fails closed. No decision needed; they
-resolve as the reason campaign continues, except where noted. Each of the 19
-fixtures named `<reason>_correct.txt` has an `_incorrect.txt` twin, and every one
-of those twins is rejected by both checkers, so none of them is a disagreement.
+reason does not parse and the step fails closed. Each fixture named
+`<reason>_correct.txt` has an `_incorrect.txt` twin, and every one of those
+twins is rejected by both checkers, so none of them is a disagreement.
 
-- **Circles — 6 files.** `circles/con_inscribed_angs_correct.txt` and
-  `examples/inscribed_angles.txt` (`con_inscribed_angs`),
-  `circles/con_tangents_ext_correct.txt`,
-  `circles/radius_chord_bisect_correct.txt`,
-  `circles/radius_chord_bisect_conv_correct.txt`,
-  `circles/tangent_perp_conv_correct.txt`. The inscribed-angle pair is blocked
-  on the open arc question in
-  [`verified-checker.md`](verified-checker.md); the rest is ordinary priority-3
-  work.
-- **Circles, textbook — 4 files.** `DS holt_s11-1_exer29_c1.txt`
-  (`tangent_perp_conv`), `DS holt_s11-1_exer30_c1.txt` (`con_tangents_ext`),
-  `DS holt_s11-2_exer42_c1.txt` (`radius_chord_bisect`),
-  `DS holt_s11-2_exer43_c1.txt` (`radius_chord_bisect_conv`). These are the only
-  textbook proofs still held up by a missing rule.
-- **Quadrilaterals — 11 files**, each named `quadrilaterals/<reason>_correct.txt`
-  for one of `isos_trap_base_angs`, `isos_trap_base_angs_conv`,
-  `isos_trap_con_diags`, `kite_diag_perp`, `pgram_diag_bisect`,
-  `pgram_diag_bisect_conv`, `pgram_opp_angs_conv`, `rect_diag_con_conv`,
-  `rhombus_diag_perp`, `rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv`.
-- **Lines — 2 files.** `lines_angles/linear_pair_conv_correct.txt` and
-  `lines_angles/perp_bisector_correct.txt`.
-- **Similarity — 1 file.** `triangles/aa_sim_correct.txt`. The `sas_sim` and
-  `sss_sim` fixtures are counted two sections down instead, because they fail to
-  parse before their reason is ever reached.
+Only three of the eleven are waiting on nothing but the work. The other eight
+split into two groups that no amount of rule-writing will close: five whose
+conclusion does not follow from the premises as the corpus spells them, and
+three whose conclusion names a point the file never places.
 
-The diagonal rules carry a hazard the corpus shares: their conclusions name a
-crossing point, and `quadrilaterals/pgram_diag_bisect_correct.txt` concludes
-`seg_bisect(AC, BD, M)` with nothing tying `M` to the figure. Implementing the
-rule will not accept that fixture, for the same reason
-`DS holt_s6-4_cio4_c1.txt` is rejected.
+**Waiting on the rule — 3 files.** `quadrilaterals/isos_trap_base_angs_correct.txt`,
+`quadrilaterals/isos_trap_base_angs_conv_correct.txt`, and
+`quadrilaterals/pgram_opp_angs_conv_correct.txt`. All three are true, and all
+three need a piece of geometry the development does not have yet. The two
+trapezoid directions share one: that a trapezoid's legs are congruent exactly
+when its base angles are, which wants the classical auxiliary construction
+(complete the parallelogram on a diagonal, then read the isosceles triangle it
+leaves). `pgram_opp_angs_conv` wants angle *comparison* — the quadrilateral's
+corners sum to two straight angles, and halving that sum needs GeoCoq's
+`LtA` monotonicity rather than the `SumA` cancellation the implemented rules
+use.
+
+**The reason is false as spelled — 5 files.** These belong with the open arc
+question in [`verified-checker.md`](verified-checker.md), not with the
+campaign; each is written up there:
+
+- `circles/con_inscribed_angs_correct.txt` and `examples/inscribed_angles.txt`
+  (`con_inscribed_angs`) — the arc question itself.
+- `circles/radius_chord_bisect_conv_correct.txt` and
+  `DS holt_s11-2_exer43_c1.txt` (`radius_chord_bisect_conv`). "The
+  perpendicular bisector of a chord is a radius" means the bisector *passes
+  through the centre*; the corpus renders it as `radius(c_OR, T)`, which claims
+  the far end of the bisector segment lies **on the circle**. Slide `T` further
+  out along the same line and every premise still holds. The audited language
+  has no conclusion form for what the theorem actually says. (`exer43`'s goal
+  happens to be trivially true, because its circle is `c_AJ` and it concludes
+  `radius(c_AJ, J)`; that is a naming coincidence, not a rule.)
+- `lines_angles/linear_pair_conv_correct.txt` — `supplementary` is a relation
+  between two angle *measures*; a linear pair additionally needs the outer rays
+  to be opposite, which is a fact about the figure. The catalog body even says
+  "if two **adjacent** angles are supplementary" while listing `supplementary`
+  as the only dependency. Nothing in the file supplies the adjacency, and once
+  a diagram premise did, the `supplementary` dependency would be doing no work.
+
+**The conclusion names a point the file never places — 3 files.**
+`quadrilaterals/pgram_diag_bisect_correct.txt` concludes
+`seg_bisect(AC, BD, M)`, `quadrilaterals/rhombus_diag_perp_correct.txt`
+concludes `perp(PR, QS, N)`, and `quadrilaterals/kite_diag_perp_correct.txt`
+concludes `perp(AC, BD, M)`, each for a point no premise mentions. The audited
+quadrilateral does supply a crossing point — `QuadrilateralWellFormed` asserts
+`exists X, BetS A X C /\ BetS B X D` — but nothing identifies it with the point
+the conclusion names, and a `pt:` line is presentation only. Adding one
+`[d_1] intersect_seg(AC, BD, M)` line to each fixture would place it, and the
+rules can then be written against it. This is the same defect that rejects
+`DS holt_s6-4_cio4_c1.txt`.
 
 ### Triangle correspondence not established — 8 files
 
@@ -363,9 +389,12 @@ legacy checker throws on both.
 | 8 | Respell `DS s1c1_wp1.txt`'s six-argument `transversal` | 1 | proof file |
 | 9 | Fix the markers on the two truncated textbook proofs | 2 | proof file |
 | 10 | Retire or respell `reg1`/`reg1v2` and the two `inscribed_angle` files | 4 | proof file |
+| 11 | Place the crossing point the diagonal rules conclude about, with an `intersect_seg` premise per fixture | 3 | proof file |
+| 12 | Give `radius_chord_bisect_conv` a conclusion its premises entail, or retire it | 2 | the language |
+| 13 | Give `linear_pair_conv` the adjacency it needs, or retire it | 1 | the language |
 
-Everything not in that list is either a reason with no rule yet (24 files, which
-only time fixes) or a file both checkers already agree about.
+Everything not in that list is either a reason still waiting on the rule
+(3 files, which only time fixes) or a file both checkers already agree about.
 
 ## Appendix: reproducing the table
 

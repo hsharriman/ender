@@ -28,7 +28,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- sixty-two reasons are fully verified and none are partial. The conservative
+- seventy-two reasons are fully verified and none are partial. The conservative
   `ang_bisect_conv` rule requires its congruent dependency to name exactly the
   two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
@@ -67,7 +67,19 @@ Known limitations relevant to prioritization:
   diagonal and `l12_21_b` -- neutral, unlike the forward direction.
   `rect_pgram_ang` composes the opposite-corner and consecutive-corner
   theorems: one right corner forces its opposite by congruence and its two
-  neighbours by supplementarity.  `pgram_consec_angs_conv` inverts the
+  neighbours by supplementarity.  The three diagonal converses are verified
+  now as well -- `rect_diag_con_conv`, `rhombus_diag_perp_conv`, and
+  `pgram_diag_bisect_conv` -- each by translating the audited figure into
+  GeoCoq's midpoint spelling once (`ender_pgram_plg`) and then using its
+  quadrilateral library; note that `plg_per_rect` and `rect_per` carry
+  `Eqdep.Eq_rect_eq`, so the rectangle converse goes through congruent
+  consecutive corners and `suppa__per` instead, while `perp_rmb`, `mid_plg`,
+  and `plg_par` are axiom-clean.  `rhombus_opp_bisect_conv` reads the bisected
+  corner against each of the four rotations of the quadrilateral's name, which
+  is sound because the audited parallelogram is rotation-invariant
+  (`pgram_rotate`).  It asks for both cited bisectors, at opposite corners:
+  one is enough for the geometry, but accepting one premise cited twice would
+  accept `rhombus_opp_bisect_conv_incorrect`.  `pgram_consec_angs_conv` inverts the
   consecutive-corner theorem, and neutrally: continuing one of the two sides
   past their shared corner turns the supplement into an alternate interior
   angle, which `l12_21_b` reads back as the parallel.  The rest of the diagonal-heavy remainder (`pgram_diag_bisect`,
@@ -102,7 +114,17 @@ Known limitations relevant to prioritization:
   and arc statement layer (`circ:` declarations; `radius`, `chord`,
   `diameter`, `tangent`, `inscribed_angle`, the nested arc spellings, and
   `con_arc`): `def_radius`, `inscribed_semi`, `con_chords_intersect_arcs`,
-  and `tangent_perp` are verified.  `inscribed_semi` gets Thales axiom-free
+  and `tangent_perp` are verified, and with them the tangent and chord
+  converses: `tangent_perp_conv` (the audited `IsTangent` *is* the right angle
+  to the radius at an on-circle point, so the rule assembles the figure rather
+  than deriving anything), `con_tangents_ext` (hypotenuse-leg, through
+  `cong2_per2__cong`), and `radius_chord_bisect` (the foot is congruent to both
+  chord endpoints, so `l7_20` makes it their midpoint).
+  `radius_chord_bisect_conv` stays fail-closed and is *not* merely deferred:
+  its catalog conclusion, `radius`, claims the far end of the bisector lies on
+  the circle, which the premises do not entail -- a third open question in
+  [`verified-checker.md`](verified-checker.md).  `inscribed_semi` gets Thales
+  axiom-free
   through `existential_triangle__rah` (witnessed by the lower-dimension
   points and `euclidean_trisuma__bet`) and `rah__thales_postulate` — both
   GeoCoq spellings of Thales (`midpoint_thales`, `thales_theorem`) rest on
