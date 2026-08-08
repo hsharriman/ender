@@ -1447,6 +1447,22 @@ Definition isos_trap_con_diags_rule (facts : list Statement) (i j : nat)
   | _, _, _ => false
   end.
 
+(** Congruent base angles make a trapezoid isosceles -- congruent diagonals
+    being what the audited [isos_trapezoid] means. *)
+Definition isos_trap_base_angs_rule (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | IsosTrap q, Some (ConAng a b), Some (TrapPremise r s1 s2) =>
+      quadrilateral_eqb q r &&
+      ((segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_cd q) &&
+        (angle_pair_eqb a b (quad_corner_a q) (quad_corner_b q) ||
+         angle_pair_eqb a b (quad_corner_c q) (quad_corner_d q))) ||
+       (segment_pair_eqb s1 s2 (quad_side_bc q) (quad_side_da q) &&
+        (angle_pair_eqb a b (quad_corner_b q) (quad_corner_c q) ||
+         angle_pair_eqb a b (quad_corner_d q) (quad_corner_a q))))
+  | _, _, _ => false
+  end.
+
 (** An isosceles trapezoid's base angles are congruent -- at either end of
     whichever pair of sides the premise names parallel. *)
 Definition isos_trap_base_angs_conv_rule (facts : list Statement) (i : nat)
@@ -2020,6 +2036,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RadiusChordBisect i j k => radius_chord_bisect_rule facts i j k conclusion
   | PerpBisect i j => perp_bisector_rule facts i j conclusion
   | IsosTrapConDiags i j => isos_trap_con_diags_rule facts i j conclusion
+  | IsosTrapBaseAngs i j => isos_trap_base_angs_rule facts i j conclusion
   | IsosTrapBaseAngsConv i =>
       isos_trap_base_angs_conv_rule facts i conclusion
   | PgramDiagBisectConv i j =>
@@ -5315,6 +5332,63 @@ Proof.
   split; [exact HXbd|exact Hdiag].
 Qed.
 
+Lemma isos_trap_base_angs_sound : forall facts i j conclusion,
+  Forall Interp facts ->
+  isos_trap_base_angs_rule facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  unfold isos_trap_base_angs_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hq Hmatch].
+  apply quadrilateral_eqb_eq in Hq. subst q0.
+  assert (Hangles : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
+  assert (Htrap : Interp (TrapPremise q s s0))
+    by (eapply lookup_step_sound; eauto).
+  pose proof Htrap as Htrapcopy. cbn in Htrapcopy.
+  destruct Htrapcopy as [Hshape Hpar].
+  pose proof Hshape as Hwf. destruct Hwf as [Hwf _].
+  destruct Hwf as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
+  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    as [Hbcd [Hcda Hdab]].
+  cbn. split; [exact Hshape|].
+  unfold Audit.SegmentCongruent, Audit.seg_start, Audit.seg_end; cbn.
+  (* the parallel pair the premise names, and the base angles at either end
+     of it: four readings of one theorem, one per rotation *)
+  apply orb_true_iff in Hmatch.
+  destruct Hmatch as [Hm|Hm]; apply andb_true_iff in Hm;
+    destruct Hm as [Hsides Hangs];
+    pose proof (para_pair_sound _ _ _ _ Hsides Hpar) as Hparallel;
+    cbn in Hparallel;
+    apply orb_true_iff in Hangs; destruct Hangs as [Hm|Hm];
+    pose proof (conga_pair_sound _ _ _ _ Hm Hangles) as Hbase; cbn in Hbase.
+  - exact (ender_isos_trap_con_diagonals _ _ _ _ X Hncol HXac HXbd
+             Hparallel Hbase).
+  - assert (Hrot : Cong (point q.(quad_c)) (point q.(quad_a))
+                        (point q.(quad_d)) (point q.(quad_b))).
+    { apply (ender_isos_trap_con_diagonals _ _ _ _ X Hcda
+               (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd));
+        [now apply par_symmetry|exact Hbase]. }
+    Cong.
+  - assert (Hrot : Cong (point q.(quad_b)) (point q.(quad_d))
+                        (point q.(quad_c)) (point q.(quad_a))).
+    { apply (ender_isos_trap_con_diagonals _ _ _ _ X Hbcd HXbd
+               (ender_bets_sym _ _ _ HXac));
+        [exact Hparallel|exact Hbase]. }
+    Cong.
+  - assert (Hrot : Cong (point q.(quad_d)) (point q.(quad_b))
+                        (point q.(quad_a)) (point q.(quad_c))).
+    { apply (ender_isos_trap_con_diagonals _ _ _ _ X Hdab
+               (ender_bets_sym _ _ _ HXbd) HXac);
+        [now apply par_symmetry|exact Hbase]. }
+    Cong.
+Qed.
+
 Lemma isos_trap_base_angs_conv_sound : forall facts i conclusion,
   Forall Interp facts ->
   isos_trap_base_angs_conv_rule facts i conclusion = true ->
@@ -5940,6 +6014,7 @@ Proof.
   - eapply radius_chord_bisect_sound; eauto.
   - eapply perp_bisector_sound; eauto.
   - eapply isos_trap_con_diags_sound; eauto.
+  - eapply isos_trap_base_angs_sound; eauto.
   - eapply isos_trap_base_angs_conv_sound; eauto.
   - eapply pgram_diag_bisect_conv_sound; eauto.
   - eapply pgram_opp_angs_conv_sound; eauto.

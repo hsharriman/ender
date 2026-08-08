@@ -1147,6 +1147,257 @@ Proof.
     apply conga_left_comm, conga_sym, Hangle.
 Qed.
 
+(** The half-diagonals decide the base angles.  With [X A] the shorter half,
+    the triangle the crossing cuts off the leg [A D] is the wider one at its
+    base: cut both legs' triangles down to the shorter pair of sides -- they
+    have congruent vertical angles at the crossing, so those two agree
+    side-angle-side -- and what is left over is an exterior angle on one side
+    and an interior one on the other. *)
+Lemma ender_trap_half_lt : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D -> Par A B C D ->
+  Lt X A X B -> LtA A B C D A B.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar Hlt.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [Hbcd [Hcda Hdab]].
+  pose proof Hncol as Hd1. apply not_col_distincts in Hd1.
+  destruct Hd1 as [_ [HAB [HBC HACne]]].
+  pose proof Hcda as Hd2. apply not_col_distincts in Hd2.
+  destruct Hd2 as [_ [HCD [HDA _]]].
+  pose proof Hbcd as Hd3. apply not_col_distincts in Hd3.
+  destruct Hd3 as [_ [_ [_ HBDne]]].
+  pose proof HAC as HACc. destruct HACc as [HbetAC [HAX HXC]].
+  pose proof HBD as HBDc. destruct HBDc as [HbetBD [HBX HXD]].
+  assert (HcolXAC : Col X A C) by (apply bet_col in HbetAC; Col).
+  assert (HcolXBD : Col X B D) by (apply bet_col in HbetBD; Col).
+  assert (HoutAC : Out A X C)
+    by (apply bet_out; [now apply not_eq_sym|assumption]).
+  assert (HoutCA : Out C X A)
+    by (apply bet_out; [assumption|now apply between_symmetry]).
+  assert (HoutBD : Out B X D)
+    by (apply bet_out; [now apply not_eq_sym|assumption]).
+  assert (HoutDB : Out D X B)
+    by (apply bet_out; [assumption|now apply between_symmetry]).
+  assert (HncolXAB : ~ Col X A B).
+  { intro Hcol. apply Hncol.
+    apply (col3 A X); [auto using not_eq_sym|Col|Col|Col]. }
+  assert (HncolXCD : ~ Col X C D).
+  { intro Hcol. apply Hcda.
+    apply (col3 C X); [auto using not_eq_sym|Col|Col|Col]. }
+  assert (HncolXAD : ~ Col X A D).
+  { intro Hcol. apply Hdab.
+    apply (col3 X D); [assumption|Col|Col|Col]. }
+  assert (HncolXBC : ~ Col X B C).
+  { intro Hcol. apply Hbcd.
+    apply (col3 X B); [now apply not_eq_sym|Col|Col|Col]. }
+  (* each half-diagonal names the same ray as the whole one *)
+  assert (HangA : CongA X A B C A B)
+    by (apply out2__conga; [now apply l6_6|apply out_trivial; auto]).
+  assert (HangB : CongA X B A D B A)
+    by (apply out2__conga; [now apply l6_6
+                           |apply out_trivial; auto using not_eq_sym]).
+  assert (HangC : CongA X C D A C D)
+    by (apply out2__conga; [now apply l6_6|apply out_trivial; auto]).
+  assert (HangD : CongA X D C B D C)
+    by (apply out2__conga; [now apply l6_6
+                           |apply out_trivial; auto using not_eq_sym]).
+  (* the far halves compare the same way as the near ones *)
+  assert (Hts1 : TS A C B D).
+  { repeat split; [intro; apply Hncol; Col|intro; apply Hcda; Col|].
+    exists X. split; assumption. }
+  assert (Hts2 : TS B D A C).
+  { repeat split; [intro; apply Hdab; Col|intro; apply Hbcd; Col|].
+    exists X. split; [Col|assumption]. }
+  assert (Hu : CongA C A B A C D).
+  { apply conga_comm, ender_alternate_interior; assumption. }
+  assert (Hv : CongA D B A B D C).
+  { apply conga_comm, ender_alternate_interior; [exact Hts2|Par]. }
+  assert (Hnear : LtA X B A X A B)
+    by (apply l11_44_2_a; [intro; apply HncolXAB; Col|exact Hlt]).
+  assert (Hfar : LtA X D C X C D).
+  { apply (conga_preserves_lta B D C A C D);
+      [now apply conga_sym|now apply conga_sym|].
+    apply (conga_preserves_lta D B A C A B);
+      [exact Hv|exact Hu|].
+    apply (conga_preserves_lta X B A X A B);
+      [exact HangB|exact HangA|exact Hnear]. }
+  assert (Hlt2 : Lt X C X D) by (apply (l11_44_2_b D X C), Hfar).
+  (* cut both legs' triangles down to the shorter pair of sides *)
+  destruct (le_bet X B X A) as [E [HbetE HcongE]]; [now apply lt__le|].
+  destruct (le_bet X D X C) as [F [HbetF HcongF]]; [now apply lt__le|].
+  assert (HEX : E <> X).
+  { intro Heq. subst E. apply HAX.
+    symmetry. exact (cong_reverse_identity X X A HcongE). }
+  assert (HFX : F <> X).
+  { intro Heq. subst F. apply HXC.
+    exact (cong_reverse_identity X X C HcongF). }
+  assert (HEB : E <> B).
+  { intro Heq. subst E. apply (cong__nlt X A X B);
+      [now apply cong_symmetry|exact Hlt]. }
+  assert (HFD : F <> D).
+  { intro Heq. subst F. apply (cong__nlt X C X D);
+      [now apply cong_symmetry|exact Hlt2]. }
+  assert (HoutE : Out X E B) by (apply bet_out; assumption).
+  assert (HoutF : Out X F D) by (apply bet_out; assumption).
+  (* the two cut triangles agree side-angle-side, across the crossing *)
+  assert (Hvertical : CongA A X F E X C).
+  { apply (conga_trans A X F A X D);
+      [apply out2__conga;
+         [apply out_trivial; now apply not_eq_sym|now apply l6_6]|].
+    apply (conga_trans A X D B X C);
+      [apply conga_right_comm, l11_14;
+         [exact HbetAC|exact HAX|now apply not_eq_sym
+         |now apply between_symmetry|exact HXD|now apply not_eq_sym]|].
+    apply out2__conga;
+      [exact HoutE|apply out_trivial; now apply not_eq_sym]. }
+  assert (HncolXAF : ~ Col X A F).
+  { intro Hcol. apply HncolXAD.
+    apply (col3 X F); [now apply not_eq_sym|Col|Col|
+      apply bet_col in HbetF; Col]. }
+  destruct (ender_sas X A F X E C) as [_ [_ [_ [_ [Hcut _]]]]];
+    [exact HncolXAF|now apply cong_symmetry|exact Hvertical
+    |exact HcongF|].
+  (* what is left over: an exterior angle at [E], an interior one at [A] *)
+  assert (HncolEBC : ~ Col E B C).
+  { intro Hcol. apply HncolXBC.
+    apply (col3 B E); [now apply not_eq_sym|Col|
+      apply bet_col in HbetE; Col|Col]. }
+  destruct (l11_41 E B C X) as [_ Houter];
+    [exact HncolEBC|now apply between_symmetry|now apply not_eq_sym|].
+  assert (HncolFAD : ~ Col F A D).
+  { intro Hcol. apply HncolXAD.
+    apply (col3 D F); [now apply not_eq_sym|apply bet_col in HbetF; Col
+                      |Col|apply bet_col in HbetF; Col]. }
+  assert (Hinner : LtA X A F X A D).
+  { apply inangle__lta; [intro; apply HncolFAD; Col|].
+    repeat split; [now apply not_eq_sym|now apply not_eq_sym
+                  |intro; subst F; apply HncolFAD; Col|].
+    exists F. split; [exact HbetF|right; apply out_trivial;
+      intro; subst F; apply HncolFAD; Col]. }
+  (* chain them: the angle over the shorter half is the smaller *)
+  assert (HCE : C <> E) by (intro Heq; subst E; apply HncolEBC; Col).
+  assert (HoutBE : Out B E X)
+    by (apply bet_out; [exact HEB|now apply between_symmetry]).
+  assert (Hlegs : LtA X B C X A D).
+  { apply (lta_trans _ _ _ X A F); [|exact Hinner].
+    apply (conga_preserves_lta E B C C E X);
+      [apply out2__conga;
+         [now apply l6_6|apply out_trivial; now apply not_eq_sym]
+      |apply (conga_trans C E X X E C);
+         [apply conga_pseudo_refl; [exact HCE|now apply not_eq_sym]
+         |now apply conga_sym]
+      |exact Houter]. }
+  (* and the corners are the sums of the two halves *)
+  destruct (ender_quad_corner_split A B C D X Hncol HAC HBD) as [HsumA HsamsA].
+  destruct (ender_quad_corner_split B C D A X Hbcd HBD
+              (ender_bets_sym _ _ _ HAC)) as [HsumB _].
+  (* the corner at [B] is the smaller sum, half for half *)
+  assert (Hleft : LtA D B C D A C).
+  { apply (conga_preserves_lta X B C X A D);
+      [apply out2__conga;
+         [now apply l6_6|apply out_trivial; now apply not_eq_sym]
+      |apply (conga_trans X A D C A D D A C);
+         [apply out2__conga;
+            [now apply l6_6|apply out_trivial; now apply not_eq_sym]
+         |apply conga_pseudo_refl; [now apply not_eq_sym|assumption]]
+      |exact Hlegs]. }
+  assert (Hright : LtA A B D C A B).
+  { apply (conga_preserves_lta X B A X A B);
+      [apply (conga_trans X B A D B A A B D);
+         [exact HangB
+         |apply conga_pseudo_refl; [now apply not_eq_sym|assumption]]
+      |exact HangA|exact Hnear]. }
+  apply (sams_lea_lta123_suma2__lta D B C A B D A B C D A C C A B D A B);
+    [exact Hleft|now apply lta__lea|exact HsamsA
+    |now apply suma_sym|exact HsumA].
+Qed.
+
+(** The other direction of the trapezoid pair: congruent base angles make the
+    diagonals congruent.  Either half-diagonal being the shorter would make
+    the base angle over it the smaller, so the halves agree, and the two
+    triangles the crossing cuts off the parallel sides are isosceles. *)
+Lemma ender_isos_trap_con_diagonals : forall A B C D X,
+  ~ Col A B C -> BetS A X C -> BetS B X D ->
+  Par A B C D -> CongA D A B A B C ->
+  Cong A C B D.
+Proof.
+  intros A B C D X Hncol HAC HBD Hpar Hbase.
+  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+    as [Hbcd [Hcda Hdab]].
+  pose proof HAC as HACc. destruct HACc as [HbetAC [HAX HXC]].
+  pose proof HBD as HBDc. destruct HBDc as [HbetBD [HBX HXD]].
+  assert (HcolXAC : Col X A C) by (apply bet_col in HbetAC; Col).
+  assert (HcolXBD : Col X B D) by (apply bet_col in HbetBD; Col).
+  assert (HncolXAB : ~ Col X A B).
+  { intro Hcol. apply Hncol.
+    apply (col3 A X); [auto using not_eq_sym|Col|Col|Col]. }
+  assert (HncolXCD : ~ Col X C D).
+  { intro Hcol. apply Hcda.
+    apply (col3 C X); [auto using not_eq_sym|Col|Col|Col]. }
+  assert (HoutAC : Out A X C)
+    by (apply bet_out; [now apply not_eq_sym|assumption]).
+  assert (HoutBD : Out B X D)
+    by (apply bet_out; [now apply not_eq_sym|assumption]).
+  assert (Hts1 : TS A C B D).
+  { repeat split; [intro; apply Hncol; Col|intro; apply Hcda; Col|].
+    exists X. split; assumption. }
+  assert (Hts2 : TS B D A C).
+  { repeat split; [intro; apply Hdab; Col|intro; apply Hbcd; Col|].
+    exists X. split; [Col|assumption]. }
+  destruct (or_lt_cong_gt X A X B) as [Hlt|[Hgt|Hcong]].
+  - exfalso.
+    apply (lta__nlea A B C D A B);
+      [exact (ender_trap_half_lt A B C D X Hncol HAC HBD Hpar Hlt)
+      |now apply conga__lea].
+  - exfalso.
+    apply (lta__nlea B A D C B A);
+      [apply (ender_trap_half_lt B A D C X);
+         [intro; apply Hdab; Col|exact HBD|exact HAC|Par|exact Hgt]
+      |apply conga__lea, conga_comm, conga_sym, Hbase].
+  - (* congruent halves at the near side, hence at the far side too *)
+    pose proof Hncol as Hd1. apply not_col_distincts in Hd1.
+    destruct Hd1 as [_ [HAB [HBC HACne]]].
+    pose proof Hcda as Hd2. apply not_col_distincts in Hd2.
+    destruct Hd2 as [_ [HCD [HDA _]]].
+    assert (HoutCA : Out C X A)
+      by (apply bet_out; [assumption|now apply between_symmetry]).
+    assert (HoutDB : Out D X B)
+      by (apply bet_out; [assumption|now apply between_symmetry]).
+    assert (HangA : CongA X A B C A B)
+      by (apply out2__conga; [now apply l6_6|apply out_trivial; auto]).
+    assert (HangB : CongA X B A D B A)
+      by (apply out2__conga; [now apply l6_6
+                             |apply out_trivial; auto using not_eq_sym]).
+    assert (HangC : CongA X C D A C D)
+      by (apply out2__conga; [now apply l6_6|apply out_trivial; auto]).
+    assert (HangD : CongA X D C B D C)
+      by (apply out2__conga; [now apply l6_6
+                             |apply out_trivial; auto using not_eq_sym]).
+    assert (Hu : CongA C A B A C D).
+    { apply conga_comm, ender_alternate_interior; assumption. }
+    assert (Hv : CongA D B A B D C).
+    { apply conga_comm, ender_alternate_interior; [exact Hts2|Par]. }
+    assert (Hbase' : CongA X A B X B A)
+      by (apply ender_base_angle; [intro; apply HncolXAB; Col|exact Hcong]).
+    (* the near base angles are congruent, so the far ones are too *)
+    assert (H1 : CongA X C D C A B)
+      by (apply (conga_trans X C D A C D); [exact HangC|now apply conga_sym]).
+    assert (H2 : CongA X C D X A B)
+      by (apply (conga_trans X C D C A B); [exact H1|now apply conga_sym]).
+    assert (H3 : CongA X C D X B A)
+      by (apply (conga_trans X C D X A B); [exact H2|exact Hbase']).
+    assert (H4 : CongA X C D D B A)
+      by (apply (conga_trans X C D X B A); [exact H3|exact HangB]).
+    assert (H5 : CongA X C D B D C)
+      by (apply (conga_trans X C D D B A); [exact H4|exact Hv]).
+    assert (Hfar : CongA X C D X D C)
+      by (apply (conga_trans X C D B D C); [exact H5|now apply conga_sym]).
+    apply (l2_11 A X C B X D);
+      [exact HbetAC|exact HbetBD|Cong|].
+    apply (ender_base_angle_conv X C D);
+      [intro; apply HncolXCD; Col|exact Hfar].
+Qed.
+
 Lemma ender_playfair : playfair_s_postulate.
 Proof.
   apply tarski_s_euclid_implies_playfair.

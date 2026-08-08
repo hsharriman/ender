@@ -731,6 +731,7 @@ Definition reason_name (r : Reason) : string :=
   | RadiusChordBisect _ _ _ => "radius_chord_bisect"
   | PerpBisect _ _ => "perp_bisector"
   | IsosTrapConDiags _ _ => "isos_trap_con_diags"
+  | IsosTrapBaseAngs _ _ => "isos_trap_base_angs"
   | IsosTrapBaseAngsConv _ => "isos_trap_base_angs_conv"
   | PgramDiagBisectConv _ _ => "pgram_diag_bisect_conv"
   | PgramOppAngsConv _ _ => "pgram_opp_angs_conv"
@@ -761,7 +762,7 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | DefParallelogram i j | PgramOppSidePara i j | RhombusConsecSides i j
   | ParaTrans i j | TangentPerp i j | TangentPerpConv i j
   | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
-  | PgramDiagBisectConv i j | PgramOppAngsConv i j
+  | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
   | RectDiagConConv i j | RhombusDiagPerpConv i j
   | AASim i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k

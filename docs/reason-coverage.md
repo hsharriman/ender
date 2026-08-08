@@ -107,17 +107,15 @@ all corpus files through the extracted API.
   `perp_bisector`.  Each converse concludes a quadrilateral statement and so
   must establish its well-formedness rather than read it off a dependency;
   the declaration is where that comes from, exactly as in
-  `pgram_opp_sides_conv`.  `pgram_opp_angs_conv` and
-  `isos_trap_base_angs_conv` join them through angle and length *ordering*
+  `pgram_opp_sides_conv`.  `pgram_opp_angs_conv`, `isos_trap_base_angs_conv`,
+  and `isos_trap_base_angs` join them through angle and length *ordering*
   rather than cancellation -- see [`verified-checker.md`](verified-checker.md).
-  One is left: `isos_trap_base_angs`, the direction from base angles to
-  diagonals, which the crossing point does not decide and which needs the
-  classical complete-the-parallelogram construction.  The forward diagonal
+  The group is now complete except for the forward diagonal
   rules
-  (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`) name the
+  (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`), which name the
   crossing point in their conclusions, so a proof that does not state where
   the diagonals meet leaves it unconstrained -- writing those rules will not
-  accept the current fixtures.  `linear_pair_conv` is false as spelled and is
+  accept the current fixtures, which is why they stay last.  `linear_pair_conv` is false as spelled and is
   written up as an open question in
   [`verified-checker.md`](verified-checker.md).  None of these unblocks a
   textbook proof: the corpus proofs still rejected are held up by defects in

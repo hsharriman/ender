@@ -33,9 +33,10 @@ The slice parses Ender source text and supports:
   `corresp_ang_conv`, `sameside_ang_conv`, `para_transitive`, `def_radius`,
   `inscribed_semi`, `con_chords_intersect_arcs`, `tangent_perp`,
   `tangent_perp_conv`, `con_tangents_ext`, `radius_chord_bisect`,
-  `perp_bisector`, `isos_trap_con_diags`, `isos_trap_base_angs_conv`,
-  `pgram_diag_bisect_conv`, `pgram_opp_angs_conv`, `rect_diag_con_conv`,
-  `rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv`, and `aa_sim`;
+  `perp_bisector`, `isos_trap_con_diags`, `isos_trap_base_angs`,
+  `isos_trap_base_angs_conv`, `pgram_diag_bisect_conv`, `pgram_opp_angs_conv`,
+  `rect_diag_con_conv`, `rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv`,
+  and `aa_sim`;
 - one-character point names, named premises, segment, triangle, angle,
   quadrilateral, and circle declarations, numbered steps, and exact step
   dependencies.
@@ -593,17 +594,30 @@ congruent diagonals plus the alternate interior angles make the triangle the
 crossing cuts off one parallel side isosceles exactly when the other one is,
 by `l11_44_2_a` and `bet2_lt2__lt`.
 
+`isos_trap_base_angs`, the direction from the base angles to the diagonals,
+needs one thing more, and it is worth saying why.  Every relation the crossing
+point offers -- the alternate interior angles, both triangle sums, the
+consecutive-interior supplements -- is satisfied by the non-isosceles figure
+as well: writing the corner at `A` as `∠DAC + ∠CAB` and the one at `B` as
+`∠ABD + ∠DBC`, the two triangle sums reduce `∠A ≅ ∠B` to `∠ADC ≅ ∠BCD`, which
+is the same hypothesis restated through the supplements.  Angles alone cannot
+pin the lengths, so the classical proof adds a point.  This one adds two, and
+puts them where the betweenness is already known: with `X A` the shorter half
+of its diagonal, cut the other two half-diagonals down to match (`le_bet`
+places `E` on `X B` and `F` on `X D`), and the two triangles the crossing
+leaves agree side-angle-side across it, since the angles at `X` are vertical
+(`l11_14`).  What is left over is an exterior angle on one side (`l11_41`) and
+an interior one on the other (`inangle__lta`), which makes the base angle over
+the shorter half strictly the smaller -- so neither strict case survives, the
+halves are congruent, and `l2_11` adds them back up.
+
 The forward diagonal rules (`pgram_diag_bisect`, `rhombus_diag_perp`,
 `kite_diag_perp`) are still fail-closed, and their fixtures would not be
 accepted if they were written, because each concludes about a crossing point
 its file never places; see
-[`corpus-disagreements.md`](corpus-disagreements.md).  So is
-`isos_trap_base_angs`, the one direction the crossing point does not decide:
-going from the base angles to the diagonals, every relation the crossing
-offers is satisfied by the non-isosceles figure too, so the classical
-auxiliary construction (complete the parallelogram on a leg, then read the
-isosceles triangle it leaves) is needed, and placing that point is the
-work.
+[`corpus-disagreements.md`](corpus-disagreements.md).  They are the only
+quadrilateral reasons left, and no corpus file is waiting on them: writing
+them would leave those three fixtures rejected all the same.
 
 See [the agent handoff](agent-handoff.md),
 [reason-development workflow](reason-development.md), and

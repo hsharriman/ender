@@ -28,7 +28,7 @@ Suggested task prompt:
 
 Known limitations relevant to prioritization:
 
-- seventy-four reasons are fully verified and none are partial. The conservative
+- seventy-five reasons are fully verified and none are partial. The conservative
   `ang_bisect_conv` rule requires its congruent dependency to name exactly the
   two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
@@ -84,10 +84,14 @@ Known limitations relevant to prioritization:
   cancellation: each diagonal splits the two corners it runs between, and a
   trichotomy on the halves (`or_lta2_conga`, `sams_lea_lta123_suma2__lta`,
   and for the trapezoid `l11_44_2_a` with `bet2_lt2__lt`) rules out both
-  strict cases.  `isos_trap_base_angs`, the remaining direction, is the one
-  the crossing point does not decide -- the angle relations it offers hold of
-  the non-isosceles figure too -- so it wants the classical
-  complete-the-parallelogram construction and stays fail-closed.  `pgram_consec_angs_conv` inverts the
+  strict cases.  `isos_trap_base_angs` needs two constructed points on top of
+  that, because the angle relations the crossing offers hold of the
+  non-isosceles figure too: cut the other two half-diagonals down to the
+  shorter pair (`le_bet`), and the triangles the crossing leaves agree
+  side-angle-side across it, leaving an exterior angle on one side and an
+  interior one on the other.  No corpus file is waiting on a reason now; the
+  three forward diagonal rules are all that is left of the quadrilateral
+  family, and their fixtures would stay rejected even if they were written.  `pgram_consec_angs_conv` inverts the
   consecutive-corner theorem, and neutrally: continuing one of the two sides
   past their shared corner turns the supplement into an alternate interior
   angle, which `l12_21_b` reads back as the parallel.  The rest of the diagonal-heavy remainder (`pgram_diag_bisect`,

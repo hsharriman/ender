@@ -91,6 +91,7 @@ const implemented = new Set([
   "aa_sim",
   "pgram_opp_angs_conv",
   "isos_trap_base_angs_conv",
+  "isos_trap_base_angs",
 ]);
 const partial = new Set();
 const priorityOne = new Set(["ang_bisect_conv"]);

@@ -17,13 +17,11 @@ checker that is always a parse failure. For the legacy checker it is either a
 parse failure (4 files) or a thrown exception during context construction
 (6 files); both are grouped as "no verdict" because neither yields an answer.
 
-Fifteen files have left this document since it was first written: the
-`aa_sim`, `con_tangents_ext`, `isos_trap_base_angs_conv`,
-`isos_trap_con_diags`, `perp_bisector`, `pgram_diag_bisect_conv`,
-`pgram_opp_angs_conv`, `radius_chord_bisect`, `rect_diag_con_conv`,
-`rhombus_diag_perp_conv`, `rhombus_opp_bisect_conv` and `tangent_perp_conv`
-rules are now verified, and the twelve fixtures and three textbook proofs that
-were waiting on them are accepted. The counts below are current.
+Sixteen files have left this document since it was first written. Every rule
+that this section once listed as unwritten is now verified except the three
+whose fixtures no rule can accept, and the thirteen fixtures and three
+textbook proofs that were waiting on them are accepted. The counts below are
+current.
 
 Two invariants hold across the whole corpus and are worth stating up front:
 
@@ -42,44 +40,32 @@ Rows are the legacy checker, columns the verified one.
 |---|---|---|---|---|
 | **no verdict** | 4 | 3 | 3 | 10 |
 | **rejects** | 8 | 82 | 4 | 94 |
-| **accepts** | 3 | 21 | 140 | 164 |
-| **total** | 15 | 106 | 147 | 268 |
+| **accepts** | 3 | 20 | 141 | 164 |
+| **total** | 15 | 105 | 148 | 268 |
 
-**226 files agree** (the diagonal); **42 disagree**. 29 of the 42 are bundled
+**227 files agree** (the diagonal); **41 disagree**. 28 of the 41 are bundled
 fixtures and 13 are textbook proofs.
 
 The six off-diagonal cells are the six sections that follow. Reproduction
 instructions are in the [appendix](#appendix-reproducing-the-table).
 
-## Legacy accepts, verified rejects — 21 files
+## Legacy accepts, verified rejects — 20 files
 
-The largest cell by far. 9 of the 21 are still waiting on a rule, 11 need a
-decision, and 1 is a bug in the legacy checker.
+The largest cell by far. 8 of the 20 are refused for reasons no rule will fix,
+11 need a decision, and 1 is a bug in the legacy checker.
 
-### Reason not yet implemented — 9 files
+### Reason with no rule, and none to be had — 8 files
 
-These fail only because the reason has no executable Rocq rule, so the step's
+These fail because the reason has no executable Rocq rule, so the step's
 reason does not parse and the step fails closed. Each fixture named
 `<reason>_correct.txt` has an `_incorrect.txt` twin, and every one of those
 twins is rejected by both checkers, so none of them is a disagreement.
 
-Only one of the nine is waiting on nothing but the work. The other eight split
-into two groups that no amount of rule-writing will close: five whose
-conclusion does not follow from the premises as the corpus spells them, and
-three whose conclusion names a point the file never places.
-
-**Waiting on the rule — 1 file.**
-`quadrilaterals/isos_trap_base_angs_correct.txt`, the one direction of the
-trapezoid pair that the crossing point does not decide. Its converse reads the
-two triangles the diagonals cut off the parallel sides and compares them, and
-that is enough there; going the other way, every relation the crossing point
-offers — the alternate interior angles, the two triangle sums, the
-consecutive-interior supplements — is satisfied by the non-isosceles figure
-too, so the angles alone cannot pin the lengths. The classical proof adds a
-point: complete the parallelogram on one leg, and the base angles make the
-triangle it leaves isosceles. Building that point is a construction, and
-placing it (it can land inside or outside the base, and coincides with a
-vertex exactly when the trapezoid is a parallelogram) is the work.
+None of these eight is waiting on the work. They split into two groups that no
+amount of rule-writing will close: five whose conclusion does not follow from
+the premises as the corpus spells them, and three whose conclusion names a
+point the file never places. Writing the missing rules would leave every one
+of them rejected.
 
 **The reason is false as spelled — 5 files.** These belong with the open arc
 question in [`verified-checker.md`](verified-checker.md), not with the
@@ -395,8 +381,9 @@ legacy checker throws on both.
 | 12 | Give `radius_chord_bisect_conv` a conclusion its premises entail, or retire it | 2 | the language |
 | 13 | Give `linear_pair_conv` the adjacency it needs, or retire it | 1 | the language |
 
-Everything not in that list is either a reason still waiting on the rule
-(1 file, which only time fixes) or a file both checkers already agree about.
+Everything not in that list is a file both checkers already agree about. No
+corpus file is waiting on a reason any more: every rule the corpus exercises
+that can be written has been.
 
 ## Appendix: reproducing the table
 
