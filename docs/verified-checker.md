@@ -126,9 +126,19 @@ legs is cited. GeoCoq proves RHL in neutral geometry as `cong2_per2__cong_3`,
 so this rule needs no Euclidean hypothesis.
 
 `midpt_conv` is the converse of `def_midpt`. Congruent halves alone place no
-point between the endpoints, so it additionally requires an `on_line` diagram
-premise: on a line there is exactly one point equidistant from two distinct
-points (GeoCoq `l7_20`).
+point between the endpoints, so it additionally requires a diagram premise that
+does. It accepts either `on_line(s, p)` or an `intersect_seg` naming `p` as the
+crossing of two segments, one of which is `s`: a crossing point lies between the
+endpoints of both segments it crosses. Betweenness is all this rule reads out of
+the premise, because `Midpoint` is by definition that betweenness together with
+the congruence the dependency supplies, so nothing here appeals to the endpoints
+being distinct.
+
+`def_perp` is deliberately not widened the same way, and keeps the strict
+`on_line` search. It needs the segment nondegenerate as well as the point on it
+(`perp_core_col`), and `intersect_seg` carries no nondegeneracy — a degenerate
+crossing satisfies it. Sharing one premise search between the two rules would
+have handed `def_perp` a hypothesis it is not entitled to.
 
 `third_angle` was the first implemented rule to need the parallel postulate;
 the forward parallel-line rules, `para_transitive`, `pgram_opp_sides`,

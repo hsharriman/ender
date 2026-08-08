@@ -817,6 +817,48 @@ Definition midpt_conv_wrong_halves_source := transitive_header "seg: AC
   "[01] given(g_1) -> con_seg(AB,BD)
 [02] midpt_conv(1) -> midpt(AC,B)".
 
+(** A crossing point lies between the endpoints of both segments it crosses, so
+    an [intersect_seg] places the point just as an [on_line] does.  Here the
+    named segment is the first of the two crossed. *)
+Definition midpt_conv_intersect_first_source := transitive_header "seg: AC
+"
+  "[d_01] intersect_seg(AC,DE,B)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** ...and here the second, which the search must reach as well. *)
+Definition midpt_conv_intersect_second_source := transitive_header "seg: AC
+"
+  "[d_01] intersect_seg(DE,AC,B)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** The crossing must be at the point the conclusion names. *)
+Definition midpt_conv_intersect_other_point_source := transitive_header "seg: AC
+"
+  "[d_01] intersect_seg(AC,DE,F)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** A crossing of two other segments places nothing on this one. *)
+Definition midpt_conv_intersect_foreign_source := transitive_header "seg: AC
+"
+  "[d_01] intersect_seg(DE,FG,B)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
 Example midpt_conv_accepts : complete_checker midpt_conv_source = true.
 Proof. vm_compute. reflexivity. Qed.
 Example midpt_conv_no_line_rejects :
@@ -827,6 +869,18 @@ Example midpt_conv_other_point_rejects :
 Proof. vm_compute. reflexivity. Qed.
 Example midpt_conv_wrong_halves_rejects :
   complete_checker midpt_conv_wrong_halves_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_intersect_first_accepts :
+  complete_checker midpt_conv_intersect_first_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_intersect_second_accepts :
+  complete_checker midpt_conv_intersect_second_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_intersect_other_point_rejects :
+  complete_checker midpt_conv_intersect_other_point_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_intersect_foreign_rejects :
+  complete_checker midpt_conv_intersect_foreign_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
 (** Two angles of a triangle determine the third.  This is the only
@@ -1622,10 +1676,26 @@ Definition def_perp_wrong_vertex_source := transitive_header "seg: AC
   "[01] given(g_1) -> right(a_ABD)
 [02] def_perp(1) -> perp(BD,AC,D)".
 
+(** [midpt_conv] reads an [intersect_seg] as placing its point, but [def_perp]
+    must not: it needs the segment nondegenerate as well as the foot on it, and
+    [intersect_seg] does not say that.  The same premise that satisfies the
+    midpoint converse has to be refused here. *)
+Definition def_perp_intersect_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_ADB)
+[d_01] intersect_seg(AC,BD,D)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_ADB)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
 Example def_perp_accepts : complete_checker def_perp_source = true.
 Proof. vm_compute. reflexivity. Qed.
 Example def_perp_no_line_rejects :
   complete_checker def_perp_no_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_perp_intersect_rejects :
+  complete_checker def_perp_intersect_source = false.
 Proof. vm_compute. reflexivity. Qed.
 Example def_perp_foreign_ray_rejects :
   complete_checker def_perp_foreign_ray_source = false.

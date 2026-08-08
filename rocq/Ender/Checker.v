@@ -703,13 +703,9 @@ Definition ang_bisect_conv (facts : list Statement) (i : nat)
   | _, _ => false
   end.
 
-(** Converse of the midpoint definition.  Congruent halves alone do not place
-    the point between the endpoints, so this rule additionally requires an
-    [on_line] diagram premise: on a line there is exactly one point equidistant
-    from two distinct points. *)
-
-(** [midpt_conv] and [def_perp] both want the same thing of the diagram: an
-    [on_line] premise placing this point on this segment. *)
+(** [def_perp] wants an [on_line] premise placing this point on this segment,
+    and wants all of what [on_line] says: [perp_core_col] needs the segment
+    nondegenerate as well as the point on it. *)
 Definition on_line_premise (s : Segment) (p : PointId) (pr : Premise) : bool :=
   match on_line_witness pr.(premise_statement) with
   | Some (t, q) => segment_u_eqb s t && ascii_eqb p q
@@ -720,6 +716,36 @@ Definition on_line_premise_used (premises : list Premise) (s : Segment)
     (p : PointId) : option Statement :=
   premise_witness (on_line_premise s p) premises.
 
+(** [midpt_conv] wants strictly less: only that the diagram puts [p] between
+    the endpoints of [s].  [on_line] says that and more, but [intersect_seg]
+    says it too, of each of the two segments it crosses — a crossing point lies
+    between the endpoints of both.  Reading the crossing here is what lets a
+    figure declared by its intersection serve a midpoint converse without also
+    having to spell out an [on_line] for the same pair.
+
+    This is deliberately not shared with [def_perp].  [intersect_seg] carries no
+    nondegeneracy, so it cannot discharge [perp_core_col]'s [seg_start <>
+    seg_end]; [midpt_conv] never needs that, because [Midpoint] is by definition
+    the betweenness together with the congruence its dependency supplies. *)
+Definition on_segment_statement (s : Segment) (p : PointId) (st : Statement)
+    : bool :=
+  match st with
+  | OnLine t q => segment_u_eqb s t && ascii_eqb p q
+  | IntersectSeg t u q =>
+      (segment_u_eqb s t || segment_u_eqb s u) && ascii_eqb p q
+  | _ => false
+  end.
+
+Definition on_segment_premise (s : Segment) (p : PointId) (pr : Premise) : bool :=
+  on_segment_statement s p pr.(premise_statement).
+
+Definition on_segment_premise_used (premises : list Premise) (s : Segment)
+    (p : PointId) : option Statement :=
+  premise_witness (on_segment_premise s p) premises.
+
+(** Converse of the midpoint definition.  Congruent halves alone do not place
+    the point between the endpoints, so this rule additionally requires a
+    diagram premise that does. *)
 Definition midpt_conv (premises : list Premise) (facts : list Statement)
     (i : nat) (conclusion : Statement) : bool :=
   match conclusion with
@@ -728,7 +754,7 @@ Definition midpt_conv (premises : list Premise) (facts : list Statement)
       | Some dependency =>
           fact_eqb (ConSeg (segment s.(seg_start) p) (segment p s.(seg_end)))
                    dependency &&
-          premise_found (on_line_premise s p) premises
+          premise_found (on_segment_premise s p) premises
       | None => false
       end
   | _ => false
@@ -1619,7 +1645,7 @@ Definition rule_diagram_premises_raw (decls : Declarations)
       end
   | MidptConv _ =>
       match conclusion with
-      | MidptOf s p => one (on_line_premise_used premises s p)
+      | MidptOf s p => one (on_segment_premise_used premises s p)
       | _ => []
       end
   | DefPerp _ =>
@@ -2734,6 +2760,43 @@ Proof.
   destruct Hon as [Hne Hbet]. split; [congruence|now apply between_symmetry].
 Qed.
 
+(** Betweenness transfers across the reversal [segment_u_eqb] allows. *)
+Lemma segment_u_bet : forall s t r,
+  segment_u_eqb s t = true ->
+  Bet (point t.(seg_start)) (point r) (point t.(seg_end)) ->
+  Bet (point s.(seg_start)) (point r) (point s.(seg_end)).
+Proof.
+  intros s t r Hs Hbet. apply segment_u_eqb_cases in Hs.
+  destruct Hs as [Heq|Heq]; subst s; [exact Hbet|].
+  unfold reverse_segment. cbn. now apply between_symmetry.
+Qed.
+
+(** The only thing [midpt_conv] reads out of the diagram premise it found.
+    [on_line] gives it directly; [intersect_seg] gives it of whichever of its
+    two segments matched.  Nondegeneracy is deliberately not claimed, because
+    [intersect_seg] does not carry it and the midpoint converse does not use
+    it. *)
+Lemma on_segment_statement_sound : forall s p st,
+  on_segment_statement s p st = true -> Interp st ->
+  Bet (point s.(seg_start)) (point p) (point s.(seg_end)).
+Proof.
+  intros s p st Hmatch Hst. destruct st; try discriminate;
+    cbn in Hmatch; apply andb_true_iff in Hmatch;
+    destruct Hmatch as [Hseg Hpoint];
+    unfold ascii_eqb in Hpoint; apply Ascii.eqb_eq in Hpoint; subst.
+  - (* IntersectSeg: either crossed segment may be the one named *)
+    cbn in Hst. destruct Hst as [Hbet1 Hbet2].
+    apply orb_true_iff in Hseg. destruct Hseg as [Hseg|Hseg];
+      eapply segment_u_bet; eassumption.
+  - (* OnLine: the betweenness half of what it says *)
+    cbn in Hst. destruct Hst as [_ Hbet].
+    eapply segment_u_bet; eassumption.
+Qed.
+
+(** [Midpoint] is by definition the betweenness together with the congruence of
+    the two halves, so the premise and the dependency give the conclusion with
+    nothing left over — in particular with no appeal to the endpoints being
+    distinct. *)
 Lemma midpt_conv_sound : forall premises facts i conclusion,
   Forall (interp_premise point) premises -> Forall Interp facts ->
   midpt_conv premises facts i conclusion = true -> Interp conclusion.
@@ -2746,26 +2809,12 @@ Proof.
   apply (fact_eqb_sound _ _ Hhalves) in Hdep. cbn in Hdep.
   rewrite premise_found_existsb in Hon.
   apply existsb_exists in Hon. destruct Hon as [pr [Hin Hmatch]].
-  unfold on_line_premise in Hmatch.
+  unfold on_segment_premise in Hmatch.
   pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
                 Hprem pr Hin) as Hpr.
   unfold interp_premise in Hpr.
-  destruct (on_line_witness (premise_statement pr)) as [[t q]|] eqn:Hwitness;
-    try discriminate.
-  assert (Hpremise : premise_statement pr = OnLine t q).
-  { unfold on_line_witness in Hwitness.
-    destruct (premise_statement pr); try discriminate.
-    now injection Hwitness as <- <-. }
-  rewrite Hpremise in Hpr.
-  apply andb_true_iff in Hmatch. destruct Hmatch as [Hseg Hpoint].
-  pose proof (on_line_u_sound s t p q Hseg Hpoint Hpr) as Hline.
-  cbn in Hline. destruct Hline as [Hne Hbet]. cbn.
-  assert (Hbetween : Col (point s.(seg_start)) (point p) (point s.(seg_end)))
-    by (apply bet_col in Hbet; Col).
-  assert (Hequal : Cong (point p) (point s.(seg_start))
-                        (point p) (point s.(seg_end))) by Cong.
-  destruct (l7_20 (point p) (point s.(seg_start)) (point s.(seg_end))
-                  Hbetween Hequal) as [Hsame|Hmid]; [contradiction|exact Hmid].
+  pose proof (on_segment_statement_sound _ _ _ Hmatch Hpr) as Hbet.
+  cbn. split; [exact Hbet|exact Hdep].
 Qed.
 
 Lemma correspondences_congruent : forall t u c,
