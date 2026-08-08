@@ -1,0 +1,10 @@
+// fail incomplete
+title: "Test: goal matching (incorrect - goal names a different segment)"
+premises:
+pt: A (0, 0, bl), M (2, 0, b), B (4, 0, br)
+[g_1] midpt(AB, M)
+-> con_seg(MA, BA)
+
+steps:
+[01] given(g_1) -> midpt(AB, M)
+[02] def_midpt(1) -> con_seg(AM, MB)

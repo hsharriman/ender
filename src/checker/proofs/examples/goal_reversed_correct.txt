@@ -1,0 +1,10 @@
+// pass
+title: "Test: goal matching (correct - goal spelled with reversed segments)"
+premises:
+pt: A (0, 0, bl), M (2, 0, b), B (4, 0, br)
+[g_1] midpt(AB, M)
+-> con_seg(MA, BM)
+
+steps:
+[01] given(g_1) -> midpt(AB, M)
+[02] def_midpt(1) -> con_seg(AM, MB)

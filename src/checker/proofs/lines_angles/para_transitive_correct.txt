@@ -1,0 +1,12 @@
+// pass
+title: "Test: para_transitive (correct - two parallels to the same line)"
+premises:
+pt: A (0, 8, tl), B (10, 8, tr), C (0, 5, l), D (10, 5, r), E (0, 2, bl), F (10, 2, br)
+[g_1] para(AB, CD)
+[g_2] para(CD, EF)
+-> para(AB, EF)
+
+steps:
+[01] given(g_1) -> para(AB, CD)
+[02] given(g_2) -> para(CD, EF)
+[03] para_transitive(1, 2) -> para(AB, EF)

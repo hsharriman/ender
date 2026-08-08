@@ -1,9 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
-import {
-  collectProofCheckerErrors,
-  runProofCheckerFromText,
-} from "./proofChecker";
-import { ErrorType } from "./errors/errorConstants";
+import { checkVerifiedProofNode } from "./verified/nodeWasmLoader";
 
 const PORT = parseInt(process.env.PORT ?? "4000", 10);
 
@@ -40,21 +36,13 @@ createServer(async (req, res) => {
         json(res, 400, { error: 'Body must contain a "text" string field' });
         return;
       }
-      const result = runProofCheckerFromText(text);
-      if (result.errors.length > 0) {
-        json(res, 200, { isCorrect: false, errors: result.errors });
-      } else {
-        json(res, 200, {
-          isCorrect: result.proof.isCorrect,
-          issues: collectProofCheckerErrors(result),
-        });
-      }
+      json(res, 200, await checkVerifiedProofNode(text));
     } catch (e) {
       json(res, 500, {
         isCorrect: false,
         errors: [
           {
-            type: ErrorType.UnclassifiedError,
+            type: 16,
             code: "unexpected_error",
             details: { msg: e instanceof Error ? e.message : String(e) },
           },

@@ -1,0 +1,1208 @@
+{
+  "generatedFrom": "src/checker/grammar/defs/reasons.defs.ts",
+  "entries": [
+    {
+      "reason": "def_isosceles",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meaning plus declared-triangle nondegeneracy",
+      "fixtures": [
+        "src/checker/proofs/examples/s2c1.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "sas",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s1c1incomplete.txt",
+        "src/checker/proofs/examples/s1inc1.txt",
+        "src/checker/proofs/examples/s2c1.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "sss",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/tutinc.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "asa",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/overlap.txt",
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "aas",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/s1inc2.txt",
+        "src/checker/proofs/lines_angles/def_con_right_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rhl",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq cong2_per2__cong_3 (neutral geometry)",
+      "fixtures": [
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/circles/reg1v2.txt",
+        "src/checker/proofs/examples/s1inc3.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "cpctc",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral Tarski geometry",
+      "fixtures": [
+        "src/checker/proofs/examples/overlap.txt",
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s1inc1.txt",
+        "src/checker/proofs/examples/s2c1.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "reflex",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "reflexivity of congruence; ref_ang needs a declared angle",
+      "fixtures": [
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/examples/overlap.txt",
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1inc2.txt",
+        "src/checker/proofs/examples/s1inc3.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/examples/tutinc.txt",
+        "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_perp",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq per_perp_in and perp_in_col_perp_in",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c2.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_midpt",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq Midpoint definition",
+      "fixtures": [
+        "src/checker/proofs/examples/goal_reversed_correct.txt",
+        "src/checker/proofs/examples/goal_reversed_incorrect.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s2c1.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "midpt_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l7_20 (unique equidistant point on a line)",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1c3.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "vert_ang",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_14 (vertical angles)",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s1c1incomplete.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s2inc2.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "altint_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l12_21_b (neutral) with the audited sidedness",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt",
+        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
+        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "altint",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
+      "fixtures": [
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt",
+        "src/checker/proofs/lines_angles/altint_correct.txt",
+        "src/checker/proofs/lines_angles/altint_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "altext",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/altext_correct.txt",
+        "src/checker/proofs/lines_angles/altext_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "altext_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l12_21_b (neutral) with the audited sidedness",
+      "fixtures": [
+        "src/checker/proofs/examples/transversal_altext.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "sameside_ang",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/sameside_ang_correct.txt",
+        "src/checker/proofs/lines_angles/sameside_ang_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "sameside_ang_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l12_21_b (neutral) with the audited sidedness",
+      "fixtures": [
+        "src/checker/proofs/examples/transversal_sameside.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "corresp_ang",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair over the audited transversal configuration",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/corresp_ang_correct.txt",
+        "src/checker/proofs/lines_angles/corresp_ang_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "corresp_ang_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l12_21_b (neutral) with the audited sidedness",
+      "fixtures": [
+        "src/checker/proofs/examples/transversal_corresp.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_ang_bisect",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited AngleBisector meaning",
+      "fixtures": [
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c2.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "ang_bisect_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited AngleBisector meaning; syntactic shared-ray schema",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/ang_bisect_conv_correct.txt",
+        "src/checker/proofs/lines_angles/ang_bisect_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_con_right",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_16 (congruence of right angles)",
+      "fixtures": [
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/lines_angles/def_con_right_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "perp_con_ang",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq Perp_at definition, l8_2, and l11_16",
+      "fixtures": [
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1inc2.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/lines_angles/perp_con_ang_correct.txt",
+        "src/checker/proofs/lines_angles/perp_con_ang_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rectangle",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited IsRectangle corners; opposite sides via Euclidean parallelogram theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/s1inc3.txt",
+        "src/checker/proofs/examples/s2c1.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_def_correct.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_def_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_linear_pair",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq neutral angle theory (bet__suppa and ray transport)",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/linear_pair_correct.txt",
+        "src/checker/proofs/lines_angles/linear_pair_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "linear_pair_conv",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/linear_pair_conv_correct.txt",
+        "src/checker/proofs/lines_angles/linear_pair_conv_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "con_supplements",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq suppa2__conga123 and conga2_suppa__suppa",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_supplements_correct.txt",
+        "src/checker/proofs/lines_angles/con_supplements_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "con_supplements_same",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq suppa2__conga123 and conga2_suppa__suppa",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_supplements_same_correct.txt",
+        "src/checker/proofs/lines_angles/con_supplements_same_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "con_complements",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq sams2_suma2__conga123 over the audited SAMS conjunct",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_complements_correct.txt",
+        "src/checker/proofs/lines_angles/con_complements_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "con_complements_same",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq sams2_suma2__conga123 over the audited SAMS conjunct",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_complements_same_correct.txt",
+        "src/checker/proofs/lines_angles/con_complements_same_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "perp_bisector",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/perp_bisector_correct.txt",
+        "src/checker/proofs/lines_angles/perp_bisector_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "given",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "logical/equality infrastructure",
+      "fixtures": [
+        "src/checker/proofs/circles/con_chords_intersect_arcs_correct.txt",
+        "src/checker/proofs/circles/con_chords_intersect_arcs_incorrect.txt",
+        "src/checker/proofs/circles/con_inscribed_angs_correct.txt",
+        "src/checker/proofs/circles/con_inscribed_angs_incorrect.txt",
+        "src/checker/proofs/circles/con_tangents_ext_correct.txt",
+        "src/checker/proofs/circles/con_tangents_ext_incorrect.txt",
+        "src/checker/proofs/circles/def_radius_correct.txt",
+        "src/checker/proofs/circles/def_radius_incorrect.txt",
+        "src/checker/proofs/circles/inscribed_semi_correct.txt",
+        "src/checker/proofs/circles/inscribed_semi_incorrect.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_conv_correct.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_conv_incorrect.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_correct.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_incorrect.txt",
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/circles/reg1v2.txt",
+        "src/checker/proofs/circles/tangent_perp_conv_correct.txt",
+        "src/checker/proofs/circles/tangent_perp_conv_incorrect.txt",
+        "src/checker/proofs/circles/tangent_perp_correct.txt",
+        "src/checker/proofs/circles/tangent_perp_incorrect.txt",
+        "src/checker/proofs/examples/buggypgram_opp_angs.txt",
+        "src/checker/proofs/examples/goal_reversed_correct.txt",
+        "src/checker/proofs/examples/goal_reversed_incorrect.txt",
+        "src/checker/proofs/examples/inscribed_angles.txt",
+        "src/checker/proofs/examples/overlap.txt",
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/examples/s1c1.txt",
+        "src/checker/proofs/examples/s1c1_dupe_stmts.txt",
+        "src/checker/proofs/examples/s1c1incomplete.txt",
+        "src/checker/proofs/examples/s1c2.txt",
+        "src/checker/proofs/examples/s1c3.txt",
+        "src/checker/proofs/examples/s1inc1.txt",
+        "src/checker/proofs/examples/s1inc2.txt",
+        "src/checker/proofs/examples/s1inc3.txt",
+        "src/checker/proofs/examples/s2c1.txt",
+        "src/checker/proofs/examples/s2c2.txt",
+        "src/checker/proofs/examples/s2c2incomplete.txt",
+        "src/checker/proofs/examples/s2inc1.txt",
+        "src/checker/proofs/examples/s2inc1corrected.txt",
+        "src/checker/proofs/examples/s2inc2.txt",
+        "src/checker/proofs/examples/transversal_altext.txt",
+        "src/checker/proofs/examples/transversal_corresp.txt",
+        "src/checker/proofs/examples/transversal_sameside.txt",
+        "src/checker/proofs/examples/tutinc.txt",
+        "src/checker/proofs/examples/tutorial.txt",
+        "src/checker/proofs/examples/z_figure.txt",
+        "src/checker/proofs/examples/z_figure_incorrect.txt",
+        "src/checker/proofs/lines_angles/altext_correct.txt",
+        "src/checker/proofs/lines_angles/altext_incorrect.txt",
+        "src/checker/proofs/lines_angles/altint_conv_correct.txt",
+        "src/checker/proofs/lines_angles/altint_conv_incorrect.txt",
+        "src/checker/proofs/lines_angles/altint_correct.txt",
+        "src/checker/proofs/lines_angles/altint_incorrect.txt",
+        "src/checker/proofs/lines_angles/ang_bisect_conv_correct.txt",
+        "src/checker/proofs/lines_angles/ang_bisect_conv_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_ang_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/con_ang_transitive_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_complements_correct.txt",
+        "src/checker/proofs/lines_angles/con_complements_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_complements_same_correct.txt",
+        "src/checker/proofs/lines_angles/con_complements_same_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_seg_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/con_seg_transitive_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_supplements_correct.txt",
+        "src/checker/proofs/lines_angles/con_supplements_incorrect.txt",
+        "src/checker/proofs/lines_angles/con_supplements_same_correct.txt",
+        "src/checker/proofs/lines_angles/con_supplements_same_incorrect.txt",
+        "src/checker/proofs/lines_angles/corresp_ang_correct.txt",
+        "src/checker/proofs/lines_angles/corresp_ang_incorrect.txt",
+        "src/checker/proofs/lines_angles/def_con_right_incorrect.txt",
+        "src/checker/proofs/lines_angles/linear_pair_conv_correct.txt",
+        "src/checker/proofs/lines_angles/linear_pair_conv_incorrect.txt",
+        "src/checker/proofs/lines_angles/linear_pair_correct.txt",
+        "src/checker/proofs/lines_angles/linear_pair_incorrect.txt",
+        "src/checker/proofs/lines_angles/para_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/para_transitive_incorrect.txt",
+        "src/checker/proofs/lines_angles/perp_bisector_correct.txt",
+        "src/checker/proofs/lines_angles/perp_bisector_incorrect.txt",
+        "src/checker/proofs/lines_angles/perp_con_ang_correct.txt",
+        "src/checker/proofs/lines_angles/perp_con_ang_incorrect.txt",
+        "src/checker/proofs/lines_angles/sameside_ang_correct.txt",
+        "src/checker/proofs/lines_angles/sameside_ang_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/def_parallelogram_correct.txt",
+        "src/checker/proofs/quadrilaterals/def_parallelogram_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_con_diags_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_con_diags_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/kite_diag_perp_correct.txt",
+        "src/checker/proofs/quadrilaterals/kite_diag_perp_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/kite_opp_con_ang_correct.txt",
+        "src/checker/proofs/quadrilaterals/kite_opp_con_ang_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_side_para_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_side_para_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rect_pgram_ang_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_pgram_ang_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_def_correct.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_def_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_pgram_correct.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_pgram_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_consec_sides_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_consec_sides_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_def_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_def_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_incorrect.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_pgram_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_pgram_incorrect.txt",
+        "src/checker/proofs/triangles/aa_sim_correct.txt",
+        "src/checker/proofs/triangles/aa_sim_incorrect.txt",
+        "src/checker/proofs/triangles/base_angle_conv_correct.txt",
+        "src/checker/proofs/triangles/base_angle_conv_incorrect.txt",
+        "src/checker/proofs/triangles/base_angle_correct.txt",
+        "src/checker/proofs/triangles/base_angle_incorrect.txt",
+        "src/checker/proofs/triangles/con_tri_transitive_correct.txt",
+        "src/checker/proofs/triangles/con_tri_transitive_incorrect.txt",
+        "src/checker/proofs/triangles/def_con_tri_correct.txt",
+        "src/checker/proofs/triangles/def_con_tri_incorrect.txt",
+        "src/checker/proofs/triangles/def_equiangular_correct.txt",
+        "src/checker/proofs/triangles/def_equiangular_incorrect.txt",
+        "src/checker/proofs/triangles/def_equilateral_correct.txt",
+        "src/checker/proofs/triangles/def_equilateral_incorrect.txt",
+        "src/checker/proofs/triangles/equiang_equilat_correct.txt",
+        "src/checker/proofs/triangles/equiang_equilat_incorrect.txt",
+        "src/checker/proofs/triangles/equilat_equiang_correct.txt",
+        "src/checker/proofs/triangles/equilat_equiang_incorrect.txt",
+        "src/checker/proofs/triangles/sas_sim_correct.txt",
+        "src/checker/proofs/triangles/sas_sim_incorrect.txt",
+        "src/checker/proofs/triangles/sss_sim_correct.txt",
+        "src/checker/proofs/triangles/sss_sim_incorrect.txt",
+        "src/checker/proofs/triangles/third_angle_correct.txt",
+        "src/checker/proofs/triangles/third_angle_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "third_angle",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq Tarski_euclidean via Playfair",
+      "fixtures": [
+        "src/checker/proofs/triangles/third_angle_correct.txt",
+        "src/checker/proofs/triangles/third_angle_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "base_angle",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_44_1 (pons asinorum, both directions)",
+      "fixtures": [
+        "src/checker/proofs/triangles/base_angle_correct.txt",
+        "src/checker/proofs/triangles/base_angle_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "base_angle_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_44_1 (pons asinorum, both directions)",
+      "fixtures": [
+        "src/checker/proofs/triangles/base_angle_conv_correct.txt",
+        "src/checker/proofs/triangles/base_angle_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "equilat_equiang",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_44_1 (pons asinorum, both directions)",
+      "fixtures": [
+        "src/checker/proofs/triangles/equilat_equiang_correct.txt",
+        "src/checker/proofs/triangles/equilat_equiang_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "equiang_equilat",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_44_1 (pons asinorum, both directions)",
+      "fixtures": [
+        "src/checker/proofs/triangles/equiang_equilat_correct.txt",
+        "src/checker/proofs/triangles/equiang_equilat_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "aa_sim",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/aa_sim_correct.txt",
+        "src/checker/proofs/triangles/aa_sim_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "sss_sim",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/sss_sim_correct.txt",
+        "src/checker/proofs/triangles/sss_sim_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "sas_sim",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/triangles/sas_sim_correct.txt",
+        "src/checker/proofs/triangles/sas_sim_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "def_equiangular",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meaning plus declared-triangle nondegeneracy",
+      "fixtures": [
+        "src/checker/proofs/triangles/def_equiangular_correct.txt",
+        "src/checker/proofs/triangles/def_equiangular_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_equilateral",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meaning plus declared-triangle nondegeneracy",
+      "fixtures": [
+        "src/checker/proofs/triangles/def_equilateral_correct.txt",
+        "src/checker/proofs/triangles/def_equilateral_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_con_tri",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meaning plus declared-triangle nondegeneracy",
+      "fixtures": [
+        "src/checker/proofs/triangles/def_con_tri_correct.txt",
+        "src/checker/proofs/triangles/def_con_tri_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_parallelogram",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meanings plus declared-quadrilateral nondegeneracy (neutral)",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/def_parallelogram_correct.txt",
+        "src/checker/proofs/quadrilaterals/def_parallelogram_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "pgram_opp_sides",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair alternate interior angles; ASA along the diagonal",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "pgram_opp_sides_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "SSS along the diagonal, then GeoCoq l12_21_b (neutral)",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_sides_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "pgram_opp_angs",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/examples/buggypgram_opp_angs.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "pgram_opp_angs_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_angs_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "pgram_opp_side_para",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq par_cong_mid_ts; the audited crossing diagonals supply its TS",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_opp_side_para_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_opp_side_para_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "pgram_consec_angs",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq consecutive_interior_angles_postulate, Playfair-derived",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "pgram_consec_angs_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "the supplement continued past its corner, then l12_21_b (neutral)",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_consec_angs_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "pgram_diag_bisect",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "pgram_diag_bisect_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/pgram_diag_bisect_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rectangle_pgram",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meanings plus declared-quadrilateral nondegeneracy (neutral)",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rectangle_pgram_correct.txt",
+        "src/checker/proofs/quadrilaterals/rectangle_pgram_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rhombus_pgram",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited meanings plus declared-quadrilateral nondegeneracy (neutral)",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_pgram_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_pgram_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rect_diag_con",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "SAS between two right corners over the Euclidean opposite-sides theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rect_diag_con_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rect_diag_con_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rect_diag_con_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_diag_con_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rect_pgram_ang",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "the opposite and consecutive corner theorems, plus l11_17 and l11_18_1",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rect_pgram_ang_correct.txt",
+        "src/checker/proofs/quadrilaterals/rect_pgram_ang_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rhombus_diag_perp",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "rhombus_diag_perp_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_diag_perp_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rhombus_opp_bisect_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rhombus_opp_bisect",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq l11_51 (SSS angles) over the audited rhombus side chain (neutral)",
+      "fixtures": [
+        "src/checker/proofs/examples/rhombusOutside.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_opp_bisect_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rhombus_consec_sides",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair alternate interior angles; ASA along the diagonal",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_consec_sides_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_consec_sides_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "kite_diag_perp",
+      "status": "unimplemented",
+      "priority": 2,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/kite_diag_perp_correct.txt",
+        "src/checker/proofs/quadrilaterals/kite_diag_perp_incorrect.txt"
+      ],
+      "note": "No executable Rocq rule yet; fail-closed."
+    },
+    {
+      "reason": "kite_opp_con_ang",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "SSS across the diagonal the congruent sides meet at (neutral)",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/kite_opp_con_ang_correct.txt",
+        "src/checker/proofs/quadrilaterals/kite_opp_con_ang_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "isos_trap_base_angs",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "isos_trap_base_angs_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_base_angs_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "isos_trap_con_diags",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/isos_trap_con_diags_correct.txt",
+        "src/checker/proofs/quadrilaterals/isos_trap_con_diags_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "tangent_perp",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "the audited IsTangent Per plus the def_perp realignment machinery (neutral, sphere-safe)",
+      "fixtures": [
+        "src/checker/proofs/circles/tangent_perp_correct.txt",
+        "src/checker/proofs/circles/tangent_perp_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "tangent_perp_conv",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/tangent_perp_conv_correct.txt",
+        "src/checker/proofs/circles/tangent_perp_conv_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "con_tangents_ext",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/con_tangents_ext_correct.txt",
+        "src/checker/proofs/circles/con_tangents_ext_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "radius_chord_bisect",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/radius_chord_bisect_correct.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "radius_chord_bisect_conv",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/radius_chord_bisect_conv_correct.txt",
+        "src/checker/proofs/circles/radius_chord_bisect_conv_incorrect.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "con_inscribed_angs",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [
+        "src/checker/proofs/circles/con_inscribed_angs_correct.txt",
+        "src/checker/proofs/circles/con_inscribed_angs_incorrect.txt",
+        "src/checker/proofs/examples/inscribed_angles.txt"
+      ],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "incenter",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "con_seg_transitive",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq congruence transitivity and symmetry",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_seg_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/con_seg_transitive_incorrect.txt",
+        "src/checker/proofs/triangles/def_equilateral_correct.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "con_ang_transitive",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq congruence transitivity and symmetry",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/con_ang_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/con_ang_transitive_incorrect.txt",
+        "src/checker/proofs/triangles/def_equiangular_correct.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "con_tri_transitive",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "GeoCoq congruence transitivity and symmetry",
+      "fixtures": [
+        "src/checker/proofs/triangles/con_tri_transitive_correct.txt",
+        "src/checker/proofs/triangles/con_tri_transitive_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "square",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "rhombus",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "audited IsRhombus congruence chain (neutral)",
+      "fixtures": [
+        "src/checker/proofs/quadrilaterals/rhombus_def_correct.txt",
+        "src/checker/proofs/quadrilaterals/rhombus_def_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "rect_para_right_opp",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "para_transitive",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Tarski_euclidean via Playfair; CopR-free re-proof of par_trans",
+      "fixtures": [
+        "src/checker/proofs/lines_angles/para_transitive_correct.txt",
+        "src/checker/proofs/lines_angles/para_transitive_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "con_arc",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "csstp",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "inscribed_semi",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "Thales via existential-triangle-to-rah, axiom-free (Euclidean, sphere-safe)",
+      "fixtures": [
+        "src/checker/proofs/circles/inscribed_semi_correct.txt",
+        "src/checker/proofs/circles/inscribed_semi_incorrect.txt",
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/circles/reg1v2.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "para_con_arcs",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "con_chords_intersect_arcs",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "SAS at the centers from ArcCongruent's radii and central angles (neutral, sphere-safe)",
+      "fixtures": [
+        "src/checker/proofs/circles/con_chords_intersect_arcs_correct.txt",
+        "src/checker/proofs/circles/con_chords_intersect_arcs_incorrect.txt",
+        "src/checker/proofs/circles/reg1.txt",
+        "src/checker/proofs/circles/reg1v2.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "def_radius",
+      "status": "verified",
+      "priority": 0,
+      "axioms": "the audited OnCircle congruence (neutral, sphere-safe)",
+      "fixtures": [
+        "src/checker/proofs/circles/def_radius_correct.txt",
+        "src/checker/proofs/circles/def_radius_incorrect.txt"
+      ],
+      "note": "Parsed, checked, and covered by the kernel soundness proof."
+    },
+    {
+      "reason": "tangent_diam_perp",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "sim_tri_transitive",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    },
+    {
+      "reason": "inscribed_angs",
+      "status": "unimplemented",
+      "priority": 3,
+      "axioms": "to determine from the weakest supporting GeoCoq theorem",
+      "fixtures": [],
+      "note": "Deferred: semantic design, circle/arc machinery, or higher-complexity dependency."
+    }
+  ]
+}

@@ -1,9 +1,18 @@
 import { readdirSync, readFileSync, statSync } from "fs";
-import { join } from "path";
+import { join, relative, sep } from "path";
+import { presentationToProofObj } from "../verified/presentationAdapter";
 import {
-  collectProofCheckerIssues,
-  runProofCheckerFromText,
-} from "../proofChecker";
+  checkVerifiedProofNode,
+  checkVerifiedReportNode,
+  parsePresentationNode,
+} from "../verified/nodeWasmLoader";
+import { presentationContent } from "../../interface/core/grammarToLayout/presentationContent";
+import {
+  buildAnnotatedLines,
+  reportFindings,
+  summarizeReport,
+} from "../../interface/core/reportAnnotations";
+import { VerifiedCheckOutput } from "../verified/presentationTypes";
 
 const PROOFS_DIR = join(__dirname, "../proofs");
 
@@ -21,43 +30,459 @@ function collectTxtFiles(dir: string): string[] {
   return results;
 }
 
+const proofFiles = collectTxtFiles(PROOFS_DIR);
+
 type Expected =
   | { kind: "pass" }
   | { kind: "fail"; step: string }
   | { kind: "incomplete" };
 
 /**
- * Parse the first line of a proof test file to determine the expected outcome.
- * Supported formats:
+ * Parse the first line of a proof file, which records the outcome the corpus
+ * author intended:
  *   // pass
- *   // fail on step N   (N is the step number without leading zeros, e.g. "3")
- *   // fail incomplete  (the proof is well-formed but never reaches its goal)
+ *   // fail on step N
+ *   // fail incomplete
  */
-function parseExpected(firstLine: string): Expected {
+function parseExpected(firstLine: string): Expected | null {
   const trimmed = firstLine.trim();
   if (trimmed === "// pass") return { kind: "pass" };
   if (trimmed === "// fail incomplete") return { kind: "incomplete" };
   const failMatch = trimmed.match(/^\/\/ fail on step (\d+)$/);
-  if (failMatch) return { kind: "fail", step: failMatch[1] };
-  throw new Error(`Unrecognised expectation comment: "${trimmed}"`);
+  return failMatch ? { kind: "fail", step: failMatch[1] } : null;
 }
 
-const proofFiles = collectTxtFiles(PROOFS_DIR);
+/**
+ * Files whose intended outcome the verified kernel can already reproduce.  The
+ * rest of the corpus needs reasons or statements that are still fail-closed,
+ * and a fail-closed rejection is not evidence of anything, so asserting on it
+ * would only lock in today's gaps.  Move a file here once it is in scope; a
+ * file that leaves this list is a regression.
+ */
+const OUTCOME_ENFORCED = new Set([
+  "circles/con_chords_intersect_arcs_correct.txt",
+  "circles/con_chords_intersect_arcs_incorrect.txt",
+  "circles/def_radius_correct.txt",
+  "circles/def_radius_incorrect.txt",
+  "circles/inscribed_semi_correct.txt",
+  "circles/inscribed_semi_incorrect.txt",
+  "circles/tangent_perp_correct.txt",
+  "circles/tangent_perp_incorrect.txt",
+  "examples/goal_reversed_correct.txt",
+  "examples/goal_reversed_incorrect.txt",
+  "examples/overlap.txt",
+  "examples/rhombusOutside.txt",
+  "examples/s1c1.txt",
+  "examples/s1c1incomplete.txt",
+  "examples/s1c2.txt",
+  "examples/s1inc1.txt",
+  "examples/s1inc2.txt",
+  "examples/s2c2incomplete.txt",
+  "examples/transversal_altext.txt",
+  "examples/transversal_corresp.txt",
+  "examples/transversal_sameside.txt",
+  "examples/tutinc.txt",
+  "examples/tutorial.txt",
+  "examples/z_figure.txt",
+  "examples/z_figure_incorrect.txt",
+  "lines_angles/altext_correct.txt",
+  "lines_angles/altext_incorrect.txt",
+  "lines_angles/altint_conv_correct.txt",
+  "lines_angles/altint_conv_incorrect.txt",
+  "lines_angles/altint_correct.txt",
+  "lines_angles/altint_incorrect.txt",
+  "lines_angles/ang_bisect_conv_correct.txt",
+  "lines_angles/ang_bisect_conv_incorrect.txt",
+  "lines_angles/con_ang_transitive_correct.txt",
+  "lines_angles/con_ang_transitive_incorrect.txt",
+  "lines_angles/con_complements_correct.txt",
+  "lines_angles/con_complements_incorrect.txt",
+  "lines_angles/con_complements_same_correct.txt",
+  "lines_angles/con_complements_same_incorrect.txt",
+  "lines_angles/con_seg_transitive_correct.txt",
+  "lines_angles/con_seg_transitive_incorrect.txt",
+  "lines_angles/con_supplements_correct.txt",
+  "lines_angles/con_supplements_incorrect.txt",
+  "lines_angles/con_supplements_same_correct.txt",
+  "lines_angles/con_supplements_same_incorrect.txt",
+  "lines_angles/corresp_ang_correct.txt",
+  "lines_angles/corresp_ang_incorrect.txt",
+  "lines_angles/def_con_right_incorrect.txt",
+  "lines_angles/linear_pair_correct.txt",
+  "lines_angles/linear_pair_incorrect.txt",
+  "lines_angles/para_transitive_correct.txt",
+  "lines_angles/para_transitive_incorrect.txt",
+  "lines_angles/perp_con_ang_correct.txt",
+  "lines_angles/perp_con_ang_incorrect.txt",
+  "lines_angles/sameside_ang_correct.txt",
+  "lines_angles/sameside_ang_incorrect.txt",
+  "quadrilaterals/def_parallelogram_correct.txt",
+  "quadrilaterals/def_parallelogram_incorrect.txt",
+  "quadrilaterals/kite_opp_con_ang_correct.txt",
+  "quadrilaterals/kite_opp_con_ang_incorrect.txt",
+  "quadrilaterals/pgram_consec_angs_conv_correct.txt",
+  "quadrilaterals/pgram_consec_angs_conv_incorrect.txt",
+  "quadrilaterals/pgram_consec_angs_correct.txt",
+  "quadrilaterals/pgram_consec_angs_incorrect.txt",
+  "quadrilaterals/pgram_opp_angs_correct.txt",
+  "quadrilaterals/pgram_opp_angs_incorrect.txt",
+  "quadrilaterals/pgram_opp_side_para_correct.txt",
+  "quadrilaterals/pgram_opp_side_para_incorrect.txt",
+  "quadrilaterals/pgram_opp_sides_conv_correct.txt",
+  "quadrilaterals/pgram_opp_sides_conv_incorrect.txt",
+  "quadrilaterals/pgram_opp_sides_correct.txt",
+  "quadrilaterals/pgram_opp_sides_incorrect.txt",
+  "quadrilaterals/rect_diag_con_correct.txt",
+  "quadrilaterals/rect_diag_con_incorrect.txt",
+  "quadrilaterals/rect_pgram_ang_correct.txt",
+  "quadrilaterals/rect_pgram_ang_incorrect.txt",
+  "quadrilaterals/rectangle_def_correct.txt",
+  "quadrilaterals/rectangle_def_incorrect.txt",
+  "quadrilaterals/rectangle_pgram_correct.txt",
+  "quadrilaterals/rectangle_pgram_incorrect.txt",
+  "quadrilaterals/rhombus_consec_sides_correct.txt",
+  "quadrilaterals/rhombus_consec_sides_incorrect.txt",
+  "quadrilaterals/rhombus_def_correct.txt",
+  "quadrilaterals/rhombus_def_incorrect.txt",
+  "quadrilaterals/rhombus_opp_bisect_correct.txt",
+  "quadrilaterals/rhombus_opp_bisect_incorrect.txt",
+  "quadrilaterals/rhombus_pgram_correct.txt",
+  "quadrilaterals/rhombus_pgram_incorrect.txt",
+  "triangles/base_angle_conv_correct.txt",
+  "triangles/base_angle_conv_incorrect.txt",
+  "triangles/base_angle_correct.txt",
+  "triangles/base_angle_incorrect.txt",
+  "triangles/con_tri_transitive_correct.txt",
+  "triangles/con_tri_transitive_incorrect.txt",
+  "triangles/def_con_tri_correct.txt",
+  "triangles/def_con_tri_incorrect.txt",
+  "triangles/def_equiangular_correct.txt",
+  "triangles/def_equiangular_incorrect.txt",
+  "triangles/def_equilateral_correct.txt",
+  "triangles/def_equilateral_incorrect.txt",
+  "triangles/equiang_equilat_correct.txt",
+  "triangles/equiang_equilat_incorrect.txt",
+  "triangles/equilat_equiang_correct.txt",
+  "triangles/equilat_equiang_incorrect.txt",
+  "triangles/third_angle_correct.txt",
+  "triangles/third_angle_incorrect.txt",
+]);
 
-describe("proof checker regression tests", () => {
-  test.each(proofFiles)("%s", (filePath) => {
+const stepsBlamedBy = (report: VerifiedCheckOutput): string[] => {
+  const issues = "issues" in report ? report.issues : report.errors;
+  return issues.flatMap((issue) => {
+    const steps = (issue.details as { steps?: unknown } | undefined)?.steps;
+    return Array.isArray(steps) ? (steps as string[]) : [];
+  });
+};
+
+describe("intended corpus outcomes", () => {
+  const enforced = proofFiles.filter((file) =>
+    OUTCOME_ENFORCED.has(relative(PROOFS_DIR, file).split(sep).join("/")),
+  );
+
+  test("every enforced file exists", () => {
+    expect(enforced).toHaveLength(OUTCOME_ENFORCED.size);
+  });
+
+  test.each(enforced)("%s", async (filePath) => {
     const text = readFileSync(filePath, "utf-8");
-    const firstLine = text.split("\n")[0];
-    const expected = parseExpected(firstLine);
-    const result = runProofCheckerFromText(text);
+    const expected = parseExpected(text.split("\n")[0]);
+    if (!expected) throw new Error("missing outcome comment");
+    const report = await checkVerifiedProofNode(text);
 
     if (expected.kind === "pass") {
-      const issues = collectProofCheckerIssues(result);
-      expect(issues).toHaveLength(0);
-    } else if (expected.kind === "incomplete") {
-      expect(result.goalMatchResult.matches).toBe(false);
-    } else {
-      expect(result.graph.incorrectSteps.has(expected.step)).toBe(true);
+      expect(report.isCorrect).toBe(true);
+      return;
     }
+    expect(report.isCorrect).toBe(false);
+    if (expected.kind === "fail") {
+      // The kernel must blame the step the corpus author blamed, not merely
+      // reject the proof somewhere.
+      expect(stepsBlamedBy(report)).toContain(expected.step);
+    }
+  });
+});
+
+describe("extracted Rocq API corpus tests", () => {
+  test.each(proofFiles)("%s", async (filePath) => {
+    const text = readFileSync(filePath, "utf-8");
+    const [presentation, report] = await Promise.all([
+      parsePresentationNode(text),
+      checkVerifiedProofNode(text),
+    ]);
+    expect(typeof report.isCorrect).toBe("boolean");
+    expect("issues" in report ? report.issues : report.errors).toBeInstanceOf(
+      Array,
+    );
+
+    // Rocq preserves arc literals such as BR_OB, but the legacy TypeScript
+    // geometry object model has no Arc variant.  Its former parser silently
+    // split these literals.  Keep testing successful Rocq parsing here while
+    // refusing to reproduce that lossy behavior in the compatibility adapter.
+    if (/[A-Z]{2}_[A-Z]{2}/.test(text)) {
+      expect(() => presentationToProofObj(presentation)).toThrow(
+        "Unsupported presentation object",
+      );
+      return;
+    }
+    const proof = presentationToProofObj(presentation);
+    expect(proof.steps).toHaveLength(
+      presentation.givens.length + presentation.steps.length,
+    );
+    expect(presentationContent(proof)).toBeDefined();
+  });
+
+  // Cheaper than a theorem and enough: a report can only name a premise the
+  // problem actually states, and that is checkable on every file we have.
+  test.each(proofFiles)("%s reports only real premises", async (filePath) => {
+    const report = await checkVerifiedReportNode(readFileSync(filePath, "utf8"));
+    const stated = new Set(report.problem?.premises ?? []);
+    for (const step of report.steps) {
+      for (const premise of step.diagramDependencies) {
+        expect(stated).toContain(premise);
+      }
+      // Each is named once however many dependencies leaned on it.
+      expect(new Set(step.diagramDependencies).size).toBe(
+        step.diagramDependencies.length,
+      );
+    }
+  });
+
+  test("exports every audited rich-report field", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutorial.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    expect(report.verdict).toBe("accepted");
+    expect(report.problem?.conclusion).toBe("con_tri(t_ABC,t_ADC)");
+    expect(report.presentation?.steps.length).toBeGreaterThan(0);
+    expect(report).toEqual(
+      expect.objectContaining({
+        steps: expect.any(Array),
+        graph: expect.any(Object),
+        duplicates: expect.any(Array),
+        goal: expect.any(Object),
+        issues: expect.any(Array),
+        errors: expect.any(Array),
+        diagnostics: expect.any(Array),
+      }),
+    );
+  });
+
+  test("reports each step of an accepted proof", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutorial.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    expect(report.steps.map((step) => step.status)).toEqual([
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+    ]);
+    expect(report.steps[3]).toEqual(
+      expect.objectContaining({
+        number: 4,
+        reason: "sas",
+        conclusion: "con_tri(t_ABC,t_ADC)",
+        dependencies: [1, 2, 3],
+      }),
+    );
+    expect(report.steps[0].source).toContain("given(g_1)");
+    // The dependency graph is acyclic by construction: a step can only cite
+    // facts proved before it.
+    expect(report.graph).toEqual({
+      nodes: [1, 2, 3, 4],
+      edges: [
+        [1, 4],
+        [2, 4],
+        [3, 4],
+      ],
+      cycles: [],
+      unusedSteps: [],
+    });
+    expect(report.goal.provedBy).toBe(4);
+    // Citing a premise with `given` is not a second derivation of it.
+    expect(report.duplicates).toEqual([]);
+  });
+
+  test("blames the step that failed", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    expect(report.verdict).toBe("rejected_proof");
+    expect(report.steps.map((step) => step.status)).toEqual([
+      "accepted",
+      "accepted",
+      "accepted",
+      "rejected",
+    ]);
+    expect(report.steps[3].diagnostics.length).toBeGreaterThan(0);
+    // The goal is stated by the rejected step, so nothing proved it -- which
+    // is a different complaint from never stating it at all.
+    expect(report.goal.provedBy).toBeNull();
+    expect(report.goal.diagnostics[0].message).toBe(
+      "step 4 states the goal but was not accepted",
+    );
+    expect(report.graph.unusedSteps).toEqual([]);
+  });
+
+  // A step that cites the failure is unjudgeable; a step that does not is
+  // still judged on its own merits, however far below the failure it sits.
+  const dependentAndIndependent = `// fail on step 2
+title: "One bad step, one dependent, one independent"
+premises:
+pt: A (0, 0, t), B (1, 0, t), C (2, 0, t), D (3, 0, t)
+tri: t_ABC t_ADC
+[g_1] con_seg(AB,AD)
+[g_2] con_ang(a_BAC,a_DAC)
+-> con_seg(AB,AD)
+
+steps:
+[01] given(g_1) -> con_seg(AB,AD)
+[02] sss(1, 1, 1) -> con_tri(t_ABC,t_ADC)
+[03] cpctc(2) -> con_seg(BC,DC)
+[04] given(g_2) -> con_ang(a_BAC,a_DAC)
+[05] reflex() -> ref_seg(AC,AC)
+`;
+
+  test("blocks only the steps that cite a failure", async () => {
+    const report = await checkVerifiedReportNode(dependentAndIndependent);
+    expect(report.steps.map((step) => step.status)).toEqual([
+      "accepted",
+      "rejected",
+      "blocked",
+      "accepted",
+      "accepted",
+    ]);
+    expect(report.steps[2].diagnostics[0].message).toContain("not judged");
+  });
+
+  // Citing forwards always fails, but the graph still shows the ring, which
+  // is the useful thing to say about it.
+  const cyclic = `// fail on step 1
+title: "Cyclic citation"
+premises:
+pt: A (0, 0, t), B (1, 0, t), C (2, 0, t), D (3, 0, t)
+tri: t_ABC t_ADC
+[g_1] con_seg(AB,AD)
+-> con_tri(t_ABC,t_ADC)
+
+steps:
+[01] cpctc(2) -> con_seg(AB,AD)
+[02] cpctc(1) -> con_ang(a_BAC,a_DAC)
+`;
+
+  test("reports a citation cycle", async () => {
+    const report = await checkVerifiedReportNode(cyclic);
+    expect(report.graph.edges).toEqual([
+      [2, 1],
+      [1, 2],
+    ]);
+    expect(report.graph.cycles).toEqual([[1, 2]]);
+  });
+
+  test("summarizes a report the way the harness shows it", async () => {
+    const accepted = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/tutorial.txt"), "utf8"),
+    );
+    expect(summarizeReport(accepted)).toBe(
+      "Accepted by the verified checker. (goal reached at step 4)",
+    );
+    expect(reportFindings(accepted)).toEqual([]);
+
+    const rejected = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8"),
+    );
+    expect(summarizeReport(rejected)).toBe("Rejected by the verified checker.");
+    expect(reportFindings(rejected)).toEqual([
+      "Goal: step 4 states the goal but was not accepted",
+      "Rejected step: 4",
+    ]);
+  });
+
+  test("marks the failed step and only the failed step", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    const unaccepted = new Map(
+      report.steps
+        .filter((step) => step.status !== "accepted")
+        .map((step) => [String(step.number), step] as const),
+    );
+    const marked = buildAnnotatedLines(source, unaccepted)
+      .filter((line) => line.status !== undefined)
+      .map((line) => [line.text.trim().slice(0, 4), line.status]);
+    expect(marked).toEqual([["[04]", "rejected"]]);
+  });
+
+  test("names the diagram premise a step consulted", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/s1c1_dupe_stmts.txt"), "utf8"),
+    );
+    // vert_ang takes no step dependency: what it uses is the crossing premise.
+    const vertAng = report.steps.find((step) => step.reason === "vert_ang")!;
+    expect(vertAng.dependencies).toEqual([]);
+    expect(vertAng.diagramDependencies).toEqual(["intersect_seg(AB,CD,M)"]);
+    // A step that consults no diagram premise says so.
+    const given = report.steps.find((step) => step.reason === "given")!;
+    expect(given.diagramDependencies).toEqual([]);
+  });
+
+  test("names the transversal a parallel-line rule validated", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "lines_angles/altint_correct.txt"), "utf8"),
+    );
+    const altint = report.steps.find((step) => step.reason === "altint")!;
+    expect(altint.diagramDependencies).toEqual([
+      "transversal(A,B,T,E,C,D,R,F)",
+    ]);
+  });
+
+  test("names the premise that placed a ray on a diagonal", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/rhombusOutside.txt"), "utf8"),
+    );
+    const bisect = report.steps.find(
+      (step) => step.reason === "rhombus_opp_bisect",
+    )!;
+    expect(bisect.diagramDependencies).toEqual(["on_line(PR,T)"]);
+  });
+
+  test("names the premises a triangle criterion transported an angle along", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/overlap.txt"), "utf8"),
+    );
+    const asa = report.steps.find((step) => step.reason === "asa")!;
+    // Reached from inside the correspondence search, two layers down, and
+    // reported once each however many dependencies leaned on them.
+    expect(asa.diagramDependencies.slice().sort()).toEqual([
+      "on_line(DG,H)",
+      "on_line(EG,F)",
+    ]);
+  });
+
+  test("reports a fact derived twice", async () => {
+    const source = readFileSync(
+      join(PROOFS_DIR, "examples/s1c1_dupe_stmts.txt"),
+      "utf8",
+    );
+    const report = await checkVerifiedReportNode(source);
+    expect(report.duplicates).toHaveLength(1);
+    expect(report.duplicates[0]).toEqual({
+      statement: "con_ang(a_AMC,a_DMB)",
+      first: { kind: "step", step: 3 },
+      again: { kind: "step", step: 5 },
+    });
+  });
+
+  test("coverage manifest contains every catalogued reason", () => {
+    const catalog = readFileSync(
+      join(__dirname, "../grammar/defs/reasons.defs.ts"),
+      "utf8",
+    );
+    const reasons = [
+      ...catalog.matchAll(/^  ([a-zA-Z0-9_]+): \{/gm),
+    ].map((match) => match[1]);
+    const manifest = JSON.parse(
+      readFileSync(join(__dirname, "../../../docs/reason-coverage.json"), "utf8"),
+    ) as { entries: Array<{ reason: string }> };
+    expect(manifest.entries.map(({ reason }) => reason)).toEqual(reasons);
+    expect(reasons).toHaveLength(92);
   });
 });

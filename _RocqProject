@@ -1,0 +1,6 @@
+# Load path for editors; the build itself goes through rocq/Makefile, which
+# passes the same -Q flag.  It sits at the repository root because that is the
+# directory a language server is started in, and Rocq searches upward from
+# there.  GeoCoq and the standard library come from ROCQPATH, which the dev
+# shell sets, so the editor has to be launched from `nix develop`.
+-Q rocq/Ender Ender

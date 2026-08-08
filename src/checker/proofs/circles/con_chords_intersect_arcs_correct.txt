@@ -1,0 +1,11 @@
+// pass
+title: "Test: con_chords_intersect_arcs (correct - congruent arcs give congruent chords)"
+premises:
+pt: O (5, 5, c), B (3, 8, tl), R (7, 8, tr), Y (8, 3, br), D (2, 3, bl)
+circ: c_OB
+[g_1] con_arc(minor_arc(c_OB, B, R), minor_arc(c_OB, Y, D))
+-> con_seg(BR, YD)
+
+steps:
+[01] given(g_1) -> con_arc(minor_arc(c_OB, B, R), minor_arc(c_OB, Y, D))
+[02] con_chords_intersect_arcs(1) -> con_seg(BR, YD)

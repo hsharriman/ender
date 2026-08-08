@@ -39,6 +39,7 @@ export interface ParseObj {
     | Obj.Angle
     | Obj.Triangle
     | Obj.Quadrilateral
-    | Obj.Circle;
+    | Obj.Circle
+    | Obj.Text;
   v: string;
 }

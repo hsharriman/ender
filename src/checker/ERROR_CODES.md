@@ -1,8 +1,10 @@
 # Checker Error Codes
 
-Every error the checker emits is an `ErrorDetails` object (`src/checker/types/checkerTypes.ts`) whose `code` field is one of the strings below. Codes are grouped by the pipeline stage that emits them. Keep this file in sync with `src/checker/checker/` and `src/checker/grammar/`.
+This is untrusted human-readable metadata for the solver/feedback prompts and
+the intended rich Rocq API. It does not drive proof acceptance. Keep it in sync
+with the issue codes exported by the verified checker.
 
-## Parser (`grammar/lezerParser.ts`)
+## Parser
 
 | Code | Meaning |
 |---|---|
@@ -25,7 +27,7 @@ Every error the checker emits is an `ErrorDetails` object (`src/checker/types/ch
 |---|---|
 | `parser_error` | Premise construction failed; `details.message` explains why: unknown statement function, point not defined in `pt:`, statement needing its `_premise` counterpart, `ang_bisect` segment not overlapping the angle, invalid trapezoid bases, or a `transversal` statement without exactly 8 defined points. |
 
-## Structural validation (`checker/validators.ts`, `checker/graph.ts`)
+## Structural validation
 
 | Code | Meaning |
 |---|---|
@@ -47,7 +49,7 @@ Every error the checker emits is an `ErrorDetails` object (`src/checker/types/ch
 | `invalid_given_dep` | A `g_n` given-premise ref is used as a dependency of a reason other than `given(...)`. |
 | `upstream_dep_error` | The step itself may be fine, but a cited dependency step was already marked incorrect, so this step cannot be validated. |
 
-## Proof-level results (`proofChecker.ts`)
+## Proof-level results
 
 | Code | Meaning |
 |---|---|
@@ -56,7 +58,7 @@ Every error the checker emits is an `ErrorDetails` object (`src/checker/types/ch
 | `unused_step` | Steps whose conclusions are never used on any dependency path reaching the goal step. |
 | `unused_step_goal_already_met` | Unused steps that appear after the step where the goal was already reached. |
 | `unexpected_error` | An uncaught exception escaped the checking pipeline (CLI `proofCheckerCli.ts` / HTTP `server.ts`); `details.msg` holds the exception message. |
-| `reason_application_error` | A reason's geometric check itself threw an exception (`reasonApplication.ts` catch-all), usually from malformed or missing geometry. |
+| `reason_application_error` | A reason's geometric check itself encountered malformed or missing geometry. |
 
 ## Reason application — shared helpers (`checker/reasonChecks/utils.ts`)
 
