@@ -122,9 +122,15 @@ Every error the checker emits is an `ErrorDetails` object (`src/checker/types/ch
 | `seg_touches_both_or_neither_con_angle` | AAS: the congruent segment must touch exactly one of the two congruent angles' vertices; it touches both or neither. |
 | `seg_not_bw_both_con_angles` | ASA: the congruent segment doesn't have both congruent angles' vertices as endpoints, so it isn't the included side. |
 | `rhl_first_seg_must_be_hypotenuse_and_second_must_be_leg` | RHL: the leg must contain the right-angle vertex and the hypotenuse must not; the given segments violate this. |
-| `segs_not_corresponding_in_triangles` | CPCTC: the two segments occupy different side positions in the (ordered) triangles, so they don't correspond. |
-| `angles_not_corresponding_in_triangles` | CPCTC: the two angles occupy different angle positions in the (ordered) triangles, so they don't correspond. |
+| `segs_not_corresponding_in_triangles` | CPCTC: mapping the first segment's endpoints through the cited step's vertex correspondence does not produce the second segment. `details.expected` names the segment that does correspond. |
+| `angles_not_corresponding_in_triangles` | CPCTC: mapping the first angle's vertex and rays through the cited step's vertex correspondence does not produce the second angle. |
 | `conclusion_must_be_con_seg_or_con_ang` | CPCTC: the conclusion statement is neither `con_seg` nor `con_ang`. |
+| `con_tri_dependency_has_no_vertex_correspondence` | CPCTC or `con_tri_transitive`: the cited `con_tri` step recorded no vertex correspondence, so no corresponding part can be derived from it. |
+| `con_tri_dependency_does_not_relate_these_two_triangles` | The cited step's correspondence is between a different pair of triangles than the ones this step names, or composing two correspondences did not yield a one-to-one vertex map. |
+| `con_seg_pairs_reuse_the_same_side_of_a_triangle` | SAS or RHL: two side slots cite the same side of one triangle, so the remaining sides carry no constraint. |
+| `con_ang_pairs_reuse_the_same_angle_of_a_triangle` | ASA or AAS: both angle slots cite the same angle of one triangle, so the triangle is not determined. |
+| `con_seg_pairs_dont_cover_all_three_sides_of_both_triangles_exactly_once` | SSS: the three segment pairs don't cover all three sides of each triangle exactly once, so at least one side is unconstrained. |
+| `derived_vertex_order_is_not_a_permutation_of_triangle` | The vertex order a congruence reason derived from its congruent-part pairs repeats a point or names a point outside the triangle. Reordering with it would drop a vertex, so the step is rejected. |
 | `con_pairs_dont_cover_each_side_and_angle_of_both_triangles_exactly_once` | `def_con_tri`: the three segment pairs and three angle pairs don't cover each triangle's sides and angles exactly once each. |
 | `triangle_not_found_from_con_angles` | No triangle (or no two distinct triangles) in the diagram contains the cited congruent angles. |
 | `con_angle_pairs_dont_cover_each_angle_of_both_triangles_exactly_once` | Third-angle: the three angle pairs don't cover each triangle's three angles exactly once each. |

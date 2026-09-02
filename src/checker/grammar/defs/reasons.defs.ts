@@ -61,7 +61,7 @@ export const REASONS_DEFS = {
     name: "cpctc",
     title: "CPCTC",
     body: "Corresponding Parts of Congruent Triangles are Congruent (CPCTC). If two triangles are congruent, then their corresponding angles and sides are also congruent.",
-    dependencies: ["con_tri"],
+    dependencies: ["con_tri_any"],
     conclusion: "con_seg, con_ang",
   },
   reflex: {
@@ -592,7 +592,7 @@ export const REASONS_DEFS = {
     name: "con_tri_transitive",
     title: "Transitive Property of Congruence",
     body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
-    dependencies: ["con_tri", "con_tri"],
+    dependencies: ["con_tri_any", "con_tri_any"],
     conclusion: "con_tri",
   },
   // con_arc_transitive: {

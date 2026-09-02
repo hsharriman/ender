@@ -3,13 +3,17 @@ import { Obj, ParseObj } from "../types/types";
 import { Angle } from "./Angle";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
-import { ProofContent } from "./ProofContent";
 import { Segment } from "./Segment";
 
+/**
+ * A triangle's vertex order is fixed at construction and carries no meaning
+ * beyond naming. Congruence correspondence lives on the proof step that
+ * established it (`TriCorrespondence`), because one triangle may pair with
+ * several others under different correspondences.
+ */
 export class Triangle extends BaseGeometryObject {
   s: [Segment, Segment, Segment];
   a: [Angle, Angle, Angle];
-  private sorted: boolean;
   p: [Point, Point, Point];
   readonly id: string;
 
@@ -24,7 +28,6 @@ export class Triangle extends BaseGeometryObject {
     this.label = `${props.pts[0].label}${props.pts[1].label}${props.pts[2].label}`;
 
     this.id = this.getId(Obj.Triangle, this.label);
-    this.sorted = false;
   }
 
   private buildSegments = (
@@ -75,27 +78,22 @@ export class Triangle extends BaseGeometryObject {
     return [aa, ab, ac];
   };
 
-  orderTri = (p: [string, string, string], ctx: ProofContent) => {
-    this.p = [ctx.getPoint(p[0]), ctx.getPoint(p[1]), ctx.getPoint(p[2])];
-    this.s = this.buildSegments(this.p);
-    this.a = this.buildAngles(this.p);
-    this.sorted = true;
-    return this;
+  /**
+   * True when `p` lists each of this triangle's three vertices exactly once.
+   *
+   * A congruence reason derives a vertex pairing from its congruent-part pairs.
+   * When those pairs reuse a side or an angle, the derived triple repeats a
+   * point or names a point this triangle does not own. Such a triple describes
+   * no correspondence, so the reason must reject it.
+   */
+  isVertexPermutation = (p: [string, string, string]) => {
+    const own = this.p.map((pt) => pt.label);
+    return new Set(p).size === 3 && p.every((label) => own.includes(label));
   };
 
   getThirdPoint = (p1: string, p2: string) => {
     const remaining = this.label.replace(p1, "").replace(p2, "");
     return remaining;
-  };
-
-  isSorted = () => this.sorted;
-
-  getSegmentIndex = (name: string) => {
-    return this.s.findIndex((seg) => new Set(seg.names).has(name));
-  };
-
-  getAngleIndex = (name: string) => {
-    return this.a.findIndex((ang) => new Set(ang.names).has(name));
   };
 
   getAngleByCenter = (center: string) => {

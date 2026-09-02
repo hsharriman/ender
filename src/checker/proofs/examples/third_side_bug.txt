@@ -1,0 +1,16 @@
+// fail on step 4
+title: "Unconstrained third side"
+premises:
+pt: A (0, 1, bl), B (3, 1, br), C (3, 4, t), D (5, 1, bl), E (10, 1, br), F (10, 6, tr)
+seg: AB BC CA DE EF FD
+tri: t_ABC t_DEF
+[g_1] con_seg(BC, DE)
+[g_2] con_seg(CA, DE)
+[g_3] con_seg(AB, EF)
+-> con_tri(t_ABC, t_DEF)
+
+steps:
+[01] given(g_1) -> con_seg(BC, DE)
+[02] given(g_2) -> con_seg(CA, DE)
+[03] given(g_3) -> con_seg(AB, EF)
+[04] sss(1, 2, 3) -> con_tri(t_ABC, t_DEF)

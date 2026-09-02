@@ -7,7 +7,7 @@ import {
   Segment,
   Triangle,
 } from "../../../geometry-object";
-import { Stmt } from "../../types/checkerTypes";
+import { Stmt, TriCorrespondence } from "../../types/checkerTypes";
 import {
   CheckerResult,
   ErrorDetails,
@@ -41,8 +41,146 @@ const BASE_ANG_BAD = "base_angle_vertex_not_at_endpoint_of_exactly_one_leg";
 const DIFF_TRIANGLES = "equilateral_and_equiangular_not_the_same_triangle";
 const NOT_TWO_SIDES = "not_all_sides_appear_exactly_twice_in_con_segs";
 const NOT_TWO_ANGS = "not_all_angles_appear_exactly_twice_in_con_angs";
+const SEGS_NOT_DISTINCT = "con_seg_pairs_reuse_the_same_side_of_a_triangle";
+const ANGS_NOT_DISTINCT = "con_ang_pairs_reuse_the_same_angle_of_a_triangle";
+const SSS_SEGS_NOT_UNIQUE =
+  "con_seg_pairs_dont_cover_all_three_sides_of_both_triangles_exactly_once";
+const BAD_VERTEX_ORDER = "derived_vertex_order_is_not_a_permutation_of_triangle";
+const NO_CORRESPONDENCE = "con_tri_dependency_has_no_vertex_correspondence";
+const CORRESP_TRI_MISMATCH =
+  "con_tri_dependency_does_not_relate_these_two_triangles";
 
 type TriangleAssignResult = { ok: true; left: string; right: string };
+
+/** True when two labels denote the same segment of the figure. */
+const sameSeg = (a: string, b: string, ctx: ProofContent) => {
+  const s1 = ctx.getSegment(a);
+  const s2 = ctx.getSegment(b);
+  return !!s1 && !!s2 && s1.equals(s2);
+};
+
+/** True when two labels denote the same angle of the figure. */
+const sameAng = (a: string, b: string, ctx: ProofContent) => {
+  const a1 = ctx.getAngle(a);
+  const a2 = ctx.getAngle(b);
+  return !!a1 && !!a2 && a1.equals(a2);
+};
+
+/**
+ * Rejects a reason that cites the same side of a triangle for two different
+ * side slots. Such a citation leaves the remaining side unconstrained, so the
+ * congruence does not follow.
+ */
+const distinctSegs = (
+  tri1: Triangle,
+  l1: string,
+  l2: string,
+  tri2: Triangle,
+  r1: string,
+  r2: string,
+  ctx: ProofContent,
+): CheckerResult => {
+  if (sameSeg(l1, l2, ctx)) {
+    return reasonApplicationFail(SEGS_NOT_DISTINCT, {
+      tri: tri1.label,
+      segs: [l1, l2],
+    });
+  }
+  if (sameSeg(r1, r2, ctx)) {
+    return reasonApplicationFail(SEGS_NOT_DISTINCT, {
+      tri: tri2.label,
+      segs: [r1, r2],
+    });
+  }
+  return reasonApplicationOk();
+};
+
+/** Angle counterpart of `distinctSegs`. */
+const distinctAngs = (
+  tri1: Triangle,
+  l1: string,
+  l2: string,
+  tri2: Triangle,
+  r1: string,
+  r2: string,
+  ctx: ProofContent,
+): CheckerResult => {
+  if (sameAng(l1, l2, ctx)) {
+    return reasonApplicationFail(ANGS_NOT_DISTINCT, {
+      tri: tri1.label,
+      angs: [l1, l2],
+    });
+  }
+  if (sameAng(r1, r2, ctx)) {
+    return reasonApplicationFail(ANGS_NOT_DISTINCT, {
+      tri: tri2.label,
+      angs: [r1, r2],
+    });
+  }
+  return reasonApplicationOk();
+};
+
+/**
+ * Records the vertex pairing a congruence reason establishes.
+ *
+ * `p1[k]` pairs with `p2[k]`. Both triples must permute their own triangle's
+ * vertices. A triple built from congruent-part pairs that reuse a side or an
+ * angle does not, and describes no correspondence.
+ */
+const buildCorrespondence = (
+  tri1: Triangle,
+  p1: [string, string, string],
+  tri2: Triangle,
+  p2: [string, string, string],
+): CheckerResult => {
+  for (const [tri, order] of [
+    [tri1, p1],
+    [tri2, p2],
+  ] as [Triangle, [string, string, string]][]) {
+    if (!tri.isVertexPermutation(order)) {
+      return reasonApplicationFail(BAD_VERTEX_ORDER, {
+        tri: tri.label,
+        order,
+      });
+    }
+  }
+  return reasonApplicationOk({
+    tris: [tri1.label, tri2.label],
+    pts: [p1, p2],
+  });
+};
+
+/**
+ * Reads a correspondence in the direction `from` → `to`, or null when it does
+ * not relate exactly those two triangles.
+ */
+const vertexMap = (
+  correspondence: TriCorrespondence,
+  from: Triangle,
+  to: Triangle,
+): Map<string, string> | null => {
+  const { tris, pts } = correspondence;
+  const forward = tris[0] === from.label && tris[1] === to.label;
+  const backward = tris[1] === from.label && tris[0] === to.label;
+  if (!forward && !backward) return null;
+  const [src, dst] = forward ? [pts[0], pts[1]] : [pts[1], pts[0]];
+  return new Map(src.map((label, i) => [label, dst[i]]));
+};
+
+/** The endpoints of the triangle side that `name` denotes, or null. */
+const triSegPts = (tri: Triangle, name: string): [string, string] | null => {
+  const seg = tri.s.find((s) => s.names.has(name));
+  return seg ? [seg.p1.label, seg.p2.label] : null;
+};
+
+/** The (start, center, end) of the triangle angle that `name` denotes, or null. */
+const triAngPts = (
+  tri: Triangle,
+  name: string,
+): [string, string, string] | null => {
+  const ang = tri.a.find((a) => a.names.has(name));
+  return ang ? [ang.start.label, ang.center.label, ang.end.label] : null;
+};
 
 // Returns the ParseObj form that the triangle actually recognises, resolving
 // through angle overlap names in ctx when the raw label isn't in the triangle.
@@ -161,10 +299,16 @@ export const checkSas = (
   const sasRPattern = check(tri2, s1.r, ar, s2.r);
   if (!sasRPattern.ok) return sasRPattern;
 
+  const distinct = distinctSegs(tri1, s1.l, s2.l, tri2, s1.r, s2.r, ctx);
+  if (!distinct.ok) return distinct;
+
   const [pl, pr] = [s1.l.replace(al, ""), s1.r.replace(ar, "")];
-  tri1.orderTri([al, pl, tri1.getThirdPoint(al, pl)], ctx);
-  tri2.orderTri([ar, pr, tri2.getThirdPoint(ar, pr)], ctx);
-  return reasonApplicationOk();
+  return buildCorrespondence(
+    tri1,
+    [al, pl, tri1.getThirdPoint(al, pl)],
+    tri2,
+    [ar, pr, tri2.getThirdPoint(ar, pr)],
+  );
 };
 
 export const checkSss = (
@@ -183,16 +327,27 @@ export const checkSss = (
   const s3 = assignToTri(conSeg3.arguments, tri1, tri2, ctx);
   if (!s3.res.ok) return s3.res;
 
-  tri1.orderTri(
-    [commonPt(s1.l, s2.l), commonPt(s2.l, s3.l), commonPt(s3.l, s1.l)],
-    ctx,
-  );
-  tri2.orderTri(
-    [commonPt(s1.r, s2.r), commonPt(s2.r, s3.r), commonPt(s3.r, s1.r)],
-    ctx,
-  );
+  // The three pairs must cover all three sides of each triangle exactly once.
+  // Without this, a side may be cited twice and the remaining side carries no
+  // constraint, so the triangles are not shown congruent.
+  if (
+    !tri1.hasUniqueSegs(s1.l, s2.l, s3.l) ||
+    !tri2.hasUniqueSegs(s1.r, s2.r, s3.r)
+  ) {
+    return reasonApplicationFail(SSS_SEGS_NOT_UNIQUE, {
+      tri1: tri1.label,
+      tri2: tri2.label,
+      segs1: [s1.l, s2.l, s3.l],
+      segs2: [s1.r, s2.r, s3.r],
+    });
+  }
 
-  return reasonApplicationOk();
+  return buildCorrespondence(
+    tri1,
+    [commonPt(s1.l, s2.l), commonPt(s2.l, s3.l), commonPt(s3.l, s1.l)],
+    tri2,
+    [commonPt(s1.r, s2.r), commonPt(s2.r, s3.r), commonPt(s3.r, s1.r)],
+  );
 };
 
 export const checkAas = (
@@ -233,9 +388,15 @@ export const checkAas = (
   const checkRight = check(tri2, a1r, a2r, s.r);
   if (!checkRight.ok) return checkRight;
 
-  tri1.orderTri([a1l, a2l, s.l.replace(a1l, "").replace(a2l, "")], ctx);
-  tri2.orderTri([a1r, a2r, s.r.replace(a1r, "").replace(a2r, "")], ctx);
-  return reasonApplicationOk();
+  const distinct = distinctAngs(tri1, a1.l, a2.l, tri2, a1.r, a2.r, ctx);
+  if (!distinct.ok) return distinct;
+
+  return buildCorrespondence(
+    tri1,
+    [a1l, a2l, s.l.replace(a1l, "").replace(a2l, "")],
+    tri2,
+    [a1r, a2r, s.r.replace(a1r, "").replace(a2r, "")],
+  );
 };
 
 export const checkAsa = (
@@ -273,10 +434,15 @@ export const checkAsa = (
   const checkRight = check(tri2, a1r, s.r, a2r); // check right
   if (!checkRight.ok) return checkRight;
 
-  tri1.orderTri([a1l, a2l, tri1.getThirdPoint(a1l, a2l)], ctx);
-  tri2.orderTri([a1r, a2r, tri2.getThirdPoint(a1r, a2r)], ctx);
+  const distinct = distinctAngs(tri1, a1.l, a2.l, tri2, a1.r, a2.r, ctx);
+  if (!distinct.ok) return distinct;
 
-  return reasonApplicationOk();
+  return buildCorrespondence(
+    tri1,
+    [a1l, a2l, tri1.getThirdPoint(a1l, a2l)],
+    tri2,
+    [a1r, a2r, tri2.getThirdPoint(a1r, a2r)],
+  );
 };
 
 export const checkRhl = (
@@ -312,32 +478,83 @@ export const checkRhl = (
   const checkRight = check(tri2, rr, h.r, l.r); // check right
   if (!checkRight.ok) return checkRight;
 
+  const distinct = distinctSegs(tri1, h.l, l.l, tri2, h.r, l.r, ctx);
+  if (!distinct.ok) return distinct;
+
   const [p2l, p2r] = [l.l.replace(rl, ""), l.r.replace(rr, "")];
-  tri1.orderTri([rl, p2l, tri1.getThirdPoint(rl, p2l)], ctx);
-  tri2.orderTri([rr, p2r, tri2.getThirdPoint(rr, p2r)], ctx);
-  return reasonApplicationOk();
+  return buildCorrespondence(
+    tri1,
+    [rl, p2l, tri1.getThirdPoint(rl, p2l)],
+    tri2,
+    [rr, p2r, tri2.getThirdPoint(rr, p2r)],
+  );
 };
 
+/**
+ * Validates CPCTC against the correspondence its cited `con_tri` step recorded.
+ *
+ * The pairing comes from that one step, never from the vertex order stored on
+ * the `Triangle` objects. A later step may relate one of these triangles to a
+ * third under a different pairing, and that must not change this result.
+ */
 export const checkCpctc = (
   t_cong: Stmt,
+  correspondence: TriCorrespondence | undefined,
   conclusion: Stmt,
   ctx: ProofContent,
 ): CheckerResult => {
   const [tri1, tri2] = stmtMapper(t_cong, ctx) as [Triangle, Triangle];
+  if (!correspondence) {
+    return reasonApplicationFail(NO_CORRESPONDENCE, {
+      tri1: tri1.label,
+      tri2: tri2.label,
+    });
+  }
+  const map = vertexMap(correspondence, tri1, tri2);
+  if (!map) {
+    return reasonApplicationFail(CORRESP_TRI_MISMATCH, {
+      tri1: tri1.label,
+      tri2: tri2.label,
+      correspondence: correspondence.tris,
+    });
+  }
+
   const pair = assignToTri(conclusion.arguments, tri1, tri2, ctx);
   if (!pair.res.ok) return pair.res;
 
   if (conclusion.function === "con_seg") {
-    if (tri1.getSegmentIndex(pair.l) !== tri2.getSegmentIndex(pair.r)) {
+    const left = triSegPts(tri1, pair.l);
+    const right = triSegPts(tri2, pair.r);
+    const expected = left && left.map((p) => map.get(p));
+    const corresponds =
+      !!right &&
+      !!expected &&
+      expected.every((p) => !!p) &&
+      new Set(expected).size === 2 &&
+      right.every((p) => expected.includes(p));
+    if (!corresponds) {
       return reasonApplicationFail(SEG_NOT_CORRESP, {
         seg1: pair.l,
         seg2: pair.r,
+        expected: expected?.join("") ?? null,
       });
     }
     return reasonApplicationOk();
   }
   if (conclusion.function === "con_ang") {
-    if (tri1.getAngleIndex(pair.l) !== tri2.getAngleIndex(pair.r)) {
+    const left = triAngPts(tri1, pair.l);
+    const right = triAngPts(tri2, pair.r);
+    // Corresponding angles share a mapped vertex and mapped rays; the two ray
+    // endpoints are unordered because `a_XYZ` and `a_ZYX` name one angle.
+    const corresponds =
+      !!left &&
+      !!right &&
+      map.get(left[1]) === right[1] &&
+      [map.get(left[0]), map.get(left[2])].every(
+        (p) => !!p && (p === right[0] || p === right[2]),
+      ) &&
+      map.get(left[0]) !== map.get(left[2]);
+    if (!corresponds) {
       return reasonApplicationFail(ANG_NOT_CORRESP, {
         ang1: pair.l,
         ang2: pair.r,
@@ -348,6 +565,95 @@ export const checkCpctc = (
   return reasonApplicationFail(BAD_CONC_TYPE, {
     function: conclusion.function,
   });
+};
+
+/**
+ * Reads the correspondence a `con_tri_ordered` premise states.
+ *
+ * The premise form carries its pairing in the vertex order the author wrote,
+ * so `con_tri_ordered(t_ABC, t_DEF)` pairs A with D, B with E, and C with F.
+ * Ordinary `con_tri` has no such guarantee, which is why premises use this
+ * form instead.
+ */
+export const conTriOrdered = (stmt: Stmt, ctx: ProofContent): CheckerResult => {
+  const [tri1, tri2] = stmtMapper(stmt, ctx) as [Triangle, Triangle];
+  const [w1, w2] = stmt.arguments.map((a) => a.v.replace("t_", "").split(""));
+  if (w1.length !== 3 || w2.length !== 3) {
+    return reasonApplicationFail(BAD_VERTEX_ORDER, {
+      tri1: tri1.label,
+      tri2: tri2.label,
+    });
+  }
+  return buildCorrespondence(
+    tri1,
+    w1 as [string, string, string],
+    tri2,
+    w2 as [string, string, string],
+  );
+};
+
+/**
+ * Composes the correspondences of two `con_tri` steps that share a triangle.
+ *
+ * `con_tri_transitive` concludes a pairing, so it must derive that pairing from
+ * its dependencies rather than assert only that a shared triangle exists.
+ */
+export const checkConTriTransitive = (
+  dep1: Stmt,
+  c1: TriCorrespondence | undefined,
+  dep2: Stmt,
+  c2: TriCorrespondence | undefined,
+  conclusion: Stmt,
+  ctx: ProofContent,
+): CheckerResult => {
+  const d1 = stmtMapper(dep1, ctx) as [Triangle, Triangle];
+  const d2 = stmtMapper(dep2, ctx) as [Triangle, Triangle];
+  const [ca, cb] = stmtMapper(conclusion, ctx) as [Triangle, Triangle];
+
+  const shared = d1.find((x) => d2.some((y) => y.equals(x)));
+  const left = shared && d1.find((x) => !x.equals(shared));
+  const right = shared && d2.find((x) => !x.equals(shared));
+  if (!shared || !left || !right) {
+    return reasonApplicationFail("no_shared_congruent_element");
+  }
+  const concludesPair =
+    (left.equals(ca) && right.equals(cb)) ||
+    (left.equals(cb) && right.equals(ca));
+  if (!concludesPair) {
+    return reasonApplicationFail("no_shared_congruent_element");
+  }
+
+  if (!c1 || !c2) {
+    return reasonApplicationFail(NO_CORRESPONDENCE, {
+      tri1: left.label,
+      tri2: right.label,
+    });
+  }
+  const toShared = vertexMap(c1, left, shared);
+  const fromShared = vertexMap(c2, shared, right);
+  if (!toShared || !fromShared) {
+    return reasonApplicationFail(CORRESP_TRI_MISMATCH, {
+      tri1: left.label,
+      tri2: right.label,
+      shared: shared.label,
+    });
+  }
+
+  const leftPts = left.p.map((pt) => pt.label) as [string, string, string];
+  const composed = leftPts.map((p) => fromShared.get(toShared.get(p) ?? ""));
+  if (composed.some((p) => !p) || new Set(composed).size !== 3) {
+    return reasonApplicationFail(CORRESP_TRI_MISMATCH, {
+      tri1: left.label,
+      tri2: right.label,
+      shared: shared.label,
+    });
+  }
+  return buildCorrespondence(
+    left,
+    leftPts,
+    right,
+    composed as [string, string, string],
+  );
 };
 
 export const checkConTri = (
@@ -392,7 +698,14 @@ export const checkConTri = (
       angs2: [a1.r, a2.r, a3.r],
     });
   }
-  return reasonApplicationOk();
+  // The three angle pairs cover each triangle exactly once, so their centers
+  // give the vertex pairing directly.
+  return buildCorrespondence(
+    tri1,
+    [angCenter(a1.l), angCenter(a2.l), angCenter(a3.l)],
+    tri2,
+    [angCenter(a1.r), angCenter(a2.r), angCenter(a3.r)],
+  );
 };
 
 export const checkThirdAngle = (
@@ -423,13 +736,11 @@ export const checkThirdAngle = (
   const a3 = assignToTri(conAng3.arguments, t1, t2, ctx);
   if (!a3.res.ok) return a3.res;
 
-  // order the triangles if t1 and t2 each contain exactly 3 unique angles
+  // The three angle pairs must cover each triangle's angles exactly once.
   if (
     t1.hasUniqueAngs(a1.l, a2.l, a3.l) &&
     t2.hasUniqueAngs(a1.r, a2.r, a3.r)
   ) {
-    t1.orderTri([angCenter(a1.l), angCenter(a2.l), angCenter(a3.l)], ctx);
-    t2.orderTri([angCenter(a1.r), angCenter(a2.r), angCenter(a3.r)], ctx);
     return reasonApplicationOk();
   }
   return reasonApplicationFail(ANGS_NOT_UNIQUE, {
@@ -582,11 +893,8 @@ export const checkAa = (
   if (!a2.res.ok)
     return reasonApplicationFail(a2.res.failure.code, a2.res.failure.details);
 
-  const [a1l, a1r] = [angCenter(a1.l), angCenter(a1.r)];
-  const [a2l, a2r] = [angCenter(a2.l), angCenter(a2.r)];
-
-  tri1.orderTri([a1l, a2l, tri1.getThirdPoint(a1l, a2l)], ctx);
-  tri2.orderTri([a1r, a2r, tri2.getThirdPoint(a1r, a2r)], ctx);
-
+  // `sim_tri` carries a correspondence too, but no reason consumes one yet:
+  // `cstp` and `sim_seg` have no case in `reasonApplication` and fall through
+  // to its permissive default. Record one here when they gain a check.
   return reasonApplicationOk();
 };

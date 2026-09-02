@@ -9,8 +9,8 @@ npm start                          # Dev server at http://localhost:3000/ender/
 npm run build                      # tsc typecheck + Vite production build to dist/
 npm test                           # Run Jest tests (single file: src/checker/test/proofTests.test.ts)
 npm run checkProof -- <file>       # CLI: check a proof file
+npm run scanProofs -- <dir>        # CLI: check every proof under a directory
 npm run checker-server             # HTTP checker service on port 4000 (used by Docker backend)
-npm run debugProof -- <file>       # CLI: debug with detailed output
 npm run deploy                     # Build and publish to gh-pages
 ```
 
@@ -82,3 +82,32 @@ steps:
 ```
 
 Sample proofs in `src/checker/proofs/`, organized into category subdirectories (e.g., `examples/tutorial.txt`, `examples/s1c1.txt`).
+
+Triangle congruence in premises uses `con_tri_ordered`, not `con_tri`. The
+vertex order states the correspondence, so `con_tri_ordered(t_ABC, t_DEF)`
+pairs A with D, B with E, and C with F. A `con_tri` step gets its
+correspondence from the reason that proved it, so only premises need the
+ordered form. Proof goals still use `con_tri`.
+
+## Response Style
+
+Write all responses in ASD-STE100 Simplified Technical English.
+
+- Use only the active voice. Write "The parser builds the ProofObj", not
+  "The ProofObj is built by the parser".
+- Keep sentences to 20 words or fewer for instructions, 25 words or fewer
+  for descriptions.
+- Write one instruction per sentence. Start each instruction with its verb.
+- Keep paragraphs to 6 sentences or fewer.
+- Use simple tenses only: past, present, and future. Do not use perfect or
+  progressive forms.
+- Use one word for one meaning. Do not use a synonym for a term you already
+  used. If you call it a "step", call it a "step" every time.
+- Keep articles ("a", "the") in place. Do not drop them.
+- Use noun clusters of 3 words or fewer.
+- Do not use slang, idioms, or figures of speech.
+- Do not use a gerund as a noun where a simple noun exists.
+
+Exception: code identifiers, file paths, error codes, grammar keywords, and
+established geometry terms stay verbatim. Do not simplify `con_tri_transitive`,
+`orderTri`, `segs_not_corresponding_in_triangles`, or "transversal".

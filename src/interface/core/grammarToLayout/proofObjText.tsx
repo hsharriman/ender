@@ -39,7 +39,10 @@ export const stmtToText =
     ) {
       return EqualAngles.text([args[0], args[1]])(isActive);
     }
-    if (stmt.function === "con_tri" && args.length === 2) {
+    if (
+      (stmt.function === "con_tri" || stmt.function === "con_tri_ordered") &&
+      args.length === 2
+    ) {
       return EqualTriangles.text([args[0], args[1]])(isActive);
     }
     if (stmt.function === "para" && args.length === 2) {

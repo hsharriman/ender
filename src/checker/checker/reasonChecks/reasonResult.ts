@@ -1,7 +1,15 @@
 import { ErrorType } from "checker/errors/errorConstants";
-import { CheckerResult, ParseDiagramStmt } from "checker/types/checkerTypes";
+import {
+  CheckerResult,
+  ParseDiagramStmt,
+  TriCorrespondence,
+} from "checker/types/checkerTypes";
 
-export type { CheckerResult, ErrorDetails } from "checker/types/checkerTypes";
+export type {
+  CheckerResult,
+  ErrorDetails,
+  TriCorrespondence,
+} from "checker/types/checkerTypes";
 
 export type DiagramResult = {
   res: CheckerResult;
@@ -24,8 +32,10 @@ export const diagramFail = (
   diagramDeps: [],
 });
 
-export const reasonApplicationOk = (): CheckerResult => {
-  return { ok: true };
+export const reasonApplicationOk = (
+  correspondence?: TriCorrespondence,
+): CheckerResult => {
+  return correspondence ? { ok: true, correspondence } : { ok: true };
 };
 
 export const reasonApplicationFail = (
