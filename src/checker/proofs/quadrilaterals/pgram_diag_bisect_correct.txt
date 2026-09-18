@@ -5,6 +5,7 @@ pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl), M (5, 4, b)
 quad: q_ABCD
 seg: AC BD
 [g_1] parallelogram(q_ABCD)
+[d_01] intersect_seg(AC, BD, M)
 -> seg_bisect(AC, BD, M)
 
 steps:

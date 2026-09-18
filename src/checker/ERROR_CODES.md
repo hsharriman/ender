@@ -43,6 +43,7 @@ Every error the checker emits is an `ErrorDetails` object (`src/checker/types/ch
 | `no_step_numbers` | The proof contains no numbered proof steps at all. |
 | `non_consecutive_step_numbers` | Sorted proof step numbers don't increase by exactly 1 from the first step (gaps or out-of-sequence labels). |
 | `illegal_diagram_dep` | A `[d_xx]` diagram premise uses a statement that isn't marked `isDiagramOnly`; such statements belong in given or proof steps. |
+| `missing_diagram_premise` | The reason declares `diagramDependencies` and the proof has no `[d_xx]` premise of the required statement type at all; `details.expected` lists the missing types. |
 | `forward_reference` | A proof step cites its own step number or a later one; steps may only depend on earlier numbered steps. |
 | `invalid_given_dep` | A `g_n` given-premise ref is used as a dependency of a reason other than `given(...)`. |
 | `upstream_dep_error` | The step itself may be fine, but a cited dependency step was already marked incorrect, so this step cannot be validated. |
@@ -77,6 +78,7 @@ Every error the checker emits is an `ErrorDetails` object (`src/checker/types/ch
 | `con_angles_appear_in_same_supp_pair` | Each angle of the given congruent pair must appear in exactly one supplementary statement; one appears in both or in neither. |
 | `con_angles_not_distributed_across_pairs` | Both angles of the given congruent pair fall in the same supplementary statement; they must be split across the two statements. |
 | `no_intersecting_seg_produces_vert_angles` | No `intersect_seg` diagram premise makes the concluded angles vertical: distinct angles, vertices at the intersection point, rays along both segments. |
+| `no_intersect_seg_premise_for_diagonals_at_this_point` | A diagonal theorem (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`) concludes about a point that no `intersect_seg` premise places at the crossing of those two diagonals. Without it the point could sit anywhere in the figure. |
 | `angle_centers_dont_match` | `def_ang_bisect`: the two concluded angles and the bisected angle don't all share the same vertex. |
 | `bisector_not_in_both_half_angles` | `def_ang_bisect`: the bisecting segment is not a ray of both concluded half-angles. |
 | `right_angles_dont_match_conclusion` | `def_con_right`: the two right angles don't equal the concluded congruent angle pair (in either order). |

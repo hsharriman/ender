@@ -1,8 +1,11 @@
 import { Angle, Point, ProofContent, Segment } from "geometry-object";
 import { Quadrilateral } from "geometry-object/geometry/Quadrilateral";
-import { Stmt } from "../../types/checkerTypes";
+import { ParseDiagramStmt, Stmt } from "../../types/checkerTypes";
 import {
   CheckerResult,
+  DiagramResult,
+  diagramFail,
+  diagramOk,
   reasonApplicationFail,
   reasonApplicationOk,
 } from "./reasonResult";
@@ -34,6 +37,41 @@ const NOT_CONSEC_SIDES = "segs_not_consecutive_sides_of_quad";
 const NOT_BASE_ANGS = "angles_not_base_angle_pair_of_trap";
 const TRAP_DIFF = "trap_and_isos_trap_are_diff_quads";
 const DIFF_QUADS = "quad_stmts_refer_to_diff_quads";
+const NO_DIAG_INTERSECT = "no_intersect_seg_premise_for_diagonals_at_this_point";
+
+/**
+ * Requires a diagram premise placing the conclusion's point at the crossing of
+ * the two diagonals.
+ *
+ * A diagonal theorem concludes something about the point where the diagonals
+ * meet, but the conclusion names that point on its own. Without this check the
+ * point may be any point in the figure, so `perp(AC, BD, M)` would hold for an
+ * M that lies nowhere near AC or BD.
+ */
+const requireDiagonalIntersection = (
+  conclusion: Stmt,
+  intersects: ParseDiagramStmt[],
+  ctx: ProofContent,
+): DiagramResult => {
+  const [s1, s2, p] = stmtMapper(conclusion, ctx) as [Segment, Segment, Point];
+  const matches = intersects.filter((d) => {
+    const [i1, i2, ip] = stmtMapper(d.statement, ctx) as [
+      Segment,
+      Segment,
+      Point,
+    ];
+    if (!i1 || !i2 || !ip || !p) return false;
+    return segmentPairsEqual([i1, i2], [s1, s2]) && ip.equals(p);
+  });
+  if (matches.length === 0) {
+    return diagramFail(NO_DIAG_INTERSECT, {
+      s1: s1?.label,
+      s2: s2?.label,
+      pt: p?.label,
+    });
+  }
+  return diagramOk(matches);
+};
 
 const quadContainsAngle = (quad: Quadrilateral, a: Angle): boolean =>
   resolveAngleForProp(a, (name) => quad.a.some((qa) => qa.names.has(name))) !==
@@ -268,16 +306,23 @@ export const quad_diag_con_check = (
     : reasonApplicationOk();
 };
 
+/**
+ * Pass `intersects` when `seg_b1` is the conclusion, as it is for
+ * `pgram_diag_bisect`. The conclusion names the point where the diagonals meet,
+ * so a diagram premise must place it there. `pgram_diag_bisect_conv` concludes
+ * `parallelogram` and takes its point from a dependency, so it passes none.
+ */
 export const pgram_diag_bisect_check = (
   pgram: Stmt,
   seg_b1: Stmt,
   ctx: ProofContent,
   seg_b2?: Stmt,
-) => {
+  intersects?: ParseDiagramStmt[],
+): DiagramResult => {
   const quad = ctx.getQuadrilateral(pgram.arguments[0].v);
   const [b1, b2, p1] = stmtMapper(seg_b1, ctx) as [Segment, Segment, Point];
 
-  const validQuadCheck = (s1: Segment, s2: Segment) => {
+  const validQuadCheck = (s1: Segment, s2: Segment): CheckerResult => {
     // s1,s2 must be exactly the diagonals — no parent/child substitutions
     if (!quad.isDiagonal(s1) || !quad.isDiagonal(s2)) {
       return reasonApplicationFail(NOT_DIAGONAL, {
@@ -288,53 +333,78 @@ export const pgram_diag_bisect_check = (
     return reasonApplicationOk();
   };
 
-  if (seg_b2) {
-    const [c1, c2, p2] = [
-      ctx.getSegment(seg_b2.arguments[0].v),
-      ctx.getSegment(seg_b2.arguments[1].v),
-      ctx.getPoint(seg_b2.arguments[2].v),
-    ];
-    // p1 and p2 should be the same,
-    const eq = checkEqual(p1, p2, DIFF_MIDPTS);
-    if (!eq.ok) {
-      return eq;
+  const geometry = (): CheckerResult => {
+    if (seg_b2) {
+      const [c1, c2, p2] = [
+        ctx.getSegment(seg_b2.arguments[0].v),
+        ctx.getSegment(seg_b2.arguments[1].v),
+        ctx.getPoint(seg_b2.arguments[2].v),
+      ];
+      // p1 and p2 should be the same,
+      const eq = checkEqual(p1, p2, DIFF_MIDPTS);
+      if (!eq.ok) {
+        return eq;
+      }
+      // c1,c2 and b1,b2 should be the same.
+      if (!segmentPairsEqual([c1, c2], [b1, b2])) {
+        return reasonApplicationFail(DIFF_SEG_PAIRS, {
+          s1: c1.label,
+          s2: b1.label,
+          s3: c2.label,
+          s4: b2.label,
+        });
+      }
+      return validQuadCheck(c1, c2);
     }
-    // c1,c2 and b1,b2 should be the same.
-    if (!segmentPairsEqual([c1, c2], [b1, b2])) {
-      return reasonApplicationFail(DIFF_SEG_PAIRS, {
-        s1: c1.label,
-        s2: b1.label,
-        s3: c2.label,
-        s4: b2.label,
-      });
-    }
-    return validQuadCheck(c1, c2);
-  }
-  return validQuadCheck(b1, b2);
+    return validQuadCheck(b1, b2);
+  };
+
+  const res = geometry();
+  if (!res.ok) return { res, diagramDeps: [] };
+  return intersects
+    ? requireDiagonalIntersection(seg_b1, intersects, ctx)
+    : diagramOk();
 };
 
-// works for checking that diagonals of rhombus or kits are perpendicular
+/**
+ * Checks that the diagonals of a rhombus or a kite are perpendicular.
+ *
+ * Pass `intersects` when `perp` is the conclusion, as it is for
+ * `rhombus_diag_perp` and `kite_diag_perp`. The conclusion names the point
+ * where the diagonals meet, so a diagram premise must place it there.
+ * `rhombus_diag_perp_conv` concludes `rhombus` and takes its point from a
+ * dependency, so it passes none.
+ */
 export const rhombus_kite_diag_check = (
   q: Stmt,
   perp: Stmt,
   ctx: ProofContent,
   pgram?: Stmt,
-) => {
+  intersects?: ParseDiagramStmt[],
+): DiagramResult => {
   const r = ctx.getQuadrilateral(q.arguments[0].v);
   const [s1, s2] = stmtMapper(perp, ctx) as [Segment, Segment, Point];
 
-  // s1, s2 should be diagonals of the quadrilateral
-  if (
-    !resolveSegmentForProp(s1, (s) => r.isDiagonal(s)) ||
-    !resolveSegmentForProp(s2, (s) => r.isDiagonal(s))
-  ) {
-    return reasonApplicationFail(NOT_DIAGONAL, {
-      s1: s1.label,
-      s2: s2.label,
-    });
-  }
-  // if pgram is incl, then it must be the same as r
-  return pgram ? checkQuadrilateralCls(pgram, q, ctx) : reasonApplicationOk();
+  const geometry = (): CheckerResult => {
+    // s1, s2 should be diagonals of the quadrilateral
+    if (
+      !resolveSegmentForProp(s1, (s) => r.isDiagonal(s)) ||
+      !resolveSegmentForProp(s2, (s) => r.isDiagonal(s))
+    ) {
+      return reasonApplicationFail(NOT_DIAGONAL, {
+        s1: s1.label,
+        s2: s2.label,
+      });
+    }
+    // if pgram is incl, then it must be the same as r
+    return pgram ? checkQuadrilateralCls(pgram, q, ctx) : reasonApplicationOk();
+  };
+
+  const res = geometry();
+  if (!res.ok) return { res, diagramDeps: [] };
+  return intersects
+    ? requireDiagonalIntersection(perp, intersects, ctx)
+    : diagramOk();
 };
 
 export const rhombus_opp_bisect_check = (

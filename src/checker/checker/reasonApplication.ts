@@ -508,15 +508,21 @@ export const checkReasonApplication = (
 
       case "pgram_diag_bisect": {
         const pgram = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = pgram_diag_bisect_check(pgram, stmt, ctx);
-        return floatReasonResult(r, currStep, reason);
+        const r = pgram_diag_bisect_check(
+          pgram,
+          stmt,
+          ctx,
+          undefined,
+          diagramPremisesByFunction(proofGraph, "intersect_seg"),
+        );
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "pgram_diag_bisect_conv": {
         const seg_b1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const seg_b2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = pgram_diag_bisect_check(stmt, seg_b1, ctx, seg_b2);
-        return floatReasonResult(r, currStep, reason);
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "pgram_opp_side_para": {
@@ -566,15 +572,21 @@ export const checkReasonApplication = (
 
       case "rhombus_diag_perp": {
         const rhombus = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = rhombus_kite_diag_check(rhombus, stmt, ctx);
-        return floatReasonResult(r, currStep, reason);
+        const r = rhombus_kite_diag_check(
+          rhombus,
+          stmt,
+          ctx,
+          undefined,
+          diagramPremisesByFunction(proofGraph, "intersect_seg"),
+        );
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "rhombus_diag_perp_conv": {
         const perpDep = getDepStmt(reason.arguments[0], proofGraph)!;
         const pgram = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = rhombus_kite_diag_check(stmt, perpDep, ctx, pgram);
-        return floatReasonResult(r, currStep, reason);
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "rhombus_opp_bisect_conv": {
@@ -600,8 +612,14 @@ export const checkReasonApplication = (
 
       case "kite_diag_perp": {
         const kite = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = rhombus_kite_diag_check(kite, stmt, ctx);
-        return floatReasonResult(r, currStep, reason);
+        const r = rhombus_kite_diag_check(
+          kite,
+          stmt,
+          ctx,
+          undefined,
+          diagramPremisesByFunction(proofGraph, "intersect_seg"),
+        );
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "kite_opp_con_ang": {
