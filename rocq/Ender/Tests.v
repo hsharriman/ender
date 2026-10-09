@@ -187,8 +187,8 @@ Example complete_wrong_reason_is_proof_rejection :
 Proof. vm_compute. reflexivity. Qed.
 
 Example certified_sss_type_mismatch_is_structured :
-  (CertifiedAPI.check bad_sss_source).(Audit.report_issues) =
-    [(Audit.issue 12 "reason_dep_type_mismatch"
+  List.hd_error (CertifiedAPI.check bad_sss_source).(Audit.report_issues) =
+    Some (Audit.issue 12 "reason_dep_type_mismatch"
       (Audit.JsonObject
         [("reason", Audit.JsonString "sss");
          ("index", Audit.JsonNumber 1);
@@ -198,7 +198,7 @@ Example certified_sss_type_mismatch_is_structured :
             [Audit.JsonString "ref_seg"]);
          ("receivedType", Audit.JsonString "con_ang");
          ("steps", Audit.JsonArray
-            [Audit.JsonString "4"])]))].
+            [Audit.JsonString "4"])])).
 Proof. vm_compute. reflexivity. Qed.
 
 (** Transitivity of congruence, for each supported object kind. *)
@@ -353,9 +353,9 @@ Example con_seg_transitive_wrong_kind_rejects :
 Proof. vm_compute. reflexivity. Qed.
 
 Example con_seg_transitive_wrong_kind_is_structured :
-  (CertifiedAPI.check con_seg_transitive_wrong_kind_source)
+  List.hd_error (CertifiedAPI.check con_seg_transitive_wrong_kind_source)
     .(Audit.report_issues) =
-    [(Audit.issue 12 "reason_dep_type_mismatch"
+    Some (Audit.issue 12 "reason_dep_type_mismatch"
       (Audit.JsonObject
         [("reason", Audit.JsonString "con_seg_transitive");
          ("index", Audit.JsonNumber 1);
@@ -365,7 +365,7 @@ Example con_seg_transitive_wrong_kind_is_structured :
             [Audit.JsonString "ref_seg"]);
          ("receivedType", Audit.JsonString "con_ang");
          ("steps", Audit.JsonArray
-            [Audit.JsonString "3"])]))].
+            [Audit.JsonString "3"])])).
 Proof. vm_compute. reflexivity. Qed.
 
 (** Right angles and perpendicularity. *)
@@ -1766,9 +1766,10 @@ Proof. vm_compute. reflexivity. Qed.
 (** Angle reflexivity, once an [ang:] declaration supplies the nondegenerate
     rays: the audited meaning of an angle declaration is exactly
     [AngleWellFormed], which is what [conga_refl] needs.  [ref_ang] cannot be a
-    goal, so these pin the behaviour by which step the checker blames: with the
-    declaration it gets past step 1 and blames the deliberately broken step 2;
-    without it, it stops at step 1. *)
+    goal, so these pin the behaviour by which step the checker blames first,
+    and why: with the declaration it gets past step 1 and blames the
+    deliberately broken step 2; without it, it blames step 1 for the missing
+    declaration. *)
 Definition ref_ang_declared_source := transitive_header "ang: a_ABC
 " ""
   "con_seg(AB,AB)"
@@ -1781,19 +1782,29 @@ Definition ref_ang_undeclared_source := transitive_header "seg: AB
   "[01] reflex() -> ref_ang(a_ABC,a_ABC)
 [02] reflex() -> ref_seg(AB,CD)".
 
-Definition blamed_step (n : string) : list Audit.Issue :=
-  [Audit.issue 1 "reason_application_error"
-    (Audit.JsonObject
-      [("steps", Audit.JsonArray [Audit.JsonString n])])].
+Definition first_blame (source : string) : option (string * Audit.JsonValue) :=
+  match (CertifiedAPI.check source).(Audit.report_issues) with
+  | issue :: _ =>
+      match issue.(Audit.issue_details) with
+      | Audit.JsonObject fields =>
+          match find (fun f => String.eqb (fst f) "steps") fields with
+          | Some (_, steps) => Some (issue.(Audit.issue_code), steps)
+          | None => None
+          end
+      | _ => None
+      end
+  | [] => None
+  end.
+
+Definition blamed (code n : string) : option (string * Audit.JsonValue) :=
+  Some (code, Audit.JsonArray [Audit.JsonString n]).
 
 Example ref_ang_declared_clears_its_step :
-  (CertifiedAPI.check ref_ang_declared_source).(Audit.report_issues) =
-    blamed_step "2".
+  first_blame ref_ang_declared_source = blamed "objs_not_equal" "2".
 Proof. vm_compute. reflexivity. Qed.
 
 Example ref_ang_undeclared_stops_at_its_step :
-  (CertifiedAPI.check ref_ang_undeclared_source).(Audit.report_issues) =
-    blamed_step "1".
+  first_blame ref_ang_undeclared_source = blamed "angle_not_declared" "1".
 Proof. vm_compute. reflexivity. Qed.
 
 (** A declared angle says nothing about a different one. *)
@@ -1804,8 +1815,7 @@ Definition ref_ang_other_angle_source := transitive_header "ang: a_ABC
 [02] reflex() -> ref_seg(AB,CD)".
 
 Example ref_ang_other_angle_stops_at_its_step :
-  (CertifiedAPI.check ref_ang_other_angle_source).(Audit.report_issues) =
-    blamed_step "1".
+  first_blame ref_ang_other_angle_source = blamed "angle_not_declared" "1".
 Proof. vm_compute. reflexivity. Qed.
 
 Example malformed_problem_is_parse_failure :

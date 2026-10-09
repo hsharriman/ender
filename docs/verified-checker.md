@@ -403,6 +403,17 @@ both against repository proof files. The compatibility command emits
 `{isCorrect, issues}` or `{isCorrect, errors}` JSON and uses exit codes 0, 1,
 and 2 for accepted, rejected, and failed-to-parse results respectively.
 `ender-checker --report FILE` emits every field of the audited `CheckReport`.
+Its `issues` name every step that did not hold and why, in the codes and
+detail fields the legacy checker used, each with a `message`. A step line that
+does not parse gets `parser_error`, `unknown_function`, `reason_dep_missing`,
+or `stmt_arg_type_invalid`, and the steps after it are still judged; a step
+citing one that failed gets `upstream_dep_error`; a rejected step gets the
+first structural cause that applies (`forward_reference`, `invalid_given_dep`,
+`reason_dep_type_mismatch`, `invalid_duplicate_stmt`, `reason_stmt_mismatch`),
+then a rule-specific cause for the rules whose failures are common, and
+otherwise `reason_application_error` naming the reason and what it needs. A
+header that does not parse names the first line the audited grammar rejects.
+All of this is advisory: the verdict never reads it.
 The callable Wasm equivalents are `enderCheckProof`, `enderParsePresentation`,
 and `enderCheckReport`.
 The Wasm bundle is under
