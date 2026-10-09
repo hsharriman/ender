@@ -84,7 +84,7 @@ independently would defeat the point of an ordered `con_tri`; do not widen it.
 
 Two other textbook vertical-angle proofs remain fail-closed because they
 declare segments but no triangle or angle that supplies nondegenerate rays.
-Another old quadrilateral proof spells a syntactically degenerate transversal;
+Another old quadrilateral proof labels its transversal with points on the wrong sides;
 these require fixture or audited-statement decisions, not permissive reason
 matching.
 

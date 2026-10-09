@@ -508,7 +508,20 @@ OS I1 I2 A C                        (* first-named points share a side *)
 
 Every distinctness and collinearity of the weaker reading is derivable, and
 the `OS` conjunct (through `TS`, which carries `~ Col`) keeps both lines
-genuinely transverse. From these, the side classifications the rules need —
+genuinely transverse.
+
+That is the meaning when all eight letters are distinct. A figure may also
+leave parts undrawn by repeating a letter: the transversal's ends spelled as
+its crossings, in either order, or one flanking point of a line spelled as
+its crossing, as in the Z figure `transversal(A, C, A, A, D, B, B, B)`. The
+audited meaning then weakens `BetS` to `Bet` for exactly the repeated slots,
+keeps distinct letters distinct, and states the side conditions for whichever
+flanking points are drawn (`Checker.v`'s `transversal_configuration_full`
+proves that a fully spelled figure means exactly the five conjuncts above).
+The soundness proofs reduce such a figure to a full one,
+`ender_transversal_complete` in `Geometry.v`, by constructing the missing
+points on the same lines, and the rules read only angles whose points are
+all drawn. From these, the side classifications the rules need —
 `TS I1 I2 A D` for alternate pairs and their kin — all follow, in the form
 GeoCoq's lemmas consume, and the whole family is now implemented and
 verified: the forward rules through the Playfair-derived alternate interior
@@ -525,7 +538,7 @@ GeoCoq's `par_trans` proves it directly under the inclusive one. And no
 angle rule needs strictness from `para`: inside any transversal figure the
 coincident case is impossible, since two coincident "parallel" lines would
 share both crossing points with the transversal and so *be* the transversal,
-which the `OS` conjunct forbids.
+which the side conditions forbid.
 
 The parallelogram family, which is the next largest cluster and includes the
 most-used unimplemented reason in the textbook corpus (`pgram_opp_sides`, 12

@@ -399,6 +399,248 @@ Proof.
     + apply conga_sym. exact Hconga'.
 Qed.
 
+(** * Transversal figures drawn without every part
+
+    A transversal may stop at its crossing points, and a crossed line may end
+    at its crossing, so the drawn figure can lack a flanking point or an
+    exterior point.  [EnderTransversalRelaxed] is that figure: each crossed
+    line has two distinct points with its crossing between them, and every
+    flanking point off its crossing lies on the side of the transversal the
+    full figure puts it.  [A] off [I1] and [B] off [I1] can't both fail, nor
+    [C] and [D], so at least one side condition applies, and it keeps both
+    crossed lines off the transversal. *)
+Definition EnderTransversalRelaxed I1 I2 A B C D : Prop :=
+  I1 <> I2 /\ Bet A I1 B /\ A <> B /\ Bet C I2 D /\ C <> D /\
+  (A <> I1 -> C <> I2 -> OS I1 I2 A C) /\
+  (A <> I1 -> D <> I2 -> TS I1 I2 A D) /\
+  (B <> I1 -> C <> I2 -> TS I1 I2 B C) /\
+  (B <> I1 -> D <> I2 -> OS I1 I2 B D).
+
+Lemma ender_extend_past : forall P Q, P <> Q -> exists X, BetS X P Q.
+Proof.
+  intros P Q HPQ.
+  destruct (segment_construction Q P P Q) as [X [Hbet Hcong]].
+  exists X. split; [apply between_symmetry; exact Hbet|]. split; [|exact HPQ].
+  intro Heq. subst X. apply HPQ. apply (cong_reverse_identity P). exact Hcong.
+Qed.
+
+(** A line with its crossing between two distinct points gets a flanking
+    point on each side, keeping every drawn point that is off the crossing. *)
+Lemma ender_complete_line : forall I A B,
+  Bet A I B -> A <> B ->
+  exists A' B', BetS A' I B' /\ (A <> I -> A' = A) /\ (B <> I -> B' = B) /\
+    Col A B A' /\ Col A B B'.
+Proof.
+  intros I A B Hbet Hab.
+  destruct (eq_dec_points A I) as [HAI|HAI].
+  - subst A. destruct (ender_extend_past I B) as [X HX]; [auto|].
+    pose proof HX as [HbetX _].
+    exists X, B. split; [exact HX|]. split; [intro; contradiction|].
+    split; [auto|]. split; [|Col].
+    apply bet_col in HbetX. Col.
+  - destruct (eq_dec_points B I) as [HBI|HBI].
+    + subst B. destruct (ender_extend_past I A) as [X HX]; [auto|].
+      pose proof HX as [HbetX _].
+      exists A, X. split.
+      { destruct HX as [HbetX' [HneXI HneIA]].
+        split; [apply between_symmetry; exact HbetX'|]. split; auto. }
+      split; [auto|]. split; [intro; contradiction|]. split; [Col|].
+      apply bet_col in HbetX. Col.
+    + exists A, B. split; [split; [exact Hbet|split; auto]|].
+      split; [auto|]. split; [auto|]. split; Col.
+Qed.
+
+(** Every relaxed figure sits inside a full one on the same two lines. *)
+Lemma ender_transversal_complete : forall I1 I2 A B C D,
+  EnderTransversalRelaxed I1 I2 A B C D ->
+  exists A' B' C' D',
+    BetS A' I1 B' /\ BetS C' I2 D' /\ OS I1 I2 A' C' /\
+    (A <> I1 -> A' = A) /\ (B <> I1 -> B' = B) /\
+    (C <> I2 -> C' = C) /\ (D <> I2 -> D' = D) /\
+    Col A B A' /\ Col A B B' /\ Col C D C' /\ Col C D D'.
+Proof.
+  intros I1 I2 A B C D [HI12 [Hab [HneAB [Hcd [HneCD [Hac [Had [Hbc Hbd]]]]]]]].
+  destruct (ender_complete_line I1 A B Hab HneAB)
+    as [A' [B' [Hab' [EA [EB [HcA HcB]]]]]].
+  destruct (ender_complete_line I2 C D Hcd HneCD)
+    as [C' [D' [Hcd' [EC [ED [HcC HcD]]]]]].
+  exists A', B', C', D'.
+  split; [exact Hab'|]. split; [exact Hcd'|].
+  split; [|repeat (split; [assumption|]); assumption].
+  pose proof Hab' as [HbetAB' [HneA'I1 HneI1B']].
+  pose proof Hcd' as [HbetCD' [HneC'I2 HneI2D']].
+  (* The flanking point opposite a drawn one crosses the transversal. *)
+  assert (Hcross1 : forall X Y, ~ Col I1 I2 X -> Bet X I1 Y -> I1 <> Y ->
+                    TS I1 I2 X Y).
+  { intros X Y Hn Hb Hne. apply bet__ts; assumption. }
+  assert (Hcross2 : forall X Y, ~ Col I1 I2 X -> Bet X I2 Y -> I2 <> Y ->
+                    TS I1 I2 X Y).
+  { intros X Y Hn Hb Hne. apply invert_two_sides.
+    apply bet__ts; [assumption|intro; apply Hn; Col|assumption]. }
+  assert (Hts_ncol : forall X Y, TS I1 I2 X Y -> ~ Col I1 I2 X /\ ~ Col I1 I2 Y).
+  { intros X Y [Hx [Hy _]]. split; intro; [apply Hx|apply Hy]; Col. }
+  destruct (eq_dec_points A I1) as [HAI|HAI];
+    destruct (eq_dec_points C I2) as [HCI|HCI].
+  - (* Both lines end at their crossings: [B] and [D] are drawn. *)
+    assert (HBI : B <> I1) by (intro; subst; contradiction).
+    assert (HDI : D <> I2) by (intro; subst; contradiction).
+    specialize (Hbd HBI HDI). rewrite (EB HBI) in *. rewrite (ED HDI) in *.
+    assert (HnB : ~ Col I1 I2 B) by (apply one_side_not_col123 with D; exact Hbd).
+    assert (HnD : ~ Col I1 I2 D)
+      by (apply one_side_not_col123 with B; apply one_side_symmetry; exact Hbd).
+    assert (HtsBA : TS I1 I2 B A')
+      by (apply Hcross1; [exact HnB|apply between_symmetry; exact HbetAB'|auto]).
+    assert (HtsDC : TS I1 I2 D C')
+      by (apply Hcross2; [exact HnD|apply between_symmetry; exact HbetCD'|auto]).
+    assert (HtsDA : TS I1 I2 D A') by (apply l9_8_2 with B; assumption).
+    apply l9_8_1 with D; apply l9_2; assumption.
+  - (* Line 1 ends at its crossing: [B] is drawn, [C] is. *)
+    assert (HBI : B <> I1) by (intro; subst; contradiction).
+    specialize (Hbc HBI HCI). rewrite (EB HBI) in *. rewrite (EC HCI).
+    assert (HtsBA : TS I1 I2 B A')
+      by (apply Hcross1; [apply (Hts_ncol _ _ Hbc)|
+                          apply between_symmetry; exact HbetAB'|auto]).
+    apply l9_8_1 with B; apply l9_2; assumption.
+  - (* Line 2 ends at its crossing: [A] is drawn, [D] is. *)
+    assert (HDI : D <> I2) by (intro; subst; contradiction).
+    specialize (Had HAI HDI). rewrite (EA HAI). rewrite (ED HDI) in *.
+    assert (HtsDC : TS I1 I2 D C')
+      by (apply Hcross2; [apply (Hts_ncol _ _ Had)|
+                          apply between_symmetry; exact HbetCD'|auto]).
+    apply l9_8_1 with D; [exact Had|apply l9_2; exact HtsDC].
+  - rewrite (EA HAI), (EC HCI). exact (Hac HAI HCI).
+Qed.
+
+(** An exterior point is either drawn beyond its crossing or not drawn at
+    all, spelled as one of the crossings; either way the full figure has
+    one, and keeps the drawn one. *)
+Lemma ender_complete_exterior : forall T I J,
+  I <> J -> (T = I \/ T = J \/ BetS T I J) ->
+  exists T', BetS T' I J /\ (BetS T I J -> T' = T).
+Proof.
+  intros T I J Hne HT.
+  destruct HT as [->|[->|HT]].
+  - destruct (ender_extend_past I J Hne) as [X HX]. exists X.
+    split; [exact HX|]. intros [_ [Hd _]]. contradiction.
+  - destruct (ender_extend_past I J Hne) as [X HX]. exists X.
+    split; [exact HX|]. intros [Hb [_ Hd]].
+    exfalso. apply Hd. symmetry. apply between_identity. exact Hb.
+  - exists T. split; [exact HT|auto].
+Qed.
+
+Lemma ender_lines_par : forall A B C D A' B' C' D',
+  A' <> B' -> C' <> D' ->
+  Col A B A' -> Col A B B' -> Col C D C' -> Col C D D' ->
+  Par A B C D -> Par A' B' C' D'.
+Proof.
+  intros A B C D A' B' C' D' HAB' HCD' HA HB HC HD Hpar.
+  apply par_symmetry.
+  apply (par_col2_par C' D' A B A' B' HAB'); [|exact HA|exact HB].
+  apply par_symmetry. apply (par_col2_par A B C D C' D' HCD'); assumption.
+Qed.
+
+(** Reasoning about a relaxed transversal figure reduces to the full one:
+    whatever holds of every completion holds of the drawn figure. *)
+Lemma ender_transversal_forward : forall T1 I1 I2 T2 A B C D (P : Prop),
+  EnderTransversalRelaxed I1 I2 A B C D ->
+  (T1 = I1 \/ T1 = I2 \/ BetS T1 I1 I2) ->
+  (T2 = I2 \/ T2 = I1 \/ BetS I1 I2 T2) ->
+  Par A B C D ->
+  (forall T1' A' B' C' D' T2',
+     BetS T1' I1 I2 -> BetS I1 I2 T2' -> BetS A' I1 B' -> BetS C' I2 D' ->
+     OS I1 I2 A' C' -> Par A' B' C' D' ->
+     (BetS T1 I1 I2 -> T1' = T1) -> (BetS I1 I2 T2 -> T2' = T2) ->
+     (A <> I1 -> A' = A) -> (B <> I1 -> B' = B) ->
+     (C <> I2 -> C' = C) -> (D <> I2 -> D' = D) -> P) ->
+  P.
+Proof.
+  intros T1 I1 I2 T2 A B C D P Hrel HT1 HT2 Hpar Hk.
+  pose proof Hrel as [HI12 _].
+  destruct (ender_transversal_complete _ _ _ _ _ _ Hrel)
+    as [A' [B' [C' [D' [Hab [Hcd [Hos [EA [EB [EC [ED [HA [HB [HC HD]]]]]]]]]]]]]].
+  destruct (ender_complete_exterior T1 I1 I2 HI12 HT1) as [T1' [Ht1 ET1]].
+  assert (HI21 : I2 <> I1) by auto.
+  assert (HT2' : T2 = I2 \/ T2 = I1 \/ BetS T2 I2 I1).
+  { destruct HT2 as [H|[H|[Hb [Hne1 Hne2]]]]; [left; exact H|right; left; exact H|].
+    right; right. split; [apply between_symmetry; exact Hb|split; auto]. }
+  destruct (ender_complete_exterior T2 I2 I1 HI21 HT2') as [T2' [Ht2 ET2]].
+  apply (Hk T1' A' B' C' D' T2'); try assumption.
+  - destruct Ht2 as [Hb [Hne1 Hne2]].
+    split; [apply between_symmetry; exact Hb|split; auto].
+  - pose proof Hab as [_ [HA1 HB1]]. pose proof Hcd as [_ [HC2 HD2]].
+    apply (ender_lines_par A B C D); try assumption.
+    + intro Heq. subst B'. apply HA1, between_identity. apply Hab.
+    + intro Heq. subst D'. apply HC2, between_identity. apply Hcd.
+  - intros [Hb [Hne1 Hne2]]. apply ET2.
+    split; [apply between_symmetry; exact Hb|split; auto].
+Qed.
+
+Lemma ender_transversal_converse : forall T1 I1 I2 T2 A B C D,
+  EnderTransversalRelaxed I1 I2 A B C D ->
+  (T1 = I1 \/ T1 = I2 \/ BetS T1 I1 I2) ->
+  (T2 = I2 \/ T2 = I1 \/ BetS I1 I2 T2) ->
+  (forall T1' A' B' C' D' T2',
+     BetS T1' I1 I2 -> BetS I1 I2 T2' -> BetS A' I1 B' -> BetS C' I2 D' ->
+     OS I1 I2 A' C' ->
+     (BetS T1 I1 I2 -> T1' = T1) -> (BetS I1 I2 T2 -> T2' = T2) ->
+     (A <> I1 -> A' = A) -> (B <> I1 -> B' = B) ->
+     (C <> I2 -> C' = C) -> (D <> I2 -> D' = D) -> Par A' B' C' D') ->
+  Par A B C D.
+Proof.
+  intros T1 I1 I2 T2 A B C D Hrel HT1 HT2 Hk.
+  pose proof Hrel as [HI12 [_ [HneAB [_ [HneCD _]]]]].
+  destruct (ender_transversal_complete _ _ _ _ _ _ Hrel)
+    as [A' [B' [C' [D' [Hab [Hcd [Hos [EA [EB [EC [ED [HA [HB [HC HD]]]]]]]]]]]]]].
+  destruct (ender_complete_exterior T1 I1 I2 HI12 HT1) as [T1' [Ht1 ET1]].
+  assert (HI21 : I2 <> I1) by auto.
+  assert (HT2' : T2 = I2 \/ T2 = I1 \/ BetS T2 I2 I1).
+  { destruct HT2 as [H|[H|[Hb [Hne1 Hne2]]]]; [left; exact H|right; left; exact H|].
+    right; right. split; [apply between_symmetry; exact Hb|split; auto]. }
+  destruct (ender_complete_exterior T2 I2 I1 HI21 HT2') as [T2' [Ht2 ET2]].
+  assert (Hpar : Par A' B' C' D').
+  { apply (Hk T1' A' B' C' D' T2'); try assumption.
+    - destruct Ht2 as [Hb [Hne1 Hne2]].
+      split; [apply between_symmetry; exact Hb|split; auto].
+    - intros [Hb [Hne1 Hne2]]. apply ET2.
+      split; [apply between_symmetry; exact Hb|split; auto]. }
+  pose proof Hab as [_ [HA1 HB1]]. pose proof Hcd as [_ [HC2 HD2]].
+  assert (HneAB' : A' <> B')
+    by (intro Heq; subst B'; apply HA1, between_identity; apply Hab).
+  assert (HneCD' : C' <> D')
+    by (intro Heq; subst D'; apply HC2, between_identity; apply Hcd).
+  apply (ender_lines_par A' B' C' D' A B C D HneAB HneCD).
+  - apply (col3 A B); Col.
+  - apply (col3 A B); Col.
+  - apply (col3 C D); Col.
+  - apply (col3 C D); Col.
+  - exact Hpar.
+Qed.
+
+(** A fully drawn figure is a relaxed one: the full configuration's single
+    side condition gives the other three. *)
+Lemma ender_transversal_full_relaxed : forall I1 I2 A B C D,
+  I1 <> I2 -> BetS A I1 B -> BetS C I2 D -> OS I1 I2 A C ->
+  EnderTransversalRelaxed I1 I2 A B C D.
+Proof.
+  intros I1 I2 A B C D HI Hab Hcd Hos.
+  destruct (ender_transversal_sides I1 I2 A B C D Hab Hcd Hos) as [HtsAD HtsBC].
+  pose proof Hab as [HbetAB [HneAI1 HneI1B]].
+  pose proof Hcd as [HbetCD [HneCI2 HneI2D]].
+  assert (HneAB : A <> B)
+    by (intro Heq; subst B; apply HneAI1, between_identity; exact HbetAB).
+  assert (HneCD : C <> D)
+    by (intro Heq; subst D; apply HneCI2, between_identity; exact HbetCD).
+  assert (HosBD : OS I1 I2 B D).
+  { assert (HtsAB : TS I1 I2 A B).
+    { apply bet__ts; [exact HneI1B| |exact HbetAB].
+      apply one_side_not_col123 with C. exact Hos. }
+    apply l9_8_1 with A; apply l9_2; assumption. }
+  split; [exact HI|]. split; [exact HbetAB|]. split; [exact HneAB|].
+  split; [exact HbetCD|]. split; [exact HneCD|].
+  split; [intros; exact Hos|]. split; [intros; exact HtsAD|].
+  split; [intros; exact HtsBC|intros; exact HosBD].
+Qed.
+
 (** Two tangent segments drawn to a circle from one outside point.  Each meets
     its radius at a right angle, so the two right triangles share the segment
     from the centre to that point and have congruent radii for their other

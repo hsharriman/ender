@@ -1944,6 +1944,100 @@ Example unlinked_ray_altint_conv_rejects :
   complete_checker unlinked_ray_altint_conv_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A transversal figure may leave parts undrawn by repeating a letter.  In
+    a Z figure the transversal is a segment ending at both crossings, and each
+    crossed line ends there too: [transversal(A, C, A, A, D, B, B, B)] draws
+    only [C] on one line and [D] on the other, on opposite sides of [AB]. *)
+Definition z_altint_conv_source := "title: Z figure, converse
+premises:
+pt: A (5,9), B (10,2), C (1,3), D (14,8)
+[d_01] transversal(A, C, A, A, D, B, B, B)
+[g_1] con_ang(a_CAB,a_DBA)
+-> para(AC,BD)
+
+steps:
+[01] given(g_1) -> con_ang(a_CAB,a_DBA)
+[02] altint_conv(1) -> para(AC,BD)".
+
+Definition z_altint_source := "title: Z figure, forward
+premises:
+pt: A (5,9), B (10,2), C (1,3), D (14,8)
+[d_01] transversal(A, C, A, A, D, B, B, B)
+[g_1] para(AC,BD)
+-> con_ang(a_CAB,a_DBA)
+
+steps:
+[01] given(g_1) -> para(AC,BD)
+[02] altint(1) -> con_ang(a_CAB,a_DBA)".
+
+(** The same figure with [C] and [D] in slots that put them on the same side
+    of the transversal: the alternate pair is no longer alternate. *)
+Definition z_same_side_slots_source := "title: Z figure, wrong slots
+premises:
+pt: A (5,9), B (10,2), C (1,3), D (14,8)
+[d_01] transversal(A, C, A, A, B, D, B, B)
+[g_1] con_ang(a_CAB,a_DBA)
+-> para(AC,BD)
+
+steps:
+[01] given(g_1) -> con_ang(a_CAB,a_DBA)
+[02] altint_conv(1) -> para(AC,BD)".
+
+(** The transversal's ends may be spelled as the crossings in either order. *)
+Definition swapped_ends_altint_conv_source := "title: swapped transversal ends
+premises:
+pt: A (2,8), B (8,8), C (6,2), D (0,2)
+[d_01] transversal(B, A, C, A, C, D, A, C)
+[g_1] con_ang(a_BAC,a_DCA)
+-> para(AB,CD)
+
+steps:
+[01] given(g_1) -> con_ang(a_BAC,a_DCA)
+[02] altint_conv(1) -> para(AB,CD)".
+
+(** A transversal that stops at its crossings, between two full lines. *)
+Definition undrawn_ends_altint_source := "title: transversal without ends
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2)
+[d_01] transversal(A, B, E, E, C, D, F, F)
+[g_1] para(AB,CD)
+-> con_ang(a_AEF,a_DFE)
+
+steps:
+[01] given(g_1) -> para(AB,CD)
+[02] altint(1) -> con_ang(a_AEF,a_DFE)".
+
+(** An angle at an undrawn part names no angle, and is never concluded. *)
+Definition z_undrawn_angle_source := "title: Z figure, undrawn angle
+premises:
+pt: A (5,9), B (10,2), C (1,3), D (14,8)
+[d_01] transversal(A, C, A, A, D, B, B, B)
+[g_1] para(AC,BD)
+-> con_ang(a_AAB,a_BBA)
+
+steps:
+[01] given(g_1) -> para(AC,BD)
+[02] altint(1) -> con_ang(a_AAB,a_BBA)".
+
+Example z_undrawn_angle_rejects :
+  complete_checker z_undrawn_angle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example z_altint_conv_accepts :
+  complete_checker z_altint_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example z_altint_accepts :
+  complete_checker z_altint_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example z_same_side_slots_rejects :
+  complete_checker z_same_side_slots_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example swapped_ends_altint_conv_accepts :
+  complete_checker swapped_ends_altint_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example undrawn_ends_altint_accepts :
+  complete_checker undrawn_ends_altint_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
 (** The circle statement layer: a circle declaration, premises of every new
     form including the nested arc spelling, a [def_radius] step, and a
     congruent-radii goal, through both checker paths. *)

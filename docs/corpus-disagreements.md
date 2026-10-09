@@ -128,40 +128,45 @@ independently.
 
 **Decision:** fix the eight files, or accept that these stay rejected.
 
-### Degenerate `transversal` premise — 1 file
+### Mislabeled `transversal` premise — 1 file
 
 The audited `transversal(a, b, t1, i1, c, d, t2, i2)` names the ordered figure:
 `a` and `b` flank the crossing `i1`, `c` and `d` flank the crossing `i2`, and
-`t1`, `t2` extend beyond the two crossings. It asserts `BetS T1 I1 I2`,
-`BetS I1 I2 T2`, `BetS A I1 B`, `BetS C I2 D`, and `OS I1 I2 A C` — see
-`TransversalConfiguration` in [`../rocq/Ender/Audit.v`](../rocq/Ender/Audit.v).
+`t1`, `t2` extend beyond the two crossings. Fully drawn, it asserts
+`BetS T1 I1 I2`, `BetS I1 I2 T2`, `BetS A I1 B`, `BetS C I2 D`, and
+`OS I1 I2 A C` — see `TransversalConfiguration` in
+[`../rocq/Ender/Audit.v`](../rocq/Ender/Audit.v).
 
-`DS holt_s6-3_theorem6-3-4_c1.txt` repeats points until the crossing point is
-also a flank point and the exterior point:
+A figure may leave parts undrawn by repeating a letter: a transversal that
+stops at its crossings spells `t1` and `t2` as the crossings (in either
+order), and a crossed line that ends at its crossing spells one flanking point
+as that crossing. The slots of the drawn flanking points still say which side
+of the transversal each lies on: `a` and `c` share a side, `b` and `d` share
+the other. `examples/s1c1.txt` writes the Z figure this way,
+`transversal(A, C, A, A, D, B, B, B)`, with `C` and `D` in the opposite-side
+slots `b` and `c`.
+
+`DS holt_s6-3_theorem6-3-4_c1.txt` puts its drawn points in slots that claim
+the wrong sides:
 
 ```
 [d_01] transversal(S, P, Q, P, Q, R, P, Q)
 [d_02] transversal(P, Q, S, P, S, R, P, S)
 ```
 
-`BetS Q P Q` and `BetS S P S` hold of no figure. Its step 3,
-`sameside_ang_conv(1) -> para(SP,QR)`, is rejected because the audited rule
-needs to know which side of the transversal each point lies on — that is the
-only thing separating alternate from corresponding from same-side angles, and
-those have different conclusions.
-
-Note what a degenerate premise means for soundness: the premise is
-*unsatisfiable*, so the theorem it heads is vacuously true and **either verdict
-is sound**. `examples/s1c1.txt` writes an equally degenerate
-`transversal(A, C, A, A, D, B, B, B)` and is accepted by both checkers, while
-`DS s1c1.txt` writes `transversal(A, C, A, A, B, D, B, B)` and is rejected by
-both. Which way a degenerate file falls depends on which conjunct the rule
-happens to need, not on anything meaningful. Five more files with the same
-defect are rejected by both checkers and appear
+`d_01` draws `S` in slot `a` and `R` in slot `d`, claiming `S` and `R` lie on
+opposite sides of `PQ`; in parallelogram `PQRS` they share a side. Its step
+3, `sameside_ang_conv(1) -> para(SP,QR)`, is rejected because under that
+labeling `a_SPQ` and `a_PQR` are not a same-side pair. Which side each point
+is on is the only thing separating alternate from corresponding from
+same-side angles, and those have different conclusions. `d_02` is labeled
+consistently (`Q` in `b`, `R` in `d`, the same side of `PS`), and its step 4
+passes the rule. Four more files with the same defect are rejected by both
+checkers and appear
 [at the end](#not-disagreements-pass-files-both-checkers-refuse).
 
-**Decision:** respell these premises with the figure's actual points. This is
-the one cause where agreement between the checkers is not evidence of anything.
+**Decision:** respell `d_01` as `transversal(S, P, Q, P, R, Q, P, Q)`, which
+puts `S` and `R` in the same-side slots `a` and `c`.
 
 ### Quadrilateral named but not declared — 1 file
 
@@ -313,18 +318,23 @@ This is the only `// pass` file in this cell.
 disagreements — both checkers say no — but they are the files most likely to be
 mistaken for regressions, so their diagnoses are recorded here.
 
-**Degenerate `transversal` premises — 5 files.** `DS s1c1.txt`,
+**Mislabeled `transversal` premises — 5 files.** `DS s1c1.txt`,
 `DS holt_s6-2_theorem6-2-1_p1_c1.txt`,
 `DS holt_s6-2_theorem6-2-1_p2_c1.txt`,
-`DS holt_s6-3_theorem6-3-1_c1.txt`, `DS holt_s6-3_theorem6-3-2_c1.txt`. The same
-defect as `DS holt_s6-3_theorem6-3-4_c1.txt` above — `[d_01]
-transversal(K,L,L,J,J,M,J,L)` in the `6-3-1` file, for instance, needs
-`BetS L L J`. The legacy checker rejects these too, with its own
+`DS holt_s6-3_theorem6-3-1_c1.txt`, `DS holt_s6-3_theorem6-3-2_c1.txt`. Four
+are the same defect as `DS holt_s6-3_theorem6-3-4_c1.txt` above: the drawn
+flanking points sit in slots that claim the wrong sides. `DS s1c1.txt` writes
+`transversal(A, C, A, A, B, D, B, B)`, putting `C` and `D` in the same-side
+slots `b` and `d`, where `examples/s1c1.txt` correctly writes
+`transversal(A, C, A, A, D, B, B, B)`. The three parallelogram files go
+further: `[d_02] transversal(K,L,L,J,J,M,J,L)` in the `6-2-1` files, and the
+same premise in `6-3-1`, put the second crossing `L` in the flanking slot
+`b`, which would make the first crossed line the transversal itself, so no
+figure satisfies it. The legacy checker rejects these too, with its own
 `alt_int_angles_not_on_alternating_sides` and
-`transversal_angles_or_parallel_segs_dont_form_valid_config` errors, so both
-checkers read the transversal — they just read it differently.
+`transversal_angles_or_parallel_segs_dont_form_valid_config` errors.
 **Decision:** respell all six premises (these five plus the one disagreement)
-with the figure's actual points.
+so each drawn point sits in a slot on its actual side.
 
 **Truncated proofs — 2 files.** `DS s1c1incomplete.txt` and
 `DS s2c2incomplete.txt` end with empty step lines:
@@ -368,7 +378,7 @@ legacy checker throws on both.
 | # | Decision | Files | Whose defect |
 |---|---|---|---|
 | 1 | Fix the triangle correspondences, or accept the rejections | 8 | proof file |
-| 2 | Respell the degenerate `transversal` premises | 6 (1 disagreement, 5 not) | proof file |
+| 2 | Respell the mislabeled `transversal` premises | 6 (1 disagreement, 5 not) | proof file |
 | 3 | Give the audited language a `sim_seg`, or drop it from the catalog | 4 | the language |
 | 4 | Admit trailing step references in the header grammar, or strip them | 6 | proof file, or the grammar |
 | 5 | Declare `q_BCAD`, or fix the file to say `q_ABCD` | 1 | proof file |

@@ -375,16 +375,35 @@ Definition LinearPairMeaning (a b : AngleName) : Prop :=
 
 (** The eight arguments name the ordered transversal figure: [a], [b] flank
     [i1], [c], [d] flank [i2], and [t1], [t2] extend beyond the intersections.
-    [OS] identifies which flanking points share a side of the transversal and
-    keeps both crossed lines genuinely transverse to it. *)
+
+    A figure need not draw every part.  A transversal that stops at its
+    crossings spells [t1] or [t2] as a crossing (either one, in either
+    order), and a crossed line that ends at its crossing spells one of its
+    flanking points as that crossing.  Only a repeated letter marks a part as
+    absent: distinct letters still name distinct points, so the figure
+    [transversal(A, B, T, E, C, D, R, F)] means exactly the full
+    configuration [BetS T1 I1 I2], [BetS I1 I2 T2], [BetS A I1 B],
+    [BetS C I2 D], [OS I1 I2 A C].
+
+    The side conditions identify which flanking points share a side of the
+    transversal, which is what separates alternate from corresponding from
+    same-side angles.  Each line keeps at least one flanking point off its
+    crossing, so at least one condition applies, and it keeps both crossed
+    lines genuinely transverse to the transversal. *)
 Definition TransversalConfiguration (a b t1 i1 c d t2 i2 : PointName) : Prop :=
   let A := point a in let B := point b in
   let C := point c in let D := point d in
   let T1 := point t1 in let T2 := point t2 in
   let I1 := point i1 in let I2 := point i2 in
-  BetS T1 I1 I2 /\ BetS I1 I2 T2 /\
-  BetS A I1 B /\ BetS C I2 D /\
-  OS I1 I2 A C.
+  I1 <> I2 /\
+  (t1 <> i1 -> t1 <> i2 -> BetS T1 I1 I2) /\
+  (t2 <> i2 -> t2 <> i1 -> BetS I1 I2 T2) /\
+  Bet A I1 B /\ A <> B /\ (a <> i1 -> A <> I1) /\ (b <> i1 -> B <> I1) /\
+  Bet C I2 D /\ C <> D /\ (c <> i2 -> C <> I2) /\ (d <> i2 -> D <> I2) /\
+  (A <> I1 -> C <> I2 -> OS I1 I2 A C) /\
+  (A <> I1 -> D <> I2 -> TS I1 I2 A D) /\
+  (B <> I1 -> C <> I2 -> TS I1 I2 B C) /\
+  (B <> I1 -> D <> I2 -> OS I1 I2 B D).
 
 Definition ArcWellFormed (a : ArcName) : Prop :=
   point a.(arc_first) <> point a.(arc_second) /\
