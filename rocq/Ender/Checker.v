@@ -70,6 +70,20 @@ Proof.
 Qed.
 
 (** `RefSeg` and `RefAng` carry the same geometry as their `Con*` forms. *)
+(** A quadrilateral is named by walking its boundary, so starting at another
+    corner or walking the other way names the same figure; the other orders of
+    four letters name a different, self-crossing one. *)
+Definition rotate_quad (q : Quadrilateral) : Quadrilateral :=
+  quadrilateral q.(quad_b) q.(quad_c) q.(quad_d) q.(quad_a).
+Definition reverse_quad (q : Quadrilateral) : Quadrilateral :=
+  quadrilateral q.(quad_d) q.(quad_c) q.(quad_b) q.(quad_a).
+Definition quad_relabelings (q : Quadrilateral) : list Quadrilateral :=
+  let r := rotate_quad in
+  let v := reverse_quad q in
+  [q; r q; r (r q); r (r (r q)); v; r v; r (r v); r (r (r v))].
+Definition same_quadrilateral (q r : Quadrilateral) : bool :=
+  existsb (quadrilateral_eqb q) (quad_relabelings r).
+
 (** Two triangle names with the same three vertices, in any order. *)
 Definition same_vertices (t u : Triangle) : bool :=
   triangle_mem t (triangle_orderings u).
@@ -110,13 +124,14 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | Complementary a b, Complementary c d => angle_pair_eqb a b c d
   (* [Par] is symmetric and unaffected by reversing either segment. *)
   | Para a b, Para c d => segment_pair_eqb a b c d
-  (* Quadrilateral names fix the cyclic order their meanings read sides from,
-     so they match exactly; the same for the transversal's labeled figure. *)
+  (* Every quadrilateral shape says the same thing of any name for its
+     figure.  A kite premise selects corners by name, so it matches exactly,
+     as does the transversal's labeled figure. *)
   | Pgram a, Pgram b | Rect a, Rect b | Rhomb a, Rhomb b
-  | IsosTrap a, IsosTrap b => quadrilateral_eqb a b
+  | IsosTrap a, IsosTrap b => same_quadrilateral a b
   | TrapPremise q a b, TrapPremise r c d
   | IsosTrapPremise q a b, IsosTrapPremise r c d =>
-      quadrilateral_eqb q r && segment_eqb a c && segment_eqb b d
+      same_quadrilateral q r && segment_eqb a c && segment_eqb b d
   | KiteP q a b, KiteP r c d =>
       quadrilateral_eqb q r && angle_eqb a c && angle_eqb b d
   | Transv a b t1 i1 c d t2 i2, Transv a' b' t1' i1' c' d' t2' i2' =>
@@ -1191,7 +1206,7 @@ Fixpoint find_premise (label : string) (premises : list Premise) : option Statem
     which the meaning-level [Par] and [Cong] permutation lemmas justify. *)
 Definition declared_quadrilateral (decls : Declarations)
     (q : Quadrilateral) : bool :=
-  existsb (quadrilateral_eqb q) decls.(decl_quadrilaterals).
+  existsb (same_quadrilateral q) decls.(decl_quadrilaterals).
 
 Definition quad_side_ab (q : Quadrilateral) : Segment :=
   segment q.(quad_a) q.(quad_b).
@@ -1230,14 +1245,14 @@ Definition def_parallelogram_rule (decls : Declarations)
 Definition rectangle_pgram_rule (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
-  | Pgram q, Some (Rect r) => quadrilateral_eqb q r
+  | Pgram q, Some (Rect r) => same_quadrilateral q r
   | _, _ => false
   end.
 
 Definition rhombus_pgram_rule (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
-  | Pgram q, Some (Rhomb r) => quadrilateral_eqb q r
+  | Pgram q, Some (Rhomb r) => same_quadrilateral q r
   | _, _ => false
   end.
 
@@ -1263,7 +1278,7 @@ Definition rhombus_consec_sides_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i, lookup_step facts j with
   | Rhomb q, Some (Pgram r), Some (ConSeg s1 s2) =>
-      quadrilateral_eqb q r &&
+      same_quadrilateral q r &&
       (segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_bc q) ||
        segment_pair_eqb s1 s2 (quad_side_bc q) (quad_side_cd q) ||
        segment_pair_eqb s1 s2 (quad_side_cd q) (quad_side_da q) ||
@@ -1342,7 +1357,7 @@ Definition rect_pgram_ang_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i, lookup_step facts j with
   | Rect q, Some (RightAng a), Some (Pgram r) =>
-      quadrilateral_eqb q r &&
+      same_quadrilateral q r &&
       (angle_u_eqb a (quad_corner_a q) || angle_u_eqb a (quad_corner_b q) ||
        angle_u_eqb a (quad_corner_c q) || angle_u_eqb a (quad_corner_d q))
   | _, _, _ => false
@@ -1505,7 +1520,7 @@ Definition rect_diag_con_conv_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i, lookup_step facts j with
   | Rect q, Some (ConSeg s1 s2), Some (Pgram r) =>
-      quadrilateral_eqb q r &&
+      same_quadrilateral q r &&
       segment_pair_eqb s1 s2 (quad_diagonal_ac q) (quad_diagonal_bd q)
   | _, _, _ => false
   end.
@@ -1517,7 +1532,7 @@ Definition rhombus_diag_perp_conv_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i, lookup_step facts j with
   | Rhomb q, Some (PerpAt s1 s2 _), Some (Pgram r) =>
-      quadrilateral_eqb q r &&
+      same_quadrilateral q r &&
       ((segment_u_eqb s1 (quad_diagonal_ac q) &&
         segment_u_eqb s2 (quad_diagonal_bd q)) ||
        (segment_u_eqb s1 (quad_diagonal_bd q) &&
@@ -1551,9 +1566,6 @@ Definition pgram_diag_bisect_conv_rule (decls : Declarations)
     for the geometry, but the reason is stated of a *pair* of opposite
     corners, so the rule asks for both rather than letting one premise be
     cited twice. *)
-Definition rotate_quad (q : Quadrilateral) : Quadrilateral :=
-  quadrilateral q.(quad_b) q.(quad_c) q.(quad_d) q.(quad_a).
-
 Definition quad_rotations (q : Quadrilateral) : list Quadrilateral :=
   [q; rotate_quad q; rotate_quad (rotate_quad q);
    rotate_quad (rotate_quad (rotate_quad q))].
@@ -1567,7 +1579,7 @@ Definition rhombus_opp_bisect_conv_rule (facts : list Statement) (i j k : nat)
   match conclusion, lookup_step facts i, lookup_step facts j,
         lookup_step facts k with
   | Rhomb q, Some (AngBisectOf a1 s1), Some (AngBisectOf a2 s2), Some (Pgram r) =>
-      quadrilateral_eqb q r &&
+      same_quadrilateral q r &&
       existsb (fun rot =>
                  bisector_at_corner a1 s1 rot &&
                  bisector_at_corner a2 s2 (rotate_quad (rotate_quad rot)))
@@ -1582,7 +1594,7 @@ Definition isos_trap_con_diags_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i, lookup_step facts j with
   | IsosTrap q, Some (ConSeg s1 s2), Some (TrapPremise r _ _) =>
-      quadrilateral_eqb q r &&
+      same_quadrilateral q r &&
       segment_pair_eqb s1 s2 (quad_diagonal_ac q) (quad_diagonal_bd q)
   | _, _, _ => false
   end.
@@ -1593,7 +1605,7 @@ Definition isos_trap_base_angs_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i, lookup_step facts j with
   | IsosTrap q, Some (ConAng a b), Some (TrapPremise r s1 s2) =>
-      quadrilateral_eqb q r &&
+      same_quadrilateral q r &&
       ((segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_cd q) &&
         (angle_pair_eqb a b (quad_corner_a q) (quad_corner_b q) ||
          angle_pair_eqb a b (quad_corner_c q) (quad_corner_d q))) ||
@@ -2354,6 +2366,210 @@ Proof.
     exact (loose_reorder_left d a c H1 Hx).
 Qed.
 
+(** * Quadrilateral names
+
+    Every quadrilateral meaning reads the same figure from any of its eight
+    names, so it survives one rotation and one reversal, and therefore any
+    relabeling [same_quadrilateral] accepts. *)
+Lemma relabel_closed : forall (P : Quadrilateral -> Prop),
+  (forall q, P q -> P (rotate_quad q)) -> (forall q, P q -> P (reverse_quad q)) ->
+  forall q r, same_quadrilateral q r = true -> P r -> P q.
+Proof.
+  intros P Hrot Hrev q r H Hr. unfold same_quadrilateral in H.
+  apply existsb_exists in H. destruct H as [q' [Hin Heq]].
+  apply quadrilateral_eqb_eq in Heq. subst q'.
+  unfold quad_relabelings in Hin. cbn [In] in Hin.
+  destruct Hin as [<-|[<-|[<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]]]]; auto 8.
+Qed.
+
+Lemma same_quadrilateral_sym : forall q r,
+  same_quadrilateral q r = true -> same_quadrilateral r q = true.
+Proof.
+  intros q [a b c d] H. unfold same_quadrilateral in H.
+  apply existsb_exists in H. destruct H as [q' [Hin Heq]].
+  apply quadrilateral_eqb_eq in Heq. subst q'.
+  unfold same_quadrilateral. apply existsb_exists.
+  exists (quadrilateral a b c d). split; [|apply quadrilateral_eqb_eq; reflexivity].
+  unfold quad_relabelings in Hin. cbn in Hin.
+  destruct Hin as [<-|[<-|[<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]]]];
+    cbn; repeat (first [left; reflexivity | right]).
+Qed.
+
+Lemma same_quadrilateral_iff : forall (P : Quadrilateral -> Prop),
+  (forall q, P q -> P (rotate_quad q)) -> (forall q, P q -> P (reverse_quad q)) ->
+  forall q r, same_quadrilateral q r = true -> (P q <-> P r).
+Proof.
+  intros P Hrot Hrev q r H. split; intro Hp.
+  - exact (relabel_closed P Hrot Hrev r q (same_quadrilateral_sym _ _ H) Hp).
+  - exact (relabel_closed P Hrot Hrev q r H Hp).
+Qed.
+
+Lemma quad_wf_rotated : forall q,
+  Audit.QuadrilateralWellFormed point (quad_name q) ->
+  Audit.QuadrilateralWellFormed point (quad_name (rotate_quad q)).
+Proof.
+  intros [A B C D] Hwf. unfold Audit.QuadrilateralWellFormed in *. cbn in *.
+  destruct Hwf as [Hab [Hac [Had [Hbc [Hbd [Hcd [Hncol [X [H1 H2]]]]]]]]].
+  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol H1 H2) as [Hbcd _].
+  refine (conj Hbc (conj Hbd (conj (not_eq_sym Hab) (conj Hcd
+    (conj (not_eq_sym Hac) (conj (not_eq_sym Had) (conj Hbcd _))))))).
+  exists X. split; [exact H2|exact (ender_bets_sym _ _ _ H1)].
+Qed.
+
+Lemma quad_wf_reversed : forall q,
+  Audit.QuadrilateralWellFormed point (quad_name q) ->
+  Audit.QuadrilateralWellFormed point (quad_name (reverse_quad q)).
+Proof.
+  intros [A B C D] Hwf. unfold Audit.QuadrilateralWellFormed in *. cbn in *.
+  destruct Hwf as [Hab [Hac [Had [Hbc [Hbd [Hcd [Hncol [X [H1 H2]]]]]]]]].
+  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol H1 H2) as [Hbcd _].
+  refine (conj (not_eq_sym Hcd) (conj (not_eq_sym Hbd) (conj (not_eq_sym Had)
+    (conj (not_eq_sym Hbc) (conj (not_eq_sym Hac) (conj (not_eq_sym Hab)
+    (conj (not_col_permutation_3 _ _ _ Hbcd) _))))))).
+  exists X. split; [exact (ender_bets_sym _ _ _ H2)|exact (ender_bets_sym _ _ _ H1)].
+Qed.
+
+Ltac quad_sides :=
+  unfold Audit.Parallel, Audit.SegmentCongruent, Audit.RightAngle,
+    Audit.quad_ab, Audit.quad_bc, Audit.quad_cd, Audit.quad_da,
+    Audit.quad_angle_a, Audit.quad_angle_b, Audit.quad_angle_c,
+    Audit.quad_angle_d, Audit.seg_start, Audit.seg_end, Audit.ang_start,
+    Audit.ang_vertex, Audit.ang_end in *; cbn in *.
+
+Lemma pgram_rotated : forall q, Interp (Pgram q) -> Interp (Pgram (rotate_quad q)).
+Proof.
+  intros q [Hwf [H1 H2]]. split; [exact (quad_wf_rotated q Hwf)|].
+  destruct q as [A B C D]. quad_sides.
+  split; [exact H2|now apply par_symmetry].
+Qed.
+
+Lemma pgram_reversed : forall q, Interp (Pgram q) -> Interp (Pgram (reverse_quad q)).
+Proof.
+  intros q [Hwf [H1 H2]]. split; [exact (quad_wf_reversed q Hwf)|].
+  destruct q as [A B C D]. quad_sides.
+  split; [now apply par_comm, par_symmetry|now apply par_comm].
+Qed.
+
+Lemma rect_rotated : forall q, Interp (Rect q) -> Interp (Rect (rotate_quad q)).
+Proof.
+  intros q [Hp [Ha [Hb [Hc Hd]]]]. split; [exact (pgram_rotated q Hp)|].
+  destruct q as [A B C D]. quad_sides. tauto.
+Qed.
+
+Lemma rect_reversed : forall q, Interp (Rect q) -> Interp (Rect (reverse_quad q)).
+Proof.
+  intros q [Hp [Ha [Hb [Hc Hd]]]]. split; [exact (pgram_reversed q Hp)|].
+  destruct q as [A B C D]. quad_sides.
+  repeat split; apply l8_2; assumption.
+Qed.
+
+Lemma rhomb_rotated : forall q, Interp (Rhomb q) -> Interp (Rhomb (rotate_quad q)).
+Proof.
+  intros q [Hp [H1 [H2 H3]]]. split; [exact (pgram_rotated q Hp)|].
+  destruct q as [A B C D]. quad_sides.
+  assert (H4 : Cong (point A) (point B) (point D) (point A)).
+  { apply cong_transitivity with (point C) (point D); [|exact H3].
+    apply cong_transitivity with (point B) (point C); assumption. }
+  repeat split; [exact H2|exact H3|Cong].
+Qed.
+
+Lemma rhomb_reversed : forall q, Interp (Rhomb q) -> Interp (Rhomb (reverse_quad q)).
+Proof.
+  intros q [Hp [H1 [H2 H3]]]. split; [exact (pgram_reversed q Hp)|].
+  destruct q as [A B C D]. quad_sides.
+  assert (H4 : Cong (point A) (point B) (point D) (point A)).
+  { apply cong_transitivity with (point C) (point D); [|exact H3].
+    apply cong_transitivity with (point B) (point C); assumption. }
+  repeat split; Cong.
+Qed.
+
+Lemma trapezoid_rotated : forall q,
+  Audit.IsTrapezoid point (quad_name q) ->
+  Audit.IsTrapezoid point (quad_name (rotate_quad q)).
+Proof.
+  intros q [Hwf Hpar]. split; [exact (quad_wf_rotated q Hwf)|].
+  destruct q as [A B C D]. quad_sides.
+  destruct Hpar as [H|H]; [right; now apply par_symmetry|left; exact H].
+Qed.
+
+Lemma trapezoid_reversed : forall q,
+  Audit.IsTrapezoid point (quad_name q) ->
+  Audit.IsTrapezoid point (quad_name (reverse_quad q)).
+Proof.
+  intros q [Hwf Hpar]. split; [exact (quad_wf_reversed q Hwf)|].
+  destruct q as [A B C D]. quad_sides.
+  destruct Hpar as [H|H]; [left; now apply par_comm, par_symmetry
+                          |right; now apply par_comm].
+Qed.
+
+Lemma isos_trapezoid_rotated : forall q,
+  Audit.IsIsoscelesTrapezoid point (quad_name q) ->
+  Audit.IsIsoscelesTrapezoid point (quad_name (rotate_quad q)).
+Proof.
+  intros q [Ht Hd]. split; [exact (trapezoid_rotated q Ht)|].
+  destruct q as [A B C D]. quad_sides. Cong.
+Qed.
+
+Lemma isos_trapezoid_reversed : forall q,
+  Audit.IsIsoscelesTrapezoid point (quad_name q) ->
+  Audit.IsIsoscelesTrapezoid point (quad_name (reverse_quad q)).
+Proof.
+  intros q [Ht Hd]. split; [exact (trapezoid_reversed q Ht)|].
+  destruct q as [A B C D]. quad_sides. Cong.
+Qed.
+
+Lemma isos_trap_rotated : forall q,
+  Interp (IsosTrap q) -> Interp (IsosTrap (rotate_quad q)).
+Proof. intros q H. exact (isos_trapezoid_rotated q H). Qed.
+Lemma isos_trap_reversed : forall q,
+  Interp (IsosTrap q) -> Interp (IsosTrap (reverse_quad q)).
+Proof. intros q H. exact (isos_trapezoid_reversed q H). Qed.
+
+Lemma trap_premise_rotated : forall a b q,
+  Interp (TrapPremise q a b) -> Interp (TrapPremise (rotate_quad q) a b).
+Proof. intros a b q [Ht Hp]. exact (conj (trapezoid_rotated q Ht) Hp). Qed.
+Lemma trap_premise_reversed : forall a b q,
+  Interp (TrapPremise q a b) -> Interp (TrapPremise (reverse_quad q) a b).
+Proof. intros a b q [Ht Hp]. exact (conj (trapezoid_reversed q Ht) Hp). Qed.
+Lemma isos_trap_premise_rotated : forall a b q,
+  Interp (IsosTrapPremise q a b) -> Interp (IsosTrapPremise (rotate_quad q) a b).
+Proof. intros a b q [Ht Hp]. exact (conj (isos_trapezoid_rotated q Ht) Hp). Qed.
+Lemma isos_trap_premise_reversed : forall a b q,
+  Interp (IsosTrapPremise q a b) -> Interp (IsosTrapPremise (reverse_quad q) a b).
+Proof. intros a b q [Ht Hp]. exact (conj (isos_trapezoid_reversed q Ht) Hp). Qed.
+
+(** What [fact_eqb] needs: a quadrilateral fact means the same under any of
+    its figure's names. *)
+Lemma quad_fact_eqb_sound : forall expected actual,
+  match expected, actual with
+  | Pgram _, Pgram _ | Rect _, Rect _ | Rhomb _, Rhomb _
+  | IsosTrap _, IsosTrap _ | TrapPremise _ _ _, TrapPremise _ _ _
+  | IsosTrapPremise _ _ _, IsosTrapPremise _ _ _ => True
+  | _, _ => False
+  end ->
+  fact_eqb expected actual = true -> (Interp expected <-> Interp actual).
+Proof.
+  intros expected actual Hkind H.
+  destruct expected, actual; try contradiction; cbn [fact_eqb] in H.
+  - exact (same_quadrilateral_iff (fun q => Interp (Pgram q))
+             pgram_rotated pgram_reversed _ _ H).
+  - exact (same_quadrilateral_iff (fun q => Interp (Rect q))
+             rect_rotated rect_reversed _ _ H).
+  - exact (same_quadrilateral_iff (fun q => Interp (Rhomb q))
+             rhomb_rotated rhomb_reversed _ _ H).
+  - exact (same_quadrilateral_iff (fun q => Interp (IsosTrap q))
+             isos_trap_rotated isos_trap_reversed _ _ H).
+  - repeat rewrite andb_true_iff in H. destruct H as [[H Ha] Hb].
+    apply segment_eqb_eq in Ha. apply segment_eqb_eq in Hb. subst.
+    exact (same_quadrilateral_iff (fun q => Interp (TrapPremise q s1 s2))
+             (trap_premise_rotated s1 s2) (trap_premise_reversed s1 s2) _ _ H).
+  - repeat rewrite andb_true_iff in H. destruct H as [[H Ha] Hb].
+    apply segment_eqb_eq in Ha. apply segment_eqb_eq in Hb. subst.
+    exact (same_quadrilateral_iff (fun q => Interp (IsosTrapPremise q s1 s2))
+             (isos_trap_premise_rotated s1 s2) (isos_trap_premise_reversed s1 s2)
+             _ _ H).
+Qed.
+
 Lemma fact_eqb_sound : forall expected actual,
   fact_eqb expected actual = true -> (Interp expected <-> Interp actual).
 Proof.
@@ -2443,6 +2659,7 @@ Proof.
       eauto 6 using par_symmetry, par_left_comm, par_right_comm, par_comm. }
   destruct expected, actual;
     try (intros H; exact (loose_same_vertices _ _ _ _ H));
+    try (intros H; apply (quad_fact_eqb_sound _ _); [exact I|exact H]);
     cbn; try discriminate; intros H;
     try (now apply Hpair); try (now apply Hangles); try (now apply Hrights);
     try (now apply Hsupp); try (now apply Hcomp); try (now apply Hparf);
@@ -4131,8 +4348,10 @@ Lemma declared_quadrilateral_sound : forall decls q,
 Proof.
   intros decls q Hwf H. destruct Hwf as [_ [_ Hq]].
   unfold declared_quadrilateral in H. apply existsb_exists in H.
-  destruct H as [r [Hin Heq]]. apply quadrilateral_eqb_eq in Heq.
-  subst r. now apply Hq.
+  destruct H as [r [Hin Heq]].
+  apply (relabel_closed (fun q => Audit.QuadrilateralWellFormed point (quad_name q))
+           quad_wf_rotated quad_wf_reversed q r Heq).
+  now apply Hq.
 Qed.
 
 Lemma def_parallelogram_sound : forall decls facts i j conclusion,
@@ -4174,9 +4393,9 @@ Proof.
   destruct conclusion; try discriminate.
   destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
     destruct x; try discriminate.
-  apply quadrilateral_eqb_eq in Hrule. subst.
   assert (Hr : Interp (Rect q0)) by (eapply lookup_step_sound; eauto).
-  cbn in Hr |- *. exact (proj1 Hr).
+  apply (relabel_closed (fun q => Interp (Pgram q)) pgram_rotated pgram_reversed q q0 Hrule).
+  exact (proj1 Hr).
 Qed.
 
 Lemma rhombus_pgram_sound : forall facts i conclusion,
@@ -4188,9 +4407,9 @@ Proof.
   destruct conclusion; try discriminate.
   destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
     destruct x; try discriminate.
-  apply quadrilateral_eqb_eq in Hrule. subst.
   assert (Hr : Interp (Rhomb q0)) by (eapply lookup_step_sound; eauto).
-  cbn in Hr |- *. exact (proj1 Hr).
+  apply (relabel_closed (fun q => Interp (Pgram q)) pgram_rotated pgram_reversed q q0 Hrule).
+  exact (proj1 Hr).
 Qed.
 
 Lemma para_pair_conclude : forall s1 s2 a b,
@@ -4895,8 +5114,10 @@ Proof.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
     destruct y; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Heq Hmatch].
-  apply quadrilateral_eqb_eq in Heq. subst.
-  assert (Hp : Interp (Pgram q0)) by (eapply lookup_step_sound; eauto).
+  assert (Hp : Interp (Pgram q))
+    by (apply (relabel_closed (fun q => Interp (Pgram q)) pgram_rotated pgram_reversed q q0 Heq);
+        eapply lookup_step_sound; eauto).
+  clear Hx Heq q0. rename q into q0.
   assert (Hcseg : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
   cbn in Hp. destruct Hp as [Hwfq [Hpar1 Hpar2]].
   pose proof Hwfq as Hwfcopy.
@@ -5401,9 +5622,10 @@ Proof.
   destruct (lookup_step facts j) as [second|] eqn:Hj; try discriminate.
   destruct second; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Heq Hcorner].
-  apply quadrilateral_eqb_eq in Heq. subst q0.
   assert (Hright : Interp (RightAng a)) by (eapply lookup_step_sound; eauto).
-  assert (Hp : Interp (Pgram q)) by (eapply lookup_step_sound; eauto).
+  assert (Hp : Interp (Pgram q))
+    by (apply (relabel_closed (fun q => Interp (Pgram q)) pgram_rotated pgram_reversed q q0 Heq);
+        eapply lookup_step_sound; eauto).
   destruct Hright as [_ Hper]. unfold right_angle in Hper.
   cbn in Hp. destruct Hp as [Hwf [Hpar1 Hpar2]].
   pose proof Hwf as Hwfcopy.
@@ -5816,10 +6038,12 @@ Proof.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
     destruct y; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hq Hdiag].
-  apply quadrilateral_eqb_eq in Hq. subst q0.
   assert (Hcong : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
   assert (Htrap : Interp (TrapPremise q s1 s2))
-    by (eapply lookup_step_sound; eauto).
+    by (apply (relabel_closed (fun q => Interp (TrapPremise q s1 s2))
+                 (trap_premise_rotated s1 s2) (trap_premise_reversed s1 s2)
+                 q q0 Hq);
+        eapply lookup_step_sound; eauto).
   cbn in Htrap. destruct Htrap as [Htrap _].
   pose proof (cong_pair_sound _ _ _ _ Hdiag Hcong) as Hdiagonals.
   cbn in Hdiagonals |- *. split; [exact Htrap|].
@@ -5932,10 +6156,12 @@ Proof.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
     destruct y; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hq Hmatch].
-  apply quadrilateral_eqb_eq in Hq. subst q0.
   assert (Hangles : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
   assert (Htrap : Interp (TrapPremise q s s0))
-    by (eapply lookup_step_sound; eauto).
+    by (apply (relabel_closed (fun q => Interp (TrapPremise q s s0))
+                 (trap_premise_rotated s s0) (trap_premise_reversed s s0)
+                 q q0 Hq);
+        eapply lookup_step_sound; eauto).
   pose proof Htrap as Htrapcopy. cbn in Htrapcopy.
   destruct Htrapcopy as [Hshape Hpar].
   pose proof Hshape as Hwf. destruct Hwf as [Hwf _].
@@ -6028,9 +6254,10 @@ Proof.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
     destruct y; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hq Hdiag].
-  apply quadrilateral_eqb_eq in Hq. subst q0.
   assert (Hcong : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
-  assert (Hp : Interp (Pgram q)) by (eapply lookup_step_sound; eauto).
+  assert (Hp : Interp (Pgram q))
+    by (apply (relabel_closed (fun q => Interp (Pgram q)) pgram_rotated pgram_reversed q q0 Hq);
+        eapply lookup_step_sound; eauto).
   pose proof (cong_pair_sound _ _ _ _ Hdiag Hcong) as Hdiagonals.
   cbn in Hdiagonals.
   destruct (pgram_figure q Hp) as [X [Hncol [HXac [HXbd [Hpar1 Hpar2]]]]].
@@ -6056,9 +6283,10 @@ Proof.
   destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
     destruct y; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hq Hmatch].
-  apply quadrilateral_eqb_eq in Hq. subst q0.
   assert (Hperp : Interp (PerpAt s s0 p)) by (eapply lookup_step_sound; eauto).
-  assert (Hp : Interp (Pgram q)) by (eapply lookup_step_sound; eauto).
+  assert (Hp : Interp (Pgram q))
+    by (apply (relabel_closed (fun q => Interp (Pgram q)) pgram_rotated pgram_reversed q q0 Hq);
+        eapply lookup_step_sound; eauto).
   destruct (pgram_figure q Hp) as [X [Hncol [HXac [HXbd [Hpar1 Hpar2]]]]].
   cbn in Hperp. apply perp_in_perp in Hperp.
   assert (Hdiag : Definitions.Perp (point q.(quad_a)) (point q.(quad_c))
@@ -6371,10 +6599,11 @@ Proof.
   destruct (lookup_step facts k) as [z|] eqn:Hz; try discriminate;
     destruct z; try discriminate.
   apply andb_true_iff in Hrule. destruct Hrule as [Hq Hsearch].
-  apply quadrilateral_eqb_eq in Hq. subst q0.
   assert (Hb1 : Interp (AngBisectOf a s)) by (eapply lookup_step_sound; eauto).
   assert (Hb2 : Interp (AngBisectOf a0 s0)) by (eapply lookup_step_sound; eauto).
-  assert (Hp : Interp (Pgram q)) by (eapply lookup_step_sound; eauto).
+  assert (Hp : Interp (Pgram q))
+    by (apply (relabel_closed (fun q => Interp (Pgram q)) pgram_rotated pgram_reversed q q0 Hq);
+        eapply lookup_step_sound; eauto).
   apply existsb_exists in Hsearch. destruct Hsearch as [rot [Hin Hmatch]].
   assert (Hstep : forall r, Interp (Pgram r) ->
       (bisector_at_corner a s r &&

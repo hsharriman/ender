@@ -99,7 +99,11 @@ ordered congruence, or a chain of such witnesses through the triangles other
 `con_tri` facts name, which is how a `con_tri_transitive` result gets one — and
 draws only parts of that. Segment and angle notation are
 both unoriented: `AB`/`BA` and `a_XYZ`/`a_ZYX` name the same object, and a
-congruence may be written with its two sides exchanged. Every declared triangle
+congruence may be written with its two sides exchanged. A quadrilateral may be named
+from any corner, walking either way — `q_ABCD`, `q_BCDA`, `q_DCBA` and the rest
+of its eight names are one figure, and every quadrilateral shape statement says
+the same thing of each, so declarations, goals, and the rules match them that
+way. The other orders of the four letters name a self-crossing figure. Every declared triangle
 carries the semantic side condition that its vertices are noncollinear, which
 is invariant under renaming its vertices, so a declared triangle may be
 referred to by any permutation of its vertex list.

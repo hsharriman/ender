@@ -146,7 +146,7 @@ puts `S` and `R` in the same-side slots `a` and `c`.
 ### Quadrilateral named but not declared — 1 file
 
 `examples/buggypgram_opp_angs.txt` declares `quad: q_ABCD` and then states
-`parallelogram(q_BCAD)`. `BCAD` is not a rotation of `ABCD`, so it names a
+`parallelogram(q_BCAD)`. `BCAD` is not a rotation or reversal of `ABCD`, so it names a
 different quadrilateral, with different diagonals — and an undeclared one, so
 nothing supplies its well-formedness. The file's own name says `buggy`; its
 marker says `// pass`.

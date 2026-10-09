@@ -2223,6 +2223,60 @@ Example ordered_given_cpctc_accepts :
   complete_checker ordered_given_cpctc_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A quadrilateral may be named from any corner, walking either way: the
+    shape statements say the same thing of every such name, so a rule may
+    conclude, and a goal may ask for, a name other than the declared one. *)
+Definition relabeled_isos_trap_source := "title: relabeled isosceles trapezoid
+premises:
+pt: E (1,1), F (9,1), G (8,5), H (2,5)
+quad: q_EFGH
+seg: EG FH
+[g_1] con_seg(EG, FH)
+[g_2] trapezoid_premise(q_EFGH, EF, GH)
+-> isos_trapezoid(q_HGFE)
+
+steps:
+[01] given(g_1) -> con_seg(EG, FH)
+[02] given(g_2) -> trapezoid_premise(q_EFGH, EF, GH)
+[03] isos_trap_con_diags(1, 2) -> isos_trapezoid(q_GHEF)".
+
+Definition relabeled_pgram_source := "title: relabeled parallelogram
+premises:
+pt: A (1,2), B (7,2), C (9,6), D (3,6)
+quad: q_ABCD
+[g_1] para(AB, CD)
+[g_2] para(BC, DA)
+-> parallelogram(q_CBAD)
+
+steps:
+[01] given(g_1) -> para(AB, CD)
+[02] given(g_2) -> para(BC, DA)
+[03] def_parallelogram(1, 2) -> parallelogram(q_CBAD)".
+
+(** Other orders of the four letters walk a self-crossing figure. *)
+Definition crossed_pgram_source := "title: crossed parallelogram name
+premises:
+pt: A (1,2), B (7,2), C (9,6), D (3,6)
+quad: q_ABCD
+[g_1] para(AB, CD)
+[g_2] para(BC, DA)
+-> parallelogram(q_ACBD)
+
+steps:
+[01] given(g_1) -> para(AB, CD)
+[02] given(g_2) -> para(BC, DA)
+[03] def_parallelogram(1, 2) -> parallelogram(q_ACBD)".
+
+Example relabeled_isos_trap_accepts :
+  complete_checker relabeled_isos_trap_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example relabeled_pgram_accepts :
+  complete_checker relabeled_pgram_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example crossed_pgram_rejects :
+  complete_checker crossed_pgram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** The circle statement layer: a circle declaration, premises of every new
     form including the nested arc spelling, a [def_radius] step, and a
     congruent-radii goal, through both checker paths. *)
