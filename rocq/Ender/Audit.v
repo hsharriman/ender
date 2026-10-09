@@ -2,7 +2,7 @@
     intentionally imports no Ender implementation module.
 
     Five things carry the guarantee, and an auditor can read them in this
-    order: [PublicStatement] is the theorem language; [statementMeaning] and
+    order: [Statement] is the theorem language; [statementMeaning] and
     [problemClaim] say what a problem asserts about Tarski geometry;
     [ProblemGrammar] says which source text states which problem; and
     [COMPLETE_VERIFIED_CHECKER] binds the implementation to all of them.
@@ -74,7 +74,7 @@ Record ArcName := arc_name {
   arc_first : PointName; arc_second : PointName
 }.
 
-Inductive PublicStatement :=
+Inductive Statement :=
 | OnLine (s : SegmentName) (p : PointName)
 | Transversal (a b t1 i1 c d t2 i2 : PointName)
 | IntersectSeg (a b : SegmentName) (p : PointName)
@@ -126,8 +126,8 @@ Inductive PublicDeclaration :=
 
 Record PublicProblem := public_problem {
   public_declarations : list PublicDeclaration;
-  public_premises : list PublicStatement;
-  public_conclusion : PublicStatement
+  public_premises : list Statement;
+  public_conclusion : Statement
 }.
 
 (** * What a problem means
@@ -430,7 +430,7 @@ Definition ArcCongruent (a b : ArcName) : Prop :=
   CongA (point a.(arc_first)) (circ_center a.(arc_circle)) (point a.(arc_second))
         (point b.(arc_first)) (circ_center b.(arc_circle)) (point b.(arc_second)).
 
-Definition statementMeaning (s : PublicStatement) : Prop :=
+Definition statementMeaning (s : Statement) : Prop :=
   match s with
   (* Every corpus diagram places the named point on the drawn segment, so
      the meaning is endpoint-inclusive betweenness, not mere collinearity. *)
@@ -550,7 +550,7 @@ Definition arcText (a : ArcName) : string :=
   call kind
     [circleText a.(arc_circle); pointText a.(arc_first); pointText a.(arc_second)].
 
-Definition statementText (s : PublicStatement) : string :=
+Definition statementText (s : Statement) : string :=
   match s with
   | OnLine a p => call "on_line" [segmentText a; pointText p]
   | Transversal a b t1 i1 c d t2 i2 => call "transversal"
@@ -605,7 +605,7 @@ Definition statementText (s : PublicStatement) : string :=
   | ConArc a b => call "con_arc" [arcText a; arcText b]
   end.
 
-Definition statementPoints (s : PublicStatement) : list PointName :=
+Definition statementPoints (s : Statement) : list PointName :=
   (match s with
    | OnLine a p => segmentPoints a ++ [p]
    | Transversal a b t1 i1 c d t2 i2 => [a; b; t1; i1; c; d; t2; i2]
@@ -667,7 +667,7 @@ Fixpoint codeBeforeComment (text : string) : string :=
   end.
 Definition normalized (text : string) : string :=
   removeWhitespace (codeBeforeComment text).
-Definition StatementText (text : string) (statement : PublicStatement) : Prop :=
+Definition StatementText (text : string) (statement : Statement) : Prop :=
   Forall PointNameValid (statementPoints statement) /\
   normalized text = statementText statement.
 
@@ -718,8 +718,8 @@ Definition goalBody (line : string) : option string :=
 (** Classification precedence makes the cases mutually exclusive. *)
 Inductive HeaderContribution :=
 | DeclaresObjects (declarations : list PublicDeclaration)
-| StatesPremise (premise : PublicStatement)
-| StatesGoal (goal : PublicStatement)
+| StatesPremise (premise : Statement)
+| StatesGoal (goal : Statement)
 | ContributesNothing.
 
 Inductive HeaderLine : string -> HeaderContribution -> Prop :=
@@ -750,8 +750,8 @@ Definition LineSplit (source : string) (lines : list string) : Prop :=
   lines <> [].
 
 Inductive HeaderLines :
-    list string -> list PublicDeclaration -> list PublicStatement ->
-    option PublicStatement -> Prop :=
+    list string -> list PublicDeclaration -> list Statement ->
+    option Statement -> Prop :=
 | NoHeaderLines : HeaderLines [] [] [] None
 | DeclarationLines : forall line lines lineDeclarations declarations premises goal,
     HeaderLine line (DeclaresObjects lineDeclarations) ->
@@ -855,10 +855,10 @@ Record StepReport := step_report {
   step_number : nat;
   step_source : string;
   step_reason_name : option string;
-  step_conclusion : option PublicStatement;
+  step_conclusion : option Statement;
   step_status : StepStatus;
   step_dependencies : list nat;
-  step_diagram_dependencies : list PublicStatement;
+  step_diagram_dependencies : list Statement;
   step_diagnostics : list Diagnostic
 }.
 Record DependencyGraph := dependency_graph {
@@ -871,7 +871,7 @@ Inductive FactOrigin :=
 | PremiseOrigin (label : string)
 | StepOrigin (step : nat).
 Record DuplicateDerivation := duplicate_derivation {
-  duplicate_statement : PublicStatement;
+  duplicate_statement : Statement;
   duplicate_first : FactOrigin;
   duplicate_again : FactOrigin
 }.

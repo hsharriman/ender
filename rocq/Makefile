@@ -68,7 +68,7 @@ Ender/Semantics.vo: Ender/Semantics.v Ender/Syntax.vo Ender/Geometry.vo
 Ender/Checker.vo: Ender/Checker.v Ender/Syntax.vo Ender/Geometry.vo Ender/Semantics.vo
 	rocq compile $(ROCQFLAGS) $<
 
-Ender/Parser.vo: Ender/Parser.v Ender/Syntax.vo Ender/Semantics.vo Ender/Checker.vo
+Ender/Parser.vo: Ender/Parser.v Ender/Syntax.vo Ender/Semantics.vo Ender/Checker.vo Ender/PublicParser.vo
 	rocq compile $(ROCQFLAGS) $<
 
 # The only module needing MathComp and GeoCoq's algebraic layer on the load

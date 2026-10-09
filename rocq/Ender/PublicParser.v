@@ -90,7 +90,7 @@ Definition parse_arc (text : PChars) : option ArcName :=
   | _ => None
   end.
 
-Definition parse_public_statement_chars_generic (text : PChars) : option PublicStatement :=
+Definition parse_public_statement_chars_generic (text : PChars) : option Statement :=
   match parse_call text with
   | None => None
   | Some (name, args) =>
@@ -151,7 +151,7 @@ Definition parse_public_statement_chars_generic (text : PChars) : option PublicS
 (** A direct decoder for canonical renderings.  Besides making the common path
     cheaper, this gives the completeness proof a small structural round trip;
     the generic call parser remains the fallback for diagnostics and evolution. *)
-Definition parse_rendered_statement (x : PChars) : option PublicStatement :=
+Definition parse_rendered_statement (x : PChars) : option Statement :=
   match x with
   | ["o"%char;"n"%char;"_"%char;"l"%char;"i"%char;"n"%char;"e"%char;"("%char;a;b;","%char;p;")"%char] => Some (OnLine (segment_name a b) p)
   | ["t"%char;"r"%char;"a"%char;"n"%char;"s"%char;"v"%char;"e"%char;"r"%char;"s"%char;"a"%char;"l"%char;"("%char;a;","%char;b;","%char;t1;","%char;i1;","%char;c;","%char;d;","%char;t2;","%char;i2;")"%char] => Some (Transversal a b t1 i1 c d t2 i2)
@@ -201,7 +201,7 @@ Definition parse_rendered_statement (x : PChars) : option PublicStatement :=
   | _ => None
   end.
 
-Definition parse_public_statement_chars (text : PChars) : option PublicStatement :=
+Definition parse_public_statement_chars (text : PChars) : option Statement :=
   match parse_rendered_statement text with
   | Some statement => Some statement
   | None => parse_public_statement_chars_generic text
@@ -224,7 +224,7 @@ Proof.
   - apply existsb_exists. exists p. split; [exact H | apply Ascii.eqb_refl].
 Qed.
 
-Definition parse_public_statement (text : string) : option PublicStatement :=
+Definition parse_public_statement (text : string) : option Statement :=
   match parse_public_statement_chars (list_ascii_of_string (normalized text)) with
   | Some statement =>
       if pointsValid (statementPoints statement) then
@@ -462,7 +462,7 @@ Qed.
 (** A line contributes one [HeaderContribution]; a whole header adds those up
     into declarations, premises, and a conclusion at once. *)
 Definition HeaderAccumulator :=
-  (list PublicDeclaration * list PublicStatement * option PublicStatement)%type.
+  (list PublicDeclaration * list Statement * option Statement)%type.
 
 Definition parse_public_line (line : string) : option HeaderContribution :=
   match premiseBody line with

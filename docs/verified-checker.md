@@ -207,7 +207,7 @@ no Ender implementation file and contains only the intended final contract:
 2. all 41 public statement forms and all five declaration forms;
 3. their Tarski-geometric meanings and explicit nondegeneracy conditions;
 4. canonical surface spellings and a declarative header grammar;
-5. a total `statementMeaning : PublicStatement -> Prop` and
+5. a total `statementMeaning : Statement -> Prop` and
    `meaning : string -> option Prop`, where optionality belongs only to parsing;
    and
 6. the final parser-soundness and checker-soundness signatures.
@@ -229,11 +229,18 @@ Tarski geometry, of any dimension.
 
 [PublicParser.v](../rocq/Ender/PublicParser.v) implements all audited declaration
 and statement forms, including nested minor/major arc syntax, and proves that
-every accepted header satisfies `ProblemGrammar`. [Syntax.v](../rocq/Ender/Syntax.v)
-and [Semantics.v](../rocq/Ender/Semantics.v) contain the internal representation
-and compatibility semantics for the currently executable reason subset.
+every accepted header satisfies `ProblemGrammar`; the step parser reads each
+conclusion with the same statement parser. There is one statement type,
+`Statement` in `Audit.v`, and the kernel reads it with its audited meaning:
+[Syntax.v](../rocq/Ender/Syntax.v) holds the proof structure around it
+(reasons, steps, declarations) and [Semantics.v](../rocq/Ender/Semantics.v)
+defines a statement's kernel meaning as `Audit.statementMeaning` itself, with
+simplification hints that let proofs read the audited definitions as the
+GeoCoq relations they are built from.
 [CompleteChecker.v](../rocq/Ender/CompleteChecker.v) supplies the fail-closed
-adapter, proves the semantic bridge, and inhabits `COMPLETE_VERIFIED_CHECKER`.
+adapter and inhabits `COMPLETE_VERIFIED_CHECKER`; with nothing to translate,
+its soundness proof hands the audited premises to the kernel and the kernel's
+goal back unchanged.
 [Chars.v](../rocq/Ender/Chars.v) holds the character-list helpers those parsers
 destructure text with. It is implementation-side and no claim rests on it: the
 audit file states every lexical notion over `string` using `String.prefix`,

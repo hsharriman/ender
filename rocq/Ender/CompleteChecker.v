@@ -11,172 +11,36 @@ Import ListNotations.
 Import EnderSyntax.
 Open Scope string_scope.
 
-Definition project_segment (s : Audit.SegmentName) : Segment :=
-  segment s.(Audit.segment_first) s.(Audit.segment_second).
-Definition project_angle (a : Audit.AngleName) : Angle :=
-  angle a.(Audit.angle_first) a.(Audit.angle_vertex) a.(Audit.angle_last).
-Definition project_triangle (t : Audit.TriangleName) : Triangle :=
-  triangle t.(Audit.triangle_first) t.(Audit.triangle_second) t.(Audit.triangle_third).
-
-Definition project_quadrilateral (q : Audit.QuadrilateralName) : Quadrilateral :=
-  quadrilateral q.(Audit.quadrilateral_first) q.(Audit.quadrilateral_second)
-                q.(Audit.quadrilateral_third) q.(Audit.quadrilateral_fourth).
-
-Definition project_circle (c : Audit.CircleName) : Circle :=
-  circle c.(Audit.circle_center) c.(Audit.circle_radius_point).
-
-Definition project_arc (a : Audit.ArcName) : Arc :=
-  arc a.(Audit.arc_kind) (project_circle a.(Audit.arc_circle))
-      a.(Audit.arc_first) a.(Audit.arc_second).
-
-(** Statements usable as premises by the currently implemented kernel.  A
-    public [con_tri_ordered] premise carries both triangles' noncollinearity
-    together with the three side congruences, which is exactly the SSS
-    hypothesis, so the kernel's stronger side-and-angle reading of
-    [ConTriOrdered] is justified; [con_tri] is the same for some ordering. *)
-Definition project_premise_statement (s : Audit.PublicStatement) : option Statement :=
-  match s with
-  | Audit.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
-  | Audit.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
-  | Audit.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
-  | Audit.ConTriOrdered a b =>
-      Some (ConTriOrdered (project_triangle a) (project_triangle b))
-  | Audit.SimTri a b => Some (SimTri (project_triangle a) (project_triangle b))
-  | Audit.RefSeg a b => Some (RefSeg (project_segment a) (project_segment b))
-  | Audit.RefAng a b => Some (RefAng (project_angle a) (project_angle b))
-  | Audit.Right a => Some (RightAng (project_angle a))
-  | Audit.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
-  | Audit.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
-  | Audit.Midpt s p => Some (MidptOf (project_segment s) p)
-  | Audit.IntersectSeg a b p =>
-      Some (IntersectSeg (project_segment a) (project_segment b) p)
-  | Audit.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
-  | Audit.SegBisect b t p =>
-      Some (SegBisectOf (project_segment b) (project_segment t) p)
-  | Audit.OnLine s p => Some (OnLine (project_segment s) p)
-  | Audit.Isosceles t => Some (IsoscelesTri (project_triangle t))
-  | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
-  | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
-  | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
-  | Audit.Complementary a b => Some (Complementary (project_angle a) (project_angle b))
-  | Audit.LinearPair a b => Some (LinearPair (project_angle a) (project_angle b))
-  | Audit.Para a b => Some (Para (project_segment a) (project_segment b))
-  | Audit.Parallelogram q => Some (Pgram (project_quadrilateral q))
-  | Audit.Rectangle q => Some (Rect (project_quadrilateral q))
-  | Audit.Rhombus q => Some (Rhomb (project_quadrilateral q))
-  | Audit.IsosTrapezoid q => Some (IsosTrap (project_quadrilateral q))
-  | Audit.TrapezoidPremise q a b =>
-      Some (TrapPremise (project_quadrilateral q)
-              (project_segment a) (project_segment b))
-  | Audit.IsosTrapezoidPremise q a b =>
-      Some (IsosTrapPremise (project_quadrilateral q)
-              (project_segment a) (project_segment b))
-  | Audit.KitePremise q a b =>
-      Some (KiteP (project_quadrilateral q) (project_angle a) (project_angle b))
-  | Audit.Transversal a b t1 i1 c d t2 i2 =>
-      Some (Transv a b t1 i1 c d t2 i2)
-  | Audit.Radius c p => Some (RadiusOf (project_circle c) p)
-  | Audit.Chord c s => Some (ChordOf (project_circle c) (project_segment s))
-  | Audit.Diameter c s =>
-      Some (DiameterOf (project_circle c) (project_segment s))
-  | Audit.Tangent c s p =>
-      Some (TangentAt (project_circle c) (project_segment s) p)
-  | Audit.InscribedAngle c a =>
-      Some (InscribedAngleOf (project_circle c) (project_angle a))
-  | Audit.ArcStatement a => Some (ArcOf (project_arc a))
-  | Audit.ConArc a b => Some (ConArc (project_arc a) (project_arc b))
-  | _ => None
-  end.
-
-(** Reflexive goals carry extra public same-object meaning not supplied merely
-    by internal congruence, so this adapter conservatively rejects them.  The
-    right-angle and perpendicularity statements below are defined to have
-    exactly their audited meanings, so they project in both directions.  The
-    quadrilateral shapes and [para] carry the audited meanings verbatim, so
-    they too project both ways; the [*_premise] forms are premise-only
-    surface vocabulary and stay out of goals. *)
-Definition project_goal_statement (s : Audit.PublicStatement) : option Statement :=
-  match s with
-  | Audit.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
-  | Audit.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
-  | Audit.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
-  | Audit.ConTriOrdered a b =>
-      Some (ConTriOrdered (project_triangle a) (project_triangle b))
-  | Audit.Right a => Some (RightAng (project_angle a))
-  | Audit.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
-  | Audit.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
-  | Audit.Midpt s p => Some (MidptOf (project_segment s) p)
-  | Audit.IntersectSeg a b p =>
-      Some (IntersectSeg (project_segment a) (project_segment b) p)
-  | Audit.AngBisect a s => Some (AngBisectOf (project_angle a) (project_segment s))
-  | Audit.SegBisect b t p =>
-      Some (SegBisectOf (project_segment b) (project_segment t) p)
-  | Audit.OnLine s p => Some (OnLine (project_segment s) p)
-  | Audit.Isosceles t => Some (IsoscelesTri (project_triangle t))
-  | Audit.Equilateral t => Some (EquilateralTri (project_triangle t))
-  | Audit.Equiangular t => Some (EquiangularTri (project_triangle t))
-  | Audit.Supplementary a b => Some (Supplementary (project_angle a) (project_angle b))
-  | Audit.Complementary a b => Some (Complementary (project_angle a) (project_angle b))
-  | Audit.LinearPair a b => Some (LinearPair (project_angle a) (project_angle b))
-  | Audit.Para a b => Some (Para (project_segment a) (project_segment b))
-  | Audit.Parallelogram q => Some (Pgram (project_quadrilateral q))
-  | Audit.Rectangle q => Some (Rect (project_quadrilateral q))
-  | Audit.Rhombus q => Some (Rhomb (project_quadrilateral q))
-  | Audit.IsosTrapezoid q => Some (IsosTrap (project_quadrilateral q))
-  | Audit.SimTri a b => Some (SimTri (project_triangle a) (project_triangle b))
-  | Audit.Radius c p => Some (RadiusOf (project_circle c) p)
-  | Audit.Chord c s => Some (ChordOf (project_circle c) (project_segment s))
-  | Audit.Diameter c s =>
-      Some (DiameterOf (project_circle c) (project_segment s))
-  | Audit.Tangent c s p =>
-      Some (TangentAt (project_circle c) (project_segment s) p)
-  | Audit.InscribedAngle c a =>
-      Some (InscribedAngleOf (project_circle c) (project_angle a))
-  | Audit.ArcStatement a => Some (ArcOf (project_arc a))
-  | Audit.ConArc a b => Some (ConArc (project_arc a) (project_arc b))
-  | _ => None
-  end.
-
-Fixpoint project_premise_statements (ss : list Audit.PublicStatement)
-    : option (list Statement) :=
-  match ss with
-  | [] => Some []
-  | s :: rest =>
-      match project_premise_statement s, project_premise_statements rest with
-      | Some x, Some xs => Some (x :: xs)
-      | _, _ => None
-      end
-  end.
-
-Definition projected_triangles (ds : list Audit.PublicDeclaration) : list Triangle :=
+(** The kernel reads a problem's declarations into its bundle, by kind. *)
+Definition projected_triangles (ds : list Audit.PublicDeclaration) : list TriangleName :=
   fold_right (fun d rest => match d with
-    | Audit.TriangleDeclaration t => project_triangle t :: rest
+    | Audit.TriangleDeclaration t => t :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_angles (ds : list Audit.PublicDeclaration) : list Angle :=
+Definition projected_angles (ds : list Audit.PublicDeclaration) : list AngleName :=
   fold_right (fun d rest => match d with
-    | Audit.AngleDeclaration a => project_angle a :: rest
+    | Audit.AngleDeclaration a => a :: rest
     | _ => rest
     end) [] ds.
 
 Definition projected_quadrilaterals (ds : list Audit.PublicDeclaration)
-    : list Quadrilateral :=
+    : list QuadrilateralName :=
   fold_right (fun d rest => match d with
-    | Audit.QuadrilateralDeclaration q => project_quadrilateral q :: rest
+    | Audit.QuadrilateralDeclaration q => q :: rest
     | _ => rest
     end) [] ds.
 
 Definition projected_circles (ds : list Audit.PublicDeclaration)
-    : list Circle :=
+    : list CircleName :=
   fold_right (fun d rest => match d with
-    | Audit.CircleDeclaration c => project_circle c :: rest
+    | Audit.CircleDeclaration c => c :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_segments (ds : list Audit.PublicDeclaration) : list Segment :=
+Definition projected_segments (ds : list Audit.PublicDeclaration) : list SegmentName :=
   fold_right (fun d rest => match d with
-    | Audit.SegmentDeclaration s => project_segment s :: rest
+    | Audit.SegmentDeclaration s => s :: rest
     | _ => rest
     end) [] ds.
 
@@ -192,35 +56,35 @@ Fixpoint statement_list_eqb (a b : list Statement) : bool :=
   | _, _ => false
   end.
 
-Fixpoint triangle_list_eqb (a b : list Triangle) : bool :=
+Fixpoint triangle_list_eqb (a b : list TriangleName) : bool :=
   match a, b with
   | [], [] => true
   | x :: xs, y :: ys => triangle_eqb x y && triangle_list_eqb xs ys
   | _, _ => false
   end.
 
-Fixpoint angle_list_eqb (a b : list Angle) : bool :=
+Fixpoint angle_list_eqb (a b : list AngleName) : bool :=
   match a, b with
   | [], [] => true
   | x :: xs, y :: ys => angle_eqb x y && angle_list_eqb xs ys
   | _, _ => false
   end.
 
-Fixpoint quadrilateral_list_eqb (a b : list Quadrilateral) : bool :=
+Fixpoint quadrilateral_list_eqb (a b : list QuadrilateralName) : bool :=
   match a, b with
   | [], [] => true
   | x :: xs, y :: ys => quadrilateral_eqb x y && quadrilateral_list_eqb xs ys
   | _, _ => false
   end.
 
-Fixpoint circle_list_eqb (a b : list Circle) : bool :=
+Fixpoint circle_list_eqb (a b : list CircleName) : bool :=
   match a, b with
   | [], [] => true
   | x :: xs, y :: ys => circle_eqb x y && circle_list_eqb xs ys
   | _, _ => false
   end.
 
-Fixpoint segment_list_eqb (a b : list Segment) : bool :=
+Fixpoint segment_list_eqb (a b : list SegmentName) : bool :=
   match a, b with
   | [], [] => true
   | x :: xs, y :: ys => segment_eqb x y && segment_list_eqb xs ys
@@ -237,31 +101,19 @@ Definition declarations_eqb (a b : Declarations) : bool :=
 Definition premise_statements (ps : list Premise) : list Statement :=
   map premise_statement ps.
 
-Definition goal_declarations_valid (goal : Audit.PublicStatement)
-    (decls : Declarations) : bool :=
-  match goal with
-  | Audit.ConTri a b | Audit.ConTriOrdered a b =>
-                     triangle_declared decls (project_triangle a) &&
-                     triangle_declared decls (project_triangle b)
-  | _ => true
-  end.
-
+(** The kernel checks the audited problem itself.  The header pass supplies
+    what the audited problem does not carry -- the labels steps cite premises
+    by -- and must agree with the audited parse on everything else. *)
 Definition build_kernel_problem (public : Audit.PublicProblem)
     (header : ProblemHeader) (steps : list Step) : option Problem :=
-  match project_premise_statements public.(Audit.public_premises),
-        project_goal_statement public.(Audit.public_conclusion) with
-  | Some premises, Some goal =>
-      if declarations_eqb (projected_declarations public.(Audit.public_declarations))
-                          header.(header_declarations) &&
-         statement_list_eqb premises (premise_statements header.(header_premises)) &&
-         statement_eqb goal header.(header_goal) &&
-         goal_declarations_valid public.(Audit.public_conclusion)
-           header.(header_declarations)
-      then Some (problem header.(header_declarations) header.(header_premises)
-                        goal steps)
-      else None
-  | _, _ => None
-  end.
+  if declarations_eqb (projected_declarations public.(Audit.public_declarations))
+                      header.(header_declarations) &&
+     statement_list_eqb public.(Audit.public_premises)
+                        (premise_statements header.(header_premises)) &&
+     statement_eqb public.(Audit.public_conclusion) header.(header_goal)
+  then Some (problem header.(header_declarations) header.(header_premises)
+                     public.(Audit.public_conclusion) steps)
+  else None.
 
 Inductive CheckResult := ParseFailure | ProofRejected | ProofAccepted.
 
@@ -338,25 +190,27 @@ Definition statement_function (s : Statement) : string :=
   | ConTri _ _ => "con_tri" | ConTriOrdered _ _ => "con_tri_ordered"
   | SimTri _ _ => "sim_tri"
   | RefSeg _ _ => "ref_seg"
-  | RefAng _ _ => "ref_ang" | RightAng _ => "right"
-  | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
-  | MidptOf _ _ => "midpt" | IntersectSeg _ _ _ => "intersect_seg"
-  | AngBisectOf _ _ => "ang_bisect" | SegBisectOf _ _ _ => "seg_bisect"
+  | RefAng _ _ => "ref_ang" | Right _ => "right"
+  | ConRight _ _ => "con_right" | Perp _ _ _ => "perp"
+  | Midpt _ _ => "midpt" | IntersectSeg _ _ _ => "intersect_seg"
+  | AngBisect _ _ => "ang_bisect" | SegBisect _ _ _ => "seg_bisect"
   | OnLine _ _ => "on_line"
-  | IsoscelesTri _ => "isosceles" | EquilateralTri _ => "equilateral"
-  | EquiangularTri _ => "equiangular" | Supplementary _ _ => "supplementary"
+  | Isosceles _ => "isosceles" | Equilateral _ => "equilateral"
+  | Equiangular _ => "equiangular" | Supplementary _ _ => "supplementary"
   | Complementary _ _ => "complementary"
   | LinearPair _ _ => "linear_pair"
-  | Para _ _ => "para" | Pgram _ => "parallelogram"
-  | Rect _ => "rectangle" | Rhomb _ => "rhombus"
-  | IsosTrap _ => "isos_trapezoid" | TrapPremise _ _ _ => "trapezoid_premise"
-  | IsosTrapPremise _ _ _ => "isos_trapezoid_premise"
-  | KiteP _ _ _ => "kite_premise"
-  | Transv _ _ _ _ _ _ _ _ => "transversal"
-  | RadiusOf _ _ => "radius" | ChordOf _ _ => "chord"
-  | DiameterOf _ _ => "diameter" | TangentAt _ _ _ => "tangent"
-  | InscribedAngleOf _ _ => "inscribed_angle"
-  | ArcOf _ => "arc" | ConArc _ _ => "con_arc"
+  | Para _ _ => "para" | Parallelogram _ => "parallelogram"
+  | Rectangle _ => "rectangle" | Rhombus _ => "rhombus"
+  | IsosTrapezoid _ => "isos_trapezoid" | TrapezoidPremise _ _ _ => "trapezoid_premise"
+  | IsosTrapezoidPremise _ _ _ => "isos_trapezoid_premise"
+  | KitePremise _ _ _ => "kite_premise"
+  | Transversal _ _ _ _ _ _ _ _ => "transversal"
+  | Radius _ _ => "radius" | Chord _ _ => "chord"
+  | Diameter _ _ => "diameter" | Tangent _ _ _ => "tangent"
+  | InscribedAngle _ _ => "inscribed_angle"
+  | ArcStatement _ => "arc" | ConArc _ _ => "con_arc"
+  | Proportion _ _ _ _ => "proportion" | Circumcenter _ _ => "circumcenter"
+  | Incenter _ _ => "incenter" | PerpBisector _ _ _ => "perp_bisector"
   end.
 
 Definition expected_function (expected : ExpectedFact) : string :=
@@ -395,17 +249,17 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedAngle, ConAng _ _ | ExpectedAngle, RefAng _ _
   | ExpectedAngle, ConRight _ _
   | ExpectedTriangle, ConTri _ _ | ExpectedTriangle, ConTriOrdered _ _
-  | ExpectedRight, RightAng _
-  | ExpectedPerpendicular, PerpAt _ _ _ | ExpectedMidpoint, MidptOf _ _
-  | ExpectedAngleBisector, AngBisectOf _ _ | ExpectedConRight, ConRight _ _
-  | ExpectedEquilateral, EquilateralTri _
-  | ExpectedEquiangular, EquiangularTri _
+  | ExpectedRight, Right _
+  | ExpectedPerpendicular, Perp _ _ _ | ExpectedMidpoint, Midpt _ _
+  | ExpectedAngleBisector, AngBisect _ _ | ExpectedConRight, ConRight _ _
+  | ExpectedEquilateral, Equilateral _
+  | ExpectedEquiangular, Equiangular _
   | ExpectedSupplementary, Supplementary _ _ => true
   | ExpectedComplementary, Complementary _ _ => true
   | ExpectedLinearPair, LinearPair _ _ => true
-  | ExpectedRhombus, Rhomb _ => true
-  | ExpectedRectangle, Rect _ => true
-  | ExpectedParallelogram, Pgram _ => true
+  | ExpectedRhombus, Rhombus _ => true
+  | ExpectedRectangle, Rectangle _ => true
+  | ExpectedParallelogram, Parallelogram _ => true
   | _, _ => false
   end.
 
@@ -612,71 +466,6 @@ Definition report_errors_for (result : CheckResult) : list Audit.Issue :=
     the first failure is reported [StepBlocked] rather than judged, because
     its dependency was never established. *)
 
-Definition unproject_segment (s : Segment) : Audit.SegmentName :=
-  Audit.segment_name s.(seg_start) s.(seg_end).
-Definition unproject_angle (a : Angle) : Audit.AngleName :=
-  Audit.angle_name a.(ang_left) a.(ang_vertex) a.(ang_right).
-Definition unproject_triangle (t : Triangle) : Audit.TriangleName :=
-  Audit.triangle_name t.(tri_a) t.(tri_b) t.(tri_c).
-Definition unproject_quadrilateral (q : Quadrilateral) : Audit.QuadrilateralName :=
-  Audit.quadrilateral_name q.(quad_a) q.(quad_b) q.(quad_c) q.(quad_d).
-Definition unproject_circle (c : Circle) : Audit.CircleName :=
-  Audit.circle_name c.(circle_c) c.(circle_r).
-Definition unproject_arc (a : Arc) : Audit.ArcName :=
-  Audit.arc_name a.(arc_k) (unproject_circle a.(arc_circ)) a.(arc_p1) a.(arc_p2).
-
-(** The kernel representation carries no more than the public one, so every
-    internal statement names a public statement again. *)
-Definition public_of_statement (s : Statement) : Audit.PublicStatement :=
-  match s with
-  | ConSeg a b => Audit.ConSeg (unproject_segment a) (unproject_segment b)
-  | ConAng a b => Audit.ConAng (unproject_angle a) (unproject_angle b)
-  | ConTri a b => Audit.ConTri (unproject_triangle a) (unproject_triangle b)
-  | ConTriOrdered a b =>
-      Audit.ConTriOrdered (unproject_triangle a) (unproject_triangle b)
-  | SimTri a b => Audit.SimTri (unproject_triangle a) (unproject_triangle b)
-  | RefSeg a b => Audit.RefSeg (unproject_segment a) (unproject_segment b)
-  | RefAng a b => Audit.RefAng (unproject_angle a) (unproject_angle b)
-  | RightAng a => Audit.Right (unproject_angle a)
-  | ConRight a b => Audit.ConRight (unproject_angle a) (unproject_angle b)
-  | PerpAt a b p => Audit.Perp (unproject_segment a) (unproject_segment b) p
-  | MidptOf s p => Audit.Midpt (unproject_segment s) p
-  | IntersectSeg a b p =>
-      Audit.IntersectSeg (unproject_segment a) (unproject_segment b) p
-  | AngBisectOf a s => Audit.AngBisect (unproject_angle a) (unproject_segment s)
-  | SegBisectOf b t p =>
-      Audit.SegBisect (unproject_segment b) (unproject_segment t) p
-  | OnLine s p => Audit.OnLine (unproject_segment s) p
-  | IsoscelesTri t => Audit.Isosceles (unproject_triangle t)
-  | EquilateralTri t => Audit.Equilateral (unproject_triangle t)
-  | EquiangularTri t => Audit.Equiangular (unproject_triangle t)
-  | Supplementary a b => Audit.Supplementary (unproject_angle a) (unproject_angle b)
-  | Complementary a b => Audit.Complementary (unproject_angle a) (unproject_angle b)
-  | LinearPair a b => Audit.LinearPair (unproject_angle a) (unproject_angle b)
-  | Para a b => Audit.Para (unproject_segment a) (unproject_segment b)
-  | Pgram q => Audit.Parallelogram (unproject_quadrilateral q)
-  | Rect q => Audit.Rectangle (unproject_quadrilateral q)
-  | Rhomb q => Audit.Rhombus (unproject_quadrilateral q)
-  | IsosTrap q => Audit.IsosTrapezoid (unproject_quadrilateral q)
-  | TrapPremise q a b =>
-      Audit.TrapezoidPremise (unproject_quadrilateral q)
-        (unproject_segment a) (unproject_segment b)
-  | IsosTrapPremise q a b =>
-      Audit.IsosTrapezoidPremise (unproject_quadrilateral q)
-        (unproject_segment a) (unproject_segment b)
-  | KiteP q a b =>
-      Audit.KitePremise (unproject_quadrilateral q)
-        (unproject_angle a) (unproject_angle b)
-  | Transv a b t1 i1 c d t2 i2 => Audit.Transversal a b t1 i1 c d t2 i2
-  | RadiusOf c p => Audit.Radius (unproject_circle c) p
-  | ChordOf c s => Audit.Chord (unproject_circle c) (unproject_segment s)
-  | DiameterOf c s => Audit.Diameter (unproject_circle c) (unproject_segment s)
-  | TangentAt c s p => Audit.Tangent (unproject_circle c) (unproject_segment s) p
-  | InscribedAngleOf c a =>
-      Audit.InscribedAngle (unproject_circle c) (unproject_angle a)
-  | ArcOf a => Audit.ArcStatement (unproject_arc a)
-  | ConArc a b => Audit.ConArc (unproject_arc a) (unproject_arc b)
-  end.
 
 Definition reason_name (r : Reason) : string :=
   match r with
@@ -845,11 +634,10 @@ Fixpoint step_reports (decls : Declarations) (premises : list Premise)
   | (source, current) :: rest =>
       let status := status_of statuses number in
       Audit.step_report number source (Some (reason_name current.(step_reason)))
-        (Some (public_of_statement current.(step_conclusion))) status
+        (Some current.(step_conclusion)) status
         (reason_dependencies current.(step_reason))
-        (map public_of_statement
-           (rule_diagram_premises decls premises facts
-              current.(step_reason) current.(step_conclusion)))
+        (rule_diagram_premises decls premises facts
+           current.(step_reason) current.(step_conclusion))
         (match status with
          | Audit.StepRejected => [step_failure_diagnostic]
          | Audit.StepBlocked => [step_blocked_diagnostic]
@@ -951,7 +739,7 @@ Fixpoint duplicate_scan (seen : list (Audit.FactOrigin * Statement))
       (match earlier with
        | [] => []
        | (first, _) :: _ =>
-           [Audit.duplicate_derivation (public_of_statement s) first origin]
+           [Audit.duplicate_derivation s first origin]
        end) ++ duplicate_scan (seen ++ [(origin, s)]) rest
   end.
 
@@ -1178,103 +966,19 @@ Proof.
       destruct Hin as [<-|Hin]; [exact Hd|now apply IH].
 Qed.
 
-(** The audited ordered congruence supplies noncollinearity and the three
-    corresponding sides, so SSS recovers the kernel's angle components. *)
-Lemma projected_ordered_congruence : forall a b,
-  Audit.TriangleCongruent point a b ->
-  triangle_congruence point (project_triangle a) (project_triangle b).
-Proof.
-  intros a b Hmeaning.
-  unfold Audit.TriangleCongruent, Audit.TriangleWellFormed, Audit.SegmentCongruent,
-    Audit.side_ab, Audit.side_bc, Audit.side_ca, Audit.seg_start, Audit.seg_end in Hmeaning.
-  cbn in Hmeaning.
-  destruct Hmeaning as [[_ [_ [_ Hncol]]] [_ [Hab [Hbc Hca]]]].
-  cbn. now apply ender_sss.
-Qed.
-
-Lemma projected_premise_meaning : forall public internal,
-  project_premise_statement public = Some internal ->
-  Audit.statementMeaning point public -> interp_statement point internal.
-Proof.
-  destruct public; cbn; intros internal Hproject Hmeaning; try discriminate;
-    injection Hproject as <-; try (cbn in *; exact Hmeaning);
-    try (cbn in *; tauto).
-  - (* [con_tri]: the same, for the ordering the audited meaning names *)
-    destruct Hmeaning as [b' [Hin Hc]].
-    exists (project_triangle b'). split.
-    + destruct b as [x y z]. cbn in Hin.
-      destruct Hin as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]];
-        cbn; repeat (first [left; reflexivity | right]).
-    + now apply projected_ordered_congruence.
-  - now apply projected_ordered_congruence.
-Qed.
-
-Lemma projected_premises_meaning : forall publics internals premises,
-  project_premise_statements publics = Some internals ->
-  premise_statements premises = internals ->
+(** The kernel reads premises with their audited meanings, so a premise it
+    was given holds whenever the audited premise does. *)
+Lemma premises_meaning : forall publics premises,
+  statement_list_eqb publics (premise_statements premises) = true ->
   Forall (Audit.statementMeaning point) publics ->
   Forall (interp_premise point) premises.
 Proof.
-  intros publics. induction publics as [|s rest IH]; intros internals premises Hproject Heq Hall.
-  - cbn in Hproject. injection Hproject as <-. destruct premises; cbn in Heq;
-      [constructor|discriminate].
-  - cbn in Hproject. destruct (project_premise_statement s) as [x|] eqn:Hs;
-      try discriminate. destruct (project_premise_statements rest) as [xs|] eqn:Hrest;
-      try discriminate. injection Hproject as <-.
-    inversion Hall as [|? ? Hsmeaning Hrestmeaning]; subst.
-    destruct premises as [|p ps]; cbn in Heq; try discriminate.
-    injection Heq as Hhead Htail. constructor.
-    + unfold interp_premise. rewrite Hhead.
-      eapply projected_premise_meaning; eauto.
-    + eapply IH; eauto.
-Qed.
-
-Lemma noncol_well_formed : forall A B C,
-  ~ Col A B C -> A <> B /\ B <> C /\ C <> A /\ ~ Col A B C.
-Proof.
-  intros A B C H. pose proof (not_col_distincts A B C H) as Hd.
-  destruct Hd as [Hn [Hab [Hbc Hac]]]. repeat split; auto; congruence.
-Qed.
-
-Lemma projected_goal_meaning : forall public internal decls,
-  project_goal_statement public = Some internal ->
-  interp_statement point internal ->
-  declarations_well_formed point decls ->
-  goal_declarations_valid public decls = true ->
-  Audit.statementMeaning point public.
-Proof.
-  destruct public; cbn; intros internal decls Hproject Hmeaning Hwf Hdecl;
-    try discriminate;
-    injection Hproject as <-; cbn in *; try exact Hmeaning.
-  all: apply andb_true_iff in Hdecl; destruct Hdecl as [Ha Hb];
-    pose proof (triangle_declared_sound point _ _ Hwf Ha) as Hwa;
-    pose proof (triangle_declared_sound point _ _ Hwf Hb) as Hnb;
-    apply noncol_well_formed in Hwa.
-  - (* [con_tri]: the kernel names an ordering of the second triangle; its
-       noncollinearity is the declared triangle's, permuted. *)
-    destruct Hmeaning as [b' [Hin Hc]].
-    destruct b as [x y z]. cbn in Hin, Hnb.
-    destruct Hin as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]];
-      [ exists (Audit.triangle_name x y z) | exists (Audit.triangle_name x z y)
-      | exists (Audit.triangle_name y x z) | exists (Audit.triangle_name y z x)
-      | exists (Audit.triangle_name z x y) | exists (Audit.triangle_name z y x) ];
-      (split; [cbn; repeat (first [left; reflexivity | right])|]);
-      unfold triangle_congruence in Hc; cbn in Hc;
-      destruct Hc as [Hab [Hbc [Hca _]]];
-      unfold Audit.TriangleCongruent; cbn;
-      refine (conj Hwa (conj _ (conj Hab (conj Hbc Hca))));
-      apply noncol_well_formed;
-      solve [ exact Hnb
-            | apply not_col_permutation_1; exact Hnb
-            | apply not_col_permutation_2; exact Hnb
-            | apply not_col_permutation_3; exact Hnb
-            | apply not_col_permutation_4; exact Hnb
-            | apply not_col_permutation_5; exact Hnb ].
-  - apply noncol_well_formed in Hnb.
-    unfold triangle_congruence in Hmeaning. cbn in Hmeaning.
-    destruct Hmeaning as [Hab [Hbc [Hca Hangles]]].
-    unfold Audit.TriangleCongruent. cbn.
-    exact (conj Hwa (conj Hnb (conj Hab (conj Hbc Hca)))).
+  intros publics premises Heq Hall.
+  apply statement_list_eqb_eq in Heq. subst publics.
+  apply Forall_forall. intros pr Hin.
+  rewrite Forall_forall in Hall. apply Hall.
+  unfold premise_statements. try rewrite map_map.
+  apply in_map_iff. exists pr. split; [reflexivity|exact Hin].
 Qed.
 
 End Bridge.
@@ -1297,38 +1001,24 @@ Proof.
   destruct (parse_step_lines (Parser.split_lines stepText []) []) as [steps|]
     eqn:Hsteps; try discriminate.
   unfold build_kernel_problem in Hcheck.
-  destruct (project_premise_statements (Audit.public_premises public)) as [premises|]
-    eqn:HprojectPremises; try discriminate.
-  destruct (project_goal_statement (Audit.public_conclusion public)) as [goal|]
-    eqn:HprojectGoal; try discriminate.
   destruct (declarations_eqb (projected_declarations (Audit.public_declarations public))
               (header_declarations header) &&
-            statement_list_eqb premises (premise_statements (header_premises header)) &&
-            statement_eqb goal (header_goal header) &&
-            goal_declarations_valid (Audit.public_conclusion public)
-              (header_declarations header)) eqn:Hmatches; try discriminate.
-  apply andb_true_iff in Hmatches. destruct Hmatches as [Hrest HgoalDeclared].
-  apply andb_true_iff in Hrest. destruct Hrest as [Hrest Hgoal].
+            statement_list_eqb (Audit.public_premises public)
+              (premise_statements (header_premises header)) &&
+            statement_eqb (Audit.public_conclusion public) (header_goal header))
+    eqn:Hmatches; try discriminate.
+  apply andb_true_iff in Hmatches. destruct Hmatches as [Hrest _].
   apply andb_true_iff in Hrest. destruct Hrest as [Htriangles Hpremises].
   apply declarations_eqb_eq in Htriangles.
-  apply statement_list_eqb_eq in Hpremises.
-  apply statement_eqb_eq in Hgoal.
   unfold Audit.problemClaim. intros Hdeclarations HpublicPremises.
   pose proof (projected_triangle_meaning point _ Hdeclarations) as Hwf.
   rewrite Htriangles in Hwf.
-  assert (HkernelPremises :
-      Forall (interp_premise point) (header_premises header)).
-  { eapply projected_premises_meaning.
-    - exact HprojectPremises.
-    - symmetry. exact Hpremises.
-    - exact HpublicPremises. }
+  pose proof (premises_meaning point _ _ Hpremises HpublicPremises)
+    as HkernelPremises.
   destruct (check_problem
-    (problem (header_declarations header) (header_premises header) goal steps))
-    eqn:HkernelCheck; try discriminate.
-  pose proof (check_problem_sound point
-    (problem (header_declarations header) (header_premises header) goal steps)
-    HkernelCheck Hwf HkernelPremises) as HkernelGoal.
-  eapply projected_goal_meaning; eauto.
+    (problem (header_declarations header) (header_premises header)
+       (Audit.public_conclusion public) steps)) eqn:HkernelCheck; try discriminate.
+  exact (check_problem_sound point _ HkernelCheck Hwf HkernelPremises).
 Qed.
 
 Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.

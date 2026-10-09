@@ -32,10 +32,9 @@ Known limitations relevant to prioritization:
   `ang_bisect_conv` rule requires its congruent dependency to name exactly the
   two halves induced by the concluded outer angle and shared ray. The `ang:`
   declaration line is read, so `reflex` concludes `ref_ang` for declared
-  angles.  The complete-contract adapter still rejects reflexive statements
-  in the *goal* position, deliberately (`project_goal_statement`): a `ref_*`
-  goal would demand the same-name half of the audited meaning, and no
-  textbook proof states one as its goal;
+  angles.  A `ref_*` fact carries the audited same-name condition, so it
+  stands in for a `con_*` form, or meets a `ref_*` goal, only when both of
+  its names are the same object;
 - goal matching accepts the same unoriented spellings step-to-step matching
   does (`fact_eqb`): segments and angles up to reversal, symmetric pairs up
   to swap, and `ref_*` facts standing in for their `con_*` forms; `con_tri`

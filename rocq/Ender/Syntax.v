@@ -4,68 +4,11 @@ Import ListNotations.
 
 Module EnderSyntax.
 
-(** Internal representation used by the currently implemented reason kernel.
-    These are implementation details and therefore deliberately absent from
-    the human-audit surface. *)
+(** The kernel reasons about the audited statements themselves: there is one
+    [Statement] type, [Audit.Statement], read with its audited meaning.  What
+    is defined here is the structure of a proof around it -- reasons, steps,
+    and the declarations that supply nondegeneracy. *)
 Definition PointId := ascii.
-Record Segment := segment { seg_start : PointId; seg_end : PointId }.
-Record Angle := angle { ang_left : PointId; ang_vertex : PointId; ang_right : PointId }.
-Record Triangle := triangle { tri_a : PointId; tri_b : PointId; tri_c : PointId }.
-Record Quadrilateral := quadrilateral {
-  quad_a : PointId; quad_b : PointId; quad_c : PointId; quad_d : PointId
-}.
-Record Circle := circle { circle_c : PointId; circle_r : PointId }.
-Record Arc := arc {
-  arc_k : Audit.ArcKind; arc_circ : Circle;
-  arc_p1 : PointId; arc_p2 : PointId
-}.
-
-Inductive Statement :=
-| ConSeg : Segment -> Segment -> Statement
-| ConAng : Angle -> Angle -> Statement
-(** [ConTri] is congruence under some correspondence of the vertices;
-    [ConTriOrdered] pairs them in the order written. *)
-| ConTri : Triangle -> Triangle -> Statement
-| ConTriOrdered : Triangle -> Triangle -> Statement
-| SimTri : Triangle -> Triangle -> Statement
-| RefSeg : Segment -> Segment -> Statement
-| RefAng : Angle -> Angle -> Statement
-| RightAng : Angle -> Statement
-| ConRight : Angle -> Angle -> Statement
-| PerpAt : Segment -> Segment -> PointId -> Statement
-| MidptOf : Segment -> PointId -> Statement
-| IntersectSeg : Segment -> Segment -> PointId -> Statement
-| AngBisectOf : Angle -> Segment -> Statement
-| SegBisectOf : Segment -> Segment -> PointId -> Statement
-| OnLine : Segment -> PointId -> Statement
-| IsoscelesTri : Triangle -> Statement
-| EquilateralTri : Triangle -> Statement
-| EquiangularTri : Triangle -> Statement
-| Supplementary : Angle -> Angle -> Statement
-| Complementary : Angle -> Angle -> Statement
-| LinearPair : Angle -> Angle -> Statement
-(** Quadrilateral and parallelism statements.  Kernel meanings for these are
-    the audited meanings verbatim (see [Semantics.v]), so the two layers
-    cannot drift. *)
-| Para : Segment -> Segment -> Statement
-| Pgram : Quadrilateral -> Statement
-| Rect : Quadrilateral -> Statement
-| Rhomb : Quadrilateral -> Statement
-| IsosTrap : Quadrilateral -> Statement
-| TrapPremise : Quadrilateral -> Segment -> Segment -> Statement
-| IsosTrapPremise : Quadrilateral -> Segment -> Segment -> Statement
-| KiteP : Quadrilateral -> Angle -> Angle -> Statement
-| Transv : PointId -> PointId -> PointId -> PointId ->
-           PointId -> PointId -> PointId -> PointId -> Statement
-(** Circle statements.  As with the quadrilaterals, kernel meanings are the
-    audited meanings verbatim (see [Semantics.v]). *)
-| RadiusOf : Circle -> PointId -> Statement
-| ChordOf : Circle -> Segment -> Statement
-| DiameterOf : Circle -> Segment -> Statement
-| TangentAt : Circle -> Segment -> PointId -> Statement
-| InscribedAngleOf : Circle -> Angle -> Statement
-| ArcOf : Arc -> Statement
-| ConArc : Arc -> Arc -> Statement.
 
 Inductive Reason :=
 | Given : string -> Reason | Reflex : Reason
@@ -147,11 +90,11 @@ Record Step := step { step_reason : Reason; step_conclusion : Statement }.
 (** Declared objects, bundled because every rule that needs one of them needs
     the others too: they are the kernel's only source of nondegeneracy. *)
 Record Declarations := declarations {
-  decl_triangles : list Triangle;
-  decl_angles : list Angle;
-  decl_quadrilaterals : list Quadrilateral;
-  decl_circles : list Circle;
-  decl_segments : list Segment
+  decl_triangles : list TriangleName;
+  decl_angles : list AngleName;
+  decl_quadrilaterals : list QuadrilateralName;
+  decl_circles : list CircleName;
+  decl_segments : list SegmentName
 }.
 
 Record ProblemHeader := problem_header {
@@ -165,24 +108,24 @@ Record Problem := problem {
 
 Definition ascii_eqb := Ascii.eqb.
 
-Definition segment_eqb (x y : Segment) : bool :=
-  ascii_eqb x.(seg_start) y.(seg_start) && ascii_eqb x.(seg_end) y.(seg_end).
+Definition segment_eqb (x y : SegmentName) : bool :=
+  ascii_eqb x.(segment_first) y.(segment_first) && ascii_eqb x.(segment_second) y.(segment_second).
 
-Definition angle_eqb (x y : Angle) : bool :=
-  ascii_eqb x.(ang_left) y.(ang_left) &&
-  ascii_eqb x.(ang_vertex) y.(ang_vertex) &&
-  ascii_eqb x.(ang_right) y.(ang_right).
+Definition angle_eqb (x y : AngleName) : bool :=
+  ascii_eqb x.(angle_first) y.(angle_first) &&
+  ascii_eqb x.(angle_vertex) y.(angle_vertex) &&
+  ascii_eqb x.(angle_last) y.(angle_last).
 
-Definition triangle_eqb (x y : Triangle) : bool :=
-  ascii_eqb x.(tri_a) y.(tri_a) && ascii_eqb x.(tri_b) y.(tri_b) &&
-  ascii_eqb x.(tri_c) y.(tri_c).
+Definition triangle_eqb (x y : TriangleName) : bool :=
+  ascii_eqb x.(triangle_first) y.(triangle_first) && ascii_eqb x.(triangle_second) y.(triangle_second) &&
+  ascii_eqb x.(triangle_third) y.(triangle_third).
 
-Definition quadrilateral_eqb (x y : Quadrilateral) : bool :=
-  ascii_eqb x.(quad_a) y.(quad_a) && ascii_eqb x.(quad_b) y.(quad_b) &&
-  ascii_eqb x.(quad_c) y.(quad_c) && ascii_eqb x.(quad_d) y.(quad_d).
+Definition quadrilateral_eqb (x y : QuadrilateralName) : bool :=
+  ascii_eqb x.(quadrilateral_first) y.(quadrilateral_first) && ascii_eqb x.(quadrilateral_second) y.(quadrilateral_second) &&
+  ascii_eqb x.(quadrilateral_third) y.(quadrilateral_third) && ascii_eqb x.(quadrilateral_fourth) y.(quadrilateral_fourth).
 
-Definition circle_eqb (x y : Circle) : bool :=
-  ascii_eqb x.(circle_c) y.(circle_c) && ascii_eqb x.(circle_r) y.(circle_r).
+Definition circle_eqb (x y : CircleName) : bool :=
+  ascii_eqb x.(circle_center) y.(circle_center) && ascii_eqb x.(circle_radius_point) y.(circle_radius_point).
 
 Definition arc_kind_eqb (x y : Audit.ArcKind) : bool :=
   match x, y with
@@ -190,9 +133,9 @@ Definition arc_kind_eqb (x y : Audit.ArcKind) : bool :=
   | _, _ => false
   end.
 
-Definition arc_eqb (x y : Arc) : bool :=
-  arc_kind_eqb x.(arc_k) y.(arc_k) && circle_eqb x.(arc_circ) y.(arc_circ) &&
-  ascii_eqb x.(arc_p1) y.(arc_p1) && ascii_eqb x.(arc_p2) y.(arc_p2).
+Definition arc_eqb (x y : ArcName) : bool :=
+  arc_kind_eqb x.(arc_kind) y.(arc_kind) && circle_eqb x.(arc_circle) y.(arc_circle) &&
+  ascii_eqb x.(arc_first) y.(arc_first) && ascii_eqb x.(arc_second) y.(arc_second).
 
 Definition statement_eqb (x y : Statement) : bool :=
   match x, y with
@@ -203,50 +146,56 @@ Definition statement_eqb (x y : Statement) : bool :=
   | ConTri a b, ConTri c d | ConTriOrdered a b, ConTriOrdered c d
   | SimTri a b, SimTri c d =>
       triangle_eqb a c && triangle_eqb b d
-  | RightAng a, RightAng b => angle_eqb a b
+  | Right a, Right b => angle_eqb a b
   | ConRight a b, ConRight c d => angle_eqb a c && angle_eqb b d
-  | PerpAt a b p, PerpAt c d q =>
+  | Perp a b p, Perp c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
-  | MidptOf a p, MidptOf b q => segment_eqb a b && ascii_eqb p q
+  | Midpt a p, Midpt b q => segment_eqb a b && ascii_eqb p q
   | IntersectSeg a b p, IntersectSeg c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
-  | AngBisectOf a b, AngBisectOf c d => angle_eqb a c && segment_eqb b d
-  | SegBisectOf a b p, SegBisectOf c d q =>
+  | AngBisect a b, AngBisect c d => angle_eqb a c && segment_eqb b d
+  | SegBisect a b p, SegBisect c d q =>
       segment_eqb a c && segment_eqb b d && ascii_eqb p q
   | OnLine a p, OnLine b q => segment_eqb a b && ascii_eqb p q
-  | IsoscelesTri a, IsoscelesTri b | EquilateralTri a, EquilateralTri b
-  | EquiangularTri a, EquiangularTri b => triangle_eqb a b
+  | Isosceles a, Isosceles b | Equilateral a, Equilateral b
+  | Equiangular a, Equiangular b => triangle_eqb a b
   | Supplementary a b, Supplementary c d
   | Complementary a b, Complementary c d => angle_eqb a c && angle_eqb b d
   | LinearPair a b, LinearPair c d => angle_eqb a c && angle_eqb b d
   | Para a b, Para c d => segment_eqb a c && segment_eqb b d
-  | Pgram a, Pgram b | Rect a, Rect b | Rhomb a, Rhomb b
-  | IsosTrap a, IsosTrap b => quadrilateral_eqb a b
-  | TrapPremise q a b, TrapPremise r c d
-  | IsosTrapPremise q a b, IsosTrapPremise r c d =>
+  | Parallelogram a, Parallelogram b | Rectangle a, Rectangle b | Rhombus a, Rhombus b
+  | IsosTrapezoid a, IsosTrapezoid b => quadrilateral_eqb a b
+  | TrapezoidPremise q a b, TrapezoidPremise r c d
+  | IsosTrapezoidPremise q a b, IsosTrapezoidPremise r c d =>
       quadrilateral_eqb q r && segment_eqb a c && segment_eqb b d
-  | KiteP q a b, KiteP r c d =>
+  | KitePremise q a b, KitePremise r c d =>
       quadrilateral_eqb q r && angle_eqb a c && angle_eqb b d
-  | Transv a b t1 i1 c d t2 i2, Transv a' b' t1' i1' c' d' t2' i2' =>
+  | Transversal a b t1 i1 c d t2 i2, Transversal a' b' t1' i1' c' d' t2' i2' =>
       ascii_eqb a a' && ascii_eqb b b' && ascii_eqb t1 t1' &&
       ascii_eqb i1 i1' && ascii_eqb c c' && ascii_eqb d d' &&
       ascii_eqb t2 t2' && ascii_eqb i2 i2'
-  | RadiusOf c p, RadiusOf c' p' => circle_eqb c c' && ascii_eqb p p'
-  | ChordOf c s, ChordOf c' s' | DiameterOf c s, DiameterOf c' s' =>
+  | Radius c p, Radius c' p' => circle_eqb c c' && ascii_eqb p p'
+  | Chord c s, Chord c' s' | Diameter c s, Diameter c' s' =>
       circle_eqb c c' && segment_eqb s s'
-  | TangentAt c s p, TangentAt c' s' p' =>
+  | Tangent c s p, Tangent c' s' p' =>
       circle_eqb c c' && segment_eqb s s' && ascii_eqb p p'
-  | InscribedAngleOf c a, InscribedAngleOf c' a' =>
+  | InscribedAngle c a, InscribedAngle c' a' =>
       circle_eqb c c' && angle_eqb a a'
-  | ArcOf a, ArcOf a' => arc_eqb a a'
+  | ArcStatement a, ArcStatement a' => arc_eqb a a'
   | ConArc a b, ConArc a' b' => arc_eqb a a' && arc_eqb b b'
+  | Proportion a b c d, Proportion a' b' c' d' =>
+      segment_eqb a a' && segment_eqb b b' && segment_eqb c c' && segment_eqb d d'
+  | Circumcenter p t, Circumcenter p' t' | Incenter p t, Incenter p' t' =>
+      ascii_eqb p p' && triangle_eqb t t'
+  | PerpBisector a b p, PerpBisector a' b' p' =>
+      segment_eqb a a' && segment_eqb b b' && ascii_eqb p p'
   | _, _ => false
   end.
 
 Lemma segment_eqb_eq : forall x y, segment_eqb x y = true <-> x = y.
 Proof.
   intros [a b] [c d].
-  change (Ascii.eqb a c && Ascii.eqb b d = true <-> segment a b = segment c d).
+  change (Ascii.eqb a c && Ascii.eqb b d = true <-> segment_name a b = segment_name c d).
   rewrite andb_true_iff, !Ascii.eqb_eq.
   split.
   - intros [-> ->]. reflexivity.
@@ -257,7 +206,7 @@ Lemma angle_eqb_eq : forall x y, angle_eqb x y = true <-> x = y.
 Proof.
   intros [a b c] [d e f].
   change (Ascii.eqb a d && Ascii.eqb b e && Ascii.eqb c f = true <->
-          angle a b c = angle d e f).
+          angle_name a b c = angle_name d e f).
   rewrite !andb_true_iff, !Ascii.eqb_eq.
   split.
   - intros [[-> ->] ->]. reflexivity.
@@ -268,7 +217,7 @@ Lemma triangle_eqb_eq : forall x y, triangle_eqb x y = true <-> x = y.
 Proof.
   intros [a b c] [d e f].
   change (Ascii.eqb a d && Ascii.eqb b e && Ascii.eqb c f = true <->
-          triangle a b c = triangle d e f).
+          triangle_name a b c = triangle_name d e f).
   rewrite !andb_true_iff, !Ascii.eqb_eq.
   split.
   - intros [[-> ->] ->]. reflexivity.
@@ -278,7 +227,7 @@ Qed.
 Lemma circle_eqb_eq : forall x y, circle_eqb x y = true <-> x = y.
 Proof.
   intros [a b] [c d].
-  change (Ascii.eqb a c && Ascii.eqb b d = true <-> circle a b = circle c d).
+  change (Ascii.eqb a c && Ascii.eqb b d = true <-> circle_name a b = circle_name c d).
   rewrite andb_true_iff, !Ascii.eqb_eq.
   split.
   - intros [-> ->]. reflexivity.
@@ -304,7 +253,7 @@ Lemma quadrilateral_eqb_eq : forall x y, quadrilateral_eqb x y = true <-> x = y.
 Proof.
   intros [a b c d] [e f g h].
   change (Ascii.eqb a e && Ascii.eqb b f && Ascii.eqb c g && Ascii.eqb d h
-            = true <-> quadrilateral a b c d = quadrilateral e f g h).
+            = true <-> quadrilateral_name a b c d = quadrilateral_name e f g h).
   rewrite !andb_true_iff, !Ascii.eqb_eq.
   split.
   - intros [[[-> ->] ->] ->]. reflexivity.
@@ -319,7 +268,7 @@ Proof.
     split; intro H; solve [discriminate | intuition congruence].
 Qed.
 
-Definition triangle_mem (t : Triangle) (ts : list Triangle) : bool :=
+Definition triangle_mem (t : TriangleName) (ts : list TriangleName) : bool :=
   existsb (triangle_eqb t) ts.
 
 Lemma triangle_mem_spec : forall t ts,

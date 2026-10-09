@@ -1,6 +1,6 @@
 From Stdlib Require Import Ascii String List Bool Nat.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
-Require Import Ender.Syntax Ender.Semantics Ender.Checker.
+Require Import Ender.Syntax Ender.Semantics Ender.Checker Ender.PublicParser.
 Import ListNotations.
 Import EnderSyntax.
 Open Scope string_scope.
@@ -73,68 +73,68 @@ Fixpoint split_on (separator : ascii) (text current : chars) : list chars :=
       else split_on separator rest (c :: current)
   end.
 
-Fixpoint point_tokens (text : chars) : list Triangle :=
+Fixpoint point_tokens (text : chars) : list TriangleName :=
   match text with
   | "t"%char :: "_"%char :: a :: b :: c :: rest =>
-      triangle a b c :: point_tokens rest
+      triangle_name a b c :: point_tokens rest
   | _ :: rest => point_tokens rest
   | [] => []
   end.
 
-Fixpoint angle_tokens (text : chars) : list Angle :=
+Fixpoint angle_tokens (text : chars) : list AngleName :=
   match text with
   | "a"%char :: "_"%char :: a :: b :: c :: rest =>
-      angle a b c :: angle_tokens rest
+      angle_name a b c :: angle_tokens rest
   | _ :: rest => angle_tokens rest
   | [] => []
   end.
 
-Fixpoint quad_tokens (text : chars) : list Quadrilateral :=
+Fixpoint quad_tokens (text : chars) : list QuadrilateralName :=
   match text with
   | "q"%char :: "_"%char :: a :: b :: c :: d :: rest =>
-      quadrilateral a b c d :: quad_tokens rest
+      quadrilateral_name a b c d :: quad_tokens rest
   | _ :: rest => quad_tokens rest
   | [] => []
   end.
 
-Definition parse_segment (text : chars) : option Segment :=
+Definition parse_segment (text : chars) : option SegmentName :=
   match text with
-  | [a; b] => Some (segment a b)
+  | [a; b] => Some (segment_name a b)
   | _ => None
   end.
 
-Definition parse_angle (text : chars) : option Angle :=
+Definition parse_angle (text : chars) : option AngleName :=
   match text with
-  | ["a"%char; "_"%char; a; b; c] => Some (angle a b c)
+  | ["a"%char; "_"%char; a; b; c] => Some (angle_name a b c)
   | _ => None
   end.
 
-Definition parse_triangle (text : chars) : option Triangle :=
+Definition parse_triangle (text : chars) : option TriangleName :=
   match text with
-  | ["t"%char; "_"%char; a; b; c] => Some (triangle a b c)
+  | ["t"%char; "_"%char; a; b; c] => Some (triangle_name a b c)
   | _ => None
   end.
 
 (** The audited parser reads a [seg:] line with its spaces removed as
     consecutive character pairs, so a kernel header must decode it the same
     way or [declarations_eqb] will refuse the problem. *)
-Fixpoint seg_tokens (text : chars) : list Segment :=
+Fixpoint seg_tokens (text : chars) : list SegmentName :=
   match text with
-  | a :: b :: rest => segment a b :: seg_tokens rest
+  | a :: b :: rest => segment_name a b :: seg_tokens rest
   | _ => []
   end.
 
-Fixpoint circ_tokens (text : chars) : list Circle :=
+Fixpoint circ_tokens (text : chars) : list CircleName :=
   match text with
   | "c"%char :: "_"%char :: a :: b :: rest =>
-      circle a b :: circ_tokens rest
+      circle_name a b :: circ_tokens rest
   | _ :: rest => circ_tokens rest
   | [] => []
   end.
 
-Definition parse_circle (text : chars) : option Circle :=
+Definition parse_circle (text : chars) : option CircleName :=
   match text with
-  | ["c"%char; "_"%char; a; b] => Some (circle a b)
+  | ["c"%char; "_"%char; a; b] => Some (circle_name a b)
   | _ => None
   end.
 
@@ -156,19 +156,19 @@ Fixpoint split_top_commas (text current : chars) (depth : nat) : list chars :=
            end
   end.
 
-Definition parse_arc_body (kind : Audit.ArcKind) (body : chars) : option Arc :=
+Definition parse_arc_body (kind : Audit.ArcKind) (body : chars) : option ArcName :=
   match split_on ","%char body [] with
   | [c; [p]; [q]] =>
       match parse_circle c with
-      | Some x => Some (arc kind x p q)
+      | Some x => Some (arc_name kind x p q)
       | None => None
       end
   | _ => None
   end.
 
-Definition parse_quadrilateral (text : chars) : option Quadrilateral :=
+Definition parse_quadrilateral (text : chars) : option QuadrilateralName :=
   match text with
-  | ["q"%char; "_"%char; a; b; c; d] => Some (quadrilateral a b c d)
+  | ["q"%char; "_"%char; a; b; c; d] => Some (quadrilateral_name a b c d)
   | _ => None
   end.
 
@@ -191,7 +191,7 @@ Definition try_call {A : Type} (name : string) (text : chars)
   | None => fallback
   end.
 
-Definition parse_arc (text : chars) : option Arc :=
+Definition parse_arc (text : chars) : option ArcName :=
   match strip_call "minor_arc" text with
   | Some body => parse_arc_body Audit.MinorArc body
   | None =>
@@ -201,198 +201,11 @@ Definition parse_arc (text : chars) : option Arc :=
       end
   end.
 
+(** Statements are read by the verified public parser, so a step's
+    conclusion and a header line mean the same text the same way. *)
 Definition parse_statement_chars (raw : chars) : option Statement :=
-  let text := remove_space (take_until "/"%char raw) in
-  let parse_segments constructor body :=
-    match split_on ","%char body [] with
-    | [a; b] =>
-        match parse_segment a, parse_segment b with
-        | Some x, Some y => Some (constructor x y)
-        | _, _ => None
-        end
-    | _ => None
-    end in
-  let parse_angles constructor body :=
-    match split_on ","%char body [] with
-    | [a; b] =>
-        match parse_angle a, parse_angle b with
-        | Some x, Some y => Some (constructor x y)
-        | _, _ => None
-        end
-    | _ => None
-    end in
-  let parse_triangles constructor body :=
-    match split_on ","%char body [] with
-    | [a; b] =>
-        match parse_triangle a, parse_triangle b with
-        | Some x, Some y => Some (constructor x y)
-        | _, _ => None
-        end
-    | _ => None
-    end in
-  let parse_right body :=
-    match parse_angle body with
-    | Some a => Some (RightAng a)
-    | None => None
-    end in
-  let parse_shape constructor body :=
-    match parse_triangle body with
-    | Some t => Some (constructor t)
-    | None => None
-    end in
-  let parse_point_at constructor body :=
-    match split_on ","%char body [] with
-    | [a; [p]] =>
-        match parse_segment a with
-        | Some x => Some (constructor x p)
-        | None => None
-        end
-    | _ => None
-    end in
-  let parse_midpt := parse_point_at MidptOf in
-  let parse_ang_bisect body :=
-    match split_on ","%char body [] with
-    | [a; b] =>
-        match parse_angle a, parse_segment b with
-        | Some x, Some y => Some (AngBisectOf x y)
-        | _, _ => None
-        end
-    | _ => None
-    end in
-  let parse_perp_like constructor body :=
-    match split_on ","%char body [] with
-    | [a; b; [p]] =>
-        match parse_segment a, parse_segment b with
-        | Some x, Some y => Some (constructor x y p)
-        | _, _ => None
-        end
-    | _ => None
-    end in
-  let parse_perp := parse_perp_like PerpAt in
-  let parse_quad_shape constructor body :=
-    match parse_quadrilateral body with
-    | Some q => Some (constructor q)
-    | None => None
-    end in
-  let parse_quad_segments constructor body :=
-    match split_on ","%char body [] with
-    | [q; a; b] =>
-        match parse_quadrilateral q, parse_segment a, parse_segment b with
-        | Some x, Some y, Some z => Some (constructor x y z)
-        | _, _, _ => None
-        end
-    | _ => None
-    end in
-  let parse_quad_angles constructor body :=
-    match split_on ","%char body [] with
-    | [q; a; b] =>
-        match parse_quadrilateral q, parse_angle a, parse_angle b with
-        | Some x, Some y, Some z => Some (constructor x y z)
-        | _, _, _ => None
-        end
-    | _ => None
-    end in
-  let parse_transversal body :=
-    match split_on ","%char body [] with
-    | [[a]; [b]; [t1]; [i1]; [c]; [d]; [t2]; [i2]] =>
-        Some (Transv a b t1 i1 c d t2 i2)
-    | _ => None
-    end in
-  try_call "con_seg" text (parse_segments ConSeg)
-  (try_call "ref_seg" text (parse_segments RefSeg)
-  (try_call "con_ang" text (parse_angles ConAng)
-  (try_call "ref_ang" text (parse_angles RefAng)
-  (try_call "con_tri" text (parse_triangles ConTri)
-  (try_call "con_tri_ordered" text (parse_triangles ConTriOrdered)
-  (try_call "con_right" text (parse_angles ConRight)
-  (try_call "right" text parse_right
-  (try_call "perp" text parse_perp
-  (try_call "midpt" text parse_midpt
-  (try_call "intersect_seg" text (parse_perp_like IntersectSeg)
-  (try_call "seg_bisect" text (parse_perp_like SegBisectOf)
-  (try_call "sim_tri" text (parse_triangles SimTri)
-  (try_call "ang_bisect" text parse_ang_bisect
-  (try_call "on_line" text (parse_point_at OnLine)
-  (try_call "isosceles" text (parse_shape IsoscelesTri)
-  (try_call "equilateral" text (parse_shape EquilateralTri)
-  (try_call "equiangular" text (parse_shape EquiangularTri)
-  (try_call "supplementary" text (parse_angles Supplementary)
-  (try_call "complementary" text (parse_angles Complementary)
-  (try_call "linear_pair" text (parse_angles LinearPair)
-  (try_call "para" text (parse_segments Para)
-  (try_call "parallelogram" text (parse_quad_shape Pgram)
-  (try_call "rectangle" text (parse_quad_shape Rect)
-  (try_call "rhombus" text (parse_quad_shape Rhomb)
-  (try_call "isos_trapezoid" text (parse_quad_shape IsosTrap)
-  (try_call "trapezoid_premise" text (parse_quad_segments TrapPremise)
-  (try_call "isos_trapezoid_premise" text (parse_quad_segments IsosTrapPremise)
-  (try_call "kite_premise" text (parse_quad_angles KiteP)
-  (try_call "transversal" text parse_transversal
-  (try_call "radius" text (fun body =>
-     match split_on ","%char body [] with
-     | [c; [p]] =>
-         match parse_circle c with
-         | Some x => Some (RadiusOf x p)
-         | None => None
-         end
-     | _ => None
-     end)
-  (try_call "chord" text (fun body =>
-     match split_on ","%char body [] with
-     | [c; s] =>
-         match parse_circle c, parse_segment s with
-         | Some x, Some y => Some (ChordOf x y)
-         | _, _ => None
-         end
-     | _ => None
-     end)
-  (try_call "diameter" text (fun body =>
-     match split_on ","%char body [] with
-     | [c; s] =>
-         match parse_circle c, parse_segment s with
-         | Some x, Some y => Some (DiameterOf x y)
-         | _, _ => None
-         end
-     | _ => None
-     end)
-  (try_call "tangent" text (fun body =>
-     match split_on ","%char body [] with
-     | [c; s; [p]] =>
-         match parse_circle c, parse_segment s with
-         | Some x, Some y => Some (TangentAt x y p)
-         | _, _ => None
-         end
-     | _ => None
-     end)
-  (try_call "inscribed_angle" text (fun body =>
-     match split_on ","%char body [] with
-     | [c; a] =>
-         match parse_circle c, parse_angle a with
-         | Some x, Some y => Some (InscribedAngleOf x y)
-         | _, _ => None
-         end
-     | _ => None
-     end)
-  (try_call "minor_arc" text (fun body =>
-     match parse_arc_body Audit.MinorArc body with
-     | Some a => Some (ArcOf a)
-     | None => None
-     end)
-  (try_call "major_arc" text (fun body =>
-     match parse_arc_body Audit.MajorArc body with
-     | Some a => Some (ArcOf a)
-     | None => None
-     end)
-  (try_call "con_arc" text (fun body =>
-     match split_top_commas body [] O with
-     | [a1; a2] =>
-         match parse_arc a1, parse_arc a2 with
-         | Some x, Some y => Some (ConArc x y)
-         | _, _ => None
-         end
-     | _ => None
-     end)
-    None))))))))))))))))))))))))))))))))))))).
+  PublicParser.parse_public_statement_chars
+    (list_ascii_of_string (Audit.normalized (string_of_list_ascii raw))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else
@@ -590,11 +403,11 @@ Definition parse_step (line : chars) : option Step :=
   end.
 
 Record HeaderState := header_state {
-  hs_triangles : list Triangle;
-  hs_angles : list Angle;
-  hs_quadrilaterals : list Quadrilateral;
-  hs_circles : list Circle;
-  hs_segments : list Segment;
+  hs_triangles : list TriangleName;
+  hs_angles : list AngleName;
+  hs_quadrilaterals : list QuadrilateralName;
+  hs_circles : list CircleName;
+  hs_segments : list SegmentName;
   hs_premises : list Premise;
   hs_goal : option Statement
 }.

@@ -36,8 +36,9 @@ to obtain parity.
 6. Prove the rule sound in `Checker.v`, preferably against the weakest GeoCoq
    typeclass context that supports it. Strengthen the global assumptions only
    when the mathematics requires it.
-7. Extend `CompleteChecker.v` only as needed to bridge the public audited
-   statement representation to the internal kernel. Do not weaken the theorem
+7. A new statement form goes in `Audit.v` (with its audited meaning) and
+   `PublicParser.v`; the kernel reads audited statements directly, so there is
+   no separate kernel form to add or bridge. Do not weaken the theorem
    in `Audit.v`.
 8. Populate step diagnostics/graph fields when the new rule can report them;
    they are observable via `ender-checker --report` and `enderCheckReport`.
