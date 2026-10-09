@@ -49,38 +49,27 @@ The parity categories deliberately distinguish:
 - `unsupported-reason`: contains at least one unimplemented reason; and
 - `parse-failure`: the theorem-bearing problem could not be decoded.
 
-Eight proof occurrences across the two corpora are marked `// pass` but land
-in `rejected-supported-slice` because a triangle-congruence step
-names a correspondence its own argument does not establish, while the `cpctc`
-step that follows relies on the correct one. The legacy checker evidently matched the two triangles up to
-independent permutation, which is exactly what makes `con_tri` unsound as an
-ordered claim.
+`con_tri` claims only that two triangles are congruent, under some
+correspondence of their vertices, so a proof may write either triangle in any
+order; `con_tri_ordered` pairs the vertices as written. The congruence criteria
+conclude either. `cpctc` on an ordered fact reads the parts off its
+correspondence; on an unordered one it uses a correspondence the facts already
+established witness — the three parts of a criterion, or an ordered congruence,
+or a chain of those through other triangles, as after `con_tri_transitive` — so
+it never draws a part the proof did not justify. A given `con_tri` names
+no correspondence, so a premise meant for `cpctc` is written
+`con_tri_ordered`.
 
-- `examples/s2c2.txt` step 7 concludes `con_tri(t_ABD,t_BCD)` from an SAS
-  argument establishing `A-C`, `B-B`, `D-D`.
-- `examples/s1c3.txt` step 7 concludes `con_tri(t_QRP,t_MRN)` from an ASA
-  argument establishing `P-M`, `R-R`, `Q-N`; its step 8 then reads `con_seg(QR,
-  RN)` off the correspondence the argument actually proves.
-- `examples/s2c1.txt` step 6 concludes `con_tri(t_FEJ,t_JGH)` although its SAS
-  dependencies establish the correspondence `F-G`, `E-H`, `J-J`; step 7 uses
-  that actual correspondence to conclude `con_seg(FJ,GJ)`.
-- `geo-proof-dataset` `holt_s4-3_cio4_c1.txt` concludes `con_tri(t_JKN,t_MLN)`
-  where the SSS argument gives `t_LMN` — the last two vertices transposed.
-- `geo-proof-dataset` `holt_s4-6_exer9_c1.txt` concludes `con_tri(t_WXZ,t_YZX)`
-  where the argument gives `t_YXZ`.
-
-The bundled `s1c3`, `s2c1`, and `s2c2` defects are duplicated in the textbook
-corpus, producing the other three occurrences.
+Eight `// pass` occurrences, among them `examples/s2c2.txt`, `examples/s1c3.txt`
+and `examples/s2c1.txt`, conclude a `con_tri` in an order their own criterion
+does not establish and then use the correct correspondence for `cpctc`. They
+were rejected while `con_tri` was ordered, and are accepted now.
 
 `on_line` has since been strengthened to endpoint-inclusive segment membership,
 and the kernel transports angle congruence across its same-ray spellings with
 GeoCoq's `out2__conga`.  The same proved transport now recognizes points placed
 on a segment by `midpt` and `intersect_seg`; this accepts the historical
-alternate-interior converse proofs without relaxing ordered triangle claims.
-
-The eight occurrences above are fixture defects, not missing reasons. Correspondence search already
-covers all six readings of a conclusion, and permuting the two triangles
-independently would defeat the point of an ordered `con_tri`; do not widen it.
+alternate-interior converse proofs.
 
 Two other textbook vertical-angle proofs remain fail-closed because they
 declare segments but no triangle or angle that supplies nondegenerate rays.

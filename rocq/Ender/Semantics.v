@@ -9,6 +9,13 @@ Section EnderSemantics.
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 Variable point : PointId -> Tpoint.
 
+(** The six orderings of a triangle's vertices, in the order
+    [Audit.triangleOrderings] lists them. *)
+Definition triangle_orderings (t : Triangle) : list Triangle :=
+  let a := t.(tri_a) in let b := t.(tri_b) in let c := t.(tri_c) in
+  [triangle a b c; triangle a c b; triangle b a c;
+   triangle b c a; triangle c a b; triangle c b a].
+
 Definition triangle_congruence (t u : Triangle) : Prop :=
   Cong (point t.(tri_a)) (point t.(tri_b))
        (point u.(tri_a)) (point u.(tri_b)) /\
@@ -63,7 +70,8 @@ Definition statement_meaning (s : Statement) : Prop :=
   | ConAng a b | RefAng a b =>
       CongA (point a.(ang_left)) (point a.(ang_vertex)) (point a.(ang_right))
             (point b.(ang_left)) (point b.(ang_vertex)) (point b.(ang_right))
-  | ConTri a b => triangle_congruence a b
+  | ConTri a b => exists b', In b' (triangle_orderings b) /\ triangle_congruence a b'
+  | ConTriOrdered a b => triangle_congruence a b
   (* The audited meaning verbatim, so the two layers cannot drift: similarity
      is the three corresponding angle congruences, on two genuine triangles. *)
   | SimTri a b => Audit.TriangleSimilar point (tri_name a) (tri_name b)

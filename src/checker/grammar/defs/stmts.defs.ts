@@ -70,6 +70,12 @@ export const STMTS_DEFS = {
       name: "con_tri",
       parameters: [triangle("t1"), triangle("t2")],
     },
+    // The same claim with the vertices paired in the order written, which is
+    // what `cpctc` needs from a given that no criterion step establishes.
+    con_tri_ordered: {
+      name: "con_tri_ordered",
+      parameters: [triangle("t1"), triangle("t2")],
+    },
     con_right: {
       name: "con_right",
       parameters: [angle("a1"), angle("a2")],

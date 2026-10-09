@@ -114,6 +114,7 @@ Definition parse_public_statement_chars_generic (text : PChars) : option PublicS
     if named "con_seg" then match args with [a;b] => match parse_segment a,parse_segment b with Some A,Some B=>Some(ConSeg A B)|_,_=>None end|_=>None end else
     if named "con_ang" then match args with [a;b] => match parse_angle a,parse_angle b with Some A,Some B=>Some(ConAng A B)|_,_=>None end|_=>None end else
     if named "con_tri" then match args with [a;b] => match parse_triangle a,parse_triangle b with Some A,Some B=>Some(ConTri A B)|_,_=>None end|_=>None end else
+    if named "con_tri_ordered" then match args with [a;b] => match parse_triangle a,parse_triangle b with Some A,Some B=>Some(ConTriOrdered A B)|_,_=>None end|_=>None end else
     if named "con_right" then match args with [a;b] => match parse_angle a,parse_angle b with Some A,Some B=>Some(ConRight A B)|_,_=>None end|_=>None end else
     if named "para" then match args with [a;b] => match parse_segment a,parse_segment b with Some A,Some B=>Some(Para A B)|_,_=>None end|_=>None end else
     if named "isosceles" then match args with [t] => match parse_triangle t with Some T=>Some(Isosceles T)|_=>None end|_=>None end else
@@ -162,6 +163,7 @@ Definition parse_rendered_statement (x : PChars) : option PublicStatement :=
   | ["c"%char;"o"%char;"n"%char;"_"%char;"s"%char;"e"%char;"g"%char;"("%char;a;b;","%char;c;d;")"%char] => Some (ConSeg (segment_name a b) (segment_name c d))
   | ["c"%char;"o"%char;"n"%char;"_"%char;"a"%char;"n"%char;"g"%char;"("%char;"a"%char;"_"%char;a;b;c;","%char;"a"%char;"_"%char;d;e;f;")"%char] => Some (ConAng (angle_name a b c) (angle_name d e f))
   | ["c"%char;"o"%char;"n"%char;"_"%char;"t"%char;"r"%char;"i"%char;"("%char;"t"%char;"_"%char;a;b;c;","%char;"t"%char;"_"%char;d;e;f;")"%char] => Some (ConTri (triangle_name a b c) (triangle_name d e f))
+  | ["c"%char;"o"%char;"n"%char;"_"%char;"t"%char;"r"%char;"i"%char;"_"%char;"o"%char;"r"%char;"d"%char;"e"%char;"r"%char;"e"%char;"d"%char;"("%char;"t"%char;"_"%char;a;b;c;","%char;"t"%char;"_"%char;d;e;f;")"%char] => Some (ConTriOrdered (triangle_name a b c) (triangle_name d e f))
   | ["c"%char;"o"%char;"n"%char;"_"%char;"r"%char;"i"%char;"g"%char;"h"%char;"t"%char;"("%char;"a"%char;"_"%char;a;b;c;","%char;"a"%char;"_"%char;d;e;f;")"%char] => Some (ConRight (angle_name a b c) (angle_name d e f))
   | ["p"%char;"a"%char;"r"%char;"a"%char;"("%char;a;b;","%char;c;d;")"%char] => Some (Para (segment_name a b) (segment_name c d))
   | ["i"%char;"s"%char;"o"%char;"s"%char;"c"%char;"e"%char;"l"%char;"e"%char;"s"%char;"("%char;"t"%char;"_"%char;a;b;c;")"%char] => Some (Isosceles (triangle_name a b c))

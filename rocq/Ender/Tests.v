@@ -2038,6 +2038,191 @@ Example undrawn_ends_altint_accepts :
   complete_checker undrawn_ends_altint_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** [con_tri] claims congruence under some correspondence of the vertices,
+    so a criterion may conclude it with either triangle in any order, and
+    [cpctc] uses the correspondence the criterion's own facts witness. *)
+Definition scrambled_cpctc_source := "title: scrambled_cpctc_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_seg(BC,EF)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_CBA,t_EDF)
+[05] cpctc(4) -> con_seg(BC,EF)".
+
+(** No fact witnesses a correspondence pairing [AB] with [EF]. *)
+Definition unwitnessed_cpctc_source := "title: unwitnessed_cpctc_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_seg(AB,EF)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_CBA,t_EDF)
+[05] cpctc(4) -> con_seg(AB,EF)".
+
+(** An unordered goal is met by the congruence in any spelling. *)
+Definition scrambled_goal_source := "title: scrambled_goal_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_tri(t_DEF,t_CAB)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_CBA,t_EDF)".
+
+(** [con_tri_ordered] pairs the vertices as written, so only the right
+    pairing is concluded. *)
+Definition ordered_criterion_source := "title: ordered_criterion_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_tri_ordered(t_CBA,t_FED)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri_ordered(t_CBA,t_FED)".
+
+Definition misordered_criterion_source := "title: misordered_criterion_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_tri_ordered(t_CBA,t_EDF)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri_ordered(t_CBA,t_EDF)".
+
+(** A given [con_tri] names no correspondence, and nothing else in the proof
+    witnesses one; a given [con_tri_ordered] names it. *)
+Definition loose_given_cpctc_source := "title: loose given
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_tri(t_ABC,t_DEF)
+-> con_seg(AB,DE)
+
+steps:
+[01] given(g_1) -> con_tri(t_ABC,t_DEF)
+[02] cpctc(1) -> con_seg(AB,DE)".
+
+Definition ordered_given_cpctc_source := "title: ordered given
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_tri_ordered(t_ABC,t_DEF)
+-> con_seg(AB,DE)
+
+steps:
+[01] given(g_1) -> con_tri_ordered(t_ABC,t_DEF)
+[02] cpctc(1) -> con_seg(AB,DE)".
+
+(** No fact relates [t_ABC] and [t_GHI] directly; their correspondence is
+    the composition of the two the criteria witness, through [t_DEF]. *)
+Definition chained_cpctc_source := "title: chained_cpctc_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3), G (20,0), H (24,0), I (21,3)
+tri: t_ABC t_DEF t_GHI
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+[g_4] con_seg(DE,GH)
+[g_5] con_ang(a_EDF,a_HGI)
+[g_6] con_seg(DF,GI)
+-> con_seg(BC,HI)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_ABC,t_DEF)
+[05] given(g_4) -> con_seg(DE,GH)
+[06] given(g_5) -> con_ang(a_EDF,a_HGI)
+[07] given(g_6) -> con_seg(DF,GI)
+[08] sas(5,6,7) -> con_tri(t_DEF,t_GHI)
+[09] con_tri_transitive(4,8) -> con_tri(t_GIH,t_BAC)
+[10] cpctc(9) -> con_seg(BC,HI)".
+Definition unchained_cpctc_source := "title: unchained_cpctc_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3), G (20,0), H (24,0), I (21,3)
+tri: t_ABC t_DEF t_GHI
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+[g_4] con_seg(DE,GH)
+[g_5] con_ang(a_EDF,a_HGI)
+[g_6] con_seg(DF,GI)
+-> con_seg(BC,GI)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_ABC,t_DEF)
+[05] given(g_4) -> con_seg(DE,GH)
+[06] given(g_5) -> con_ang(a_EDF,a_HGI)
+[07] given(g_6) -> con_seg(DF,GI)
+[08] sas(5,6,7) -> con_tri(t_DEF,t_GHI)
+[09] con_tri_transitive(4,8) -> con_tri(t_GIH,t_BAC)
+[10] cpctc(9) -> con_seg(BC,GI)".
+
+Example chained_cpctc_accepts :
+  complete_checker chained_cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example unchained_cpctc_rejects :
+  complete_checker unchained_cpctc_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example scrambled_cpctc_accepts :
+  complete_checker scrambled_cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example unwitnessed_cpctc_rejects :
+  complete_checker unwitnessed_cpctc_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example scrambled_goal_accepts :
+  complete_checker scrambled_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example ordered_criterion_accepts :
+  complete_checker ordered_criterion_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example misordered_criterion_rejects :
+  complete_checker misordered_criterion_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example loose_given_cpctc_rejects :
+  complete_checker loose_given_cpctc_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example ordered_given_cpctc_accepts :
+  complete_checker ordered_given_cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
 (** The circle statement layer: a circle declaration, premises of every new
     form including the nested arc spelling, a [def_radius] step, and a
     congruent-radii goal, through both checker paths. *)

@@ -70,6 +70,10 @@ Proof.
 Qed.
 
 (** `RefSeg` and `RefAng` carry the same geometry as their `Con*` forms. *)
+(** Two triangle names with the same three vertices, in any order. *)
+Definition same_vertices (t u : Triangle) : bool :=
+  triangle_mem t (triangle_orderings u).
+
 Definition fact_eqb (expected actual : Statement) : bool :=
   match expected, actual with
   | ConSeg a b, ConSeg c d | ConSeg a b, RefSeg c d
@@ -78,7 +82,12 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   | ConAng a b, ConAng c d | ConAng a b, RefAng c d
   | RefAng a b, ConAng c d | RefAng a b, RefAng c d =>
       angle_pair_eqb a b c d
-  | ConTri a b, ConTri c d | SimTri a b, SimTri c d =>
+  (* Unordered congruence is blind to the order of either triangle's
+     vertices, and to which triangle comes first. *)
+  | ConTri a b, ConTri c d =>
+      (same_vertices a c && same_vertices b d) ||
+      (same_vertices a d && same_vertices b c)
+  | ConTriOrdered a b, ConTriOrdered c d | SimTri a b, SimTri c d =>
       triangle_eqb a c && triangle_eqb b d
   | RightAng a, RightAng b => angle_eqb a b
   | ConRight a b, ConRight c d => angle_pair_eqb a b c d
@@ -535,6 +544,110 @@ Definition correspondences (t u : Triangle) : list (Triangle * Triangle) :=
 Definition declared_pair (decls : Declarations) (t u : Triangle) : bool :=
   triangle_declared decls t && triangle_declared decls u.
 
+(** A congruence criterion concludes [con_tri_ordered] for the correspondence
+    as written, read in any of its six ways, and [con_tri] for any ordering of
+    the second triangle. *)
+Definition criterion_conclusion
+    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
+              Triangle -> Triangle -> bool)
+    decls premises facts i j k (conclusion : Statement) : bool :=
+  match conclusion with
+  | ConTriOrdered t u =>
+      declared_pair decls t u &&
+      six_correspondences schema decls premises facts i j k t u
+  | ConTri t u =>
+      declared_pair decls t u &&
+      existsb (six_correspondences schema decls premises facts i j k t)
+              (triangle_orderings u)
+  | _ => false
+  end.
+
+Definition criterion_used
+    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
+              Triangle -> Triangle -> option (list Statement))
+    decls premises facts i j k (conclusion : Statement) : option (list Statement) :=
+  match conclusion with
+  | ConTriOrdered t u => six_correspondences_used schema decls premises facts i j k t u
+  | ConTri t u =>
+      first_used (six_correspondences_used schema decls premises facts i j k t)
+                 (triangle_orderings u)
+  | _ => None
+  end.
+
+(** What [cpctc] needs from an unordered [con_tri] is a correspondence, and
+    the statement does not carry one.  The facts already established can: a
+    correspondence is witnessed when a congruence criterion's three parts, or
+    an ordered congruence, are among them, read in any of the six ways. *)
+Definition supported decls premises (facts : list Statement)
+    (expected : Statement) : bool :=
+  existsb (dependency_matches decls premises expected) facts.
+
+Definition supported3 decls premises facts (a b c : Statement) : bool :=
+  supported decls premises facts a && supported decls premises facts b &&
+  supported decls premises facts c.
+
+Definition reading_witnessed decls premises facts (t u : Triangle) : bool :=
+  (* SAS *)
+  supported3 decls premises facts
+    (ConSeg (side_ab t) (side_ab u)) (ConAng (angle_a t) (angle_a u))
+    (ConSeg (side_ca t) (side_ca u)) ||
+  (* SSS *)
+  supported3 decls premises facts
+    (ConSeg (side_ab t) (side_ab u)) (ConSeg (side_bc t) (side_bc u))
+    (ConSeg (side_ca t) (side_ca u)) ||
+  (* ASA *)
+  supported3 decls premises facts
+    (ConAng (angle_a t) (angle_a u)) (ConSeg (side_ab t) (side_ab u))
+    (ConAng (angle_b t) (angle_b u)) ||
+  (* AAS *)
+  supported3 decls premises facts
+    (ConAng (angle_c t) (angle_c u)) (ConAng (angle_b t) (angle_b u))
+    (ConSeg (side_ab t) (side_ab u)) ||
+  (* HL *)
+  supported3 decls premises facts
+    (ConRight (angle_b t) (angle_b u)) (ConSeg (side_ca t) (side_ca u))
+    (ConSeg (side_bc t) (side_bc u)) ||
+  existsb (fact_eqb (ConTriOrdered t u)) facts.
+
+Definition correspondence_witnessed decls premises facts (t u : Triangle) : bool :=
+  existsb (fun c => reading_witnessed decls premises facts (fst c) (snd c))
+          (correspondences t u).
+
+(** Correspondences compose, so a chain of witnessed ones through other
+    triangles — the way [con_tri_transitive] chains congruences — witnesses
+    one too.  The intermediate triangles are those the [con_tri] facts name,
+    in every vertex order.  The search grows the set of triangles reached
+    from [t] a round at a time and stops when a round adds nothing; a direct
+    witness is tried first, so the usual one-step case costs no more. *)
+Definition congruence_nodes (facts : list Statement) : list Triangle :=
+  flat_map (fun f =>
+    match f with
+    | ConTri a b | ConTriOrdered a b => triangle_orderings a ++ triangle_orderings b
+    | _ => []
+    end) facts.
+
+Fixpoint reach_correspondences decls premises facts (fuel : nat)
+    (nodes reached : list Triangle) : list Triangle :=
+  match fuel with
+  | O => reached
+  | S fuel' =>
+      let fresh := filter (fun w =>
+        negb (triangle_mem w reached) &&
+        existsb (fun u => correspondence_witnessed decls premises facts u w)
+                reached) nodes in
+      match fresh with
+      | [] => reached
+      | _ => reach_correspondences decls premises facts fuel' nodes
+               (reached ++ fresh)
+      end
+  end.
+
+Definition chain_witnessed decls premises facts (t u : Triangle) : bool :=
+  correspondence_witnessed decls premises facts t u ||
+  let nodes := congruence_nodes facts in
+  existsb (fun w => correspondence_witnessed decls premises facts w u)
+          (reach_correspondences decls premises facts (List.length nodes) nodes [t]).
+
 Definition cpctc_facts (t u : Triangle) : list Statement :=
   [ ConSeg (side_ab t) (side_ab u)
   ; ConSeg (side_bc t) (side_bc u)
@@ -547,6 +660,20 @@ Definition cpctc_facts (t u : Triangle) : list Statement :=
 Definition is_cpctc_fact (t u : Triangle) (conclusion : Statement) : bool :=
   existsb (fun expected => fact_eqb expected conclusion) (cpctc_facts t u).
 
+(** An ordered congruence names its correspondence; an unordered one leaves
+    [cpctc] to find one the facts witness. *)
+Definition cpctc_rule decls premises facts (i : nat) (conclusion : Statement)
+    : bool :=
+  match lookup_step facts i with
+  | Some (ConTriOrdered t u) => is_cpctc_fact t u conclusion
+  | Some (ConTri t u) =>
+      declared_pair decls t u &&
+      existsb (fun u' => chain_witnessed decls premises facts t u' &&
+                         is_cpctc_fact t u' conclusion)
+              (triangle_orderings u)
+  | _ => false
+  end.
+
 (** Transitivity of congruence.  A dependency states a congruence between two
     like objects; the two dependencies must share one object, and the
     conclusion must congruate the remaining two.  Sharing is decided by the
@@ -558,7 +685,11 @@ Definition segment_congruence_pair (s : Statement) : option (Segment * Segment) 
 Definition angle_congruence_pair (s : Statement) : option (Angle * Angle) :=
   match s with ConAng a b | RefAng a b => Some (a, b) | _ => None end.
 Definition triangle_congruence_pair (s : Statement) : option (Triangle * Triangle) :=
-  match s with ConTri a b => Some (a, b) | _ => None end.
+  match s with ConTriOrdered a b => Some (a, b) | _ => None end.
+(** An ordered congruence is in particular an unordered one. *)
+Definition any_triangle_congruence_pair (s : Statement)
+    : option (Triangle * Triangle) :=
+  match s with ConTri a b | ConTriOrdered a b => Some (a, b) | _ => None end.
 
 Section Transitivity.
 Context {A : Type} (same : A -> A -> bool) (congruence : A -> A -> Statement).
@@ -586,7 +717,15 @@ Definition con_seg_transitive facts i j conclusion : bool :=
 Definition con_ang_transitive facts i j conclusion : bool :=
   transitive_rule angle_u_eqb ConAng angle_congruence_pair facts i j conclusion.
 Definition con_tri_transitive facts i j conclusion : bool :=
-  transitive_rule triangle_eqb ConTri triangle_congruence_pair facts i j conclusion.
+  match conclusion with
+  | ConTriOrdered _ _ =>
+      transitive_rule triangle_eqb ConTriOrdered triangle_congruence_pair
+        facts i j conclusion
+  | ConTri _ _ =>
+      transitive_rule same_vertices ConTri any_triangle_congruence_pair
+        facts i j conclusion
+  | _ => false
+  end.
 
 (** Two right angles are congruent.  The audited [right] meaning supplies the
     nondegenerate rays that GeoCoq's [l11_16] needs, so this rule may conclude
@@ -851,12 +990,13 @@ Definition def_con_tri_at (decls : Declarations) (premises : list Premise)
 Definition def_con_tri (decls : Declarations) (premises : list Premise)
     (facts : list Statement)
     (i1 i2 i3 i4 i5 i6 : nat) (conclusion : Statement) : bool :=
+  let at_some := fun t u =>
+    existsb (fun c => def_con_tri_at decls premises facts i1 i2 i3 i4 i5 i6
+                        (fst c) (snd c))
+            (correspondences t u) in
   match conclusion with
-  | ConTri t u =>
-      declared_pair decls t u &&
-      existsb (fun c => def_con_tri_at decls premises facts i1 i2 i3 i4 i5 i6
-                          (fst c) (snd c))
-              (correspondences t u)
+  | ConTriOrdered t u => declared_pair decls t u && at_some t u
+  | ConTri t u => declared_pair decls t u && existsb (at_some t) (triangle_orderings u)
   | _ => false
   end.
 
@@ -1837,40 +1977,15 @@ Definition rule_diagram_premises_raw (decls : Declarations)
      along an [on_line] premise to match a dependency; the correspondence
      search returns the premises whichever reading won. *)
   | SAS i j k =>
-      match conclusion with
-      | ConTri t u =>
-          all (six_correspondences_used sas_schema_used decls premises facts
-                 i j k t u)
-      | _ => []
-      end
+      all (criterion_used sas_schema_used decls premises facts i j k conclusion)
   | SSS i j k =>
-      match conclusion with
-      | ConTri t u =>
-          all (six_correspondences_used sss_schema_used decls premises facts
-                 i j k t u)
-      | _ => []
-      end
+      all (criterion_used sss_schema_used decls premises facts i j k conclusion)
   | ASA i j k =>
-      match conclusion with
-      | ConTri t u =>
-          all (six_correspondences_used asa_schema_used decls premises facts
-                 i j k t u)
-      | _ => []
-      end
+      all (criterion_used asa_schema_used decls premises facts i j k conclusion)
   | AAS i j k =>
-      match conclusion with
-      | ConTri t u =>
-          all (six_correspondences_used aas_schema_used decls premises facts
-                 i j k t u)
-      | _ => []
-      end
+      all (criterion_used aas_schema_used decls premises facts i j k conclusion)
   | RHL i j k =>
-      match conclusion with
-      | ConTri t u =>
-          all (six_correspondences_used rhl_schema_used decls premises facts
-                 i j k t u)
-      | _ => []
-      end
+      all (criterion_used rhl_schema_used decls premises facts i j k conclusion)
   | InscribedSemi i =>
       match conclusion, dependency i with
       | RightAng a, Some (DiameterOf c _) =>
@@ -1971,34 +2086,14 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
       | _ => false
       end
   | SAS i j k =>
-      match conclusion with
-      | ConTri t u => declared_pair decls t u &&
-          six_correspondences sas_schema decls premises facts i j k t u
-      | _ => false
-      end
+      criterion_conclusion sas_schema decls premises facts i j k conclusion
   | SSS i j k =>
-      match conclusion with
-      | ConTri t u => declared_pair decls t u &&
-          six_correspondences sss_schema decls premises facts i j k t u
-      | _ => false
-      end
+      criterion_conclusion sss_schema decls premises facts i j k conclusion
   | ASA i j k =>
-      match conclusion with
-      | ConTri t u => declared_pair decls t u &&
-          six_correspondences asa_schema decls premises facts i j k t u
-      | _ => false
-      end
+      criterion_conclusion asa_schema decls premises facts i j k conclusion
   | AAS i j k =>
-      match conclusion with
-      | ConTri t u => declared_pair decls t u &&
-          six_correspondences aas_schema decls premises facts i j k t u
-      | _ => false
-      end
-  | CPCTC i =>
-      match lookup_step facts i with
-      | Some (ConTri t u) => is_cpctc_fact t u conclusion
-      | _ => false
-      end
+      criterion_conclusion aas_schema decls premises facts i j k conclusion
+  | CPCTC i => cpctc_rule decls premises facts i conclusion
   | ConSegTrans i j => con_seg_transitive facts i j conclusion
   | ConAngTrans i j => con_ang_transitive facts i j conclusion
   | ConTriTrans i j => con_tri_transitive facts i j conclusion
@@ -2074,11 +2169,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
       rhombus_opp_bisect_conv_rule facts i j k conclusion
   | AASim i j => aa_sim decls premises facts i j conclusion
   | RHL i j k =>
-      match conclusion with
-      | ConTri t u => declared_pair decls t u &&
-          six_correspondences rhl_schema decls premises facts i j k t u
-      | _ => false
-      end
+      criterion_conclusion rhl_schema decls premises facts i j k conclusion
   end.
 
 Fixpoint check_steps decls premises facts steps : option (list Statement) :=
@@ -2139,6 +2230,128 @@ Proof.
     split; intros [Hne [Hcol Hmid]];
     (split; [solve [exact Hne | now apply not_eq_sym]|]);
     (split; [solve [Col]|solve [exact Hmid | now apply l7_2]]).
+Qed.
+
+(** * Unordered triangle congruence
+
+    [ConTri t u] says [t] is congruent to some ordering of [u].  Reordering
+    either triangle, or swapping them, keeps that true, which is what lets
+    [fact_eqb] and transitivity ignore vertex order. *)
+Ltac in_orderings := cbn; repeat (first [left; reflexivity | right]).
+
+Lemma orderings_refl : forall t, In t (triangle_orderings t).
+Proof. intros [A B C]. cbn. left. reflexivity. Qed.
+
+Lemma orderings_sym : forall t u,
+  In u (triangle_orderings t) -> In t (triangle_orderings u).
+Proof.
+  intros [A B C] u H. cbn in H.
+  destruct H as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]]; in_orderings.
+Qed.
+
+Lemma orderings_trans : forall t u v,
+  In u (triangle_orderings t) -> In v (triangle_orderings u) ->
+  In v (triangle_orderings t).
+Proof.
+  intros [A B C] u v Hu Hv. cbn in Hu.
+  destruct Hu as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]]; cbn in Hv;
+    destruct Hv as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]]; in_orderings.
+Qed.
+
+Lemma triangle_congruence_unfold : forall A B C D E F,
+  triangle_congruence point (triangle A B C) (triangle D E F) =
+  TriangleCongruent (point A) (point B) (point C) (point D) (point E) (point F).
+Proof. reflexivity. Qed.
+
+(** Reordering one triangle of an ordered congruence reorders the other to
+    match. *)
+Lemma congruence_reorder : forall t u t2,
+  In t2 (triangle_orderings t) -> triangle_congruence point t u ->
+  exists u2, In u2 (triangle_orderings u) /\ triangle_congruence point t2 u2.
+Proof.
+  intros [A B C] [D E F] t2 Hin Hc. cbn in Hin.
+  rewrite triangle_congruence_unfold in Hc.
+  destruct Hin as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]].
+  - exists (triangle D E F). split; [in_orderings|].
+    rewrite triangle_congruence_unfold. exact Hc.
+  - exists (triangle D F E). split; [in_orderings|].
+    rewrite triangle_congruence_unfold.
+    apply triangle_congruent_rotate, triangle_congruent_rotate,
+      triangle_congruent_reverse. exact Hc.
+  - exists (triangle E D F). split; [in_orderings|].
+    rewrite triangle_congruence_unfold.
+    apply triangle_congruent_rotate, triangle_congruent_reverse. exact Hc.
+  - exists (triangle E F D). split; [in_orderings|].
+    rewrite triangle_congruence_unfold.
+    apply triangle_congruent_rotate. exact Hc.
+  - exists (triangle F D E). split; [in_orderings|].
+    rewrite triangle_congruence_unfold.
+    apply triangle_congruent_rotate, triangle_congruent_rotate. exact Hc.
+  - exists (triangle F E D). split; [in_orderings|].
+    rewrite triangle_congruence_unfold.
+    apply triangle_congruent_reverse. exact Hc.
+Qed.
+
+Lemma loose_of_ordered : forall t u,
+  triangle_congruence point t u -> Interp (ConTri t u).
+Proof. intros t u H. exists u. split; [apply orderings_refl|exact H]. Qed.
+
+Lemma loose_reorder_left : forall t t2 u,
+  In t2 (triangle_orderings t) -> Interp (ConTri t u) -> Interp (ConTri t2 u).
+Proof.
+  intros t t2 u Hin [u' [Hu' Hc]].
+  destruct (congruence_reorder t u' t2 Hin Hc) as [u2 [Hu2 Hc2]].
+  exists u2. split; [eapply orderings_trans; eauto|exact Hc2].
+Qed.
+
+Lemma loose_reorder_right : forall t u u2,
+  In u2 (triangle_orderings u) -> Interp (ConTri t u) -> Interp (ConTri t u2).
+Proof.
+  intros t u u2 Hin [u' [Hu' Hc]]. exists u'. split; [|exact Hc].
+  eapply orderings_trans; [apply orderings_sym; exact Hin|exact Hu'].
+Qed.
+
+Lemma loose_sym : forall t u, Interp (ConTri t u) -> Interp (ConTri u t).
+Proof.
+  intros t u [u' [Hu' Hc]].
+  assert (Hc' : triangle_congruence point u' t).
+  { destruct t as [A B C], u' as [D E F].
+    rewrite triangle_congruence_unfold in *. now apply triangle_congruent_sym. }
+  destruct (congruence_reorder u' t u (orderings_sym _ _ Hu') Hc')
+    as [t2 [Ht2 Hc2]].
+  exists t2. split; assumption.
+Qed.
+
+Lemma loose_trans : forall x y z,
+  Interp (ConTri x y) -> Interp (ConTri y z) -> Interp (ConTri x z).
+Proof.
+  intros x y z [y' [Hy' Hxy]] [z' [Hz' Hyz]].
+  destruct (congruence_reorder y z' y' Hy' Hyz) as [z2 [Hz2 Hyz2]].
+  exists z2. split; [eapply orderings_trans; eauto|].
+  destruct x as [A B C], y' as [D E F], z2 as [G H I].
+  rewrite triangle_congruence_unfold in *.
+  eapply triangle_congruent_trans; eauto.
+Qed.
+
+Lemma loose_same_vertices : forall a b c d,
+  fact_eqb (ConTri a b) (ConTri c d) = true ->
+  (Interp (ConTri a b) <-> Interp (ConTri c d)).
+Proof.
+  intros a b c d H. cbn [fact_eqb] in H. unfold same_vertices in H.
+  apply orb_true_iff in H.
+  destruct H as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
+    apply triangle_mem_spec in H1; apply triangle_mem_spec in H2;
+    split; intro Hx.
+  - apply (loose_reorder_right c b d (orderings_sym _ _ H2)).
+    exact (loose_reorder_left a c b (orderings_sym _ _ H1) Hx).
+  - apply (loose_reorder_right a d b H2).
+    exact (loose_reorder_left c a d H1 Hx).
+  - apply loose_sym.
+    apply (loose_reorder_right d b c (orderings_sym _ _ H2)).
+    exact (loose_reorder_left a d b (orderings_sym _ _ H1) Hx).
+  - apply loose_sym in Hx.
+    apply (loose_reorder_right a c b H2).
+    exact (loose_reorder_left d a c H1 Hx).
 Qed.
 
 Lemma fact_eqb_sound : forall expected actual,
@@ -2228,7 +2441,9 @@ Proof.
       cbn; unfold Audit.Parallel, seg_name, Audit.seg_start, Audit.seg_end,
         reverse_segment; cbn; split; intro;
       eauto 6 using par_symmetry, par_left_comm, par_right_comm, par_comm. }
-  destruct expected, actual; cbn; try discriminate; intros H;
+  destruct expected, actual;
+    try (intros H; exact (loose_same_vertices _ _ _ _ H));
+    cbn; try discriminate; intros H;
     try (now apply Hpair); try (now apply Hangles); try (now apply Hrights);
     try (now apply Hsupp); try (now apply Hcomp); try (now apply Hparf);
     try (apply andb_true_iff in H; destruct H as [H ?];
@@ -2778,6 +2993,33 @@ Proof.
   apply fact_eqb_sound in H; tauto.
 Qed.
 
+Lemma criterion_conclusion_sound :
+  forall schema decls premises facts i j k conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  (forall decls premises facts i j k t u,
+    declarations_well_formed point decls ->
+    Forall (interp_premise point) premises ->
+    Forall Interp facts -> triangle_well_formed point t ->
+    schema decls premises facts i j k t u = true ->
+    interp_triangle_congruence point t u) ->
+  criterion_conclusion schema decls premises facts i j k conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros schema decls premises facts i j k conclusion Hwf Hprem Hfacts
+    Hschema H.
+  unfold criterion_conclusion in H. destruct conclusion; try discriminate;
+    apply andb_true_iff in H; destruct H as [Hdecl H];
+    apply declared_pair_sound in Hdecl; try exact Hwf;
+    destruct Hdecl as [Ht Hu].
+  - apply existsb_exists in H. destruct H as [u' [Hin Hsix]].
+    exists u'. split; [exact Hin|].
+    change (interp_triangle_congruence point t u').
+    eapply six_correspondences_sound; eauto.
+  - change (interp_triangle_congruence point t t0).
+    eapply six_correspondences_sound; eauto.
+Qed.
+
 (** One transitivity argument covers segments, angles, and triangles.  The
     shared-object test is only ever used to move an already established
     congruence onto an equal object, so no reflexivity — and in particular no
@@ -2856,6 +3098,16 @@ Lemma con_tri_transitive_sound : forall facts i j conclusion,
   Interp conclusion.
 Proof.
   intros facts i j conclusion Hfacts Hrule.
+  unfold con_tri_transitive in Hrule.
+  destruct conclusion; try discriminate.
+  { eapply transitive_rule_sound; [| | | |exact Hfacts|exact Hrule].
+    - intros w x y Hsame Hcong. unfold same_vertices in Hsame.
+      apply triangle_mem_spec in Hsame.
+      exact (loose_reorder_right w x y (orderings_sym _ _ Hsame) Hcong).
+    - intros x y. apply loose_sym.
+    - intros x y z. apply loose_trans.
+    - intros s x y Hpair Hs. destruct s; cbn in Hpair; try discriminate;
+        injection Hpair as <- <-; [exact Hs|now apply loose_of_ordered]. }
   eapply transitive_rule_sound; [| | | |exact Hfacts|exact Hrule].
   - intros w x y Hsame Hcong. apply triangle_eqb_eq in Hsame. now subst.
   - intros x y Hcong. cbn in Hcong |- *. now apply triangle_congruent_sym.
@@ -3122,6 +3374,174 @@ Proof.
   contradiction.
 Qed.
 
+Lemma supported_lookup : forall decls premises facts expected,
+  supported decls premises facts expected = true ->
+  exists i actual, lookup_step facts i = Some actual /\
+    dependency_matches decls premises expected actual = true.
+Proof.
+  intros decls premises facts expected H. unfold supported in H.
+  apply existsb_exists in H. destruct H as [actual [Hin Hm]].
+  apply In_nth_error in Hin. destruct Hin as [n Hn].
+  exists (S n), actual. split; [exact Hn|exact Hm].
+Qed.
+
+Lemma supported3_schema3 : forall decls premises facts a b c,
+  supported3 decls premises facts a b c = true ->
+  exists i j k, schema3 decls premises facts i j k a b c = true.
+Proof.
+  intros decls premises facts a b c H. unfold supported3 in H.
+  apply andb_true_iff in H. destruct H as [H Hc].
+  apply andb_true_iff in H. destruct H as [Ha Hb].
+  destruct (supported_lookup _ _ _ _ Ha) as [i [x [Hx Hmx]]].
+  destruct (supported_lookup _ _ _ _ Hb) as [j [y [Hy Hmy]]].
+  destruct (supported_lookup _ _ _ _ Hc) as [k [z [Hz Hmz]]].
+  exists i, j, k. rewrite schema3_unfold, Hx, Hy, Hz, Hmx, Hmy, Hmz.
+  reflexivity.
+Qed.
+
+Lemma reading_witnessed_sound : forall decls premises facts t u,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  triangle_well_formed point t ->
+  reading_witnessed decls premises facts t u = true ->
+  interp_triangle_congruence point t u.
+Proof.
+  intros decls premises facts t u Hwf Hprem Hfacts Ht H.
+  unfold reading_witnessed in H. repeat rewrite orb_true_iff in H.
+  destruct H as [[[[[H|H]|H]|H]|H]|H].
+  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
+    eapply sas_schema_sound; eauto.
+  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
+    eapply sss_schema_sound; eauto.
+  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
+    eapply asa_schema_sound; eauto.
+  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
+    eapply aas_schema_sound; [exact Hwf|exact Hprem|exact Hfacts|exact Ht|].
+    unfold aas_schema. rewrite Hs. reflexivity.
+  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
+    eapply rhl_schema_sound; [exact Hwf|exact Hprem|exact Hfacts|exact Ht|].
+    unfold rhl_schema. rewrite Hs. reflexivity.
+  - apply existsb_exists in H. destruct H as [f [Hin Heq]].
+    apply fact_eqb_sound in Heq. apply Heq.
+    eapply Forall_forall; eauto.
+Qed.
+
+Lemma correspondence_first_well_formed : forall t u c,
+  In c (correspondences t u) -> triangle_well_formed point t ->
+  triangle_well_formed point (fst c).
+Proof.
+  intros t u c Hin Ht. unfold correspondences in Hin. cbn in Hin.
+  repeat (destruct Hin as [<-|Hin];
+    [cbn; repeat first [ apply rotated_well_formed
+                       | apply reversed_well_formed ]; exact Ht|]).
+  contradiction.
+Qed.
+
+Lemma correspondence_witnessed_sound : forall decls premises facts t u,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  triangle_well_formed point t ->
+  correspondence_witnessed decls premises facts t u = true ->
+  interp_triangle_congruence point t u.
+Proof.
+  intros decls premises facts t u Hwf Hprem Hfacts Ht H.
+  unfold correspondence_witnessed in H.
+  apply existsb_exists in H. destruct H as [c [Hin Hw]].
+  apply (correspondences_congruent t u c Hin).
+  eapply reading_witnessed_sound; eauto.
+  eapply correspondence_first_well_formed; eauto.
+Qed.
+
+Lemma congruence_well_formed : forall t u,
+  triangle_well_formed point t -> interp_triangle_congruence point t u ->
+  triangle_well_formed point u.
+Proof.
+  intros [A B C] [D E F] Ht Hc. unfold triangle_well_formed in *. cbn in *.
+  unfold interp_triangle_congruence in Hc. rewrite triangle_congruence_unfold in Hc.
+  destruct Hc as [Hab [Hbc [Hca _]]].
+  intro Hcol. apply Ht.
+  apply (l4_13 (point D) (point E) (point F)); [exact Hcol|].
+  unfold Cong_3. split; [Cong|split; Cong].
+Qed.
+
+Lemma interp_triangle_congruence_trans : forall t u v,
+  interp_triangle_congruence point t u -> interp_triangle_congruence point u v ->
+  interp_triangle_congruence point t v.
+Proof.
+  intros [A B C] [D E F] [G H I] Htu Huv. unfold interp_triangle_congruence in *.
+  rewrite triangle_congruence_unfold in *.
+  eapply triangle_congruent_trans; eauto.
+Qed.
+
+(** Every triangle the search reaches is [t] or congruent to it under the
+    correspondence reached, and noncollinear. *)
+Lemma reach_correspondences_sound : forall decls premises facts t fuel nodes reached,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  (forall u, In u reached ->
+     (u = t \/ interp_triangle_congruence point t u) /\ triangle_well_formed point u) ->
+  forall u, In u (reach_correspondences decls premises facts fuel nodes reached) ->
+    (u = t \/ interp_triangle_congruence point t u) /\ triangle_well_formed point u.
+Proof.
+  intros decls premises facts t fuel. induction fuel as [|fuel IH];
+    intros nodes reached Hwf Hprem Hfacts Hinv; cbn; [exact Hinv|].
+  destruct (filter _ nodes) as [|w ws] eqn:Hfresh; [exact Hinv|].
+  apply IH; [exact Hwf|exact Hprem|exact Hfacts|].
+  intros u Hin. apply in_app_or in Hin. destruct Hin as [Hin|Hin]; [now apply Hinv|].
+  rewrite <- Hfresh in Hin. apply filter_In in Hin. destruct Hin as [_ Hu].
+  apply andb_true_iff in Hu. destruct Hu as [_ Hu].
+  apply existsb_exists in Hu. destruct Hu as [x [Hx Hxu]].
+  destruct (Hinv x Hx) as [Hxt Hwfx].
+  assert (Hcxu : interp_triangle_congruence point x u)
+    by (eapply correspondence_witnessed_sound; eauto).
+  assert (Hctu : interp_triangle_congruence point t u)
+    by (destruct Hxt as [->|Htx];
+        [exact Hcxu|eapply interp_triangle_congruence_trans; eauto]).
+  split; [now right|].
+  eapply congruence_well_formed; [exact Hwfx|exact Hcxu].
+Qed.
+
+Lemma chain_witnessed_sound : forall decls premises facts t u,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  triangle_well_formed point t ->
+  chain_witnessed decls premises facts t u = true ->
+  interp_triangle_congruence point t u.
+Proof.
+  intros decls premises facts t u Hwf Hprem Hfacts Ht H.
+  unfold chain_witnessed in H. apply orb_true_iff in H. destruct H as [H|H].
+  - eapply correspondence_witnessed_sound; eauto.
+  - apply existsb_exists in H. destruct H as [w [Hin Hwu]].
+    destruct (reach_correspondences_sound decls premises facts t
+                (List.length (congruence_nodes facts)) (congruence_nodes facts)
+                [t] Hwf Hprem Hfacts) with (u := w) as [Htw Hwfw];
+      [|exact Hin|].
+    { intros x [<-|[]]. split; [now left|exact Ht]. }
+    assert (Hcwu : interp_triangle_congruence point w u)
+      by (eapply correspondence_witnessed_sound; eauto).
+    destruct Htw as [->|Htw]; [exact Hcwu|].
+    eapply interp_triangle_congruence_trans; eauto.
+Qed.
+
+Lemma cpctc_rule_sound : forall decls premises facts i conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  cpctc_rule decls premises facts i conclusion = true -> Interp conclusion.
+Proof.
+  intros decls premises facts i conclusion Hwf Hprem Hfacts H.
+  unfold cpctc_rule in H.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  - apply andb_true_iff in H. destruct H as [Hdecl H].
+    apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht _].
+    apply existsb_exists in H. destruct H as [u' [_ H]].
+    apply andb_true_iff in H. destruct H as [Hw Hc].
+    apply (cpctc_sound t u' conclusion); [|exact Hc].
+    eapply chain_witnessed_sound; eauto.
+  - apply (cpctc_sound t t0 conclusion); [|exact H].
+    change (Interp (ConTriOrdered t t0)). eapply lookup_step_sound; eauto.
+Qed.
+
 Lemma schema6_sound : forall decls premises facts i1 i2 i3 i4 i5 i6 a b c d e f,
   declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -3142,15 +3562,24 @@ Lemma def_con_tri_sound : forall decls premises facts i1 i2 i3 i4 i5 i6
   Interp conclusion.
 Proof.
   intros decls premises facts i1 i2 i3 i4 i5 i6 conclusion Hwf Hprem Hall Hrule.
-  unfold def_con_tri in Hrule. destruct conclusion; try discriminate.
-  apply andb_true_iff in Hrule. destruct Hrule as [_ Hrule].
-  apply existsb_exists in Hrule. destruct Hrule as [c [Hin Hmatch]].
-  change (Interp (ConTri t t0)). apply (correspondences_congruent t t0 c Hin).
-  unfold def_con_tri_at in Hmatch.
-  apply (schema6_sound _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in Hmatch.
-  destruct (fst c) as [A B C]; destruct (snd c) as [D E F].
-  cbn in Hmatch |- *. unfold interp_triangle_congruence, triangle_congruence.
-  cbn. tauto.
+  assert (Hat : forall t u,
+    existsb (fun c => def_con_tri_at decls premises facts i1 i2 i3 i4 i5 i6
+                        (fst c) (snd c))
+            (correspondences t u) = true ->
+    interp_triangle_congruence point t u).
+  { intros t u H.
+    apply existsb_exists in H. destruct H as [c [Hin Hmatch]].
+    apply (correspondences_congruent t u c Hin).
+    unfold def_con_tri_at in Hmatch.
+    apply (schema6_sound _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in Hmatch.
+    destruct (fst c) as [A B C]; destruct (snd c) as [D E F].
+    cbn in Hmatch |- *. unfold interp_triangle_congruence, triangle_congruence.
+    cbn. tauto. }
+  unfold def_con_tri in Hrule. destruct conclusion; try discriminate;
+    apply andb_true_iff in Hrule; destruct Hrule as [_ Hrule].
+  - apply existsb_exists in Hrule. destruct Hrule as [u' [Hin Hmatch]].
+    exists u'. split; [exact Hin|exact (Hat _ _ Hmatch)].
+  - exact (Hat _ _ Hrule).
 Qed.
 
 Lemma def_isosceles_sound : forall decls facts i conclusion,
@@ -6083,31 +6512,15 @@ Proof.
         [destruct Hdeclared as [Hl Hr]; cbn; now apply conga_refl|].
       unfold reverse_angle in Hdeclared |- *. cbn in Hdeclared |- *.
       destruct Hdeclared as [Hl Hr]. now apply conga_pseudo_refl.
-  - destruct conclusion; try discriminate.
-    apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
-    apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
-    eapply six_correspondences_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact sas_schema_sound|exact Hschema].
-  - destruct conclusion; try discriminate.
-    apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
-    apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
-    eapply six_correspondences_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact sss_schema_sound|exact Hschema].
-  - destruct conclusion; try discriminate.
-    apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
-    apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
-    eapply six_correspondences_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact asa_schema_sound|exact Hschema].
-  - destruct conclusion; try discriminate.
-    apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
-    apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
-    eapply six_correspondences_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact aas_schema_sound|exact Hschema].
-  - destruct (lookup_step facts n) as [dependency|] eqn:Hlookup; try discriminate.
-    destruct dependency; try discriminate.
-    change (is_cpctc_fact t t0 conclusion = true) in Hvalid.
-    apply (cpctc_sound t t0 conclusion); [|exact Hvalid].
-    change (Interp (ConTri t t0)). eapply lookup_step_sound; eauto.
+  - eapply criterion_conclusion_sound;
+      [exact Hwf|exact Hprem|exact Hfacts|exact sas_schema_sound|exact Hvalid].
+  - eapply criterion_conclusion_sound;
+      [exact Hwf|exact Hprem|exact Hfacts|exact sss_schema_sound|exact Hvalid].
+  - eapply criterion_conclusion_sound;
+      [exact Hwf|exact Hprem|exact Hfacts|exact asa_schema_sound|exact Hvalid].
+  - eapply criterion_conclusion_sound;
+      [exact Hwf|exact Hprem|exact Hfacts|exact aas_schema_sound|exact Hvalid].
+  - eapply cpctc_rule_sound; eauto.
   - eapply con_seg_transitive_sound; eauto.
   - eapply con_ang_transitive_sound; eauto.
   - eapply con_tri_transitive_sound; eauto.
@@ -6117,11 +6530,8 @@ Proof.
   - eapply vert_ang_sound; eauto.
   - eapply def_ang_bisect_sound; eauto.
   - eapply ang_bisect_conv_sound; eauto.
-  - destruct conclusion; try discriminate.
-    apply andb_true_iff in Hvalid. destruct Hvalid as [Hdecl Hschema].
-    apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
-    eapply six_correspondences_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact Ht|exact rhl_schema_sound|exact Hschema].
+  - eapply criterion_conclusion_sound;
+      [exact Hwf|exact Hprem|exact Hfacts|exact rhl_schema_sound|exact Hvalid].
   - eapply midpt_conv_sound; eauto.
   - eapply third_angle_sound; eauto.
   - eapply def_con_tri_sound; eauto.

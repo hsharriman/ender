@@ -23,7 +23,10 @@ Record Arc := arc {
 Inductive Statement :=
 | ConSeg : Segment -> Segment -> Statement
 | ConAng : Angle -> Angle -> Statement
+(** [ConTri] is congruence under some correspondence of the vertices;
+    [ConTriOrdered] pairs them in the order written. *)
 | ConTri : Triangle -> Triangle -> Statement
+| ConTriOrdered : Triangle -> Triangle -> Statement
 | SimTri : Triangle -> Triangle -> Statement
 | RefSeg : Segment -> Segment -> Statement
 | RefAng : Angle -> Angle -> Statement
@@ -197,7 +200,8 @@ Definition statement_eqb (x y : Statement) : bool :=
       segment_eqb a c && segment_eqb b d
   | ConAng a b, ConAng c d | RefAng a b, RefAng c d =>
       angle_eqb a c && angle_eqb b d
-  | ConTri a b, ConTri c d | SimTri a b, SimTri c d =>
+  | ConTri a b, ConTri c d | ConTriOrdered a b, ConTriOrdered c d
+  | SimTri a b, SimTri c d =>
       triangle_eqb a c && triangle_eqb b d
   | RightAng a, RightAng b => angle_eqb a b
   | ConRight a b, ConRight c d => angle_eqb a c && angle_eqb b d

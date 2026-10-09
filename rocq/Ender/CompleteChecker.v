@@ -30,14 +30,17 @@ Definition project_arc (a : Audit.ArcName) : Arc :=
       a.(Audit.arc_first) a.(Audit.arc_second).
 
 (** Statements usable as premises by the currently implemented kernel.  A
-    public [con_tri] premise carries both triangles' noncollinearity together
-    with the three side congruences, which is exactly the SSS hypothesis, so
-    the kernel's stronger side-and-angle reading of [ConTri] is justified. *)
+    public [con_tri_ordered] premise carries both triangles' noncollinearity
+    together with the three side congruences, which is exactly the SSS
+    hypothesis, so the kernel's stronger side-and-angle reading of
+    [ConTriOrdered] is justified; [con_tri] is the same for some ordering. *)
 Definition project_premise_statement (s : Audit.PublicStatement) : option Statement :=
   match s with
   | Audit.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
   | Audit.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
   | Audit.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
+  | Audit.ConTriOrdered a b =>
+      Some (ConTriOrdered (project_triangle a) (project_triangle b))
   | Audit.SimTri a b => Some (SimTri (project_triangle a) (project_triangle b))
   | Audit.RefSeg a b => Some (RefSeg (project_segment a) (project_segment b))
   | Audit.RefAng a b => Some (RefAng (project_angle a) (project_angle b))
@@ -97,6 +100,8 @@ Definition project_goal_statement (s : Audit.PublicStatement) : option Statement
   | Audit.ConSeg a b => Some (ConSeg (project_segment a) (project_segment b))
   | Audit.ConAng a b => Some (ConAng (project_angle a) (project_angle b))
   | Audit.ConTri a b => Some (ConTri (project_triangle a) (project_triangle b))
+  | Audit.ConTriOrdered a b =>
+      Some (ConTriOrdered (project_triangle a) (project_triangle b))
   | Audit.Right a => Some (RightAng (project_angle a))
   | Audit.ConRight a b => Some (ConRight (project_angle a) (project_angle b))
   | Audit.Perp a b p => Some (PerpAt (project_segment a) (project_segment b) p)
@@ -235,7 +240,8 @@ Definition premise_statements (ps : list Premise) : list Statement :=
 Definition goal_declarations_valid (goal : Audit.PublicStatement)
     (decls : Declarations) : bool :=
   match goal with
-  | Audit.ConTri a b => triangle_declared decls (project_triangle a) &&
+  | Audit.ConTri a b | Audit.ConTriOrdered a b =>
+                     triangle_declared decls (project_triangle a) &&
                      triangle_declared decls (project_triangle b)
   | _ => true
   end.
@@ -329,7 +335,8 @@ Inductive ExpectedFact :=
 Definition statement_function (s : Statement) : string :=
   match s with
   | ConSeg _ _ => "con_seg" | ConAng _ _ => "con_ang"
-  | ConTri _ _ => "con_tri" | SimTri _ _ => "sim_tri"
+  | ConTri _ _ => "con_tri" | ConTriOrdered _ _ => "con_tri_ordered"
+  | SimTri _ _ => "sim_tri"
   | RefSeg _ _ => "ref_seg"
   | RefAng _ _ => "ref_ang" | RightAng _ => "right"
   | ConRight _ _ => "con_right" | PerpAt _ _ _ => "perp"
@@ -387,7 +394,8 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedSegment, ConSeg _ _ | ExpectedSegment, RefSeg _ _
   | ExpectedAngle, ConAng _ _ | ExpectedAngle, RefAng _ _
   | ExpectedAngle, ConRight _ _
-  | ExpectedTriangle, ConTri _ _ | ExpectedRight, RightAng _
+  | ExpectedTriangle, ConTri _ _ | ExpectedTriangle, ConTriOrdered _ _
+  | ExpectedRight, RightAng _
   | ExpectedPerpendicular, PerpAt _ _ _ | ExpectedMidpoint, MidptOf _ _
   | ExpectedAngleBisector, AngBisectOf _ _ | ExpectedConRight, ConRight _ _
   | ExpectedEquilateral, EquilateralTri _
@@ -624,6 +632,8 @@ Definition public_of_statement (s : Statement) : Audit.PublicStatement :=
   | ConSeg a b => Audit.ConSeg (unproject_segment a) (unproject_segment b)
   | ConAng a b => Audit.ConAng (unproject_angle a) (unproject_angle b)
   | ConTri a b => Audit.ConTri (unproject_triangle a) (unproject_triangle b)
+  | ConTriOrdered a b =>
+      Audit.ConTriOrdered (unproject_triangle a) (unproject_triangle b)
   | SimTri a b => Audit.SimTri (unproject_triangle a) (unproject_triangle b)
   | RefSeg a b => Audit.RefSeg (unproject_segment a) (unproject_segment b)
   | RefAng a b => Audit.RefAng (unproject_angle a) (unproject_angle b)
@@ -806,13 +816,15 @@ Fixpoint step_statuses (decls : Declarations) (premises : list Premise)
   match steps with
   | [] => statuses
   | current :: rest =>
+      (* Blocking comes first: a rule may need its cited step's facts to
+         judge the step at all, as [cpctc] does for an unordered [con_tri]. *)
       let status :=
-        if negb (rule_valid decls premises facts current.(step_reason)
-                   current.(step_conclusion))
-        then Audit.StepRejected
-        else if dependency_blocked statuses
-                  (reason_dependencies current.(step_reason))
+        if dependency_blocked statuses
+             (reason_dependencies current.(step_reason))
         then Audit.StepBlocked
+        else if negb (rule_valid decls premises facts current.(step_reason)
+                        current.(step_conclusion))
+        then Audit.StepRejected
         else Audit.StepAccepted in
       step_statuses decls premises (List.app facts [current.(step_conclusion)])
         rest (S number) (List.app statuses [(number, status)])
@@ -1166,19 +1178,35 @@ Proof.
       destruct Hin as [<-|Hin]; [exact Hd|now apply IH].
 Qed.
 
+(** The audited ordered congruence supplies noncollinearity and the three
+    corresponding sides, so SSS recovers the kernel's angle components. *)
+Lemma projected_ordered_congruence : forall a b,
+  Audit.TriangleCongruent point a b ->
+  triangle_congruence point (project_triangle a) (project_triangle b).
+Proof.
+  intros a b Hmeaning.
+  unfold Audit.TriangleCongruent, Audit.TriangleWellFormed, Audit.SegmentCongruent,
+    Audit.side_ab, Audit.side_bc, Audit.side_ca, Audit.seg_start, Audit.seg_end in Hmeaning.
+  cbn in Hmeaning.
+  destruct Hmeaning as [[_ [_ [_ Hncol]]] [_ [Hab [Hbc Hca]]]].
+  cbn. now apply ender_sss.
+Qed.
+
 Lemma projected_premise_meaning : forall public internal,
   project_premise_statement public = Some internal ->
   Audit.statementMeaning point public -> interp_statement point internal.
 Proof.
   destruct public; cbn; intros internal Hproject Hmeaning; try discriminate;
-    injection Hproject as <-; cbn in *; try exact Hmeaning; try tauto.
-  (* [con_tri]: the audited meaning supplies noncollinearity and the three
-     corresponding sides, so SSS recovers the kernel's angle components. *)
-  unfold Audit.TriangleCongruent, Audit.TriangleWellFormed, Audit.SegmentCongruent,
-    Audit.side_ab, Audit.side_bc, Audit.side_ca, Audit.seg_start, Audit.seg_end in Hmeaning.
-  cbn in Hmeaning.
-  destruct Hmeaning as [[_ [_ [_ Hncol]]] [_ [Hab [Hbc Hca]]]].
-  now apply ender_sss.
+    injection Hproject as <-; try (cbn in *; exact Hmeaning);
+    try (cbn in *; tauto).
+  - (* [con_tri]: the same, for the ordering the audited meaning names *)
+    destruct Hmeaning as [b' [Hin Hc]].
+    exists (project_triangle b'). split.
+    + destruct b as [x y z]. cbn in Hin.
+      destruct Hin as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]];
+        cbn; repeat (first [left; reflexivity | right]).
+    + now apply projected_ordered_congruence.
+  - now apply projected_ordered_congruence.
 Qed.
 
 Lemma projected_premises_meaning : forall publics internals premises,
@@ -1218,14 +1246,35 @@ Proof.
   destruct public; cbn; intros internal decls Hproject Hmeaning Hwf Hdecl;
     try discriminate;
     injection Hproject as <-; cbn in *; try exact Hmeaning.
-  apply andb_true_iff in Hdecl. destruct Hdecl as [Ha Hb].
-  pose proof (triangle_declared_sound point _ _ Hwf Ha) as Hwa.
-  pose proof (triangle_declared_sound point _ _ Hwf Hb) as Hwb.
-  apply noncol_well_formed in Hwa. apply noncol_well_formed in Hwb.
-  unfold triangle_congruence in Hmeaning. cbn in Hmeaning.
-  destruct Hmeaning as [Hab [Hbc [Hca Hangles]]].
-  unfold Audit.TriangleCongruent. cbn.
-  exact (conj Hwa (conj Hwb (conj Hab (conj Hbc Hca)))).
+  all: apply andb_true_iff in Hdecl; destruct Hdecl as [Ha Hb];
+    pose proof (triangle_declared_sound point _ _ Hwf Ha) as Hwa;
+    pose proof (triangle_declared_sound point _ _ Hwf Hb) as Hnb;
+    apply noncol_well_formed in Hwa.
+  - (* [con_tri]: the kernel names an ordering of the second triangle; its
+       noncollinearity is the declared triangle's, permuted. *)
+    destruct Hmeaning as [b' [Hin Hc]].
+    destruct b as [x y z]. cbn in Hin, Hnb.
+    destruct Hin as [<-|[<-|[<-|[<-|[<-|[<-|[]]]]]]];
+      [ exists (Audit.triangle_name x y z) | exists (Audit.triangle_name x z y)
+      | exists (Audit.triangle_name y x z) | exists (Audit.triangle_name y z x)
+      | exists (Audit.triangle_name z x y) | exists (Audit.triangle_name z y x) ];
+      (split; [cbn; repeat (first [left; reflexivity | right])|]);
+      unfold triangle_congruence in Hc; cbn in Hc;
+      destruct Hc as [Hab [Hbc [Hca _]]];
+      unfold Audit.TriangleCongruent; cbn;
+      refine (conj Hwa (conj _ (conj Hab (conj Hbc Hca))));
+      apply noncol_well_formed;
+      solve [ exact Hnb
+            | apply not_col_permutation_1; exact Hnb
+            | apply not_col_permutation_2; exact Hnb
+            | apply not_col_permutation_3; exact Hnb
+            | apply not_col_permutation_4; exact Hnb
+            | apply not_col_permutation_5; exact Hnb ].
+  - apply noncol_well_formed in Hnb.
+    unfold triangle_congruence in Hmeaning. cbn in Hmeaning.
+    destruct Hmeaning as [Hab [Hbc [Hca Hangles]]].
+    unfold Audit.TriangleCongruent. cbn.
+    exact (conj Hwa (conj Hnb (conj Hab (conj Hbc Hca)))).
 Qed.
 
 End Bridge.

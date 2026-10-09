@@ -39,7 +39,8 @@ Known limitations relevant to prioritization:
 - goal matching accepts the same unoriented spellings step-to-step matching
   does (`fact_eqb`): segments and angles up to reversal, symmetric pairs up
   to swap, and `ref_*` facts standing in for their `con_*` forms; `con_tri`
-  stays ordered-exact per the correspondence semantics;
+  matches with either triangle in any vertex order, since it names no
+  correspondence, while `con_tri_ordered` stays exact;
 - `QuadrilateralWellFormed` now includes `~ Col` on the first three vertices,
   which rules out the interleaved-collinear quadrilaterals that once made
   `pgram_opp_sides` *false* as audited (historical counterexample in

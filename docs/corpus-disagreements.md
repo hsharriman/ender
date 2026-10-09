@@ -17,11 +17,13 @@ checker that is always a parse failure. For the legacy checker it is either a
 parse failure (4 files) or a thrown exception during context construction
 (6 files); both are grouped as "no verdict" because neither yields an answer.
 
-Sixteen files have left this document since it was first written. Every rule
-that this section once listed as unwritten is now verified except the three
-whose fixtures no rule can accept, and the thirteen fixtures and three
-textbook proofs that were waiting on them are accepted. The counts below are
-current.
+Twenty-four files have left this document since it was first written. Every
+rule that this section once listed as unwritten is now verified except the
+three whose fixtures no rule can accept, and the thirteen fixtures and three
+textbook proofs that were waiting on them are accepted. Eight more left when
+`con_tri` stopped fixing a correspondence (see
+[below](#triangle-correspondence-no-longer-a-disagreement)). The counts below
+are current.
 
 Two invariants hold across the whole corpus and are worth stating up front:
 
@@ -40,19 +42,19 @@ Rows are the legacy checker, columns the verified one.
 |---|---|---|---|---|
 | **no verdict** | 4 | 3 | 3 | 10 |
 | **rejects** | 8 | 82 | 4 | 94 |
-| **accepts** | 3 | 20 | 141 | 164 |
-| **total** | 15 | 105 | 148 | 268 |
+| **accepts** | 3 | 12 | 149 | 164 |
+| **total** | 15 | 97 | 156 | 268 |
 
-**227 files agree** (the diagonal); **41 disagree**. 28 of the 41 are bundled
-fixtures and 13 are textbook proofs.
+**235 files agree** (the diagonal); **33 disagree**. 25 of the 33 are bundled
+fixtures and 8 are textbook proofs.
 
 The six off-diagonal cells are the six sections that follow. Reproduction
 instructions are in the [appendix](#appendix-reproducing-the-table).
 
-## Legacy accepts, verified rejects — 20 files
+## Legacy accepts, verified rejects — 12 files
 
-The largest cell by far. 8 of the 20 are refused for reasons no rule will fix,
-11 need a decision, and 1 is a bug in the legacy checker.
+The largest cell by far. 8 of the 12 are refused for reasons no rule will fix,
+3 need a decision, and 1 is a bug in the legacy checker.
 
 ### Reason with no rule, and none to be had — 8 files
 
@@ -100,33 +102,6 @@ the conclusion names, and a `pt:` line is presentation only. Adding one
 `[d_1] intersect_seg(AC, BD, M)` line to each fixture would place it, and the
 rules can then be written against it. This is the same defect that rejects
 `DS holt_s6-4_cio4_c1.txt`.
-
-### Triangle correspondence not established — 8 files
-
-`con_tri(t_ABC,t_DEF)` means the ordered correspondence `A-D`, `B-E`, `C-F`.
-These proofs conclude one correspondence from dependencies that establish a
-different one, then use the correct one at the next step.
-
-`examples/s2c2.txt` step 7 concludes `con_tri(t_ABD,t_BCD)` from an SAS argument
-establishing `A-C`, `B-B`, `D-D`. Step 8 then reads `con_seg` off the
-correspondence the argument actually proves, not the one step 7 stated.
-
-The legacy checker matched the two triangles up to independent permutation,
-which is exactly what makes `con_tri` unsound as an ordered claim: under that
-reading `con_tri` says only "these six parts pair up somehow", and CPCTC may
-then draw a conclusion the proof never justified. Widening the search to recover
-these proofs would give that back. Correspondence search already covers all six
-readings of a *conclusion*; what it will not do is permute the two triangles
-independently.
-
-- `examples/s1c3.txt`, `examples/s2c1.txt`, `examples/s2c2.txt`
-- `DS s1c3.txt`, `DS s2c1.txt`, `DS s2c2.txt` (the same three)
-- `DS holt_s4-3_cio4_c1.txt` — concludes `con_tri(t_JKN,t_MLN)` where SSS gives
-  `t_LMN`, the last two vertices transposed
-- `DS holt_s4-6_exer9_c1.txt` — concludes `con_tri(t_WXZ,t_YZX)` where the
-  argument gives `t_YXZ`
-
-**Decision:** fix the eight files, or accept that these stay rejected.
 
 ### Mislabeled `transversal` premise — 1 file
 
@@ -373,23 +348,37 @@ angle and its chord, where the audited form is
 blocked on the open arc question, so respelling alone will not accept them. The
 legacy checker throws on both.
 
+## Triangle correspondence: no longer a disagreement
+
+Eight `// pass` files conclude a `con_tri` whose vertex order is not the
+correspondence their own criterion establishes, then use the correct one for
+`cpctc`: `examples/s1c3.txt`, `examples/s2c1.txt`, `examples/s2c2.txt`, their
+three textbook copies, `DS holt_s4-3_cio4_c1.txt` and
+`DS holt_s4-6_exer9_c1.txt`. The legacy checker accepted them; the verified
+checker rejected them while `con_tri` meant the ordered correspondence.
+
+`con_tri` now means only that the triangles are congruent, under some
+correspondence, and `con_tri_ordered` carries the old meaning. `cpctc` on an
+unordered `con_tri` reads a correspondence off the facts already established —
+a criterion's three parts, or an ordered congruence — so it never draws a part
+the proof did not justify. All eight are accepted by both checkers now.
+
 ## Decisions in one list
 
 | # | Decision | Files | Whose defect |
 |---|---|---|---|
-| 1 | Fix the triangle correspondences, or accept the rejections | 8 | proof file |
-| 2 | Respell the mislabeled `transversal` premises | 6 (1 disagreement, 5 not) | proof file |
-| 3 | Give the audited language a `sim_seg`, or drop it from the catalog | 4 | the language |
-| 4 | Admit trailing step references in the header grammar, or strip them | 6 | proof file, or the grammar |
-| 5 | Declare `q_BCAD`, or fix the file to say `q_ABCD` | 1 | proof file |
-| 6 | Declare the nondegeneracy in `holt_s2-7_cio3`, or relax the rule | 1 | arguably the checker |
-| 7 | Confirm unused steps and duplicate conclusions are non-fatal | 1 | policy |
-| 8 | Respell `DS s1c1_wp1.txt`'s six-argument `transversal` | 1 | proof file |
-| 9 | Fix the markers on the two truncated textbook proofs | 2 | proof file |
-| 10 | Retire or respell `reg1`/`reg1v2` and the two `inscribed_angle` files | 4 | proof file |
-| 11 | Place the crossing point the diagonal rules conclude about, with an `intersect_seg` premise per fixture | 3 | proof file |
-| 12 | Give `radius_chord_bisect_conv` a conclusion its premises entail, or retire it | 2 | the language |
-| 13 | Give `linear_pair_conv` the adjacency it needs, or retire it | 1 | the language |
+| 1 | Respell the mislabeled `transversal` premises | 6 (1 disagreement, 5 not) | proof file |
+| 2 | Give the audited language a `sim_seg`, or drop it from the catalog | 4 | the language |
+| 3 | Admit trailing step references in the header grammar, or strip them | 6 | proof file, or the grammar |
+| 4 | Declare `q_BCAD`, or fix the file to say `q_ABCD` | 1 | proof file |
+| 5 | Declare the nondegeneracy in `holt_s2-7_cio3`, or relax the rule | 1 | arguably the checker |
+| 6 | Confirm unused steps and duplicate conclusions are non-fatal | 1 | policy |
+| 7 | Respell `DS s1c1_wp1.txt`'s six-argument `transversal` | 1 | proof file |
+| 8 | Fix the markers on the two truncated textbook proofs | 2 | proof file |
+| 9 | Retire or respell `reg1`/`reg1v2` and the two `inscribed_angle` files | 4 | proof file |
+| 10 | Place the crossing point the diagonal rules conclude about, with an `intersect_seg` premise per fixture | 3 | proof file |
+| 11 | Give `radius_chord_bisect_conv` a conclusion its premises entail, or retire it | 2 | the language |
+| 12 | Give `linear_pair_conv` the adjacency it needs, or retire it | 1 | the language |
 
 Everything not in that list is a file both checkers already agree about. No
 corpus file is waiting on a reason any more: every rule the corpus exercises

@@ -303,6 +303,7 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
   (try_call "con_ang" text (parse_angles ConAng)
   (try_call "ref_ang" text (parse_angles RefAng)
   (try_call "con_tri" text (parse_triangles ConTri)
+  (try_call "con_tri_ordered" text (parse_triangles ConTriOrdered)
   (try_call "con_right" text (parse_angles ConRight)
   (try_call "right" text parse_right
   (try_call "perp" text parse_perp
@@ -391,7 +392,7 @@ Definition parse_statement_chars (raw : chars) : option Statement :=
          end
      | _ => None
      end)
-    None)))))))))))))))))))))))))))))))))))).
+    None))))))))))))))))))))))))))))))))))))).
 
 Definition digit_value (c : ascii) : option nat :=
   if Ascii.eqb c "0"%char then Some 0 else

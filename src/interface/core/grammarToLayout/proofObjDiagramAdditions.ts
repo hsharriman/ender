@@ -135,7 +135,10 @@ export const applyStmtAdditions =
       );
       return;
     }
-    if (stmt.function === "con_tri" && stmt.arguments.length === 2) {
+    if (
+      (stmt.function === "con_tri" || stmt.function === "con_tri_ordered") &&
+      stmt.arguments.length === 2
+    ) {
       CongruentTriangles.congruentLabel({ ctx, frame, mode }, [
         stmt.arguments[0].v,
         stmt.arguments[1].v,

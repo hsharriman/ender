@@ -85,6 +85,7 @@ Inductive PublicStatement :=
 | ConSeg (a b : SegmentName)
 | ConAng (a b : AngleName)
 | ConTri (a b : TriangleName)
+| ConTriOrdered (a b : TriangleName)
 | ConRight (a b : AngleName)
 | Para (a b : SegmentName)
 | Isosceles (t : TriangleName)
@@ -206,6 +207,17 @@ Definition TriangleCongruent (a b : TriangleName) : Prop :=
   SegmentCongruent (side_ab a) (side_ab b) /\
   SegmentCongruent (side_bc a) (side_bc b) /\
   SegmentCongruent (side_ca a) (side_ca b).
+(** [TriangleCongruent] pairs the vertices in the order they are written.
+    Two triangles are congruent outright when some ordering of the second
+    pairs with the first. *)
+Definition triangleOrderings (t : TriangleName) : list TriangleName :=
+  let a := t.(triangle_first) in
+  let b := t.(triangle_second) in
+  let c := t.(triangle_third) in
+  [triangle_name a b c; triangle_name a c b; triangle_name b a c;
+   triangle_name b c a; triangle_name c a b; triangle_name c b a].
+Definition TrianglesCongruent (a b : TriangleName) : Prop :=
+  exists b', In b' (triangleOrderings b) /\ TriangleCongruent a b'.
 Definition TriangleSimilar (a b : TriangleName) : Prop :=
   TriangleWellFormed a /\ TriangleWellFormed b /\
   AngleCongruent (angle_a a) (angle_a b) /\
@@ -432,7 +444,11 @@ Definition statementMeaning (s : PublicStatement) : Prop :=
   | Right a => AngleWellFormed a /\ RightAngle a
   | ConSeg a b => SegmentCongruent a b
   | ConAng a b => AngleCongruent a b
-  | ConTri a b => TriangleCongruent a b
+  (* [con_tri] claims only that the triangles are congruent, so a proof may
+     write either triangle in any order; [con_tri_ordered] fixes the
+     correspondence, which is what [cpctc] needs from a premise. *)
+  | ConTri a b => TrianglesCongruent a b
+  | ConTriOrdered a b => TriangleCongruent a b
   (* Deliberately weaker than [Right]: [con_right] follows from bare
      perpendicularity, which need not make the named rays nondegenerate.
      Converting it to [ConAng] separately requires declared objects. *)
@@ -553,6 +569,7 @@ Definition statementText (s : PublicStatement) : string :=
   | ConSeg a b => call "con_seg" [segmentText a; segmentText b]
   | ConAng a b => call "con_ang" [angleText a; angleText b]
   | ConTri a b => call "con_tri" [triangleText a; triangleText b]
+  | ConTriOrdered a b => call "con_tri_ordered" [triangleText a; triangleText b]
   | ConRight a b => call "con_right" [angleText a; angleText b]
   | Para a b => call "para" [segmentText a; segmentText b]
   | Isosceles t => call "isosceles" [triangleText t]
@@ -600,7 +617,8 @@ Definition statementPoints (s : PublicStatement) : list PointName :=
    | ConSeg a b | Para a b | RefSeg a b => segmentPoints a ++ segmentPoints b
    | ConAng a b | ConRight a b | Supplementary a b | Complementary a b
    | LinearPair a b | RefAng a b => anglePoints a ++ anglePoints b
-   | ConTri a b | SimTri a b => trianglePoints a ++ trianglePoints b
+   | ConTri a b | ConTriOrdered a b | SimTri a b =>
+       trianglePoints a ++ trianglePoints b
    | Isosceles t | Equilateral t | Equiangular t => trianglePoints t
    | Perp a b p | PerpBisector a b p | SegBisect a b p =>
        segmentPoints a ++ segmentPoints b ++ [p]

@@ -8,7 +8,8 @@ kernel. It is the sole executable checker; unsupported reasons fail closed.
 
 The slice parses Ender source text and supports:
 
-- statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`, `right`,
+- statements `con_seg`, `ref_seg`, `con_ang`, `ref_ang`, `con_tri`,
+  `con_tri_ordered`, `right`,
   `con_right`, `perp`, `midpt`, `intersect_seg`, `ang_bisect`, `on_line`,
   `isosceles`, `equilateral`, `equiangular`, `supplementary`, `para`,
   `parallelogram`, `rectangle`, `rhombus`, `isos_trapezoid`,
@@ -83,12 +84,20 @@ point along the diagonal only when a `seg:` line says that point is not the
 corner itself. `Declarations` in `Syntax.v` bundles the declaration kinds
 because no rule wants one without the others.
 
-Triangle congruence is ordered: `con_tri(t_ABC,t_DEF)` means the correspondence
-`A-D`, `B-E`, `C-F`. It comprises the three corresponding side congruences and
-the three corresponding angle congruences. SSS, SAS, ASA, and AAS search all
-six readings of that correspondence — its three cyclic rotations, each in both
+Triangle congruence comes in two forms. `con_tri_ordered(t_ABC,t_DEF)` means
+the correspondence `A-D`, `B-E`, `C-F`: the three corresponding side
+congruences and the three corresponding angle congruences. `con_tri(t_ABC,t_DEF)`
+means only that the triangles are congruent, under some correspondence, so
+either triangle may be written in any order. SSS, SAS, ASA, AAS, and HL search
+all six readings of a correspondence — its three cyclic rotations, each in both
 orientations — since a criterion's dependency order, not the conclusion's
-spelling, fixes which vertex plays which role. Segment and angle notation are
+spelling, fixes which vertex plays which role; for `con_tri` they also search
+every ordering of the second triangle. `cpctc` reads parts off an ordered
+congruence directly. An unordered one carries no correspondence, so `cpctc`
+looks for one the established facts witness — a criterion's three parts, or an
+ordered congruence, or a chain of such witnesses through the triangles other
+`con_tri` facts name, which is how a `con_tri_transitive` result gets one — and
+draws only parts of that. Segment and angle notation are
 both unoriented: `AB`/`BA` and `a_XYZ`/`a_ZYX` name the same object, and a
 congruence may be written with its two sides exchanged. Every declared triangle
 carries the semantic side condition that its vertices are noncollinear, which
