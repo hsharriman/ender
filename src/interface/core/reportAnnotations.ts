@@ -1,5 +1,7 @@
+import { ParseDiagramStmt, ProofObj } from "checker/types/checkerTypes";
 import {
   VerifiedCheckReport,
+  VerifiedIssue,
   VerifiedStepReport,
 } from "checker/verified/presentationTypes";
 
@@ -56,6 +58,56 @@ export function reportFindings(report: VerifiedCheckReport): string[] {
     );
   }
   return findings;
+}
+
+/** Issue codes whose content `reportFindings` already states. */
+const SUMMARIZED_ISSUES = new Set([
+  "goal_not_reached",
+  "unused_step",
+  "cycle",
+  "duplicate_conclusion",
+  "upstream_dep_error",
+]);
+
+/** The issues `reportFindings` does not already state, one line each. */
+export function otherIssues(report: VerifiedCheckReport): string[] {
+  return [...report.issues, ...report.errors]
+    .filter((issue) => !SUMMARIZED_ISSUES.has(issue.code))
+    .map(issueText);
+}
+
+function issueText(issue: VerifiedIssue): string {
+  return issue.details === undefined
+    ? issue.code
+    : `${issue.code}: ${JSON.stringify(issue.details)}`;
+}
+
+/**
+ * Give each proof step the diagram premises the checker says it consulted,
+ * which the layout highlights.  The report names a premise by its call text,
+ * as the presentation spells it.
+ */
+export function attachDiagramDependencies(
+  proof: ProofObj,
+  report: VerifiedCheckReport,
+): void {
+  const premises = new Map(
+    (report.presentation?.diagramPremises ?? []).map(({ call }, i) => [
+      `${call.name}(${call.arguments.join(",")})`,
+      proof.premises.diagramStatements[i],
+    ]),
+  );
+  const steps = new Map(
+    report.steps.map((step) => [String(step.number), step] as const),
+  );
+  for (const step of proof.steps) {
+    if (step.type !== "proof" || !step.stepNumber) continue;
+    const deps = steps
+      .get(step.stepNumber)
+      ?.diagramDependencies.map((call) => premises.get(call))
+      .filter((premise): premise is ParseDiagramStmt => premise !== undefined);
+    if (deps?.length) step.diagramDeps = deps;
+  }
 }
 
 function plural(items: unknown[]): string {

@@ -8,7 +8,9 @@ import {
 } from "../verified/nodeWasmLoader";
 import { presentationContent } from "../../interface/core/grammarToLayout/presentationContent";
 import {
+  attachDiagramDependencies,
   buildAnnotatedLines,
+  otherIssues,
   reportFindings,
   summarizeReport,
 } from "../../interface/core/reportAnnotations";
@@ -395,6 +397,49 @@ steps:
       "Goal: step 4 states the goal but was not accepted",
       "Rejected step: 4",
     ]);
+  });
+
+  test("lists each issue the findings do not already state", async () => {
+    const rejected = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8"),
+    );
+    expect(otherIssues(rejected).map((issue) => issue.split(":")[0])).toEqual([
+      "reason_dep_type_mismatch",
+    ]);
+  });
+
+  test("hands the layout the diagram premise a step consulted", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/s1c1.txt"), "utf8"),
+    );
+    const proof = presentationToProofObj(report.presentation!);
+    attachDiagramDependencies(proof, report);
+    const deps = proof.steps
+      .filter((step) => step.diagramDeps)
+      .map((step) => [
+        step.stepNumber,
+        step.diagramDeps!.map((dep) => dep.stepNumber),
+      ]);
+    expect(deps).toEqual([
+      ["3", ["d_1"]],
+      ["6", ["d_2"]],
+    ]);
+  });
+
+  test("draws the lines a premise implies", async () => {
+    const drawn = async (file: string) => {
+      const presentation = await parsePresentationNode(
+        readFileSync(join(PROOFS_DIR, file), "utf8"),
+      );
+      const ctx = presentationContent(presentationToProofObj(presentation));
+      return ctx.ctx.segments.map((segment) => segment.label);
+    };
+    // The whole transversal, though only the stubs past E and F are named.
+    expect(await drawn("lines_angles/altext_correct.txt")).toContain("TR");
+    // An inscribed angle's sides are chords of the circle.
+    expect(await drawn("circles/inscribed_semi_correct.txt")).toEqual(
+      expect.arrayContaining(["BR", "RD"]),
+    );
   });
 
   test("marks the failed step and only the failed step", async () => {

@@ -1,16 +1,15 @@
 import { ProofObj } from "checker/types/checkerTypes";
 import { presentationToProofObj } from "checker/verified/presentationAdapter";
 import { VerifiedStepReport } from "checker/verified/presentationTypes";
-import {
-  checkVerifiedReport,
-  parsePresentation,
-} from "checker/verified/wasmLoader";
+import { checkVerifiedReport } from "checker/verified/wasmLoader";
 import { ProofContent } from "geometry-object";
 import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
 import {
+  attachDiagramDependencies,
   buildAnnotatedLines,
+  otherIssues,
   reportFindings,
   summarizeReport,
 } from "interface/core/reportAnnotations";
@@ -99,6 +98,7 @@ type ProofObjHarnessState = {
   lastGoodCtx: ProofContent | null;
   parseVersion: number;
   statusMessage: string;
+  accepted: boolean;
   incorrectSteps: Set<string>;
   proofWideIssues: string[];
   unacceptedSteps: Map<string, VerifiedStepReport>;
@@ -130,6 +130,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       lastGoodCtx: null,
       parseVersion: 0,
       statusMessage: "Loading proof...",
+      accepted: false,
       incorrectSteps: new Set(),
       proofWideIssues: [],
       unacceptedSteps: new Map(),
@@ -186,19 +187,27 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.proofParseTimeoutId = window.setTimeout(async () => {
       this.proofParseTimeoutId = null;
       try {
-        const [presentation, report] = await Promise.all([
-          parsePresentation(this.state.proofText),
-          checkVerifiedReport(this.state.proofText),
-        ]);
+        const report = await checkVerifiedReport(this.state.proofText);
         if (generation !== this.proofParseGeneration) return;
-        const proof = presentationToProofObj(presentation);
         const nextProofIssues = [
           ...reportFindings(report),
-          ...[...report.issues, ...report.errors].map(
-            (issue) =>
-              `${issue.code}${issue.details === undefined ? "" : `: ${JSON.stringify(issue.details)}`}`,
-          ),
+          ...otherIssues(report),
         ];
+        if (!report.presentation) {
+          // Keep drawing the last proof that parsed; the report says why
+          // this one did not.
+          this.setState({
+            statusMessage: summarizeReport(report),
+            accepted: false,
+            proofWideIssues: nextProofIssues,
+            unacceptedSteps: new Map(),
+            incorrectSteps: new Set(),
+            proofParseSucceeded: false,
+          });
+          return;
+        }
+        const proof = presentationToProofObj(report.presentation);
+        attachDiagramDependencies(proof, report);
         // Only a rejected step is the reader's problem; a blocked one is
         // waiting on the step above it, and marking it wrong would send them
         // to the wrong line.
@@ -222,6 +231,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           unacceptedSteps: unaccepted,
           proofWideIssues: nextProofIssues,
           statusMessage: summarizeReport(report),
+          accepted: report.verdict === "accepted",
           lastGoodProof: proof,
           lastGoodCtx: ctx,
           incorrectSteps: rejected,
@@ -229,8 +239,10 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           parseVersion: prev.parseVersion + 1,
         }));
       } catch (err) {
+        if (generation !== this.proofParseGeneration) return;
         this.setState({
           statusMessage: err instanceof Error ? err.message : String(err),
+          accepted: false,
           proofWideIssues: [],
           unacceptedSteps: new Map(),
           incorrectSteps: new Set(),
@@ -322,6 +334,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       proofText,
       parseVersion,
       statusMessage,
+      accepted,
       proofWideIssues,
       unacceptedSteps,
       hoverTooltip,
@@ -486,9 +499,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             </div>
             <div
               className={`mt-2 text-xs ${
-                statusMessage === "Proof parsed successfully."
-                  ? "text-green-700"
-                  : "text-red-600"
+                accepted ? "text-green-700" : "text-red-600"
               }`}
             >
               {statusMessage}
