@@ -311,6 +311,13 @@
                     "4"
                   ]
                 }
+              },
+              {
+                "type": 4,
+                "code": "goal_not_reached",
+                "details": {
+                  "message": "step 4 states the goal but was not accepted"
+                }
               }
             ]
           }
