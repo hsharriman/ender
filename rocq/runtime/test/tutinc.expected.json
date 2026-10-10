@@ -1,0 +1,29 @@
+{
+  "isCorrect": false,
+  "issues": [
+    {
+      "type": 12,
+      "code": "reason_dep_type_mismatch",
+      "details": {
+        "reason": "sss",
+        "index": 1,
+        "ref": "2",
+        "expectedType": "con_seg",
+        "allowedTypes": [
+          "ref_seg"
+        ],
+        "receivedType": "con_ang",
+        "steps": [
+          "4"
+        ]
+      }
+    },
+    {
+      "type": 4,
+      "code": "goal_not_reached",
+      "details": {
+        "message": "step 4 states the goal but was not accepted"
+      }
+    }
+  ]
+}

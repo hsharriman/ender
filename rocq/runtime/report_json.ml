@@ -28,8 +28,7 @@ let output_json is_correct field issues =
   Format.pp_print_flush formatter ();
   Buffer.contents buffer
 
-let checker_output source =
-  let report = EnderChecker.CertifiedChecker.check source in
+let checker_output_of_report report =
   match report.EnderChecker.report_verdict with
   | EnderChecker.Accepted ->
       output_json true "issues" report.EnderChecker.report_issues
@@ -37,6 +36,9 @@ let checker_output source =
       output_json false "issues" report.EnderChecker.report_issues
   | EnderChecker.FailedToParseProblem ->
       output_json false "errors" report.EnderChecker.report_errors
+
+let checker_output source =
+  checker_output_of_report (EnderChecker.CertifiedChecker.check source)
 
 let surface_call_json call =
   `Assoc

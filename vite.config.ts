@@ -46,8 +46,7 @@ const verifiedCheckerAssets = (): Plugin => {
             " or point ENDER_CHECKER_WASM_DIR at one",
         );
       }
-      for (const entry of files) {
-        const relative = String(entry);
+      for (const relative of files) {
         this.emitFile({
           type: "asset",
           fileName: `ender-checker-wasm/${relative}`,

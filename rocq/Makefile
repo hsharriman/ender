@@ -20,7 +20,7 @@ EXTRACTED := extracted
 EXTRACT_HERE := yes
 endif
 
-.PHONY: all proofs test extract native wasm clean
+.PHONY: all proofs test extract native wasm check clean
 
 # A recipe that fails partway must not leave its target looking up to date:
 # `Tests.vo` is written before the axiom check below can reject it.
@@ -118,24 +118,19 @@ $(NATIVE): $(EXTRACTED)/EnderChecker.ml runtime/main.ml runtime/report_json.ml
 	    EnderChecker.cmx report_json.cmx main.ml
 	cp $(BUILD)/native/ender-checker $@
 
-# `ender-checker.js` is the command-line equivalent of the native binary;
 # `ender-checker-api.js` installs the callable entry points on the global
-# object for the browser and for Node.  wasm_of_ocaml writes each one's runtime
-# assets into a sibling `.assets` directory, which has to travel with it.
-$(WASMDIR)/ender-checker-api.js: $(EXTRACTED)/EnderChecker.ml runtime/main.ml \
+# object for the browser and for Node.  wasm_of_ocaml writes its runtime assets
+# into a sibling `.assets` directory, which has to travel with it.
+$(WASMDIR)/ender-checker-api.js: $(EXTRACTED)/EnderChecker.ml \
     runtime/report_json.ml runtime/wasm_api.ml
 	rm -rf $(BUILD)/wasm-obj $(WASMDIR)
 	mkdir -p $(BUILD)/wasm-obj $(WASMDIR)
 	cp $(EXTRACTED)/EnderChecker.ml $(EXTRACTED)/EnderChecker.mli \
-	  runtime/main.ml runtime/report_json.ml runtime/wasm_api.ml \
-	  $(BUILD)/wasm-obj/
+	  runtime/report_json.ml runtime/wasm_api.ml $(BUILD)/wasm-obj/
 	cd $(BUILD)/wasm-obj && \
 	  ocamlfind ocamlc -package yojson -c EnderChecker.mli && \
 	  ocamlfind ocamlc -package yojson -c EnderChecker.ml && \
 	  ocamlfind ocamlc -package yojson -c report_json.ml && \
-	  ocamlfind ocamlc -package yojson -linkpkg -o ender-checker.byte \
-	    EnderChecker.cmo report_json.cmo main.ml && \
-	  wasm_of_ocaml ender-checker.byte -o ender-checker.js && \
 	  ocamlfind ocamlc -package yojson,js_of_ocaml -c wasm_api.ml && \
 	  ocamlfind ocamlc -package yojson,js_of_ocaml -linkpkg \
 	    -o ender-checker-api.byte \
@@ -147,9 +142,12 @@ $(WASMDIR)/ender-checker-api.js: $(EXTRACTED)/EnderChecker.ml runtime/main.ml \
 	grep -q 'require\.main\.filename' $(BUILD)/wasm-obj/ender-checker-api.js
 	sed 's/require\.main\.filename/__filename/g' \
 	  $(BUILD)/wasm-obj/ender-checker-api.js > $(WASMDIR)/ender-checker-api.js
-	cp $(BUILD)/wasm-obj/ender-checker.js $(WASMDIR)/
-	cp -r $(BUILD)/wasm-obj/ender-checker.assets $(WASMDIR)/
 	cp -r $(BUILD)/wasm-obj/ender-checker-api.assets $(WASMDIR)/
+
+# Run both runtimes against the repository's proof files; needs `node` and
+# `jq`.  `nix flake check` runs the same script against the Nix-built ones.
+check: $(NATIVE) $(WASMDIR)/ender-checker-api.js
+	runtime/test/integration.sh $(NATIVE) $(WASMDIR) ../src/checker/proofs
 
 clean:
 	find Ender -type f \( -name '*.vo' -o -name '*.vos' -o -name '*.vok' -o -name '*.glob' -o -name '*.aux' \) -delete

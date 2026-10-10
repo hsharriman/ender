@@ -1,18 +1,12 @@
 {
-  description = "Ender verified Rocq checker vertical slice";
+  description = "Ender: a verified geometry proof checker and its web interface";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     geocoq = {
-      # Upstream's Rocq 9 port, merged 2025-11-17 and reverted the next day
-      # (PRs 52 and 53) with no stated reason -- most likely because its
-      # `intuition` and `Unshelve` fixes narrow GeoCoq's declared `coq >= 8.10`
-      # support, which it has no CI to check.  Pinned here rather than tracking
-      # master because master does not build on Rocq 9 at all: it fails at
-      # `Coinc/Utils/arity.v` line 1, since Rocq 9 split out the standard
-      # library and master still writes `Require Import Arith`.  The port
-      # targets 9.0; the layers Ender uses build unchanged on 9.1 as well.
+      # Upstream's Rocq 9 port (GeoCoq PR 52, reverted in PR 53).  Master
+      # does not build on Rocq 9, which split out the standard library.
       url = "github:GeoCoq/GeoCoq/1b1e7ad51d9139b6c98cde48a4516b78546cae9d";
       flake = false;
     };
@@ -22,16 +16,20 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        # `rocqPackages_9_1.rocq-core` ships only `rocq` and `rocqchk`, but
-        # GeoCoq's build script calls `coq_makefile` and `coqdep`, which live in
-        # the `coq_9_1` compatibility wrapper around it.  Same compiler either
-        # way, so the `.vo` files stay interchangeable.
-        rocq = pkgs.coq_9_1;
+        inherit (pkgs) lib;
+        version = (lib.importJSON ./package.json).version;
+        rocqPackages = pkgs.rocqPackages_9_1;
+        rocq = rocqPackages.rocq-core;
+        # GeoCoq's build script calls `coq_makefile` and `coqdep`, which only
+        # the `coq_9_1` compatibility wrapper around the same compiler ships.
+        # Its setup hook sets the deprecated `COQPATH`, so it is used for
+        # GeoCoq alone; `rocq-core`'s sets `ROCQPATH` from `buildInputs`.
+        coq = pkgs.coq_9_1;
         # Rocq 9 split the standard library out of the compiler, so every
         # derivation that compiles a `.v` file needs it explicitly.
-        stdlib = pkgs.rocqPackages_9_1.stdlib;
+        stdlib = rocqPackages.stdlib;
         # Rocq 9 still installs to `lib/coq`, whatever the tools are called.
-        rocqLib = "lib/coq/${rocq.coq-version}/user-contrib";
+        rocqLib = "lib/coq/${coq.coq-version}/user-contrib";
         # GeoCoq's algebraic model construction is written in MathComp, so the
         # non-vacuity witness needs MathComp on the load path.  MathComp 2.5
         # splits itself across one package per layer and none of them
@@ -39,7 +37,7 @@
         # touches is named here rather than pulled in through `mathcomp`, which
         # ships only `mathcomp/all`.  `mathcomp-real-closed` supplies
         # `realalg`, the concrete real closed field the model is built over.
-        mathcomp = with pkgs.rocqPackages_9_1; [
+        mathcomp = with rocqPackages; [
           mathcomp-boot mathcomp-order mathcomp-fingroup mathcomp-algebra
           mathcomp-solvable mathcomp-field mathcomp-character
           mathcomp-bigenough mathcomp-finmap mathcomp-real-closed
@@ -52,7 +50,7 @@
         # findlib setup hook refuses to build such a shell at all.  Taking the
         # set from `rocq` rather than naming a version keeps the two in step on
         # their own.
-        ocamlPackages = rocq.ocamlPackages;
+        ocamlPackages = coq.ocamlPackages;
         # One Node for the web package and the dev shell, so a build that works
         # in one works in the other.
         nodejs = pkgs.nodejs_24;
@@ -63,10 +61,10 @@
             version = geocoq.shortRev or "unstable";
             src = geocoq;
             strictDeps = true;
-            nativeBuildInputs = [ rocq pkgs.gnumake stdlib ] ++ dependencies;
+            nativeBuildInputs = [ coq pkgs.gnumake stdlib ] ++ dependencies;
             buildInputs = [ stdlib ] ++ dependencies;
             inherit patches;
-            ROCQPATH = pkgs.lib.concatStringsSep ":"
+            ROCQPATH = lib.concatStringsSep ":"
               (map (part: "${part}/${rocqLib}") ([ stdlib ] ++ dependencies));
             configurePhase = ''
               runHook preConfigure
@@ -94,8 +92,7 @@
           pname = "geocoq-axioms";
           configure = "configure-axioms.sh";
           dependencies = [ geocoqCoinc ];
-          # This historical example lives under Axioms but imports Main, so it
-          # cannot be part of the foundational Axioms layer used by Ender.
+          # One example under Axioms imports Main, which builds after it.
           patches = [ ./nix/geocoq-axioms-layering.patch ];
         };
         geocoqMain = mkGeoCoqPart {
@@ -106,9 +103,8 @@
 
         # `Algebraic/POF_to_Tarski.v` builds a Euclidean plane over any real
         # closed field, which is what makes `checker_sound` non-vacuous.
-        # Upstream wrote it against MathComp 2.4 and it does not compile
-        # against the 2.5 this Nixpkgs ships; the patch carries the three fixes
-        # and trims the layer to the two files the model needs.
+        # Upstream wrote it against MathComp 2.4; the patch ports the two files
+        # the model needs to the 2.5 this Nixpkgs ships and builds only those.
         geocoqAlgebraic = mkGeoCoqPart {
           pname = "geocoq-algebraic";
           configure = "configure-algebraic.sh";
@@ -116,26 +112,22 @@
           patches = [ ./nix/geocoq-algebraic-mathcomp25.patch ];
         };
 
+        # Everything the Ender development loads.  As `buildInputs` they reach
+        # `ROCQPATH` through `rocq`'s setup hook and, for the `rocq-elpi`
+        # plugin Hierarchy Builder loads, `OCAMLPATH` through findlib's.
+        rocqLibraries = [
+          stdlib geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
+        ] ++ mathcomp;
+
         verifiedProofs = pkgs.stdenvNoCC.mkDerivation {
-          pname = "ender-verified-proofs";
-          version = "0.1.0";
+          pname = "ender-proofs";
+          inherit version;
           src = ./rocq;
           strictDeps = true;
-          nativeBuildInputs = [
-            rocq pkgs.gnumake stdlib geocoqCoinc geocoqAxioms geocoqMain
-            geocoqAlgebraic
-          ] ++ mathcomp;
-          # Rocq-elpi is an OCaml plugin, and `CertifiedAPI.v` loads it through
-          # Hierarchy Builder.  Its findlib dependencies reach `OCAMLPATH` from
-          # `buildInputs`, so naming MathComp only as a native input would put
-          # the `.vo` files on the load path but leave the plugin unloadable.
-          buildInputs = [ stdlib ] ++ mathcomp;
-          ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") ([
-            stdlib geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
-          ] ++ mathcomp));
-          # `make test` kernel-checks the development and fails if any proof has
-          # come to rest on an axiom -- including the non-vacuity witness, which
-          # `CertifiedAPI.v` now discharges as part of the audited contract.
+          nativeBuildInputs = [ rocq ocamlPackages.findlib pkgs.gnumake ];
+          buildInputs = rocqLibraries;
+          # `make test` kernel-checks the development and fails if any proof,
+          # or the non-vacuity witness, rests on an axiom.
           buildPhase = ''
             runHook preBuild
             make -j$NIX_BUILD_CORES test extract
@@ -158,7 +150,7 @@
         # from drifting away from what the dev shell produces.
         nativeChecker = pkgs.stdenvNoCC.mkDerivation {
           pname = "ender-checker";
-          version = "0.1.0";
+          inherit version;
           src = ./rocq;
           strictDeps = true;
           nativeBuildInputs = [
@@ -176,11 +168,12 @@
             cp _build/bin/ender-checker "$out/bin/"
             runHook postInstall
           '';
+          meta.mainProgram = "ender-checker";
         };
 
         wasmChecker = pkgs.stdenvNoCC.mkDerivation {
           pname = "ender-checker-wasm";
-          version = "0.1.0";
+          inherit version;
           src = ./rocq;
           strictDeps = true;
           nativeBuildInputs = [
@@ -210,18 +203,18 @@
         # Passing the two files rather than `npmRoot = ./.` keeps the whole
         # repository out of this derivation's inputs.
         npmSources = pkgs.importNpmLock {
-          package = pkgs.lib.importJSON ./package.json;
-          packageLock = pkgs.lib.importJSON ./package-lock.json;
+          package = lib.importJSON ./package.json;
+          packageLock = lib.importJSON ./package-lock.json;
         };
 
         webApp = pkgs.buildNpmPackage {
           pname = "ender-web";
-          version = "0.1.0";
+          inherit version;
           # Only what `vite build` reads, so that editing a proof script or the
           # Rocq sources does not invalidate this.
-          src = pkgs.lib.fileset.toSource {
+          src = lib.fileset.toSource {
             root = ./.;
-            fileset = pkgs.lib.fileset.unions [
+            fileset = lib.fileset.unions [
               ./index.html
               ./package.json
               ./package-lock.json
@@ -285,83 +278,19 @@
           '';
         };
 
-        tutorialOutput = pkgs.writeText "ender-tutorial-output.json" ''
-          {
-            "isCorrect": true,
-            "issues": []
-          }
-        '';
-        tutincOutput = pkgs.writeText "ender-tutinc-output.json" ''
-          {
-            "isCorrect": false,
-            "issues": [
-              {
-                "type": 12,
-                "code": "reason_dep_type_mismatch",
-                "details": {
-                  "reason": "sss",
-                  "index": 1,
-                  "ref": "2",
-                  "expectedType": "con_seg",
-                  "allowedTypes": [
-                    "ref_seg"
-                  ],
-                  "receivedType": "con_ang",
-                  "steps": [
-                    "4"
-                  ]
-                }
-              },
-              {
-                "type": 4,
-                "code": "goal_not_reached",
-                "details": {
-                  "message": "step 4 states the goal but was not accepted"
-                }
-              }
-            ]
-          }
-        '';
-
+        # The same script `make -C rocq check` runs, against the Nix builds.
         integrationTests = pkgs.runCommand "ender-checker-tests" {
-          nativeBuildInputs = [ nativeChecker pkgs.nodejs_24 pkgs.jq ];
+          nativeBuildInputs = [ pkgs.bash nodejs pkgs.jq ];
         } ''
-          ender-checker ${./src/checker/proofs/examples/tutorial.txt} > native-tutorial.json
-          diff -u ${tutorialOutput} native-tutorial.json
-          ender-checker --report ${./src/checker/proofs/examples/tutorial.txt} \
-            | jq -e '.verdict == "accepted" and
-                     .problem.conclusion == "con_tri(t_ABC,t_ADC)" and
-                     (.presentation.steps | length > 0) and
-                     (.steps | type == "array") and (.graph | type == "object") and
-                     (.duplicates | type == "array") and (.goal | type == "object") and
-                     (.diagnostics | type == "array")' >/dev/null
-          if ender-checker ${./src/checker/proofs/examples/tutinc.txt} > native-tutinc.json; then
-            echo "invalid SSS proof was accepted" >&2
-            exit 1
-          fi
-          diff -u ${tutincOutput} native-tutinc.json
-          node ${wasmChecker}/share/ender-checker-wasm/ender-checker.js \
-            ${./src/checker/proofs/examples/tutorial.txt} > wasm-tutorial.json
-          diff -u ${tutorialOutput} wasm-tutorial.json
-          if node ${wasmChecker}/share/ender-checker-wasm/ender-checker.js \
-              ${./src/checker/proofs/examples/tutinc.txt} > wasm-tutinc.json; then
-            echo "Wasm checker accepted invalid SSS proof" >&2
-            exit 1
-          fi
-          diff -u ${tutincOutput} wasm-tutinc.json
-          node ${./rocq/runtime/test_wasm_api.js} \
-            ${wasmChecker}/share/ender-checker-wasm/ender-checker-api.js \
-            ${./src/checker/proofs/examples/tutorial.txt} > wasm-api-tutorial.json
-          diff -u ${tutorialOutput} wasm-api-tutorial.json
-          find ${./src/checker/proofs} -name '*.txt' -print0 | while IFS= read -r -d $'\0' proof; do
-            ender-checker --presentation "$proof" | jq -e 'type == "object"' >/dev/null
-          done
+          bash ${./rocq/runtime/test}/integration.sh \
+            ${lib.getExe nativeChecker} \
+            ${wasmChecker}/share/ender-checker-wasm \
+            ${./src/checker/proofs}
           touch "$out"
         '';
       in {
         packages = {
-          inherit geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
-            verifiedProofs;
+          ender-proofs = verifiedProofs;
           ender-checker = nativeChecker;
           ender-checker-wasm = wasmChecker;
           ender-web = webApp;
@@ -377,7 +306,7 @@
         apps = {
           default = {
             type = "app";
-            program = "${nativeChecker}/bin/ender-checker";
+            program = lib.getExe nativeChecker;
             meta.description = "Check a proof file with the verified checker";
           };
           serve = {
@@ -394,23 +323,20 @@
         # without Nix follows the same steps with their own toolchain.
         devShells.default = pkgs.mkShell {
           packages = [
-            rocq stdlib geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
+            rocq
             # VsRocq's language server loads the `.vo` files of whatever it is
             # editing, and those are locked to the compiler that built them, so
             # it has to be the one matching `rocq` above rather than whichever
             # the editor happens to ship.  VsRocq prefers a `vsrocqtop` on the
             # PATH over its own, so launching the editor from this shell is
             # enough; see README.md.
-            pkgs.rocqPackages_9_1.vsrocq-language-server
-            pkgs.gnumake pkgs.stdenv.cc
+            rocqPackages.vsrocq-language-server
             ocamlPackages.ocaml ocamlPackages.findlib
-            ocamlPackages.yojson ocamlPackages.js_of_ocaml
             ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
             nodejs pkgs.jq
-          ] ++ mathcomp;
-          ROCQPATH = pkgs.lib.concatStringsSep ":" (map (part: "${part}/${rocqLib}") ([
-            stdlib geocoqCoinc geocoqAxioms geocoqMain geocoqAlgebraic
-          ] ++ mathcomp));
+          ];
+          buildInputs = rocqLibraries
+            ++ [ ocamlPackages.yojson ocamlPackages.js_of_ocaml ];
           # A convenience only: `make -C rocq native` puts the binary here, and
           # the Node, Vite, and script loaders find that directory on their own,
           # so nothing depends on this being set.

@@ -23,13 +23,8 @@ let () =
     exit 0
   end;
   let report = EnderChecker.CertifiedChecker.check source in
+  print_endline (Report_json.checker_output_of_report report);
   match report.EnderChecker.report_verdict with
-  | EnderChecker.Accepted ->
-      print_endline (Report_json.checker_output source);
-      exit 0
-  | EnderChecker.RejectedProof ->
-      print_endline (Report_json.checker_output source);
-      exit 1
-  | EnderChecker.FailedToParseProblem ->
-      print_endline (Report_json.checker_output source);
-      exit 2
+  | EnderChecker.Accepted -> exit 0
+  | EnderChecker.RejectedProof -> exit 1
+  | EnderChecker.FailedToParseProblem -> exit 2
