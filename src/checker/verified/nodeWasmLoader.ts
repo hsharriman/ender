@@ -24,7 +24,8 @@ type WasmGlobals = typeof globalThis & {
 
 let initialization: Promise<WasmGlobals> | undefined;
 
-const initialize = async (): Promise<WasmGlobals> => {
+/** Load the checker now, so a missing build fails at startup, not on use. */
+export const initialize = async (): Promise<WasmGlobals> => {
   if (initialization) return initialization;
   initialization = (async () => {
     const directory =

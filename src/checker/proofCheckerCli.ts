@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { pathToFileURL } from "url";
 import { checkVerifiedProofNode } from "./verified/nodeWasmLoader";
+import { UNEXPECTED_ERROR_TYPE } from "./verified/presentationTypes";
 
 const checkProof = async (filePath: string): Promise<void> => {
   try {
@@ -16,7 +17,7 @@ const checkProof = async (filePath: string): Promise<void> => {
           isCorrect: false,
           errors: [
             {
-              type: 16,
+              type: UNEXPECTED_ERROR_TYPE,
               code: "unexpected_error",
               details: { msg },
             },

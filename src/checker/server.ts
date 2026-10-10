@@ -1,5 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
-import { checkVerifiedProofNode } from "./verified/nodeWasmLoader";
+import { checkVerifiedProofNode, initialize } from "./verified/nodeWasmLoader";
+import { UNEXPECTED_ERROR_TYPE } from "./verified/presentationTypes";
 
 const PORT = parseInt(process.env.PORT ?? "4000", 10);
 
@@ -21,7 +22,7 @@ function json(res: ServerResponse, status: number, data: unknown): void {
   res.end(body);
 }
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   if (req.method === "GET" && req.url === "/health") {
     res.writeHead(200);
     res.end("ok");
@@ -42,7 +43,7 @@ createServer(async (req, res) => {
         isCorrect: false,
         errors: [
           {
-            type: 16,
+            type: UNEXPECTED_ERROR_TYPE,
             code: "unexpected_error",
             details: { msg: e instanceof Error ? e.message : String(e) },
           },
@@ -54,6 +55,12 @@ createServer(async (req, res) => {
 
   res.writeHead(404);
   res.end("Not found");
-}).listen(PORT, () => {
-  console.log(`Checker server listening on port ${PORT}`);
 });
+
+// Load the checker before listening, so a missing build fails here rather
+// than on the first request.
+void initialize().then(() =>
+  server.listen(PORT, () => {
+    console.log(`Checker server listening on port ${PORT}`);
+  }),
+);

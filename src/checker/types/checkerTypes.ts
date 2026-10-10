@@ -53,7 +53,6 @@ export interface ParseDiagramStmt {
   stepNumber: string;
 }
 
-// errors here: cycles, unused steps, duplicate steps, goal not reached
 export interface ProofObj {
   title: string | null;
   premises: {

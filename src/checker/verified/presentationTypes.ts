@@ -25,6 +25,9 @@ export type PresentationFile = {
   steps: PresentationStep[];
 };
 
+/** The issue type for an exception that escaped the checker. */
+export const UNEXPECTED_ERROR_TYPE = 16;
+
 export type VerifiedIssue = {
   type: number;
   code: string;
