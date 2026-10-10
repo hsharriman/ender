@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-make -C rocq                       # Build the verified checker into rocq/_build/ (needed first)
+nix develop -c make -C rocq        # Build the verified checker into rocq/_build/ (needed first)
 npm start                          # Dev server at http://localhost:3000/ender/
 npm run build                      # tsc typecheck + Vite production build to dist/
 npm test                           # Run Jest tests (single file: src/checker/test/proofTests.test.ts)

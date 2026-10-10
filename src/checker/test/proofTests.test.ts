@@ -218,10 +218,9 @@ describe("extracted Rocq API corpus tests", () => {
       Array,
     );
 
-    // Rocq preserves arc literals such as BR_OB, but the legacy TypeScript
-    // geometry object model has no Arc variant.  Its former parser silently
-    // split these literals.  Keep testing successful Rocq parsing here while
-    // refusing to reproduce that lossy behavior in the compatibility adapter.
+    // Rocq preserves arc literals such as BR_OB, but the TypeScript geometry
+    // object model has no Arc variant, so the adapter refuses them rather
+    // than drawing something lossy.
     if (/[A-Z]{2}_[A-Z]{2}/.test(text)) {
       expect(() => presentationToProofObj(presentation)).toThrow(
         "Unsupported presentation object",
@@ -516,18 +515,22 @@ steps:
     });
   });
 
-  test("coverage manifest contains every catalogued reason", () => {
+  test("the catalog describes every reason the kernel checks", () => {
     const catalog = readFileSync(
       join(__dirname, "../grammar/defs/reasons.defs.ts"),
       "utf8",
     );
-    const reasons = [
-      ...catalog.matchAll(/^  ([a-zA-Z0-9_]+): \{/gm),
+    const catalogued = new Set(
+      [...catalog.matchAll(/^  ([a-zA-Z0-9_]+): \{/gm)].map((match) => match[1]),
+    );
+    const kernel = readFileSync(
+      join(__dirname, "../../../rocq/Ender/CompleteChecker.v"),
+      "utf8",
+    );
+    const checked = [
+      ...kernel.matchAll(/\("([a-z_]+)", \(\d+, \d+\)\)/g),
     ].map((match) => match[1]);
-    const manifest = JSON.parse(
-      readFileSync(join(__dirname, "../../../docs/reason-coverage.json"), "utf8"),
-    ) as { entries: Array<{ reason: string }> };
-    expect(manifest.entries.map(({ reason }) => reason)).toEqual(reasons);
-    expect(reasons).toHaveLength(92);
+    expect(checked.length).toBeGreaterThan(70);
+    expect(checked.filter((reason) => !catalogued.has(reason))).toEqual([]);
   });
 });

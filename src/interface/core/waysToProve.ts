@@ -16,10 +16,7 @@ import {
   Triangle,
 } from "geometry-object";
 
-/**
- * Restored from the legacy checker's `utils.ts`, which went with it: the only
- * thing this module needed from there.
- */
+/** Resolve a statement argument to the drawn object it names. */
 const getGeometricObject = (
   arg: ParseObj,
   ctx: ProofContent,

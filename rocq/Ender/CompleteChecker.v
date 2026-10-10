@@ -793,9 +793,8 @@ Definition goal_missing_diagnostic : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
     "no step states the goal".
 
-(** Naming the step keeps what the legacy checker reported separately -- which
-    step states the goal, whether or not it holds -- recoverable from a report
-    whose [goal_proved_by] deliberately omits it. *)
+(** Naming the step keeps which step states the goal, whether or not it holds,
+    recoverable from a report whose [goal_proved_by] deliberately omits it. *)
 Definition goal_unproved_diagnostic (number : nat) : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
     ("step " ++ nat_text number ++ " states the goal but was not accepted").
@@ -861,8 +860,8 @@ Definition report_content (source : string)
 (** * Issues
 
     What the interface and the feedback prompts read: one issue per step that
-    did not hold, saying why as specifically as the checker can, in the
-    shapes the legacy checker used.  Advisory, like the rest of the report:
+    did not hold, saying why as specifically as the checker can, in the codes
+    of [src/checker/ERROR_CODES.md].  Advisory, like the rest of the report:
     the verdict never reads them. *)
 Definition step_field (number : nat) : string * Audit.JsonValue :=
   ("steps", Audit.JsonArray [Audit.JsonString (nat_text number)]).
