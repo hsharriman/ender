@@ -2,8 +2,9 @@ ROCQFLAGS := -Q Ender Ender
 MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Semantics Checker Parser Model CompleteChecker CertifiedAPI Tests
 VOFILES := $(addprefix Ender/,$(addsuffix .vo,$(MODULES)))
 
-# Everything this Makefile writes goes under $(BUILD); nothing lands beside the
-# sources except the `.vo` files Rocq insists on putting there.
+# Everything this Makefile writes goes under $(BUILD), except what Rocq insists
+# on putting beside the sources (`.vo`, `.vos`, `.vok`, `.glob`) and the
+# extracted OCaml in `extracted/`.
 BUILD := _build
 NATIVE := $(BUILD)/bin/ender-checker
 WASMDIR := $(BUILD)/wasm
@@ -20,6 +21,10 @@ EXTRACT_HERE := yes
 endif
 
 .PHONY: all proofs test extract native wasm clean
+
+# A recipe that fails partway must not leave its target looking up to date:
+# `Tests.vo` is written before the axiom check below can reject it.
+.DELETE_ON_ERROR:
 
 # `all` is the whole verified checker: kernel-checked proofs, the axiom check,
 # the extracted OCaml, and both compiled artifacts.  This is the same work the
