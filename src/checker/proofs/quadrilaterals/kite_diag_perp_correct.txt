@@ -6,6 +6,7 @@ quad: q_ABCD
 seg: AC BD
 ang: a_DAB a_BCD
 [g_1] kite_premise(q_ABCD, a_DAB, a_BCD)
+[d_01] intersect_seg(AC, BD, M)
 -> perp(AC, BD, M)
 
 steps:

@@ -70,7 +70,23 @@ export type ErrorDetails = {
   details?: Record<string, unknown>;
 };
 
-export type CheckerResult = { ok: true } | { ok: false; failure: ErrorDetails };
+/**
+ * The vertex pairing a single `con_tri` step establishes.
+ *
+ * `pts[0][k]` corresponds to `pts[1][k]`, and `tris[i]` is the label of the
+ * triangle whose vertices `pts[i]` lists. A correspondence belongs to the step
+ * that derived it, never to the `Triangle` objects in `ProofContent` — two
+ * steps may relate the same triangle pair under different pairings, and each
+ * step keeps its own.
+ */
+export interface TriCorrespondence {
+  tris: [string, string];
+  pts: [[string, string, string], [string, string, string]];
+}
+
+export type CheckerResult =
+  | { ok: true; correspondence?: TriCorrespondence }
+  | { ok: false; failure: ErrorDetails };
 
 // Types for the proof checker
 // errors here:
@@ -81,6 +97,8 @@ export interface ProofStep {
   stepNumber?: string;
   diagramDeps?: ParseDiagramStmt[];
   waysToProve?: WaysToProveSummary;
+  /** Set on steps concluding `con_tri`/`con_tri_ordered`; read by `cpctc`. */
+  correspondence?: TriCorrespondence;
   errors: ErrorDetails[];
 }
 

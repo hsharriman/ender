@@ -1,0 +1,16 @@
+// fail on step 4
+title: "Test: sas (incorrect - DE cited as both sides, so EF and FD are unconstrained)"
+premises:
+pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r)
+seg: AB BC CA DE EF FD
+tri: t_ABC t_DEF
+[g_1] con_seg(AB, DE)
+[g_2] con_ang(a_BAC, a_EDF)
+[g_3] con_seg(CA, DE)
+-> con_tri(t_ABC, t_DEF)
+
+steps:
+[01] given(g_1) -> con_seg(AB, DE)
+[02] given(g_2) -> con_ang(a_BAC, a_EDF)
+[03] given(g_3) -> con_seg(CA, DE)
+[04] sas(1, 2, 3) -> con_tri(t_ABC, t_DEF)

@@ -1,0 +1,12 @@
+// fail on step 2
+title: "Test: cpctc off a con_tri_ordered premise (incorrect - AB corresponds to DE, not EF)"
+premises:
+pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r)
+seg: AB BC CA DE EF FD
+tri: t_ABC t_DEF
+[g_1] con_tri_ordered(t_ABC, t_DEF)
+-> con_seg(AB, EF)
+
+steps:
+[01] given(g_1) -> con_tri_ordered(t_ABC, t_DEF)
+[02] cpctc(1) -> con_seg(AB, EF)

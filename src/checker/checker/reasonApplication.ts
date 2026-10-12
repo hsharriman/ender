@@ -61,7 +61,9 @@ import {
   checkAsa,
   checkBaseAngle,
   checkConTri,
+  checkConTriTransitive,
   checkCpctc,
+  conTriOrdered,
   checkEquiangular,
   checkEquilateral,
   checkIsosceles,
@@ -163,7 +165,8 @@ export const checkReasonApplication = (
 
       case "cpctc": {
         const t_cong = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = checkCpctc(t_cong, stmt, ctx);
+        const corresp = getDepCorrespondence(reason.arguments[0], proofGraph);
+        const r = checkCpctc(t_cong, corresp, stmt, ctx);
         return floatReasonResult(r, currStep, reason);
       }
 
@@ -454,7 +457,14 @@ export const checkReasonApplication = (
       }
 
       case "given": {
-        return validateGivenProofStep(currStep, proofGraph);
+        if (!validateGivenProofStep(currStep, proofGraph)) return false;
+        // `con_tri_ordered` states its vertex pairing in the labels the author
+        // wrote, so `t_ABC ≅ t_DEF` pairs A with D, B with E, and C with F.
+        if (stmt.function === "con_tri_ordered") {
+          const r = conTriOrdered(stmt, ctx);
+          return floatReasonResult(r, currStep, reason);
+        }
+        return true;
       }
 
       case "pgram_opp_sides": {
@@ -498,15 +508,21 @@ export const checkReasonApplication = (
 
       case "pgram_diag_bisect": {
         const pgram = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = pgram_diag_bisect_check(pgram, stmt, ctx);
-        return floatReasonResult(r, currStep, reason);
+        const r = pgram_diag_bisect_check(
+          pgram,
+          stmt,
+          ctx,
+          undefined,
+          diagramPremisesByFunction(proofGraph, "intersect_seg"),
+        );
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "pgram_diag_bisect_conv": {
         const seg_b1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const seg_b2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = pgram_diag_bisect_check(stmt, seg_b1, ctx, seg_b2);
-        return floatReasonResult(r, currStep, reason);
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "pgram_opp_side_para": {
@@ -556,15 +572,21 @@ export const checkReasonApplication = (
 
       case "rhombus_diag_perp": {
         const rhombus = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = rhombus_kite_diag_check(rhombus, stmt, ctx);
-        return floatReasonResult(r, currStep, reason);
+        const r = rhombus_kite_diag_check(
+          rhombus,
+          stmt,
+          ctx,
+          undefined,
+          diagramPremisesByFunction(proofGraph, "intersect_seg"),
+        );
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "rhombus_diag_perp_conv": {
         const perpDep = getDepStmt(reason.arguments[0], proofGraph)!;
         const pgram = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = rhombus_kite_diag_check(stmt, perpDep, ctx, pgram);
-        return floatReasonResult(r, currStep, reason);
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "rhombus_opp_bisect_conv": {
@@ -590,8 +612,14 @@ export const checkReasonApplication = (
 
       case "kite_diag_perp": {
         const kite = getDepStmt(reason.arguments[0], proofGraph)!;
-        const r = rhombus_kite_diag_check(kite, stmt, ctx);
-        return floatReasonResult(r, currStep, reason);
+        const r = rhombus_kite_diag_check(
+          kite,
+          stmt,
+          ctx,
+          undefined,
+          diagramPremisesByFunction(proofGraph, "intersect_seg"),
+        );
+        return floatDiagramResult(r, currStep, reason);
       }
 
       case "kite_opp_con_ang": {
@@ -679,9 +707,22 @@ export const checkReasonApplication = (
         return floatReasonResult(r, currStep, reason);
       }
 
-      case "con_seg_transitive":
-      case "con_ang_transitive":
       case "con_tri_transitive": {
+        const dep1 = getDepStmt(reason.arguments[0], proofGraph)!;
+        const dep2 = getDepStmt(reason.arguments[1], proofGraph)!;
+        const r = checkConTriTransitive(
+          dep1,
+          getDepCorrespondence(reason.arguments[0], proofGraph),
+          dep2,
+          getDepCorrespondence(reason.arguments[1], proofGraph),
+          stmt,
+          ctx,
+        );
+        return floatReasonResult(r, currStep, reason);
+      }
+
+      case "con_seg_transitive":
+      case "con_ang_transitive": {
         const dep1 = getDepStmt(reason.arguments[0], proofGraph)!;
         const dep2 = getDepStmt(reason.arguments[1], proofGraph)!;
         const r = checkTransitive(dep1, dep2, stmt, ctx);
@@ -716,6 +757,10 @@ const getDepStmt = (idx: string, proofGraph: ProofGraph) => {
   return proofGraph.nodes.get(idx)?.statement;
 };
 
+/** The vertex pairing the cited `con_tri` step recorded, if it has one. */
+const getDepCorrespondence = (idx: string, proofGraph: ProofGraph) =>
+  proofGraph.nodes.get(idx)?.correspondence;
+
 const diagramPremisesByFunction = (
   proofGraph: ProofGraph,
   fn: string,
@@ -733,6 +778,11 @@ const floatReasonResult = (
   if (!r.ok) {
     addReasonCheckFail(currStep.errors, reason.function, r.failure);
     return false;
+  }
+  // A congruence reason records the vertex pairing it establishes on its own
+  // step, so `cpctc` resolves against that step rather than shared state.
+  if (r.correspondence) {
+    currStep.correspondence = r.correspondence;
   }
   return true;
 };

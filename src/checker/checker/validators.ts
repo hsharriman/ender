@@ -112,35 +112,41 @@ export const validateGivenProofStep = (
   return true;
 };
 
+/**
+ * Names every diagram dependency the reason requires that no `[d_xx]` premise
+ * supplies. Empty means all are present. Diagram dependencies are satisfied by
+ * diagram premises on the proof graph and are not passed as args.
+ */
+const missingDiagramDeps = (
+  definition: ReasonDefinition,
+  groups: Map<string, StatementGroup>,
+  proofGraph: ProofGraph,
+): string[] => {
+  const missing: string[] = [];
+  for (const expected of definition.diagramDependencies ?? []) {
+    if (typeof expected !== "string") continue;
+    const group = groups.get(expected);
+    const anyMatch = Array.from(proofGraph.diagramPremises.values()).some(
+      (d) => {
+        const foundType = d.statement.function;
+        if (group) {
+          return (
+            group.base === foundType || group.extensions.includes(foundType)
+          );
+        }
+        return foundType === expected;
+      },
+    );
+    if (!anyMatch) missing.push(group ? group.base : expected);
+  }
+  return missing;
+};
+
 const anyDiagramDepMatch = (
   definition: ReasonDefinition,
   groups: Map<string, StatementGroup>,
   proofGraph: ProofGraph,
-) => {
-  // Diagram dependencies are satisfied by diagram premises on the proof graph
-  // and are not passed as args.
-  if (definition.diagramDependencies?.length) {
-    for (const expected of definition.diagramDependencies) {
-      if (typeof expected !== "string") continue;
-      const group = groups.get(expected);
-      const anyMatch = Array.from(proofGraph.diagramPremises.values()).some(
-        (d) => {
-          const foundType = d.statement.function;
-          if (group) {
-            return (
-              group.base === foundType || group.extensions.includes(foundType)
-            );
-          }
-          return foundType === expected;
-        },
-      );
-      if (!anyMatch) {
-        return false;
-      }
-    }
-  }
-  return true;
-};
+) => missingDiagramDeps(definition, groups, proofGraph).length === 0;
 
 // Check if reason dependencies match the expected number
 export const checkReasonStructure = (
@@ -201,8 +207,14 @@ export const checkReasonStructure = (
       });
     }
 
-    if (!anyDiagramDepMatch(definition, groups, proofGraph)) {
+    const missingDiagram = missingDiagramDeps(definition, groups, proofGraph);
+    if (missingDiagram.length > 0) {
       structureOk = false;
+      step.errors.push({
+        type: ErrorType.NoDiagramDepMatch,
+        code: "missing_diagram_premise",
+        details: { reason: reason.function, expected: missingDiagram },
+      });
     }
 
     for (let idx = 0; idx < reason.arguments.length; idx++) {

@@ -112,6 +112,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "complementary":
       case "rectangle":
       case "con_tri":
+      case "con_tri_ordered":
       case "con_right":
       case "isosceles":
       case "sim_tri":
@@ -224,6 +225,7 @@ export const buildPremises = (proof: ProofObj) => {
       case "isosceles":
       case "sim_tri":
       case "con_tri":
+      case "con_tri_ordered":
       case "equilateral":
       case "equiangular":
       case "rectangle":

@@ -214,8 +214,12 @@ export const checkEqual = (
 
 /**
  * Transitivity check: given dep1 (A ≅ X) and dep2 (X ≅ B), verify the
- * conclusion stmt (A ≅ B). Works for segments, angles, triangles, or any
- * two-argument congruence statement whose objects support `.equals()`.
+ * conclusion stmt (A ≅ B). Works for segments, angles, or any two-argument
+ * congruence statement whose objects support `.equals()`.
+ *
+ * Triangles use `checkConTriTransitive` instead. A triangle congruence also
+ * carries a vertex correspondence, and transitivity must compose the two
+ * correspondences rather than only confirm a shared triangle.
  */
 export const checkTransitive = (
   dep1: Stmt,

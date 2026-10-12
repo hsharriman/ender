@@ -5,6 +5,7 @@ pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
 quad: q_PQRS
 seg: PR QS
 [g_1] rhombus(q_PQRS)
+[d_01] intersect_seg(PR, QS, N)
 -> perp(PR, QS, N)
 
 steps:
