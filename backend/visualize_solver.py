@@ -1,4 +1,5 @@
 import json
+import sys
 import difflib
 from rich.console import Console
 from rich.table import Table
@@ -62,9 +63,11 @@ def visualize_changes(solver_metadata, current_step=-1):
 
 
 if __name__ == "__main__":
+    target_dir = sys.argv[1]
+    target_step = int(sys.argv[2])
     with open(
-        "geo-proof-dataset/wrong_proofs/holt_s4-5_ex3_2corrs_inc10/solver_metadata.json",
+        f"{target_dir}/solver_metadata.json",
         encoding="utf-8",
     ) as f:
         m = f.read()
-        visualize_changes(m, 1)
+        visualize_changes(m, target_step)

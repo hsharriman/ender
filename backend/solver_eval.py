@@ -8,6 +8,7 @@ import csv
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from tqdm import tqdm
 from solver_agent import run_solver_agent
 
@@ -102,7 +103,7 @@ def _process_single_proof(wp, score, wrong_proof_dir, prompt_path, max_iteration
 
     row_data = {
         "proof_name": wp,
-        "mutation_score": score,
+        "edit_distance": score,
         "status": "pending",
         "iterations": "N/A",
         "solution_reached": False,
@@ -141,26 +142,32 @@ def _process_single_proof(wp, score, wrong_proof_dir, prompt_path, max_iteration
 
 
 def run_solver_evaluation(
-    wrong_proofs_dir="geo-proof-dataset/wrong_proofs",
+    wrong_proofs_dir="geo-proof-dataset/wrong_proofs_multiple_mutations_per_step",
     prompt_path=PROMPT_PATH,
-    csv_output_path="backend/solver_evaluation.csv",
+    csv_output_path="backend/solver_evaluation_multiple_mutations_per_step.csv",
     seed=42,
 ):
     """Run solver evaluation pipeline for selected wrong proofs and save to csv"""
     os.makedirs(os.path.dirname(csv_output_path), exist_ok=True)
 
     random.seed(seed)
-    selected_dataset = select_wrong_proofs(wrong_proofs_dir, sample_size=20)
-
-    # Flatten selected_dataset to a list of (proof_name, mutation_score) tuples
+    # selected_dataset = select_wrong_proofs(wrong_proofs_dir, sample_size=20)
+    # # Flatten selected_dataset to a list of (proof_name, mutation_score) tuples
     proof_list = []
-    for score, proofs in selected_dataset.items():
-        for wp in proofs:
-            proof_list.append((wp, score))
-
+    # for edit_distance, proofs in selected_dataset.items():
+    #     for wp in proofs:
+    #         proof_list.append((wp, edit_distance))
+    # proof_list = [f.name for f in Path(wrong_proofs_dir).iterdir() if f.is_dir()]
+    for f in Path(wrong_proofs_dir).iterdir():
+        metadata_file = f / "metadata.json"
+        if metadata_file.exists():
+            with open(metadata_file, "r", encoding="utf-8-sig") as file:
+                data = json.load(file)
+                edit_dist = data.get("edit_distance")
+                proof_list.append((f.name, edit_dist))
     headers = [
         "proof_name",
-        "mutation_score",
+        "edit_distance",
         "status",
         "solution_reached",
         "iterations",

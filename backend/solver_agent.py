@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import json
 from pathlib import Path
@@ -239,9 +240,8 @@ def run_solver_agent(
 
 
 if __name__ == "__main__":
-    PROOF_DIR = "geo-proof-dataset/wrong_proofs/holt_s2-6_cio2_1corrs_inc1"
-
+    target_dir = sys.argv[1]
     try:
-        solution, metadata = run_solver_agent(PROOF_DIR)
+        solution, metadata = run_solver_agent(target_dir)
     except ValueError as error:
         print(f"Solver failed: {error}")
