@@ -1568,6 +1568,72 @@ Definition rect_diag_con_conv_rule (facts : list Statement) (i j : nat)
 (** Perpendicular diagonals in a parallelogram make it a rhombus.  Only the
     two lines matter, so where the perpendicularity premise puts their meeting
     point is left alone: [Perp_at] already places it on both. *)
+(** A pair of segments that are the two diagonals of [q], in either order
+    and either direction. *)
+Definition names_diagonals (q : QuadrilateralName) (s t : SegmentName) : bool :=
+  (segment_u_eqb s (quad_diagonal_ac q) && segment_u_eqb t (quad_diagonal_bd q)) ||
+  (segment_u_eqb s (quad_diagonal_bd q) && segment_u_eqb t (quad_diagonal_ac q)).
+
+(** The forward diagonal theorems conclude about the point where the
+    diagonals cross.  The audited quadrilateral has such a point but does not
+    name it, so an [intersect_seg] premise of the two diagonals has to place
+    the point the conclusion names. *)
+Definition diagonals_cross_statement (q : QuadrilateralName) (p : PointId)
+    (st : Statement) : bool :=
+  match st with
+  | IntersectSeg s t r => ascii_eqb r p && names_diagonals q s t
+  | _ => false
+  end.
+
+Definition diagonals_cross_premise (q : QuadrilateralName) (p : PointId)
+    (pr : Premise) : bool :=
+  diagonals_cross_statement q p pr.(premise_statement).
+
+(** The quadrilateral a forward diagonal rule reads off its dependency, and
+    the segments and point its conclusion names. *)
+Definition diagonal_rule_parts (r : Reason) (facts : list Statement)
+    (conclusion : Statement)
+    : option (QuadrilateralName * SegmentName * SegmentName * PointId) :=
+  match r, conclusion with
+  | PgramDiagBisect i, SegBisect s t p =>
+      match lookup_step facts i with
+      | Some (Parallelogram q) => Some (q, s, t, p)
+      | _ => None
+      end
+  | RhombusDiagPerp i, Perp s t p =>
+      match lookup_step facts i with
+      | Some (Rhombus q) => Some (q, s, t, p)
+      | _ => None
+      end
+  | KiteDiagPerp i, Perp s t p =>
+      match lookup_step facts i with
+      | Some (KitePremise q _ _) => Some (q, s, t, p)
+      | _ => None
+      end
+  | _, _ => None
+  end.
+
+(** The diagonals of a parallelogram bisect each other, and those of a rhombus
+    or a kite are perpendicular, at the point an [intersect_seg] premise puts
+    on both. *)
+Definition diagonal_rule (premises : list Premise) (facts : list Statement)
+    (r : Reason) (conclusion : Statement) : bool :=
+  match diagonal_rule_parts r facts conclusion with
+  | Some (q, s, t, p) =>
+      names_diagonals q s t && premise_found (diagonals_cross_premise q p) premises
+  | None => false
+  end.
+
+Definition diagonal_rule_used (premises : list Premise) (facts : list Statement)
+    (r : Reason) (conclusion : Statement) : option Statement :=
+  match diagonal_rule_parts r facts conclusion with
+  | Some (q, s, t, p) =>
+      if names_diagonals q s t
+      then premise_witness (diagonals_cross_premise q p) premises
+      else None
+  | None => None
+  end.
+
 Definition rhombus_diag_perp_conv_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i, lookup_step facts j with
@@ -2113,6 +2179,8 @@ Definition rule_diagram_premises_raw (decls : Declarations)
       | _, _ => []
       end
   | LinearPairConv _ => one (linear_pair_conv_used premises conclusion)
+  | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
+      one (diagonal_rule_used premises facts reason conclusion)
   | _ => []
   end.
 
@@ -2222,6 +2290,8 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
       rhombus_opp_bisect_conv_rule facts i j k conclusion
   | AASim i j => aa_sim decls premises facts i j conclusion
   | LinearPairConv i => linear_pair_conv premises facts i conclusion
+  | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
+      diagonal_rule premises facts r conclusion
   | RHL i j k =>
       criterion_conclusion rhl_schema decls premises facts i j k conclusion
   end.
@@ -6641,6 +6711,162 @@ Proof.
   repeat split; assumption.
 Qed.
 
+(** What an [intersect_seg] premise of the two diagonals says, with the
+    diagonals read in [q]'s own vertex order. *)
+Lemma diagonals_cross_sound : forall q p st,
+  diagonals_cross_statement q p st = true -> Interp st ->
+  BetS (point q.(quadrilateral_first)) (point p) (point q.(quadrilateral_third)) /\
+  BetS (point q.(quadrilateral_second)) (point p) (point q.(quadrilateral_fourth)).
+Proof.
+  intros [A B C D] p st Hmatch Hst.
+  destruct st; try discriminate. cbn in Hmatch.
+  apply andb_true_iff in Hmatch. destruct Hmatch as [Hp Hnames].
+  unfold ascii_eqb in Hp. apply Ascii.eqb_eq in Hp. subst.
+  cbn in Hst. destruct Hst as [Hs Ht].
+  unfold names_diagonals, quad_diagonal_ac, quad_diagonal_bd in Hnames. cbn in Hnames.
+  apply orb_true_iff in Hnames.
+  destruct Hnames as [Hn|Hn]; apply andb_true_iff in Hn; destruct Hn as [H1 H2];
+    apply segment_u_eqb_cases in H1; apply segment_u_eqb_cases in H2;
+    destruct H1 as [H1|H1]; destruct H2 as [H2|H2]; subst;
+    unfold reverse_segment in Hs, Ht; cbn in Hs, Ht; cbn;
+    first [ split; assumption
+          | split; [assumption|now apply ender_bets_sym]
+          | split; [now apply ender_bets_sym|assumption]
+          | split; now apply ender_bets_sym ].
+Qed.
+
+(** A fact stated of the two diagonals in [q]'s order holds of any spelling
+    [names_diagonals] accepts, for the two symmetric relations the diagonal
+    rules conclude. *)
+Lemma perp_diagonals_conclude : forall q s t p,
+  names_diagonals q s t = true ->
+  Perp_at (point p) (point q.(quadrilateral_first)) (point q.(quadrilateral_third))
+    (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth)) ->
+  Interp (Perp s t p).
+Proof.
+  intros q s t p Hnames Hperp. unfold names_diagonals in Hnames.
+  apply orb_true_iff in Hnames.
+  destruct Hnames as [Hn|Hn]; apply andb_true_iff in Hn; destruct Hn as [H1 H2].
+  - apply (proj2 (perp_at_realign _ _ _ _ p p H1 H2 (Ascii.eqb_refl p))).
+    exact Hperp.
+  - apply (proj2 (perp_at_realign _ _ _ _ p p H1 H2 (Ascii.eqb_refl p))).
+    cbn. now apply perp_in_sym.
+Qed.
+
+Lemma bisect_diagonals_conclude : forall q s t p,
+  names_diagonals q s t = true ->
+  point q.(quadrilateral_first) <> point q.(quadrilateral_third) ->
+  point q.(quadrilateral_second) <> point q.(quadrilateral_fourth) ->
+  BetS (point q.(quadrilateral_first)) (point p) (point q.(quadrilateral_third)) ->
+  BetS (point q.(quadrilateral_second)) (point p) (point q.(quadrilateral_fourth)) ->
+  Midpoint (point p) (point q.(quadrilateral_first)) (point q.(quadrilateral_third)) ->
+  Midpoint (point p) (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth)) ->
+  Interp (SegBisect s t p).
+Proof.
+  intros [A B C D] s t p Hnames HAC HBD [Hac _] [Hbd _] Hmac Hmbd.
+  unfold names_diagonals in Hnames. apply orb_true_iff in Hnames.
+  destruct Hnames as [Hn|Hn]; apply andb_true_iff in Hn; destruct Hn as [H1 H2].
+  - apply (proj2 (seg_bisect_realign _ _ _ _ p p H1 H2 (Ascii.eqb_refl p))).
+    cbn in *. split; [exact HAC|split; [apply bet_col in Hac; Col|exact Hmbd]].
+  - apply (proj2 (seg_bisect_realign _ _ _ _ p p H1 H2 (Ascii.eqb_refl p))).
+    cbn in *. split; [exact HBD|split; [apply bet_col in Hbd; Col|exact Hmac]].
+Qed.
+
+Lemma diagonal_rule_parts_cases : forall r facts conclusion q s t p,
+  diagonal_rule_parts r facts conclusion = Some (q, s, t, p) ->
+  exists i,
+    (conclusion = SegBisect s t p /\ lookup_step facts i = Some (Parallelogram q)) \/
+    (conclusion = Perp s t p /\ lookup_step facts i = Some (Rhombus q)) \/
+    (conclusion = Perp s t p /\
+     exists a b, lookup_step facts i = Some (KitePremise q a b)).
+Proof.
+  intros r facts conclusion q s t p H. unfold diagonal_rule_parts in H.
+  destruct r; cbn in H; try discriminate; destruct conclusion; cbn in H;
+    try discriminate;
+    match type of H with
+    | match lookup_step facts ?n with _ => _ end = _ =>
+        destruct (lookup_step facts n) as [dep|] eqn:Hl; try discriminate;
+        destruct dep; try discriminate; inversion H; subst; exists n; eauto 10
+    end.
+Qed.
+
+(** Two opposite corners each equidistant from the other two make the
+    diagonals perpendicular where they cross. *)
+Lemma equidistant_diagonals_perp : forall A B C D M,
+  A <> C -> Cong A B A D -> Cong C B C D ->
+  BetS A M C -> BetS B M D ->
+  Perp_at M A C B D.
+Proof.
+  intros A B C D M HAC HA HC [HbetAC _] [HbetBD [HBM _]].
+  apply ender_equidistant_line_perp_at; auto.
+  apply bet_col in HbetAC. Col.
+Qed.
+
+(** Each forward diagonal rule from its dependency and the crossing premise:
+    a parallelogram through [Plg]'s shared midpoint, and a rhombus or a kite
+    because two opposite corners are each equidistant from the other two. *)
+Lemma diagonal_rule_sound : forall premises facts r conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  diagonal_rule premises facts r conclusion = true -> Interp conclusion.
+Proof.
+  intros premises facts r conclusion Hprem Hfacts Hrule.
+  unfold diagonal_rule in Hrule.
+  destruct (diagonal_rule_parts r facts conclusion) as [[[[q s] t] p]|] eqn:Hparts;
+    try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hnames Hon].
+  rewrite premise_found_existsb in Hon.
+  apply existsb_exists in Hon. destruct Hon as [pr [Hin Hmatch]].
+  pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
+                Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr. unfold diagonals_cross_premise in Hmatch.
+  destruct (diagonals_cross_sound _ _ _ Hmatch Hpr) as [Hac Hbd].
+  destruct (diagonal_rule_parts_cases _ _ _ _ _ _ _ Hparts)
+    as [i [[-> Hl]|[[-> Hl]|[-> [a [b Hl]]]]]].
+  - (* parallelogram: the diagonals bisect each other *)
+    assert (Hp : Interp (Parallelogram q)) by (eapply lookup_step_sound; eauto).
+    destruct q as [A B C D]. cbn in Hp, Hac, Hbd.
+    destruct Hp as [Hwfq [Hpar1 Hpar2]].
+    destruct Hwfq as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol _]]]]]]].
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
+      cbn in Hpar1, Hpar2, Hncol, HAC, HBD.
+    assert (Hcol1 : Col (point A) (point C) (point p))
+      by (destruct Hac as [Hb _]; apply bet_col in Hb; Col).
+    assert (Hcol2 : Col (point B) (point D) (point p))
+      by (destruct Hbd as [Hb _]; apply bet_col in Hb; Col).
+    destruct (ender_pgram_diagonals_bisect _ _ _ _ _ Hncol Hpar1 Hpar2 HBD
+                Hcol1 Hcol2) as [Hm1 Hm2].
+    exact (bisect_diagonals_conclude (quadrilateral_name A B C D) s t p
+             Hnames HAC HBD Hac Hbd Hm1 Hm2).
+  - (* rhombus: all four sides congruent, so A and C are equidistant from B, D *)
+    assert (Hr : Interp (Rhombus q)) by (eapply lookup_step_sound; eauto).
+    destruct q as [A B C D]. cbn in Hr, Hac, Hbd.
+    destruct Hr as [[Hwfq _] [H1 [H2 H3]]].
+    destruct Hwfq as [_ [HAC _]].
+    unfold Audit.SegmentCongruent, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end in H1, H2, H3;
+      cbn in H1, H2, H3, HAC.
+    apply (perp_diagonals_conclude (quadrilateral_name A B C D));
+      [exact Hnames|]. cbn.
+    apply equidistant_diagonals_perp; auto.
+    + apply cong_transitivity with (point B) (point C); [exact H1|].
+      apply cong_transitivity with (point C) (point D); [exact H2|]. Cong.
+    + Cong.
+  - (* kite: one diagonal joins the two corners equidistant from the others *)
+    assert (Hk : Interp (KitePremise q a b)) by (eapply lookup_step_sound; eauto).
+    destruct q as [A B C D]. cbn in Hk, Hac, Hbd.
+    destruct Hk as [Hwfq Hcase].
+    destruct Hwfq as [_ [HAC [_ [_ [HBD _]]]]].
+    unfold Audit.SegmentCongruent, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end in Hcase;
+      cbn in Hcase, HAC, HBD.
+    apply (perp_diagonals_conclude (quadrilateral_name A B C D));
+      [exact Hnames|]. cbn.
+    destruct Hcase as [[H1 [H2 _]]|[H1 [H2 _]]].
+    + apply equidistant_diagonals_perp; auto; Cong.
+    + apply perp_in_sym, equidistant_diagonals_perp; auto; Cong.
+Qed.
+
 Lemma rhombus_diag_perp_conv_sound : forall facts i j conclusion,
   Forall Interp facts ->
   rhombus_diag_perp_conv_rule facts i j conclusion = true ->
@@ -7209,6 +7435,9 @@ Proof.
   - eapply rhombus_opp_bisect_conv_sound; eauto.
   - eapply aa_sim_sound; eauto.
   - eapply linear_pair_conv_sound; eauto.
+  - eapply diagonal_rule_sound; eauto.
+  - eapply diagonal_rule_sound; eauto.
+  - eapply diagonal_rule_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

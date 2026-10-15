@@ -2406,6 +2406,80 @@ Example complete_reversed_goal_accepts :
   complete_checker reversed_goal_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** The forward diagonal theorems, at the point an [intersect_seg] premise
+    puts on both diagonals. *)
+Definition diagonal_source (shape step goal premise : string) : string :=
+  transitive_header "quad: q_ABCD
+" (premise ++ "[g_1] " ++ shape ++ "
+") goal ("[01] given(g_1) -> " ++ shape ++ "
+[02] " ++ step ++ " -> " ++ goal).
+
+Example pgram_diag_bisect_accepts : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1)"
+     "seg_bisect(AC,BD,E)" "[d_01] intersect_seg(AC,BD,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** Either diagonal may bisect the other, and either may be spelled backwards,
+    in the conclusion or the premise. *)
+Example pgram_diag_bisect_other_accepts : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1, d_01)"
+     "seg_bisect(DB,AC,E)" "[d_01] intersect_seg(DB,CA,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_diag_bisect_no_crossing_rejects : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1)"
+     "seg_bisect(AC,BD,E)" "") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_diag_bisect_wrong_point_rejects : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1)"
+     "seg_bisect(AC,BD,A)" "[d_01] intersect_seg(AC,BD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_diag_bisect_sides_rejects : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1)"
+     "seg_bisect(AB,CD,E)" "[d_01] intersect_seg(AB,CD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example rhombus_diag_perp_accepts : complete_checker
+  (diagonal_source "rhombus(q_ABCD)" "rhombus_diag_perp(1)"
+     "perp(AC,BD,E)" "[d_01] intersect_seg(AC,BD,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_diag_perp_swapped_accepts : complete_checker
+  (diagonal_source "rhombus(q_ABCD)" "rhombus_diag_perp(1)"
+     "perp(DB,CA,E)" "[d_01] intersect_seg(BD,AC,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_diag_perp_no_crossing_rejects : complete_checker
+  (diagonal_source "rhombus(q_ABCD)" "rhombus_diag_perp(1)"
+     "perp(AC,BD,E)" "") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** A parallelogram's diagonals need not be perpendicular. *)
+Example rhombus_diag_perp_parallelogram_rejects : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "rhombus_diag_perp(1)"
+     "perp(AC,BD,E)" "[d_01] intersect_seg(AC,BD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Both kinds of kite: congruent sides meeting at [A] and [C], or at [B]
+    and [D]. *)
+Example kite_diag_perp_accepts : complete_checker
+  (diagonal_source "kite_premise(q_ABCD,a_DAB,a_BCD)" "kite_diag_perp(1)"
+     "perp(AC,BD,E)" "[d_01] intersect_seg(AC,BD,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example kite_diag_perp_other_kind_accepts : complete_checker
+  (diagonal_source "kite_premise(q_ABCD,a_ABC,a_CDA)" "kite_diag_perp(1)"
+     "perp(BD,AC,E)" "[d_01] intersect_seg(AC,BD,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example kite_diag_perp_wrong_point_rejects : complete_checker
+  (diagonal_source "kite_premise(q_ABCD,a_DAB,a_BCD)" "kite_diag_perp(1)"
+     "perp(AC,BD,B)" "[d_01] intersect_seg(AC,BD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.
 Print Assumptions CertifiedAPI.euclidean_plane_exists.

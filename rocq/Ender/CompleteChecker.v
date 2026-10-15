@@ -492,6 +492,9 @@ Definition reason_name (r : Reason) : string :=
   | RhombusOppBisectConv _ _ _ => "rhombus_opp_bisect_conv"
   | AASim _ _ => "aa_sim"
   | LinearPairConv _ => "linear_pair_conv"
+  | PgramDiagBisect _ => "pgram_diag_bisect"
+  | RhombusDiagPerp _ => "rhombus_diag_perp"
+  | KiteDiagPerp _ => "kite_diag_perp"
   end.
 
 (** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
@@ -508,7 +511,8 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
   | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
   | DefRadius i | InscribedSemi i | ConChordsArcs i
-  | IsosTrapBaseAngsConv i | LinearPairConv i => [i]
+  | IsosTrapBaseAngsConv i | LinearPairConv i
+  | PgramDiagBisect i | RhombusDiagPerp i | KiteDiagPerp i => [i]
   | PgramOppSidesConv i j | PgramConsecAngsConv i j | RectPgramAng i j
   | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
   | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
@@ -1022,7 +1026,8 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("pgram_diag_bisect_conv", (2, 2)); ("pgram_opp_angs_conv", (2, 2));
    ("rect_diag_con_conv", (2, 2)); ("rhombus_diag_perp_conv", (2, 2));
    ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
-   ("linear_pair_conv", (1, 2))].
+   ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
+   ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2))].
 
 Definition premise_label_text (arg : list ascii) : bool :=
   match arg with
@@ -1146,6 +1151,8 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | InscribedSemi _ => Some ["right"]
   | AASim _ _ => Some ["sim_tri"]
   | LinearPairConv _ => Some ["linear_pair"]
+  | PgramDiagBisect _ => Some ["seg_bisect"]
+  | RhombusDiagPerp _ | KiteDiagPerp _ => Some ["perp"]
   end.
 
 (** A statement naming one object twice where it means two. *)
@@ -1168,8 +1175,10 @@ Definition json_numbers (xs : list nat) : Audit.JsonValue :=
     rules whose dependency types [reason_dependency_issue] does not cover. *)
 Definition dependency_kinds (r : Reason) : list (nat * string) :=
   match r with
-  | PgramOppSides i | PgramOppAngles i => [(i, "parallelogram")]
-  | KiteOppConAng i => [(i, "kite_premise")]
+  | PgramOppSides i | PgramOppAngles i | PgramDiagBisect i =>
+      [(i, "parallelogram")]
+  | KiteOppConAng i | KiteDiagPerp i => [(i, "kite_premise")]
+  | RhombusDiagPerp i => [(i, "rhombus")]
   | RectanglePgram i => [(i, "rectangle")]
   | RhombusPgram i => [(i, "rhombus")]
   | AltInt i | AltExt i | CorrespAng i | SamesideAng i => [(i, "para")]
@@ -1706,6 +1715,27 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
             [string_field "message"
                ("transitivity needs the two congruences to share a triangle")]
       | _, _ => None
+      end
+  | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
+      match diagonal_rule_parts r facts conclusion with
+      | Some (q, s, t, p) =>
+          let ac := Audit.segmentText (quad_diagonal_ac q) in
+          let bd := Audit.segmentText (quad_diagonal_bd q) in
+          if names_diagonals q s t then
+            issue "no_intersect_seg_premise_for_diagonals_at_this_point"
+              [string_field "message"
+                 ("the diagonals " ++ ac ++ " and " ++ bd ++ " of "
+                  ++ quoted (Audit.quadrilateralText q) ++ " must cross at "
+                  ++ string_of_list_ascii [p] ++ " by a diagram premise, as in "
+                  ++ quoted ("intersect_seg(" ++ ac ++ ", " ++ bd ++ ", "
+                             ++ string_of_list_ascii [p] ++ ")"))]
+          else
+            issue "segs_not_both_diagonals_of_quad"
+              [("s1", seg_text s); ("s2", seg_text t);
+               string_field "message"
+                 ("the diagonals of " ++ quoted (Audit.quadrilateralText q)
+                  ++ " are " ++ ac ++ " and " ++ bd)]
+      | None => None
       end
   | _ => None
   end.

@@ -120,16 +120,19 @@ audited meanings in `Audit.v` are authoritative.
   `on_line` or `intersect_seg` premise placing the point between the
   endpoints; `def_perp` needs an `on_line` premise placing the foot on the
   target line; `linear_pair_conv` needs an `on_line` premise placing the
-  common vertex between the two angles' other points. `rhl` accepts the
-  hypotenuse and the leg cited in either order.
+  common vertex between the two angles' other points; `pgram_diag_bisect`,
+  `rhombus_diag_perp`, and `kite_diag_perp` need an `intersect_seg` premise
+  of the two diagonals at the point they conclude about, since the
+  quadrilateral alone does not name where its diagonals cross. `rhl` accepts
+  the hypotenuse and the leg cited in either order.
 
 Coordinates on the `pt:` line are display-only and contribute nothing to a
 theorem's meaning.
 
 ## Reasons that always reject
 
-The kernel has a rule for 76 of the 92 reasons in the
-[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 16 reject
+The kernel has a rule for 79 of the 92 reasons in the
+[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 13 reject
 every step that cites them.
 
 Three are false as the corpus spells them, so no rule can be written until
@@ -148,11 +151,6 @@ the language changes:
   slide `T` along the same line and every premise still holds. The theorem
   says the bisector passes through the centre, which the language has no way
   to state.
-
-Three conclude about a crossing point their fixtures never place:
-`pgram_diag_bisect`, `rhombus_diag_perp`, and `kite_diag_perp`. The audited
-quadrilateral has a crossing point, but nothing identifies it with the point
-the conclusion names, which an `intersect_seg` premise would.
 
 `sas_sim` and `sss_sim` cite `proportion`, which the kernel has no rules
 for yet. The remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,

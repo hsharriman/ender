@@ -112,7 +112,8 @@ why a particular rule did not accept the step.
 | `angles_not_base_angle_pair_of_trap` | `isos_trap_base_angs_conv` | The angles are not the two corners at either end of a parallel side. |
 | `conclusion_elements_not_in_quad` | `rectangle` | The conclusion names neither corners nor opposite sides of the rectangle. |
 | `quad_stmts_refer_to_diff_quads` | `rectangle_pgram`, `rhombus_pgram`, and the rules that cite a parallelogram or trapezoid to conclude a rhombus, rectangle, or isosceles trapezoid | The cited and concluded quadrilaterals are different figures. |
-| `segs_not_both_diagonals_of_quad` | `isos_trap_con_diags` | The cited congruence is not between the two diagonals. |
+| `segs_not_both_diagonals_of_quad` | `isos_trap_con_diags`, `pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp` | The cited congruence, or the conclusion, is not about the two diagonals. |
+| `no_intersect_seg_premise_for_diagonals_at_this_point` | `pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp` | No `intersect_seg` premise puts the concluded point where the two diagonals cross. |
 | `segs_not_radii_of_circle` | `def_radius` | The conclusion is not the congruence the cited radius gives. |
 | `tangent_segs_have_no_common_ext_pt` | `con_tangents_ext` | The cited tangents do not share their outside endpoint. |
 | `tangent_and_radius_have_diff_tangency_pts` | `tangent_perp`, `tangent_perp_conv` | The tangent and radius do not meet at the point of tangency on the same circle. |

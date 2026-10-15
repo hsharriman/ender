@@ -669,6 +669,38 @@ Proof.
     [contradiction|exact Hmid].
 Qed.
 
+(** A line through two points each equidistant from [U] and [V] is
+    perpendicular to [UV] where it crosses it.  The crossing is equidistant
+    too ([l4_17]), and being between [U] and [V] it is their midpoint; one of
+    the two points lies off it and so makes the right angle.  No dimension
+    axiom enters, because the line is given as meeting [UV]: this is what a
+    kite's, and a rhombus's, diagonals are. *)
+Lemma ender_equidistant_line_perp_at : forall P Q U V M,
+  P <> Q -> Cong P U P V -> Cong Q U Q V ->
+  Bet U M V -> U <> M -> Col P Q M ->
+  Perp_at M P Q U V.
+Proof.
+  intros P Q U V M HPQ HP HQ Hbet HUM Hcol.
+  assert (HMeq : Cong M U M V) by exact (l4_17 P Q M U V HPQ Hcol HP HQ).
+  assert (Hmid : Midpoint M U V) by (split; [exact Hbet|Cong]).
+  assert (HUV : U <> V).
+  { intro Heq. subst V. apply between_identity in Hbet. congruence. }
+  assert (Hright : exists R, R <> M /\ Col P Q R /\ Cong R U R V /\
+                   Col R M P /\ Col R M Q).
+  { destruct (eq_dec_points P M) as [HPM|HPM].
+    - subst M. exists Q. repeat split; Col.
+    - exists P. repeat split; Col. }
+  destruct Hright as [R [HRM [_ [HR [HRP HRQ]]]]].
+  assert (Hper : Per R M U) by (exists V; split; assumption).
+  assert (Hperp : Perp R M U V).
+  { apply perp_sym, (perp_col2 M U); [|exact HUV|Col|apply bet_col in Hbet; Col].
+    apply perp_sym, perp_in_perp with M, per_perp_in; auto. }
+  apply l8_14_2_1b_bis.
+  - apply (perp_col2 R M); assumption.
+  - Col.
+  - apply bet_col in Hbet; Col.
+Qed.
+
 End EnderGeometry.
 
 (** Rules that genuinely need the parallel postulate live here, in their own
@@ -751,6 +783,27 @@ Proof.
   assert (Hstrict : Par_strict A B C D).
   { apply par_not_col_strict with C; [exact Hab|Col|exact Hncol]. }
   apply pars_par_plg; [exact Hstrict|Par].
+Qed.
+
+(** The diagonals of the audited parallelogram bisect each other at any
+    point lying on both.  [Plg] supplies a shared midpoint, and two lines that
+    are not one meet at one point. *)
+Lemma ender_pgram_diagonals_bisect : forall A B C D M,
+  ~ Col A B C -> Par A B C D -> Par B C D A -> B <> D ->
+  Col A C M -> Col B D M ->
+  Midpoint M A C /\ Midpoint M B D.
+Proof.
+  intros A B C D M Hncol Hab Hbc HBD HM1 HM2.
+  destruct (ender_pgram_plg A B C D Hncol Hab Hbc) as [_ [N [HNAC HNBD]]].
+  assert (Heq : M = N).
+  { apply (l6_21 A C B D M N).
+    - intro. apply Hncol. Col.
+    - exact HBD.
+    - exact HM1.
+    - apply midpoint_col in HNAC. Col.
+    - exact HM2.
+    - apply midpoint_col in HNBD. Col. }
+  subst N. split; assumption.
 Qed.
 
 (** The converse of the diagonal-bisection theorem, read off GeoCoq's own
