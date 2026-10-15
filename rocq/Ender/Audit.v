@@ -437,7 +437,11 @@ Definition statementMeaning (s : Statement) : Prop :=
   | OnLine s p => SegmentWellFormed s /\ OnSegment s p
   | Transversal a b t1 i1 c d t2 i2 =>
       TransversalConfiguration a b t1 i1 c d t2 i2
-  | IntersectSeg a b p => OnSegment a p /\ OnSegment b p
+  (* Two segments crossing at a point interior to both: the crossing differs
+     from all four endpoints, so it is never a corner or a T-junction. *)
+  | IntersectSeg a b p =>
+      BetS (seg_start a) (point p) (seg_end a) /\
+      BetS (seg_start b) (point p) (seg_end b)
   | TrapezoidPremise q a b => IsTrapezoid q /\ Parallel a b
   | KitePremise q a b => IsKitePremise q a b
   | IsosTrapezoidPremise q a b => IsIsoscelesTrapezoid q /\ Parallel a b

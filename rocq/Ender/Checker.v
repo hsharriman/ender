@@ -800,10 +800,11 @@ Definition def_midpt (facts : list Statement) (i : nat)
   end.
 
 (** Vertical angles.  Two segments crossing at [p] give two pairs of opposite
-    angles at [p]; both members of the concluded pair must span the vertices of
-    a declared triangle, which is what supplies the nondegenerate rays.  This
-    reason takes no step dependency, so the crossing is looked up among the
-    diagram premises. *)
+    angles at [p]; both members of the concluded pair must be declared
+    nondegenerate.  The crossing itself declares them, since [check_problem]
+    reads an [intersect_seg]'s half-segments as declared segments
+    ([kernel_declarations]).  This reason takes no step dependency, so the
+    crossing is looked up among the diagram premises. *)
 Definition vertical_angle_pair (decls : Declarations) (s t : SegmentName)
     (p : PointId) (conclusion : Statement) : bool :=
   let opposite first second :=
@@ -883,12 +884,9 @@ Definition on_line_premise_used (premises : list Premise) (s : SegmentName)
     says it too, of each of the two segments it crosses — a crossing point lies
     between the endpoints of both.  Reading the crossing here is what lets a
     figure declared by its intersection serve a midpoint converse without also
-    having to spell out an [on_line] for the same pair.
-
-    This is deliberately not shared with [def_perp].  [intersect_seg] carries no
-    nondegeneracy, so it cannot discharge [perp_core_col]'s [seg_start <>
-    seg_end]; [midpt_conv] never needs that, because [Midpoint] is by definition
-    the betweenness together with the congruence its dependency supplies. *)
+    having to spell out an [on_line] for the same pair.  [Midpoint] is by
+    definition the betweenness together with the congruence the dependency
+    supplies, so this reads nothing else out of the premise. *)
 Definition on_segment_statement (s : SegmentName) (p : PointId) (st : Statement)
     : bool :=
   match st with
@@ -2242,8 +2240,29 @@ Fixpoint check_steps decls premises facts steps : option (list Statement) :=
     up to reversal, symmetric pairs up to swap, and [ref_*] facts standing in
     for their [con_*] forms.  [fact_eqb_sound] is the justification, and it
     keeps [con_tri] ordered-exact, as the correspondence semantics demand. *)
+(** An [intersect_seg] premise is audited as a strict crossing, so the point
+    differs from all four endpoints: each crossed segment and each of the four
+    half-segments has two different ends, which is exactly what a [seg:] line
+    asserts.  The kernel therefore reads them as declared segments, which is
+    what lets [vert_ang] and the ray-matching rules use the crossing without a
+    separate declaration. *)
+Definition crossing_segments (pr : Premise) : list SegmentName :=
+  match pr.(premise_statement) with
+  | IntersectSeg s t p =>
+      [s; t; segment_name s.(segment_first) p; segment_name p s.(segment_second);
+       segment_name t.(segment_first) p; segment_name p t.(segment_second)]
+  | _ => []
+  end.
+
+Definition kernel_declarations (decls : Declarations) (premises : list Premise)
+    : Declarations :=
+  declarations decls.(decl_triangles) decls.(decl_angles)
+    decls.(decl_quadrilaterals) decls.(decl_circles)
+    (decls.(decl_segments) ++ flat_map crossing_segments premises).
+
 Definition check_problem (p : Problem) : bool :=
-  match check_steps p.(problem_declarations) p.(problem_premises) [] p.(problem_steps) with
+  match check_steps (kernel_declarations p.(problem_declarations) p.(problem_premises))
+          p.(problem_premises) [] p.(problem_steps) with
   | Some facts => existsb (fact_eqb p.(problem_goal)) facts
   | None => false
   end.
@@ -3039,7 +3058,7 @@ Proof.
   destruct pr.(premise_statement); try discriminate;
     cbn in Hpr, Hc;
     first
-    [ destruct Hpr as [Hbet1 Hbet2]; apply orb_true_iff in Hc;
+    [ destruct Hpr as [[Hbet1 _] [Hbet2 _]]; apply orb_true_iff in Hc;
       destruct Hc as [Hc|Hc];
       [ eapply on_segment_match_out; [exact Hbet1|exact Hc|exact Hp|exact Hq]
       | eapply on_segment_match_out; [exact Hbet2|exact Hc|exact Hp|exact Hq] ]
@@ -3653,7 +3672,7 @@ Lemma vertical_angle_pair_sound : forall decls s t p conclusion,
   vertical_angle_pair decls s t p conclusion = true -> Interp conclusion.
 Proof.
   intros decls s t p conclusion Hwf Hcross Hpair.
-  cbn in Hcross. destruct Hcross as [Hs Ht].
+  cbn in Hcross. destruct Hcross as [[Hs _] [Ht _]].
   unfold vertical_angle_pair in Hpair. apply orb_true_iff in Hpair.
   destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
     destruct Hcase as [Hdeclared Heq]; apply andb_true_iff in Hdeclared;
@@ -3749,9 +3768,7 @@ Qed.
 
 (** The only thing [midpt_conv] reads out of the diagram premise it found.
     [on_line] gives it directly; [intersect_seg] gives it of whichever of its
-    two segments matched.  Nondegeneracy is deliberately not claimed, because
-    [intersect_seg] does not carry it and the midpoint converse does not use
-    it. *)
+    two segments matched.  The midpoint converse needs nothing more. *)
 Lemma on_segment_statement_sound : forall s p st,
   on_segment_statement s p st = true -> Interp st ->
   Bet (point s.(segment_first)) (point p) (point s.(segment_second)).
@@ -3764,7 +3781,7 @@ Proof.
     cbn in Hst. destruct Hst as [_ Hbet].
     eapply segment_u_bet; eassumption.
   - (* IntersectSeg: either crossed segment may be the one named *)
-    cbn in Hst. destruct Hst as [Hbet1 Hbet2].
+    cbn in Hst. destruct Hst as [[Hbet1 _] [Hbet2 _]].
     apply orb_true_iff in Hseg. destruct Hseg as [Hseg|Hseg];
       eapply segment_u_bet; eassumption.
 Qed.
@@ -7210,14 +7227,44 @@ Proof.
     eapply rule_valid_sound; eauto.
 Qed.
 
+Lemma crossing_segments_sound : forall pr s,
+  interp_premise point pr -> In s (crossing_segments pr) ->
+  point s.(segment_first) <> point s.(segment_second).
+Proof.
+  intros pr s Hpr Hin. unfold crossing_segments in Hin. unfold interp_premise in Hpr.
+  destruct (premise_statement pr); try contradiction.
+  cbn in Hpr. destruct Hpr as [[Hb1 [Hb2 Hb3]] [Hc1 [Hc2 Hc3]]].
+  cbn in Hin.
+  repeat (destruct Hin as [<-|Hin]; [cbn; first [assumption | now apply sym_not_eq
+         | intro Heq; rewrite Heq in *; apply between_identity in Hb1; congruence
+         | intro Heq; rewrite Heq in *; apply between_identity in Hc1; congruence]|]).
+  contradiction.
+Qed.
+
+Lemma kernel_declarations_well_formed : forall decls premises,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  declarations_well_formed point (kernel_declarations decls premises).
+Proof.
+  intros decls premises [Ht [Ha [Hq [Hc Hs]]]] Hprem.
+  split; [exact Ht|split; [exact Ha|split; [exact Hq|split; [exact Hc|]]]].
+  intros s Hin. cbn in Hin. apply in_app_or in Hin. destruct Hin as [Hin|Hin].
+  - now apply Hs.
+  - apply in_flat_map in Hin. destruct Hin as [pr [Hpr Hin]].
+    eapply crossing_segments_sound; [|exact Hin].
+    exact (proj1 (Forall_forall _ _) Hprem pr Hpr).
+Qed.
+
 Theorem check_problem_sound : forall p,
   check_problem p = true ->
   declarations_well_formed point p.(problem_declarations) ->
   Forall (interp_premise point) p.(problem_premises) ->
   Interp p.(problem_goal).
 Proof.
-  intros p Hcheck Hwf Hprem. unfold check_problem in Hcheck.
-  destruct (check_steps (problem_declarations p) (problem_premises p) []
+  intros p Hcheck Hwf0 Hprem. unfold check_problem in Hcheck.
+  pose proof (kernel_declarations_well_formed _ _ Hwf0 Hprem) as Hwf.
+  destruct (check_steps (kernel_declarations (problem_declarations p) (problem_premises p))
+            (problem_premises p) []
             (problem_steps p)) as [facts|] eqn:Hsteps; try discriminate.
   apply existsb_exists in Hcheck. destruct Hcheck as [goal [Hin Heq]].
   pose proof (check_steps_sound _ _ _ _ _ Hwf Hprem (Forall_nil _) Hsteps) as Hall.

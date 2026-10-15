@@ -834,9 +834,13 @@ Definition report_data_of (source : string) : option ReportData :=
           match build_kernel_problem public header [] with
           | Some p =>
               let steps := report_step_lines (Parser.split_lines stepText []) in
-              Some (report_data p.(problem_declarations) p.(problem_premises)
+              (* the declarations [check_problem] reads, so the report judges
+                 each step as the verdict does *)
+              let decls := kernel_declarations p.(problem_declarations)
+                             p.(problem_premises) in
+              Some (report_data decls p.(problem_premises)
                       p.(problem_goal) steps
-                      (step_statuses p.(problem_declarations)
+                      (step_statuses decls
                          p.(problem_premises) [] (map rs_step steps) 1 []))
           | None => None
           end

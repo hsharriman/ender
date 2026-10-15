@@ -586,9 +586,9 @@ Definition vert_ang_adjacent_source := transitive_header "tri: t_ACE t_BDE
   "con_ang(a_CEA,a_CEB)"
   "[01] vert_ang() -> con_ang(a_CEA,a_CEB)".
 
-(** Without declared triangles the rays may be degenerate. *)
-Definition vert_ang_undeclared_source := transitive_header "seg: AB
-"
+(** The crossing is strict, so it makes all four rays nondegenerate itself:
+    no triangle or segment needs declaring. *)
+Definition vert_ang_undeclared_source := transitive_header ""
   "[d_01] intersect_seg(AB,CD,E)
 "
   "con_ang(a_CEA,a_DEB)"
@@ -610,8 +610,8 @@ Proof. vm_compute. reflexivity. Qed.
 Example vert_ang_adjacent_rejects :
   complete_checker vert_ang_adjacent_source = false.
 Proof. vm_compute. reflexivity. Qed.
-Example vert_ang_undeclared_rejects :
-  complete_checker vert_ang_undeclared_source = false.
+Example vert_ang_undeclared_accepts :
+  complete_checker vert_ang_undeclared_source = true.
 Proof. vm_compute. reflexivity. Qed.
 Example vert_ang_no_crossing_rejects :
   complete_checker vert_ang_no_crossing_source = false.

@@ -93,14 +93,18 @@ audited meanings in `Audit.v` are authoritative.
   `cpctc` is written `con_tri_ordered`.
 - **Nondegeneracy comes from declarations.** A rule that needs a nondegenerate
   angle or segment gets it from a `tri:`, `quad:`, `ang:`, or `seg:`
-  declaration and nowhere else; with none to draw on, it rejects. A
-  quadrilateral supplies it for any three of its vertices, and two declared
-  segments sharing an endpoint are an angle's two rays. This is why, for
+  declaration, or from an `intersect_seg` premise, and nowhere else; with none
+  to draw on, it rejects. A quadrilateral supplies it for any three of its
+  vertices, and two declared segments sharing an endpoint are an angle's two
+  rays. A crossing is strict, so `intersect_seg(AC, BD, E)` counts as
+  declaring `AC`, `BD`, and the four half-segments `AE`, `EC`, `BE`, and
+  `ED`. This is why, for
   example, `reflex` concludes `ref_ang` only for a declared angle, and
   `perp_con_ang` concludes `con_ang` (rather than `con_right`) only for
   declared angles.
 - **Diagram premises.** `on_line(s, p)` puts `p` on the drawn segment `s`,
-  endpoints included, not anywhere on its line. `transversal(a, b, t1, i1, c,
+  endpoints included, not anywhere on its line. `intersect_seg(s, t, p)` says
+  `s` and `t` cross at a point strictly inside both, never at an endpoint. `transversal(a, b, t1, i1, c,
   d, t2, i2)` describes the whole figure: `a` and `b` flank the crossing `i1`,
   `c` and `d` flank `i2`, `t1` and `t2` extend past the crossings, and `a` and
   `c` lie on the same side of the transversal. A part left undrawn is spelled
@@ -116,7 +120,8 @@ audited meanings in `Audit.v` are authoritative.
   `on_line` or `intersect_seg` premise placing the point between the
   endpoints; `def_perp` needs an `on_line` premise placing the foot on the
   target line; `linear_pair_conv` needs an `on_line` premise placing the
-  common vertex between the two angles' other points. `rhl` accepts the hypotenuse and the leg cited in either order.
+  common vertex between the two angles' other points. `rhl` accepts the
+  hypotenuse and the leg cited in either order.
 
 Coordinates on the `pt:` line are display-only and contribute nothing to a
 theorem's meaning.
