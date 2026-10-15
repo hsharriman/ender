@@ -2480,6 +2480,80 @@ Example kite_diag_perp_wrong_point_rejects : complete_checker
 ") = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Converse of the chord bisector: the perpendicular bisector of a chord
+    passes through the centre. *)
+Definition chord_source (premises goal steps : string) : string :=
+  "title: chords
+premises:
+pt: O (5,5), R (5,0), A (1,8), B (9,8), M (5,8), T (5,10)
+circ: c_OR
+" ++ premises ++ "-> " ++ goal ++ "
+
+steps:
+" ++ steps.
+
+Definition chord_bisect_conv_source (goal : string) := chord_source
+  "[g_1] perp_bisector(MT, AB, M)
+[g_2] chord(c_OR, AB)
+" goal ("[01] given(g_1) -> perp_bisector(MT, AB, M)
+[02] given(g_2) -> chord(c_OR, AB)
+[03] chord_bisect_conv(1, 2) -> " ++ goal).
+
+Example chord_bisect_conv_accepts :
+  complete_checker (chord_bisect_conv_source "center_on_line(c_OR, MT)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** Either direction of the bisector names its line. *)
+Example chord_bisect_conv_reversed_accepts :
+  complete_checker (chord_bisect_conv_source "center_on_line(c_OR, TM)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** The chord does not pass through the centre. *)
+Example chord_bisect_conv_chord_rejects :
+  complete_checker (chord_bisect_conv_source "center_on_line(c_OR, AB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** The chord must be the one the bisector bisects. *)
+Example chord_bisect_conv_other_chord_rejects : complete_checker (chord_source
+  "[g_1] perp_bisector(MT, AB, M)
+[g_2] chord(c_OR, AT)
+" "center_on_line(c_OR, MT)" "[01] given(g_1) -> perp_bisector(MT, AB, M)
+[02] given(g_2) -> chord(c_OR, AT)
+[03] chord_bisect_conv(1, 2) -> center_on_line(c_OR, MT)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A segment from a line through the centre to the circle is a radius, with
+    the point placed on the circle by any circle premise. *)
+Definition def_radius_conv_source (premise goal : string) := chord_source
+  (premise ++ "[g_1] center_on_line(c_OR, MT)
+") goal ("[01] given(g_1) -> center_on_line(c_OR, MT)
+[02] def_radius_conv(1) -> " ++ goal).
+
+Example def_radius_conv_on_circle_accepts : complete_checker
+  (def_radius_conv_source "[d_01] on_circle(c_OR, T)
+" "radius(c_OR, T)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_radius_conv_chord_accepts : complete_checker
+  (def_radius_conv_source "[d_01] chord(c_OR, AT)
+" "radius(c_OR, T)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_radius_conv_inscribed_accepts : complete_checker
+  (def_radius_conv_source "[d_01] inscribed_angle(c_OR, a_ATB)
+" "radius(c_OR, T)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** Nothing places M on the circle. *)
+Example def_radius_conv_off_circle_rejects : complete_checker
+  (def_radius_conv_source "[d_01] on_circle(c_OR, T)
+" "radius(c_OR, M)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** A point on the circle that is not an end of the segment. *)
+Example def_radius_conv_not_endpoint_rejects : complete_checker
+  (def_radius_conv_source "[d_01] on_circle(c_OR, A)
+" "radius(c_OR, A)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** On a different circle. *)
+Example def_radius_conv_other_circle_rejects : complete_checker
+  (def_radius_conv_source "[d_01] on_circle(c_OA, T)
+" "radius(c_OR, T)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.
 Print Assumptions CertifiedAPI.euclidean_plane_exists.

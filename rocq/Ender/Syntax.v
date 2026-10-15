@@ -86,7 +86,9 @@ Inductive Reason :=
 | LinearPairConv : nat -> Reason
 | PgramDiagBisect : nat -> Reason
 | RhombusDiagPerp : nat -> Reason
-| KiteDiagPerp : nat -> Reason.
+| KiteDiagPerp : nat -> Reason
+| ChordBisectConv : nat -> nat -> Reason
+| DefRadiusConv : nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.

@@ -1,0 +1,13 @@
+// pass
+title: "Test: def_radius_conv (correct - a segment from a line through the centre to the circle is a radius)"
+premises:
+pt: O (5, 5, c), R (5, 0, b), M (5, 8, r), T (5, 10, t)
+circ: c_OR
+seg: MT
+[d_01] on_circle(c_OR, T)
+[g_1] center_on_line(c_OR, MT)
+-> radius(c_OR, T)
+
+steps:
+[01] given(g_1) -> center_on_line(c_OR, MT)
+[02] def_radius_conv(1, d_01) -> radius(c_OR, T)

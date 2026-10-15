@@ -1,0 +1,14 @@
+// pass
+title: "Test: chord_bisect_conv (correct - the perpendicular bisector of a chord passes through the centre)"
+premises:
+pt: O (5, 5, c), R (5, 0, b), A (1, 8, tl), B (9, 8, tr), M (5, 8, tc), T (5, 10, tc)
+circ: c_OR
+seg: MT
+[g_1] perp_bisector(MT, AB, M)
+[g_2] chord(c_OR, AB)
+-> center_on_line(c_OR, MT)
+
+steps:
+[01] given(g_1) -> perp_bisector(MT, AB, M)
+[02] given(g_2) -> chord(c_OR, AB)
+[03] chord_bisect_conv(1, 2) -> center_on_line(c_OR, MT)

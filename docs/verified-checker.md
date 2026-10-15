@@ -32,10 +32,11 @@ The statement meanings assume only `Tarski_neutral_dimensionless`. The
 soundness theorem quantifies over decidable point equality,
 `Tarski_euclidean`, and `Tarski_2D` as hypotheses, not axioms. The plane is
 needed only for circles: the audited `OnCircle` is equidistance from a center,
-which in three dimensions is a sphere, and the inscribed-angle theorems are
-false on spheres. Individual rules assume the parallel postulate only where
-they need it; `Tarski_euclidean` is introduced in `Checker.v` just above the
-first rule that does, so every rule above that point is visibly neutral.
+which in three dimensions is a sphere, so some circle theorems are false
+without it. Individual rules assume the parallel postulate and the plane only
+where they need them; `Checker.v` introduces `Tarski_euclidean` just above the
+first rule that needs it and `Tarski_2D` just above `chord_bisect_conv`, the
+only rule that does, so every rule above each point is visibly free of it.
 
 Because the hypotheses are universally quantified, soundness would hold
 vacuously if no model satisfied them. The contract therefore also requires
@@ -125,17 +126,22 @@ audited meanings in `Audit.v` are authoritative.
   of the two diagonals at the point they conclude about, since the
   quadrilateral alone does not name where its diagonals cross. `rhl` accepts
   the hypotenuse and the leg cited in either order.
+- **Circles.** `on_circle(c, p)` and `radius(c, p)` mean the same thing: `p`
+  is on the circle. Every circle statement puts the points it names on the
+  circle, except the centre and a tangent's far end, so a rule that needs a
+  point on the circle, like `def_radius_conv`, finds it in any of them.
+  `center_on_line(c, s)` says the centre lies on the line through `s`.
 
 Coordinates on the `pt:` line are display-only and contribute nothing to a
 theorem's meaning.
 
 ## Reasons that always reject
 
-The kernel has a rule for 79 of the 92 reasons in the
-[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 13 reject
+The kernel has a rule for 81 of the 93 reasons in the
+[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 12 reject
 every step that cites them.
 
-Three are false as the corpus spells them, so no rule can be written until
+Two are false as the corpus spells them, so no rule can be written until
 the language changes:
 
 - **`con_inscribed_angs`, `inscribed_angs`.** Two inscribed angles on one
@@ -146,11 +152,6 @@ the language changes:
   options are a same-side premise such as `sameside(AB, P, Q)`, or having
   `inscribed_angle` name its intercepted arc; either way the rule also needs
   the arc condition that separates the two cases.
-- **`radius_chord_bisect_conv`.** It concludes `radius(c_OR, T)`, that the far
-  end of the perpendicular bisector lies on the circle, which does not follow:
-  slide `T` along the same line and every premise still holds. The theorem
-  says the bisector passes through the centre, which the language has no way
-  to state.
 
 `sas_sim` and `sss_sim` cite `proportion`, which the kernel has no rules
 for yet. The remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,

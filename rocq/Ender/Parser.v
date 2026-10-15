@@ -363,7 +363,9 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "pgram_diag_bisect" text (parse_one_with_diagram PgramDiagBisect)
         (try_call "rhombus_diag_perp" text (parse_one_with_diagram RhombusDiagPerp)
         (try_call "kite_diag_perp" text (parse_one_with_diagram KiteDiagPerp)
-        None))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+        (try_call "chord_bisect_conv" text (parse_two ChordBisectConv)
+        (try_call "def_radius_conv" text (parse_one_with_diagram DefRadiusConv)
+        None))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 
@@ -529,9 +531,10 @@ Definition check_source (source : string) : bool :=
 Section SourceSoundness.
 
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
-(* [third_angle] is the one implemented rule that needs the parallel
-   postulate; see the comment above its soundness lemma in [Checker.v]. *)
+(* The parallel postulate and the plane, which some rules need; see where
+   [Checker.v] introduces each. *)
 Context {TE : @Tarski_euclidean Tn TnEQD}.
+Context {T2D : @Tarski_2D Tn TnEQD}.
 Variable point : PointId -> Tpoint.
 
 Theorem check_source_sound : forall source p,

@@ -548,12 +548,12 @@ export const REASONS_DEFS = {
     dependencies: ["perp", "radius", "chord"],
     conclusion: "seg_bisect", // todo arc bisect?
   },
-  radius_chord_bisect_conv: {
-    name: "radius_chord_bisect_conv",
-    title: "Radius Chord Bisect (Converse)",
-    body: "The perpendicular bisector of a chord is a radius of the circle.",
+  chord_bisect_conv: {
+    name: "chord_bisect_conv",
+    title: "Chord Bisector (Converse)",
+    body: "The perpendicular bisector of a chord passes through the center of the circle.",
     dependencies: ["perp_bisector", "chord"],
-    conclusion: "radius",
+    conclusion: "center_on_line",
   },
   con_inscribed_angs: {
     name: "con_inscribed_angs",
@@ -675,6 +675,14 @@ export const REASONS_DEFS = {
     body: "A radius of a circle is a line segment from the center of the circle to any point on the circle. All radii have the same length.",
     dependencies: ["radius"],
     conclusion: "con_seg",
+  },
+  def_radius_conv: {
+    name: "def_radius_conv",
+    title: "Def. Radius (Converse)",
+    body: "If a line through the center of a circle meets the circle at a point, then the segment from the center to that point is a radius.",
+    dependencies: ["center_on_line"],
+    diagramDependencies: ["on_circle"],
+    conclusion: "radius",
   },
   tangent_diam_perp: {
     name: "tangent_diam_perp",

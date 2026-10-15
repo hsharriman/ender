@@ -62,8 +62,12 @@ function parseExpected(firstLine: string): Expected | null {
  * file that leaves this list is a regression.
  */
 const OUTCOME_ENFORCED = new Set([
+  "circles/chord_bisect_conv_correct.txt",
+  "circles/chord_bisect_conv_incorrect.txt",
   "circles/con_chords_intersect_arcs_correct.txt",
   "circles/con_chords_intersect_arcs_incorrect.txt",
+  "circles/def_radius_conv_correct.txt",
+  "circles/def_radius_conv_incorrect.txt",
   "circles/def_radius_correct.txt",
   "circles/def_radius_incorrect.txt",
   "circles/inscribed_semi_correct.txt",

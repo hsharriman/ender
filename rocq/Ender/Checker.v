@@ -2060,6 +2060,62 @@ Definition radius_chord_bisect_rule (facts : list Statement) (i j k : nat)
   | _, _, _, _ => false
   end.
 
+(** The converse: the perpendicular bisector of a chord passes through the
+    centre.  The centre is as far from the chord's two ends as each is from
+    it, and in the plane every such point lies on the perpendicular bisector.
+    The concluded line is the bisector's, in either direction, and the chord
+    the bisector's target. *)
+Definition chord_bisect_conv_rule (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | CenterOnLine c b, Some (PerpBisector b' t _), Some (Chord c' ch) =>
+      circle_eqb c c' && segment_u_eqb b b' && segment_u_eqb t ch
+  | _, _, _ => false
+  end.
+
+(** A statement placing [p] on circle [c], read off its audited meaning:
+    every circle statement puts the points it names on the circle, except the
+    centre and any point a tangent or a [center_on_line] names off it. *)
+Definition places_on_circle (c : CircleName) (p : PointId) (s : Statement) : bool :=
+  let on_arc (a : ArcName) :=
+    circle_eqb c a.(arc_circle) &&
+    (ascii_eqb p a.(arc_first) || ascii_eqb p a.(arc_second)) in
+  match s with
+  | OnCirclePoint c' q | Radius c' q | Tangent c' _ q =>
+      circle_eqb c c' && ascii_eqb p q
+  | Chord c' s | Diameter c' s => circle_eqb c c' && endpoint_of p s
+  | InscribedAngle c' a | MinorInscribedAngle c' a | MajorInscribedAngle c' a =>
+      circle_eqb c c' &&
+      (ascii_eqb p a.(angle_first) || ascii_eqb p a.(angle_vertex) ||
+       ascii_eqb p a.(angle_last))
+  | ArcStatement a => on_arc a
+  | ConArc a b => on_arc a || on_arc b
+  | _ => false
+  end.
+
+Definition on_circle_premise (c : CircleName) (p : PointId) (pr : Premise) : bool :=
+  places_on_circle c p pr.(premise_statement).
+
+(** A segment from a line through the centre to a point on the circle is a
+    radius.  The point is an end of the segment the dependency puts the
+    centre in line with, and some premise places it on the circle: an
+    [on_circle] premise, or any circle statement naming it there. *)
+Definition def_radius_conv_rule (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | Radius c p, Some (CenterOnLine c' s) =>
+      circle_eqb c c' && endpoint_of p s &&
+      premise_found (on_circle_premise c p) premises
+  | _, _ => false
+  end.
+
+Definition def_radius_conv_used (premises : list Premise) (conclusion : Statement)
+    : option Statement :=
+  match conclusion with
+  | Radius c p => premise_witness (on_circle_premise c p) premises
+  | _ => None
+  end.
+
 (** Which diagram premises a step actually consulted.  Each entry comes from
     the same search the rule itself runs -- the rule is [premise_found] of it
     and this is [premise_witness] of it -- so the report cannot claim a premise
@@ -2185,6 +2241,7 @@ Definition rule_diagram_premises_raw (decls : Declarations)
   | LinearPairConv _ => one (linear_pair_conv_used premises conclusion)
   | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
       one (diagonal_rule_used premises facts reason conclusion)
+  | DefRadiusConv _ => one (def_radius_conv_used premises conclusion)
   | _ => []
   end.
 
@@ -2296,6 +2353,8 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | LinearPairConv i => linear_pair_conv premises facts i conclusion
   | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
       diagonal_rule premises facts r conclusion
+  | ChordBisectConv i j => chord_bisect_conv_rule facts i j conclusion
+  | DefRadiusConv i => def_radius_conv_rule premises facts i conclusion
   | RHL i j k =>
       criterion_conclusion rhl_schema decls premises facts i j k conclusion
   end.
@@ -7332,6 +7391,143 @@ Proof.
   now apply ender_third_angle.
 Qed.
 
+Lemma endpoint_of_cases : forall p s, endpoint_of p s = true ->
+  p = s.(segment_first) \/ p = s.(segment_second).
+Proof.
+  intros p s H. unfold endpoint_of, ascii_eqb in H.
+  apply orb_true_iff in H. destruct H as [H|H]; apply Ascii.eqb_eq in H; auto.
+Qed.
+
+Lemma places_on_circle_sound : forall c p st,
+  Interp st -> places_on_circle c p st = true ->
+  Audit.OnCircle point c p.
+Proof.
+  intros c p st Hst H.
+  destruct st; cbn in H; try discriminate.
+  all: unfold ascii_eqb in *.
+  all: repeat match type of H with
+    | (_ && _)%bool = true => apply andb_true_iff in H; destruct H as [Hc H]
+    end.
+  all: try (apply circle_eqb_eq in Hc; subst).
+  all: cbn in Hst.
+  - (* tangent *)
+    apply Ascii.eqb_eq in H. subst. destruct Hst as [_ [Hon _]]. exact Hon.
+  - (* chord *)
+    apply endpoint_of_cases in H. destruct Hst as [_ [H1 H2]].
+    destruct H as [->| ->]; assumption.
+  - (* arc *)
+    apply orb_true_iff in H. destruct Hst as [_ [H1 H2]].
+    destruct H as [H|H]; apply Ascii.eqb_eq in H; subst; assumption.
+  - (* radius *)
+    apply Ascii.eqb_eq in H. subst. exact Hst.
+  - (* diameter *)
+    apply endpoint_of_cases in H. destruct Hst as [[_ [H1 H2]] _].
+    destruct H as [->| ->]; assumption.
+  - (* inscribed angle *)
+    rewrite !orb_true_iff in H. destruct Hst as [H1 [H2 [H3 _]]].
+    destruct H as [[H|H]|H]; apply Ascii.eqb_eq in H; subst; assumption.
+  - (* on_circle *)
+    apply Ascii.eqb_eq in H. subst. exact Hst.
+  - (* minor inscribed angle *)
+    rewrite !orb_true_iff in H. destruct Hst as [[H1 [H2 [H3 _]]] _].
+    destruct H as [[H|H]|H]; apply Ascii.eqb_eq in H; subst; assumption.
+  - (* major inscribed angle *)
+    rewrite !orb_true_iff in H. destruct Hst as [[H1 [H2 [H3 _]]] _].
+    destruct H as [[H|H]|H]; apply Ascii.eqb_eq in H; subst; assumption.
+  - (* congruent arcs *)
+    destruct Hst as [[_ [Ha1 Ha2]] [[_ [Hb1 Hb2]] _]].
+    apply orb_true_iff in H.
+    destruct H as [H|H]; apply andb_true_iff in H; destruct H as [Hc H];
+      apply circle_eqb_eq in Hc; subst; apply orb_true_iff in H;
+      destruct H as [H|H]; apply Ascii.eqb_eq in H; subst; assumption.
+Qed.
+
+(** The conclusion is the [on_circle] fact itself, read as [radius]: the two
+    have the same audited meaning, and the [center_on_line] dependency is
+    the textbook's reason for calling the segment a radius. *)
+Lemma def_radius_conv_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises ->
+  def_radius_conv_rule premises facts i conclusion = true -> Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hrule.
+  unfold def_radius_conv_rule in Hrule.
+  destruct conclusion; try discriminate. all: try old_names_goal.
+  destruct (lookup_step facts i) as [x|]; try discriminate;
+    destruct x; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [_ Hon].
+  rewrite premise_found_existsb in Hon.
+  apply existsb_exists in Hon. destruct Hon as [pr [Hin Hmatch]].
+  pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
+                Hprem pr Hin) as Hpr.
+  exact (places_on_circle_sound _ _ _ Hpr Hmatch).
+Qed.
+
+(** Everything below assumes the plane, which only [chord_bisect_conv]
+    needs: in three dimensions the points equidistant from a chord's ends
+    fill a plane, not a line. *)
+Context {T2D : @Tarski_2D Tn TnEQD}.
+
+Lemma ender_center_on_bisector : forall X Y A B M O,
+  X <> Y -> Col X Y M -> Midpoint M A B -> Perp_at M X Y A B ->
+  Cong O A O B -> Col X Y O.
+Proof.
+  intros X Y A B M O HXY HcolM Hmid Hperp Hcong.
+  destruct (eq_dec_points O M) as [->|HOM]; [exact HcolM|].
+  assert (HAB : A <> B) by (destruct Hperp as [_ [HAB _]]; exact HAB).
+  assert (HMA : M <> A).
+  { intro HeqMA. subst M. apply HAB. apply is_midpoint_id. exact Hmid. }
+  assert (HperO : Per O M A) by (exists B; split; [exact Hmid|exact Hcong]).
+  destruct Hperp as [_ [_ [_ [_ Hall]]]].
+  destruct (eq_dec_points X M) as [HXM|HXM].
+  - subst M.
+    assert (HperY : Per Y X A) by (apply Hall; [apply col_trivial_3|apply col_trivial_1]).
+    assert (Hcol : Col O Y X) by (apply per2__col with A; auto).
+    Col.
+  - assert (HperX : Per X M A) by (apply Hall; [apply col_trivial_1|apply col_trivial_1]).
+    assert (Hcol : Col O X M) by (apply per2__col with A; auto).
+    ColR.
+Qed.
+
+Lemma chord_bisect_conv_sound : forall facts i j conclusion,
+  Forall Interp facts ->
+  chord_bisect_conv_rule facts i j conclusion = true -> Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  unfold chord_bisect_conv_rule in Hrule.
+  destruct conclusion; try discriminate. all: try old_names_goal.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  all: try old_names_eq Hx.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  all: try old_names_eq Hy.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Htarget].
+  apply andb_true_iff in Hrule. destruct Hrule as [Hcircle Hline].
+  apply circle_eqb_eq in Hcircle. subst c0.
+  assert (Hpb : Interp (PerpBisector s0 s1 p)) by (eapply lookup_step_sound; eauto).
+  assert (Hch : Interp (Chord c s2)) by (eapply lookup_step_sound; eauto).
+  cbn in Hpb, Hch.
+  destruct Hpb as [[Hwf [Hcol Hmid]] Hperp].
+  destruct Hch as [_ [[Hcwf Hone] [_ Htwo]]].
+  (* The chord's ends are as far from the centre as each other. *)
+  assert (Hcong : Cong (point c.(circle_center)) (point s1.(segment_first))
+                       (point c.(circle_center)) (point s1.(segment_second))).
+  { unfold Audit.circ_center in Hone, Htwo.
+    apply segment_u_eqb_cases in Htarget.
+    destruct Htarget as [->| ->]; cbn;
+      apply cong_transitivity with (point c.(circle_center))
+                                   (point c.(circle_radius_point)).
+    - exact Hone.
+    - apply cong_symmetry. exact Htwo.
+    - exact Htwo.
+    - apply cong_symmetry. exact Hone. }
+  pose proof (ender_center_on_bisector _ _ _ _ _ _ Hwf Hcol Hmid Hperp Hcong)
+    as Hcentre.
+  cbn. split; [exact Hcwf|].
+  apply segment_u_eqb_cases in Hline.
+  destruct Hline as [->| ->]; cbn; split; auto; Col.
+Qed.
+
 Lemma rule_valid_sound : forall decls premises facts reason conclusion,
   declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -7442,6 +7638,8 @@ Proof.
   - eapply diagonal_rule_sound; eauto.
   - eapply diagonal_rule_sound; eauto.
   - eapply diagonal_rule_sound; eauto.
+  - eapply chord_bisect_conv_sound; eauto.
+  - eapply def_radius_conv_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

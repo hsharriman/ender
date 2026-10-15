@@ -498,6 +498,8 @@ Definition reason_name (r : Reason) : string :=
   | PgramDiagBisect _ => "pgram_diag_bisect"
   | RhombusDiagPerp _ => "rhombus_diag_perp"
   | KiteDiagPerp _ => "kite_diag_perp"
+  | ChordBisectConv _ _ => "chord_bisect_conv"
+  | DefRadiusConv _ => "def_radius_conv"
   end.
 
 (** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
@@ -515,7 +517,8 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
   | DefRadius i | InscribedSemi i | ConChordsArcs i
   | IsosTrapBaseAngsConv i | LinearPairConv i
-  | PgramDiagBisect i | RhombusDiagPerp i | KiteDiagPerp i => [i]
+  | PgramDiagBisect i | RhombusDiagPerp i | KiteDiagPerp i
+  | DefRadiusConv i => [i]
   | PgramOppSidesConv i j | PgramConsecAngsConv i j | RectPgramAng i j
   | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
   | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
@@ -524,7 +527,7 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
   | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
   | RectDiagConConv i j | RhombusDiagPerpConv i j
-  | AASim i j => [i; j]
+  | AASim i j | ChordBisectConv i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
   | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
   | RadiusChordBisect i j k | RhombusOppBisectConv i j k
@@ -1034,7 +1037,8 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("rect_diag_con_conv", (2, 2)); ("rhombus_diag_perp_conv", (2, 2));
    ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
    ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
-   ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2))].
+   ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2));
+   ("chord_bisect_conv", (2, 2)); ("def_radius_conv", (1, 2))].
 
 Definition premise_label_text (arg : list ascii) : bool :=
   match arg with
@@ -1160,6 +1164,8 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | LinearPairConv _ => Some ["linear_pair"]
   | PgramDiagBisect _ => Some ["seg_bisect"]
   | RhombusDiagPerp _ | KiteDiagPerp _ => Some ["perp"]
+  | ChordBisectConv _ _ => Some ["center_on_line"]
+  | DefRadiusConv _ => Some ["radius"]
   end.
 
 (** A statement naming one object twice where it means two. *)
@@ -1209,6 +1215,8 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | RectDiagConConv i j => [(i, "con_seg"); (j, "parallelogram")]
   | RhombusDiagPerpConv i j => [(i, "perp"); (j, "parallelogram")]
   | RadiusChordBisect i j k => [(i, "perp"); (j, "radius"); (k, "chord")]
+  | ChordBisectConv i j => [(i, "perp_bisector"); (j, "chord")]
+  | DefRadiusConv i => [(i, "center_on_line")]
   | RhombusOppBisectConv i j k =>
       [(i, "ang_bisect"); (j, "ang_bisect"); (k, "parallelogram")]
   | ConComplementsSame i j | ConComplements i j _ =>
@@ -1764,6 +1772,10 @@ Definition reason_requirements : list (string * string) :=
     "angles supplementary to congruent angles are congruent: cite two supplementary pairs and the con_ang relating one angle of each, and conclude con_ang of the other two");
    ("def_linear_pair",
     "the two angles of a linear pair are supplementary: conclude supplementary of exactly the two angles of the cited linear_pair");
+   ("chord_bisect_conv",
+    "the perpendicular bisector of a chord passes through the centre: cite the perp_bisector and the chord it bisects, and conclude center_on_line of the circle and the bisector");
+   ("def_radius_conv",
+    "a segment from a line through the centre to a point on the circle is a radius: cite center_on_line of the circle and a segment, with a premise placing the segment's end on the circle, and conclude radius of that end");
    ("linear_pair_conv",
     "two supplementary angles sharing a ray form a linear pair when their other rays are opposite: cite supplementary of the two angles, with an on_line premise placing their common vertex on the segment between the two other points, and conclude linear_pair of the same angles");
    ("para_transitive",
@@ -2233,11 +2245,12 @@ Theorem complete_checker_problem_sound : forall source part public,
   parsePublicProblem part = Some public ->
   complete_checker source = true ->
   forall `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality},
+  forall (T2D : @Tarski_2D Tn TnEQD),
   forall (TE : @Tarski_euclidean Tn TnEQD),
   forall point : Audit.PointName -> Tpoint,
     Audit.problemClaim point public.
 Proof.
-  intros source part public Hpart Hpublic Hcheck Tn TnEQD TE point.
+  intros source part public Hpart Hpublic Hcheck Tn TnEQD T2D TE point.
   unfold complete_checker, classify_source in Hcheck. rewrite Hpart, Hpublic in Hcheck.
   destruct (Parser.find_after (list_ascii_of_string "steps:")
               (list_ascii_of_string source)) as [stepText|] eqn:HstepText;
@@ -2290,7 +2303,7 @@ Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
     destruct (parsePublicProblem part) as [public|] eqn:Hpublic.
     - exists public. split; [reflexivity|].
       intros point. exact (@complete_checker_problem_sound source part public
-        Hpart Hpublic Hcheck Tn TnEQD TE point).
+        Hpart Hpublic Hcheck Tn TnEQD T2D TE point).
     - exfalso. unfold checker, complete_checker, classify_source in Hcheck.
       rewrite Hpart, Hpublic in Hcheck. discriminate.
   Qed.
