@@ -124,6 +124,7 @@ Definition fact_eqb (expected actual : Statement) : bool :=
   (* [SuppA] is symmetric and unaffected by reversing either angle. *)
   | Supplementary a b, Supplementary c d
   | Complementary a b, Complementary c d => angle_pair_eqb a b c d
+  | LinearPair a b, LinearPair c d => angle_eqb a c && angle_eqb b d
   (* [Par] is symmetric and unaffected by reversing either segment. *)
   | Para a b, Para c d => segment_pair_eqb a b c d
   (* Every quadrilateral shape says the same thing of any name for its
@@ -1168,6 +1169,45 @@ Definition def_linear_pair (facts : list Statement) (i : nat)
   | _ => false
   end.
 
+(** The converse needs the figure as well as the measures: [supplementary]
+    holds of two angles anywhere in the plane, while a linear pair also shares
+    a ray and has its other two rays opposite.  The shared ray is the letter
+    the two angles have in common; an [on_line] premise placing their common
+    vertex on the segment between the two other letters makes those rays
+    opposite.  The supplementary dependency is what makes every ray
+    nondegenerate. *)
+Definition linear_pair_figure (a b : AngleName) (s : SegmentName) (p : PointId)
+    : bool :=
+  let shares x y u v :=
+    ascii_eqb x y && segment_u_eqb s (segment_name u v) in
+  ascii_eqb a.(angle_vertex) p && ascii_eqb b.(angle_vertex) p &&
+  (shares a.(angle_first) b.(angle_first) a.(angle_last) b.(angle_last) ||
+   shares a.(angle_first) b.(angle_last) a.(angle_last) b.(angle_first) ||
+   shares a.(angle_last) b.(angle_first) a.(angle_first) b.(angle_last) ||
+   shares a.(angle_last) b.(angle_last) a.(angle_first) b.(angle_first)).
+
+Definition linear_pair_conv_premise (a b : AngleName) (pr : Premise) : bool :=
+  match on_line_witness pr.(premise_statement) with
+  | Some (s, p) => linear_pair_figure a b s p
+  | None => false
+  end.
+
+Definition linear_pair_conv (premises : list Premise) (facts : list Statement)
+    (i : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i with
+  | LinearPair a b, Some dependency =>
+      fact_eqb (Supplementary a b) dependency &&
+      premise_found (linear_pair_conv_premise a b) premises
+  | _, _ => false
+  end.
+
+Definition linear_pair_conv_used (premises : list Premise)
+    (conclusion : Statement) : option Statement :=
+  match conclusion with
+  | LinearPair a b => premise_witness (linear_pair_conv_premise a b) premises
+  | _ => None
+  end.
+
 (** A right angle at [p] whose rays reach the two lines makes them
     perpendicular at [p].  [Perp_at] additionally demands that the whole of
     each line meet at right angles, so the [on_line] premise is what lets the
@@ -2074,6 +2114,7 @@ Definition rule_diagram_premises_raw (decls : Declarations)
           transversal (sameside_ang_check s1 s2 x y)
       | _, _ => []
       end
+  | LinearPairConv _ => one (linear_pair_conv_used premises conclusion)
   | _ => []
   end.
 
@@ -2182,6 +2223,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RhombusOppBisectConv i j k =>
       rhombus_opp_bisect_conv_rule facts i j k conclusion
   | AASim i j => aa_sim decls premises facts i j conclusion
+  | LinearPairConv i => linear_pair_conv premises facts i conclusion
   | RHL i j k =>
       criterion_conclusion rhl_schema decls premises facts i j k conclusion
   end.
@@ -4377,6 +4419,71 @@ Proof.
   apply (fact_eqb_sound _ _ Hrule).
   apply linear_pair_is_supplementary.
   eapply lookup_step_sound; eauto.
+Qed.
+
+Lemma on_line_witness_some : forall st s p,
+  on_line_witness st = Some (s, p) -> st = OnLine s p.
+Proof. intros st s p H. destruct st; cbn in H; congruence. Qed.
+
+Lemma segment_u_bet_named : forall s x y r,
+  segment_u_eqb s (segment_name x y) = true ->
+  Bet (point s.(segment_first)) (point r) (point s.(segment_second)) ->
+  Bet (point x) (point r) (point y).
+Proof.
+  intros s x y r Hs Hbet. apply segment_u_eqb_cases in Hs.
+  destruct Hs as [Heq|Heq]; subst s; cbn in Hbet; [exact Hbet|].
+  now apply between_symmetry.
+Qed.
+
+Lemma linear_pair_figure_sound : forall a b s p,
+  linear_pair_figure a b s p = true ->
+  Bet (point s.(segment_first)) (point p) (point s.(segment_second)) ->
+  Interp (Supplementary a b) -> Interp (LinearPair a b).
+Proof.
+  intros [A V C] [D W F] s p Hfig Hbet Hsupp.
+  unfold linear_pair_figure in Hfig. cbn in Hfig.
+  apply andb_true_iff in Hfig. destruct Hfig as [Hv Hcases].
+  apply andb_true_iff in Hv. destruct Hv as [HV HW].
+  unfold ascii_eqb in HV, HW. apply Ascii.eqb_eq in HV, HW. subst V W.
+  cbn in Hsupp. apply suppa_distincts in Hsupp.
+  destruct Hsupp as [HA [HC [HD HF]]].
+  cbn. unfold Audit.LinearPairMeaning, Audit.AngleWellFormed, Audit.ang_start,
+    Audit.ang_vertex, Audit.ang_end. cbn.
+  split; [split; auto|]. split; [split; auto|]. split; [reflexivity|].
+  rewrite !orb_true_iff in Hcases.
+  destruct Hcases as [[[H|H]|H]|H]; apply andb_true_iff in H;
+    destruct H as [Hshared Hline]; unfold ascii_eqb in Hshared;
+    apply Ascii.eqb_eq in Hshared; subst;
+    pose proof (segment_u_bet_named _ _ _ _ Hline Hbet) as Hb.
+  - left. split; [apply out_trivial; auto|]. repeat split; auto.
+  - right; left. split; [apply out_trivial; auto|]. repeat split; auto.
+  - right; right; left. split; [apply out_trivial; auto|]. repeat split; auto.
+  - right; right; right. split; [apply out_trivial; auto|]. repeat split; auto.
+Qed.
+
+(** Every ray is nondegenerate because the supplementary dependency says so,
+    and the [on_line] premise is what makes the outer rays opposite. *)
+Lemma linear_pair_conv_sound : forall premises facts i conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  linear_pair_conv premises facts i conclusion = true -> Interp conclusion.
+Proof.
+  intros premises facts i conclusion Hprem Hfacts Hrule.
+  unfold linear_pair_conv in Hrule. destruct conclusion; try discriminate.
+  all: try old_names_goal.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hsupp Hon].
+  assert (Hdep : Interp dependency) by (eapply lookup_step_sound; eauto).
+  apply (proj2 (fact_eqb_sound _ _ Hsupp)) in Hdep.
+  rewrite premise_found_existsb in Hon.
+  apply existsb_exists in Hon. destruct Hon as [pr [Hin Hmatch]].
+  pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
+                Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr. unfold linear_pair_conv_premise in Hmatch.
+  destruct (on_line_witness (premise_statement pr)) as [[t q]|] eqn:Hw;
+    try discriminate.
+  apply on_line_witness_some in Hw. rewrite Hw in Hpr. cbn in Hpr.
+  destruct Hpr as [_ Hbet].
+  eapply linear_pair_figure_sound; eassumption.
 Qed.
 
 Lemma endpoints_determine : forall u p y, p <> y ->
@@ -7084,6 +7191,7 @@ Proof.
   - eapply rhombus_diag_perp_conv_sound; eauto.
   - eapply rhombus_opp_bisect_conv_sound; eauto.
   - eapply aa_sim_sound; eauto.
+  - eapply linear_pair_conv_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

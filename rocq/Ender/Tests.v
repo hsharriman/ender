@@ -883,6 +883,81 @@ Example midpt_conv_intersect_foreign_rejects :
   complete_checker midpt_conv_intersect_foreign_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Converse of the linear pair definition: two supplementary angles sharing
+    a ray, with an [on_line] premise putting their common vertex between the
+    other two points. *)
+Definition linear_pair_conv_source := transitive_header ""
+  "[d_01] on_line(AB,C)
+[g_1] supplementary(a_ACD,a_DCB)
+"
+  "linear_pair(a_ACD,a_DCB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] linear_pair_conv(1, d_01) -> linear_pair(a_ACD,a_DCB)".
+
+(** The diagram label is optional: the rule searches the premises. *)
+Definition linear_pair_conv_unlabeled_source := transitive_header ""
+  "[d_01] on_line(AB,C)
+[g_1] supplementary(a_ACD,a_DCB)
+"
+  "linear_pair(a_ACD,a_DCB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] linear_pair_conv(1) -> linear_pair(a_ACD,a_DCB)".
+
+(** The shared ray may be named at either end of either angle. *)
+Definition linear_pair_conv_reversed_source := transitive_header ""
+  "[d_01] on_line(BA,C)
+[g_1] supplementary(a_DCA,a_BCD)
+"
+  "linear_pair(a_DCA,a_BCD)"
+  "[01] given(g_1) -> supplementary(a_DCA,a_BCD)
+[02] linear_pair_conv(1, d_01) -> linear_pair(a_DCA,a_BCD)".
+
+(** Supplementary measures alone place the angles nowhere. *)
+Definition linear_pair_conv_no_line_source := transitive_header ""
+  "[g_1] supplementary(a_ACD,a_DCB)
+"
+  "linear_pair(a_ACD,a_DCB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] linear_pair_conv(1) -> linear_pair(a_ACD,a_DCB)".
+
+(** The premise must put the vertex between the two outer points, not on the
+    shared ray. *)
+Definition linear_pair_conv_wrong_line_source := transitive_header ""
+  "[d_01] on_line(AD,C)
+[g_1] supplementary(a_ACD,a_DCB)
+"
+  "linear_pair(a_ACD,a_DCB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] linear_pair_conv(1, d_01) -> linear_pair(a_ACD,a_DCB)".
+
+(** The two angles must share a ray. *)
+Definition linear_pair_conv_no_shared_ray_source := transitive_header ""
+  "[d_01] on_line(AB,C)
+[g_1] supplementary(a_ACD,a_ECB)
+"
+  "linear_pair(a_ACD,a_ECB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_ECB)
+[02] linear_pair_conv(1, d_01) -> linear_pair(a_ACD,a_ECB)".
+
+Example linear_pair_conv_accepts :
+  complete_checker linear_pair_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_unlabeled_accepts :
+  complete_checker linear_pair_conv_unlabeled_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_reversed_accepts :
+  complete_checker linear_pair_conv_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_no_line_rejects :
+  complete_checker linear_pair_conv_no_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_wrong_line_rejects :
+  complete_checker linear_pair_conv_wrong_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_no_shared_ray_rejects :
+  complete_checker linear_pair_conv_no_shared_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Two angles of a triangle determine the third.  This is the only
     implemented rule that needs the parallel postulate. *)
 Definition third_angle_source := transitive_header "tri: t_ABC t_DEF

@@ -116,6 +116,8 @@ const OUTCOME_ENFORCED = new Set([
   "lines_angles/corresp_ang_correct.txt",
   "lines_angles/corresp_ang_incorrect.txt",
   "lines_angles/def_con_right_incorrect.txt",
+  "lines_angles/linear_pair_conv_correct.txt",
+  "lines_angles/linear_pair_conv_incorrect.txt",
   "lines_angles/linear_pair_correct.txt",
   "lines_angles/linear_pair_incorrect.txt",
   "lines_angles/para_transitive_correct.txt",

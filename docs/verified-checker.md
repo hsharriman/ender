@@ -115,18 +115,19 @@ audited meanings in `Audit.v` are authoritative.
   premise whose crossing makes the angles vertical; `midpt_conv` needs an
   `on_line` or `intersect_seg` premise placing the point between the
   endpoints; `def_perp` needs an `on_line` premise placing the foot on the
-  target line. `rhl` accepts the hypotenuse and the leg cited in either order.
+  target line; `linear_pair_conv` needs an `on_line` premise placing the
+  common vertex between the two angles' other points. `rhl` accepts the hypotenuse and the leg cited in either order.
 
 Coordinates on the `pt:` line are display-only and contribute nothing to a
 theorem's meaning.
 
 ## Reasons that always reject
 
-The kernel has a rule for 75 of the 92 reasons in the
-[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 17 reject
+The kernel has a rule for 76 of the 92 reasons in the
+[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 16 reject
 every step that cites them.
 
-Four are false as the corpus spells them, so no rule can be written until
+Three are false as the corpus spells them, so no rule can be written until
 the language changes:
 
 - **`con_inscribed_angs`, `inscribed_angs`.** Two inscribed angles on one
@@ -142,10 +143,6 @@ the language changes:
   slide `T` along the same line and every premise still holds. The theorem
   says the bisector passes through the centre, which the language has no way
   to state.
-- **`linear_pair_conv`.** `supplementary` relates two angle measures anywhere
-  in the plane; a linear pair also needs the shared ray and opposite outer
-  rays. A diagram premise could supply that adjacency, but then it alone
-  gives the linear pair and the `supplementary` dependency does no work.
 
 Three conclude about a crossing point their fixtures never place:
 `pgram_diag_bisect`, `rhombus_diag_perp`, and `kite_diag_perp`. The audited

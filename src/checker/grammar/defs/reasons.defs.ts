@@ -210,6 +210,7 @@ export const REASONS_DEFS = {
     name: "linear_pair_conv",
     title: "Def. Linear Pair (Converse)",
     body: "If two adjacent angles are supplementary, then they form a linear pair.",
+    diagramDependencies: ["on_line"],
     dependencies: ["supplementary"],
     conclusion: "linear_pair",
   },

@@ -359,7 +359,8 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "rhombus_opp_bisect_conv" text
           (parse_three RhombusOppBisectConv)
         (try_call "aa_sim" text (parse_two AASim)
-        None))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+        (try_call "linear_pair_conv" text (parse_one_with_diagram LinearPairConv)
+        None)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

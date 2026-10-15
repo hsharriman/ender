@@ -82,7 +82,8 @@ Inductive Reason :=
 | RectDiagConConv : nat -> nat -> Reason
 | RhombusDiagPerpConv : nat -> nat -> Reason
 | RhombusOppBisectConv : nat -> nat -> nat -> Reason
-| AASim : nat -> nat -> Reason.
+| AASim : nat -> nat -> Reason
+| LinearPairConv : nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.

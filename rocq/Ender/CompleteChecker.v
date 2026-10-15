@@ -352,6 +352,9 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
            ExpectedSupplementary step_number)
   | DefLinearPair i =>
       dependency_type_issue facts "def_linear_pair" 0 i ExpectedLinearPair step_number
+  | LinearPairConv i =>
+      dependency_type_issue facts "linear_pair_conv" 0 i ExpectedSupplementary
+        step_number
   | RhombusDef i =>
       dependency_type_issue facts "rhombus" 0 i ExpectedRhombus step_number
   | RhombusOppBisect i =>
@@ -488,6 +491,7 @@ Definition reason_name (r : Reason) : string :=
   | RhombusDiagPerpConv _ _ => "rhombus_diag_perp_conv"
   | RhombusOppBisectConv _ _ _ => "rhombus_opp_bisect_conv"
   | AASim _ _ => "aa_sim"
+  | LinearPairConv _ => "linear_pair_conv"
   end.
 
 (** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
@@ -504,7 +508,7 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
   | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
   | DefRadius i | InscribedSemi i | ConChordsArcs i
-  | IsosTrapBaseAngsConv i => [i]
+  | IsosTrapBaseAngsConv i | LinearPairConv i => [i]
   | PgramOppSidesConv i j | PgramConsecAngsConv i j | RectPgramAng i j
   | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
   | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
@@ -1013,7 +1017,8 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("isos_trap_base_angs_conv", (1, 1)); ("isos_trap_base_angs", (2, 2));
    ("pgram_diag_bisect_conv", (2, 2)); ("pgram_opp_angs_conv", (2, 2));
    ("rect_diag_con_conv", (2, 2)); ("rhombus_diag_perp_conv", (2, 2));
-   ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2))].
+   ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
+   ("linear_pair_conv", (1, 2))].
 
 Definition premise_label_text (arg : list ascii) : bool :=
   match arg with
@@ -1136,6 +1141,7 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | RadiusChordBisect _ _ _ => Some ["seg_bisect"]
   | InscribedSemi _ => Some ["right"]
   | AASim _ _ => Some ["sim_tri"]
+  | LinearPairConv _ => Some ["linear_pair"]
   end.
 
 (** A statement naming one object twice where it means two. *)
@@ -1717,6 +1723,8 @@ Definition reason_requirements : list (string * string) :=
     "angles supplementary to congruent angles are congruent: cite two supplementary pairs and the con_ang relating one angle of each, and conclude con_ang of the other two");
    ("def_linear_pair",
     "the two angles of a linear pair are supplementary: conclude supplementary of exactly the two angles of the cited linear_pair");
+   ("linear_pair_conv",
+    "two supplementary angles sharing a ray form a linear pair when their other rays are opposite: cite supplementary of the two angles, with an on_line premise placing their common vertex on the segment between the two other points, and conclude linear_pair of the same angles");
    ("para_transitive",
     "two lines parallel to a third are parallel: cite two para statements sharing a segment and conclude para of the other two");
    ("perp_bisector",
