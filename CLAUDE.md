@@ -82,3 +82,8 @@ vertex order states the correspondence, so `con_tri_ordered(t_ABC, t_DEF)`
 pairs A with D, B with E, and C with F. A `con_tri` step gets its
 correspondence from the reason that proved it, so only premises need the
 ordered form. Proof goals still use `con_tri`.
+
+A quadrilateral is declared once, as `quad: q_ABCD`, and may then be named by
+any rotation or reversal of those four letters (`q_BCDA`, `q_DCBA`, ...). The
+other orders name a different, self-crossing figure, so they do not refer to
+the declared quadrilateral.
