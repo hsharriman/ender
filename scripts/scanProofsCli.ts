@@ -1,11 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative } from "path";
 import { pathToFileURL } from "url";
-import {
-  collectProofCheckerIssues,
-  runProofCheckerFromText,
-} from "../src/checker/proofChecker";
-import { ProofStep } from "../src/checker/types/checkerTypes";
+import { checkVerifiedProofNode } from "../src/checker/verified/nodeWasmLoader";
 
 /**
  * Runs the checker over every `.txt` in a directory tree and reports one JSON
@@ -46,22 +42,19 @@ const collectTxtFiles = (dir: string): string[] => {
   return out;
 };
 
-export const scanFile = (root: string, file: string): ScanRow => {
+export const scanFile = async (
+  root: string,
+  file: string,
+): Promise<ScanRow> => {
   const f = relative(root, file);
   try {
-    const result = runProofCheckerFromText(readFileSync(file, "utf-8"));
-    const codes = [
-      ...result.graph.nodes.values(),
-      ...(result.proof?.steps ?? []),
-    ]
-      .flatMap((step: ProofStep) => step.errors ?? [])
-      .map((e) => e.code)
-      .concat(result.errors.map((e) => e.code));
+    const output = await checkVerifiedProofNode(readFileSync(file, "utf-8"));
+    const issues = "issues" in output ? output.issues : output.errors;
     return {
       f,
-      ok: collectProofCheckerIssues(result).length === 0,
-      n: collectProofCheckerIssues(result).length,
-      codes: Array.from(new Set(codes)).sort(),
+      ok: issues.length === 0,
+      n: issues.length,
+      codes: Array.from(new Set(issues.map((issue) => issue.code))).sort(),
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
@@ -69,10 +62,13 @@ export const scanFile = (root: string, file: string): ScanRow => {
   }
 };
 
-export const scanDirectory = (root: string): ScanRow[] =>
-  collectTxtFiles(root)
-    .sort()
-    .map((file) => scanFile(root, file));
+export const scanDirectory = async (root: string): Promise<ScanRow[]> => {
+  const rows: ScanRow[] = [];
+  for (const file of collectTxtFiles(root).sort()) {
+    rows.push(await scanFile(root, file));
+  }
+  return rows;
+};
 
 /** Reports every file whose verdict or error codes differ from the baseline. */
 export const compareToBaseline = (rows: ScanRow[], baselinePath: string) => {
@@ -108,7 +104,7 @@ export const compareToBaseline = (rows: ScanRow[], baselinePath: string) => {
   return changed.length;
 };
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+const main = async () => {
   const [root, ...rest] = process.argv.slice(2);
   if (!root) {
     console.error(
@@ -117,7 +113,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     process.exit(1);
   }
   const compareIdx = rest.indexOf("--compare");
-  const rows = scanDirectory(root);
+  const rows = await scanDirectory(root);
 
   if (compareIdx === -1) {
     for (const row of rows) console.log(JSON.stringify(row));
@@ -129,4 +125,6 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     }
     process.exitCode = compareToBaseline(rows, baselinePath) === 0 ? 0 : 1;
   }
-}
+};
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) void main();

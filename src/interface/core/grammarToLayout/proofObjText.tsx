@@ -69,8 +69,13 @@ export const stmtToText =
     if (stmt.function === "complementary" && args.length === 2) {
       return Complementary.text([args[0], args[1]])(isActive);
     }
-    if (stmt.function === "sim_seg" && args.length === 2) {
-      return SimilarSegments.text([args[0], args[1]])(isActive);
+    if (stmt.function === "proportion" && args.length === 4) {
+      return SimilarSegments.proportionText([
+        args[0],
+        args[1],
+        args[2],
+        args[3],
+      ])(isActive);
     }
     if (stmt.function === "sim_tri" && args.length === 2) {
       return SimilarTriangles.text([args[0], args[1]])(isActive);
@@ -84,7 +89,12 @@ export const stmtToText =
     if (stmt.function === "perp_bisector" && args.length === 3) {
       return PerpBisector.text([args[0], args[1]])(isActive);
     }
-    if (stmt.function === "inscribed_angle" && args.length === 2) {
+    if (
+      (stmt.function === "inscribed_angle" ||
+        stmt.function === "minor_inscribed_ang" ||
+        stmt.function === "major_inscribed_ang") &&
+      args.length === 2
+    ) {
       return InscribedAngle.text(args[0], args[1])(isActive);
     }
     if (stmt.function === "tangent" && args.length === 3) {

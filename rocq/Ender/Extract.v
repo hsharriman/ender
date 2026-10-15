@@ -1,0 +1,7 @@
+From Stdlib Require Import Extraction ExtrOcamlBasic ExtrOcamlString ExtrOcamlNatInt.
+Require Import Ender.CertifiedAPI.
+
+Extraction Language OCaml.
+Extraction "extracted/EnderChecker.ml"
+  CertifiedAPI.parseProblem CertifiedAPI.parsePresentation
+  CertifiedAPI.check CertifiedAPI.checker.

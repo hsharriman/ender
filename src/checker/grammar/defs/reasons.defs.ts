@@ -210,6 +210,7 @@ export const REASONS_DEFS = {
     name: "linear_pair_conv",
     title: "Def. Linear Pair (Converse)",
     body: "If two adjacent angles are supplementary, then they form a linear pair.",
+    diagramDependencies: ["on_line"],
     dependencies: ["supplementary"],
     conclusion: "linear_pair",
   },
@@ -301,14 +302,14 @@ export const REASONS_DEFS = {
     name: "sss_sim",
     title: "SSS Triangle Similarity",
     body: "If three sides of one triangle are proportional to three sides of another triangle, then the triangles are similar.",
-    dependencies: ["sim_seg", "sim_seg", "sim_seg"],
+    dependencies: ["proportion", "proportion"],
     conclusion: "sim_tri",
   },
   sas_sim: {
     name: "sas_sim",
     title: "SAS Triangle Similarity",
     body: "If two sides of one triangle are proportional to two sides of another triangle and their included angles are congruent, then the triangles are similar.",
-    dependencies: ["sim_seg", "con_ang_ref_allow", "sim_seg"],
+    dependencies: ["proportion", "con_ang_ref_allow"],
     conclusion: "sim_tri",
   },
   def_equiangular: {
@@ -547,19 +548,26 @@ export const REASONS_DEFS = {
     dependencies: ["perp", "radius", "chord"],
     conclusion: "seg_bisect", // todo arc bisect?
   },
-  radius_chord_bisect_conv: {
-    name: "radius_chord_bisect_conv",
-    title: "Radius Chord Bisect (Converse)",
-    body: "The perpendicular bisector of a chord is a radius of the circle.",
+  chord_bisect_conv: {
+    name: "chord_bisect_conv",
+    title: "Chord Bisector (Converse)",
+    body: "The perpendicular bisector of a chord passes through the center of the circle.",
     dependencies: ["perp_bisector", "chord"],
-    conclusion: "radius",
+    conclusion: "center_on_line",
   },
   con_inscribed_angs: {
     name: "con_inscribed_angs",
     title: "Congruent Inscribed Angles",
-    body: "If inscribed angles of a circle are subtended by the same chord or arc, then the angles are congruent.",
-    dependencies: ["inscribed_angle", "inscribed_angle"],
+    body: "If two inscribed angles of a circle are subtended by the same chord and intercept the same arc, then the angles are congruent.",
+    dependencies: ["inscribed_ang", "inscribed_ang"],
     conclusion: "con_ang",
+  },
+  supplementary_inscribed_angs: {
+    name: "supplementary_inscribed_angs",
+    title: "Supplementary Inscribed Angles",
+    body: "If two inscribed angles of a circle are subtended by the same chord and intercept opposite arcs, then the angles are supplementary.",
+    dependencies: ["inscribed_ang", "inscribed_ang"],
+    conclusion: "supplementary",
   },
   // still implementing cutoff
   // inscribed_quad: {
@@ -645,7 +653,7 @@ export const REASONS_DEFS = {
     title: "Corresponding Sides of Similar Triangles are Proportional",
     body: "If two triangles are similar, then their corresponding sides are proportional.",
     dependencies: ["sim_tri"],
-    conclusion: "sim_seg",
+    conclusion: "proportion",
   },
   inscribed_semi: {
     name: "inscribed_semi",
@@ -674,6 +682,14 @@ export const REASONS_DEFS = {
     body: "A radius of a circle is a line segment from the center of the circle to any point on the circle. All radii have the same length.",
     dependencies: ["radius"],
     conclusion: "con_seg",
+  },
+  def_radius_conv: {
+    name: "def_radius_conv",
+    title: "Def. Radius (Converse)",
+    body: "If a line through the center of a circle meets the circle at a point, then the segment from the center to that point is a radius.",
+    dependencies: ["center_on_line"],
+    diagramDependencies: ["on_circle"],
+    conclusion: "radius",
   },
   tangent_diam_perp: {
     name: "tangent_diam_perp",

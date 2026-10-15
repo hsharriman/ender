@@ -1,15 +1,13 @@
-// fail on step 4
+// fail on step 3
 title: "Test: sss_sim (incorrect - third segment pair from same triangle)"
 premises:
 pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r)
 tri: t_ABC t_DEF
-[g_1] sim_seg(AB, DE)
-[g_2] sim_seg(BC, EF)
-[g_3] sim_seg(AC, BC)
+[g_1] proportion(AB, DE, BC, EF)
+[g_2] proportion(BC, EF, AC, BC)
 -> sim_tri(t_ABC, t_DEF)
 
 steps:
-[01] given(g_1) -> sim_seg(AB, DE)
-[02] given(g_2) -> sim_seg(BC, EF)
-[03] given(g_3) -> sim_seg(AC, BC)
-[04] sss_sim(1, 2, 3) -> sim_tri(t_ABC, t_DEF)
+[01] given(g_1) -> proportion(AB, DE, BC, EF)
+[02] given(g_2) -> proportion(BC, EF, AC, BC)
+[03] sss_sim(1, 2) -> sim_tri(t_ABC, t_DEF)

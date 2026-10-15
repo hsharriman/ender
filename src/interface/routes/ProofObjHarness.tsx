@@ -1,8 +1,19 @@
-import { runProofCheckerFromText } from "checker/proofChecker";
-import { ErrorDetails, ProofObj } from "checker/types/checkerTypes";
+import { ProofObj } from "checker/types/checkerTypes";
+import { presentationToProofObj } from "checker/verified/presentationAdapter";
+import { VerifiedStepReport } from "checker/verified/presentationTypes";
+import { checkVerifiedReport } from "checker/verified/wasmLoader";
 import { ProofContent } from "geometry-object";
 import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
+import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
+import {
+  attachDiagramDependencies,
+  buildAnnotatedLines,
+  otherIssues,
+  reportFindings,
+  summarizeReport,
+} from "interface/core/reportAnnotations";
+import { waysToProve } from "interface/core/waysToProve";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -78,35 +89,6 @@ const DEFAULT_PROOF_KEY =
   proofOptions[0]?.key ??
   "";
 
-function formatErrorList(errors: ErrorDetails[] | undefined): string {
-  if (!errors?.length) return "Incorrect step (no step.errors payload)";
-  return errors
-    .map((e, i) => {
-      const suffix =
-        e.details === undefined ? "" : `: ${JSON.stringify(e.details, null, 2)}`;
-      return `${i + 1}. ${e.code}${suffix}`;
-    })
-    .join("\n");
-}
-
-function buildAnnotatedLines(
-  text: string,
-  stepErrorsByStep: Map<string, ErrorDetails[]>,
-): Array<{ text: string; tooltip?: string; isIncorrect: boolean }> {
-  return text.split("\n").map((line) => {
-    const m = line.match(/^\s*\[(\d+)\]/);
-    if (!m) return { text: line, isIncorrect: false };
-    const stepNum = String(parseInt(m[1], 10));
-    const stepErrors = stepErrorsByStep.get(stepNum);
-    if (!stepErrors) return { text: line, isIncorrect: false };
-    return {
-      text: line,
-      isIncorrect: true,
-      tooltip: formatErrorList(stepErrors),
-    };
-  });
-}
-
 type ProofObjHarnessState = {
   isEditorOpen: boolean;
   isInteractiveLayout: boolean;
@@ -116,9 +98,10 @@ type ProofObjHarnessState = {
   lastGoodCtx: ProofContent | null;
   parseVersion: number;
   statusMessage: string;
+  accepted: boolean;
   incorrectSteps: Set<string>;
   proofWideIssues: string[];
-  incorrectStepErrors: Map<string, ErrorDetails[]>;
+  unacceptedSteps: Map<string, VerifiedStepReport>;
   proofParseSucceeded: boolean;
   hoverTooltip: string;
   hoverPos: { x: number; y: number } | null;
@@ -132,6 +115,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
 
   private proofParseTimeoutId: number | null = null;
   private selectedProofFetchGen = 0;
+  private proofParseGeneration = 0;
   private editorOutsideMouseDownHandler: ((event: MouseEvent) => void) | null =
     null;
 
@@ -146,9 +130,10 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       lastGoodCtx: null,
       parseVersion: 0,
       statusMessage: "Loading proof...",
+      accepted: false,
       incorrectSteps: new Set(),
       proofWideIssues: [],
-      incorrectStepErrors: new Map(),
+      unacceptedSteps: new Map(),
       proofParseSucceeded: true,
       hoverTooltip: "",
       hoverPos: null,
@@ -198,68 +183,68 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       this.proofParseTimeoutId = null;
     }
     if (!this.state.proofText.trim()) return;
-    this.proofParseTimeoutId = window.setTimeout(() => {
+    const generation = ++this.proofParseGeneration;
+    this.proofParseTimeoutId = window.setTimeout(async () => {
       this.proofParseTimeoutId = null;
       try {
-        const result = runProofCheckerFromText(this.state.proofText);
-
-        const nextIncorrectStepErrors = new Map<string, ErrorDetails[]>();
-        result.graph.incorrectSteps.forEach((stepNum) => {
-          const step = result.proof.steps.find((s) => s.stepNumber === stepNum);
-          nextIncorrectStepErrors.set(stepNum, step?.errors ?? []);
-        });
-
-        const nextProofIssues: string[] = [];
-        if (!result.goalMatchResult.matches) {
-          nextProofIssues.push(
-            `Goal not reached: ${result.goalMatchResult.details}`,
-          );
-        }
-        if (result.graph.unusedSteps.size > 0) {
-          nextProofIssues.push(
-            `Unused steps: ${Array.from(result.graph.unusedSteps).sort().join(", ")}`,
-          );
-        }
-        if (result.graph.cycles.length > 0) {
-          nextProofIssues.push(
-            `Cycles: ${result.graph.cycles.map((c) => c.join(" -> ")).join(" | ")}`,
-          );
-        }
-        if (result.duplicateSteps.length > 0) {
-          nextProofIssues.push(
-            `Duplicate steps: ${result.duplicateSteps
-              .map(([a, b]) => `${a} & ${b}`)
-              .join(", ")}`,
-          );
-        }
-        if (result.errors.length > 0) {
-          result.errors.forEach((e) => {
-            nextProofIssues.push(
-              `${e.code}${e.details ? `: ${JSON.stringify(e.details)}` : ""}`,
-            );
+        const report = await checkVerifiedReport(this.state.proofText);
+        if (generation !== this.proofParseGeneration) return;
+        const nextProofIssues = [
+          ...reportFindings(report),
+          ...otherIssues(report),
+        ];
+        if (!report.presentation) {
+          // Keep drawing the last proof that parsed; the report says why
+          // this one did not.
+          this.setState({
+            statusMessage: summarizeReport(report),
+            accepted: false,
+            proofWideIssues: nextProofIssues,
+            unacceptedSteps: new Map(),
+            incorrectSteps: new Set(),
+            proofParseSucceeded: false,
           });
+          return;
         }
-        if (result.graph.incorrectSteps.size > 0) {
-          nextProofIssues.push(
-            `Incorrect steps: ${Array.from(result.graph.incorrectSteps).sort().join(", ")}`,
-          );
-        }
+        const proof = presentationToProofObj(report.presentation);
+        attachDiagramDependencies(proof, report);
+        // Only a rejected step is the reader's problem; a blocked one is
+        // waiting on the step above it, and marking it wrong would send them
+        // to the wrong line.
+        const unaccepted = new Map(
+          report.steps
+            .filter((step) => step.status !== "accepted")
+            .map((step) => [String(step.number), step] as const),
+        );
+        const rejected = new Set(
+          report.steps
+            .filter((step) => step.status === "rejected")
+            .map((step) => String(step.number)),
+        );
+
+        // The editor draws a mini-figure per step from the parts its reason
+        // relates; the checker has no opinion on these.
+        const ctx = presentationContent(proof);
+        for (const step of proof.steps) step.waysToProve = waysToProve(step, ctx);
 
         this.setState((prev) => ({
-          incorrectStepErrors: nextIncorrectStepErrors,
+          unacceptedSteps: unaccepted,
           proofWideIssues: nextProofIssues,
-          statusMessage: "Proof parsed successfully.",
-          lastGoodProof: result.proof,
-          lastGoodCtx: result.ctx,
-          incorrectSteps: result.graph.incorrectSteps,
+          statusMessage: summarizeReport(report),
+          accepted: report.verdict === "accepted",
+          lastGoodProof: proof,
+          lastGoodCtx: ctx,
+          incorrectSteps: rejected,
           proofParseSucceeded: true,
           parseVersion: prev.parseVersion + 1,
         }));
       } catch (err) {
+        if (generation !== this.proofParseGeneration) return;
         this.setState({
           statusMessage: err instanceof Error ? err.message : String(err),
+          accepted: false,
           proofWideIssues: [],
-          incorrectStepErrors: new Map(),
+          unacceptedSteps: new Map(),
           incorrectSteps: new Set(),
           proofParseSucceeded: false,
         });
@@ -283,7 +268,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
         this.setState({
           statusMessage: `Failed to load ${selected.label}: ${String(err)}`,
           proofWideIssues: [],
-          incorrectStepErrors: new Map(),
+          unacceptedSteps: new Map(),
         });
       });
   }
@@ -349,8 +334,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       proofText,
       parseVersion,
       statusMessage,
+      accepted,
       proofWideIssues,
-      incorrectStepErrors,
+      unacceptedSteps,
       hoverTooltip,
       hoverPos,
       editorScrollTop,
@@ -358,7 +344,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
 
     const layouts = this.getLayouts();
     const interactiveProps = this.getInteractiveProps();
-    const annotatedLines = buildAnnotatedLines(proofText, incorrectStepErrors);
+    const annotatedLines = buildAnnotatedLines(proofText, unacceptedSteps);
     const lineHeightPx = 16;
     const editorPaddingTopPx = 8;
 
@@ -445,9 +431,11 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                   <div
                     key={`${i}-${line.text}`}
                     className={
-                      line.isIncorrect
+                      line.status === "rejected"
                         ? "bg-red-100 rounded px-1 -mx-1"
-                        : undefined
+                        : line.status === "blocked"
+                          ? "bg-amber-50 rounded px-1 -mx-1"
+                          : undefined
                     }
                   >
                     {line.text || " "}
@@ -470,7 +458,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
               />
               <div className="absolute left-0 top-0 w-3 h-full">
                 {annotatedLines.map((line, idx) => {
-                  if (!line.isIncorrect || !line.tooltip) return null;
+                  if (!line.status || !line.tooltip) return null;
                   const dotY =
                     editorPaddingTopPx +
                     idx * lineHeightPx +
@@ -480,7 +468,11 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                     <button
                       key={`dot-${idx}`}
                       type="button"
-                      className="absolute left-[2px] w-2 h-2 rounded-full bg-red-600"
+                      className={`absolute left-[2px] w-2 h-2 rounded-full ${
+                        line.status === "rejected"
+                          ? "bg-red-600"
+                          : "bg-amber-400"
+                      }`}
                       style={{ top: `${dotY}px` }}
                       onMouseEnter={() => {
                         this.setState({
@@ -491,7 +483,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                       onMouseLeave={() => {
                         this.setState({ hoverTooltip: "", hoverPos: null });
                       }}
-                      aria-label={`Show checker errors for line ${idx + 1}`}
+                      aria-label={`Show checker report for line ${idx + 1}`}
                     />
                   );
                 })}
@@ -507,9 +499,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             </div>
             <div
               className={`mt-2 text-xs ${
-                statusMessage === "Proof parsed successfully."
-                  ? "text-green-700"
-                  : "text-red-600"
+                accepted ? "text-green-700" : "text-red-600"
               }`}
             >
               {statusMessage}

@@ -56,6 +56,13 @@ export const buildCongruenceTickTracker = (
   const nextPara = { value: 1 };
 
   stmts.forEach((stmt) => {
+    // `proportion(AB, DE, AC, DF)` pairs AB with DE and AC with DF.
+    if (stmt?.function === "proportion" && stmt.arguments.length === 4) {
+      const [a, b, c, d] = stmt.arguments.map((arg) => canonSeg(ctx, arg.v));
+      assignTick(simSegTickByObj, a, b, nextSimSeg);
+      assignTick(simSegTickByObj, c, d, nextSimSeg);
+      return;
+    }
     if (!stmt || stmt.arguments.length !== 2) return;
     const a = stmt.arguments[0].v;
     const b = stmt.arguments[1].v;
@@ -63,13 +70,6 @@ export const buildCongruenceTickTracker = (
       assignTick(segTickByObj, canonSeg(ctx, a), canonSeg(ctx, b), nextSeg);
     } else if (stmt.function === "con_ang" || stmt.function === "ref_ang") {
       assignTick(angTickByObj, canonAng(ctx, a), canonAng(ctx, b), nextAng);
-    } else if (stmt.function === "sim_seg") {
-      assignTick(
-        simSegTickByObj,
-        canonSeg(ctx, a),
-        canonSeg(ctx, b),
-        nextSimSeg,
-      );
     } else if (stmt.function === "para") {
       assignTick(paraTickByObj, canonSeg(ctx, a), canonSeg(ctx, b), nextPara);
     }
@@ -185,13 +185,12 @@ export const applyStmtAdditions =
       );
       return;
     }
-    if (stmt.function === "sim_seg" && stmt.arguments.length === 2) {
-      const numTicks = getNumTicks(tracker.simSegTickByObj, stmt, "s");
-      SimilarSegments.additions(
-        { ctx, frame, mode },
-        [stmt.arguments[0].v, stmt.arguments[1].v],
-        numTicks,
-      );
+    if (stmt.function === "proportion" && stmt.arguments.length === 4) {
+      const [s1, s2, s3, s4] = stmt.arguments.map((arg) => arg.v);
+      const ticks = (s: string) =>
+        tracker.simSegTickByObj.get(canonSeg(ctx, s));
+      SimilarSegments.additions({ ctx, frame, mode }, [s1, s2], ticks(s1));
+      SimilarSegments.additions({ ctx, frame, mode }, [s3, s4], ticks(s3));
       return;
     }
     if (stmt.function === "sim_tri" && stmt.arguments.length === 2) {
@@ -217,7 +216,12 @@ export const applyStmtAdditions =
       );
       return;
     }
-    if (stmt.function === "inscribed_angle" && stmt.arguments.length === 2) {
+    if (
+      (stmt.function === "inscribed_angle" ||
+        stmt.function === "minor_inscribed_ang" ||
+        stmt.function === "major_inscribed_ang") &&
+      stmt.arguments.length === 2
+    ) {
       InscribedAngle.additions(
         { ctx, frame, mode },
         stmt.arguments[0].v,

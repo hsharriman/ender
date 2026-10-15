@@ -1,0 +1,164 @@
+diff --git a/configure-algebraic.sh b/configure-algebraic.sh
+index fa2920a..a3f322a 100755
+--- a/configure-algebraic.sh
++++ b/configure-algebraic.sh
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env sh
+ cp -f _CoqProject-Algebraic.in _CoqProject
+-find theories/Algebraic -name "*.v" >> _CoqProject
++echo theories/Algebraic/coplanarity.v >> _CoqProject
++echo theories/Algebraic/POF_to_Tarski.v >> _CoqProject
+ coq_makefile -f _CoqProject -o Makefile
+ rm -f .coqdeps.d
+diff --git a/theories/Algebraic/POF_to_Tarski.v b/theories/Algebraic/POF_to_Tarski.v
+index b972fd6..71d5e6a 100644
+--- a/theories/Algebraic/POF_to_Tarski.v
++++ b/theories/Algebraic/POF_to_Tarski.v
+@@ -1,4 +1,4 @@
+-Require Import mathcomp.ssreflect.ssreflect.
++From mathcomp Require Import ssreflect.
+ From mathcomp
+ Require Import ssrbool ssrfun ssrnat eqtype seq order.
+ From mathcomp
+@@ -22,15 +22,12 @@ Require Import GeoCoq.Algebraic.coplanarity.
+ Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.parallel_postulates.
+ Require Import GeoCoq.Main.Tarski_dev.Ch12_parallel_inter_dec.
+ 
+-Reserved Notation "'[ u , v ]"
+-  (at level 2, format "'[hv' ''[' u , '/ '  v ] ']'").
+-Reserved Notation "'[ u ]" (at level 2, format "''[' u ]").
+ 
+ Local Definition dot (R : realFieldType) n (u v : 'rV[R]_n) : R := (u *m v^T) 0 0.
+ Arguments dot R n : clear implicits.
+ 
+-Local Notation "''[' u , v ]" := (dot _ _ u v) : ring_scope.
+-Local Notation "''[' u ]" := '[u, u]%R : ring_scope.
++Local Notation "dotp[ u , v ]" := (dot _ _ u v) (at level 2) : ring_scope.
++Local Notation "dotp[ u ]" := (dotp[u, u]%R) (at level 2) : ring_scope.
+ 
+ Section Aux.
+ 
+@@ -41,8 +38,8 @@ Variable n : nat.
+ 
+ Implicit Types (v : 'rV[R]_n).
+ 
+-Lemma dotE v1 v2 : '[v1, v2] = (v1 *m v2^T) 0 0. Proof. by []. Qed.
+-Lemma mulmx_tr v1 v2 : v1 *m v2^T = '[v1, v2]%:M.
++Lemma dotE v1 v2 : dotp[v1, v2] = (v1 *m v2^T) 0 0. Proof. by []. Qed.
++Lemma mulmx_tr v1 v2 : v1 *m v2^T = dotp[v1, v2]%:M.
+ Proof. by apply/matrixP=> i j; rewrite !ord1 -mx11_scalar. Qed.
+ 
+ (* generalize to any matrix *)
+@@ -54,7 +51,7 @@ Lemma eq_pick_neq0 v k : (v 0 k != 0) = ((- v) 0 k != 0).
+ Proof. by rewrite funmxN oppr_eq0. Qed.
+ 
+ (* keep only one of these *)
+-Lemma dot2_eq0 v : ('[v] == 0) = (v == 0).
++Lemma dot2_eq0 v : (dotp[v] == 0) = (v == 0).
+ Proof.
+ rewrite /dot; apply/eqP/eqP => [/eqP|->]; last by rewrite mul0mx mxE /=.
+ rewrite !mxE psumr_eq0 /=; last by move=> i _; rewrite mxE sqr_ge0.
+@@ -75,7 +72,7 @@ Qed.
+ Lemma quad_neq0 v : ((v *m v^T) 0 0 != 0) = (v != 0).
+ Proof. by rewrite quad_eq0'. Qed.
+ 
+-Lemma dot_ge0 v : 0 <= '[v].
++Lemma dot_ge0 v : 0 <= dotp[v].
+ Proof. by rewrite /dot !mxE sumr_ge0 // => i _; rewrite mxE sqr_ge0. Qed.
+ 
+ Lemma quad_ge0 v : 0 <= (v *m v^T) 0 0.
+@@ -184,21 +181,21 @@ Qed.
+ Lemma dotC v1 v2 : v1 *m v2^T = v2 *m v1^T.
+ Proof. by rewrite !mulmx_tr dotC'. Qed.
+ 
+-Lemma dot2D v1 v2 : '[v1 + v2] = '[v1] + '[v2] + '[v1, v2] *+ 2.
++Lemma dot2D v1 v2 : dotp[v1 + v2] = dotp[v1] + dotp[v2] + dotp[v1, v2] *+ 2.
+ Proof.
+ rewrite !dotE !mulmxDl raddfD/= !mulmxDr [X in _ (_ + X) _ _]addrC addrACA.
+ by rewrite !mulmx_tr dotC' -mulr2n !mxE.
+ Qed.
+ 
+-Lemma dotvN v1 v2 : '[v1, - v2] = - '[v1, v2].
++Lemma dotvN v1 v2 : dotp[v1, - v2] = - dotp[v1, v2].
+ Proof. by rewrite !dotE raddfN/= mulmxN !mxE. Qed.
+ 
+-Lemma dotNv v1 v2 : '[- v1, v2] = - '[v1, v2].
++Lemma dotNv v1 v2 : dotp[- v1, v2] = - dotp[v1, v2].
+ Proof. by rewrite !dotE mulNmx !mxE. Qed.
+ 
+-Lemma dot2N v : '[- v] = '[v]. Proof. by rewrite dotvN dotNv opprK. Qed.
++Lemma dot2N v : dotp[- v] = dotp[v]. Proof. by rewrite dotvN dotNv opprK. Qed.
+ 
+-Lemma dot2B v1 v2 : '[v1 - v2] = '[v1] + '[v2] - '[v1, v2] *+ 2.
++Lemma dot2B v1 v2 : dotp[v1 - v2] = dotp[v1] + dotp[v2] - dotp[v1, v2] *+ 2.
+ Proof. by rewrite dot2D dot2N dotvN mulNrn. Qed.
+ 
+ (* reuse dot maybe swap the operands in ((v2 - v1) *m (v3 - v1)^T) *)
+@@ -1134,7 +1131,9 @@ elim HC; clear HC; [|move=> HC; elim HC; clear HC]; move=> /betSP'[E0 E1 _ _].
+   by rewrite [X in _ * X]mulrC eq_sym mulrCA.
+ rewrite -[a 0 0 - b 0 0](addrBDB _ (c 0 0)) -[a 0 1 - b 0 1](addrBDB _ (c 0 1)).
+ rewrite E0 E1 -[c 0 0 - b 0 0]opprB -[c 0 1 - b 0 1]opprB -[X in _ - X]mul1r.
+-by rewrite eq_sym -[X in _ - X]mul1r -!mulrBl mulrAC.
++have gen : forall r X Y : R, (r * X - 1 * X) * Y = (r * Y - Y) * X.
++  by move=> r X Y; rewrite mul1r !mulrBl -!mulrA [Y * X]mulrC.
++by apply/eqP; apply: gen.
+ Qed.
+ 
+ Lemma cong_perp_aux1 (a p m : 'rV[R]_2) i :
+@@ -1148,19 +1147,47 @@ rewrite addrAC addrA /m !mxE -mulrDl addf_divrr ?divff ?add11_neq0 //.
+ by rewrite mul1r -addrA addrACA subrr add0r.
+ Qed.
+ 
++(* Ender: [half_sub], [half_mid], [half_perp] and the [cong_perp] proof below
++   replace a rewrite chain that no longer applies under MathComp 2.5.  The
++   statements are unchanged; only the proof scripts differ. *)
++Lemma half_sub (h : R) (H : h * (1 + 1) = 1) (x y : R) :
++  x - h * (x + y) = h * (x - y).
++Proof.
++have hh : h + h = 1 by rewrite -H mulrDr !mulr1.
++have hx : forall z : R, z - h * z = h * z.
++  by move=> z; apply/eqP; rewrite subr_eq -mulrDl hh mul1r.
++by rewrite mulrDr mulrBr opprD addrA hx.
++Qed.
++
++Lemma half_mid (h : R) (H : h * (1 + 1) = 1) (x y a : R) :
++  h * (x + y) - a = h * ((x - a) + (y - a)).
++Proof.
++have hh : h + h = 1 by rewrite -H mulrDr !mulr1.
++by rewrite [RHS]mulrDr !mulrBr addrACA -opprD -mulrDl hh mul1r mulrDr.
++Qed.
++
++Lemma half_perp (h u0 u1 v0 v1 a0 a1 : R) :
++  (u0 - a0) ^+ 2 + (u1 - a1) ^+ 2 = (v0 - a0) ^+ 2 + (v1 - a1) ^+ 2 ->
++  (h * (u0 - v0)) * (h * ((u0 - a0) + (v0 - a0)))
++  + (h * (u1 - v1)) * (h * ((u1 - a1) + (v1 - a1))) = 0.
++Proof.
++move=> E.
++have e : forall x y c : R, x - y = (x - c) - (y - c).
++  by move=> x y c; rewrite opprB addrA subrK.
++rewrite (e u0 v0 a0) (e u1 v1 a1).
++rewrite [X in X + _]mulrACA [X in _ + X]mulrACA -!subr_sqr -mulrDr.
++by rewrite addrACA -opprD E subrr mulr0.
++Qed.
++
+ Lemma cong_perp (a p q : 'rV[R]_2) (m := (1 / (1 + 1)) *: (p + q)) :
+   cong a p a q ->
+   (p 0 0 - m 0 0) * (m 0 0 - a 0 0) + (p 0 1 - m 0 1) * (m 0 1 - a 0 1) = 0.
+ Proof.
+-move=> /congP/eqP E; move: E; rewrite /sqr_L2_norm_2D.
+-rewrite -(cong_perp_aux1 a p m) -[p 0 1 - a 0 1](cong_perp_aux1 a p m).
+-rewrite -(cong_perp_aux2 a p q) -[q 0 1 - a 0 1](cong_perp_aux2 a p) -!/m.
+-rewrite -[p 0 0 - m 0 0]opprB; set x0 := m 0 0 - a 0 0; set y0 := m 0 0 - p 0 0.
+-rewrite -[p 0 1 - m 0 1]opprB; set x1 := m 0 1 - a 0 1; set y1 := m 0 1 - p 0 1.
+-rewrite !mulNr -subr_eq eq_sym -[(x0 - y0) ^+ 2 + (x1 - y1) ^+ 2 - (x1 + y1) ^+ 2]addrA [X in _ == X]addrC -subr_eq !subr_sqr.
+-rewrite eq_sym -opprB mulNr -sub0r subr_eq eq_sym !addrDBB [X in _ * X]addrC.
+-rewrite !addrBDD !mulrnAl !mulrnAr -!mulrnA -mulrnDl mulrn_eq0 muln_eq0 /=.
+-by rewrite addr_eq0=> /eqP E; rewrite -E addrC subrr.
++move=> /congP E; rewrite /sqr_L2_norm_2D in E.
++have h2 : (1 / (1 + 1) : R) * (1 + 1) = 1 by rewrite div1r mulVf ?add11_neq0.
++have M : forall i : 'I_2, m 0 i = (1 / (1 + 1)) * (p 0 i + q 0 i).
++  by move=> i; rewrite /m !mxE.
++by rewrite !M !(half_sub h2) !(half_mid h2); apply: half_perp E.
+ Qed.
+ 
+ Lemma upper_dim_dgc_aux0 (p q : 'rV[R]_2) (m := (1 / (1 + 1)) *: (p + q)) :

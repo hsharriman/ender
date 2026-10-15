@@ -1,0 +1,12 @@
+// fail on step 2
+title: "Test: ang_bisect_conv (incorrect - conclusion names another ray)"
+premises:
+pt: A (1, 5, l), B (5, 1, b), C (9, 5, r), D (5, 5, t), E (8, 8, tr)
+seg: BE
+ang: a_ABC a_ABD a_DBC
+[g_1] con_ang(a_ABD, a_DBC)
+-> ang_bisect(a_ABC, BE)
+
+steps:
+[01] given(g_1) -> con_ang(a_ABD, a_DBC)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC, BE)
