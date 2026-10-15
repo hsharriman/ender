@@ -114,9 +114,10 @@ export const STMTS_DEFS = {
       name: "parallelogram",
       parameters: [quadrilateral("q")],
     },
-    sim_seg: {
-      name: "sim_seg",
-      parameters: [segment("s1"), segment("s2")],
+    // proportion(AB, DE, AC, DF) says AB/DE = AC/DF.
+    proportion: {
+      name: "proportion",
+      parameters: [segment("s1"), segment("s2"), segment("s3"), segment("s4")],
     },
     sim_tri: {
       name: "sim_tri",

@@ -69,8 +69,13 @@ export const stmtToText =
     if (stmt.function === "complementary" && args.length === 2) {
       return Complementary.text([args[0], args[1]])(isActive);
     }
-    if (stmt.function === "sim_seg" && args.length === 2) {
-      return SimilarSegments.text([args[0], args[1]])(isActive);
+    if (stmt.function === "proportion" && args.length === 4) {
+      return SimilarSegments.proportionText([
+        args[0],
+        args[1],
+        args[2],
+        args[3],
+      ])(isActive);
     }
     if (stmt.function === "sim_tri" && args.length === 2) {
       return SimilarTriangles.text([args[0], args[1]])(isActive);

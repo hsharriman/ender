@@ -101,7 +101,7 @@ const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
   const args = statement.arguments;
   switch (statement.function) {
     case "para":
-    case "sim_seg":
+    case "proportion":
     case "con_seg":
       addAllObjects(ctx, statement);
       break;

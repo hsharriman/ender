@@ -152,8 +152,8 @@ Three conclude about a crossing point their fixtures never place:
 quadrilateral has a crossing point, but nothing identifies it with the point
 the conclusion names, which an `intersect_seg` premise would.
 
-`sas_sim` and `sss_sim` cite `sim_seg`, which has no audited meaning. The
-remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,
+`sas_sim` and `sss_sim` cite `proportion`, which the kernel has no rules
+for yet. The remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,
 `rect_para_right_opp`, `sim_tri_transitive`, `square`, `tangent_diam_perp`)
 have no fixtures and have not been designed.
 
