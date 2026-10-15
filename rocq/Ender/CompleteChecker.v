@@ -208,6 +208,9 @@ Definition statement_function (s : Statement) : string :=
   | Radius _ _ => "radius" | Chord _ _ => "chord"
   | Diameter _ _ => "diameter" | Tangent _ _ _ => "tangent"
   | InscribedAngle _ _ => "inscribed_angle"
+  | OnCirclePoint _ _ => "on_circle" | CenterOnLine _ _ => "center_on_line"
+  | MinorInscribedAngle _ _ => "minor_inscribed_ang"
+  | MajorInscribedAngle _ _ => "major_inscribed_ang"
   | ArcStatement _ => "arc" | ConArc _ _ => "con_arc"
   | Proportion _ _ _ _ => "proportion" | Circumcenter _ _ => "circumcenter"
   | Incenter _ _ => "incenter" | PerpBisector _ _ _ => "perp_bisector"
@@ -925,6 +928,10 @@ Definition statement_signatures : list (string * string) :=
    ("radius", "a circle and a point, as in radius(c_OA, B)");
    ("diameter", "a circle and a segment, as in diameter(c_OA, AB)");
    ("inscribed_angle", "a circle and an angle, as in inscribed_angle(c_OA, a_BCD)");
+   ("minor_inscribed_ang", "a circle and an angle, as in minor_inscribed_ang(c_OA, a_BCD)");
+   ("major_inscribed_ang", "a circle and an angle, as in major_inscribed_ang(c_OA, a_BCD)");
+   ("on_circle", "a circle and a point, as in on_circle(c_OA, B)");
+   ("center_on_line", "a circle and a segment, as in center_on_line(c_OA, PQ)");
    ("ref_seg", "the same segment twice, as in ref_seg(AB, AB)");
    ("ref_ang", "the same angle twice, as in ref_ang(a_ABC, a_ABC)");
    ("con_arc",

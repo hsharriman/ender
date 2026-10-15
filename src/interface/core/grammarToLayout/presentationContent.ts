@@ -101,6 +101,7 @@ const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
   const args = statement.arguments;
   switch (statement.function) {
     case "para":
+    case "center_on_line":
     case "proportion":
     case "con_seg":
       addAllObjects(ctx, statement);
@@ -128,6 +129,9 @@ const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
     case "chord":
     case "diameter":
     case "inscribed_angle":
+    case "minor_inscribed_ang":
+    case "major_inscribed_ang":
+    case "on_circle":
     case "radius":
       circlePremise(ctx, statement);
       break;

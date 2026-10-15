@@ -194,6 +194,29 @@ export const STMTS_DEFS = {
       name: "inscribed_angle",
       parameters: [circle("c"), angle("a")],
     },
+    // The vertex is on the centre's side of the chord, so the angle
+    // intercepts the minor arc and is acute.
+    minor_inscribed_ang: {
+      name: "minor_inscribed_ang",
+      parameters: [circle("c"), angle("a")],
+    },
+    // The vertex is across the chord from the centre, so the angle intercepts
+    // the major arc and is obtuse.
+    major_inscribed_ang: {
+      name: "major_inscribed_ang",
+      parameters: [circle("c"), angle("a")],
+    },
+    on_circle: {
+      name: "on_circle",
+      parameters: [circle("c"), point("p")],
+      isPremisesOnly: true,
+      isDiagramOnly: true,
+    },
+    // The circle's centre lies on the line through the segment.
+    center_on_line: {
+      name: "center_on_line",
+      parameters: [circle("c"), segment("s")],
+    },
     // arc_bisect: {
     //   name: "arc_bisect",
     //   parameters: [arc("a"), segment("s"), point("p")],
@@ -228,6 +251,12 @@ export const STMTS_DEFS = {
       name: "con_ang_ref_allow",
       base: "con_ang",
       extensions: ["ref_ang", "con_right"],
+    },
+    /** Either inscribed angle that names the arc it intercepts. */
+    inscribed_ang: {
+      name: "inscribed_ang",
+      base: "minor_inscribed_ang",
+      extensions: ["major_inscribed_ang"],
     },
     /** Either form of triangle congruence; both carry a correspondence. */
     con_tri_any: {

@@ -89,7 +89,12 @@ export const stmtToText =
     if (stmt.function === "perp_bisector" && args.length === 3) {
       return PerpBisector.text([args[0], args[1]])(isActive);
     }
-    if (stmt.function === "inscribed_angle" && args.length === 2) {
+    if (
+      (stmt.function === "inscribed_angle" ||
+        stmt.function === "minor_inscribed_ang" ||
+        stmt.function === "major_inscribed_ang") &&
+      args.length === 2
+    ) {
       return InscribedAngle.text(args[0], args[1])(isActive);
     }
     if (stmt.function === "tangent" && args.length === 3) {

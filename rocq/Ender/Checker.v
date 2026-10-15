@@ -146,8 +146,12 @@ Definition fact_eqb (expected actual : Statement) : bool :=
       circle_eqb c c' && segment_eqb s s'
   | Tangent c s p, Tangent c' s' p' =>
       circle_eqb c c' && segment_eqb s s' && ascii_eqb p p'
-  | InscribedAngle c a, InscribedAngle c' a' =>
+  | InscribedAngle c a, InscribedAngle c' a'
+  | MinorInscribedAngle c a, MinorInscribedAngle c' a'
+  | MajorInscribedAngle c a, MajorInscribedAngle c' a' =>
       circle_eqb c c' && angle_eqb a a'
+  | OnCirclePoint c p, OnCirclePoint c' p' => circle_eqb c c' && ascii_eqb p p'
+  | CenterOnLine c s, CenterOnLine c' s' => circle_eqb c c' && segment_eqb s s'
   | ArcStatement a, ArcStatement a' => arc_eqb a a'
   | ConArc a b, ConArc a' b' => arc_eqb a a' && arc_eqb b b'
   | _, _ => false

@@ -113,6 +113,10 @@ Inductive Statement :=
 | Radius (c : CircleName) (p : PointName)
 | Diameter (c : CircleName) (s : SegmentName)
 | InscribedAngle (c : CircleName) (a : AngleName)
+| OnCirclePoint (c : CircleName) (p : PointName)
+| CenterOnLine (c : CircleName) (s : SegmentName)
+| MinorInscribedAngle (c : CircleName) (a : AngleName)
+| MajorInscribedAngle (c : CircleName) (a : AngleName)
 | RefSeg (a b : SegmentName)
 | RefAng (a b : AngleName)
 | ConArc (a b : ArcName).
@@ -322,13 +326,26 @@ Definition IsTangent (c : CircleName) (s : SegmentName) (p : PointName) : Prop :
   OnCircle c p /\ Col (seg_start s) (seg_end s) (point p) /\
   exists Q, (Q = seg_start s \/ Q = seg_end s) /\ Q <> point p /\
             Per (circ_center c) (point p) Q.
-(** The syntax names no intercepted arc or same-side relation.  It therefore
-    supports [inscribed_semi], whose answer is independent of the vertex's
-    arc, but [con_inscribed_angs] and [inscribed_angs] deliberately remain
-    fail-closed.  See [docs/verified-checker.md]. *)
+(** The general form names no intercepted arc, which is all [inscribed_semi]
+    needs: an angle in a semicircle is right whichever side its vertex is on.
+    Two inscribed angles on one chord are congruent or supplementary depending
+    on their arcs, so the rules relating them read the two forms below. *)
 Definition IsInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
   OnCircle c a.(angle_first) /\ OnCircle c a.(angle_vertex) /\
   OnCircle c a.(angle_last) /\ AngleWellFormed a.
+(** A vertex on the centre's side of its chord makes the angle intercept the
+    minor arc, so it is acute; a vertex on the far side intercepts the major
+    arc and is obtuse.  Neither covers a chord through the centre, where the
+    angle is right and only [inscribed_angle] applies. *)
+Definition IsMinorInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
+  IsInscribedAngle c a /\ OS (ang_start a) (ang_end a) (circ_center c) (ang_vertex a).
+Definition IsMajorInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
+  IsInscribedAngle c a /\ TS (ang_start a) (ang_end a) (circ_center c) (ang_vertex a).
+(** The centre lies on the line through the segment, which has to be a
+    genuine segment for [Col] to name a line at all. *)
+Definition IsCenterOnLine (c : CircleName) (s : SegmentName) : Prop :=
+  CircleWellFormed c /\ SegmentWellFormed s /\
+  Col (seg_start s) (seg_end s) (circ_center c).
 
 (** As with [IsTangent], the bisector must be a genuine segment. *)
 Definition SegmentBisectorAt
@@ -493,6 +510,10 @@ Definition statementMeaning (s : Statement) : Prop :=
   | Radius c p => OnCircle c p
   | Diameter c s => IsDiameter c s
   | InscribedAngle c a => IsInscribedAngle c a
+  | OnCirclePoint c p => OnCircle c p
+  | CenterOnLine c s => IsCenterOnLine c s
+  | MinorInscribedAngle c a => IsMinorInscribedAngle c a
+  | MajorInscribedAngle c a => IsMajorInscribedAngle c a
   | RefSeg a b => SameSegmentName a b /\ SegmentCongruent a b
   | RefAng a b => SameAngleName a b /\ AngleCongruent a b
   | ConArc a b => ArcCongruent a b
@@ -604,6 +625,12 @@ Definition statementText (s : Statement) : string :=
   | Radius c p => call "radius" [circleText c; pointText p]
   | Diameter c s => call "diameter" [circleText c; segmentText s]
   | InscribedAngle c a => call "inscribed_angle" [circleText c; angleText a]
+  | OnCirclePoint c p => call "on_circle" [circleText c; pointText p]
+  | CenterOnLine c s => call "center_on_line" [circleText c; segmentText s]
+  | MinorInscribedAngle c a =>
+      call "minor_inscribed_ang" [circleText c; angleText a]
+  | MajorInscribedAngle c a =>
+      call "major_inscribed_ang" [circleText c; angleText a]
   | RefSeg a b => call "ref_seg" [segmentText a; segmentText b]
   | RefAng a b => call "ref_ang" [angleText a; angleText b]
   | ConArc a b => call "con_arc" [arcText a; arcText b]
@@ -636,8 +663,10 @@ Definition statementPoints (s : Statement) : list PointName :=
    | Tangent c s p => circlePoints c ++ segmentPoints s ++ [p]
    | Chord c s | Diameter c s => circlePoints c ++ segmentPoints s
    | ArcStatement a => arcPoints a
-   | Radius c p => circlePoints c ++ [p]
-   | InscribedAngle c a => circlePoints c ++ anglePoints a
+   | Radius c p | OnCirclePoint c p => circlePoints c ++ [p]
+   | CenterOnLine c s => circlePoints c ++ segmentPoints s
+   | InscribedAngle c a | MinorInscribedAngle c a | MajorInscribedAngle c a =>
+       circlePoints c ++ anglePoints a
    | ConArc a b => arcPoints a ++ arcPoints b
    end)%list.
 
