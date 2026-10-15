@@ -10,6 +10,7 @@ npm start                          # Dev server at http://localhost:3000/ender/
 npm run build                      # tsc typecheck + Vite production build to dist/
 npm test                           # Run Jest tests (single file: src/checker/test/proofTests.test.ts)
 npm run checkProof -- <file>       # CLI: check a proof file
+npm run scanProofs -- <dir>        # CLI: check every proof under a directory
 npm run checker-server             # HTTP checker service on port 4000 (used by Docker backend)
 npm run deploy                     # Build and publish to gh-pages
 ```
@@ -75,3 +76,9 @@ steps:
 ```
 
 Sample proofs in `src/checker/proofs/`, organized into category subdirectories (e.g., `examples/tutorial.txt`, `examples/s1c1.txt`).
+
+Triangle congruence in premises uses `con_tri_ordered`, not `con_tri`. The
+vertex order states the correspondence, so `con_tri_ordered(t_ABC, t_DEF)`
+pairs A with D, B with E, and C with F. A `con_tri` step gets its
+correspondence from the reason that proved it, so only premises need the
+ordered form. Proof goals still use `con_tri`.

@@ -1,0 +1,25 @@
+// fail on step 10
+title: "Aliasing exploit"
+premises:
+pt: A (1, 1, bl), B (3, 1, br), C (1, 4, tl), D (6, 1, bl), E (8, 1, br), F (6, 4, tl), G (8, 5, bl), H (10, 5, br), I (8, 8, tl)
+seg: AB BC CA DE EF FD GH HI IG
+tri: t_ABC t_DEF t_GHI
+[g_1] con_seg(AB, DE)
+[g_2] con_seg(BC, EF)
+[g_3] con_seg(CA, FD)
+[g_4] con_seg(AB, GH)
+[g_5] con_seg(BC, HI)
+[g_6] con_seg(CA, IG)
+-> con_seg(EF, IG)
+
+steps:
+[01] given(g_1) -> con_seg(AB, DE)
+[02] given(g_2) -> con_seg(BC, EF)
+[03] given(g_3) -> con_seg(CA, FD)
+[04] sss(1, 2, 3) -> con_tri(t_ABC, t_DEF)
+[05] given(g_4) -> con_seg(AB, GH)
+[06] given(g_5) -> con_seg(BC, HI)
+[07] given(g_6) -> con_seg(CA, IG)
+[08] sss(6, 7, 5) -> con_tri(t_ABC, t_GHI)
+[09] con_tri_transitive(4, 8) -> con_tri(t_DEF, t_GHI)
+[10] cpctc(9) -> con_seg(EF, IG)

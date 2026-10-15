@@ -17,6 +17,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "checkProof": "tsx src/checker/proofCheckerCli.ts",
+    "scanProofs": "tsx scripts/scanProofsCli.ts",
     "test-core": "jest --passWithNoTests",
     "checker-server": "tsx src/checker/server.ts",
     "docker:standalone": "docker compose -f docker-compose.standalone.yml up --build"

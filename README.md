@@ -102,11 +102,11 @@ npm run checker-server   # starts on http://localhost:4000
 
 Three containers are defined in `docker-compose.yml`:
 
-| Container | Role | Port |
-|---|---|---|
-| `checker` | Node.js HTTP server wrapping the proof checker | 4000 |
-| `backend` | Python/Flask server for the solver and feedback agents | 5000 |
-| `interface` | Vite dev server for the React UI | 3000 |
+| Container   | Role                                                   | Port |
+| ----------- | ------------------------------------------------------ | ---- |
+| `checker`   | Node.js HTTP server wrapping the proof checker         | 4000 |
+| `backend`   | Python/Flask server for the solver and feedback agents | 5000 |
+| `interface` | Vite dev server for the React UI                       | 3000 |
 
 The backend calls the checker via HTTP (`CHECKER_URL=http://checker:4000`). The interface proxies `/api/*` requests to the backend through Vite's dev server proxy.
 
@@ -125,6 +125,7 @@ Both `backend` and `interface` also mount an external, read-only volume named `p
 cp .env.example .env
 # then edit .env and set OPENAI_API_KEY
 ```
+
 - The `proof_data` volume must exist before starting this project. Build and seed it once from the `geo-proof-dataset` repo:
 
 ```bash
@@ -132,7 +133,7 @@ cd ../geo-proof-dataset
 docker compose up proof-data
 ```
 
-  (See that repo's README for full details. If the volume doesn't exist yet, `docker compose up` here will fail with an error naming the missing external volume.)
+(See that repo's README for full details. If the volume doesn't exist yet, `docker compose up` here will fail with an error naming the missing external volume.)
 
 #### Running without `geo-proof-dataset`
 
@@ -188,11 +189,11 @@ docker compose logs -f backend    # one service
 
 Once running, the backend exposes:
 
-| Method | Path | Body | Description |
-|---|---|---|---|
-| `POST` | `/api/solve` | `{ "proofName": "s1c1", "prompt": "solver_with_valid_reasons_and_explanation" }` | Run the LLM solver on a proof |
+| Method | Path            | Body                                                                                                 | Description                      |
+| ------ | --------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `POST` | `/api/solve`    | `{ "proofName": "s1c1", "prompt": "solver_with_valid_reasons_and_explanation" }`                     | Run the LLM solver on a proof    |
 | `POST` | `/api/feedback` | `{ "proofName": "s1c1", "solverPrompt": "solver_with_valid_reasons", "feedbackPrompt": "feedback" }` | Get Socratic feedback on a proof |
-| `GET` | `/api/health` | — | Health check |
+| `GET`  | `/api/health`   | —                                                                                                    | Health check                     |
 
 `proofName` must match a file in `src/checker/proofs/` (without the `.txt` extension), including its category subdirectory — for example `examples/s1c1`. The `prompt` fields default to the values shown above if omitted.
 

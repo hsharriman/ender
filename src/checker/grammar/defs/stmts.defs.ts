@@ -70,11 +70,16 @@ export const STMTS_DEFS = {
       name: "con_tri",
       parameters: [triangle("t1"), triangle("t2")],
     },
-    // The same claim with the vertices paired in the order written, which is
-    // what `cpctc` needs from a given that no criterion step establishes.
+    /**
+     * Premise form of `con_tri`. The vertex order the author writes is the
+     * correspondence: `con_tri_ordered(t_ABC, t_DEF)` pairs A-D, B-E, C-F.
+     * A derived `con_tri` step gets its correspondence from the reason that
+     * proved it, so only premises need this form.
+     */
     con_tri_ordered: {
       name: "con_tri_ordered",
       parameters: [triangle("t1"), triangle("t2")],
+      isPremisesOnly: true,
     },
     con_right: {
       name: "con_right",
@@ -222,6 +227,12 @@ export const STMTS_DEFS = {
       name: "con_ang_ref_allow",
       base: "con_ang",
       extensions: ["ref_ang", "con_right"],
+    },
+    /** Either form of triangle congruence; both carry a correspondence. */
+    con_tri_any: {
+      name: "con_tri_any",
+      base: "con_tri",
+      extensions: ["con_tri_ordered"],
     },
     pgram_obj: {
       name: "pgram_obj",
