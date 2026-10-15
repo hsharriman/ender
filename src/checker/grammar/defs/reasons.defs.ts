@@ -558,9 +558,16 @@ export const REASONS_DEFS = {
   con_inscribed_angs: {
     name: "con_inscribed_angs",
     title: "Congruent Inscribed Angles",
-    body: "If inscribed angles of a circle are subtended by the same chord or arc, then the angles are congruent.",
-    dependencies: ["inscribed_angle", "inscribed_angle"],
+    body: "If two inscribed angles of a circle are subtended by the same chord and intercept the same arc, then the angles are congruent.",
+    dependencies: ["inscribed_ang", "inscribed_ang"],
     conclusion: "con_ang",
+  },
+  supplementary_inscribed_angs: {
+    name: "supplementary_inscribed_angs",
+    title: "Supplementary Inscribed Angles",
+    body: "If two inscribed angles of a circle are subtended by the same chord and intercept opposite arcs, then the angles are supplementary.",
+    dependencies: ["inscribed_ang", "inscribed_ang"],
+    conclusion: "supplementary",
   },
   // still implementing cutoff
   // inscribed_quad: {

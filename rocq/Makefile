@@ -1,5 +1,5 @@
 ROCQFLAGS := -Q Ender Ender
-MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Semantics Checker Parser Model CompleteChecker CertifiedAPI Tests
+MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Inscribed Semantics Checker Parser Model CompleteChecker CertifiedAPI Tests
 VOFILES := $(addprefix Ender/,$(addsuffix .vo,$(MODULES)))
 
 # Everything this Makefile writes goes under $(BUILD), except what Rocq insists
@@ -67,10 +67,13 @@ Ender/PresentationParser.vo: Ender/PresentationParser.v Ender/PublicParser.vo
 Ender/Geometry.vo: Ender/Geometry.v
 	rocq compile $(ROCQFLAGS) $<
 
+Ender/Inscribed.vo: Ender/Inscribed.v Ender/Geometry.vo
+	rocq compile $(ROCQFLAGS) $<
+
 Ender/Semantics.vo: Ender/Semantics.v Ender/Syntax.vo Ender/Geometry.vo
 	rocq compile $(ROCQFLAGS) $<
 
-Ender/Checker.vo: Ender/Checker.v Ender/Syntax.vo Ender/Geometry.vo Ender/Semantics.vo
+Ender/Checker.vo: Ender/Checker.v Ender/Syntax.vo Ender/Geometry.vo Ender/Inscribed.vo Ender/Semantics.vo
 	rocq compile $(ROCQFLAGS) $<
 
 Ender/Parser.vo: Ender/Parser.v Ender/Syntax.vo Ender/Semantics.vo Ender/Checker.vo Ender/PublicParser.vo

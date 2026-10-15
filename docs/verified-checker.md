@@ -48,8 +48,9 @@ it.
 `make -C rocq test` and `nix flake check` fail if `Print Assumptions` reports
 any axiom for either theorem. Some GeoCoq routes rest on `Eqdep.Eq_rect_eq`
 (`par_2_plg`, `plg_per_rect`, `rect_per`, `midpoint_thales`, the `CopR`
-reflection in `par_trans`, `l12_21_a`); the development proves the same facts
-another way.
+reflection in `par_trans`, `l12_21_a`, and through it every inscribed-angle
+theorem in GeoCoq's `inscribed_angle.v`); the development proves the same
+facts another way.
 
 What Rocq cannot check is that the audited meanings say what a reader means
 by them, which is why they live in one short file. Beyond that, the trusted
@@ -65,6 +66,7 @@ extraction, the OCaml compiler, and `wasm_of_ocaml` produce the programs.
 | `Syntax.v` | Reasons, steps, and declarations around the audited `Statement` type. |
 | `Semantics.v` | A statement's kernel meaning, defined as its audited meaning. |
 | `Geometry.v` | Geometry lemmas the rules need beyond GeoCoq: the triangle criteria, Playfair-based parallel facts, quadrilateral translations. |
+| `Inscribed.v` | GeoCoq's inscribed-angle theorems (Euclid III.20–22), with the two lemmas that rested on an axiom re-proved through `Geometry.v`. |
 | `Checker.v` | The reason kernel: one executable rule per reason, each with its soundness lemma. |
 | `Parser.v` | The step parser. |
 | `CompleteChecker.v` | Implements the contract, and builds the advisory report. |
@@ -131,30 +133,27 @@ audited meanings in `Audit.v` are authoritative.
   circle, except the centre and a tangent's far end, so a rule that needs a
   point on the circle, like `def_radius_conv`, finds it in any of them.
   `center_on_line(c, s)` says the centre lies on the line through `s`.
+  `minor_inscribed_ang(c, a_APB)` puts the vertex P on the centre's side of
+  chord AB, so the angle intercepts the minor arc and is acute;
+  `major_inscribed_ang` puts it across the chord, intercepting the major arc.
+  Two angles on one chord are congruent when they are the same kind and
+  supplementary when they differ. `inscribed_angle` names no arc, which is
+  all an angle in a semicircle needs, since it is neither.
 
 Coordinates on the `pt:` line are display-only and contribute nothing to a
 theorem's meaning.
 
 ## Reasons that always reject
 
-The kernel has a rule for 81 of the 93 reasons in the
-[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 12 reject
+The kernel has a rule for 83 of the 94 reasons in the
+[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 11 reject
 every step that cites them.
 
-Two are false as the corpus spells them, so no rule can be written until
-the language changes:
-
-- **`con_inscribed_angs`, `inscribed_angs`.** Two inscribed angles on one
-  chord are congruent when their vertices are on the same arc and
-  supplementary when they are on opposite arcs, and
-  `inscribed_angle(c_OA, a_APB)` does not say which. The fact relates the two
-  vertices, so no stronger meaning for one inscribed angle can supply it. The
-  options are a same-side premise such as `sameside(AB, P, Q)`, or having
-  `inscribed_angle` name its intercepted arc; either way the rule also needs
-  the arc condition that separates the two cases.
-
-`sas_sim` and `sss_sim` cite `proportion`, which the kernel has no rules
-for yet. The remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,
+`inscribed_angs` cites two general `inscribed_angle` statements, which say
+nothing about which arc each vertex is on, so its conclusion does not follow;
+`con_inscribed_angs` and `supplementary_inscribed_angs` cover what it meant.
+`sas_sim` and `sss_sim` cite `proportion`, which the kernel has no rules for
+yet. The remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,
 `rect_para_right_opp`, `sim_tri_transitive`, `square`, `tangent_diam_perp`)
 have no fixtures and have not been designed.
 

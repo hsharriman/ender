@@ -88,7 +88,9 @@ Inductive Reason :=
 | RhombusDiagPerp : nat -> Reason
 | KiteDiagPerp : nat -> Reason
 | ChordBisectConv : nat -> nat -> Reason
-| DefRadiusConv : nat -> Reason.
+| DefRadiusConv : nat -> Reason
+| ConInscribedAngs : nat -> nat -> Reason
+| SupplementaryInscribedAngs : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.

@@ -365,7 +365,10 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "kite_diag_perp" text (parse_one_with_diagram KiteDiagPerp)
         (try_call "chord_bisect_conv" text (parse_two ChordBisectConv)
         (try_call "def_radius_conv" text (parse_one_with_diagram DefRadiusConv)
-        None))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+        (try_call "con_inscribed_angs" text (parse_two ConInscribedAngs)
+        (try_call "supplementary_inscribed_angs" text
+          (parse_two SupplementaryInscribedAngs)
+        None))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

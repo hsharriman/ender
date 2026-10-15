@@ -500,6 +500,8 @@ Definition reason_name (r : Reason) : string :=
   | KiteDiagPerp _ => "kite_diag_perp"
   | ChordBisectConv _ _ => "chord_bisect_conv"
   | DefRadiusConv _ => "def_radius_conv"
+  | ConInscribedAngs _ _ => "con_inscribed_angs"
+  | SupplementaryInscribedAngs _ _ => "supplementary_inscribed_angs"
   end.
 
 (** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
@@ -527,7 +529,8 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
   | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
   | RectDiagConConv i j | RhombusDiagPerpConv i j
-  | AASim i j | ChordBisectConv i j => [i; j]
+  | AASim i j | ChordBisectConv i j | ConInscribedAngs i j
+  | SupplementaryInscribedAngs i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
   | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
   | RadiusChordBisect i j k | RhombusOppBisectConv i j k
@@ -1038,7 +1041,8 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
    ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
    ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2));
-   ("chord_bisect_conv", (2, 2)); ("def_radius_conv", (1, 2))].
+   ("chord_bisect_conv", (2, 2)); ("def_radius_conv", (1, 2));
+   ("con_inscribed_angs", (2, 2)); ("supplementary_inscribed_angs", (2, 2))].
 
 Definition premise_label_text (arg : list ascii) : bool :=
   match arg with
@@ -1166,6 +1170,8 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | RhombusDiagPerp _ | KiteDiagPerp _ => Some ["perp"]
   | ChordBisectConv _ _ => Some ["center_on_line"]
   | DefRadiusConv _ => Some ["radius"]
+  | ConInscribedAngs _ _ => Some ["con_ang"]
+  | SupplementaryInscribedAngs _ _ => Some ["supplementary"]
   end.
 
 (** A statement naming one object twice where it means two. *)
@@ -1776,6 +1782,10 @@ Definition reason_requirements : list (string * string) :=
     "the perpendicular bisector of a chord passes through the centre: cite the perp_bisector and the chord it bisects, and conclude center_on_line of the circle and the bisector");
    ("def_radius_conv",
     "a segment from a line through the centre to a point on the circle is a radius: cite center_on_line of the circle and a segment, with a premise placing the segment's end on the circle, and conclude radius of that end");
+   ("con_inscribed_angs",
+    "inscribed angles on one chord intercepting the same arc are congruent: cite two minor_inscribed_ang or two major_inscribed_ang steps on the same circle and chord, and conclude con_ang of the two angles");
+   ("supplementary_inscribed_angs",
+    "inscribed angles on one chord intercepting opposite arcs are supplementary: cite one minor_inscribed_ang and one major_inscribed_ang step on the same circle and chord, and conclude supplementary of the two angles");
    ("linear_pair_conv",
     "two supplementary angles sharing a ray form a linear pair when their other rays are opposite: cite supplementary of the two angles, with an on_line premise placing their common vertex on the segment between the two other points, and conclude linear_pair of the same angles");
    ("para_transitive",

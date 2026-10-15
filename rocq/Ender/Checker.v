@@ -3,6 +3,7 @@ Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import GeoCoq.Main.Tarski_dev.Ch12_parallel.
 Require Import GeoCoq.Main.Annexes.suma.
 Require Import Ender.Syntax Ender.Geometry Ender.Semantics.
+Require Ender.Inscribed.
 Import ListNotations.
 Import EnderSyntax.
 
@@ -2116,6 +2117,36 @@ Definition def_radius_conv_used (premises : list Premise) (conclusion : Statemen
   | _ => None
   end.
 
+(** Two inscribed angles on one chord, as two steps state them: congruent
+    when both name the same kind of arc, supplementary when one is minor and
+    the other major.  The chord is the two angles' outer points, in either
+    order, and the conclusion relates the two angles as [fact_eqb] reads
+    them, in either order or direction. *)
+Definition same_chord (a b : AngleName) : bool :=
+  (ascii_eqb a.(angle_first) b.(angle_first) &&
+   ascii_eqb a.(angle_last) b.(angle_last)) ||
+  (ascii_eqb a.(angle_first) b.(angle_last) &&
+   ascii_eqb a.(angle_last) b.(angle_first)).
+
+Definition con_inscribed_angs_rule (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j with
+  | Some (MinorInscribedAngle c a), Some (MinorInscribedAngle c' b)
+  | Some (MajorInscribedAngle c a), Some (MajorInscribedAngle c' b) =>
+      circle_eqb c c' && same_chord a b && fact_eqb conclusion (ConAng a b)
+  | _, _ => false
+  end.
+
+Definition supplementary_inscribed_angs_rule (facts : list Statement) (i j : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i, lookup_step facts j with
+  | Some (MinorInscribedAngle c a), Some (MajorInscribedAngle c' b)
+  | Some (MajorInscribedAngle c a), Some (MinorInscribedAngle c' b) =>
+      circle_eqb c c' && same_chord a b &&
+      fact_eqb conclusion (Supplementary a b)
+  | _, _ => false
+  end.
+
 (** Which diagram premises a step actually consulted.  Each entry comes from
     the same search the rule itself runs -- the rule is [premise_found] of it
     and this is [premise_witness] of it -- so the report cannot claim a premise
@@ -2355,6 +2386,9 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
       diagonal_rule premises facts r conclusion
   | ChordBisectConv i j => chord_bisect_conv_rule facts i j conclusion
   | DefRadiusConv i => def_radius_conv_rule premises facts i conclusion
+  | ConInscribedAngs i j => con_inscribed_angs_rule facts i j conclusion
+  | SupplementaryInscribedAngs i j =>
+      supplementary_inscribed_angs_rule facts i j conclusion
   | RHL i j k =>
       criterion_conclusion rhl_schema decls premises facts i j k conclusion
   end.
@@ -7462,6 +7496,110 @@ Proof.
   exact (places_on_circle_sound _ _ _ Hpr Hmatch).
 Qed.
 
+(** Inscribed angles, through [Inscribed.v]: GeoCoq's proofs of Euclid
+    III.21 and III.22 with its two axiom-dependent lemmas re-proved.  The
+    audited minor and major forms exclude a chord through the centre, so the
+    vertex's side of the chord is the centre's side or the other one. *)
+Lemma ender_inscribed_same_side : forall O R A B P Q,
+  Cong O A O R -> Cong O B O R -> Cong O P O R -> Cong O Q O R ->
+  ((OS A B O P /\ OS A B O Q) \/ (TS A B O P /\ TS A B O Q)) ->
+  CongA A P B A Q B.
+Proof.
+  intros O R A B P Q HA HB HP HQ Hsides.
+  assert (Hcop : Coplanar A B P O).
+  { destruct Hsides as [[H _]|[H _]];
+      [apply os__coplanar in H|apply ts__coplanar in H]; Cop. }
+  assert (Hos : OS A B P Q).
+  { destruct Hsides as [[HOP HOQ]|[HOP HOQ]].
+    - apply one_side_transitivity with O; [apply one_side_symmetry|]; assumption.
+    - apply l9_8_1 with O; apply l9_2; assumption. }
+  apply (Inscribed.EnderInscribed.cop_onc4_os__conga O R A B P Q); assumption.
+Qed.
+
+Lemma ender_inscribed_opposite_sides : forall O R A B P Q,
+  Cong O A O R -> Cong O B O R -> Cong O P O R -> Cong O Q O R ->
+  OS A B O P -> TS A B O Q -> SuppA A P B A Q B.
+Proof.
+  intros O R A B P Q HA HB HP HQ HOP HOQ.
+  assert (Hcop : Coplanar A B P O) by (apply os__coplanar in HOP; Cop).
+  assert (Hts : TS A B P Q) by (apply l9_8_2 with O; assumption).
+  apply (Inscribed.EnderInscribed.cop_onc4_ts__suppa O R A B P Q); assumption.
+Qed.
+
+(** The two angles' chord, read in [b]'s order, is [a]'s chord one way or
+    the other. *)
+Lemma same_chord_cases : forall a b, same_chord a b = true ->
+  (b.(angle_first) = a.(angle_first) /\ b.(angle_last) = a.(angle_last)) \/
+  (b.(angle_first) = a.(angle_last) /\ b.(angle_last) = a.(angle_first)).
+Proof.
+  intros a b H. unfold same_chord, ascii_eqb in H.
+  apply orb_true_iff in H.
+  destruct H as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
+    apply Ascii.eqb_eq in H1, H2; auto.
+Qed.
+
+Lemma con_inscribed_angs_sound : forall facts i j conclusion,
+  Forall Interp facts ->
+  con_inscribed_angs_rule facts i j conclusion = true -> Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  unfold con_inscribed_angs_rule in Hrule.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate;
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  all: apply andb_true_iff in Hrule; destruct Hrule as [Hrule Hconc];
+    apply andb_true_iff in Hrule; destruct Hrule as [Hcircle Hchord];
+    apply circle_eqb_eq in Hcircle; subst;
+    apply (proj2 (fact_eqb_sound _ _ Hconc));
+    assert (Hi := lookup_step_sound _ _ _ Hfacts Hx);
+    assert (Hj := lookup_step_sound _ _ _ Hfacts Hy);
+    cbn in Hi, Hj; unfold Audit.circ_center in *;
+    destruct Hi as [[[_ Ha1] [[_ Hav] [[_ Ha2] _]]] Hsa];
+    destruct Hj as [[[_ Hb1] [[_ Hbv] [[_ Hb2] _]]] Hsb];
+    cbn; unfold Audit.ang_start, Audit.ang_vertex, Audit.ang_end in *;
+    apply same_chord_cases in Hchord;
+    destruct Hchord as [[Hf Hl]|[Hf Hl]]; rewrite Hf, Hl in *.
+  - eapply ender_inscribed_same_side; eauto.
+  - apply conga_right_comm. eapply ender_inscribed_same_side; eauto.
+    left. split; [assumption|apply invert_one_side; assumption].
+  - eapply ender_inscribed_same_side; eauto.
+  - apply conga_right_comm. eapply ender_inscribed_same_side; eauto.
+    right. split; [assumption|apply invert_two_sides; assumption].
+Qed.
+
+Lemma supplementary_inscribed_angs_sound : forall facts i j conclusion,
+  Forall Interp facts ->
+  supplementary_inscribed_angs_rule facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros facts i j conclusion Hfacts Hrule.
+  unfold supplementary_inscribed_angs_rule in Hrule.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate;
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  all: apply andb_true_iff in Hrule; destruct Hrule as [Hrule Hconc];
+    apply andb_true_iff in Hrule; destruct Hrule as [Hcircle Hchord];
+    apply circle_eqb_eq in Hcircle; subst;
+    apply (proj2 (fact_eqb_sound _ _ Hconc));
+    assert (Hi := lookup_step_sound _ _ _ Hfacts Hx);
+    assert (Hj := lookup_step_sound _ _ _ Hfacts Hy);
+    cbn in Hi, Hj; unfold Audit.circ_center in *;
+    destruct Hi as [[[_ Ha1] [[_ Hav] [[_ Ha2] _]]] Hsa];
+    destruct Hj as [[[_ Hb1] [[_ Hbv] [[_ Hb2] _]]] Hsb];
+    cbn; unfold Audit.ang_start, Audit.ang_vertex, Audit.ang_end in *;
+    apply same_chord_cases in Hchord;
+    destruct Hchord as [[Hf Hl]|[Hf Hl]]; rewrite Hf, Hl in *.
+  - eapply ender_inscribed_opposite_sides; eauto.
+  - apply suppa_right_comm. eapply ender_inscribed_opposite_sides; eauto.
+    apply invert_two_sides; assumption.
+  - apply suppa_sym. eapply ender_inscribed_opposite_sides; eauto.
+  - apply suppa_sym, suppa_left_comm.
+    eapply ender_inscribed_opposite_sides; eauto.
+    apply invert_one_side; assumption.
+Qed.
+
 (** Everything below assumes the plane, which only [chord_bisect_conv]
     needs: in three dimensions the points equidistant from a chord's ends
     fill a plane, not a line. *)
@@ -7640,6 +7778,8 @@ Proof.
   - eapply diagonal_rule_sound; eauto.
   - eapply chord_bisect_conv_sound; eauto.
   - eapply def_radius_conv_sound; eauto.
+  - eapply con_inscribed_angs_sound; eauto.
+  - eapply supplementary_inscribed_angs_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

@@ -2554,6 +2554,75 @@ Example def_radius_conv_other_circle_rejects : complete_checker
 " "radius(c_OR, T)") = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Inscribed angles on one chord: congruent from the same arc, supplementary
+    from opposite arcs.  A, B, P, Q, S on the circle of centre O through A;
+    P and Q are on the centre's side of AB, S across it. *)
+Definition inscribed_source (premises goal steps : string) : string :=
+  "title: inscribed angles
+premises:
+pt: O (5,5), A (1,2), B (9,2), P (2,9), Q (8,9), S (5,0)
+circ: c_OA
+" ++ premises ++ "-> " ++ goal ++ "
+
+steps:
+" ++ steps.
+
+Definition inscribed_pair_source (first second reason goal : string) :=
+  inscribed_source ("[g_1] " ++ first ++ "
+[g_2] " ++ second ++ "
+") goal ("[01] given(g_1) -> " ++ first ++ "
+[02] given(g_2) -> " ++ second ++ "
+[03] " ++ reason ++ "(1, 2) -> " ++ goal).
+
+Example con_inscribed_angs_minor_accepts : complete_checker
+  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
+     "minor_inscribed_ang(c_OA, a_AQB)" "con_inscribed_angs"
+     "con_ang(a_APB, a_AQB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_inscribed_angs_major_accepts : complete_checker
+  (inscribed_pair_source "major_inscribed_ang(c_OA, a_ASB)"
+     "major_inscribed_ang(c_OA, a_AQB)" "con_inscribed_angs"
+     "con_ang(a_ASB, a_AQB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** The chord may be read either way round, and the conclusion in any
+    order. *)
+Example con_inscribed_angs_reversed_chord_accepts : complete_checker
+  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
+     "minor_inscribed_ang(c_OA, a_BQA)" "con_inscribed_angs"
+     "con_ang(a_AQB, a_BPA)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_inscribed_angs_mixed_rejects : complete_checker
+  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
+     "major_inscribed_ang(c_OA, a_ASB)" "con_inscribed_angs"
+     "con_ang(a_APB, a_ASB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example con_inscribed_angs_other_chord_rejects : complete_checker
+  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
+     "minor_inscribed_ang(c_OA, a_AQS)" "con_inscribed_angs"
+     "con_ang(a_APB, a_AQS)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** The general form names no arc. *)
+Example con_inscribed_angs_general_rejects : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_AQB)" "con_inscribed_angs"
+     "con_ang(a_APB, a_AQB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example supplementary_inscribed_angs_accepts : complete_checker
+  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
+     "major_inscribed_ang(c_OA, a_BSA)" "supplementary_inscribed_angs"
+     "supplementary(a_APB, a_BSA)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example supplementary_inscribed_angs_major_first_accepts : complete_checker
+  (inscribed_pair_source "major_inscribed_ang(c_OA, a_ASB)"
+     "minor_inscribed_ang(c_OA, a_APB)" "supplementary_inscribed_angs"
+     "supplementary(a_APB, a_ASB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example supplementary_inscribed_angs_same_arc_rejects : complete_checker
+  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
+     "minor_inscribed_ang(c_OA, a_AQB)" "supplementary_inscribed_angs"
+     "supplementary(a_APB, a_AQB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.
 Print Assumptions CertifiedAPI.euclidean_plane_exists.
