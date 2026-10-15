@@ -5,9 +5,10 @@ pt: L (2, 1, bl), N (3.5, 4, l), Q (8.5, 4, tr), R (6, 2.85, tl), S (6, 1, b), P
 tri: t_PSL t_PSU t_LNU t_UQL
 [d_1] on_line(LP, N)
 [d_2] on_line(PU, Q)
-[g_1] perp(LU, PS, S) [01]
-[g_2] con_seg(LN, QU) [02]
-[g_3] con_ang(a_LPS, a_UPS) [03]
+[d_3] on_line(LU, S)
+[g_1] perp(LU, PS, S)
+[g_2] con_seg(LN, QU)
+[g_3] con_ang(a_LPS, a_UPS)
 -> con_tri(t_LNU, t_UQL)
 
 steps:
