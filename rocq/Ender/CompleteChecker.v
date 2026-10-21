@@ -890,58 +890,56 @@ Definition string_field (key value : string) : string * Audit.JsonValue :=
   (key, Audit.JsonString value).
 Definition quoted (text : string) : string := "`" ++ text ++ "`".
 
-(** What each statement takes, for a statement written wrongly. *)
-Definition statement_signatures : list (string * string) :=
-  [("on_line", "a segment and a point, as in on_line(AB, P)");
-   ("transversal", "eight points, as in transversal(A, B, T, E, C, D, R, F)");
-   ("intersect_seg", "two segments and a point, as in intersect_seg(AB, CD, M)");
-   ("trapezoid_premise",
-    "a quadrilateral and two segments, as in trapezoid_premise(q_ABCD, AB, CD)");
-   ("kite_premise",
-    "a quadrilateral and two angles, as in kite_premise(q_ABCD, a_DAB, a_BCD)");
-   ("isos_trapezoid_premise",
-    "a quadrilateral and two segments, as in isos_trapezoid_premise(q_ABCD, AB, CD)");
-   ("right", "an angle, as in right(a_ABC)");
-   ("con_seg", "two segments, as in con_seg(AB, CD)");
-   ("con_ang", "two angles, as in con_ang(a_ABC, a_DEF)");
-   ("con_tri", "two triangles, as in con_tri(t_ABC, t_DEF)");
-   ("con_tri_ordered", "two triangles, as in con_tri_ordered(t_ABC, t_DEF)");
-   ("con_right", "two angles, as in con_right(a_ABC, a_DEF)");
-   ("para", "two segments, as in para(AB, CD)");
-   ("isosceles", "a triangle, as in isosceles(t_ABC)");
-   ("perp", "two segments and a point, as in perp(AB, CD, M)");
-   ("midpt", "a segment and a point, as in midpt(AB, M)");
-   ("ang_bisect", "an angle and a segment, as in ang_bisect(a_ABC, BD)");
-   ("rectangle", "a quadrilateral, as in rectangle(q_ABCD)");
-   ("parallelogram", "a quadrilateral, as in parallelogram(q_ABCD)");
-   ("proportion", "four segments, as in proportion(AB, CD, EF, GH)");
-   ("sim_tri", "two triangles, as in sim_tri(t_ABC, t_DEF)");
-   ("equilateral", "a triangle, as in equilateral(t_ABC)");
-   ("supplementary", "two angles, as in supplementary(a_ABC, a_CBD)");
-   ("complementary", "two angles, as in complementary(a_ABC, a_CBD)");
-   ("linear_pair", "two angles, as in linear_pair(a_ABC, a_CBD)");
-   ("equiangular", "a triangle, as in equiangular(t_ABC)");
-   ("circumcenter", "a point and a triangle, as in circumcenter(O, t_ABC)");
-   ("incenter", "a point and a triangle, as in incenter(I, t_ABC)");
-   ("perp_bisector", "two segments and a point, as in perp_bisector(MN, AB, M)");
-   ("seg_bisect", "two segments and a point, as in seg_bisect(MN, AB, M)");
-   ("isos_trapezoid", "a quadrilateral, as in isos_trapezoid(q_ABCD)");
-   ("rhombus", "a quadrilateral, as in rhombus(q_ABCD)");
-   ("tangent", "a circle, a segment, and a point, as in tangent(c_OA, BC, A)");
-   ("chord", "a circle and a segment, as in chord(c_OA, BC)");
-   ("minor_arc", "a circle and two points, as in minor_arc(c_OA, A, B)");
-   ("major_arc", "a circle and two points, as in major_arc(c_OA, A, B)");
-   ("radius", "a circle and a point, as in radius(c_OA, B)");
-   ("diameter", "a circle and a segment, as in diameter(c_OA, AB)");
-   ("inscribed_angle", "a circle and an angle, as in inscribed_angle(c_OA, a_BCD)");
-   ("minor_inscribed_ang", "a circle and an angle, as in minor_inscribed_ang(c_OA, a_BCD)");
-   ("major_inscribed_ang", "a circle and an angle, as in major_inscribed_ang(c_OA, a_BCD)");
-   ("on_circle", "a circle and a point, as in on_circle(c_OA, B)");
-   ("center_on_line", "a circle and a segment, as in center_on_line(c_OA, PQ)");
-   ("ref_seg", "the same segment twice, as in ref_seg(AB, AB)");
-   ("ref_ang", "the same angle twice, as in ref_ang(a_ABC, a_ABC)");
-   ("con_arc",
-    "two arcs, as in con_arc(minor_arc(c_OA, A, B), minor_arc(c_OA, C, D))")].
+(** The arguments each statement takes, for a statement written wrongly. *)
+Definition statement_signatures : list (string * list string) :=
+  let seg := "segment" in let pt := "point" in let ang := "angle" in
+  let tri := "triangle" in let quad := "quadrilateral" in let circ := "circle" in
+  [("on_line", [seg; pt]);
+   ("transversal", [pt; pt; pt; pt; pt; pt; pt; pt]);
+   ("intersect_seg", [seg; seg; pt]);
+   ("trapezoid_premise", [quad; seg; seg]);
+   ("kite_premise", [quad; ang; ang]);
+   ("isos_trapezoid_premise", [quad; seg; seg]);
+   ("right", [ang]);
+   ("con_seg", [seg; seg]);
+   ("con_ang", [ang; ang]);
+   ("con_tri", [tri; tri]);
+   ("con_tri_ordered", [tri; tri]);
+   ("con_right", [ang; ang]);
+   ("para", [seg; seg]);
+   ("isosceles", [tri]);
+   ("perp", [seg; seg; pt]);
+   ("midpt", [seg; pt]);
+   ("ang_bisect", [ang; seg]);
+   ("rectangle", [quad]);
+   ("parallelogram", [quad]);
+   ("proportion", [seg; seg; seg; seg]);
+   ("sim_tri", [tri; tri]);
+   ("equilateral", [tri]);
+   ("supplementary", [ang; ang]);
+   ("complementary", [ang; ang]);
+   ("linear_pair", [ang; ang]);
+   ("equiangular", [tri]);
+   ("circumcenter", [pt; tri]);
+   ("incenter", [pt; tri]);
+   ("perp_bisector", [seg; seg; pt]);
+   ("seg_bisect", [seg; seg; pt]);
+   ("isos_trapezoid", [quad]);
+   ("rhombus", [quad]);
+   ("tangent", [circ; seg; pt]);
+   ("chord", [circ; seg]);
+   ("minor_arc", [circ; pt; pt]);
+   ("major_arc", [circ; pt; pt]);
+   ("radius", [circ; pt]);
+   ("diameter", [circ; seg]);
+   ("inscribed_angle", [circ; ang]);
+   ("minor_inscribed_ang", [circ; ang]);
+   ("major_inscribed_ang", [circ; ang]);
+   ("on_circle", [circ; pt]);
+   ("center_on_line", [circ; seg]);
+   ("ref_seg", [seg; seg]);
+   ("ref_ang", [ang; ang]);
+   ("con_arc", ["arc"; "arc"])].
 
 Definition lookup_text {A : Type} (key : string) (table : list (string * A))
     : option A :=
@@ -971,37 +969,36 @@ Definition statement_issue (context : list (string * Audit.JsonValue))
   let text := Audit.normalized raw in
   let t := list_ascii_of_string text in
   let name := string_of_list_ascii (Parser.take_until "("%char t) in
-  let parser_message message :=
-    Audit.issue 3 "parser_error"
-      (Audit.JsonObject (context ++ [string_field "message" message])) in
+  let unreadable code extra :=
+    Audit.issue 3 code
+      (Audit.JsonObject (List.app context (string_field "text" text :: extra))) in
+  match t with
+  | [] => Audit.issue 3 "empty_statement" (Audit.JsonObject context)
+  | _ =>
   match Parser.find_after ["("%char] t with
-  | None =>
-      parser_message ("expected a statement such as con_seg(AB, CD), not "
-                      ++ quoted text)
+  | None => unreadable "malformed_statement" []
   | Some after =>
       match split_close 0 [] after with
-      | None => parser_message (quoted text ++ " is missing a closing parenthesis")
+      | None => unreadable "unclosed_parenthesis" []
       | Some (args, trailing) =>
           match trailing with
           | _ :: _ =>
-              parser_message ("unexpected " ++ quoted (string_of_list_ascii trailing)
-                ++ " after the statement " ++ quoted (name ++ "("
-                ++ string_of_list_ascii args ++ ")"))
+              unreadable "trailing_text"
+                [string_field "trailing" (string_of_list_ascii trailing)]
           | [] =>
               match lookup_text name statement_signatures with
               | None =>
                   Audit.issue 3 "unknown_function" (Audit.JsonObject (context ++
-                    [string_field "token" name;
-                     string_field "message"
-                       (quoted name ++ " is not a statement this checker knows")]))
-              | Some signature =>
+                    [string_field "token" name]))
+              | Some parameters =>
                   Audit.issue 11 "stmt_arg_type_invalid" (Audit.JsonObject (context ++
                     [string_field "statement" name;
-                     string_field "message"
-                       (name ++ " takes " ++ signature ++ "; found " ++ quoted text)]))
+                     ("parameters", Audit.JsonArray (json_strings parameters));
+                     string_field "text" text]))
               end
           end
       end
+  end
   end.
 
 (** How many dependencies each reason cites. *)
@@ -1069,52 +1066,42 @@ Definition reason_issue (number : nat) (raw : list ascii) : Audit.Issue :=
   match lookup_text name reason_arities with
   | None =>
       Audit.issue 3 "unknown_function" (Audit.JsonObject (base ++
-        [string_field "token" name;
-         string_field "message"
-           (quoted name ++ " is not a reason this checker has a rule for")]))
+        [string_field "token" name]))
   | Some (low, high) =>
       match find premise_label_text args with
       | Some label =>
           if String.eqb name "given" then
-            Audit.issue 3 "parser_error" (Audit.JsonObject (base ++
-              [string_field "message"
-                 ("could not read " ++ quoted (string_of_list_ascii t))]))
+            Audit.issue 3 "unreadable_given_citation" (Audit.JsonObject (base ++
+              [string_field "text" (string_of_list_ascii t)]))
           else
             Audit.issue 13 "invalid_given_dep" (Audit.JsonObject (base ++
-              [string_field "ref" (string_of_list_ascii label);
-               string_field "message"
-                 ("a premise like " ++ quoted (string_of_list_ascii label)
-                  ++ " is cited with given(...) in a step of its own, and that "
-                  ++ "step's number is what " ++ name ++ " cites")]))
+              [string_field "ref" (string_of_list_ascii label)]))
       | None =>
           if negb (Nat.leb low count && Nat.leb count high) then
             Audit.issue 9 "reason_dep_missing" (Audit.JsonObject (base ++
               [("expectedLength", Audit.JsonNumber low);
-               ("receivedLength", Audit.JsonNumber count);
-               string_field "message"
-                 (name ++ " cites " ++ nat_text low ++ " step"
-                  ++ (if Nat.eqb low 1 then "" else "s") ++ "; found "
-                  ++ nat_text count)]))
+               ("receivedLength", Audit.JsonNumber count)]))
           else
-            Audit.issue 3 "parser_error" (Audit.JsonObject (base ++
-              [string_field "message"
-                 ("could not read the step numbers in "
-                  ++ quoted (string_of_list_ascii t))]))
+            Audit.issue 3 "unreadable_dependencies" (Audit.JsonObject (base ++
+              [string_field "text" (string_of_list_ascii t)]))
       end
   end.
 
-(** Why a step line did not parse. *)
+(** Why a step line did not parse.  Spaces and a trailing [//] comment do not
+    count, so [[01]  // todo] is an empty step. *)
 Definition step_parse_issue (number : nat) (line : list ascii) : Audit.Issue :=
-  let parser_message message :=
-    Audit.issue 3 "parser_error"
-      (Audit.JsonObject [step_field number; string_field "message" message]) in
-  match line with
+  let compact := Parser.remove_space (Parser.take_until "/"%char line) in
+  let issue code := Audit.issue 3 code (Audit.JsonObject [step_field number]) in
+  match compact with
   | "["%char :: rest =>
       match Parser.find_after ["]"%char] rest with
-      | None => parser_message "the step number is missing its closing ]"
+      | None => issue "unclosed_step_number"
+      | Some [] => issue "empty_step"
       | Some after =>
           match Parser.split_arrow after with
-          | None => parser_message "the step has no -> between its reason and its statement"
+          | None => issue "missing_arrow"
+          | Some ([], []) => issue "empty_step"
+          | Some ([], _) => issue "empty_reason"
           | Some (reason_text, statement_text) =>
               match Parser.parse_reason_chars reason_text with
               | None => reason_issue number reason_text
@@ -1124,7 +1111,7 @@ Definition step_parse_issue (number : nat) (line : list ascii) : Audit.Issue :=
               end
           end
       end
-  | _ => parser_message "a step line starts with its number in brackets, as in [01]"
+  | _ => issue "missing_step_number"
   end.
 
 (** The statements each reason can conclude. *)
@@ -1280,17 +1267,7 @@ Definition tri_text (t : TriangleName) : Audit.JsonValue :=
 (** Two quadrilateral statements a rule relates must name one figure, in any
     of its eight spellings. *)
 Definition different_quads (r q : QuadrilateralName) : list (string * Audit.JsonValue) :=
-  [("pair", Audit.JsonArray [quad_text r; quad_text q]);
-   string_field "message"
-     (quoted (Audit.quadrilateralText r) ++ " and "
-      ++ quoted (Audit.quadrilateralText q) ++ " are different quadrilaterals")].
-
-Definition criterion_shape (name : string) : string :=
-  if String.eqb name "sas" then "two sides and the angle between them"
-  else if String.eqb name "sss" then "all three sides"
-  else if String.eqb name "asa" then "two angles and the side between them"
-  else if String.eqb name "aas" then "two angles and a side that is not between them"
-  else "a right angle, the hypotenuse, and a leg".
+  [("pair", Audit.JsonArray [quad_text r; quad_text q])].
 
 (** Under the correspondence [t] to [u], the part a congruence's first
     object corresponds to. *)
@@ -1317,21 +1294,24 @@ Definition corresponding_part (t u : TriangleName) (conclusion : Statement)
   | _ => None
   end.
 
-Definition first_object_text (s : Statement) : string :=
-  match s with
-  | ConSeg x _ => Audit.segmentText x
-  | ConAng x _ => Audit.angleText x
-  | _ => ""
+(** The part a cpctc conclusion should have paired its first object with. *)
+Definition corresponding_field (t u : TriangleName) (conclusion : Statement)
+    : list (string * Audit.JsonValue) :=
+  match corresponding_part t u conclusion with
+  | Some partner => [string_field "expected" partner]
+  | None => []
   end.
 
-Definition correspondence_note (t u : TriangleName) (conclusion : Statement)
-    : string :=
-  match corresponding_part t u conclusion with
-  | Some partner =>
-      "; matching " ++ Audit.triangleText t ++ " to " ++ Audit.triangleText u ++ ", "
-      ++ quoted (first_object_text conclusion) ++ " corresponds to " ++ quoted partner
-  | None => ""
-  end.
+Definition opposite_sides (q : QuadrilateralName) : Audit.JsonValue :=
+  Audit.JsonArray
+    [Audit.JsonArray [seg_text (quad_side_ab q); seg_text (quad_side_cd q)];
+     Audit.JsonArray [seg_text (quad_side_bc q); seg_text (quad_side_da q)]].
+Definition opposite_angles (q : QuadrilateralName) : Audit.JsonValue :=
+  Audit.JsonArray
+    [Audit.JsonArray [ang_text (quad_corner_a q); ang_text (quad_corner_c q)];
+     Audit.JsonArray [ang_text (quad_corner_b q); ang_text (quad_corner_d q)]].
+Definition diagonals (q : QuadrilateralName) : Audit.JsonValue :=
+  Audit.JsonArray [seg_text (quad_diagonal_ac q); seg_text (quad_diagonal_bd q)].
 
 Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (number : nat) (current : Step)
@@ -1341,32 +1321,20 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
   let base := [string_field "reason" (reason_name r); step_field number] in
   let issue code extra :=
     Some (Audit.issue 1 code (Audit.JsonObject (base ++ extra))) in
-  let said := quoted (Audit.statementText conclusion) in
   match r with
   | Reflex =>
       match conclusion with
       | RefSeg a b =>
           if segment_u_eqb a b then None
           else issue "objs_not_equal"
-            [("pair", Audit.JsonArray [seg_text a; seg_text b]);
-             string_field "message"
-               ("reflex relates a segment to itself, and "
-                ++ quoted (Audit.segmentText a) ++ " and "
-                ++ quoted (Audit.segmentText b) ++ " are different segments")]
+            [("pair", Audit.JsonArray [seg_text a; seg_text b])]
       | RefAng a b =>
           if angle_u_eqb a b then
             if declared_angle decls a then None
             else issue "angle_not_declared"
-              [("angle", ang_text a);
-               string_field "message"
-                 ("ref_ang needs " ++ quoted (Audit.angleText a)
-                  ++ " declared on an ang: line, which is what says its rays are genuine")]
+              [("angle", ang_text a)]
           else issue "objs_not_equal"
-            [("pair", Audit.JsonArray [ang_text a; ang_text b]);
-             string_field "message"
-               ("reflex relates an angle to itself, and "
-                ++ quoted (Audit.angleText a) ++ " and "
-                ++ quoted (Audit.angleText b) ++ " are different angles")]
+            [("pair", Audit.JsonArray [ang_text a; ang_text b])]
       | _ => None
       end
   | DefMidpt i =>
@@ -1375,11 +1343,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
           let halves := ConSeg (segment_name s.(segment_first) p)
                                (segment_name p s.(segment_second)) in
           issue "segs_not_subsegments_meeting_at_midpt"
-            [string_field "expected" (Audit.statementText halves);
-             string_field "message"
-               ("the midpoint " ++ string_of_list_ascii [p] ++ " of "
-                ++ quoted (Audit.segmentText s) ++ " gives "
-                ++ quoted (Audit.statementText halves) ++ ", not " ++ said)]
+            [string_field "expected" (Audit.statementText halves)]
       | _ => None
       end
   | DefAngBisect i =>
@@ -1388,26 +1352,17 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
           let v := a.(angle_vertex) in
           if ascii_eqb x.(angle_vertex) v && ascii_eqb y.(angle_vertex) v then
             issue "bisector_not_in_both_half_angles"
-              [string_field "message"
-                 ("the bisector " ++ quoted (Audit.segmentText s) ++ " splits "
-                  ++ quoted (Audit.angleText a)
-                  ++ " into the two angles between it and each side, not " ++ said)]
+              [("angle", ang_text a); ("bisector", seg_text s)]
           else
             issue "angle_centers_dont_match"
-              [string_field "message"
-                 ("both halves of " ++ quoted (Audit.angleText a)
-                  ++ " have their vertex at " ++ string_of_list_ascii [v])]
+              [string_field "vertex" (string_of_list_ascii [v])]
       | _, _ => None
       end
   | DefConRight i j =>
       match lookup_step facts i, lookup_step facts j with
       | Some (Right a), Some (Right b) =>
           issue "right_angles_dont_match_conclusion"
-            [("expected", Audit.JsonArray [ang_text a; ang_text b]);
-             string_field "message"
-               ("the cited right angles are " ++ quoted (Audit.angleText a)
-                ++ " and " ++ quoted (Audit.angleText b)
-                ++ ", so the conclusion relates those two")]
+            [("expected", Audit.JsonArray [ang_text a; ang_text b])]
       | _, _ => None
       end
   | PgramOppSides i =>
@@ -1415,12 +1370,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | Some (Parallelogram q), ConSeg a b =>
           issue "segs_not_opp_sides_of_quad"
             [("pair", Audit.JsonArray [seg_text a; seg_text b]);
-             string_field "message"
-               ("the opposite sides of " ++ quoted (Audit.quadrilateralText q)
-                ++ " are " ++ Audit.segmentText (quad_side_ab q) ++ " and "
-                ++ Audit.segmentText (quad_side_cd q) ++ ", and "
-                ++ Audit.segmentText (quad_side_bc q) ++ " and "
-                ++ Audit.segmentText (quad_side_da q))]
+             ("quad", quad_text q); ("oppositeSides", opposite_sides q)]
       | _, _ => None
       end
   | PgramOppAngles i =>
@@ -1428,132 +1378,66 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | Some (Parallelogram q), ConAng a b =>
           issue "angles_not_opp_angles_of_quad"
             [("pair", Audit.JsonArray [ang_text a; ang_text b]);
-             string_field "message"
-               ("the opposite corners of " ++ quoted (Audit.quadrilateralText q)
-                ++ " are " ++ Audit.angleText (quad_corner_a q) ++ " and "
-                ++ Audit.angleText (quad_corner_c q) ++ ", and "
-                ++ Audit.angleText (quad_corner_b q) ++ " and "
-                ++ Audit.angleText (quad_corner_d q))]
+             ("quad", quad_text q); ("oppositeAngles", opposite_angles q)]
       | _, _ => None
       end
   | PgramConsecAngs i =>
       match lookup_step facts i, conclusion with
       | Some (Parallelogram q), Supplementary a b =>
           issue "angles_not_consecutive_in_quad"
-            [("a1", ang_text a); ("a2", ang_text b);
-             string_field "message"
-               ("two corners of " ++ quoted (Audit.quadrilateralText q)
-                ++ " are supplementary when they share a side, as "
-                ++ Audit.angleText (quad_corner_a q) ++ " and "
-                ++ Audit.angleText (quad_corner_b q) ++ " do")]
+            [("a1", ang_text a); ("a2", ang_text b); ("quad", quad_text q)]
       | _, _ => None
       end
   | RhombusOppBisect i =>
       match lookup_step facts i, conclusion with
       | Some (Rhombus q), AngBisect a s =>
           issue "angle_or_seg_not_within_quad"
-            [("angle", ang_text a); ("segment", seg_text s);
-             string_field "message"
-               ("a diagonal of " ++ quoted (Audit.quadrilateralText q)
-                ++ " bisects the corners it joins: "
-                ++ Audit.segmentText (quad_diagonal_ac q) ++ " bisects "
-                ++ Audit.angleText (quad_corner_a q) ++ " and "
-                ++ Audit.angleText (quad_corner_c q) ++ ", "
-                ++ Audit.segmentText (quad_diagonal_bd q) ++ " bisects "
-                ++ Audit.angleText (quad_corner_b q) ++ " and "
-                ++ Audit.angleText (quad_corner_d q))]
+            [("angle", ang_text a); ("segment", seg_text s); ("quad", quad_text q)]
       | _, _ => None
       end
   | VertAng label =>
       let parts := Parser.split_on ","%char (list_ascii_of_string label) [] in
+      let cited := [string_field "label" label] in
       if Nat.ltb 1 (List.length parts) then
-        issue "no_intersecting_seg_produces_vert_angles"
-          [string_field "message"
-             ("vert_ang cites just the intersect_seg diagram premise whose crossing"
-              ++ " makes the angles vertical, as in vert_ang(d_01); found "
-              ++ quoted label)]
+        issue "no_intersecting_seg_produces_vert_angles" cited
       else
       match find_premise label premises with
-      | Some (IntersectSeg a b p) =>
+      | Some found =>
           issue "no_intersecting_seg_produces_vert_angles"
-            [string_field "message"
-               (quoted (Audit.segmentText a) ++ " and "
-                ++ quoted (Audit.segmentText b) ++ " cross at "
-                ++ string_of_list_ascii [p] ++ ", and " ++ said
-                ++ " is not a pair of angles opposite each other there")]
-      | Some other =>
-          issue "no_intersecting_seg_produces_vert_angles"
-            [string_field "message"
-               (quoted label ++ " states " ++ quoted (Audit.statementText other)
-                ++ "; vert_ang cites the intersect_seg premise whose crossing"
-                ++ " makes the angles vertical")]
-      | None =>
-          issue "no_intersecting_seg_produces_vert_angles"
-            [string_field "message"
-               ("vert_ang cites the intersect_seg diagram premise whose crossing"
-                ++ " makes the angles vertical, as in vert_ang(d_01); no premise"
-                ++ " is labelled " ++ quoted label)]
+            (List.app cited [string_field "premise" (Audit.statementText found)])
+      | None => issue "no_intersecting_seg_produces_vert_angles" cited
       end
   | AltInt _ | AltExt _ | CorrespAng _ | SamesideAng _
   | AltIntConv _ | AltExtConv _ | CorrespAngConv _ | SamesideAngConv _ =>
-      if has_transversal premises then
-        issue "transversal_angles_or_parallel_segs_dont_form_valid_config"
-          [string_field "message"
-             ("no transversal premise crosses these two lines with "
-              ++ said ++ " as the pair of angles " ++ reason_name r ++ " is about")]
-      else
-        issue "transversal_angles_or_parallel_segs_dont_form_valid_config"
-          [string_field "message"
-             ("the parallel-line rules read the figure from a transversal diagram"
-              ++ " premise, and this problem has none")]
+      issue "transversal_angles_or_parallel_segs_dont_form_valid_config"
+        [("hasTransversal", Audit.JsonBool (has_transversal premises))]
   | SAS _ _ _ | SSS _ _ _ | ASA _ _ _ | AAS _ _ _ | RHL _ _ _ =>
       match conclusion with
       | ConTri t u | ConTriOrdered t u =>
           if declared_pair decls t u then
             issue "criterion_parts_dont_match_triangles"
-              [("tri1", tri_text t); ("tri2", tri_text u);
-               string_field "message"
-                 (reason_name r ++ " needs " ++ criterion_shape (reason_name r)
-                  ++ " of " ++ Audit.triangleText t ++ " congruent to the"
-                  ++ " corresponding parts of " ++ Audit.triangleText u
-                  ++ ", cited in that order, and the cited steps do not state them")]
+              [("tri1", tri_text t); ("tri2", tri_text u)]
           else
             issue "triangle_not_declared"
-              [("tri1", tri_text t); ("tri2", tri_text u);
-               string_field "message"
-                 ("both triangles must be declared on a tri: line, which is"
-                  ++ " what says they are genuine triangles")]
+              [("tri1", tri_text t); ("tri2", tri_text u)]
       | _ => None
       end
   | CPCTC i =>
       match lookup_step facts i with
       | Some (ConTriOrdered t u) =>
           issue "parts_not_corresponding_in_triangles"
-            [("tri1", tri_text t); ("tri2", tri_text u);
-             string_field "message"
-               (quoted (Audit.statementText conclusion) ++ " does not pair parts"
-                ++ " that correspond when " ++ Audit.triangleText t ++ " is matched"
-                ++ " to " ++ Audit.triangleText u ++ " vertex by vertex"
-                ++ correspondence_note t u conclusion)]
+            (List.app [("tri1", tri_text t); ("tri2", tri_text u)]
+               (corresponding_field t u conclusion))
       | Some (ConTri t u) =>
           match find (fun u' => chain_witnessed decls premises facts t u')
                      (triangle_orderings u) with
           | Some u' =>
             issue "parts_not_corresponding_in_triangles"
-              [("tri1", tri_text t); ("tri2", tri_text u);
-               string_field "message"
-                 (quoted (Audit.statementText conclusion) ++ " does not pair parts"
-                  ++ " that correspond in the way the earlier steps match "
-                  ++ Audit.triangleText t ++ " to " ++ Audit.triangleText u
-                  ++ correspondence_note t u' conclusion)]
+              (List.app [("tri1", tri_text t); ("tri2", tri_text u)]
+                 (corresponding_field t u' conclusion))
           | None =>
             issue "no_correspondence_established"
-              [("tri1", tri_text t); ("tri2", tri_text u);
-               string_field "message"
-                 ("con_tri does not say which vertices correspond; cpctc takes the"
-                  ++ " correspondence from the steps that proved the congruence,"
-                  ++ " and none of the earlier steps establishes one -- a given"
-                  ++ " congruence for cpctc is written con_tri_ordered")]
+              [("tri1", tri_text t); ("tri2", tri_text u)]
           end
       | _ => None
       end
@@ -1561,32 +1445,25 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       match lookup_step facts i with
       | Some (KitePremise q a b) =>
           issue "angles_not_opp_angles_of_quad"
-            [("pair", Audit.JsonArray [ang_text a; ang_text b]);
-             string_field "message"
-               ("the kite premise selects " ++ quoted (Audit.angleText a) ++ " and "
-                ++ quoted (Audit.angleText b) ++ ", so the conclusion is "
-                ++ quoted (Audit.statementText (ConAng a b)))]
+            [("expected", Audit.JsonArray [ang_text a; ang_text b]);
+             ("quad", quad_text q)]
       | _ => None
       end
   | EquilatEquiang i | EquiangEquilat i =>
       match lookup_step facts i, conclusion with
       | Some (Equilateral u), Equiangular t | Some (Equiangular u), Equilateral t =>
           issue "equilateral_and_equiangular_not_the_same_triangle"
-            [("tri1", tri_text u); ("tri2", tri_text t);
-             string_field "message"
-               ("the cited step is about " ++ Audit.triangleText u
-                ++ " and the conclusion about " ++ Audit.triangleText t)]
+            [("tri1", tri_text u); ("tri2", tri_text t)]
       | _, _ => None
       end
   | ConSupplementsSame i j | ConComplementsSame i j =>
       let shared a b c d :=
         if angles_share a b c d then
           issue "non_shared_angles_dont_match_con_ang_conclusion"
-            [string_field "message"
-               ("the conclusion relates the two angles the cited pairs do not share")]
+            []
         else
           issue "no_shared_angle_bw_supp_pairs"
-            [string_field "message" "the two cited pairs need an angle in common"] in
+            [] in
       match lookup_step facts i, lookup_step facts j with
       | Some (Supplementary a b), Some (Supplementary c d)
       | Some (Complementary a b), Some (Complementary c d) => shared a b c d
@@ -1598,60 +1475,39 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
           let expected := ConSeg (segment_name c.(circle_center) p)
                             (segment_name c.(circle_center) c.(circle_radius_point)) in
           issue "segs_not_radii_of_circle"
-            [string_field "expected" (Audit.statementText expected);
-             string_field "message"
-               (quoted (Audit.statementText (Radius c p)) ++ " gives "
-                ++ quoted (Audit.statementText expected))]
+            [string_field "expected" (Audit.statementText expected)]
       | _ => None
       end
   | ConTangentsExt _ _ =>
       issue "tangent_segs_have_no_common_ext_pt"
-        [string_field "message"
-           ("two tangents to the same circle from one outside point are congruent;"
-            ++ " the cited tangents must share their outside endpoint")]
+        []
   | TangentPerp _ _ | TangentPerpConv _ _ =>
       issue "tangent_and_radius_have_diff_tangency_pts"
-        [string_field "message"
-           ("the tangent and the radius must meet at the point of tangency, on the"
-            ++ " same circle, and the perpendicular is between those two segments there")]
+        []
   | PerpConAng i =>
       match lookup_step facts i, conclusion with
       | Some (Perp _ _ p), ConAng a b =>
           if declared_angle decls a && declared_angle decls b then
             issue "angles_dont_share_centerpt"
-              [string_field "message"
-                 ("both angles must be right angles at " ++ string_of_list_ascii [p]
-                  ++ " between the perpendicular segments")]
+              [string_field "point" (string_of_list_ascii [p])]
           else
             issue "angle_not_declared"
-              [string_field "message"
-                 ("con_ang from perpendicularity needs both angles declared on an"
-                  ++ " ang: line, which is what says their rays are genuine;"
-                  ++ " con_right needs no declaration")]
+              [("angles", Audit.JsonArray [ang_text a; ang_text b])]
       | Some (Perp _ _ p), ConRight _ _ =>
           issue "angles_dont_share_centerpt"
-            [string_field "message"
-               ("both angles must be right angles at " ++ string_of_list_ascii [p]
-                ++ " between the perpendicular segments")]
+            [string_field "point" (string_of_list_ascii [p])]
       | _, _ => None
       end
   | IsosTrapBaseAngsConv i =>
       match lookup_step facts i with
       | Some (IsosTrapezoidPremise q _ _) =>
-          issue "angles_not_base_angle_pair_of_trap"
-            [string_field "message"
-               ("the base angles of " ++ quoted (Audit.quadrilateralText q)
-                ++ " are the two corners at either end of one of its parallel sides")]
+          issue "angles_not_base_angle_pair_of_trap" [("quad", quad_text q)]
       | _ => None
       end
   | RectangleDef i =>
       match lookup_step facts i with
       | Some (Rectangle q) =>
-          issue "conclusion_elements_not_in_quad"
-            [string_field "message"
-               ("a rectangle's corners are right angles and its opposite sides"
-                ++ " congruent; the conclusion must name corners or opposite sides of "
-                ++ quoted (Audit.quadrilateralText q))]
+          issue "conclusion_elements_not_in_quad" [("quad", quad_text q)]
       | _ => None
       end
   | RectanglePgram i | RhombusPgram i =>
@@ -1683,10 +1539,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
                 | Some (ConSeg a b) =>
                     issue "segs_not_both_diagonals_of_quad"
                       [("s1", seg_text a); ("s2", seg_text b);
-                       string_field "message"
-                         ("the diagonals of " ++ quoted (Audit.quadrilateralText q)
-                          ++ " are " ++ Audit.segmentText (quad_diagonal_ac q)
-                          ++ " and " ++ Audit.segmentText (quad_diagonal_bd q))]
+                       ("quad", quad_text q); ("diagonals", diagonals q)]
                 | _ => None
                 end
             | _ => None
@@ -1698,12 +1551,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       match conclusion with
       | Parallelogram q =>
           issue "segs_not_opp_sides_of_quad"
-            [string_field "message"
-               ("a parallelogram's opposite sides are parallel: the cited steps must"
-                ++ " state para(" ++ Audit.segmentText (quad_side_ab q) ++ ", "
-                ++ Audit.segmentText (quad_side_cd q) ++ ") and para("
-                ++ Audit.segmentText (quad_side_bc q) ++ ", "
-                ++ Audit.segmentText (quad_side_da q) ++ ")")]
+            [("quad", quad_text q); ("oppositeSides", opposite_sides q)]
       | _ => None
       end
   | ConSegTrans i j =>
@@ -1711,8 +1559,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | Some (ConSeg a b), Some (ConSeg c d) =>
           if segments_share a b c d then None
           else issue "no_shared_congruent_element"
-            [string_field "message"
-               ("transitivity needs the two congruences to share a segment")]
+            []
       | _, _ => None
       end
   | ConAngTrans i j =>
@@ -1720,8 +1567,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | Some (ConAng a b), Some (ConAng c d) =>
           if angles_share a b c d then None
           else issue "no_shared_congruent_element"
-            [string_field "message"
-               ("transitivity needs the two congruences to share an angle")]
+            []
       | _, _ => None
       end
   | ConTriTrans i j =>
@@ -1733,95 +1579,24 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
           if same_vertices a c || same_vertices a d || same_vertices b c
              || same_vertices b d then None
           else issue "no_shared_congruent_element"
-            [string_field "message"
-               ("transitivity needs the two congruences to share a triangle")]
+            []
       | _, _ => None
       end
   | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
       match diagonal_rule_parts r facts conclusion with
       | Some (q, s, t, p) =>
-          let ac := Audit.segmentText (quad_diagonal_ac q) in
-          let bd := Audit.segmentText (quad_diagonal_bd q) in
           if names_diagonals q s t then
             issue "no_intersect_seg_premise_for_diagonals_at_this_point"
-              [string_field "message"
-                 ("the diagonals " ++ ac ++ " and " ++ bd ++ " of "
-                  ++ quoted (Audit.quadrilateralText q) ++ " must cross at "
-                  ++ string_of_list_ascii [p] ++ " by a diagram premise, as in "
-                  ++ quoted ("intersect_seg(" ++ ac ++ ", " ++ bd ++ ", "
-                             ++ string_of_list_ascii [p] ++ ")"))]
+              [string_field "expected" (Audit.statementText
+                 (IntersectSeg (quad_diagonal_ac q) (quad_diagonal_bd q) p))]
           else
             issue "segs_not_both_diagonals_of_quad"
               [("s1", seg_text s); ("s2", seg_text t);
-               string_field "message"
-                 ("the diagonals of " ++ quoted (Audit.quadrilateralText q)
-                  ++ " are " ++ ac ++ " and " ++ bd)]
+               ("quad", quad_text q); ("diagonals", diagonals q)]
       | None => None
       end
   | _ => None
   end.
-
-(** What a rule needs, said once, for the rejections nothing above explains
-    more specifically. *)
-Definition reason_requirements : list (string * string) :=
-  [("con_chords_intersect_arcs",
-    "congruent arcs of one circle have congruent chords: cite con_arc of the two arcs and conclude con_seg of their chords");
-   ("inscribed_semi",
-    "an angle inscribed in a semicircle is right: cite the diameter whose endpoints the angle's rays reach, with the inscribed_angle premise placing its vertex on the circle");
-   ("radius_chord_bisect",
-    "a radius perpendicular to a chord bisects it: cite the perp, the radius, and the chord, and conclude seg_bisect of the radius's line, the chord, and the foot");
-   ("ang_bisect_conv",
-    "a ray splitting an angle into two congruent halves bisects it: cite con_ang of exactly the two halves and conclude ang_bisect of the whole angle and the ray");
-   ("con_complements",
-    "angles complementary to congruent angles are congruent: cite two complementary pairs and the con_ang relating one angle of each, and conclude con_ang of the other two");
-   ("con_supplements",
-    "angles supplementary to congruent angles are congruent: cite two supplementary pairs and the con_ang relating one angle of each, and conclude con_ang of the other two");
-   ("def_linear_pair",
-    "the two angles of a linear pair are supplementary: conclude supplementary of exactly the two angles of the cited linear_pair");
-   ("chord_bisect_conv",
-    "the perpendicular bisector of a chord passes through the centre: cite the perp_bisector and the chord it bisects, and conclude center_on_line of the circle and the bisector");
-   ("def_radius_conv",
-    "a segment from a line through the centre to a point on the circle is a radius: cite center_on_line of the circle and a segment, with a premise placing the segment's end on the circle, and conclude radius of that end");
-   ("con_inscribed_angs",
-    "inscribed angles on one chord intercepting the same arc are congruent: cite two minor_inscribed_ang or two major_inscribed_ang steps on the same circle and chord, and conclude con_ang of the two angles");
-   ("supplementary_inscribed_angs",
-    "inscribed angles on one chord intercepting opposite arcs are supplementary: cite one minor_inscribed_ang and one major_inscribed_ang step on the same circle and chord, and conclude supplementary of the two angles");
-   ("linear_pair_conv",
-    "two supplementary angles sharing a ray form a linear pair when their other rays are opposite: cite supplementary of the two angles, with an on_line premise placing their common vertex on the segment between the two other points, and conclude linear_pair of the same angles");
-   ("para_transitive",
-    "two lines parallel to a third are parallel: cite two para statements sharing a segment and conclude para of the other two");
-   ("perp_bisector",
-    "a point on the perpendicular bisector of a segment is as far from both ends: cite the perp at the midpoint and the midpt, and conclude con_seg of the two distances");
-   ("isos_trap_base_angs",
-    "a trapezoid with congruent base angles is isosceles: cite con_ang of the two corners at one end of a parallel side, and the trapezoid premise");
-   ("pgram_opp_angs_conv",
-    "both pairs of opposite angles congruent make a parallelogram: cite con_ang of each pair of opposite corners");
-   ("pgram_opp_side_para",
-    "one pair of opposite sides parallel and congruent makes a parallelogram: cite con_seg and para of the same two opposite sides");
-   ("pgram_opp_sides_conv",
-    "both pairs of opposite sides congruent make a parallelogram: cite con_seg of each pair of opposite sides");
-   ("rect_diag_con_conv",
-    "a parallelogram with congruent diagonals is a rectangle: cite con_seg of its two diagonals and the parallelogram");
-   ("rect_diag_con",
-    "a rectangle's diagonals are congruent: conclude con_seg of its two diagonals");
-   ("rhombus_consec_sides",
-    "a parallelogram with two consecutive sides congruent is a rhombus: cite the parallelogram and con_seg of two sides that share a corner");
-   ("rhombus",
-    "a rhombus's sides are congruent: conclude con_seg of two of its sides");
-   ("aa_sim",
-    "two triangles with two pairs of congruent angles are similar: cite con_ang of two corresponding pairs and conclude sim_tri with the vertices in corresponding order");
-   ("base_angle_conv",
-    "a triangle with two congruent angles has the sides opposite them congruent: cite con_ang of the base angles and conclude con_seg of the two legs from the apex");
-   ("base_angle",
-    "a triangle with two congruent sides has the angles opposite them congruent: cite con_seg of the two legs from the apex and conclude con_ang of the base angles");
-   ("def_con_tri",
-    "triangles with all six corresponding parts congruent are congruent: cite the three side and three angle congruences, in corresponding order");
-   ("def_equiangular",
-    "a triangle whose three angles are congruent is equiangular: cite congruences covering each of its angles");
-   ("def_equilateral",
-    "a triangle whose three sides are congruent is equilateral: cite congruences covering each of its sides");
-   ("third_angle",
-    "two triangles with two pairs of congruent angles have congruent third angles: cite the two pairs and conclude con_ang of the remaining corners")].
 
 (** Two dependency slots citing the same fact, by position in the citation. *)
 Definition duplicate_dependency (facts : list Statement) (deps : list nat)
@@ -1858,17 +1633,13 @@ Definition rejected_step_issue (decls : Declarations) (premises : list Premise)
         match find_premise label premises with
         | None =>
             Some (Audit.issue 13 "invalid_given_dep" (Audit.JsonObject (base ++
-              [string_field "ref" label;
-               string_field "message" ("no stated is labelled " ++ quoted label)])))
+              [string_field "ref" label])))
         | Some stated =>
             if String.eqb (statement_function stated) (statement_function conclusion)
             then Some (Audit.issue 11 "stmt_arg_type_invalid" (Audit.JsonObject (base ++
               [string_field "ref" label;
                string_field "expected" (Audit.statementText stated);
-               string_field "actual" (Audit.statementText conclusion);
-               string_field "message"
-                 (quoted label ++ " states " ++ quoted (Audit.statementText stated)
-                  ++ ", not " ++ quoted (Audit.statementText conclusion))])))
+               string_field "actual" (Audit.statementText conclusion)])))
             else Some (Audit.issue 10 "reason_stmt_mismatch" (Audit.JsonObject (base ++
               [("legalStatements",
                 Audit.JsonArray [Audit.JsonString (statement_function stated)]);
@@ -1882,9 +1653,7 @@ Definition rejected_step_issue (decls : Declarations) (premises : list Premise)
   match forward with
   | Some d =>
       Audit.issue 7 "forward_reference" (Audit.JsonObject (base ++
-        [string_field "ref" (nat_text d);
-         string_field "message"
-           ("step " ++ nat_text number ++ " can only cite steps before it")]))
+        [string_field "ref" (nat_text d)]))
   | None =>
   match given_issue with
   | Some found => found
@@ -1897,10 +1666,7 @@ Definition rejected_step_issue (decls : Declarations) (premises : list Premise)
   | Some (first, second) =>
       Audit.issue 14 "invalid_duplicate_stmt" (Audit.JsonObject (base ++
         [("firstIndex", Audit.JsonNumber first);
-         ("secondIndex", Audit.JsonNumber second);
-         string_field "message"
-           ("dependencies " ++ nat_text first ++ " and " ++ nat_text second
-            ++ " state the same fact, and " ++ name ++ " needs different ones")]))
+         ("secondIndex", Audit.JsonNumber second)]))
   | None =>
   match reason_conclusions r with
   | Some legal =>
@@ -1909,18 +1675,11 @@ Definition rejected_step_issue (decls : Declarations) (premises : list Premise)
         | Some argument =>
             Audit.issue 14 "invalid_duplicate_stmt" (Audit.JsonObject (base ++
               [string_field "statement" (statement_function conclusion);
-               string_field "argument" argument;
-               string_field "message"
-                 (quoted (Audit.statementText conclusion) ++ " names "
-                  ++ quoted argument ++ " twice")]))
+               string_field "argument" argument]))
         | None =>
             match rule_specific_issue decls premises facts number current with
             | Some found => found
-            | None => Audit.issue 1 "reason_application_error" (Audit.JsonObject
-                (base ++ match lookup_text name reason_requirements with
-                         | Some need => [string_field "message" need]
-                         | None => []
-                         end))
+            | None => Audit.issue 1 "reason_application_error" (Audit.JsonObject base)
             end
         end
       else
@@ -2019,6 +1778,7 @@ Definition relabel_issue (labels : list (option nat)) (i : Audit.Issue)
         (Audit.JsonObject (map (fun field =>
            if String.eqb (fst field) "steps" || String.eqb (fst field) "dependsOn"
               || String.eqb (fst field) "ref" || String.eqb (fst field) "duplicateOf"
+              || String.eqb (fst field) "statedBy"
            then (fst field, relabel_value labels (snd field))
            else field) fields))
   | _ => i
@@ -2044,9 +1804,12 @@ Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :
              | Some _ => []
              | None =>
                  [Audit.issue 4 "goal_not_reached" (Audit.JsonObject
-                   (map (fun diag => string_field "message"
-                           diag.(Audit.diagnostic_message))
-                        goal.(Audit.goal_diagnostics)))]
+                   (string_field "goal" (Audit.statementText d.(rd_goal)) ::
+                    match goal_stated_by d.(rd_goal) (map rs_step d.(rd_steps)) 1
+                            d.(rd_statuses) false with
+                    | Some n => [string_field "statedBy" (nat_text n)]
+                    | None => []
+                    end))]
              end in
       let unused :=
         match graph.(Audit.graph_unused_steps) with
@@ -2066,8 +1829,7 @@ Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :
   | None =>
       if accepted then []
       else [Audit.issue 1 "reason_application_error" (Audit.JsonObject
-              [string_field "message"
-                 "the steps do not match the problem's premises and goal"])]
+              [])]
   end.
 
 (** Why the problem part did not parse: the first line the audited grammar
@@ -2088,25 +1850,36 @@ Fixpoint header_line_issue (lines : list string) (number : nat)
                 match Audit.goalBody line with
                 | Some body => statement_issue context body
                 | None =>
-                    Audit.issue 3 "parser_error" (Audit.JsonObject (context ++
-                      [string_field "message"
-                         (quoted line ++ " is not a declaration, a premise, or a goal")]))
+                    Audit.issue 3 "unrecognized_line" (Audit.JsonObject context)
                 end
             end
       end
   end.
 
+Definition goal_line_count (lines : list string) : nat :=
+  List.length (filter (fun line => match Audit.goalBody line with
+                                   | Some _ => true
+                                   | None => false
+                                   end) lines).
+
 Definition problem_issue (source : string) : Audit.Issue :=
-  let parser_message message :=
-    Audit.issue 3 "parser_error" (Audit.JsonObject [string_field "message" message]) in
+  let issue code := Audit.issue 3 code (Audit.JsonObject []) in
   match problemPart source with
   | None =>
-      parser_message "the problem needs a pt: line listing its points, and a steps: line"
+      match Audit.after "pt:" source with
+      | None => issue "missing_points_line"
+      | Some _ => issue "missing_steps_line"
+      end
   | Some part =>
-      match header_line_issue (PublicParser.splitLines part) 1 with
+      let lines := PublicParser.splitLines part in
+      match header_line_issue lines 1 with
       | Some found => found
       | None =>
-          parser_message "the problem has no goal: a line starting with ->, stated once"
+          match goal_line_count lines with
+          | O => issue "missing_goal"
+          | S O => issue "parser_error"
+          | _ => issue "multiple_goals"
+          end
       end
   end.
 

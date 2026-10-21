@@ -22,7 +22,8 @@
       "type": 4,
       "code": "goal_not_reached",
       "details": {
-        "message": "step 4 states the goal but was not accepted"
+        "goal": "con_tri(t_ABC,t_ADC)",
+        "statedBy": "4"
       }
     }
   ]

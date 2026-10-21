@@ -545,6 +545,70 @@ steps:
     });
   });
 
+  test("names each kind of unreadable step", async () => {
+    const source = [
+      'title: "unreadable steps"',
+      "premises:",
+      "pt: A (0, 0, t), B (1, 0, t), C (0, 1, t)",
+      "seg: AB BC",
+      "-> con_seg(AB, BC)",
+      "",
+      "steps:",
+      "[01]",
+      "[02] -> con_seg(AB, BC)",
+      "[03] sas(1, 2, 3) ->",
+      "[04]   // still to do",
+      "[05 reflex() -> ref_seg(AB, AB)",
+      "[06] reflex() ref_seg(AB, AB)",
+      "[07] sas(1, x, 3) -> con_seg(AB, BC)",
+      "[08] reflex() -> ref_seg(AB, AB",
+      "[09] reflex() -> ref_seg(AB, AB) extra",
+      "[10] reflex() -> refseg",
+    ].join("\n");
+    const report = await checkVerifiedProofNode(source);
+    const issues = "issues" in report ? report.issues : report.errors;
+    const codes = issues
+      .filter((issue) => issue.type === 3)
+      .map((issue) => issue.code);
+    expect(codes).toEqual([
+      "empty_step",
+      "empty_reason",
+      "empty_statement",
+      "empty_step",
+      "unclosed_step_number",
+      "missing_arrow",
+      "unreadable_dependencies",
+      "unclosed_parenthesis",
+      "trailing_text",
+      "malformed_statement",
+    ]);
+    // The checker reports codes and structured details, never prose.
+    for (const issue of issues) {
+      expect(issue.details).not.toHaveProperty("message");
+    }
+  });
+
+  test("names what the problem header is missing", async () => {
+    const header = (lines: string[]) =>
+      checkVerifiedProofNode(['title: "x"', "premises:", ...lines].join("\n"));
+    const code = async (lines: string[]) => {
+      const report = await header(lines);
+      return "errors" in report ? report.errors[0].code : undefined;
+    };
+    const pt = "pt: A (0, 0, t), B (1, 1, t)";
+    expect(await code(["-> con_seg(AB, AB)", "steps:"])).toBe(
+      "missing_points_line",
+    );
+    expect(await code([pt, "-> con_seg(AB, AB)"])).toBe("missing_steps_line");
+    expect(await code([pt, "seg: AB", "steps:"])).toBe("missing_goal");
+    expect(
+      await code([pt, "-> con_seg(AB, AB)", "-> con_seg(AB, AB)", "steps:"]),
+    ).toBe("multiple_goals");
+    expect(await code([pt, "hello", "-> con_seg(AB, AB)", "steps:"])).toBe(
+      "unrecognized_line",
+    );
+  });
+
   test("the catalog describes every reason the kernel checks", () => {
     const catalog = readFileSync(
       join(__dirname, "../grammar/defs/reasons.defs.ts"),
