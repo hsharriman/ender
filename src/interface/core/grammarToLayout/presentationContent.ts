@@ -128,12 +128,15 @@ const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
       break;
     case "chord":
     case "diameter":
-    case "inscribed_angle":
-    case "minor_inscribed_ang":
-    case "major_inscribed_ang":
     case "on_circle":
     case "radius":
       circlePremise(ctx, statement);
+      break;
+    case "inscribed_angle":
+      inscribedAngle(ctx, args);
+      break;
+    case "circ_order":
+      circOrder(ctx, args);
       break;
     case "tangent":
       tangentPremise(ctx, statement);
@@ -200,13 +203,26 @@ const addAnglesAtSharedPoints = (ctx: ProofContent, proof: ProofObj) =>
     }
   });
 
+// Each puts its points on the circle, which registers the circle's other
+// names: `c_OB` for `c_OA`.
 const circlePremise = (ctx: ProofContent, statement: Stmt) => {
   const [circle, object] = statement.arguments;
-  // An inscribed angle's sides are chords, so they are drawn.
   statement.arguments.forEach((arg) => addObject(ctx, arg));
   const c = ctx.getCircle(circle.v);
-  // Registers the circle's other names, `c_OB` for `c_OA`.
   object.v.split("").forEach((label) => c.addPt(ctx.getPoint(label)));
+};
+
+// Only the vertex is on the circle; the rays are drawn to the points that
+// name them, which may lie beyond it.
+const inscribedAngle = (ctx: ProofContent, [circle, angle]: ParseObj[]) => {
+  addObject(ctx, circle);
+  addObject(ctx, angle);
+  ctx.getCircle(circle.v).addPt(ctx.getPoint(angle.v[1]));
+};
+
+const circOrder = (ctx: ProofContent, [circle, ...points]: ParseObj[]) => {
+  const c = ctx.addCircleFromStr(circle.v);
+  points.forEach((point) => c.addPt(ctx.getPoint(point.v)));
 };
 
 const tangentPremise = (ctx: ProofContent, statement: Stmt) => {
