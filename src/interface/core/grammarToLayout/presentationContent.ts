@@ -205,21 +205,14 @@ const circlePremise = (ctx: ProofContent, statement: Stmt) => {
   // An inscribed angle's sides are chords, so they are drawn.
   statement.arguments.forEach((arg) => addObject(ctx, arg));
   const c = ctx.getCircle(circle.v);
-  object.v.split("").forEach((label) => {
-    const pt = ctx.getPoint(label);
-    c.addPt(pt);
-    pt.addOnCircle(c);
-  });
+  // Registers the circle's other names, `c_OB` for `c_OA`.
+  object.v.split("").forEach((label) => c.addPt(ctx.getPoint(label)));
 };
 
 const tangentPremise = (ctx: ProofContent, statement: Stmt) => {
   addAllObjects(ctx, statement);
-  const [circle, segment, point] = statement.arguments;
-  const c = ctx.getCircle(circle.v);
-  const pt = ctx.getPoint(point.v);
-  c.addPt(pt);
-  pt.addOnLine(ctx.getSegment(segment.v));
-  pt.addOnCircle(c);
+  const [circle, , point] = statement.arguments;
+  ctx.getCircle(circle.v).addPt(ctx.getPoint(point.v));
 };
 
 const perpPremise = (ctx: ProofContent, args: ParseObj[]) => {
@@ -229,7 +222,6 @@ const perpPremise = (ctx: ProofContent, args: ParseObj[]) => {
   const p = ctx.getPoint(point.v);
   // An endpoint of one segment meets the other in a T: split the other at it.
   const split = (onto: typeof s1, label: string) => {
-    p.addOnLine(onto);
     label.split("").forEach((end) => {
       onto.addSubSegment(ctx.addSegmentFromStr(`${point.v}${end}`));
     });
@@ -253,7 +245,6 @@ const onLine = (ctx: ProofContent, args: ParseObj[]) => {
   const [segment, point] = args;
   const s = ctx.addSegmentFromStr(segment.v);
   const p = ctx.getPoint(point.v);
-  p.addOnLine(s);
   ctx.addSegmentFromStr(`${s.p1.label}${p.label}`).addParentSegment(s);
   ctx.addSegmentFromStr(`${p.label}${s.p2.label}`).addParentSegment(s);
 };
@@ -263,7 +254,6 @@ const intersectSeg = (ctx: ProofContent, args: ParseObj[]) => {
   const crossing = ctx.getPoint(point.v);
   [seg1, seg2].forEach((segment) => {
     const s = ctx.addSegmentFromStr(segment.v);
-    crossing.addOnLine(s);
     segment.v.split("").forEach((end) => {
       const sub = ctx.addSegmentFromStr(`${crossing.label}${end}`);
       s.addSubSegment(sub);
@@ -282,18 +272,9 @@ const transversal = (ctx: ProofContent, args: ParseObj[]) => {
   ctx.addSegmentFromStr(`${a}${b}`);
   ctx.addSegmentFromStr(`${c}${d}`);
   const t = ctx.addSegmentFromStr(line);
+  // A transversal that stops at its crossings splits nothing.
   const atEndpoints = (i1 === t1 && i2 === t2) || (i1 === t2 && i2 === t1);
-  if (atEndpoints) {
-    // The transversal stops at its crossings.
-    [
-      [i1, `${a}${b}`],
-      [i2, `${c}${d}`],
-    ].forEach(([crossing, crossed]) => {
-      const p = ctx.getPoint(crossing);
-      p.addOnLine(ctx.getSegment(crossed));
-      p.addOnLine(t);
-    });
-  } else {
+  if (!atEndpoints) {
     intersectSeg(ctx, [segmentObj(`${a}${b}`), segmentObj(line), pointObj(i1)]);
     intersectSeg(ctx, [segmentObj(`${c}${d}`), segmentObj(line), pointObj(i2)]);
     ctx.addSegmentFromStr(`${i1}${i2}`).addParentSegment(t);
@@ -304,7 +285,6 @@ const midpt = (ctx: ProofContent, args: ParseObj[]) => {
   const [segment, point] = args;
   const s = ctx.addSegmentFromStr(segment.v);
   const p = ctx.getPoint(point.v);
-  p.addOnLine(s);
   ctx.addSegment({ p1: p, p2: s.p2 }).addParentSegment(s);
   ctx.addSegment({ p1: s.p1, p2: p }).addParentSegment(s);
 };
@@ -314,6 +294,5 @@ const linearPair = (ctx: ProofContent, args: ParseObj[]) => {
   const shared = a1.sharedSide(a2);
   if (!shared) return;
   ctx.addSegmentFromStr(shared.shared);
-  const line = ctx.addSegmentFromStr(`${shared.thisThird}${shared.otherThird}`);
-  ctx.getPoint(a1.center.label).addOnLine(line);
+  ctx.addSegmentFromStr(`${shared.thisThird}${shared.otherThird}`);
 };
