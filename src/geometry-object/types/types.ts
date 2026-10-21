@@ -40,6 +40,8 @@ export interface ParseObj {
     | Obj.Triangle
     | Obj.Quadrilateral
     | Obj.Circle
+    // An argument with no drawable object, kept as its source text: the
+    // nested arc spelling `minor_arc(c_OB, B, R)` inside `con_arc(...)`.
     | Obj.Text;
   v: string;
 }
