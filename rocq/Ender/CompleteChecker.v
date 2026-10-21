@@ -209,8 +209,7 @@ Definition statement_function (s : Statement) : string :=
   | Diameter _ _ => "diameter" | Tangent _ _ _ => "tangent"
   | InscribedAngle _ _ => "inscribed_angle"
   | OnCirclePoint _ _ => "on_circle" | CenterOnLine _ _ => "center_on_line"
-  | MinorInscribedAngle _ _ => "minor_inscribed_ang"
-  | MajorInscribedAngle _ _ => "major_inscribed_ang"
+  | CircOrder _ _ => "circ_order"
   | ArcStatement _ => "arc" | ConArc _ _ => "con_arc"
   | Proportion _ _ _ _ => "proportion" | Circumcenter _ _ => "circumcenter"
   | Incenter _ _ => "incenter" | PerpBisector _ _ _ => "perp_bisector"
@@ -478,7 +477,7 @@ Definition reason_name (r : Reason) : string :=
   | SamesideAngConv _ => "sameside_ang_conv"
   | ParaTrans _ _ => "para_transitive"
   | DefRadius _ => "def_radius"
-  | InscribedSemi _ => "inscribed_semi"
+  | InscribedSemi _ _ => "inscribed_semi"
   | ConChordsArcs _ => "con_chords_intersect_arcs"
   | TangentPerp _ _ => "tangent_perp"
   | TangentPerpConv _ _ => "tangent_perp_conv"
@@ -501,7 +500,7 @@ Definition reason_name (r : Reason) : string :=
   | ChordBisectConv _ _ => "chord_bisect_conv"
   | DefRadiusConv _ => "def_radius_conv"
   | ConInscribedAngs _ _ => "con_inscribed_angs"
-  | SupplementaryInscribedAngs _ _ => "supplementary_inscribed_angs"
+  | SuppInscribedAngs _ _ => "supp_inscribed_angs"
   end.
 
 (** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
@@ -517,7 +516,7 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | RhombusPgram i | RhombusDef i | RhombusOppBisect i | RectDiagCon i
   | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
   | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
-  | DefRadius i | InscribedSemi i | ConChordsArcs i
+  | DefRadius i | ConChordsArcs i
   | IsosTrapBaseAngsConv i | LinearPairConv i
   | PgramDiagBisect i | RhombusDiagPerp i | KiteDiagPerp i
   | DefRadiusConv i => [i]
@@ -530,7 +529,7 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
   | RectDiagConConv i j | RhombusDiagPerpConv i j
   | AASim i j | ChordBisectConv i j | ConInscribedAngs i j
-  | SupplementaryInscribedAngs i j => [i; j]
+  | SuppInscribedAngs i j | InscribedSemi i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
   | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
   | RadiusChordBisect i j k | RhombusOppBisectConv i j k
@@ -933,8 +932,7 @@ Definition statement_signatures : list (string * list string) :=
    ("radius", [circ; pt]);
    ("diameter", [circ; seg]);
    ("inscribed_angle", [circ; ang]);
-   ("minor_inscribed_ang", [circ; ang]);
-   ("major_inscribed_ang", [circ; ang]);
+   ("circ_order", [circ; pt; pt; pt; "..."]);
    ("on_circle", [circ; pt]);
    ("center_on_line", [circ; seg]);
    ("ref_seg", [seg; seg]);
@@ -1028,7 +1026,7 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("altext", (1, 2)); ("corresp_ang_conv", (1, 2)); ("corresp_ang", (1, 2));
    ("sameside_ang_conv", (1, 2)); ("sameside_ang", (1, 2));
    ("para_transitive", (2, 2)); ("def_radius", (1, 1));
-   ("inscribed_semi", (1, 1)); ("con_chords_intersect_arcs", (1, 1));
+   ("inscribed_semi", (2, 3)); ("con_chords_intersect_arcs", (1, 1));
    ("tangent_perp_conv", (2, 2)); ("tangent_perp", (2, 2));
    ("con_tangents_ext", (2, 2)); ("radius_chord_bisect", (3, 3));
    ("perp_bisector", (2, 2)); ("isos_trap_con_diags", (2, 2));
@@ -1039,7 +1037,7 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
    ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2));
    ("chord_bisect_conv", (2, 2)); ("def_radius_conv", (1, 2));
-   ("con_inscribed_angs", (2, 2)); ("supplementary_inscribed_angs", (2, 2))].
+   ("con_inscribed_angs", (2, 3)); ("supp_inscribed_angs", (2, 3))].
 
 Definition premise_label_text (arg : list ascii) : bool :=
   match arg with
@@ -1150,7 +1148,7 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | IsosTrapBaseAngs _ _ | IsosTrapConDiags _ _ => Some ["isos_trapezoid"]
   | TangentPerpConv _ _ => Some ["tangent"]
   | RadiusChordBisect _ _ _ => Some ["seg_bisect"]
-  | InscribedSemi _ => Some ["right"]
+  | InscribedSemi _ _ => Some ["right"]
   | AASim _ _ => Some ["sim_tri"]
   | LinearPairConv _ => Some ["linear_pair"]
   | PgramDiagBisect _ => Some ["seg_bisect"]
@@ -1158,7 +1156,7 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | ChordBisectConv _ _ => Some ["center_on_line"]
   | DefRadiusConv _ => Some ["radius"]
   | ConInscribedAngs _ _ => Some ["con_ang"]
-  | SupplementaryInscribedAngs _ _ => Some ["supplementary"]
+  | SuppInscribedAngs _ _ => Some ["supplementary"]
   end.
 
 (** A statement naming one object twice where it means two. *)
@@ -1191,7 +1189,9 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | AltIntConv i | AltExtConv i | CorrespAngConv i => [(i, "con_ang")]
   | SamesideAngConv i => [(i, "supplementary")]
   | DefRadius i => [(i, "radius")]
-  | InscribedSemi i => [(i, "diameter")]
+  | InscribedSemi i j => [(i, "inscribed_angle"); (j, "diameter")]
+  | ConInscribedAngs i j | SuppInscribedAngs i j =>
+      [(i, "inscribed_angle"); (j, "inscribed_angle")]
   | ConChordsArcs i => [(i, "con_arc")]
   | IsosTrapBaseAngsConv i => [(i, "isos_trapezoid_premise")]
   | DefParallelogram i j | ParaTrans i j => [(i, "para"); (j, "para")]
@@ -1312,6 +1312,105 @@ Definition opposite_angles (q : QuadrilateralName) : Audit.JsonValue :=
      Audit.JsonArray [ang_text (quad_corner_b q); ang_text (quad_corner_d q)]].
 Definition diagonals (q : QuadrilateralName) : Audit.JsonValue :=
   Audit.JsonArray [seg_text (quad_diagonal_ac q); seg_text (quad_diagonal_bd q)].
+
+(** Why an inscribed-angle rule could not read the circle: the [circ_order]
+    premise it needs, the points that premise must list, and where each
+    angle's rays meet the circle. *)
+Definition circle_order_of (premises : list Premise) (c : CircleName)
+    : option (list PointId) :=
+  match find (fun pr => match pr.(premise_statement) with
+                        | CircOrder c' _ => circle_eqb c c'
+                        | _ => false
+                        end) premises with
+  | Some pr => match pr.(premise_statement) with
+               | CircOrder _ ps => Some ps
+               | _ => None
+               end
+  | None => None
+  end.
+
+Definition circle_points_missing (premises : list Premise) (c : CircleName)
+    (ps : list PointId) : list PointId :=
+  let placed :=
+    c.(circle_radius_point) ::
+    flat_map (fun pr => filter (fun p => places_on_circle c p pr.(premise_statement))
+                               (Audit.statementPoints pr.(premise_statement)))
+             premises in
+  nodup Ascii.ascii_dec (filter (fun p => negb (listed p ps)) placed).
+
+Definition point_texts (ps : list PointId) : Audit.JsonValue :=
+  Audit.JsonArray (map (fun p => Audit.JsonString (string_of_list_ascii [p])) ps).
+
+Definition inscribed_issue (premises : list Premise) (facts : list Statement)
+    (r : Reason) (issue : string -> list (string * Audit.JsonValue) -> option Audit.Issue)
+    : option Audit.Issue :=
+  let angles :=
+    flat_map (fun d => match lookup_step facts d with
+                       | Some (InscribedAngle c a) => [(c, a)]
+                       | _ => []
+                       end) (reason_dependencies r) in
+  match angles with
+  | [] => None
+  | (c, _) :: _ =>
+      let circle := [("circle", Audit.JsonString (Audit.circleText c))] in
+      match circle_order_of premises c with
+      | None => issue "no_circ_order_premise" circle
+      | Some ps =>
+          match circle_points_missing premises c ps with
+          | _ :: _ as missing =>
+              issue "circ_order_missing_point"
+                (List.app circle [("missing", point_texts missing)])
+          | [] =>
+              match find (fun ca => negb (listed (snd ca).(angle_vertex) ps)) angles with
+              | Some (_, a) => issue "vertex_not_in_circ_order" [("angle", ang_text a)]
+              | None =>
+                  match find (fun ca => match inscribed_chord premises ps (snd ca) with
+                                        | Some _ => false
+                                        | None => true
+                                        end) angles with
+                  | Some (_, a) =>
+                      issue "ray_not_traced_to_circle_point" [("angle", ang_text a)]
+                  | None =>
+                      match r, angles with
+                      | ConInscribedAngs _ _, [(_, a); (_, b)]
+                      | SuppInscribedAngs _ _, [(_, a); (_, b)] =>
+                          match inscribed_chord premises ps a,
+                                inscribed_chord premises ps b with
+                          | Some (A, B), Some (A', B') =>
+                              if negb (same_chord_points A B A' B') then
+                                issue "inscribed_angles_on_different_chords"
+                                  [("chords", Audit.JsonArray
+                                     [Audit.JsonString (string_of_list_ascii [A; B]);
+                                      Audit.JsonString (string_of_list_ascii [A'; B'])])]
+                              else
+                                match arc_side ps A B a.(angle_vertex),
+                                      arc_side ps A B b.(angle_vertex), r with
+                                | Some x, Some y, ConInscribedAngs _ _ =>
+                                    if Bool.eqb x y then None
+                                    else issue "vertices_on_opposite_arcs" []
+                                | Some x, Some y, SuppInscribedAngs _ _ =>
+                                    if Bool.eqb x y
+                                    then issue "vertices_on_same_arc" [] else None
+                                | _, _, _ => None
+                                end
+                          | _, _ => None
+                          end
+                      | InscribedSemi _ j, [(_, a)] =>
+                          match inscribed_chord premises ps a, lookup_step facts j with
+                          | Some (A, B), Some (Diameter _ d) =>
+                              if segment_u_eqb (segment_name A B) d then None
+                              else issue "rays_dont_reach_diameter_ends"
+                                     [string_field "chord" (string_of_list_ascii [A; B]);
+                                      ("diameter", seg_text d)]
+                          | _, _ => None
+                          end
+                      | _, _ => None
+                      end
+                  end
+              end
+          end
+      end
+  end.
 
 Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (number : nat) (current : Step)
@@ -1582,6 +1681,8 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
             []
       | _, _ => None
       end
+  | ConInscribedAngs _ _ | SuppInscribedAngs _ _ | InscribedSemi _ _ =>
+      inscribed_issue premises facts r issue
   | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
       match diagonal_rule_parts r facts conclusion with
       | Some (q, s, t, p) =>

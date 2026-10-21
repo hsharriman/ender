@@ -67,7 +67,7 @@ Inductive Reason :=
 | SamesideAngConv : nat -> Reason
 | ParaTrans : nat -> nat -> Reason
 | DefRadius : nat -> Reason
-| InscribedSemi : nat -> Reason
+| InscribedSemi : nat -> nat -> Reason
 | ConChordsArcs : nat -> Reason
 | TangentPerp : nat -> nat -> Reason
 | TangentPerpConv : nat -> nat -> Reason
@@ -90,7 +90,7 @@ Inductive Reason :=
 | ChordBisectConv : nat -> nat -> Reason
 | DefRadiusConv : nat -> Reason
 | ConInscribedAngs : nat -> nat -> Reason
-| SupplementaryInscribedAngs : nat -> nat -> Reason.
+| SuppInscribedAngs : nat -> nat -> Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.
@@ -145,6 +145,13 @@ Definition arc_eqb (x y : ArcName) : bool :=
   arc_kind_eqb x.(arc_kind) y.(arc_kind) && circle_eqb x.(arc_circle) y.(arc_circle) &&
   ascii_eqb x.(arc_first) y.(arc_first) && ascii_eqb x.(arc_second) y.(arc_second).
 
+Fixpoint points_eqb (xs ys : list PointName) : bool :=
+  match xs, ys with
+  | [], [] => true
+  | x :: xs', y :: ys' => ascii_eqb x y && points_eqb xs' ys'
+  | _, _ => false
+  end.
+
 Definition statement_eqb (x y : Statement) : bool :=
   match x, y with
   | ConSeg a b, ConSeg c d | RefSeg a b, RefSeg c d =>
@@ -189,10 +196,9 @@ Definition statement_eqb (x y : Statement) : bool :=
       circle_eqb c c' && segment_eqb s s'
   | Tangent c s p, Tangent c' s' p' =>
       circle_eqb c c' && segment_eqb s s' && ascii_eqb p p'
-  | InscribedAngle c a, InscribedAngle c' a'
-  | MinorInscribedAngle c a, MinorInscribedAngle c' a'
-  | MajorInscribedAngle c a, MajorInscribedAngle c' a' =>
+  | InscribedAngle c a, InscribedAngle c' a' =>
       circle_eqb c c' && angle_eqb a a'
+  | CircOrder c ps, CircOrder c' ps' => circle_eqb c c' && points_eqb ps ps'
   | ArcStatement a, ArcStatement a' => arc_eqb a a'
   | ConArc a b, ConArc a' b' => arc_eqb a a' && arc_eqb b b'
   | Proportion a b c d, Proportion a' b' c' d' =>
@@ -272,10 +278,20 @@ Proof.
   - intros H. inversion H. repeat split; reflexivity.
 Qed.
 
+Lemma points_eqb_eq : forall xs ys, points_eqb xs ys = true <-> xs = ys.
+Proof.
+  induction xs as [|x xs IH]; intros [|y ys]; cbn; split; intro H;
+    try discriminate; try reflexivity.
+  - unfold ascii_eqb in H. apply andb_true_iff in H as [H1 H2].
+    apply Ascii.eqb_eq in H1. apply IH in H2. now subst.
+  - injection H as -> ->. unfold ascii_eqb.
+    rewrite Ascii.eqb_refl. cbn. now apply IH.
+Qed.
+
 Lemma statement_eqb_eq : forall x y, statement_eqb x y = true <-> x = y.
 Proof.
   destruct x, y; cbn; unfold ascii_eqb;
-    rewrite ?andb_true_iff, ?segment_eqb_eq, ?angle_eqb_eq, ?triangle_eqb_eq,
+    rewrite ?andb_true_iff, ?points_eqb_eq, ?segment_eqb_eq, ?angle_eqb_eq, ?triangle_eqb_eq,
       ?quadrilateral_eqb_eq, ?circle_eqb_eq, ?arc_eqb_eq, ?Ascii.eqb_eq;
     split; intro H; solve [discriminate | intuition congruence].
 Qed.

@@ -115,8 +115,7 @@ Inductive Statement :=
 | InscribedAngle (c : CircleName) (a : AngleName)
 | OnCirclePoint (c : CircleName) (p : PointName)
 | CenterOnLine (c : CircleName) (s : SegmentName)
-| MinorInscribedAngle (c : CircleName) (a : AngleName)
-| MajorInscribedAngle (c : CircleName) (a : AngleName)
+| CircOrder (c : CircleName) (points : list PointName)
 | RefSeg (a b : SegmentName)
 | RefAng (a b : AngleName)
 | ConArc (a b : ArcName).
@@ -326,21 +325,34 @@ Definition IsTangent (c : CircleName) (s : SegmentName) (p : PointName) : Prop :
   OnCircle c p /\ Col (seg_start s) (seg_end s) (point p) /\
   exists Q, (Q = seg_start s \/ Q = seg_end s) /\ Q <> point p /\
             Per (circ_center c) (point p) Q.
-(** The general form names no intercepted arc, which is all [inscribed_semi]
-    needs: an angle in a semicircle is right whichever side its vertex is on.
-    Two inscribed angles on one chord are congruent or supplementary depending
-    on their arcs, so the rules relating them read the two forms below. *)
+(** The ray from [v] through [x] meets the circle at a point other than [v];
+    when [x] is itself on the circle, that point is [x]. *)
+Definition RayMeetsCircle (c : CircleName) (v x : PointName) : Prop :=
+  exists A, Cong (circ_center c) A (circ_center c) (point c.(circle_radius_point)) /\
+            A <> point v /\ Out (point v) A (point x).
+(** An inscribed angle has its vertex on the circle, and each of its rays meets
+    the circle again.  Its outer points may lie anywhere along those rays. *)
 Definition IsInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
-  OnCircle c a.(angle_first) /\ OnCircle c a.(angle_vertex) /\
-  OnCircle c a.(angle_last) /\ AngleWellFormed a.
-(** A vertex on the centre's side of its chord makes the angle intercept the
-    minor arc, so it is acute; a vertex on the far side intercepts the major
-    arc and is obtuse.  Neither covers a chord through the centre, where the
-    angle is right and only [inscribed_angle] applies. *)
-Definition IsMinorInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
-  IsInscribedAngle c a /\ OS (ang_start a) (ang_end a) (circ_center c) (ang_vertex a).
-Definition IsMajorInscribedAngle (c : CircleName) (a : AngleName) : Prop :=
-  IsInscribedAngle c a /\ TS (ang_start a) (ang_end a) (circ_center c) (ang_vertex a).
+  OnCircle c a.(angle_vertex) /\ AngleWellFormed a /\
+  RayMeetsCircle c a.(angle_vertex) a.(angle_first) /\
+  RayMeetsCircle c a.(angle_vertex) a.(angle_last).
+(** Points listed in the order met going round a circle: for every chord
+    between two listed points, the points listed strictly between them lie on
+    one side of it and the rest on the other.  Reading the list from another
+    start, or backwards, says the same thing.  With three or more points this
+    makes the listed points distinct. *)
+Definition circOrderInside (i j k : nat) : bool := Nat.ltb i k && Nat.ltb k j.
+(** Only read at positions inside the list, so its value never matters. *)
+Definition circOrderDefault : PointName := "?"%char.
+Definition IsCircOrder (c : CircleName) (points : list PointName) : Prop :=
+  let P n := point (nth n points circOrderDefault) in
+  3 <= List.length points /\ Forall (OnCircle c) points /\
+  forall i j k l, i < j -> j < List.length points ->
+    k < List.length points -> l < List.length points ->
+    k <> i -> k <> j -> l <> i -> l <> j ->
+    if Bool.eqb (circOrderInside i j k) (circOrderInside i j l)
+    then OS (P i) (P j) (P k) (P l)
+    else TS (P i) (P j) (P k) (P l).
 (** The centre lies on the line through the segment, which has to be a
     genuine segment for [Col] to name a line at all. *)
 Definition IsCenterOnLine (c : CircleName) (s : SegmentName) : Prop :=
@@ -512,8 +524,7 @@ Definition statementMeaning (s : Statement) : Prop :=
   | InscribedAngle c a => IsInscribedAngle c a
   | OnCirclePoint c p => OnCircle c p
   | CenterOnLine c s => IsCenterOnLine c s
-  | MinorInscribedAngle c a => IsMinorInscribedAngle c a
-  | MajorInscribedAngle c a => IsMajorInscribedAngle c a
+  | CircOrder c ps => IsCircOrder c ps
   | RefSeg a b => SameSegmentName a b /\ SegmentCongruent a b
   | RefAng a b => SameAngleName a b /\ AngleCongruent a b
   | ConArc a b => ArcCongruent a b
@@ -627,10 +638,7 @@ Definition statementText (s : Statement) : string :=
   | InscribedAngle c a => call "inscribed_angle" [circleText c; angleText a]
   | OnCirclePoint c p => call "on_circle" [circleText c; pointText p]
   | CenterOnLine c s => call "center_on_line" [circleText c; segmentText s]
-  | MinorInscribedAngle c a =>
-      call "minor_inscribed_ang" [circleText c; angleText a]
-  | MajorInscribedAngle c a =>
-      call "major_inscribed_ang" [circleText c; angleText a]
+  | CircOrder c ps => call "circ_order" (circleText c :: map pointText ps)
   | RefSeg a b => call "ref_seg" [segmentText a; segmentText b]
   | RefAng a b => call "ref_ang" [angleText a; angleText b]
   | ConArc a b => call "con_arc" [arcText a; arcText b]
@@ -665,8 +673,8 @@ Definition statementPoints (s : Statement) : list PointName :=
    | ArcStatement a => arcPoints a
    | Radius c p | OnCirclePoint c p => circlePoints c ++ [p]
    | CenterOnLine c s => circlePoints c ++ segmentPoints s
-   | InscribedAngle c a | MinorInscribedAngle c a | MajorInscribedAngle c a =>
-       circlePoints c ++ anglePoints a
+   | InscribedAngle c a => circlePoints c ++ anglePoints a
+   | CircOrder c ps => circlePoints c ++ ps
    | ConArc a b => arcPoints a ++ arcPoints b
    end)%list.
 

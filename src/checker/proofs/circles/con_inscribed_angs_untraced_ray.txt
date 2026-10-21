@@ -1,0 +1,15 @@
+// fail on step 3
+title: "Test: con_inscribed_angs (incorrect - nothing says where the ray from P through X meets the circle)"
+premises:
+pt: O (5, 5, c), A (1, 2, bl), B (9, 2, br), P (2, 9, tl), Q (8, 9, tr), X (1.5, 5.5, l)
+circ: c_OA
+seg: PX PB QA QB AB
+[d_01] circ_order(c_OA, A, B, Q, P)
+[g_1] inscribed_angle(c_OA, a_XPB)
+[g_2] inscribed_angle(c_OA, a_AQB)
+-> con_ang(a_XPB, a_AQB)
+
+steps:
+[01] given(g_1) -> inscribed_angle(c_OA, a_XPB)
+[02] given(g_2) -> inscribed_angle(c_OA, a_AQB)
+[03] con_inscribed_angs(1, 2) -> con_ang(a_XPB, a_AQB)

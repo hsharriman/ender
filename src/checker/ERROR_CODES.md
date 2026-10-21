@@ -154,6 +154,14 @@ why a particular rule did not accept the step. Every one carries
 | `no_intersect_seg_premise_for_diagonals_at_this_point` | `pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp` | The conclusion is about the two diagonals at a point no `intersect_seg` premise places at their crossing. Without it the point could sit anywhere in the figure. | `expected`: the premise that would place it |
 | `segs_not_radii_of_circle` | `def_radius` | The conclusion is not the congruence the cited radius gives. | `expected` |
 | `tangent_segs_have_no_common_ext_pt` | `con_tangents_ext` | Two tangents to one circle from one outside point are congruent; the cited tangents must share their outside endpoint. | |
+| `no_circ_order_premise` | `con_inscribed_angs`, `supp_inscribed_angs`, `inscribed_semi` | These rules read the circle through a `circ_order` premise listing its points in order, and the problem has none for this circle. | `circle` |
+| `circ_order_missing_point` | `con_inscribed_angs`, `supp_inscribed_angs`, `inscribed_semi` | The `circ_order` premise must list every point the premises place on its circle, the circle's own radius point among them, and it leaves some out. | `circle`, `missing` |
+| `vertex_not_in_circ_order` | `con_inscribed_angs`, `supp_inscribed_angs`, `inscribed_semi` | An inscribed angle's vertex is not one of the points the `circ_order` premise lists. | `angle` |
+| `ray_not_traced_to_circle_point` | `con_inscribed_angs`, `supp_inscribed_angs`, `inscribed_semi` | A ray of the angle cannot be traced to a listed point: its point is not listed and no `on_line`, `midpt`, or `intersect_seg` premise puts a listed point on the same ray from the vertex. Also used when both rays reach the same point. | `angle` |
+| `inscribed_angles_on_different_chords` | `con_inscribed_angs`, `supp_inscribed_angs` | The two angles' rays meet the circle at different pairs of points. | `chords` |
+| `vertices_on_opposite_arcs` | `con_inscribed_angs` | The vertices are on opposite arcs of the chord, so the angles are supplementary, not congruent (`supp_inscribed_angs`). | |
+| `vertices_on_same_arc` | `supp_inscribed_angs` | The vertices are on the same arc of the chord, so the angles are congruent, not supplementary (`con_inscribed_angs`). | |
+| `rays_dont_reach_diameter_ends` | `inscribed_semi` | The angle's rays do not meet the circle at the two ends of the cited diameter. | `chord`, `diameter` |
 | `tangent_and_radius_have_diff_tangency_pts` | `tangent_perp`, `tangent_perp_conv` | The tangent and the radius must meet at the point of tangency, on the same circle, and the perpendicular is between those two segments there. | |
 
 ### What each rule needs
@@ -170,14 +178,14 @@ more specific code.
 | `chord_bisect_conv` | The perpendicular bisector of a chord passes through the centre: cite the `perp_bisector` and the `chord` it bisects, and conclude `center_on_line` of the circle and the bisector. |
 | `con_chords_intersect_arcs` | Congruent arcs of one circle have congruent chords: cite `con_arc` of the two arcs and conclude `con_seg` of their chords. |
 | `con_complements` | Angles complementary to congruent angles are congruent: cite two complementary pairs and the `con_ang` relating one angle of each, and conclude `con_ang` of the other two. |
-| `con_inscribed_angs` | Inscribed angles on one chord intercepting the same arc are congruent: cite two `minor_inscribed_ang` or two `major_inscribed_ang` steps on the same circle and chord, and conclude `con_ang` of the two angles. |
+| `con_inscribed_angs` | Two inscribed angles of a circle intercepting the same chord from the same arc are congruent: cite two `inscribed_angle` steps, with a `circ_order` premise placing both vertices on the same arc of the chord, and conclude `con_ang` of the two angles. |
 | `con_supplements` | Angles supplementary to congruent angles are congruent: cite two supplementary pairs and the `con_ang` relating one angle of each, and conclude `con_ang` of the other two. |
 | `def_con_tri` | Triangles with all six corresponding parts congruent are congruent: cite the three side and three angle congruences, in corresponding order. |
 | `def_equiangular` | A triangle whose three angles are congruent is equiangular: cite congruences covering each of its angles. |
 | `def_equilateral` | A triangle whose three sides are congruent is equilateral: cite congruences covering each of its sides. |
 | `def_linear_pair` | The two angles of a linear pair are supplementary: conclude `supplementary` of exactly the two angles of the cited `linear_pair`. |
 | `def_radius_conv` | A segment from a line through the centre to a point on the circle is a radius: cite `center_on_line` of the circle and a segment, with a premise placing the segment's end on the circle, and conclude `radius` of that end. |
-| `inscribed_semi` | An angle inscribed in a semicircle is right: cite the diameter whose endpoints the angle's rays reach, with the `inscribed_angle` premise placing its vertex on the circle. |
+| `inscribed_semi` | An angle inscribed in a semicircle is right: cite the `inscribed_angle` step and the `diameter` whose ends its rays reach, with a `circ_order` premise for the circle, and conclude `right` of the angle. |
 | `isos_trap_base_angs` | A trapezoid with congruent base angles is isosceles: cite `con_ang` of the two corners at one end of a parallel side, and the trapezoid premise. |
 | `linear_pair_conv` | Two supplementary angles sharing a ray form a linear pair when their other rays are opposite: cite `supplementary` of the two angles, with an `on_line` premise placing their common vertex on the segment between the two other points, and conclude `linear_pair` of the same angles. |
 | `para_transitive` | Two lines parallel to a third are parallel: cite two `para` statements sharing a segment and conclude `para` of the other two. |
@@ -190,7 +198,7 @@ more specific code.
 | `rect_diag_con_conv` | A parallelogram with congruent diagonals is a rectangle: cite `con_seg` of its two diagonals and the parallelogram. |
 | `rhombus` | A rhombus's sides are congruent: conclude `con_seg` of two of its sides. |
 | `rhombus_consec_sides` | A parallelogram with two consecutive sides congruent is a rhombus: cite the parallelogram and `con_seg` of two sides that share a corner. |
-| `supplementary_inscribed_angs` | Inscribed angles on one chord intercepting opposite arcs are supplementary: cite one `minor_inscribed_ang` and one `major_inscribed_ang` step on the same circle and chord, and conclude `supplementary` of the two angles. |
+| `supp_inscribed_angs` | Two inscribed angles of a circle intercepting the same chord from opposite arcs are supplementary: cite two `inscribed_angle` steps, with a `circ_order` premise placing the vertices on opposite arcs of the chord, and conclude `supplementary` of the two angles. |
 | `third_angle` | Two triangles with two pairs of congruent angles have congruent third angles: cite the two pairs and conclude `con_ang` of the remaining corners. |
 
 ## Whole proof

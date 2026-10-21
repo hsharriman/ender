@@ -558,15 +558,17 @@ export const REASONS_DEFS = {
   con_inscribed_angs: {
     name: "con_inscribed_angs",
     title: "Congruent Inscribed Angles",
-    body: "If two inscribed angles of a circle are subtended by the same chord and intercept the same arc, then the angles are congruent.",
-    dependencies: ["inscribed_ang", "inscribed_ang"],
+    body: "If two inscribed angles of a circle intercept the same chord from the same arc, then the angles are congruent.",
+    diagramDependencies: ["circ_order"],
+    dependencies: ["inscribed_angle", "inscribed_angle"],
     conclusion: "con_ang",
   },
-  supplementary_inscribed_angs: {
-    name: "supplementary_inscribed_angs",
+  supp_inscribed_angs: {
+    name: "supp_inscribed_angs",
     title: "Supplementary Inscribed Angles",
-    body: "If two inscribed angles of a circle are subtended by the same chord and intercept opposite arcs, then the angles are supplementary.",
-    dependencies: ["inscribed_ang", "inscribed_ang"],
+    body: "If two inscribed angles of a circle intercept the same chord from opposite arcs, then the angles are supplementary.",
+    diagramDependencies: ["circ_order"],
+    dependencies: ["inscribed_angle", "inscribed_angle"],
     conclusion: "supplementary",
   },
   // still implementing cutoff
@@ -659,7 +661,8 @@ export const REASONS_DEFS = {
     name: "inscribed_semi",
     title: "Inscribed Angle (Semicircle)",
     body: "If an angle is inscribed in a semicircle, then it is a right angle.",
-    dependencies: ["diameter"],
+    diagramDependencies: ["circ_order"],
+    dependencies: ["inscribed_angle", "diameter"],
     conclusion: "right",
   },
   para_con_arcs: {
@@ -704,13 +707,5 @@ export const REASONS_DEFS = {
     body: "If two triangles are similar to the same triangle, then they are similar to each other.",
     dependencies: ["sim_tri", "sim_tri"],
     conclusion: "sim_tri",
-  },
-  inscribed_angs: {
-    // ..... TODO should these even be implemented?
-    name: "inscribed_angs",
-    title: "Inscribed Angles Theorem",
-    body: "The measure of an inscribed angle is half the measure of its intercepted arc. If two inscribed angles intercept congruent arcs, then the angles are congruent.",
-    dependencies: ["inscribed_angle", "inscribed_angle"],
-    conclusion: "con_ang",
   },
 } as const;

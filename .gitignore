@@ -45,3 +45,4 @@ yarn-error.log*
 # direnv
 /.direnv/
 /.envrc
+/rocq/.lia.cache

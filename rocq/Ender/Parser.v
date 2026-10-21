@@ -278,6 +278,17 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
     | [one; _diagram] => parse_one constructor one
     | _ => None
     end in
+  (** The inscribed-angle rules find their [circ_order] premise themselves, so
+      a cited label after the two steps is accepted and ignored. *)
+  let parse_two_with_diagram constructor body :=
+    match split_on ","%char body [] with
+    | [a; b] | [a; b; _] =>
+        match parse_nat a, parse_nat b with
+        | Some i, Some j => Some (constructor i j)
+        | _, _ => None
+        end
+    | _ => None
+    end in
   match strip_call "given" text with
   | Some label => Some (Given (string_of_list_ascii label))
   | None => match strip_call "reflex" text with
@@ -341,7 +352,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "sameside_ang" text (parse_one_with_diagram SamesideAng)
         (try_call "para_transitive" text (parse_two ParaTrans)
         (try_call "def_radius" text (parse_one DefRadius)
-        (try_call "inscribed_semi" text (parse_one InscribedSemi)
+        (try_call "inscribed_semi" text (parse_two_with_diagram InscribedSemi)
         (try_call "con_chords_intersect_arcs" text (parse_one ConChordsArcs)
         (try_call "tangent_perp_conv" text (parse_two TangentPerpConv)
         (try_call "tangent_perp" text (parse_two TangentPerp)
@@ -365,9 +376,9 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "kite_diag_perp" text (parse_one_with_diagram KiteDiagPerp)
         (try_call "chord_bisect_conv" text (parse_two ChordBisectConv)
         (try_call "def_radius_conv" text (parse_one_with_diagram DefRadiusConv)
-        (try_call "con_inscribed_angs" text (parse_two ConInscribedAngs)
-        (try_call "supplementary_inscribed_angs" text
-          (parse_two SupplementaryInscribedAngs)
+        (try_call "con_inscribed_angs" text (parse_two_with_diagram ConInscribedAngs)
+        (try_call "supp_inscribed_angs" text
+          (parse_two_with_diagram SuppInscribedAngs)
         None))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.

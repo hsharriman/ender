@@ -145,8 +145,6 @@ Definition parse_public_statement_chars_generic (text : PChars) : option Stateme
     if named "inscribed_angle" then match args with [c;a] => match parse_circle c,parse_angle a with Some C,Some A=>Some(InscribedAngle C A)|_,_=>None end|_=>None end else
     if named "on_circle" then match args with [c;p] => match parse_circle c,parse_point p with Some C,Some P=>Some(OnCirclePoint C P)|_,_=>None end|_=>None end else
     if named "center_on_line" then match args with [c;s] => match parse_circle c,parse_segment s with Some C,Some ss=>Some(CenterOnLine C ss)|_,_=>None end|_=>None end else
-    if named "minor_inscribed_ang" then match args with [c;a] => match parse_circle c,parse_angle a with Some C,Some A=>Some(MinorInscribedAngle C A)|_,_=>None end|_=>None end else
-    if named "major_inscribed_ang" then match args with [c;a] => match parse_circle c,parse_angle a with Some C,Some A=>Some(MajorInscribedAngle C A)|_,_=>None end|_=>None end else
     if named "ref_seg" then match args with [a;b] => match parse_segment a,parse_segment b with Some A,Some B=>Some(RefSeg A B)|_,_=>None end|_=>None end else
     if named "ref_ang" then match args with [a;b] => match parse_angle a,parse_angle b with Some A,Some B=>Some(RefAng A B)|_,_=>None end|_=>None end else
     if named "con_arc" then match args with [a;b] => match parse_arc a,parse_arc b with Some A,Some B=>Some(ConArc A B)|_,_=>None end|_=>None end else None
@@ -204,16 +202,92 @@ Definition parse_rendered_statement (x : PChars) : option Statement :=
   | ["c"%char;"o"%char;"n"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"m"%char;"a"%char;"j"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o1;r1;","%char;a1;","%char;b1;")"%char;","%char;"m"%char;"a"%char;"j"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o2;r2;","%char;a2;","%char;b2;")"%char;")"%char] => Some (ConArc (arc_name MajorArc (circle_name o1 r1) a1 b1) (arc_name MajorArc (circle_name o2 r2) a2 b2))
   | ["o"%char;"n"%char;"_"%char;"c"%char;"i"%char;"r"%char;"c"%char;"l"%char;"e"%char;"("%char;"c"%char;"_"%char;o;r;","%char;p;")"%char] => Some (OnCirclePoint (circle_name o r) p)
   | ["c"%char;"e"%char;"n"%char;"t"%char;"e"%char;"r"%char;"_"%char;"o"%char;"n"%char;"_"%char;"l"%char;"i"%char;"n"%char;"e"%char;"("%char;"c"%char;"_"%char;o;r;","%char;a;b;")"%char] => Some (CenterOnLine (circle_name o r) (segment_name a b))
-  | ["m"%char;"i"%char;"n"%char;"o"%char;"r"%char;"_"%char;"i"%char;"n"%char;"s"%char;"c"%char;"r"%char;"i"%char;"b"%char;"e"%char;"d"%char;"_"%char;"a"%char;"n"%char;"g"%char;"("%char;"c"%char;"_"%char;o;r;","%char;"a"%char;"_"%char;a;b;c;")"%char] => Some (MinorInscribedAngle (circle_name o r) (angle_name a b c))
-  | ["m"%char;"a"%char;"j"%char;"o"%char;"r"%char;"_"%char;"i"%char;"n"%char;"s"%char;"c"%char;"r"%char;"i"%char;"b"%char;"e"%char;"d"%char;"_"%char;"a"%char;"n"%char;"g"%char;"("%char;"c"%char;"_"%char;o;r;","%char;"a"%char;"_"%char;a;b;c;")"%char] => Some (MajorInscribedAngle (circle_name o r) (angle_name a b c))
+  | _ => None
+  end.
+
+(** [circ_order] is the one statement with a list of arguments, so it has a
+    decoder of its own rather than a fixed-shape case above. *)
+Fixpoint decode_point_tail (x : PChars) : option (list PointName) :=
+  match x with
+  | [")"%char] => Some []
+  | ","%char :: p :: rest =>
+      match decode_point_tail rest with
+      | Some ps => Some (p :: ps)
+      | None => None
+      end
+  | _ => None
+  end.
+
+Definition parse_circ_order_chars (x : PChars) : option Statement :=
+  match x with
+  | "c"%char :: "i"%char :: "r"%char :: "c"%char :: "_"%char :: "o"%char ::
+    "r"%char :: "d"%char :: "e"%char :: "r"%char :: "("%char :: "c"%char ::
+    "_"%char :: o :: r :: rest =>
+      match decode_point_tail rest with
+      | Some ps => Some (CircOrder (circle_name o r) ps)
+      | None => None
+      end
   | _ => None
   end.
 
 Definition parse_public_statement_chars (text : PChars) : option Statement :=
+  match parse_circ_order_chars text with
+  | Some statement => Some statement
+  | None =>
   match parse_rendered_statement text with
   | Some statement => Some statement
   | None => parse_public_statement_chars_generic text
+  end
   end.
+
+Lemma list_ascii_of_string_app : forall a b,
+  list_ascii_of_string (a ++ b) =
+  List.app (list_ascii_of_string a) (list_ascii_of_string b).
+Proof. induction a; cbn; intros; [reflexivity|now rewrite IHa]. Qed.
+
+Lemma string_app_assoc : forall a b c, ((a ++ b) ++ c = a ++ b ++ c)%string.
+Proof. induction a; cbn; intros; [reflexivity|now rewrite IHa]. Qed.
+
+Fixpoint render_point_tail (ps : list PointName) : PChars :=
+  match ps with
+  | [] => [")"%char]
+  | p :: rest => ","%char :: p :: render_point_tail rest
+  end.
+
+Lemma decode_render_point_tail : forall ps,
+  decode_point_tail (render_point_tail ps) = Some ps.
+Proof.
+  induction ps as [|p rest IH]; [reflexivity|]. cbn. now rewrite IH.
+Qed.
+
+Lemma render_circ_order_args : forall x ps,
+  list_ascii_of_string (String.concat "," (x :: map pointText ps) ++ ")") =
+  List.app (list_ascii_of_string x) (render_point_tail ps).
+Proof.
+  intros x ps. revert x. induction ps as [|p rest IH]; intros x.
+  - cbn. rewrite list_ascii_of_string_app. reflexivity.
+  - change (String.concat "," (x :: map pointText (p :: rest)))
+      with (x ++ "," ++ String.concat "," (pointText p :: map pointText rest)).
+    rewrite !string_app_assoc, list_ascii_of_string_app.
+    change (list_ascii_of_string
+              ("," ++ (String.concat "," (pointText p :: map pointText rest) ++ ")")))
+      with (","%char :: list_ascii_of_string
+              (String.concat "," (pointText p :: map pointText rest) ++ ")")).
+    rewrite IH. reflexivity.
+Qed.
+
+Lemma parse_circ_order_render : forall c ps,
+  parse_circ_order_chars (list_ascii_of_string (statementText (CircOrder c ps))) =
+  Some (CircOrder c ps).
+Proof.
+  intros [o r] ps.
+  change (statementText (CircOrder (circle_name o r) ps))
+    with ("circ_order(" ++
+          (String.concat "," (circleText (circle_name o r) :: map pointText ps)
+           ++ ")"))%string.
+  rewrite list_ascii_of_string_app, render_circ_order_args.
+  cbn. now rewrite decode_render_point_tail.
+Qed.
 
 (** Decision procedure for the audited [PointNameValid]. *)
 Definition pointNameValid (p : PointName) : bool :=
@@ -260,7 +334,8 @@ Lemma parse_public_statement_chars_render : forall statement,
     (list_ascii_of_string (statementText statement)) = Some statement.
 Proof.
   intros statement Hvalid. destruct statement.
-  all: abstract solve_statement_render.
+  all: try abstract solve_statement_render.
+  unfold parse_public_statement_chars. now rewrite parse_circ_order_render.
 Qed.
 
 Theorem parse_public_statement_complete : forall text statement,

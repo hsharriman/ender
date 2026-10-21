@@ -216,12 +216,7 @@ export const applyStmtAdditions =
       );
       return;
     }
-    if (
-      (stmt.function === "inscribed_angle" ||
-        stmt.function === "minor_inscribed_ang" ||
-        stmt.function === "major_inscribed_ang") &&
-      stmt.arguments.length === 2
-    ) {
+    if (stmt.function === "inscribed_angle" && stmt.arguments.length === 2) {
       InscribedAngle.additions(
         { ctx, frame, mode },
         stmt.arguments[0].v,

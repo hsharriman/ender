@@ -5,6 +5,7 @@ const point = (p: string) => `Point ${p}`;
 const quadrilateral = (q: string) => `Quadrilateral ${q}`;
 const circle = (c: string) => `Circle ${c}`;
 const arc = (a: string) => `Arc ${a}`;
+const point_list = (min: number) => `Points (at least ${min})`;
 
 export const STMTS_DEFS = {
   statements: {
@@ -194,17 +195,13 @@ export const STMTS_DEFS = {
       name: "inscribed_angle",
       parameters: [circle("c"), angle("a")],
     },
-    // The vertex is on the centre's side of the chord, so the angle
-    // intercepts the minor arc and is acute.
-    minor_inscribed_ang: {
-      name: "minor_inscribed_ang",
-      parameters: [circle("c"), angle("a")],
-    },
-    // The vertex is across the chord from the centre, so the angle intercepts
-    // the major arc and is obtuse.
-    major_inscribed_ang: {
-      name: "major_inscribed_ang",
-      parameters: [circle("c"), angle("a")],
+    // Every named point on the circle, in the order met going round it,
+    // starting anywhere and running either way.
+    circ_order: {
+      name: "circ_order",
+      parameters: [circle("c"), point_list(3)],
+      isPremisesOnly: true,
+      isDiagramOnly: true,
     },
     on_circle: {
       name: "on_circle",
@@ -251,12 +248,6 @@ export const STMTS_DEFS = {
       name: "con_ang_ref_allow",
       base: "con_ang",
       extensions: ["ref_ang", "con_right"],
-    },
-    /** Either inscribed angle that names the arc it intercepts. */
-    inscribed_ang: {
-      name: "inscribed_ang",
-      base: "minor_inscribed_ang",
-      extensions: ["major_inscribed_ang"],
     },
     /** Either form of triangle congruence; both carry a correspondence. */
     con_tri_any: {

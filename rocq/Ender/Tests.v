@@ -2554,73 +2554,114 @@ Example def_radius_conv_other_circle_rejects : complete_checker
 " "radius(c_OR, T)") = false.
 Proof. vm_compute. reflexivity. Qed.
 
-(** Inscribed angles on one chord: congruent from the same arc, supplementary
-    from opposite arcs.  A, B, P, Q, S on the circle of centre O through A;
-    P and Q are on the centre's side of AB, S across it. *)
+(** Inscribed angles, read through a [circ_order] premise.  Going round the
+    circle of centre O through A, the points come A, S, B, Q, P, so P and Q
+    are on one arc of chord AB and S is on the other.  X is off the circle,
+    on the ray from P through A. *)
 Definition inscribed_source (premises goal steps : string) : string :=
   "title: inscribed angles
 premises:
-pt: O (5,5), A (1,2), B (9,2), P (2,9), Q (8,9), S (5,0)
+pt: O (5,5), A (1,2), B (9,2), P (2,9), Q (8,9), S (5,0), X (0,0), D (5,10)
 circ: c_OA
 " ++ premises ++ "-> " ++ goal ++ "
 
 steps:
 " ++ steps.
 
-Definition inscribed_pair_source (first second reason goal : string) :=
-  inscribed_source ("[g_1] " ++ first ++ "
+Definition circ_order_ASBQP := "[d_01] circ_order(c_OA, A, S, B, Q, P)
+".
+
+Definition inscribed_pair_with (order first second reason goal : string) :=
+  inscribed_source (order ++ "[g_1] " ++ first ++ "
 [g_2] " ++ second ++ "
 ") goal ("[01] given(g_1) -> " ++ first ++ "
 [02] given(g_2) -> " ++ second ++ "
 [03] " ++ reason ++ "(1, 2) -> " ++ goal).
 
-Example con_inscribed_angs_minor_accepts : complete_checker
-  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
-     "minor_inscribed_ang(c_OA, a_AQB)" "con_inscribed_angs"
+Definition inscribed_pair_source := inscribed_pair_with circ_order_ASBQP.
+
+Example con_inscribed_angs_same_arc_accepts : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_AQB)" "con_inscribed_angs"
      "con_ang(a_APB, a_AQB)") = true.
-Proof. vm_compute. reflexivity. Qed.
-Example con_inscribed_angs_major_accepts : complete_checker
-  (inscribed_pair_source "major_inscribed_ang(c_OA, a_ASB)"
-     "major_inscribed_ang(c_OA, a_AQB)" "con_inscribed_angs"
-     "con_ang(a_ASB, a_AQB)") = true.
 Proof. vm_compute. reflexivity. Qed.
 (** The chord may be read either way round, and the conclusion in any
     order. *)
 Example con_inscribed_angs_reversed_chord_accepts : complete_checker
-  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
-     "minor_inscribed_ang(c_OA, a_BQA)" "con_inscribed_angs"
-     "con_ang(a_AQB, a_BPA)") = true.
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_BQA)" "con_inscribed_angs"
+     "con_ang(a_BQA, a_APB)") = true.
 Proof. vm_compute. reflexivity. Qed.
-Example con_inscribed_angs_mixed_rejects : complete_checker
-  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
-     "major_inscribed_ang(c_OA, a_ASB)" "con_inscribed_angs"
+(** The list may start anywhere and run either way. *)
+Example con_inscribed_angs_rotated_order_accepts : complete_checker
+  (inscribed_pair_with "[d_01] circ_order(c_OA, Q, B, S, A, P)
+" "inscribed_angle(c_OA, a_APB)" "inscribed_angle(c_OA, a_AQB)"
+     "con_inscribed_angs" "con_ang(a_APB, a_AQB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** A ray may be named through a point off the circle that a premise puts on
+    the same ray as a listed point. *)
+Example con_inscribed_angs_traced_ray_accepts : complete_checker
+  (inscribed_pair_with "[d_01] circ_order(c_OA, A, S, B, Q, P)
+[d_02] on_line(PX, A)
+" "inscribed_angle(c_OA, a_XPB)" "inscribed_angle(c_OA, a_AQB)"
+     "con_inscribed_angs" "con_ang(a_XPB, a_AQB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_inscribed_angs_opposite_arcs_rejects : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_ASB)" "con_inscribed_angs"
      "con_ang(a_APB, a_ASB)") = false.
 Proof. vm_compute. reflexivity. Qed.
 Example con_inscribed_angs_other_chord_rejects : complete_checker
-  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
-     "minor_inscribed_ang(c_OA, a_AQS)" "con_inscribed_angs"
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_AQS)" "con_inscribed_angs"
      "con_ang(a_APB, a_AQS)") = false.
 Proof. vm_compute. reflexivity. Qed.
-(** The general form names no arc. *)
-Example con_inscribed_angs_general_rejects : complete_checker
-  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+(** Without the [on_line] premise nothing says where the ray through X meets
+    the circle. *)
+Example con_inscribed_angs_untraced_ray_rejects : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_XPB)"
+     "inscribed_angle(c_OA, a_AQB)" "con_inscribed_angs"
+     "con_ang(a_XPB, a_AQB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** The list leaves out S, which the second angle puts on the circle. *)
+Example inscribed_angs_missing_point_rejects : complete_checker
+  (inscribed_pair_with "[d_01] circ_order(c_OA, A, B, Q, P)
+" "inscribed_angle(c_OA, a_APB)" "inscribed_angle(c_OA, a_ASB)"
+     "supp_inscribed_angs" "supplementary(a_APB, a_ASB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** No [circ_order] premise at all. *)
+Example con_inscribed_angs_no_order_rejects : complete_checker
+  (inscribed_pair_with "" "inscribed_angle(c_OA, a_APB)"
      "inscribed_angle(c_OA, a_AQB)" "con_inscribed_angs"
      "con_ang(a_APB, a_AQB)") = false.
 Proof. vm_compute. reflexivity. Qed.
-Example supplementary_inscribed_angs_accepts : complete_checker
-  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
-     "major_inscribed_ang(c_OA, a_BSA)" "supplementary_inscribed_angs"
+Example supp_inscribed_angs_accepts : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_BSA)" "supp_inscribed_angs"
      "supplementary(a_APB, a_BSA)") = true.
 Proof. vm_compute. reflexivity. Qed.
-Example supplementary_inscribed_angs_major_first_accepts : complete_checker
-  (inscribed_pair_source "major_inscribed_ang(c_OA, a_ASB)"
-     "minor_inscribed_ang(c_OA, a_APB)" "supplementary_inscribed_angs"
-     "supplementary(a_APB, a_ASB)") = true.
-Proof. vm_compute. reflexivity. Qed.
-Example supplementary_inscribed_angs_same_arc_rejects : complete_checker
-  (inscribed_pair_source "minor_inscribed_ang(c_OA, a_APB)"
-     "minor_inscribed_ang(c_OA, a_AQB)" "supplementary_inscribed_angs"
+Example supp_inscribed_angs_same_arc_rejects : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_AQB)" "supp_inscribed_angs"
      "supplementary(a_APB, a_AQB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** An angle in a semicircle: S and D are the ends of a diameter, and P is
+    on the circle between them. *)
+Definition inscribed_semi_source (order angle diameter goal : string) :=
+  inscribed_source (order ++ "[g_1] " ++ angle ++ "
+[g_2] " ++ diameter ++ "
+") goal ("[01] given(g_1) -> " ++ angle ++ "
+[02] given(g_2) -> " ++ diameter ++ "
+[03] inscribed_semi(1, 2) -> " ++ goal).
+
+Example inscribed_semi_accepts : complete_checker
+  (inscribed_semi_source "[d_01] circ_order(c_OA, A, S, B, D, P)
+" "inscribed_angle(c_OA, a_SPD)" "diameter(c_OA, SD)" "right(a_SPD)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example inscribed_semi_not_the_diameter_rejects : complete_checker
+  (inscribed_semi_source "[d_01] circ_order(c_OA, A, S, B, D, P)
+" "inscribed_angle(c_OA, a_APB)" "diameter(c_OA, SD)" "right(a_APB)") = false.
 Proof. vm_compute. reflexivity. Qed.
 
 Print Assumptions check_source_sound.

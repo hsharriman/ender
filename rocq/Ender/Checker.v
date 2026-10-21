@@ -1,4 +1,4 @@
-From Stdlib Require Import List String Bool Lia.
+From Stdlib Require Import List String Bool Lia PeanoNat.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import GeoCoq.Main.Tarski_dev.Ch12_parallel.
 Require Import GeoCoq.Main.Annexes.suma.
@@ -147,9 +147,7 @@ Definition fact_eqb (expected actual : Statement) : bool :=
       circle_eqb c c' && segment_eqb s s'
   | Tangent c s p, Tangent c' s' p' =>
       circle_eqb c c' && segment_eqb s s' && ascii_eqb p p'
-  | InscribedAngle c a, InscribedAngle c' a'
-  | MinorInscribedAngle c a, MinorInscribedAngle c' a'
-  | MajorInscribedAngle c a, MajorInscribedAngle c' a' =>
+  | InscribedAngle c a, InscribedAngle c' a' =>
       circle_eqb c c' && angle_eqb a a'
   | OnCirclePoint c p, OnCirclePoint c' p' => circle_eqb c c' && ascii_eqb p p'
   | CenterOnLine c s, CenterOnLine c' s' => circle_eqb c c' && segment_eqb s s'
@@ -1968,28 +1966,6 @@ Definition def_radius_rule (facts : list Statement) (i : nat)
   | _, _ => false
   end.
 
-(** The angle sits in a semicircle: its two ray points name the diameter's
-    endpoints, and an [inscribed_angle] diagram premise places its vertex on
-    the circle. *)
-Definition inscribed_angle_premise (c : CircleName) (a : AngleName) (pr : Premise) : bool :=
-  match inscribed_witness pr.(premise_statement) with
-  | Some (c', a') => circle_eqb c c' && angle_u_eqb a a'
-  | None => false
-  end.
-
-Definition inscribed_angle_premise_used (premises : list Premise) (c : CircleName)
-    (a : AngleName) : option Statement :=
-  premise_witness (inscribed_angle_premise c a) premises.
-
-Definition inscribed_semi_rule (premises : list Premise)
-    (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Right a, Some (Diameter c s) =>
-      segment_u_eqb (segment_name a.(angle_first) a.(angle_last)) s &&
-      premise_found (inscribed_angle_premise c a) premises
-  | _, _ => false
-  end.
-
 Definition con_chords_arcs_rule (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_step facts i with
@@ -2085,10 +2061,8 @@ Definition places_on_circle (c : CircleName) (p : PointId) (s : Statement) : boo
   | OnCirclePoint c' q | Radius c' q | Tangent c' _ q =>
       circle_eqb c c' && ascii_eqb p q
   | Chord c' s | Diameter c' s => circle_eqb c c' && endpoint_of p s
-  | InscribedAngle c' a | MinorInscribedAngle c' a | MajorInscribedAngle c' a =>
-      circle_eqb c c' &&
-      (ascii_eqb p a.(angle_first) || ascii_eqb p a.(angle_vertex) ||
-       ascii_eqb p a.(angle_last))
+  | InscribedAngle c' a => circle_eqb c c' && ascii_eqb p a.(angle_vertex)
+  | CircOrder c' ps => circle_eqb c c' && existsb (ascii_eqb p) ps
   | ArcStatement a => on_arc a
   | ConArc a b => on_arc a || on_arc b
   | _ => false
@@ -2117,34 +2091,127 @@ Definition def_radius_conv_used (premises : list Premise) (conclusion : Statemen
   | _ => None
   end.
 
-(** Two inscribed angles on one chord, as two steps state them: congruent
-    when both name the same kind of arc, supplementary when one is minor and
-    the other major.  The chord is the two angles' outer points, in either
-    order, and the conclusion relates the two angles as [fact_eqb] reads
-    them, in either order or direction. *)
-Definition same_chord (a b : AngleName) : bool :=
-  (ascii_eqb a.(angle_first) b.(angle_first) &&
-   ascii_eqb a.(angle_last) b.(angle_last)) ||
-  (ascii_eqb a.(angle_first) b.(angle_last) &&
-   ascii_eqb a.(angle_last) b.(angle_first)).
+(** * Inscribed angles, read through a [circ_order] premise
 
-Definition con_inscribed_angs_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
+    A [circ_order] premise lists a circle's named points in the order met
+    going round it.  An inscribed angle's ray is traced to the first listed
+    point, other than the vertex, that lies on it: the ray's own point if it
+    is listed, or one an [on_line]-family premise puts on the same ray.  The
+    list's order then says which side of the chord each vertex is on. *)
+Definition listed (p : PointId) (ps : list PointId) : bool := existsb (ascii_eqb p) ps.
+
+Fixpoint index_of (p : PointId) (ps : list PointId) : option nat :=
+  match ps with
+  | [] => None
+  | q :: rest =>
+      if ascii_eqb p q then Some 0
+      else match index_of p rest with Some n => Some (S n) | None => None end
+  end.
+
+Definition trace_ray (premises : list Premise) (ps : list PointId) (v x : PointId)
+    : option PointId :=
+  find (fun A => negb (ascii_eqb A v) && ray_linked premises v x A) ps.
+
+(** The chord an inscribed angle stands on: where its two rays meet the
+    circle, two different listed points, with the vertex listed too. *)
+Definition inscribed_chord (premises : list Premise) (ps : list PointId)
+    (a : AngleName) : option (PointId * PointId) :=
+  if listed a.(angle_vertex) ps then
+    match trace_ray premises ps a.(angle_vertex) a.(angle_first),
+          trace_ray premises ps a.(angle_vertex) a.(angle_last) with
+    | Some A, Some B => if ascii_eqb A B then None else Some (A, B)
+    | _, _ => None
+    end
+  else None.
+
+(** Which of the two arcs between [A] and [B] the point [P] is on. *)
+Definition arc_side (ps : list PointId) (A B P : PointId) : option bool :=
+  match index_of A ps, index_of B ps, index_of P ps with
+  | Some i, Some j, Some k =>
+      Some (Audit.circOrderInside (Nat.min i j) (Nat.max i j) k)
+  | _, _, _ => None
+  end.
+
+(** A [circ_order] list has to name every point the premises place on its
+    circle, the circle's own radius point among them. *)
+Definition circ_order_complete (premises : list Premise) (c : CircleName)
+    (ps : list PointId) : bool :=
+  listed c.(circle_radius_point) ps &&
+  forallb (fun pr =>
+             forallb (fun p => negb (places_on_circle c p pr.(premise_statement))
+                               || listed p ps)
+                     (Audit.statementPoints pr.(premise_statement)))
+          premises.
+
+Definition same_chord_points (A B A' B' : PointId) : bool :=
+  (ascii_eqb A A' && ascii_eqb B B') || (ascii_eqb A B' && ascii_eqb B A').
+
+(** Two inscribed angles on one chord: congruent when their vertices are on
+    the same arc ([same] is true), supplementary when on opposite arcs. *)
+Definition inscribed_pair_check (premises : list Premise) (c : CircleName)
+    (a b : AngleName) (same : bool) (pr : Premise) : bool :=
+  match pr.(premise_statement) with
+  | CircOrder c' ps =>
+      circle_eqb c c' && circ_order_complete premises c ps &&
+      match inscribed_chord premises ps a, inscribed_chord premises ps b with
+      | Some (A, B), Some (A', B') =>
+          same_chord_points A B A' B' &&
+          match arc_side ps A B a.(angle_vertex), arc_side ps A B b.(angle_vertex) with
+          | Some x, Some y => Bool.eqb (Bool.eqb x y) same
+          | _, _ => false
+          end
+      | _, _ => false
+      end
+  | _ => false
+  end.
+
+Definition inscribed_pair_rule (premises : list Premise) (facts : list Statement)
+    (i j : nat) (same : bool) (conclusion : Statement) : bool :=
   match lookup_step facts i, lookup_step facts j with
-  | Some (MinorInscribedAngle c a), Some (MinorInscribedAngle c' b)
-  | Some (MajorInscribedAngle c a), Some (MajorInscribedAngle c' b) =>
-      circle_eqb c c' && same_chord a b && fact_eqb conclusion (ConAng a b)
+  | Some (InscribedAngle c a), Some (InscribedAngle c' b) =>
+      circle_eqb c c' &&
+      fact_eqb conclusion (if same then ConAng a b else Supplementary a b) &&
+      premise_found (inscribed_pair_check premises c a b same) premises
   | _, _ => false
   end.
 
-Definition supplementary_inscribed_angs_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
+Definition inscribed_pair_used (premises : list Premise) (facts : list Statement)
+    (i j : nat) (same : bool) : option Statement :=
   match lookup_step facts i, lookup_step facts j with
-  | Some (MinorInscribedAngle c a), Some (MajorInscribedAngle c' b)
-  | Some (MajorInscribedAngle c a), Some (MinorInscribedAngle c' b) =>
-      circle_eqb c c' && same_chord a b &&
-      fact_eqb conclusion (Supplementary a b)
-  | _, _ => false
+  | Some (InscribedAngle c a), Some (InscribedAngle _ b) =>
+      premise_witness (inscribed_pair_check premises c a b same) premises
+  | _, _ => None
+  end.
+
+(** An angle in a semicircle: its rays meet the circle at the ends of a
+    diameter. *)
+Definition inscribed_semi_check (premises : list Premise) (c : CircleName)
+    (a : AngleName) (s : SegmentName) (pr : Premise) : bool :=
+  match pr.(premise_statement) with
+  | CircOrder c' ps =>
+      circle_eqb c c' && circ_order_complete premises c ps &&
+      match inscribed_chord premises ps a with
+      | Some (A, B) => segment_u_eqb (segment_name A B) s
+      | None => false
+      end
+  | _ => false
+  end.
+
+Definition inscribed_semi_rule (premises : list Premise)
+    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
+  match conclusion, lookup_step facts i, lookup_step facts j with
+  | Right a', Some (InscribedAngle c a), Some (Diameter c' s) =>
+      circle_eqb c c' && angle_u_eqb a' a &&
+      premise_found (inscribed_semi_check premises c a s) premises
+  | _, _, _ => false
+  end.
+
+Definition inscribed_semi_used (premises : list Premise) (facts : list Statement)
+    (i j : nat) : option Statement :=
+  match lookup_step facts i, lookup_step facts j with
+  | Some (InscribedAngle c a), Some (Diameter _ s) =>
+      premise_witness (inscribed_semi_check premises c a s) premises
+  | _, _ => None
   end.
 
 (** Which diagram premises a step actually consulted.  Each entry comes from
@@ -2195,12 +2262,9 @@ Definition rule_diagram_premises_raw (decls : Declarations)
       all (criterion_used aas_schema_used decls premises facts i j k conclusion)
   | RHL i j k =>
       all (criterion_used rhl_schema_used decls premises facts i j k conclusion)
-  | InscribedSemi i =>
-      match conclusion, dependency i with
-      | Right a, Some (Diameter c _) =>
-          one (inscribed_angle_premise_used premises c a)
-      | _, _ => []
-      end
+  | InscribedSemi i j => one (inscribed_semi_used premises facts i j)
+  | ConInscribedAngs i j => one (inscribed_pair_used premises facts i j true)
+  | SuppInscribedAngs i j => one (inscribed_pair_used premises facts i j false)
   | RhombusOppBisect i =>
       match conclusion, dependency i with
       | AngBisect a s, Some (Rhombus q) =>
@@ -2361,7 +2425,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | SamesideAngConv i => sameside_ang_conv_rule premises facts i conclusion
   | ParaTrans i j => para_transitive_rule facts i j conclusion
   | DefRadius i => def_radius_rule facts i conclusion
-  | InscribedSemi i => inscribed_semi_rule premises facts i conclusion
+  | InscribedSemi i j => inscribed_semi_rule premises facts i j conclusion
   | ConChordsArcs i => con_chords_arcs_rule facts i conclusion
   | TangentPerp i j => tangent_perp_rule facts i j conclusion
   | TangentPerpConv i j => tangent_perp_conv_rule facts i j conclusion
@@ -2386,9 +2450,8 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
       diagonal_rule premises facts r conclusion
   | ChordBisectConv i j => chord_bisect_conv_rule facts i j conclusion
   | DefRadiusConv i => def_radius_conv_rule premises facts i conclusion
-  | ConInscribedAngs i j => con_inscribed_angs_rule facts i j conclusion
-  | SupplementaryInscribedAngs i j =>
-      supplementary_inscribed_angs_rule facts i j conclusion
+  | ConInscribedAngs i j => inscribed_pair_rule premises facts i j true conclusion
+  | SuppInscribedAngs i j => inscribed_pair_rule premises facts i j false conclusion
   | RHL i j k =>
       criterion_conclusion rhl_schema decls premises facts i j k conclusion
   end.
@@ -6490,68 +6553,6 @@ Proof.
     now apply par_symmetry.
 Qed.
 
-Lemma inscribed_semi_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  inscribed_semi_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold inscribed_semi_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hends Hex].
-  assert (Hd : Interp (Diameter c s)) by (eapply lookup_step_sound; eauto).
-  cbn in Hd. destruct Hd as [[Hswf [Hon1 Hon2]] Hbet].
-  destruct Hon1 as [_ Hc1]. destruct Hon2 as [_ Hc2].
-  cbn in Hc1, Hc2, Hbet, Hswf.
-  rewrite premise_found_existsb in Hex.
-  apply existsb_exists in Hex. destruct Hex as [pr [Hin Hw]].
-  unfold inscribed_angle_premise in Hw.
-  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
-  unfold interp_premise in Hpr.
-  destruct (inscribed_witness pr.(premise_statement)) as [[c' a']|] eqn:Hwit;
-    try discriminate.
-  assert (Hps : pr.(premise_statement) = InscribedAngle c' a').
-  { unfold inscribed_witness in Hwit.
-    destruct pr.(premise_statement); try discriminate.
-    now injection Hwit as <- <-. }
-  rewrite Hps in Hpr. cbn in Hpr.
-  apply andb_true_iff in Hw. destruct Hw as [Hceq Haeq].
-  apply circle_eqb_eq in Hceq. subst c'.
-  destruct Hpr as [HonA [HonV [HonB Hawf]]].
-  destruct HonV as [_ HcV]. cbn in HcV, Hawf.
-  assert (Hmid : Midpoint (point (c.(circle_center)))
-                   (point s.(segment_first)) (point s.(segment_second))).
-  { split; [exact Hbet|].
-    assert (Hse : Cong (point (c.(circle_center))) (point s.(segment_first))
-                       (point (c.(circle_center))) (point s.(segment_second))).
-    { apply cong_transitivity with (point (c.(circle_center)))
-          (point (c.(circle_radius_point))); [exact Hc1|Cong]. }
-    Cong. }
-  apply angle_u_eqb_cases in Haeq.
-  assert (HOV : Cong (point (c.(circle_center))) (point s.(segment_first))
-                     (point (c.(circle_center))) (point (a.(angle_vertex)))).
-  { assert (Hvx : point (a.(angle_vertex)) = point (a'.(angle_vertex)))
-      by (destruct Haeq as [->| ->]; reflexivity).
-    rewrite Hvx.
-    apply cong_transitivity with (point (c.(circle_center)))
-        (point (c.(circle_radius_point))); [exact Hc1|Cong]. }
-  assert (Hper : Per (point s.(segment_first)) (point (a.(angle_vertex)))
-                     (point s.(segment_second))).
-  { apply (ender_thales _ _ _ (point (c.(circle_center)))); assumption. }
-  cbn. split.
-  - destruct Haeq as [->| ->]; cbn in Hawf |- *.
-    + exact Hawf.
-    + unfold reverse_angle. cbn. destruct Hawf as [Hl Hr]. split; assumption.
-  - apply segment_u_eqb_cases in Hends. destruct Hends as [Hends|Hends].
-    + rewrite <- Hends in Hper. cbn in Hper.
-      unfold right_angle. exact Hper.
-    + unfold reverse_segment in Hends. injection Hends as Hl Hr.
-      unfold right_angle. rewrite Hl, Hr. apply l8_2. exact Hper.
-Qed.
-
 (** * Rules added by the reason campaign: soundness *)
 
 Lemma isos_trap_con_diags_sound : forall facts i j conclusion,
@@ -7457,17 +7458,16 @@ Proof.
   - (* diameter *)
     apply endpoint_of_cases in H. destruct Hst as [[_ [H1 H2]] _].
     destruct H as [->| ->]; assumption.
-  - (* inscribed angle *)
-    rewrite !orb_true_iff in H. destruct Hst as [H1 [H2 [H3 _]]].
-    destruct H as [[H|H]|H]; apply Ascii.eqb_eq in H; subst; assumption.
+  - (* inscribed angle: only its vertex is on the circle *)
+    apply Ascii.eqb_eq in H. subst. destruct Hst as [Hv _]. exact Hv.
   - (* on_circle *)
     apply Ascii.eqb_eq in H. subst. exact Hst.
-  - (* minor inscribed angle *)
-    rewrite !orb_true_iff in H. destruct Hst as [[H1 [H2 [H3 _]]] _].
-    destruct H as [[H|H]|H]; apply Ascii.eqb_eq in H; subst; assumption.
-  - (* major inscribed angle *)
-    rewrite !orb_true_iff in H. destruct Hst as [[H1 [H2 [H3 _]]] _].
-    destruct H as [[H|H]|H]; apply Ascii.eqb_eq in H; subst; assumption.
+  - (* circ_order *)
+    apply existsb_exists in H. destruct H as [q [Hin Hq]].
+    apply Ascii.eqb_eq in Hq. subst q.
+    unfold Audit.IsCircOrder in Hst. cbv beta zeta in Hst.
+    destruct Hst as [_ [Hon _]].
+    exact ((proj1 (Forall_forall _ _)) Hon p Hin).
   - (* congruent arcs *)
     destruct Hst as [[_ [Ha1 Ha2]] [[_ [Hb1 Hb2]] _]].
     apply orb_true_iff in H.
@@ -7494,110 +7494,6 @@ Proof.
   pose proof ((proj1 (@Forall_forall Premise (interp_premise point) premises))
                 Hprem pr Hin) as Hpr.
   exact (places_on_circle_sound _ _ _ Hpr Hmatch).
-Qed.
-
-(** Inscribed angles, through [Inscribed.v]: GeoCoq's proofs of Euclid
-    III.21 and III.22 with its two axiom-dependent lemmas re-proved.  The
-    audited minor and major forms exclude a chord through the centre, so the
-    vertex's side of the chord is the centre's side or the other one. *)
-Lemma ender_inscribed_same_side : forall O R A B P Q,
-  Cong O A O R -> Cong O B O R -> Cong O P O R -> Cong O Q O R ->
-  ((OS A B O P /\ OS A B O Q) \/ (TS A B O P /\ TS A B O Q)) ->
-  CongA A P B A Q B.
-Proof.
-  intros O R A B P Q HA HB HP HQ Hsides.
-  assert (Hcop : Coplanar A B P O).
-  { destruct Hsides as [[H _]|[H _]];
-      [apply os__coplanar in H|apply ts__coplanar in H]; Cop. }
-  assert (Hos : OS A B P Q).
-  { destruct Hsides as [[HOP HOQ]|[HOP HOQ]].
-    - apply one_side_transitivity with O; [apply one_side_symmetry|]; assumption.
-    - apply l9_8_1 with O; apply l9_2; assumption. }
-  apply (Inscribed.EnderInscribed.cop_onc4_os__conga O R A B P Q); assumption.
-Qed.
-
-Lemma ender_inscribed_opposite_sides : forall O R A B P Q,
-  Cong O A O R -> Cong O B O R -> Cong O P O R -> Cong O Q O R ->
-  OS A B O P -> TS A B O Q -> SuppA A P B A Q B.
-Proof.
-  intros O R A B P Q HA HB HP HQ HOP HOQ.
-  assert (Hcop : Coplanar A B P O) by (apply os__coplanar in HOP; Cop).
-  assert (Hts : TS A B P Q) by (apply l9_8_2 with O; assumption).
-  apply (Inscribed.EnderInscribed.cop_onc4_ts__suppa O R A B P Q); assumption.
-Qed.
-
-(** The two angles' chord, read in [b]'s order, is [a]'s chord one way or
-    the other. *)
-Lemma same_chord_cases : forall a b, same_chord a b = true ->
-  (b.(angle_first) = a.(angle_first) /\ b.(angle_last) = a.(angle_last)) \/
-  (b.(angle_first) = a.(angle_last) /\ b.(angle_last) = a.(angle_first)).
-Proof.
-  intros a b H. unfold same_chord, ascii_eqb in H.
-  apply orb_true_iff in H.
-  destruct H as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
-    apply Ascii.eqb_eq in H1, H2; auto.
-Qed.
-
-Lemma con_inscribed_angs_sound : forall facts i j conclusion,
-  Forall Interp facts ->
-  con_inscribed_angs_rule facts i j conclusion = true -> Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold con_inscribed_angs_rule in Hrule.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate;
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: apply andb_true_iff in Hrule; destruct Hrule as [Hrule Hconc];
-    apply andb_true_iff in Hrule; destruct Hrule as [Hcircle Hchord];
-    apply circle_eqb_eq in Hcircle; subst;
-    apply (proj2 (fact_eqb_sound _ _ Hconc));
-    assert (Hi := lookup_step_sound _ _ _ Hfacts Hx);
-    assert (Hj := lookup_step_sound _ _ _ Hfacts Hy);
-    cbn in Hi, Hj; unfold Audit.circ_center in *;
-    destruct Hi as [[[_ Ha1] [[_ Hav] [[_ Ha2] _]]] Hsa];
-    destruct Hj as [[[_ Hb1] [[_ Hbv] [[_ Hb2] _]]] Hsb];
-    cbn; unfold Audit.ang_start, Audit.ang_vertex, Audit.ang_end in *;
-    apply same_chord_cases in Hchord;
-    destruct Hchord as [[Hf Hl]|[Hf Hl]]; rewrite Hf, Hl in *.
-  - eapply ender_inscribed_same_side; eauto.
-  - apply conga_right_comm. eapply ender_inscribed_same_side; eauto.
-    left. split; [assumption|apply invert_one_side; assumption].
-  - eapply ender_inscribed_same_side; eauto.
-  - apply conga_right_comm. eapply ender_inscribed_same_side; eauto.
-    right. split; [assumption|apply invert_two_sides; assumption].
-Qed.
-
-Lemma supplementary_inscribed_angs_sound : forall facts i j conclusion,
-  Forall Interp facts ->
-  supplementary_inscribed_angs_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold supplementary_inscribed_angs_rule in Hrule.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate;
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: apply andb_true_iff in Hrule; destruct Hrule as [Hrule Hconc];
-    apply andb_true_iff in Hrule; destruct Hrule as [Hcircle Hchord];
-    apply circle_eqb_eq in Hcircle; subst;
-    apply (proj2 (fact_eqb_sound _ _ Hconc));
-    assert (Hi := lookup_step_sound _ _ _ Hfacts Hx);
-    assert (Hj := lookup_step_sound _ _ _ Hfacts Hy);
-    cbn in Hi, Hj; unfold Audit.circ_center in *;
-    destruct Hi as [[[_ Ha1] [[_ Hav] [[_ Ha2] _]]] Hsa];
-    destruct Hj as [[[_ Hb1] [[_ Hbv] [[_ Hb2] _]]] Hsb];
-    cbn; unfold Audit.ang_start, Audit.ang_vertex, Audit.ang_end in *;
-    apply same_chord_cases in Hchord;
-    destruct Hchord as [[Hf Hl]|[Hf Hl]]; rewrite Hf, Hl in *.
-  - eapply ender_inscribed_opposite_sides; eauto.
-  - apply suppa_right_comm. eapply ender_inscribed_opposite_sides; eauto.
-    apply invert_two_sides; assumption.
-  - apply suppa_sym. eapply ender_inscribed_opposite_sides; eauto.
-  - apply suppa_sym, suppa_left_comm.
-    eapply ender_inscribed_opposite_sides; eauto.
-    apply invert_one_side; assumption.
 Qed.
 
 (** Everything below assumes the plane, which only [chord_bisect_conv]
@@ -7664,6 +7560,320 @@ Proof.
   cbn. split; [exact Hcwf|].
   apply segment_u_eqb_cases in Hline.
   destruct Hline as [->| ->]; cbn; split; auto; Col.
+Qed.
+
+(** ** Inscribed angles through [circ_order]
+
+    The list's order fixes which side of each chord every listed point is on,
+    and with at least three points that makes listed points at different
+    positions different points.  GeoCoq's Euclid III.21 and III.22, through
+    [Inscribed.v], need the four points coplanar, which the plane gives. *)
+Lemma index_of_spec : forall p ps i, index_of p ps = Some i ->
+  i < List.length ps /\ nth i ps Audit.circOrderDefault = p.
+Proof.
+  intros p ps. induction ps as [|q rest IH]; intros i H; cbn in H; [discriminate|].
+  destruct (ascii_eqb p q) eqn:E.
+  - injection H as <-. unfold ascii_eqb in E. apply Ascii.eqb_eq in E. subst.
+    cbn. split; [lia|reflexivity].
+  - destruct (index_of p rest) as [n|] eqn:Hn; [|discriminate].
+    injection H as <-. destruct (IH n eq_refl) as [Hlt Hnth].
+    cbn. split; [lia|exact Hnth].
+Qed.
+
+Lemma index_of_listed : forall p ps, listed p ps = true ->
+  exists i, index_of p ps = Some i.
+Proof.
+  intros p ps. induction ps as [|q rest IH]; cbn; intros H; [discriminate|].
+  destruct (ascii_eqb p q) eqn:E; [eauto|].
+  cbn in H. destruct (IH H) as [n Hn]. rewrite Hn. eauto.
+Qed.
+
+Lemma listed_In : forall p ps, listed p ps = true -> In p ps.
+Proof.
+  intros p ps H. unfold listed in H. apply existsb_exists in H.
+  destruct H as [q [Hin Hq]]. unfold ascii_eqb in Hq.
+  apply Ascii.eqb_eq in Hq. now subst.
+Qed.
+
+Lemma In_listed : forall p ps, In p ps -> listed p ps = true.
+Proof.
+  intros p ps H. unfold listed. apply existsb_exists. exists p.
+  split; [exact H|]. unfold ascii_eqb. apply Ascii.eqb_refl.
+Qed.
+
+Lemma circ_order_positions_distinct : forall c ps i j,
+  Audit.IsCircOrder point c ps ->
+  i < List.length ps -> j < List.length ps -> i <> j ->
+  point (nth i ps Audit.circOrderDefault) <> point (nth j ps Audit.circOrderDefault).
+Proof.
+  intros c ps i j Hco Hi Hj Hij Heq.
+  unfold Audit.IsCircOrder in Hco. cbv beta zeta in Hco.
+  destruct Hco as [Hlen [_ Hord]].
+  assert (Hk : exists k, k < List.length ps /\ k <> i /\ k <> j).
+  { destruct (Nat.eq_dec i 0); destruct (Nat.eq_dec j 0);
+      destruct (Nat.eq_dec i 1); destruct (Nat.eq_dec j 1);
+      first [exists 2; lia | exists 1; lia | exists 0; lia]. }
+  destruct Hk as [k [Hk [Hki Hkj]]].
+  destruct (Nat.lt_ge_cases i j) as [Hlt|Hge].
+  - specialize (Hord i j k k Hlt Hj Hk Hk Hki Hkj Hki Hkj).
+    rewrite Bool.eqb_reflx in Hord.
+    apply one_side_not_col123 in Hord. apply Hord. rewrite Heq. Col.
+  - assert (Hlt : j < i) by lia.
+    specialize (Hord j i k k Hlt Hi Hk Hk Hkj Hki Hkj Hki).
+    rewrite Bool.eqb_reflx in Hord.
+    apply one_side_not_col123 in Hord. apply Hord. rewrite Heq. Col.
+Qed.
+
+Lemma listed_points_distinct : forall c ps p q,
+  Audit.IsCircOrder point c ps -> listed p ps = true -> listed q ps = true ->
+  p <> q -> point p <> point q.
+Proof.
+  intros c ps p q Hco Hp Hq Hpq.
+  destruct (index_of_listed _ _ Hp) as [i Hi].
+  destruct (index_of_listed _ _ Hq) as [j Hj].
+  destruct (index_of_spec _ _ _ Hi) as [Hil Hin].
+  destruct (index_of_spec _ _ _ Hj) as [Hjl Hjn].
+  rewrite <- Hin, <- Hjn.
+  apply (circ_order_positions_distinct c); try assumption.
+  intros ->. apply Hpq. congruence.
+Qed.
+
+Lemma listed_on_circle : forall c ps p,
+  Audit.IsCircOrder point c ps -> listed p ps = true ->
+  Cong (point c.(circle_center)) (point p)
+       (point c.(circle_center)) (point c.(circle_radius_point)).
+Proof.
+  intros c ps p Hco Hp.
+  unfold Audit.IsCircOrder in Hco. cbv beta zeta in Hco.
+  destruct Hco as [_ [Hon _]].
+  pose proof ((proj1 (Forall_forall _ _)) Hon p (listed_In _ _ Hp)) as [_ H].
+  exact H.
+Qed.
+
+Lemma trace_ray_sound : forall premises c ps v x A,
+  Forall (interp_premise point) premises ->
+  Audit.IsCircOrder point c ps -> listed v ps = true ->
+  point x <> point v ->
+  trace_ray premises ps v x = Some A ->
+  listed A ps = true /\ A <> v /\ Out (point v) (point A) (point x).
+Proof.
+  intros premises c ps v x A Hprem Hco Hv Hx Htr.
+  unfold trace_ray in Htr. apply find_some in Htr.
+  destruct Htr as [Hin Hc]. apply andb_true_iff in Hc. destruct Hc as [Hne Hlink].
+  assert (HAv : A <> v).
+  { intros ->. unfold ascii_eqb in Hne. rewrite Ascii.eqb_refl in Hne. discriminate. }
+  assert (HA : listed A ps = true) by (now apply In_listed).
+  split; [exact HA|]. split; [exact HAv|].
+  apply (ray_linked_out premises v x A Hprem Hlink Hx).
+  apply (listed_points_distinct c ps); assumption.
+Qed.
+
+Lemma inscribed_chord_sound : forall premises c ps a A B,
+  Forall (interp_premise point) premises ->
+  Audit.IsCircOrder point c ps -> Interp (InscribedAngle c a) ->
+  inscribed_chord premises ps a = Some (A, B) ->
+  listed a.(angle_vertex) ps = true /\ listed A ps = true /\ listed B ps = true /\
+  A <> B /\ A <> a.(angle_vertex) /\ B <> a.(angle_vertex) /\
+  Out (point a.(angle_vertex)) (point A) (point a.(angle_first)) /\
+  Out (point a.(angle_vertex)) (point B) (point a.(angle_last)).
+Proof.
+  intros premises c ps a A B Hprem Hco Hia Hch.
+  unfold inscribed_chord in Hch.
+  destruct (listed a.(angle_vertex) ps) eqn:Hv; [|discriminate].
+  destruct (trace_ray premises ps a.(angle_vertex) a.(angle_first)) as [A0|] eqn:HtA;
+    [|discriminate].
+  destruct (trace_ray premises ps a.(angle_vertex) a.(angle_last)) as [B0|] eqn:HtB;
+    [|discriminate].
+  destruct (ascii_eqb A0 B0) eqn:HAB; [discriminate|].
+  injection Hch as <- <-.
+  cbn in Hia. destruct Hia as [_ [[Hs He] _]].
+  destruct (trace_ray_sound _ _ _ _ _ _ Hprem Hco Hv Hs HtA) as [HlA [HAv HoA]].
+  destruct (trace_ray_sound _ _ _ _ _ _ Hprem Hco Hv He HtB) as [HlB [HBv HoB]].
+  assert (HAB' : A0 <> B0).
+  { intros ->. unfold ascii_eqb in HAB. rewrite Ascii.eqb_refl in HAB. discriminate. }
+  exact (conj eq_refl (conj HlA (conj HlB (conj HAB' (conj HAv (conj HBv (conj HoA HoB))))))).
+Qed.
+
+Lemma arc_side_sides : forall c ps A B P Q x y,
+  Audit.IsCircOrder point c ps ->
+  listed A ps = true -> listed B ps = true ->
+  listed P ps = true -> listed Q ps = true ->
+  A <> B -> P <> A -> P <> B -> Q <> A -> Q <> B ->
+  arc_side ps A B P = Some x -> arc_side ps A B Q = Some y ->
+  if Bool.eqb x y then OS (point A) (point B) (point P) (point Q)
+  else TS (point A) (point B) (point P) (point Q).
+Proof.
+  intros c ps A B P Q x y Hco HA HB HP HQ HAB HPA HPB HQA HQB Hx Hy.
+  destruct (index_of_listed _ _ HA) as [iA EA].
+  destruct (index_of_listed _ _ HB) as [iB EB].
+  destruct (index_of_listed _ _ HP) as [iP EP].
+  destruct (index_of_listed _ _ HQ) as [iQ EQ].
+  unfold arc_side in Hx, Hy. rewrite EA, EB, EP in Hx. rewrite EA, EB, EQ in Hy.
+  injection Hx as <-. injection Hy as <-.
+  destruct (index_of_spec _ _ _ EA) as [LA NA].
+  destruct (index_of_spec _ _ _ EB) as [LB NB].
+  destruct (index_of_spec _ _ _ EP) as [LP NP].
+  destruct (index_of_spec _ _ _ EQ) as [LQ NQ].
+  assert (Hne : forall i j p q, nth i ps Audit.circOrderDefault = p -> nth j ps Audit.circOrderDefault = q ->
+                  p <> q -> i <> j) by (intros; congruence).
+  pose proof (Hne _ _ _ _ NA NB HAB) as DAB.
+  pose proof (Hne _ _ _ _ NP NA HPA) as DPA.
+  pose proof (Hne _ _ _ _ NP NB HPB) as DPB.
+  pose proof (Hne _ _ _ _ NQ NA HQA) as DQA.
+  pose proof (Hne _ _ _ _ NQ NB HQB) as DQB.
+  unfold Audit.IsCircOrder in Hco. cbv beta zeta in Hco.
+  destruct Hco as [_ [_ Hord]].
+  destruct (Nat.lt_ge_cases iA iB) as [Hlt|Hge].
+  - rewrite (Nat.min_l iA iB), (Nat.max_r iA iB) by lia.
+    specialize (Hord iA iB iP iQ Hlt LB LP LQ DPA DPB DQA DQB).
+    rewrite <- NA, <- NB, <- NP, <- NQ. exact Hord.
+  - assert (Hlt : iB < iA) by lia.
+    rewrite (Nat.min_r iA iB), (Nat.max_l iA iB) by lia.
+    specialize (Hord iB iA iP iQ Hlt LA LP LQ DPB DPA DQB DQA).
+    rewrite <- NA, <- NB, <- NP, <- NQ.
+    destruct (Bool.eqb _ _);
+      [apply invert_one_side | apply invert_two_sides]; exact Hord.
+Qed.
+
+Lemma inscribed_pair_sound : forall premises facts i j same conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  inscribed_pair_rule premises facts i j same conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i j same conclusion Hprem Hfacts Hrule.
+  unfold inscribed_pair_rule in Hrule.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  rename c into c1, c0 into c2, a0 into b.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hfound].
+  apply andb_true_iff in Hrule. destruct Hrule as [Hcircle Hconc].
+  apply circle_eqb_eq in Hcircle. subst c2.
+  pose proof (lookup_step_sound _ _ _ Hfacts Hx) as Hia.
+  pose proof (lookup_step_sound _ _ _ Hfacts Hy) as Hib.
+  rewrite premise_found_existsb in Hfound.
+  apply existsb_exists in Hfound. destruct Hfound as [pr [Hin Hcheck]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr. unfold inscribed_pair_check in Hcheck.
+  destruct pr.(premise_statement) eqn:Hst; try discriminate.
+  rename c into c3, points into ps.
+  cbn in Hpr.
+  apply andb_true_iff in Hcheck. destruct Hcheck as [Hcheck Hpair].
+  apply andb_true_iff in Hcheck. destruct Hcheck as [Hceq _].
+  apply circle_eqb_eq in Hceq. subst c3.
+  destruct (inscribed_chord premises ps a) as [[A B]|] eqn:Hca; [|discriminate].
+  destruct (inscribed_chord premises ps b) as [[A' B']|] eqn:Hcb; [|discriminate].
+  apply andb_true_iff in Hpair. destruct Hpair as [Hchord Hside].
+  destruct (arc_side ps A B a.(angle_vertex)) as [sa|] eqn:Hsa; [|discriminate].
+  destruct (arc_side ps A B b.(angle_vertex)) as [sb|] eqn:Hsb; [|discriminate].
+  destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hia Hca)
+    as [HlP [HlA [HlB [HAB [HAP [HBP [HoA HoB]]]]]]].
+  destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hib Hcb)
+    as [HlQ [HlA' [HlB' [HAB' [HAQ [HBQ [HoA' HoB']]]]]]].
+  (* The second angle's rays reach the same two points, in either order. *)
+  assert (Hsame : (A' = A /\ B' = B) \/ (A' = B /\ B' = A)).
+  { unfold same_chord_points, ascii_eqb in Hchord.
+    apply orb_true_iff in Hchord.
+    destruct Hchord as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
+      apply Ascii.eqb_eq in H1, H2; subst; auto. }
+  assert (HQA : b.(angle_vertex) <> A) by (destruct Hsame as [[-> ->]|[-> ->]]; auto).
+  assert (HQB : b.(angle_vertex) <> B) by (destruct Hsame as [[-> ->]|[-> ->]]; auto).
+  pose proof (arc_side_sides c1 ps A B a.(angle_vertex) b.(angle_vertex) sa sb Hpr
+                HlA HlB HlP HlQ HAB (not_eq_sym HAP) (not_eq_sym HBP) HQA HQB Hsa Hsb)
+    as Hsides.
+  pose proof (listed_on_circle _ _ _ Hpr HlA) as CA.
+  pose proof (listed_on_circle _ _ _ Hpr HlB) as CB.
+  pose proof (listed_on_circle _ _ _ Hpr HlP) as CP.
+  pose proof (listed_on_circle _ _ _ Hpr HlQ) as CQ.
+  (* Each angle is the angle its rays' circle points make. *)
+  assert (Ha : CongA (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))
+                     (point A) (point a.(angle_vertex)) (point B))
+    by (apply out2__conga; assumption).
+  assert (Hb : CongA (point A) (point b.(angle_vertex)) (point B)
+                     (point b.(angle_first)) (point b.(angle_vertex)) (point b.(angle_last))).
+  { destruct Hsame as [[-> ->]|[-> ->]].
+    - apply conga_sym, out2__conga; assumption.
+    - apply conga_left_comm, conga_right_comm, conga_sym, conga_right_comm.
+      apply out2__conga; assumption. }
+  destruct same; cbn in Hside; apply (proj2 (fact_eqb_sound _ _ Hconc)); cbn.
+  - destruct (Bool.eqb sa sb) eqn:Heq; [|discriminate].
+    apply conga_trans with (point A) (point a.(angle_vertex)) (point B); [exact Ha|].
+    apply conga_trans with (point A) (point b.(angle_vertex)) (point B); [|exact Hb].
+    apply (Inscribed.EnderInscribed.cop_onc4_os__conga
+             (point c1.(circle_center)) (point c1.(circle_radius_point))); try assumption.
+    apply all_coplanar.
+  - destruct (Bool.eqb sa sb) eqn:Heq; [discriminate|].
+    apply (conga2_suppa__suppa (point A) (point a.(angle_vertex)) (point B)
+             (point A) (point b.(angle_vertex)) (point B)).
+    + apply conga_sym. exact Ha.
+    + exact Hb.
+    + apply (Inscribed.EnderInscribed.cop_onc4_ts__suppa
+               (point c1.(circle_center)) (point c1.(circle_radius_point))); try assumption.
+      apply all_coplanar.
+Qed.
+
+Lemma inscribed_semi_sound : forall premises facts i j conclusion,
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  inscribed_semi_rule premises facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros premises facts i j conclusion Hprem Hfacts Hrule.
+  unfold inscribed_semi_rule in Hrule.
+  destruct conclusion; try discriminate.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
+    destruct x; try discriminate.
+  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
+    destruct y; try discriminate.
+  rename a into a', c into c1, a0 into a, c0 into c2.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hfound].
+  apply andb_true_iff in Hrule. destruct Hrule as [Hcircle Haeq].
+  apply circle_eqb_eq in Hcircle. subst c2.
+  pose proof (lookup_step_sound _ _ _ Hfacts Hx) as Hia.
+  pose proof (lookup_step_sound _ _ _ Hfacts Hy) as Hd.
+  rewrite premise_found_existsb in Hfound.
+  apply existsb_exists in Hfound. destruct Hfound as [pr [Hin Hcheck]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr. unfold inscribed_semi_check in Hcheck.
+  destruct pr.(premise_statement) eqn:Hst; try discriminate.
+  rename c into c3, points into ps.
+  cbn in Hpr.
+  apply andb_true_iff in Hcheck. destruct Hcheck as [Hcheck Hends].
+  apply andb_true_iff in Hcheck. destruct Hcheck as [Hceq _].
+  apply circle_eqb_eq in Hceq. subst c3.
+  destruct (inscribed_chord premises ps a) as [[A B]|] eqn:Hca; [|discriminate].
+  destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hia Hca)
+    as [HlP [HlA [HlB [HAB [HAP [HBP [HoA HoB]]]]]]].
+  cbn in Hd. destruct Hd as [[Hswf [Hon1 Hon2]] Hbet].
+  destruct Hon1 as [_ Hc1]. destruct Hon2 as [_ Hc2].
+  cbn in Hc1, Hc2, Hbet.
+  pose proof (listed_on_circle _ _ _ Hpr HlP) as CP.
+  assert (Hmid : Midpoint (point c1.(circle_center))
+                   (point s.(segment_first)) (point s.(segment_second))).
+  { split; [exact Hbet|].
+    apply cong_transitivity with (point c1.(circle_center))
+        (point c1.(circle_radius_point)); unfold Audit.circ_center in *; Cong. }
+  assert (HOV : Cong (point c1.(circle_center)) (point s.(segment_first))
+                     (point c1.(circle_center)) (point a.(angle_vertex))).
+  { apply cong_transitivity with (point c1.(circle_center))
+        (point c1.(circle_radius_point)); unfold Audit.circ_center in *; Cong. }
+  assert (Hper : Per (point s.(segment_first)) (point a.(angle_vertex))
+                     (point s.(segment_second))).
+  { apply (ender_thales _ _ _ (point c1.(circle_center))); assumption. }
+  assert (HperAB : Per (point A) (point a.(angle_vertex)) (point B)).
+  { apply segment_u_eqb_cases in Hends. destruct Hends as [Hends|Hends].
+    - rewrite <- Hends in Hper. exact Hper.
+    - destruct s as [s1 s2]. unfold reverse_segment in Hends. cbn in Hends.
+      injection Hends as -> ->. cbn in Hper. apply l8_2. exact Hper. }
+  assert (Hrt : Per (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))).
+  { apply (l11_17 (point A) (point a.(angle_vertex)) (point B)); [exact HperAB|].
+    apply conga_sym, out2__conga; assumption. }
+  cbn in Hia. destruct Hia as [_ [Hawf _]].
+  apply angle_u_eqb_cases in Haeq. cbn.
+  destruct Haeq as [->| ->]; cbn.
+  - split; [exact Hawf|]. exact Hrt.
+  - unfold reverse_angle. cbn. destruct Hawf as [Hl Hr].
+    split; [split; assumption|]. unfold Audit.RightAngle. cbn. apply l8_2. exact Hrt.
 Qed.
 
 Lemma rule_valid_sound : forall decls premises facts reason conclusion,
@@ -7778,8 +7988,8 @@ Proof.
   - eapply diagonal_rule_sound; eauto.
   - eapply chord_bisect_conv_sound; eauto.
   - eapply def_radius_conv_sound; eauto.
-  - eapply con_inscribed_angs_sound; eauto.
-  - eapply supplementary_inscribed_angs_sound; eauto.
+  - eapply inscribed_pair_sound; eauto.
+  - eapply inscribed_pair_sound; eauto.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

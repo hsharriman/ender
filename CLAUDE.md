@@ -87,3 +87,10 @@ A quadrilateral is declared once, as `quad: q_ABCD`, and may then be named by
 any rotation or reversal of those four letters (`q_BCDA`, `q_DCBA`, ...). The
 other orders name a different, self-crossing figure, so they do not refer to
 the declared quadrilateral.
+
+The inscribed-angle rules (`con_inscribed_angs`, `supp_inscribed_angs`,
+`inscribed_semi`) need a `[d_n] circ_order(c_OA, A, B, C, ...)` premise that
+lists every point on the circle in the order met going round it, from any
+start and in either direction. `inscribed_angle(c_OA, a_XPY)` puts only the
+vertex P on the circle; X and Y may be any points along rays that reach a
+listed point.

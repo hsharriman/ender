@@ -130,28 +130,35 @@ audited meanings in `Audit.v` are authoritative.
   the hypotenuse and the leg cited in either order.
 - **Circles.** `on_circle(c, p)` and `radius(c, p)` mean the same thing: `p`
   is on the circle. Every circle statement puts the points it names on the
-  circle, except the centre and a tangent's far end, so a rule that needs a
-  point on the circle, like `def_radius_conv`, finds it in any of them.
-  `center_on_line(c, s)` says the centre lies on the line through `s`.
-  `minor_inscribed_ang(c, a_APB)` puts the vertex P on the centre's side of
-  chord AB, so the angle intercepts the minor arc and is acute;
-  `major_inscribed_ang` puts it across the chord, intercepting the major arc.
-  Two angles on one chord are congruent when they are the same kind and
-  supplementary when they differ. `inscribed_angle` names no arc, which is
-  all an angle in a semicircle needs, since it is neither.
+  circle, except the centre, a tangent's far end, and an inscribed angle's
+  outer points, so a rule that needs a point on the circle, like
+  `def_radius_conv`, finds it in any of them. `center_on_line(c, s)` says
+  the centre lies on the line through `s`.
+- **Inscribed angles.** `inscribed_angle(c, a_XPY)` puts the vertex P on the
+  circle and says each ray, P→X and P→Y, meets the circle again; X and Y
+  themselves may lie anywhere along those rays. `circ_order(c, A, B, C, ...)`
+  lists the circle's named points, at least three, in the order met going
+  round it, starting anywhere and running either way: for every chord
+  between two listed points, the points listed between them are on one side
+  and the rest on the other. The inscribed-angle rules read the circle
+  through it. Each ray is traced to the listed point it reaches, its own
+  point if listed or one an `on_line`, `midpt`, or `intersect_seg` premise
+  puts on the same ray. The vertex must be listed. The list must name every
+  point any premise places on that circle, including the circle's radius
+  point. Two angles on one chord are congruent (`con_inscribed_angs`) when
+  their vertices are on the same arc and supplementary (`supp_inscribed_angs`)
+  when they are on opposite arcs; `inscribed_semi` needs the chord to be a
+  diameter.
 
 Coordinates on the `pt:` line are display-only and contribute nothing to a
 theorem's meaning.
 
 ## Reasons that always reject
 
-The kernel has a rule for 83 of the 94 reasons in the
-[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 11 reject
+The kernel has a rule for 83 of the 93 reasons in the
+[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 10 reject
 every step that cites them.
 
-`inscribed_angs` cites two general `inscribed_angle` statements, which say
-nothing about which arc each vertex is on, so its conclusion does not follow;
-`con_inscribed_angs` and `supplementary_inscribed_angs` cover what it meant.
 `sas_sim` and `sss_sim` cite `proportion`, which the kernel has no rules for
 yet. The remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,
 `rect_para_right_opp`, `sim_tri_transitive`, `square`, `tangent_diam_perp`)
