@@ -104,22 +104,9 @@ export const interactiveLayoutFromProofObj = (
   const stepMetas: StepMeta[] = [];
   proofSteps.forEach((step, idx) => {
     const currStep = idx + 1;
-    // TODO WHY IS THIS DONE THIS WAY
-    const dependencyErrorIndices = new Set(
-      step.errors
-        .filter(
-          (e) =>
-            e.code === "reason_dep_missing" ||
-            e.code === "reason_dep_type_mismatch",
-        )
-        .map((e) => e.details?.index)
-        .filter((index): index is number => typeof index === "number"),
-    );
     const dependsOn =
       step.reason?.arguments
-        ?.map((arg, argIdx) => {
-          if (dependencyErrorIndices.has(argIdx)) return "?";
-
+        ?.map((arg) => {
           if (!/^\d+$/.test(arg)) return undefined;
           const stepLabelNumber = parseInt(arg, 10);
           const uiIndex = stepLabelToUiIndex.get(stepLabelNumber);
@@ -141,8 +128,7 @@ export const interactiveLayoutFromProofObj = (
     const isGivenReason =
       (step.reason?.function ?? "").toLowerCase() === "given";
     const isRightAngleEqualityStep = isConRightStmt(step.statement);
-    // Diagram premises for reasons with `diagramDependencies` are attached only
-    // after `checkReasonApplication` in `runProofChecker`.
+    // Future rich Rocq reports can attach theorem-relevant diagram dependencies.
     const intSegDep = step.diagramDeps?.find(
       (d) => d.statement.function === "intersect_seg",
     );

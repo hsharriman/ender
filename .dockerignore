@@ -2,3 +2,14 @@ node_modules
 dist
 .git
 .env
+# Local scratch work, Nix results, and Rocq build products.  The images need
+# only the Wasm checker, from rocq/_build/wasm.
+scratch
+result*
+.direnv
+rocq/_build/bin
+rocq/_build/native
+rocq/_build/wasm-obj
+rocq/Ender/*.vo*
+rocq/Ender/*.glob
+rocq/Ender/*.aux

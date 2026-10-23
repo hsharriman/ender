@@ -1,0 +1,30 @@
+{
+  "isCorrect": false,
+  "issues": [
+    {
+      "type": 12,
+      "code": "reason_dep_type_mismatch",
+      "details": {
+        "reason": "sss",
+        "index": 1,
+        "ref": "2",
+        "expectedType": "con_seg",
+        "allowedTypes": [
+          "ref_seg"
+        ],
+        "receivedType": "con_ang",
+        "steps": [
+          "4"
+        ]
+      }
+    },
+    {
+      "type": 4,
+      "code": "goal_not_reached",
+      "details": {
+        "goal": "con_tri(t_ABC,t_ADC)",
+        "statedBy": "4"
+      }
+    }
+  ]
+}

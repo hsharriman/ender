@@ -210,6 +210,7 @@ export const REASONS_DEFS = {
     name: "linear_pair_conv",
     title: "Def. Linear Pair (Converse)",
     body: "If two adjacent angles are supplementary, then they form a linear pair.",
+    diagramDependencies: ["on_line"],
     dependencies: ["supplementary"],
     conclusion: "linear_pair",
   },
@@ -301,14 +302,14 @@ export const REASONS_DEFS = {
     name: "sss_sim",
     title: "SSS Triangle Similarity",
     body: "If three sides of one triangle are proportional to three sides of another triangle, then the triangles are similar.",
-    dependencies: ["sim_seg", "sim_seg", "sim_seg"],
+    dependencies: ["proportion", "proportion"],
     conclusion: "sim_tri",
   },
   sas_sim: {
     name: "sas_sim",
     title: "SAS Triangle Similarity",
     body: "If two sides of one triangle are proportional to two sides of another triangle and their included angles are congruent, then the triangles are similar.",
-    dependencies: ["sim_seg", "con_ang_ref_allow", "sim_seg"],
+    dependencies: ["proportion", "con_ang_ref_allow"],
     conclusion: "sim_tri",
   },
   def_equiangular: {
@@ -547,19 +548,28 @@ export const REASONS_DEFS = {
     dependencies: ["perp", "radius", "chord"],
     conclusion: "seg_bisect", // todo arc bisect?
   },
-  radius_chord_bisect_conv: {
-    name: "radius_chord_bisect_conv",
-    title: "Radius Chord Bisect (Converse)",
-    body: "The perpendicular bisector of a chord is a radius of the circle.",
+  chord_bisect_conv: {
+    name: "chord_bisect_conv",
+    title: "Chord Bisector (Converse)",
+    body: "The perpendicular bisector of a chord passes through the center of the circle.",
     dependencies: ["perp_bisector", "chord"],
-    conclusion: "radius",
+    conclusion: "center_on_line",
   },
   con_inscribed_angs: {
     name: "con_inscribed_angs",
     title: "Congruent Inscribed Angles",
-    body: "If inscribed angles of a circle are subtended by the same chord or arc, then the angles are congruent.",
+    body: "If two inscribed angles of a circle intercept the same chord from the same arc, then the angles are congruent.",
+    diagramDependencies: ["circ_order"],
     dependencies: ["inscribed_angle", "inscribed_angle"],
     conclusion: "con_ang",
+  },
+  supp_inscribed_angs: {
+    name: "supp_inscribed_angs",
+    title: "Supplementary Inscribed Angles",
+    body: "If two inscribed angles of a circle intercept the same chord from opposite arcs, then the angles are supplementary.",
+    diagramDependencies: ["circ_order"],
+    dependencies: ["inscribed_angle", "inscribed_angle"],
+    conclusion: "supplementary",
   },
   // still implementing cutoff
   // inscribed_quad: {
@@ -645,13 +655,14 @@ export const REASONS_DEFS = {
     title: "Corresponding Sides of Similar Triangles are Proportional",
     body: "If two triangles are similar, then their corresponding sides are proportional.",
     dependencies: ["sim_tri"],
-    conclusion: "sim_seg",
+    conclusion: "proportion",
   },
   inscribed_semi: {
     name: "inscribed_semi",
     title: "Inscribed Angle (Semicircle)",
     body: "If an angle is inscribed in a semicircle, then it is a right angle.",
-    dependencies: ["diameter"],
+    diagramDependencies: ["circ_order"],
+    dependencies: ["inscribed_angle", "diameter"],
     conclusion: "right",
   },
   para_con_arcs: {
@@ -675,6 +686,14 @@ export const REASONS_DEFS = {
     dependencies: ["radius"],
     conclusion: "con_seg",
   },
+  def_radius_conv: {
+    name: "def_radius_conv",
+    title: "Def. Radius (Converse)",
+    body: "If a line through the center of a circle meets the circle at a point, then the segment from the center to that point is a radius.",
+    dependencies: ["center_on_line"],
+    diagramDependencies: ["on_circle"],
+    conclusion: "radius",
+  },
   tangent_diam_perp: {
     name: "tangent_diam_perp",
     title: "Tangent and Diameter Perpendicularity",
@@ -688,13 +707,5 @@ export const REASONS_DEFS = {
     body: "If two triangles are similar to the same triangle, then they are similar to each other.",
     dependencies: ["sim_tri", "sim_tri"],
     conclusion: "sim_tri",
-  },
-  inscribed_angs: {
-    // ..... TODO should these even be implemented?
-    name: "inscribed_angs",
-    title: "Inscribed Angles Theorem",
-    body: "The measure of an inscribed angle is half the measure of its intercepted arc. If two inscribed angles intercept congruent arcs, then the angles are congruent.",
-    dependencies: ["inscribed_angle", "inscribed_angle"],
-    conclusion: "con_ang",
   },
 } as const;

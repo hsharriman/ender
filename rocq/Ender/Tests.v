@@ -1,0 +1,2669 @@
+From Stdlib Require Import String List.
+Require Import Ender.Parser Ender.PublicParser Ender.CompleteChecker Ender.CertifiedAPI.
+Import ListNotations.
+Open Scope string_scope.
+
+Definition common_header (premises goal steps : string) : string :=
+  "title: Rocq vertical slice
+premises:
+pt: A (0,0), B (1,0), C (0,1), D (3,0), E (4,0), F (3,1)
+tri: t_ABC t_DEF
+" ++ premises ++ "-> " ++ goal ++ "
+
+steps:
+" ++ steps.
+
+Definition sas_source := common_header
+  "[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_ABC,t_DEF)".
+
+Definition sss_source := common_header
+  "[g_1] con_seg(AB,DE)
+[g_2] con_seg(BC,EF)
+[g_3] con_seg(CA,FD)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_seg(BC,EF)
+[03] given(g_3) -> con_seg(CA,FD)
+[04] sss(1,2,3) -> con_tri(t_ABC,t_DEF)".
+
+Definition asa_source := common_header
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_seg(AB,DE)
+[g_3] con_ang(a_ABC,a_DEF)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_seg(AB,DE)
+[03] given(g_3) -> con_ang(a_ABC,a_DEF)
+[04] asa(1,2,3) -> con_tri(t_ABC,t_DEF)".
+
+Definition aas_source := common_header
+  "[g_1] con_ang(a_ACB,a_DFE)
+[g_2] con_ang(a_ABC,a_DEF)
+[g_3] con_seg(AB,DE)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_ang(a_ACB,a_DFE)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] given(g_3) -> con_seg(AB,DE)
+[04] aas(1,2,3) -> con_tri(t_ABC,t_DEF)".
+
+Definition cpctc_source := common_header
+  "[g_1] con_seg(AB,DE)
+[g_2] con_seg(BC,EF)
+[g_3] con_seg(CA,FD)
+"
+  "con_ang(a_BAC,a_EDF)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_seg(BC,EF)
+[03] given(g_3) -> con_seg(CA,FD)
+[04] sss(1,2,3) -> con_tri(t_ABC,t_DEF)
+[05] cpctc(4) -> con_ang(a_BAC,a_EDF)".
+
+Definition repository_tutorial :=
+  "// pass
+title: Tutorial
+premises:
+pt: A (5.5, 9), B (2, 3), C (5.5, 1), D (9, 3)
+tri: t_ABC t_ADC
+[g_1] con_seg(AB,AD)
+[g_2] con_ang(a_BAC,a_DAC)
+-> con_tri(t_ABC,t_ADC)
+
+steps:
+[01] given(g_1) -> con_seg(AB,AD)
+[02] given(g_2) -> con_ang(a_BAC,a_DAC)
+[03] reflex() -> ref_seg(AC, AC)
+[04] sas(1, 2, 3) -> con_tri(t_ABC,t_ADC)".
+
+Example sas_accepts : check_source sas_source = true. Proof. vm_compute. reflexivity. Qed.
+Example sss_accepts : check_source sss_source = true. Proof. vm_compute. reflexivity. Qed.
+Example asa_accepts : check_source asa_source = true. Proof. vm_compute. reflexivity. Qed.
+Example aas_accepts : check_source aas_source = true. Proof. vm_compute. reflexivity. Qed.
+Example cpctc_accepts : check_source cpctc_source = true. Proof. vm_compute. reflexivity. Qed.
+Example repository_tutorial_accepts : check_source repository_tutorial = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example complete_sas_accepts : complete_checker sas_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_sss_accepts : complete_checker sss_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_asa_accepts : complete_checker asa_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_aas_accepts : complete_checker aas_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_cpctc_accepts : complete_checker cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_repository_tutorial_accepts :
+  complete_checker repository_tutorial = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example certified_rich_report_accepts :
+  (CertifiedAPI.check sas_source).(Audit.report_verdict) =
+    Audit.Accepted.
+Proof. vm_compute. reflexivity. Qed.
+
+Example certified_boolean_is_report_projection : forall source,
+  CertifiedAPI.checker source =
+    Audit.accepted (CertifiedAPI.check source).
+Proof. reflexivity. Qed.
+
+Example presentation_parser_retains_untrusted_display_data :
+  match CertifiedAPI.parsePresentation
+    "title: Display title
+premises:
+pt: A (-1.5, 2.0, tl), B (3, 4, br)
+tri: t_ABC
+[g_1] con_seg(AB,AC)
+-> con_seg(AB,AC)
+
+steps:
+[01] given(g_1) -> con_seg(AB,AC)" with
+  | Some file =>
+      file.(Audit.presentation_title) = Some "Display title" /\
+      length file.(Audit.presentation_points) = 2 /\
+      length file.(Audit.presentation_declarations) = 1 /\
+      length file.(Audit.presentation_givens) = 1 /\
+      length file.(Audit.presentation_steps) = 1
+  | None => False
+  end.
+Proof. vm_compute. repeat split; reflexivity. Qed.
+
+(** The complete public parser already covers statement forms outside the
+    currently executable reason kernel, including nested arc syntax. *)
+Example public_arc_statement_parses :
+  match parse_public_statement
+    "con_arc(minor_arc(c_OA,A,B),major_arc(c_OD,D,E))" with
+  | Some (Audit.ConArc _ _) => true
+  | _ => false
+  end = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example lowercase_point_label_is_rejected :
+  parse_public_statement "con_seg(aB,CD)" = None.
+Proof. vm_compute. reflexivity. Qed.
+
+Example public_statement_parser_is_complete : forall text statement,
+  Audit.StatementText text statement ->
+  parse_public_statement text = Some statement.
+Proof. exact parse_public_statement_complete. Qed.
+
+Definition public_header := "tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+-> con_tri(t_ABC,t_DEF)
+".
+
+Example complete_public_header_parses :
+  match parsePublicProblem public_header with Some _ => true | None => false end = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition bad_sss_source := common_header
+  "[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sss(1,2,3) -> con_tri(t_ABC,t_DEF)".
+
+Example wrong_reason_rejects : check_source bad_sss_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example complete_wrong_reason_rejects : complete_checker bad_sss_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_wrong_reason_is_proof_rejection :
+  classify_source bad_sss_source = ProofRejected.
+Proof. vm_compute. reflexivity. Qed.
+
+Example certified_sss_type_mismatch_is_structured :
+  List.hd_error (CertifiedAPI.check bad_sss_source).(Audit.report_issues) =
+    Some (Audit.issue 12 "reason_dep_type_mismatch"
+      (Audit.JsonObject
+        [("reason", Audit.JsonString "sss");
+         ("index", Audit.JsonNumber 1);
+         ("ref", Audit.JsonString "2");
+         ("expectedType", Audit.JsonString "con_seg");
+         ("allowedTypes", Audit.JsonArray
+            [Audit.JsonString "ref_seg"]);
+         ("receivedType", Audit.JsonString "con_ang");
+         ("steps", Audit.JsonArray
+            [Audit.JsonString "4"])])).
+Proof. vm_compute. reflexivity. Qed.
+
+(** Transitivity of congruence, for each supported object kind. *)
+Definition transitive_header (declarations premises goal steps : string) : string :=
+  "title: Transitivity
+premises:
+pt: A (0,0), B (1,0), C (2,0), D (3,0), E (4,0), F (5,0), G (6,0), H (7,0), I (8,0), J (9,0), K (10,0), L (11,0)
+" ++ declarations ++ premises ++ "-> " ++ goal ++ "
+
+steps:
+" ++ steps.
+
+Definition con_seg_transitive_source := transitive_header "seg: AB CD EF
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(CD,EF)
+"
+  "con_seg(AB,EF)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(CD,EF)
+[03] con_seg_transitive(1,2) -> con_seg(AB,EF)".
+
+(** Segment names are unoriented, and either dependency may list the shared
+    segment on either side. *)
+Definition con_seg_transitive_reordered_source := transitive_header "seg: AB CD EF
+"
+  "[g_1] con_seg(CD,AB)
+[g_2] con_seg(EF,DC)
+"
+  "con_seg(BA,EF)"
+  "[01] given(g_1) -> con_seg(CD,AB)
+[02] given(g_2) -> con_seg(EF,DC)
+[03] con_seg_transitive(1,2) -> con_seg(BA,EF)".
+
+Definition con_seg_transitive_unshared_source := transitive_header "seg: AB CD EF GH
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(EF,GH)
+"
+  "con_seg(AB,EF)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(EF,GH)
+[03] con_seg_transitive(1,2) -> con_seg(AB,EF)".
+
+Definition con_ang_transitive_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_EDF,a_HGI)
+"
+  "con_ang(a_BAC,a_HGI)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_EDF,a_HGI)
+[03] con_ang_transitive(1,2) -> con_ang(a_BAC,a_HGI)".
+
+(** [a_XYZ] and [a_ZYX] name the same angle, so a reversed middle angle is
+    still the shared one. *)
+Definition con_ang_transitive_reversed_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_FDE,a_HGI)
+"
+  "con_ang(a_BAC,a_HGI)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_FDE,a_HGI)
+[03] con_ang_transitive(1,2) -> con_ang(a_BAC,a_HGI)".
+
+Definition con_ang_transitive_unshared_source :=
+  transitive_header "tri: t_ABC t_DEF t_GHI t_JKL
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_HGI,a_KJL)
+"
+  "con_ang(a_BAC,a_HGI)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_HGI,a_KJL)
+[03] con_ang_transitive(1,2) -> con_ang(a_BAC,a_HGI)".
+
+Definition con_tri_transitive_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_tri(t_ABC,t_DEF)
+[g_2] con_tri(t_DEF,t_GHI)
+"
+  "con_tri(t_ABC,t_GHI)"
+  "[01] given(g_1) -> con_tri(t_ABC,t_DEF)
+[02] given(g_2) -> con_tri(t_DEF,t_GHI)
+[03] con_tri_transitive(1,2) -> con_tri(t_ABC,t_GHI)".
+
+(** The shared triangle may appear on either side of either dependency. *)
+Definition con_tri_transitive_crossed_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_tri(t_ABC,t_DEF)
+[g_2] con_tri(t_GHI,t_ABC)
+"
+  "con_tri(t_DEF,t_GHI)"
+  "[01] given(g_1) -> con_tri(t_ABC,t_DEF)
+[02] given(g_2) -> con_tri(t_GHI,t_ABC)
+[03] con_tri_transitive(1,2) -> con_tri(t_DEF,t_GHI)".
+
+Definition con_tri_transitive_unshared_source :=
+  transitive_header "tri: t_ABC t_DEF t_GHI t_JKL
+"
+  "[g_1] con_tri(t_ABC,t_DEF)
+[g_2] con_tri(t_GHI,t_JKL)
+"
+  "con_tri(t_ABC,t_GHI)"
+  "[01] given(g_1) -> con_tri(t_ABC,t_DEF)
+[02] given(g_2) -> con_tri(t_GHI,t_JKL)
+[03] con_tri_transitive(1,2) -> con_tri(t_ABC,t_GHI)".
+
+Example con_seg_transitive_accepts :
+  complete_checker con_seg_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_seg_transitive_reordered_accepts :
+  complete_checker con_seg_transitive_reordered_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_seg_transitive_unshared_rejects :
+  complete_checker con_seg_transitive_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example con_ang_transitive_accepts :
+  complete_checker con_ang_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_ang_transitive_reversed_accepts :
+  complete_checker con_ang_transitive_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_ang_transitive_unshared_rejects :
+  complete_checker con_ang_transitive_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example con_tri_transitive_accepts :
+  complete_checker con_tri_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_tri_transitive_crossed_accepts :
+  complete_checker con_tri_transitive_crossed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_tri_transitive_unshared_rejects :
+  complete_checker con_tri_transitive_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A transitivity dependency of the wrong statement kind fails closed and is
+    reported through the audited issue channel. *)
+Definition con_seg_transitive_wrong_kind_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_ang(a_BAC,a_EDF)
+"
+  "con_seg(AB,EF)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] con_seg_transitive(1,2) -> con_seg(AB,EF)".
+
+Example con_seg_transitive_wrong_kind_rejects :
+  complete_checker con_seg_transitive_wrong_kind_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example con_seg_transitive_wrong_kind_is_structured :
+  List.hd_error (CertifiedAPI.check con_seg_transitive_wrong_kind_source)
+    .(Audit.report_issues) =
+    Some (Audit.issue 12 "reason_dep_type_mismatch"
+      (Audit.JsonObject
+        [("reason", Audit.JsonString "con_seg_transitive");
+         ("index", Audit.JsonNumber 1);
+         ("ref", Audit.JsonString "2");
+         ("expectedType", Audit.JsonString "con_seg");
+         ("allowedTypes", Audit.JsonArray
+            [Audit.JsonString "ref_seg"]);
+         ("receivedType", Audit.JsonString "con_ang");
+         ("steps", Audit.JsonArray
+            [Audit.JsonString "3"])])).
+Proof. vm_compute. reflexivity. Qed.
+
+(** Right angles and perpendicularity. *)
+Definition def_con_right_source := transitive_header ""
+  "[g_1] right(a_CAB)
+[g_2] right(a_FDE)
+"
+  "con_ang(a_CAB,a_FDE)"
+  "[01] given(g_1) -> right(a_CAB)
+[02] given(g_2) -> right(a_FDE)
+[03] def_con_right(1,2) -> con_ang(a_CAB,a_FDE)".
+
+Definition def_con_right_con_right_source := transitive_header ""
+  "[g_1] right(a_CAB)
+[g_2] right(a_FDE)
+"
+  "con_right(a_CAB,a_FDE)"
+  "[01] given(g_1) -> right(a_CAB)
+[02] given(g_2) -> right(a_FDE)
+[03] def_con_right(1,2) -> con_right(a_CAB,a_FDE)".
+
+(** The concluded angles must be the ones stated to be right. *)
+Definition def_con_right_other_angle_source := transitive_header ""
+  "[g_1] right(a_CAB)
+[g_2] right(a_FDE)
+"
+  "con_ang(a_ABC,a_FDE)"
+  "[01] given(g_1) -> right(a_CAB)
+[02] given(g_2) -> right(a_FDE)
+[03] def_con_right(1,2) -> con_ang(a_ABC,a_FDE)".
+
+Definition perp_con_ang_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_right(a_ADB,a_BDC)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_right(a_ADB,a_BDC)".
+
+(** Both concluded angles must have the foot of the perpendicular as vertex. *)
+Definition perp_con_ang_wrong_vertex_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_right(a_ADB,a_ABD)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_right(a_ADB,a_ABD)".
+
+(** Each ray must reach one of the two perpendicular segments. *)
+Definition perp_con_ang_foreign_ray_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_right(a_ADB,a_EDB)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_right(a_ADB,a_EDB)".
+
+(** Perpendicularity alone does not supply nondegenerate rays, but declared
+    triangles spanning both angles do. *)
+Definition perp_con_ang_con_ang_source := transitive_header "tri: t_ABD t_CBD
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_ang(a_ADB,a_BDC)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_ang(a_ADB,a_BDC)".
+
+(** Without a declared triangle to span them, the rays may be degenerate and
+    the angle-congruence conclusion stays fail-closed. *)
+Definition perp_con_ang_con_ang_undeclared_source := transitive_header "seg: AC
+"
+  "[g_1] perp(BD,AC,D)
+"
+  "con_ang(a_ADB,a_BDC)"
+  "[01] given(g_1) -> perp(BD,AC,D)
+[02] perp_con_ang(1) -> con_ang(a_ADB,a_BDC)".
+
+Example def_con_right_accepts : complete_checker def_con_right_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_con_right_con_right_accepts :
+  complete_checker def_con_right_con_right_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_con_right_other_angle_rejects :
+  complete_checker def_con_right_other_angle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_accepts : complete_checker perp_con_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_wrong_vertex_rejects :
+  complete_checker perp_con_ang_wrong_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_foreign_ray_rejects :
+  complete_checker perp_con_ang_foreign_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_con_ang_accepts :
+  complete_checker perp_con_ang_con_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example perp_con_ang_con_ang_undeclared_rejects :
+  complete_checker perp_con_ang_con_ang_undeclared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A triangle criterion may consume a right-angle pair where it expects an
+    angle congruence, may name a declared triangle by any permutation of its
+    vertices, may reverse an angle name, and may use the reversed vertex
+    correspondence. *)
+Definition right_angle_criterion_source := transitive_header "tri: t_ABC t_ABD
+"
+  "[g_1] perp(CD,AB,B)
+[g_2] con_ang(a_CAB,a_DAB)
+"
+  "con_tri(t_CBA,t_DBA)"
+  "[01] given(g_1) -> perp(CD,AB,B)
+[02] given(g_2) -> con_ang(a_CAB,a_DAB)
+[03] perp_con_ang(1) -> con_right(a_ABC,a_ABD)
+[04] reflex() -> ref_seg(AB,AB)
+[05] asa(2,4,3) -> con_tri(t_CBA,t_DBA)".
+
+(** An undeclared triangle is never noncollinear by assumption. *)
+Definition undeclared_triangle_source := transitive_header "tri: t_ABC
+"
+  "[g_1] perp(CD,AB,B)
+[g_2] con_ang(a_CAB,a_DAB)
+"
+  "con_tri(t_CBA,t_DBA)"
+  "[01] given(g_1) -> perp(CD,AB,B)
+[02] given(g_2) -> con_ang(a_CAB,a_DAB)
+[03] perp_con_ang(1) -> con_right(a_ABC,a_ABD)
+[04] reflex() -> ref_seg(AB,AB)
+[05] asa(2,4,3) -> con_tri(t_CBA,t_DBA)".
+
+(** The right angles must correspond the way the criterion needs them. *)
+Definition mismatched_right_angle_source := transitive_header "tri: t_ABC t_ABD
+"
+  "[g_1] perp(CD,AB,B)
+[g_2] con_ang(a_CAB,a_DAB)
+"
+  "con_tri(t_CBA,t_DBA)"
+  "[01] given(g_1) -> perp(CD,AB,B)
+[02] given(g_2) -> con_ang(a_CAB,a_DAB)
+[03] perp_con_ang(1) -> con_right(a_ABD,a_ABC)
+[04] reflex() -> ref_seg(AB,AB)
+[05] asa(2,4,3) -> con_tri(t_CBA,t_DBA)".
+
+Example right_angle_criterion_accepts :
+  complete_checker right_angle_criterion_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example undeclared_triangle_rejects :
+  complete_checker undeclared_triangle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example mismatched_right_angle_rejects :
+  complete_checker mismatched_right_angle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A midpoint halves its segment; the halves must be the two it defines. *)
+Definition def_midpt_source := transitive_header "seg: AC
+"
+  "[g_1] midpt(AC,B)
+"
+  "con_seg(AB,BC)"
+  "[01] given(g_1) -> midpt(AC,B)
+[02] def_midpt(1) -> con_seg(AB,BC)".
+
+Definition def_midpt_reversed_source := transitive_header "seg: AC
+"
+  "[g_1] midpt(CA,B)
+"
+  "con_seg(CB,BA)"
+  "[01] given(g_1) -> midpt(CA,B)
+[02] def_midpt(1) -> con_seg(CB,BA)".
+
+Definition def_midpt_other_segment_source := transitive_header "seg: AC
+"
+  "[g_1] midpt(AC,B)
+"
+  "con_seg(AB,BD)"
+  "[01] given(g_1) -> midpt(AC,B)
+[02] def_midpt(1) -> con_seg(AB,BD)".
+
+(** A midpoint goal is only reached by a rule that actually produces one. *)
+Definition midpt_goal_source := transitive_header "seg: AC
+"
+  "[g_1] midpt(AC,B)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> midpt(AC,B)".
+
+Example def_midpt_accepts : complete_checker def_midpt_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_midpt_reversed_accepts :
+  complete_checker def_midpt_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_midpt_other_segment_rejects :
+  complete_checker def_midpt_other_segment_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_goal_accepts : complete_checker midpt_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Vertical angles, taken from the diagram premise rather than a step. *)
+Definition vert_ang_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang() -> con_ang(a_CEA,a_DEB)".
+
+(** The other opposite pair is equally valid. *)
+Definition vert_ang_other_pair_source := transitive_header "tri: t_ADE t_BCE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_AED,a_BEC)"
+  "[01] vert_ang() -> con_ang(a_AED,a_BEC)".
+
+(** Adjacent angles at the crossing are not vertical angles. *)
+Definition vert_ang_adjacent_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_CEA,a_CEB)"
+  "[01] vert_ang() -> con_ang(a_CEA,a_CEB)".
+
+(** The crossing is strict, so it makes all four rays nondegenerate itself:
+    no triangle or segment needs declaring. *)
+Definition vert_ang_undeclared_source := transitive_header ""
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang() -> con_ang(a_CEA,a_DEB)".
+
+(** No crossing in the diagram means no vertical angles. *)
+Definition vert_ang_no_crossing_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[g_1] con_seg(AB,CD)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang() -> con_ang(a_CEA,a_DEB)".
+
+Example vert_ang_accepts : complete_checker vert_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_other_pair_accepts :
+  complete_checker vert_ang_other_pair_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_adjacent_rejects :
+  complete_checker vert_ang_adjacent_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_undeclared_accepts :
+  complete_checker vert_ang_undeclared_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_no_crossing_rejects :
+  complete_checker vert_ang_no_crossing_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** An angle bisector halves its angle. *)
+Definition def_ang_bisect_source := transitive_header "ang: a_ABC
+"
+  "[g_1] ang_bisect(a_ABC,BD)
+"
+  "con_ang(a_ABD,a_DBC)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,BD)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
+
+(** The ray may be written with the vertex second. *)
+Definition def_ang_bisect_reversed_source := transitive_header "ang: a_ABC
+"
+  "[g_1] ang_bisect(a_ABC,DB)
+"
+  "con_ang(a_ABD,a_DBC)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,DB)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
+
+(** The halves must be the ones the bisector actually defines. *)
+Definition def_ang_bisect_wrong_halves_source := transitive_header "ang: a_ABC
+"
+  "[g_1] ang_bisect(a_ABC,BD)
+"
+  "con_ang(a_ABD,a_DBE)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,BD)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBE)".
+
+(** A ray that misses the vertex bisects nothing. *)
+Definition def_ang_bisect_detached_source := transitive_header "ang: a_ABC
+"
+  "[g_1] ang_bisect(a_ABC,DE)
+"
+  "con_ang(a_ABD,a_DBC)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,DE)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
+
+Example def_ang_bisect_accepts : complete_checker def_ang_bisect_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_ang_bisect_reversed_accepts :
+  complete_checker def_ang_bisect_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_ang_bisect_wrong_halves_rejects :
+  complete_checker def_ang_bisect_wrong_halves_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_ang_bisect_detached_rejects :
+  complete_checker def_ang_bisect_detached_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The converse accepts only the ray syntactically shared by the two
+    congruent halves of the concluded outer angle. *)
+Definition ang_bisect_conv_source := transitive_header "ang: a_ABC a_ABD a_DBC
+"
+  "[g_1] con_ang(a_ABD,a_DBC)
+"
+  "ang_bisect(a_ABC,BD)"
+  "[01] given(g_1) -> con_ang(a_ABD,a_DBC)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC,BD)".
+
+Definition ang_bisect_conv_reversed_source := transitive_header
+  "ang: a_ABC a_ABD a_DBC
+"
+  "[g_1] con_ang(a_ABD,a_DBC)
+"
+  "ang_bisect(a_ABC,DB)"
+  "[01] given(g_1) -> con_ang(a_ABD,a_DBC)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC,DB)".
+
+(** A different segment cannot be inferred from the congruence. *)
+Definition ang_bisect_conv_wrong_ray_source := transitive_header
+  "ang: a_ABC a_ABD a_DBC
+"
+  "[g_1] con_ang(a_ABD,a_DBC)
+"
+  "ang_bisect(a_ABC,BE)"
+  "[01] given(g_1) -> con_ang(a_ABD,a_DBC)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC,BE)".
+
+(** Nor can congruent angles that do not form the named halves establish a
+    bisector. *)
+Definition ang_bisect_conv_unrelated_source := transitive_header
+  "ang: a_ABC a_EFG a_HIJ
+"
+  "[g_1] con_ang(a_EFG,a_HIJ)
+"
+  "ang_bisect(a_ABC,BD)"
+  "[01] given(g_1) -> con_ang(a_EFG,a_HIJ)
+[02] ang_bisect_conv(1) -> ang_bisect(a_ABC,BD)".
+
+Example ang_bisect_conv_accepts :
+  complete_checker ang_bisect_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example ang_bisect_conv_reversed_accepts :
+  complete_checker ang_bisect_conv_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example ang_bisect_conv_wrong_ray_rejects :
+  complete_checker ang_bisect_conv_wrong_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example ang_bisect_conv_unrelated_rejects :
+  complete_checker ang_bisect_conv_unrelated_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Right-hypotenuse-leg, in both of the dependency orders the corpus uses. *)
+Definition rhl_hypotenuse_first_source := transitive_header "tri: t_KLM t_MNK
+"
+  "[g_1] con_right(a_KLM,a_MNK)
+[g_2] con_seg(LM,NK)
+"
+  "con_tri(t_KLM,t_MNK)"
+  "[01] given(g_1) -> con_right(a_KLM,a_MNK)
+[02] given(g_2) -> con_seg(LM,NK)
+[03] reflex() -> ref_seg(MK,MK)
+[04] rhl(1,3,2) -> con_tri(t_KLM,t_MNK)".
+
+Definition rhl_leg_first_source := transitive_header "tri: t_KLM t_MNK
+"
+  "[g_1] con_right(a_KLM,a_MNK)
+[g_2] con_seg(LM,NK)
+"
+  "con_tri(t_KLM,t_MNK)"
+  "[01] given(g_1) -> con_right(a_KLM,a_MNK)
+[02] given(g_2) -> con_seg(LM,NK)
+[03] reflex() -> ref_seg(MK,MK)
+[04] rhl(1,2,3) -> con_tri(t_KLM,t_MNK)".
+
+(** Two legs are not a hypotenuse and a leg. *)
+Definition rhl_two_legs_source := transitive_header "tri: t_KLM t_MNK
+"
+  "[g_1] con_right(a_KLM,a_MNK)
+[g_2] con_seg(LM,NK)
+[g_3] con_seg(KL,MN)
+"
+  "con_tri(t_KLM,t_MNK)"
+  "[01] given(g_1) -> con_right(a_KLM,a_MNK)
+[02] given(g_2) -> con_seg(LM,NK)
+[03] given(g_3) -> con_seg(KL,MN)
+[04] rhl(1,2,3) -> con_tri(t_KLM,t_MNK)".
+
+(** The cited angles must be the ones at the corresponding vertices. *)
+Definition rhl_wrong_vertex_source := transitive_header "tri: t_KLM t_MNK
+"
+  "[g_1] con_right(a_LMK,a_MNK)
+[g_2] con_seg(LM,NK)
+"
+  "con_tri(t_KLM,t_MNK)"
+  "[01] given(g_1) -> con_right(a_LMK,a_MNK)
+[02] given(g_2) -> con_seg(LM,NK)
+[03] reflex() -> ref_seg(MK,MK)
+[04] rhl(1,3,2) -> con_tri(t_KLM,t_MNK)".
+
+Example rhl_hypotenuse_first_accepts :
+  complete_checker rhl_hypotenuse_first_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhl_leg_first_accepts : complete_checker rhl_leg_first_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhl_two_legs_rejects : complete_checker rhl_two_legs_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example rhl_wrong_vertex_rejects :
+  complete_checker rhl_wrong_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Converse of the midpoint definition: congruent halves plus an [on_line]
+    diagram premise. *)
+Definition midpt_conv_source := transitive_header "seg: AC
+"
+  "[d_01] on_line(AC,B)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** Congruent halves alone place no point between the endpoints. *)
+Definition midpt_conv_no_line_source := transitive_header "seg: AC
+"
+  "[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** The collinear point must be the one the conclusion names. *)
+Definition midpt_conv_other_point_source := transitive_header "seg: AC
+"
+  "[d_01] on_line(AC,D)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** The cited congruence must be of the two halves. *)
+Definition midpt_conv_wrong_halves_source := transitive_header "seg: AC
+"
+  "[d_01] on_line(AC,B)
+[g_1] con_seg(AB,BD)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BD)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** A crossing point lies between the endpoints of both segments it crosses, so
+    an [intersect_seg] places the point just as an [on_line] does.  Here the
+    named segment is the first of the two crossed. *)
+Definition midpt_conv_intersect_first_source := transitive_header "seg: AC
+"
+  "[d_01] intersect_seg(AC,DE,B)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** ...and here the second, which the search must reach as well. *)
+Definition midpt_conv_intersect_second_source := transitive_header "seg: AC
+"
+  "[d_01] intersect_seg(DE,AC,B)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** The crossing must be at the point the conclusion names. *)
+Definition midpt_conv_intersect_other_point_source := transitive_header "seg: AC
+"
+  "[d_01] intersect_seg(AC,DE,F)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+(** A crossing of two other segments places nothing on this one. *)
+Definition midpt_conv_intersect_foreign_source := transitive_header "seg: AC
+"
+  "[d_01] intersect_seg(DE,FG,B)
+[g_1] con_seg(AB,BC)
+"
+  "midpt(AC,B)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] midpt_conv(1) -> midpt(AC,B)".
+
+Example midpt_conv_accepts : complete_checker midpt_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_no_line_rejects :
+  complete_checker midpt_conv_no_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_other_point_rejects :
+  complete_checker midpt_conv_other_point_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_wrong_halves_rejects :
+  complete_checker midpt_conv_wrong_halves_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_intersect_first_accepts :
+  complete_checker midpt_conv_intersect_first_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_intersect_second_accepts :
+  complete_checker midpt_conv_intersect_second_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_intersect_other_point_rejects :
+  complete_checker midpt_conv_intersect_other_point_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example midpt_conv_intersect_foreign_rejects :
+  complete_checker midpt_conv_intersect_foreign_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Converse of the linear pair definition: two supplementary angles sharing
+    a ray, with an [on_line] premise putting their common vertex between the
+    other two points. *)
+Definition linear_pair_conv_source := transitive_header ""
+  "[d_01] on_line(AB,C)
+[g_1] supplementary(a_ACD,a_DCB)
+"
+  "linear_pair(a_ACD,a_DCB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] linear_pair_conv(1, d_01) -> linear_pair(a_ACD,a_DCB)".
+
+(** The diagram label is optional: the rule searches the premises. *)
+Definition linear_pair_conv_unlabeled_source := transitive_header ""
+  "[d_01] on_line(AB,C)
+[g_1] supplementary(a_ACD,a_DCB)
+"
+  "linear_pair(a_ACD,a_DCB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] linear_pair_conv(1) -> linear_pair(a_ACD,a_DCB)".
+
+(** The shared ray may be named at either end of either angle. *)
+Definition linear_pair_conv_reversed_source := transitive_header ""
+  "[d_01] on_line(BA,C)
+[g_1] supplementary(a_DCA,a_BCD)
+"
+  "linear_pair(a_DCA,a_BCD)"
+  "[01] given(g_1) -> supplementary(a_DCA,a_BCD)
+[02] linear_pair_conv(1, d_01) -> linear_pair(a_DCA,a_BCD)".
+
+(** Supplementary measures alone place the angles nowhere. *)
+Definition linear_pair_conv_no_line_source := transitive_header ""
+  "[g_1] supplementary(a_ACD,a_DCB)
+"
+  "linear_pair(a_ACD,a_DCB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] linear_pair_conv(1) -> linear_pair(a_ACD,a_DCB)".
+
+(** The premise must put the vertex between the two outer points, not on the
+    shared ray. *)
+Definition linear_pair_conv_wrong_line_source := transitive_header ""
+  "[d_01] on_line(AD,C)
+[g_1] supplementary(a_ACD,a_DCB)
+"
+  "linear_pair(a_ACD,a_DCB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] linear_pair_conv(1, d_01) -> linear_pair(a_ACD,a_DCB)".
+
+(** The two angles must share a ray. *)
+Definition linear_pair_conv_no_shared_ray_source := transitive_header ""
+  "[d_01] on_line(AB,C)
+[g_1] supplementary(a_ACD,a_ECB)
+"
+  "linear_pair(a_ACD,a_ECB)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_ECB)
+[02] linear_pair_conv(1, d_01) -> linear_pair(a_ACD,a_ECB)".
+
+Example linear_pair_conv_accepts :
+  complete_checker linear_pair_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_unlabeled_accepts :
+  complete_checker linear_pair_conv_unlabeled_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_reversed_accepts :
+  complete_checker linear_pair_conv_reversed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_no_line_rejects :
+  complete_checker linear_pair_conv_no_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_wrong_line_rejects :
+  complete_checker linear_pair_conv_wrong_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example linear_pair_conv_no_shared_ray_rejects :
+  complete_checker linear_pair_conv_no_shared_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Two angles of a triangle determine the third.  This is the only
+    implemented rule that needs the parallel postulate. *)
+Definition third_angle_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_ABC,a_DEF)
+"
+  "con_ang(a_BCA,a_EFD)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] third_angle(1,2) -> con_ang(a_BCA,a_EFD)".
+
+(** The rule needs both triangles to be declared; otherwise they may be
+    degenerate and have no angle sum. *)
+Definition third_angle_undeclared_source := transitive_header "tri: t_ABC
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_ABC,a_DEF)
+"
+  "con_ang(a_BCA,a_EFD)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] third_angle(1,2) -> con_ang(a_BCA,a_EFD)".
+
+(** The concluded pair must be the remaining vertices. *)
+Definition third_angle_wrong_pair_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+[g_2] con_ang(a_ABC,a_DEF)
+"
+  "con_ang(a_BCA,a_DEF)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] third_angle(1,2) -> con_ang(a_BCA,a_DEF)".
+
+(** Two angles of the same triangle prove nothing about another. *)
+Definition third_angle_same_vertex_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_ang(a_BAC,a_EDF)
+"
+  "con_ang(a_BCA,a_EFD)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_EDF)
+[02] third_angle(1,1) -> con_ang(a_BCA,a_EFD)".
+
+Example third_angle_accepts : complete_checker third_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example third_angle_undeclared_rejects :
+  complete_checker third_angle_undeclared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example third_angle_wrong_pair_rejects :
+  complete_checker third_angle_wrong_pair_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example third_angle_same_vertex_rejects :
+  complete_checker third_angle_same_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Triangle shape statements and the reasons that produce or consume them. *)
+Definition shape_header (premises goal steps : string) : string :=
+  transitive_header "tri: t_ABC
+" premises goal steps.
+
+Definition def_isosceles_source := shape_header
+  "[g_1] con_seg(AB,BC)
+"
+  "isosceles(t_ABC)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] def_isosceles(1) -> isosceles(t_ABC)".
+
+(** A congruence between sides of two different triangles proves nothing about
+    the shape of this one. *)
+Definition def_isosceles_foreign_side_source := shape_header
+  "[g_1] con_seg(AB,DE)
+"
+  "isosceles(t_ABC)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] def_isosceles(1) -> isosceles(t_ABC)".
+
+Definition base_angle_source := shape_header
+  "[g_1] con_seg(AB,AC)
+"
+  "con_ang(a_ABC,a_ACB)"
+  "[01] given(g_1) -> con_seg(AB,AC)
+[02] base_angle(1) -> con_ang(a_ABC,a_ACB)".
+
+(** The two sides must share the apex. *)
+Definition base_angle_no_apex_source := shape_header
+  "[g_1] con_seg(AB,BC)
+"
+  "con_ang(a_ABC,a_ACB)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] base_angle(1) -> con_ang(a_ABC,a_ACB)".
+
+Definition base_angle_conv_source := shape_header
+  "[g_1] con_ang(a_ABC,a_ACB)
+"
+  "con_seg(AB,AC)"
+  "[01] given(g_1) -> con_ang(a_ABC,a_ACB)
+[02] base_angle_conv(1) -> con_seg(AB,AC)".
+
+Definition def_equilateral_source := shape_header
+  "[g_1] con_seg(AB,BC)
+[g_2] con_seg(BC,AC)
+"
+  "equilateral(t_ABC)"
+  "[01] given(g_1) -> con_seg(AB,BC)
+[02] given(g_2) -> con_seg(BC,AC)
+[03] con_seg_transitive(1,2) -> con_seg(AC,AB)
+[04] def_equilateral(1,2,3) -> equilateral(t_ABC)".
+
+Definition def_equiangular_source := shape_header
+  "[g_1] con_ang(a_BAC,a_ABC)
+[g_2] con_ang(a_ABC,a_ACB)
+"
+  "equiangular(t_ABC)"
+  "[01] given(g_1) -> con_ang(a_BAC,a_ABC)
+[02] given(g_2) -> con_ang(a_ABC,a_ACB)
+[03] con_ang_transitive(1,2) -> con_ang(a_ACB,a_BAC)
+[04] def_equiangular(1,2,3) -> equiangular(t_ABC)".
+
+Definition equilat_equiang_source := shape_header
+  "[g_1] equilateral(t_ABC)
+"
+  "equiangular(t_ABC)"
+  "[01] given(g_1) -> equilateral(t_ABC)
+[02] equilat_equiang(1) -> equiangular(t_ABC)".
+
+Definition equiang_equilat_source := shape_header
+  "[g_1] equiangular(t_ABC)
+"
+  "equilateral(t_ABC)"
+  "[01] given(g_1) -> equiangular(t_ABC)
+[02] equiang_equilat(1) -> equilateral(t_ABC)".
+
+(** The conclusion must be about the triangle the dependency is about. *)
+Definition equilat_equiang_other_triangle_source := transitive_header
+  "tri: t_ABC t_DEF
+"
+  "[g_1] equilateral(t_ABC)
+"
+  "equiangular(t_DEF)"
+  "[01] given(g_1) -> equilateral(t_ABC)
+[02] equilat_equiang(1) -> equiangular(t_DEF)".
+
+Definition def_con_tri_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_seg(AB,DE)
+[g_2] con_seg(BC,EF)
+[g_3] con_seg(AC,DF)
+[g_4] con_ang(a_BAC,a_EDF)
+[g_5] con_ang(a_ABC,a_DEF)
+[g_6] con_ang(a_ACB,a_DFE)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_seg(BC,EF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] given(g_4) -> con_ang(a_BAC,a_EDF)
+[05] given(g_5) -> con_ang(a_ABC,a_DEF)
+[06] given(g_6) -> con_ang(a_ACB,a_DFE)
+[07] def_con_tri(1,2,3,4,5,6) -> con_tri(t_ABC,t_DEF)".
+
+(** One mismatched part is enough to refuse the congruence. *)
+Definition def_con_tri_wrong_part_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_seg(AB,DE)
+[g_2] con_seg(BC,EF)
+[g_3] con_seg(AC,DF)
+[g_4] con_ang(a_BAC,a_EDF)
+[g_5] con_ang(a_ABC,a_DEF)
+[g_6] con_ang(a_ACB,a_DEF)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_seg(BC,EF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] given(g_4) -> con_ang(a_BAC,a_EDF)
+[05] given(g_5) -> con_ang(a_ABC,a_DEF)
+[06] given(g_6) -> con_ang(a_ACB,a_DEF)
+[07] def_con_tri(1,2,3,4,5,6) -> con_tri(t_ABC,t_DEF)".
+
+Example def_isosceles_accepts : complete_checker def_isosceles_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_isosceles_foreign_side_rejects :
+  complete_checker def_isosceles_foreign_side_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example base_angle_accepts : complete_checker base_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example base_angle_no_apex_rejects :
+  complete_checker base_angle_no_apex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example base_angle_conv_accepts :
+  complete_checker base_angle_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_equilateral_accepts :
+  complete_checker def_equilateral_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_equiangular_accepts :
+  complete_checker def_equiangular_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example equilat_equiang_accepts :
+  complete_checker equilat_equiang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example equiang_equilat_accepts :
+  complete_checker equiang_equilat_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example equilat_equiang_other_triangle_rejects :
+  complete_checker equilat_equiang_other_triangle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_con_tri_accepts : complete_checker def_con_tri_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_con_tri_wrong_part_rejects :
+  complete_checker def_con_tri_wrong_part_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Supplements of congruent angles, and of the same angle. *)
+Definition con_supplements_source := transitive_header "ang: a_ACD a_DCB a_EGH a_HGF
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_EGH,a_HGF)
+[g_3] con_ang(a_DCB,a_HGF)
+"
+  "con_ang(a_ACD,a_EGH)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_EGH,a_HGF)
+[03] given(g_3) -> con_ang(a_DCB,a_HGF)
+[04] con_supplements(1,2,3) -> con_ang(a_ACD,a_EGH)".
+
+(** Without the congruence of the two supplements nothing follows. *)
+Definition con_supplements_unrelated_source :=
+  transitive_header "ang: a_ACD a_DCB a_EGH a_HGF
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_EGH,a_HGF)
+[g_3] con_ang(a_ACD,a_HGF)
+"
+  "con_ang(a_ACD,a_EGH)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_EGH,a_HGF)
+[03] given(g_3) -> con_ang(a_ACD,a_HGF)
+[04] con_supplements(1,2,3) -> con_ang(a_ACD,a_EGH)".
+
+Definition con_supplements_same_source := transitive_header "ang: a_ACD a_DCB a_ACE
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_ACE,a_DCB)
+"
+  "con_ang(a_ACD,a_ACE)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_ACE,a_DCB)
+[03] con_supplements_same(1,2) -> con_ang(a_ACD,a_ACE)".
+
+(** The shared supplement really has to be shared. *)
+Definition con_supplements_same_unshared_source :=
+  transitive_header "ang: a_ACD a_DCB a_ACE a_ECB
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_ACE,a_ECB)
+"
+  "con_ang(a_ACD,a_ACE)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_ACE,a_ECB)
+[03] con_supplements_same(1,2) -> con_ang(a_ACD,a_ACE)".
+
+Example con_supplements_accepts :
+  complete_checker con_supplements_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_supplements_unrelated_rejects :
+  complete_checker con_supplements_unrelated_source = false.
+Proof. vm_compute. reflexivity. Qed.
+(** The shared supplement may sit in the first slot of the second dependency,
+    which is how the textbook corpus chains them. *)
+Definition con_supplements_same_chained_source :=
+  transitive_header "ang: a_ACD a_DCB a_ACE
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_DCB,a_ACE)
+"
+  "con_ang(a_ACD,a_ACE)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_DCB,a_ACE)
+[03] con_supplements_same(1,2) -> con_ang(a_ACD,a_ACE)".
+
+Example con_supplements_same_chained_accepts :
+  complete_checker con_supplements_same_chained_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_supplements_same_accepts :
+  complete_checker con_supplements_same_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_supplements_same_unshared_rejects :
+  complete_checker con_supplements_same_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A syntactic linear pair is supplementary; another pair cannot be mixed
+    into the conclusion. *)
+Definition def_linear_pair_source := transitive_header "ang: a_ACD a_DCB
+"
+  "[g_1] linear_pair(a_ACD,a_DCB)
+"
+  "supplementary(a_ACD,a_DCB)"
+  "[01] given(g_1) -> linear_pair(a_ACD,a_DCB)
+[02] def_linear_pair(1) -> supplementary(a_ACD,a_DCB)".
+
+Definition def_linear_pair_mixed_source := transitive_header
+  "ang: a_ACD a_DCB a_ECB
+"
+  "[g_1] linear_pair(a_ACD,a_DCB)
+"
+  "supplementary(a_ACD,a_ECB)"
+  "[01] given(g_1) -> linear_pair(a_ACD,a_DCB)
+[02] def_linear_pair(1) -> supplementary(a_ACD,a_ECB)".
+
+Example def_linear_pair_accepts :
+  complete_checker def_linear_pair_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_linear_pair_mixed_rejects :
+  complete_checker def_linear_pair_mixed_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A parallelogram exposes exactly its two pairs of opposite corners. *)
+Definition pgram_opp_angles_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] parallelogram(q_ABCD)
+"
+  "con_ang(a_ABC,a_CDA)"
+  "[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_opp_angs(1) -> con_ang(a_ABC,a_CDA)".
+
+Definition pgram_consecutive_angles_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] parallelogram(q_ABCD)
+"
+  "con_ang(a_ABC,a_BCD)"
+  "[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_opp_angs(1) -> con_ang(a_ABC,a_BCD)".
+
+Example pgram_opp_angles_accepts :
+  complete_checker pgram_opp_angles_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_consecutive_angles_rejects :
+  complete_checker pgram_consecutive_angles_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A rhombus exposes every pair from its four-side congruence chain. *)
+Definition rhombus_def_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "con_seg(AB,DA)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus(1) -> con_seg(AB,DA)".
+
+Definition rhombus_def_diagonal_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "con_seg(AB,AC)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus(1) -> con_seg(AB,AC)".
+
+Example rhombus_def_accepts : complete_checker rhombus_def_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_def_diagonal_rejects :
+  complete_checker rhombus_def_diagonal_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Either diagonal of a rhombus bisects the two corners it runs between; a
+    side is not a diagonal, and a diagonal says nothing about the corners it
+    misses. *)
+Definition rhombus_opp_bisect_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_DAB,AC)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AC)".
+
+Definition rhombus_opp_bisect_far_corner_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_ABC,AC)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_ABC,AC)".
+
+Definition rhombus_opp_bisect_side_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_DAB,AB)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AB)".
+
+(** The ray may be named by a point along the diagonal instead of by the
+    opposite corner.  That needs the point to be distinct from the corner,
+    which only a [seg:] declaration supplies. *)
+Definition rhombus_opp_bisect_ray_source := transitive_header "quad: q_ABCD
+seg: AE
+"
+  "[d_1] on_line(AC,E)
+[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_DAB,AE)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AE)".
+
+Definition rhombus_opp_bisect_undeclared_ray_source := transitive_header "quad: q_ABCD
+"
+  "[d_1] on_line(AC,E)
+[g_1] rhombus(q_ABCD)
+"
+  "ang_bisect(a_DAB,AE)"
+  "[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_DAB,AE)".
+
+Example rhombus_opp_bisect_ray_accepts :
+  complete_checker rhombus_opp_bisect_ray_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_opp_bisect_undeclared_ray_rejects :
+  complete_checker rhombus_opp_bisect_undeclared_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example rhombus_opp_bisect_accepts :
+  complete_checker rhombus_opp_bisect_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_opp_bisect_far_corner_rejects :
+  complete_checker rhombus_opp_bisect_far_corner_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_opp_bisect_side_rejects :
+  complete_checker rhombus_opp_bisect_side_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A rectangle's two diagonals are congruent; its opposite sides are too,
+    but that is not what this reason concludes. *)
+Definition rect_diag_con_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rectangle(q_ABCD)
+"
+  "con_seg(AC,BD)"
+  "[01] given(g_1) -> rectangle(q_ABCD)
+[02] rect_diag_con(1) -> con_seg(AC,BD)".
+
+Definition rect_diag_con_sides_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] rectangle(q_ABCD)
+"
+  "con_seg(AB,CD)"
+  "[01] given(g_1) -> rectangle(q_ABCD)
+[02] rect_diag_con(1) -> con_seg(AB,CD)".
+
+(** Complements of congruent angles are congruent, and so are two complements
+    of the same angle; a shared angle is what the second rule needs. *)
+Definition con_complements_source := transitive_header "ang: a_ABC a_CBD a_EFG a_GFH
+"
+  "[g_1] complementary(a_ABC,a_CBD)
+[g_2] complementary(a_EFG,a_GFH)
+[g_3] con_ang(a_CBD,a_GFH)
+"
+  "con_ang(a_ABC,a_EFG)"
+  "[01] given(g_1) -> complementary(a_ABC,a_CBD)
+[02] given(g_2) -> complementary(a_EFG,a_GFH)
+[03] given(g_3) -> con_ang(a_CBD,a_GFH)
+[04] con_complements(1,2,3) -> con_ang(a_ABC,a_EFG)".
+
+Definition con_complements_same_source := transitive_header "ang: a_ABC a_CBD a_DBE
+"
+  "[g_1] complementary(a_ABC,a_CBD)
+[g_2] complementary(a_DBE,a_CBD)
+"
+  "con_ang(a_ABC,a_DBE)"
+  "[01] given(g_1) -> complementary(a_ABC,a_CBD)
+[02] given(g_2) -> complementary(a_DBE,a_CBD)
+[03] con_complements_same(1,2) -> con_ang(a_ABC,a_DBE)".
+
+Definition con_complements_unshared_source := transitive_header "ang: a_ABC a_CBD a_DBE a_EBF
+"
+  "[g_1] complementary(a_ABC,a_CBD)
+[g_2] complementary(a_DBE,a_EBF)
+"
+  "con_ang(a_ABC,a_DBE)"
+  "[01] given(g_1) -> complementary(a_ABC,a_CBD)
+[02] given(g_2) -> complementary(a_DBE,a_EBF)
+[03] con_complements_same(1,2) -> con_ang(a_ABC,a_DBE)".
+
+Example con_complements_accepts :
+  complete_checker con_complements_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_complements_same_accepts :
+  complete_checker con_complements_same_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_complements_unshared_rejects :
+  complete_checker con_complements_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Corners of a parallelogram that share a side are supplementary; opposite
+    corners are congruent, which is a different reason. *)
+Definition pgram_consec_angs_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] parallelogram(q_ABCD)
+"
+  "supplementary(a_ABC,a_BCD)"
+  "[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_consec_angs(1) -> supplementary(a_ABC,a_BCD)".
+
+Definition pgram_consec_angs_opposite_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] parallelogram(q_ABCD)
+"
+  "supplementary(a_ABC,a_CDA)"
+  "[01] given(g_1) -> parallelogram(q_ABCD)
+[02] pgram_consec_angs(1) -> supplementary(a_ABC,a_CDA)".
+
+(** A declared quadrilateral supplies nondegenerate rays for any three of its
+    vertices, consecutive or not; a point outside it supplies none. *)
+Definition quad_declared_angle_source := transitive_header "quad: q_ABCD
+"
+  ""
+  "con_ang(a_ABD,a_ABD)"
+  "[01] reflex() -> ref_ang(a_ABD,a_ABD)".
+
+Definition quad_declared_angle_outside_source := transitive_header "quad: q_ABCD
+"
+  ""
+  "con_ang(a_ABE,a_ABE)"
+  "[01] reflex() -> ref_ang(a_ABE,a_ABE)".
+
+(** An angle's two rays are two segments, so declaring both is declaring the
+    angle nondegenerate -- which is how a figure with no triangle in it says
+    so. *)
+Definition segment_declared_angle_source := transitive_header "seg: AB CB
+"
+  ""
+  "con_ang(a_ABC,a_ABC)"
+  "[01] reflex() -> ref_ang(a_ABC,a_ABC)".
+
+Definition segment_declared_angle_one_ray_source := transitive_header "seg: AB
+"
+  ""
+  "con_ang(a_ABC,a_ABC)"
+  "[01] reflex() -> ref_ang(a_ABC,a_ABC)".
+
+Example segment_declared_angle_accepts :
+  complete_checker segment_declared_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example segment_declared_angle_one_ray_rejects :
+  complete_checker segment_declared_angle_one_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example quad_declared_angle_accepts :
+  complete_checker quad_declared_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example quad_declared_angle_outside_rejects :
+  complete_checker quad_declared_angle_outside_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Both opposite side pairs congruent make a parallelogram; one pair does
+    not, and a right corner of a parallelogram makes it a rectangle. *)
+Definition pgram_opp_sides_conv_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(BC,DA)
+"
+  "parallelogram(q_ABCD)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(BC,DA)
+[03] pgram_opp_sides_conv(1,2) -> parallelogram(q_ABCD)".
+
+Definition pgram_opp_sides_conv_one_pair_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(AB,CD)
+"
+  "parallelogram(q_ABCD)"
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(AB,CD)
+[03] pgram_opp_sides_conv(1,2) -> parallelogram(q_ABCD)".
+
+Definition rect_pgram_ang_source := transitive_header "quad: q_ABCD
+ang: a_ABC
+"
+  "[g_1] right(a_ABC)
+[g_2] parallelogram(q_ABCD)
+"
+  "rectangle(q_ABCD)"
+  "[01] given(g_1) -> right(a_ABC)
+[02] given(g_2) -> parallelogram(q_ABCD)
+[03] rect_pgram_ang(1,2) -> rectangle(q_ABCD)".
+
+Definition rect_pgram_ang_diagonal_source := transitive_header "quad: q_ABCD
+ang: a_ABD
+"
+  "[g_1] right(a_ABD)
+[g_2] parallelogram(q_ABCD)
+"
+  "rectangle(q_ABCD)"
+  "[01] given(g_1) -> right(a_ABD)
+[02] given(g_2) -> parallelogram(q_ABCD)
+[03] rect_pgram_ang(1,2) -> rectangle(q_ABCD)".
+
+(** Two corners supplementary to a third make a parallelogram; two pairs
+    along the same side direction do not. *)
+Definition pgram_consec_angs_conv_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] supplementary(a_ABC,a_BCD)
+[g_2] supplementary(a_ABC,a_DAB)
+"
+  "parallelogram(q_ABCD)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_BCD)
+[02] given(g_2) -> supplementary(a_ABC,a_DAB)
+[03] pgram_consec_angs_conv(1,2) -> parallelogram(q_ABCD)".
+
+Definition pgram_consec_angs_conv_one_side_source := transitive_header "quad: q_ABCD
+"
+  "[g_1] supplementary(a_ABC,a_BCD)
+[g_2] supplementary(a_CDA,a_DAB)
+"
+  "parallelogram(q_ABCD)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_BCD)
+[02] given(g_2) -> supplementary(a_CDA,a_DAB)
+[03] pgram_consec_angs_conv(1,2) -> parallelogram(q_ABCD)".
+
+(** A kite premise names the pair of corners it makes congruent; the other
+    pair is not congruent and the rule does not conclude it. *)
+Definition kite_opp_con_ang_source := transitive_header "quad: q_ABCD
+ang: a_DAB a_BCD
+"
+  "[g_1] kite_premise(q_ABCD,a_DAB,a_BCD)
+"
+  "con_ang(a_DAB,a_BCD)"
+  "[01] given(g_1) -> kite_premise(q_ABCD,a_DAB,a_BCD)
+[02] kite_opp_con_ang(1) -> con_ang(a_DAB,a_BCD)".
+
+Definition kite_opp_con_ang_other_pair_source := transitive_header "quad: q_ABCD
+ang: a_DAB a_BCD
+"
+  "[g_1] kite_premise(q_ABCD,a_DAB,a_BCD)
+"
+  "con_ang(a_ABC,a_CDA)"
+  "[01] given(g_1) -> kite_premise(q_ABCD,a_DAB,a_BCD)
+[02] kite_opp_con_ang(1) -> con_ang(a_ABC,a_CDA)".
+
+Example kite_opp_con_ang_accepts :
+  complete_checker kite_opp_con_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example kite_opp_con_ang_other_pair_rejects :
+  complete_checker kite_opp_con_ang_other_pair_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example pgram_consec_angs_conv_accepts :
+  complete_checker pgram_consec_angs_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_consec_angs_conv_one_side_rejects :
+  complete_checker pgram_consec_angs_conv_one_side_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example pgram_opp_sides_conv_accepts :
+  complete_checker pgram_opp_sides_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_opp_sides_conv_one_pair_rejects :
+  complete_checker pgram_opp_sides_conv_one_pair_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example rect_pgram_ang_accepts :
+  complete_checker rect_pgram_ang_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rect_pgram_ang_diagonal_rejects :
+  complete_checker rect_pgram_ang_diagonal_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example pgram_consec_angs_accepts :
+  complete_checker pgram_consec_angs_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_consec_angs_opposite_rejects :
+  complete_checker pgram_consec_angs_opposite_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example rect_diag_con_accepts :
+  complete_checker rect_diag_con_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rect_diag_con_sides_rejects :
+  complete_checker rect_diag_con_sides_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Rectangle corners are mutually congruent and opposite sides are
+    congruent; a diagonal ray is not a corner. *)
+Definition rectangle_def_angle_source := transitive_header
+  "quad: q_EFGH
+ang: a_FEH a_GHE
+"
+  "[g_1] rectangle(q_EFGH)
+"
+  "con_ang(a_FEH,a_GHE)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] rectangle(1) -> con_ang(a_FEH,a_GHE)".
+
+Definition rectangle_def_side_source := transitive_header "quad: q_EFGH
+"
+  "[g_1] rectangle(q_EFGH)
+"
+  "con_seg(EF,GH)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] rectangle(1) -> con_seg(EF,GH)".
+
+Definition rectangle_def_noncorner_source := transitive_header
+  "quad: q_EFGH
+ang: a_FEH a_FGE
+"
+  "[g_1] rectangle(q_EFGH)
+"
+  "con_ang(a_FEH,a_FGE)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] rectangle(1) -> con_ang(a_FEH,a_FGE)".
+
+Definition rectangle_def_midpoint_rays_source := transitive_header
+  "tri: t_FEJ t_JGH
+quad: q_EFGH
+"
+  "[g_1] rectangle(q_EFGH)
+[g_2] midpt(EH,J)
+"
+  "con_right(a_FEJ,a_JHG)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] given(g_2) -> midpt(EH,J)
+[03] rectangle(1) -> con_right(a_FEJ,a_JHG)".
+
+Definition rectangle_def_unrelated_midpoint_source := transitive_header
+  "tri: t_FEJ t_JGH
+quad: q_EFGH
+"
+  "[g_1] rectangle(q_EFGH)
+[g_2] midpt(KL,J)
+"
+  "con_right(a_FEJ,a_JHG)"
+  "[01] given(g_1) -> rectangle(q_EFGH)
+[02] given(g_2) -> midpt(KL,J)
+[03] rectangle(1) -> con_right(a_FEJ,a_JHG)".
+
+Example rectangle_def_angle_accepts :
+  complete_checker rectangle_def_angle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rectangle_def_side_accepts :
+  complete_checker rectangle_def_side_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rectangle_def_noncorner_rejects :
+  complete_checker rectangle_def_noncorner_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example rectangle_def_midpoint_rays_accepts :
+  complete_checker rectangle_def_midpoint_rays_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rectangle_def_unrelated_midpoint_rejects :
+  complete_checker rectangle_def_unrelated_midpoint_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A right angle at a point of a line makes the two lines perpendicular
+    there.  The [on_line] premise is what carries the right angle from the ray
+    to the whole line. *)
+Definition def_perp_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_ADB)
+[d_01] on_line(AC,D)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_ADB)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+(** Without knowing the foot lies on the line, the right angle says nothing
+    about the rest of it. *)
+Definition def_perp_no_line_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_ADB)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_ADB)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+(** Each ray has to reach one of the two lines. *)
+Definition def_perp_foreign_ray_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_EDB)
+[d_01] on_line(AC,D)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_EDB)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+(** The right angle must be at the stated foot. *)
+Definition def_perp_wrong_vertex_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_ABD)
+[d_01] on_line(AC,D)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_ABD)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+(** [midpt_conv] reads an [intersect_seg] as placing its point, but [def_perp]
+    must not: it needs the segment nondegenerate as well as the foot on it, and
+    [intersect_seg] does not say that.  The same premise that satisfies the
+    midpoint converse has to be refused here. *)
+Definition def_perp_intersect_source := transitive_header "seg: AC
+"
+  "[g_1] right(a_ADB)
+[d_01] intersect_seg(AC,BD,D)
+"
+  "perp(BD,AC,D)"
+  "[01] given(g_1) -> right(a_ADB)
+[02] def_perp(1) -> perp(BD,AC,D)".
+
+Example def_perp_accepts : complete_checker def_perp_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_perp_no_line_rejects :
+  complete_checker def_perp_no_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_perp_intersect_rejects :
+  complete_checker def_perp_intersect_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_perp_foreign_ray_rejects :
+  complete_checker def_perp_foreign_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example def_perp_wrong_vertex_rejects :
+  complete_checker def_perp_wrong_vertex_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** AAS may cite its two angles in either order. *)
+Definition aas_swapped_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] con_ang(a_ACB,a_DFE)
+[g_2] con_ang(a_ABC,a_DEF)
+[g_3] con_seg(AB,DE)
+"
+  "con_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> con_ang(a_ACB,a_DFE)
+[02] given(g_2) -> con_ang(a_ABC,a_DEF)
+[03] given(g_3) -> con_seg(AB,DE)
+[04] aas(2,1,3) -> con_tri(t_ABC,t_DEF)".
+
+Example aas_swapped_accepts : complete_checker aas_swapped_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The witness congruence may relate either angle of one supplementary
+    dependency to either angle of the other. *)
+Definition con_supplements_crossed_source :=
+  transitive_header "ang: a_ACD a_DCB a_EGH a_HGF
+"
+  "[g_1] supplementary(a_ACD,a_DCB)
+[g_2] supplementary(a_EGH,a_HGF)
+[g_3] con_ang(a_DCB,a_EGH)
+"
+  "con_ang(a_ACD,a_HGF)"
+  "[01] given(g_1) -> supplementary(a_ACD,a_DCB)
+[02] given(g_2) -> supplementary(a_EGH,a_HGF)
+[03] given(g_3) -> con_ang(a_DCB,a_EGH)
+[04] con_supplements(1,2,3) -> con_ang(a_ACD,a_HGF)".
+
+Example con_supplements_crossed_accepts :
+  complete_checker con_supplements_crossed_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** [vert_ang] may name the diagram premise it relies on. *)
+Definition vert_ang_labelled_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang(d_01) -> con_ang(a_CEA,a_DEB)".
+
+(** Naming a premise that is not a crossing proves nothing. *)
+Definition vert_ang_wrong_label_source := transitive_header "tri: t_ACE t_BDE
+"
+  "[d_01] intersect_seg(AB,CD,E)
+[g_1] con_seg(AB,CD)
+"
+  "con_ang(a_CEA,a_DEB)"
+  "[01] vert_ang(g_1) -> con_ang(a_CEA,a_DEB)".
+
+Example vert_ang_labelled_accepts :
+  complete_checker vert_ang_labelled_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example vert_ang_wrong_label_rejects :
+  complete_checker vert_ang_wrong_label_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Angle reflexivity, once an [ang:] declaration supplies the nondegenerate
+    rays: the audited meaning of an angle declaration is exactly
+    [AngleWellFormed], which is what [conga_refl] needs.  [ref_ang] cannot be a
+    goal, so these pin the behaviour by which step the checker blames first,
+    and why: with the declaration it gets past step 1 and blames the
+    deliberately broken step 2; without it, it blames step 1 for the missing
+    declaration. *)
+Definition ref_ang_declared_source := transitive_header "ang: a_ABC
+" ""
+  "con_seg(AB,AB)"
+  "[01] reflex() -> ref_ang(a_ABC,a_ABC)
+[02] reflex() -> ref_seg(AB,CD)".
+
+Definition ref_ang_undeclared_source := transitive_header "seg: AB
+" ""
+  "con_seg(AB,AB)"
+  "[01] reflex() -> ref_ang(a_ABC,a_ABC)
+[02] reflex() -> ref_seg(AB,CD)".
+
+Definition first_blame (source : string) : option (string * Audit.JsonValue) :=
+  match (CertifiedAPI.check source).(Audit.report_issues) with
+  | issue :: _ =>
+      match issue.(Audit.issue_details) with
+      | Audit.JsonObject fields =>
+          match find (fun f => String.eqb (fst f) "steps") fields with
+          | Some (_, steps) => Some (issue.(Audit.issue_code), steps)
+          | None => None
+          end
+      | _ => None
+      end
+  | [] => None
+  end.
+
+Definition blamed (code n : string) : option (string * Audit.JsonValue) :=
+  Some (code, Audit.JsonArray [Audit.JsonString n]).
+
+Example ref_ang_declared_clears_its_step :
+  first_blame ref_ang_declared_source = blamed "objs_not_equal" "2".
+Proof. vm_compute. reflexivity. Qed.
+
+Example ref_ang_undeclared_stops_at_its_step :
+  first_blame ref_ang_undeclared_source = blamed "angle_not_declared" "1".
+Proof. vm_compute. reflexivity. Qed.
+
+(** A declared angle says nothing about a different one. *)
+Definition ref_ang_other_angle_source := transitive_header "ang: a_ABC
+" ""
+  "con_seg(AB,AB)"
+  "[01] reflex() -> ref_ang(a_DEF,a_DEF)
+[02] reflex() -> ref_seg(AB,CD)".
+
+Example ref_ang_other_angle_stops_at_its_step :
+  first_blame ref_ang_other_angle_source = blamed "angle_not_declared" "1".
+Proof. vm_compute. reflexivity. Qed.
+
+Example malformed_problem_is_parse_failure :
+  classify_source "this is not an Ender problem" = ParseFailure.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition unsupported_goal_source := common_header "" "right(a_BAC)" "".
+Example parsed_but_unimplemented_goal_rejects :
+  match Audit.problemPart unsupported_goal_source with
+  | Some part =>
+      match parsePublicProblem part with Some _ => true | None => false end
+  | None => false
+  end = true /\ complete_checker unsupported_goal_source = false.
+Proof. vm_compute. split; reflexivity. Qed.
+
+Example parsed_but_unimplemented_goal_is_proof_rejection :
+  classify_source unsupported_goal_source = ProofRejected.
+Proof. vm_compute. reflexivity. Qed.
+
+Example bad_dependency_rejects :
+  check_source (common_header
+    "[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+" "con_tri(t_ABC,t_DEF)"
+    "[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,99) -> con_tri(t_ABC,t_DEF)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example problem_part_excludes_coordinates_and_steps :
+  Audit.problemPart "title: ignored
+pt: A (100,200)
+tri: t_ABC
+-> ref_seg(AB,AB)
+
+steps:
+[01] reflex() -> ref_seg(AB,AB)" =
+  Some "tri: t_ABC
+-> ref_seg(AB,AB)
+
+".
+Proof. vm_compute. reflexivity. Qed.
+
+(** The quadrilateral statement layer: declarations, premises of every new
+    form, a [given] step, and a [parallelogram] goal, through both checker
+    paths. *)
+Definition quad_layer_source := "title: quadrilateral statements
+premises:
+pt: A (0,0), B (4,0), C (6,3), D (2,3)
+quad: q_ABCD
+[g_1] parallelogram(q_ABCD)
+[g_2] trapezoid_premise(q_ABCD, AB, CD)
+[g_3] kite_premise(q_ABCD, a_ABC, a_ADC)
+[g_4] para(AB, CD)
+[g_5] rhombus(q_ABCD)
+[g_6] isos_trapezoid_premise(q_ABCD, AB, CD)
+[g_7] rectangle(q_ABCD)
+[g_8] isos_trapezoid(q_ABCD)
+-> parallelogram(q_ABCD)
+
+steps:
+[01] given(g_1) -> parallelogram(q_ABCD)".
+
+Example quad_layer_accepts : check_source quad_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_quad_layer_accepts : complete_checker quad_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The transversal statement parses as a diagram premise and feeds a goal
+    through a [given] step. *)
+Definition transversal_layer_source := "title: transversal statement
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2), T (13,9), R (5,1)
+[d_1] transversal(A, B, T, E, C, D, R, F)
+[g_1] para(AB, CD)
+-> para(AB, CD)
+
+steps:
+[01] given(g_1) -> para(AB, CD)".
+
+Example transversal_layer_accepts :
+  check_source transversal_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_transversal_layer_accepts :
+  complete_checker transversal_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Historical files may retain an explicit diagram label after the logical
+    step dependency.  The rule still validates the actual transversal. *)
+Definition labelled_altint_source := "title: labelled alternate angles
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2), T (13,9), R (5,1)
+[d_01] transversal(A,B,T,E,C,D,R,F)
+[g_1] para(AB,CD)
+-> con_ang(a_AEF,a_DFE)
+
+steps:
+[01] given(g_1) -> para(AB,CD)
+[02] altint(1,d_01) -> con_ang(a_AEF,a_DFE)".
+
+Example labelled_altint_accepts :
+  complete_checker labelled_altint_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A point known to lie on the transversal segment may spell the same ray
+    in a converse proof. *)
+Definition intersect_ray_altint_conv_source := "title: intersection ray spelling
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2), T (13,9), R (5,1), X (9,5), G (9,1), H (9,9)
+[d_01] transversal(A,B,T,E,C,D,R,F)
+[d_02] intersect_seg(EF,GH,X)
+[g_1] con_ang(a_AEX,a_DFE)
+-> para(AB,CD)
+
+steps:
+[01] given(g_1) -> con_ang(a_AEX,a_DFE)
+[02] altint_conv(1) -> para(AB,CD)".
+
+Definition unlinked_ray_altint_conv_source := "title: unlinked ray spelling
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2), T (13,9), R (5,1), X (9,5)
+[d_01] transversal(A,B,T,E,C,D,R,F)
+[g_1] con_ang(a_AEX,a_DFE)
+-> para(AB,CD)
+
+steps:
+[01] given(g_1) -> con_ang(a_AEX,a_DFE)
+[02] altint_conv(1) -> para(AB,CD)".
+
+Example intersect_ray_altint_conv_accepts :
+  complete_checker intersect_ray_altint_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example unlinked_ray_altint_conv_rejects :
+  complete_checker unlinked_ray_altint_conv_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A transversal figure may leave parts undrawn by repeating a letter.  In
+    a Z figure the transversal is a segment ending at both crossings, and each
+    crossed line ends there too: [transversal(A, C, A, A, D, B, B, B)] draws
+    only [C] on one line and [D] on the other, on opposite sides of [AB]. *)
+Definition z_altint_conv_source := "title: Z figure, converse
+premises:
+pt: A (5,9), B (10,2), C (1,3), D (14,8)
+[d_01] transversal(A, C, A, A, D, B, B, B)
+[g_1] con_ang(a_CAB,a_DBA)
+-> para(AC,BD)
+
+steps:
+[01] given(g_1) -> con_ang(a_CAB,a_DBA)
+[02] altint_conv(1) -> para(AC,BD)".
+
+Definition z_altint_source := "title: Z figure, forward
+premises:
+pt: A (5,9), B (10,2), C (1,3), D (14,8)
+[d_01] transversal(A, C, A, A, D, B, B, B)
+[g_1] para(AC,BD)
+-> con_ang(a_CAB,a_DBA)
+
+steps:
+[01] given(g_1) -> para(AC,BD)
+[02] altint(1) -> con_ang(a_CAB,a_DBA)".
+
+(** The same figure with [C] and [D] in slots that put them on the same side
+    of the transversal: the alternate pair is no longer alternate. *)
+Definition z_same_side_slots_source := "title: Z figure, wrong slots
+premises:
+pt: A (5,9), B (10,2), C (1,3), D (14,8)
+[d_01] transversal(A, C, A, A, B, D, B, B)
+[g_1] con_ang(a_CAB,a_DBA)
+-> para(AC,BD)
+
+steps:
+[01] given(g_1) -> con_ang(a_CAB,a_DBA)
+[02] altint_conv(1) -> para(AC,BD)".
+
+(** The transversal's ends may be spelled as the crossings in either order. *)
+Definition swapped_ends_altint_conv_source := "title: swapped transversal ends
+premises:
+pt: A (2,8), B (8,8), C (6,2), D (0,2)
+[d_01] transversal(B, A, C, A, C, D, A, C)
+[g_1] con_ang(a_BAC,a_DCA)
+-> para(AB,CD)
+
+steps:
+[01] given(g_1) -> con_ang(a_BAC,a_DCA)
+[02] altint_conv(1) -> para(AB,CD)".
+
+(** A transversal that stops at its crossings, between two full lines. *)
+Definition undrawn_ends_altint_source := "title: transversal without ends
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), E (12,8), F (6,2)
+[d_01] transversal(A, B, E, E, C, D, F, F)
+[g_1] para(AB,CD)
+-> con_ang(a_AEF,a_DFE)
+
+steps:
+[01] given(g_1) -> para(AB,CD)
+[02] altint(1) -> con_ang(a_AEF,a_DFE)".
+
+(** An angle at an undrawn part names no angle, and is never concluded. *)
+Definition z_undrawn_angle_source := "title: Z figure, undrawn angle
+premises:
+pt: A (5,9), B (10,2), C (1,3), D (14,8)
+[d_01] transversal(A, C, A, A, D, B, B, B)
+[g_1] para(AC,BD)
+-> con_ang(a_AAB,a_BBA)
+
+steps:
+[01] given(g_1) -> para(AC,BD)
+[02] altint(1) -> con_ang(a_AAB,a_BBA)".
+
+Example z_undrawn_angle_rejects :
+  complete_checker z_undrawn_angle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example z_altint_conv_accepts :
+  complete_checker z_altint_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example z_altint_accepts :
+  complete_checker z_altint_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example z_same_side_slots_rejects :
+  complete_checker z_same_side_slots_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example swapped_ends_altint_conv_accepts :
+  complete_checker swapped_ends_altint_conv_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example undrawn_ends_altint_accepts :
+  complete_checker undrawn_ends_altint_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** [con_tri] claims congruence under some correspondence of the vertices,
+    so a criterion may conclude it with either triangle in any order, and
+    [cpctc] uses the correspondence the criterion's own facts witness. *)
+Definition scrambled_cpctc_source := "title: scrambled_cpctc_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_seg(BC,EF)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_CBA,t_EDF)
+[05] cpctc(4) -> con_seg(BC,EF)".
+
+(** No fact witnesses a correspondence pairing [AB] with [EF]. *)
+Definition unwitnessed_cpctc_source := "title: unwitnessed_cpctc_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_seg(AB,EF)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_CBA,t_EDF)
+[05] cpctc(4) -> con_seg(AB,EF)".
+
+(** An unordered goal is met by the congruence in any spelling. *)
+Definition scrambled_goal_source := "title: scrambled_goal_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_tri(t_DEF,t_CAB)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_CBA,t_EDF)".
+
+(** [con_tri_ordered] pairs the vertices as written, so only the right
+    pairing is concluded. *)
+Definition ordered_criterion_source := "title: ordered_criterion_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_tri_ordered(t_CBA,t_FED)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri_ordered(t_CBA,t_FED)".
+
+Definition misordered_criterion_source := "title: misordered_criterion_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+-> con_tri_ordered(t_CBA,t_EDF)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri_ordered(t_CBA,t_EDF)".
+
+(** A given [con_tri] names no correspondence, and nothing else in the proof
+    witnesses one; a given [con_tri_ordered] names it. *)
+Definition loose_given_cpctc_source := "title: loose given
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_tri(t_ABC,t_DEF)
+-> con_seg(AB,DE)
+
+steps:
+[01] given(g_1) -> con_tri(t_ABC,t_DEF)
+[02] cpctc(1) -> con_seg(AB,DE)".
+
+Definition ordered_given_cpctc_source := "title: ordered given
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3)
+tri: t_ABC t_DEF
+[g_1] con_tri_ordered(t_ABC,t_DEF)
+-> con_seg(AB,DE)
+
+steps:
+[01] given(g_1) -> con_tri_ordered(t_ABC,t_DEF)
+[02] cpctc(1) -> con_seg(AB,DE)".
+
+(** No fact relates [t_ABC] and [t_GHI] directly; their correspondence is
+    the composition of the two the criteria witness, through [t_DEF]. *)
+Definition chained_cpctc_source := "title: chained_cpctc_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3), G (20,0), H (24,0), I (21,3)
+tri: t_ABC t_DEF t_GHI
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+[g_4] con_seg(DE,GH)
+[g_5] con_ang(a_EDF,a_HGI)
+[g_6] con_seg(DF,GI)
+-> con_seg(BC,HI)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_ABC,t_DEF)
+[05] given(g_4) -> con_seg(DE,GH)
+[06] given(g_5) -> con_ang(a_EDF,a_HGI)
+[07] given(g_6) -> con_seg(DF,GI)
+[08] sas(5,6,7) -> con_tri(t_DEF,t_GHI)
+[09] con_tri_transitive(4,8) -> con_tri(t_GIH,t_BAC)
+[10] cpctc(9) -> con_seg(BC,HI)".
+Definition unchained_cpctc_source := "title: unchained_cpctc_source
+premises:
+pt: A (0,0), B (4,0), C (1,3), D (10,0), E (14,0), F (11,3), G (20,0), H (24,0), I (21,3)
+tri: t_ABC t_DEF t_GHI
+[g_1] con_seg(AB,DE)
+[g_2] con_ang(a_BAC,a_EDF)
+[g_3] con_seg(AC,DF)
+[g_4] con_seg(DE,GH)
+[g_5] con_ang(a_EDF,a_HGI)
+[g_6] con_seg(DF,GI)
+-> con_seg(BC,GI)
+
+steps:
+[01] given(g_1) -> con_seg(AB,DE)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] given(g_3) -> con_seg(AC,DF)
+[04] sas(1,2,3) -> con_tri(t_ABC,t_DEF)
+[05] given(g_4) -> con_seg(DE,GH)
+[06] given(g_5) -> con_ang(a_EDF,a_HGI)
+[07] given(g_6) -> con_seg(DF,GI)
+[08] sas(5,6,7) -> con_tri(t_DEF,t_GHI)
+[09] con_tri_transitive(4,8) -> con_tri(t_GIH,t_BAC)
+[10] cpctc(9) -> con_seg(BC,GI)".
+
+Example chained_cpctc_accepts :
+  complete_checker chained_cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example unchained_cpctc_rejects :
+  complete_checker unchained_cpctc_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example scrambled_cpctc_accepts :
+  complete_checker scrambled_cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example unwitnessed_cpctc_rejects :
+  complete_checker unwitnessed_cpctc_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example scrambled_goal_accepts :
+  complete_checker scrambled_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example ordered_criterion_accepts :
+  complete_checker ordered_criterion_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example misordered_criterion_rejects :
+  complete_checker misordered_criterion_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example loose_given_cpctc_rejects :
+  complete_checker loose_given_cpctc_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example ordered_given_cpctc_accepts :
+  complete_checker ordered_given_cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A quadrilateral may be named from any corner, walking either way: the
+    shape statements say the same thing of every such name, so a rule may
+    conclude, and a goal may ask for, a name other than the declared one. *)
+Definition relabeled_isos_trap_source := "title: relabeled isosceles trapezoid
+premises:
+pt: E (1,1), F (9,1), G (8,5), H (2,5)
+quad: q_EFGH
+seg: EG FH
+[g_1] con_seg(EG, FH)
+[g_2] trapezoid_premise(q_EFGH, EF, GH)
+-> isos_trapezoid(q_HGFE)
+
+steps:
+[01] given(g_1) -> con_seg(EG, FH)
+[02] given(g_2) -> trapezoid_premise(q_EFGH, EF, GH)
+[03] isos_trap_con_diags(1, 2) -> isos_trapezoid(q_GHEF)".
+
+Definition relabeled_pgram_source := "title: relabeled parallelogram
+premises:
+pt: A (1,2), B (7,2), C (9,6), D (3,6)
+quad: q_ABCD
+[g_1] para(AB, CD)
+[g_2] para(BC, DA)
+-> parallelogram(q_CBAD)
+
+steps:
+[01] given(g_1) -> para(AB, CD)
+[02] given(g_2) -> para(BC, DA)
+[03] def_parallelogram(1, 2) -> parallelogram(q_CBAD)".
+
+(** Other orders of the four letters walk a self-crossing figure. *)
+Definition crossed_pgram_source := "title: crossed parallelogram name
+premises:
+pt: A (1,2), B (7,2), C (9,6), D (3,6)
+quad: q_ABCD
+[g_1] para(AB, CD)
+[g_2] para(BC, DA)
+-> parallelogram(q_ACBD)
+
+steps:
+[01] given(g_1) -> para(AB, CD)
+[02] given(g_2) -> para(BC, DA)
+[03] def_parallelogram(1, 2) -> parallelogram(q_ACBD)".
+
+Example relabeled_isos_trap_accepts :
+  complete_checker relabeled_isos_trap_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example relabeled_pgram_accepts :
+  complete_checker relabeled_pgram_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example crossed_pgram_rejects :
+  complete_checker crossed_pgram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The circle statement layer: a circle declaration, premises of every new
+    form including the nested arc spelling, a [def_radius] step, and a
+    congruent-radii goal, through both checker paths. *)
+Definition circle_layer_source := "title: circle statements
+premises:
+pt: O (5,5), A (5,9), B (9,5), C (1,5), P (5,1)
+circ: c_OA
+[g_1] radius(c_OA, B)
+[g_2] chord(c_OA, AB)
+[g_3] diameter(c_OA, AP)
+[g_4] tangent(c_OA, CB, A)
+[g_5] inscribed_angle(c_OA, a_ABP)
+[g_6] con_arc(minor_arc(c_OA, A, B), minor_arc(c_OA, B, P))
+[g_7] minor_arc(c_OA, A, B)
+-> con_seg(OB, OA)
+
+steps:
+[01] given(g_1) -> radius(c_OA, B)
+[02] def_radius(1) -> con_seg(OB, OA)".
+
+Example circle_layer_accepts : check_source circle_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_circle_layer_accepts :
+  complete_checker circle_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The goal is closed by a derived fact spelled with reversed segments,
+    under exactly the spellings step-to-step matching accepts. *)
+Definition reversed_goal_source := "title: reversed goal spelling
+premises:
+pt: A (0,0), M (2,0), B (4,0)
+[g_1] midpt(AB, M)
+-> con_seg(MA, BM)
+
+steps:
+[01] given(g_1) -> midpt(AB, M)
+[02] def_midpt(1) -> con_seg(AM, MB)".
+
+Example reversed_goal_accepts : check_source reversed_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example complete_reversed_goal_accepts :
+  complete_checker reversed_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The forward diagonal theorems, at the point an [intersect_seg] premise
+    puts on both diagonals. *)
+Definition diagonal_source (shape step goal premise : string) : string :=
+  transitive_header "quad: q_ABCD
+" (premise ++ "[g_1] " ++ shape ++ "
+") goal ("[01] given(g_1) -> " ++ shape ++ "
+[02] " ++ step ++ " -> " ++ goal).
+
+Example pgram_diag_bisect_accepts : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1)"
+     "seg_bisect(AC,BD,E)" "[d_01] intersect_seg(AC,BD,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** Either diagonal may bisect the other, and either may be spelled backwards,
+    in the conclusion or the premise. *)
+Example pgram_diag_bisect_other_accepts : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1, d_01)"
+     "seg_bisect(DB,AC,E)" "[d_01] intersect_seg(DB,CA,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_diag_bisect_no_crossing_rejects : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1)"
+     "seg_bisect(AC,BD,E)" "") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_diag_bisect_wrong_point_rejects : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1)"
+     "seg_bisect(AC,BD,A)" "[d_01] intersect_seg(AC,BD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example pgram_diag_bisect_sides_rejects : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "pgram_diag_bisect(1)"
+     "seg_bisect(AB,CD,E)" "[d_01] intersect_seg(AB,CD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example rhombus_diag_perp_accepts : complete_checker
+  (diagonal_source "rhombus(q_ABCD)" "rhombus_diag_perp(1)"
+     "perp(AC,BD,E)" "[d_01] intersect_seg(AC,BD,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_diag_perp_swapped_accepts : complete_checker
+  (diagonal_source "rhombus(q_ABCD)" "rhombus_diag_perp(1)"
+     "perp(DB,CA,E)" "[d_01] intersect_seg(BD,AC,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example rhombus_diag_perp_no_crossing_rejects : complete_checker
+  (diagonal_source "rhombus(q_ABCD)" "rhombus_diag_perp(1)"
+     "perp(AC,BD,E)" "") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** A parallelogram's diagonals need not be perpendicular. *)
+Example rhombus_diag_perp_parallelogram_rejects : complete_checker
+  (diagonal_source "parallelogram(q_ABCD)" "rhombus_diag_perp(1)"
+     "perp(AC,BD,E)" "[d_01] intersect_seg(AC,BD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Both kinds of kite: congruent sides meeting at [A] and [C], or at [B]
+    and [D]. *)
+Example kite_diag_perp_accepts : complete_checker
+  (diagonal_source "kite_premise(q_ABCD,a_DAB,a_BCD)" "kite_diag_perp(1)"
+     "perp(AC,BD,E)" "[d_01] intersect_seg(AC,BD,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example kite_diag_perp_other_kind_accepts : complete_checker
+  (diagonal_source "kite_premise(q_ABCD,a_ABC,a_CDA)" "kite_diag_perp(1)"
+     "perp(BD,AC,E)" "[d_01] intersect_seg(AC,BD,E)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example kite_diag_perp_wrong_point_rejects : complete_checker
+  (diagonal_source "kite_premise(q_ABCD,a_DAB,a_BCD)" "kite_diag_perp(1)"
+     "perp(AC,BD,B)" "[d_01] intersect_seg(AC,BD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Converse of the chord bisector: the perpendicular bisector of a chord
+    passes through the centre. *)
+Definition chord_source (premises goal steps : string) : string :=
+  "title: chords
+premises:
+pt: O (5,5), R (5,0), A (1,8), B (9,8), M (5,8), T (5,10)
+circ: c_OR
+" ++ premises ++ "-> " ++ goal ++ "
+
+steps:
+" ++ steps.
+
+Definition chord_bisect_conv_source (goal : string) := chord_source
+  "[g_1] perp_bisector(MT, AB, M)
+[g_2] chord(c_OR, AB)
+" goal ("[01] given(g_1) -> perp_bisector(MT, AB, M)
+[02] given(g_2) -> chord(c_OR, AB)
+[03] chord_bisect_conv(1, 2) -> " ++ goal).
+
+Example chord_bisect_conv_accepts :
+  complete_checker (chord_bisect_conv_source "center_on_line(c_OR, MT)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** Either direction of the bisector names its line. *)
+Example chord_bisect_conv_reversed_accepts :
+  complete_checker (chord_bisect_conv_source "center_on_line(c_OR, TM)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** The chord does not pass through the centre. *)
+Example chord_bisect_conv_chord_rejects :
+  complete_checker (chord_bisect_conv_source "center_on_line(c_OR, AB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** The chord must be the one the bisector bisects. *)
+Example chord_bisect_conv_other_chord_rejects : complete_checker (chord_source
+  "[g_1] perp_bisector(MT, AB, M)
+[g_2] chord(c_OR, AT)
+" "center_on_line(c_OR, MT)" "[01] given(g_1) -> perp_bisector(MT, AB, M)
+[02] given(g_2) -> chord(c_OR, AT)
+[03] chord_bisect_conv(1, 2) -> center_on_line(c_OR, MT)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A segment from a line through the centre to the circle is a radius, with
+    the point placed on the circle by any circle premise. *)
+Definition def_radius_conv_source (premise goal : string) := chord_source
+  (premise ++ "[g_1] center_on_line(c_OR, MT)
+") goal ("[01] given(g_1) -> center_on_line(c_OR, MT)
+[02] def_radius_conv(1) -> " ++ goal).
+
+Example def_radius_conv_on_circle_accepts : complete_checker
+  (def_radius_conv_source "[d_01] on_circle(c_OR, T)
+" "radius(c_OR, T)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_radius_conv_chord_accepts : complete_checker
+  (def_radius_conv_source "[d_01] chord(c_OR, AT)
+" "radius(c_OR, T)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_radius_conv_inscribed_accepts : complete_checker
+  (def_radius_conv_source "[d_01] inscribed_angle(c_OR, a_ATB)
+" "radius(c_OR, T)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** Nothing places M on the circle. *)
+Example def_radius_conv_off_circle_rejects : complete_checker
+  (def_radius_conv_source "[d_01] on_circle(c_OR, T)
+" "radius(c_OR, M)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** A point on the circle that is not an end of the segment. *)
+Example def_radius_conv_not_endpoint_rejects : complete_checker
+  (def_radius_conv_source "[d_01] on_circle(c_OR, A)
+" "radius(c_OR, A)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** On a different circle. *)
+Example def_radius_conv_other_circle_rejects : complete_checker
+  (def_radius_conv_source "[d_01] on_circle(c_OA, T)
+" "radius(c_OR, T)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Inscribed angles, read through a [circ_order] premise.  Going round the
+    circle of centre O through A, the points come A, S, B, Q, P, so P and Q
+    are on one arc of chord AB and S is on the other.  X is off the circle,
+    on the ray from P through A. *)
+Definition inscribed_source (premises goal steps : string) : string :=
+  "title: inscribed angles
+premises:
+pt: O (5,5), A (1,2), B (9,2), P (2,9), Q (8,9), S (5,0), X (0,0), D (5,10)
+circ: c_OA
+" ++ premises ++ "-> " ++ goal ++ "
+
+steps:
+" ++ steps.
+
+Definition circ_order_ASBQP := "[d_01] circ_order(c_OA, A, S, B, Q, P)
+".
+
+Definition inscribed_pair_with (order first second reason goal : string) :=
+  inscribed_source (order ++ "[g_1] " ++ first ++ "
+[g_2] " ++ second ++ "
+") goal ("[01] given(g_1) -> " ++ first ++ "
+[02] given(g_2) -> " ++ second ++ "
+[03] " ++ reason ++ "(1, 2) -> " ++ goal).
+
+Definition inscribed_pair_source := inscribed_pair_with circ_order_ASBQP.
+
+Example con_inscribed_angs_same_arc_accepts : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_AQB)" "con_inscribed_angs"
+     "con_ang(a_APB, a_AQB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** The chord may be read either way round, and the conclusion in any
+    order. *)
+Example con_inscribed_angs_reversed_chord_accepts : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_BQA)" "con_inscribed_angs"
+     "con_ang(a_BQA, a_APB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** The list may start anywhere and run either way. *)
+Example con_inscribed_angs_rotated_order_accepts : complete_checker
+  (inscribed_pair_with "[d_01] circ_order(c_OA, Q, B, S, A, P)
+" "inscribed_angle(c_OA, a_APB)" "inscribed_angle(c_OA, a_AQB)"
+     "con_inscribed_angs" "con_ang(a_APB, a_AQB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** A ray may be named through a point off the circle that a premise puts on
+    the same ray as a listed point. *)
+Example con_inscribed_angs_traced_ray_accepts : complete_checker
+  (inscribed_pair_with "[d_01] circ_order(c_OA, A, S, B, Q, P)
+[d_02] on_line(PX, A)
+" "inscribed_angle(c_OA, a_XPB)" "inscribed_angle(c_OA, a_AQB)"
+     "con_inscribed_angs" "con_ang(a_XPB, a_AQB)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example con_inscribed_angs_opposite_arcs_rejects : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_ASB)" "con_inscribed_angs"
+     "con_ang(a_APB, a_ASB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example con_inscribed_angs_other_chord_rejects : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_AQS)" "con_inscribed_angs"
+     "con_ang(a_APB, a_AQS)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** Without the [on_line] premise nothing says where the ray through X meets
+    the circle. *)
+Example con_inscribed_angs_untraced_ray_rejects : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_XPB)"
+     "inscribed_angle(c_OA, a_AQB)" "con_inscribed_angs"
+     "con_ang(a_XPB, a_AQB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** The list leaves out S, which the second angle puts on the circle. *)
+Example inscribed_angs_missing_point_rejects : complete_checker
+  (inscribed_pair_with "[d_01] circ_order(c_OA, A, B, Q, P)
+" "inscribed_angle(c_OA, a_APB)" "inscribed_angle(c_OA, a_ASB)"
+     "supp_inscribed_angs" "supplementary(a_APB, a_ASB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+(** No [circ_order] premise at all. *)
+Example con_inscribed_angs_no_order_rejects : complete_checker
+  (inscribed_pair_with "" "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_AQB)" "con_inscribed_angs"
+     "con_ang(a_APB, a_AQB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example supp_inscribed_angs_accepts : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_BSA)" "supp_inscribed_angs"
+     "supplementary(a_APB, a_BSA)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example supp_inscribed_angs_same_arc_rejects : complete_checker
+  (inscribed_pair_source "inscribed_angle(c_OA, a_APB)"
+     "inscribed_angle(c_OA, a_AQB)" "supp_inscribed_angs"
+     "supplementary(a_APB, a_AQB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** An angle in a semicircle: S and D are the ends of a diameter, and P is
+    on the circle between them. *)
+Definition inscribed_semi_source (order angle diameter goal : string) :=
+  inscribed_source (order ++ "[g_1] " ++ angle ++ "
+[g_2] " ++ diameter ++ "
+") goal ("[01] given(g_1) -> " ++ angle ++ "
+[02] given(g_2) -> " ++ diameter ++ "
+[03] inscribed_semi(1, 2) -> " ++ goal).
+
+Example inscribed_semi_accepts : complete_checker
+  (inscribed_semi_source "[d_01] circ_order(c_OA, A, S, B, D, P)
+" "inscribed_angle(c_OA, a_SPD)" "diameter(c_OA, SD)" "right(a_SPD)") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example inscribed_semi_not_the_diameter_rejects : complete_checker
+  (inscribed_semi_source "[d_01] circ_order(c_OA, A, S, B, D, P)
+" "inscribed_angle(c_OA, a_APB)" "diameter(c_OA, SD)" "right(a_APB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Print Assumptions check_source_sound.
+Print Assumptions CompleteVerifiedChecker.checker_sound.
+Print Assumptions CertifiedAPI.euclidean_plane_exists.

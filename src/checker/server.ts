@@ -1,9 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from "http";
-import {
-  collectProofCheckerErrors,
-  runProofCheckerFromText,
-} from "./proofChecker";
-import { ErrorType } from "./errors/errorConstants";
+import { checkVerifiedProofNode, initialize } from "./verified/nodeWasmLoader";
+import { UNEXPECTED_ERROR_TYPE } from "./verified/presentationTypes";
 
 const PORT = parseInt(process.env.PORT ?? "4000", 10);
 
@@ -25,7 +22,7 @@ function json(res: ServerResponse, status: number, data: unknown): void {
   res.end(body);
 }
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   if (req.method === "GET" && req.url === "/health") {
     res.writeHead(200);
     res.end("ok");
@@ -40,21 +37,13 @@ createServer(async (req, res) => {
         json(res, 400, { error: 'Body must contain a "text" string field' });
         return;
       }
-      const result = runProofCheckerFromText(text);
-      if (result.errors.length > 0) {
-        json(res, 200, { isCorrect: false, errors: result.errors });
-      } else {
-        json(res, 200, {
-          isCorrect: result.proof.isCorrect,
-          issues: collectProofCheckerErrors(result),
-        });
-      }
+      json(res, 200, await checkVerifiedProofNode(text));
     } catch (e) {
       json(res, 500, {
         isCorrect: false,
         errors: [
           {
-            type: ErrorType.UnclassifiedError,
+            type: UNEXPECTED_ERROR_TYPE,
             code: "unexpected_error",
             details: { msg: e instanceof Error ? e.message : String(e) },
           },
@@ -66,6 +55,12 @@ createServer(async (req, res) => {
 
   res.writeHead(404);
   res.end("Not found");
-}).listen(PORT, () => {
-  console.log(`Checker server listening on port ${PORT}`);
 });
+
+// Load the checker before listening, so a missing build fails here rather
+// than on the first request.
+void initialize().then(() =>
+  server.listen(PORT, () => {
+    console.log(`Checker server listening on port ${PORT}`);
+  }),
+);

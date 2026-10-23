@@ -1,0 +1,12 @@
+// fail on step 2
+title: "Test: rectangle definition (incorrect - diagonal ray is not a corner)"
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+ang: a_FEH a_FGE
+[g_1] rectangle(q_EFGH)
+-> con_ang(a_FEH, a_FGE)
+
+steps:
+[01] given(g_1) -> rectangle(q_EFGH)
+[02] rectangle(1) -> con_ang(a_FEH, a_FGE)

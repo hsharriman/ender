@@ -1,192 +1,213 @@
 # Checker Error Codes
 
-Every error the checker emits is an `ErrorDetails` object (`src/checker/types/checkerTypes.ts`) whose `code` field is one of the strings below. Codes are grouped by the pipeline stage that emits them. Keep this file in sync with `src/checker/checker/` and `src/checker/grammar/`.
+This is untrusted, human-readable documentation of what the checker reports.
+It does not drive proof acceptance. Every code below is emitted by
+`rocq/Ender/CompleteChecker.v`, except `unexpected_error`, which comes from the
+TypeScript wrappers; keep this file in sync with those sites.
 
-## Parser (`grammar/lezerParser.ts`)
+The checker emits only codes and structured details, never prose. This file is
+where the explanations live.
 
-| Code | Meaning |
+`npm run checkProof` and `POST /check` return one of two shapes:
+
+- `{ "isCorrect": ..., "issues": [...] }` once the problem header parses. A
+  proof can be accepted and still carry `unused_step` or
+  `duplicate_conclusion` issues; neither is fatal.
+- `{ "isCorrect": false, "errors": [...] }` when the header does not parse.
+  `errors` holds exactly one issue, for the first header line that does not
+  read or for what the header is missing as a whole.
+
+Each issue is `{ type, code, details }`. Step-level issues name the step in
+`details.steps`, using the number written in brackets. Header-level issues
+name the offending line in `details.line`. The other detail fields are listed
+with each code.
+
+## Issue types
+
+| Type | Meaning |
 |---|---|
-| `invalid_segment` | A segment label repeats the same point letter (e.g. `AA`); segments need two distinct points. |
-| `invalid_angle` | An angle label (`a_XYZ`) does not have exactly 3 distinct point letters. |
-| `invalid_triangle` | A triangle label (`t_XYZ`) does not have exactly 3 distinct point letters. |
-| `invalid_quadrilateral` | A quadrilateral label (`q_WXYZ`) does not have exactly 4 distinct point letters. |
-| `invalid_circle` | A circle label (`c_XY`) does not have exactly 2 distinct point letters. |
-| `invalid_object_type` | Fallback when a parsed object's type is none of the known kinds (point, segment, angle, triangle, quad, circle). |
-| `wrong_premise_type` | The token right after a premise section head (`pt:`, `tri:`, `seg:`, `ang:`, `quad:`, `circ:`) is a geometric literal of a different kind. |
-| `malformed_identifier` | A prefixed object (`a_`/`t_`/`q_`/`c_`) has the wrong number of points (e.g. `t_RA`), so the lexer saw it as a plain identifier. |
-| `missing_coordinates` | A point in the `pt:` section is not followed by a valid `(x, y, offsetCode)` placement. |
-| `unexpected_token` | A bare geometric literal appears in the premises outside of any recognized section. |
-| `reason_as_statement` | A known reason name (e.g. `sas`) is used where a statement is expected (premise, goal, or step conclusion). |
-| `unknown_function` | A statement function name is not found in the statement definitions (`stmts.defs.ts`). |
+| 1 | A reason's rule did not accept the step |
+| 3 | Parser error |
+| 4 | Goal not reached |
+| 5 | Unused step |
+| 6 | Upstream dependency error |
+| 7 | Forward reference |
+| 8 | Cycle |
+| 9 | Wrong number of dependencies |
+| 10 | Conclusion not allowed for the reason |
+| 11 | Invalid statement arguments |
+| 12 | Dependency of the wrong kind |
+| 13 | Premise label cited outside `given` |
+| 14 | Duplicate statement |
+| 16 | Unexpected error |
 
-## Premise building (`checker/premises.ts`)
+Types 2 and 15 are no longer emitted.
 
-| Code | Meaning |
+## The problem header
+
+These go in `errors`. A header line that is a premise or the goal but whose
+statement does not read gets one of the statement codes in the next section,
+with `details.line`.
+
+| Code | Type | Meaning |
+|---|---|---|
+| `missing_points_line` | 3 | The file has no `pt:` line. |
+| `missing_steps_line` | 3 | The file has a `pt:` line but no `steps:` line after it. |
+| `unrecognized_line` | 3 | A header line is not a declaration (`pt:`, `seg:`, `ang:`, `tri:`, `quad:`, `circ:`), a premise (`[g_n]`, `[d_n]`), or the goal (`-> ...`). |
+| `missing_goal` | 3 | No header line states the goal. |
+| `multiple_goals` | 3 | More than one header line states a goal. |
+| `parser_error` | 3 | Every line reads and there is exactly one goal, but the header as a whole still is not a problem the audited grammar accepts. The checker has nothing more specific to say. |
+
+## Statements
+
+Used for a statement in a premise, the goal, or a step's conclusion.
+`details.text` is the statement with spaces and any `//` comment removed.
+
+| Code | Type | Meaning |
+|---|---|---|
+| `empty_statement` | 3 | A step has a reason and `->` but nothing after it, as in `[01] sas(1, 2, 3) ->`. |
+| `malformed_statement` | 3 | The text is not of the form `name(arguments)`. |
+| `unclosed_parenthesis` | 3 | A `(` is never closed. |
+| `trailing_text` | 3 | Something follows the statement's closing parenthesis; `details.trailing` holds it. |
+| `unknown_function` | 3 | The statement name is not one the checker knows; `details.token` holds it. Also used for an unknown reason name. |
+| `stmt_arg_type_invalid` | 11 | A known statement has arguments of the wrong number or kind. `details.statement` is its name and `details.parameters` the kinds it takes, such as `["segment", "point"]`. Also emitted when a `given(g_n)` step restates `g_n` with different arguments; `details.expected` and `details.actual` are the two statements. |
+
+## Steps
+
+Every step is judged on its own. A step that is not accepted gets exactly one
+issue, and the steps after it are still judged.
+
+### A step that does not parse
+
+Spaces and a trailing `//` comment are ignored, so `[04]  // todo` is an
+empty step.
+
+| Code | Type | Meaning |
+|---|---|---|
+| `empty_step` | 3 | The line holds only a step number, as in `[01]`, or a number and a bare `->`. |
+| `empty_reason` | 3 | Nothing comes before the `->`, as in `[01] -> con_seg(AB, BC)`. |
+| `missing_step_number` | 3 | The line does not start with a step number in brackets. |
+| `unclosed_step_number` | 3 | The step number's `]` is missing. |
+| `missing_arrow` | 3 | The line has a reason or statement but no `->` between them. |
+| `unknown_function` | 3 | The reason name is not one the checker has a rule for; `details.token` holds it. |
+| `unreadable_given_citation` | 3 | A `given(...)` citation could not be read; `details.text` holds the reason. |
+| `unreadable_dependencies` | 3 | The reason's dependency numbers could not be read; `details.text` holds the reason. |
+| `invalid_given_dep` | 13 | A premise label such as `g_1` is cited by a reason other than `given`. It is cited with `given` in a step of its own, and that step's number is what other reasons cite. `details.ref` is the label. |
+| `reason_dep_missing` | 9 | The reason cites the wrong number of dependencies (`expectedLength`, `receivedLength`). |
+
+The statement codes above also apply to the step's conclusion.
+
+### A step that cites a step that was not accepted
+
+| Code | Type | Meaning |
+|---|---|---|
+| `upstream_dep_error` | 6 | The step was not judged; `details.dependsOn` lists the cited steps that were not accepted. |
+
+### A step that parses and is rejected
+
+It gets the first of these that applies, in this order.
+
+| Code | Type | Meaning |
+|---|---|---|
+| `forward_reference` | 7 | The step cites itself or a later step; `details.ref` is the citation. |
+| `invalid_given_dep` | 13 | `given` cites a label no premise has; `details.ref` is the label. |
+| `stmt_arg_type_invalid` | 11 | `given(g_n)` restates `g_n`'s statement with different arguments. |
+| `reason_stmt_mismatch` | 10 | `given(g_n)` concludes a different statement from `g_n` (`details.ref`); or, later in this order, the conclusion is not a statement the reason can conclude. `details.legalStatements` lists what it can conclude and `details.actualStatement` what the step wrote. |
+| `reason_dep_type_mismatch` | 12 | A cited dependency states the wrong kind of fact for its slot: `details.index` is the slot, `expectedType` and `allowedTypes` what it accepts, `ref` the cited step, and `receivedType` what that step states. |
+| `invalid_duplicate_stmt` | 14 | Two dependency slots cite the same fact (`firstIndex`, `secondIndex`); or, after the conclusion's statement is checked, the conclusion names one object twice (`statement`, `argument`). |
+| *rule-specific code* | 1 | See the next table. |
+| `reason_application_error` | 1 | The rule did not accept the step and nothing more specific applies. `details.reason` names the reason; what each one needs is listed [below](#what-each-rule-needs). Also emitted, with no step, when the steps do not match the problem's premises and goal. |
+
+### Rule-specific causes (type 1)
+
+These replace `reason_application_error` when the checker can say more about
+why a particular rule did not accept the step. Every one carries
+`details.reason` and `details.steps`.
+
+| Code | Reasons | Meaning | Other details |
+|---|---|---|---|
+| `objs_not_equal` | `reflex` | `reflex` relates a segment or angle to itself, and these are different objects. | `pair` |
+| `angle_not_declared` | `reflex`, `perp_con_ang` | An angle in the conclusion is not declared on an `ang:` line, which is what makes its rays genuine. `con_right` from `perp_con_ang` needs no declaration. | `angle` (`reflex`) or `angles` (`perp_con_ang`) |
+| `triangle_not_declared` | `sas`, `sss`, `asa`, `aas`, `rhl` | Both triangles must be declared on a `tri:` line, which is what says they are genuine triangles. | `tri1`, `tri2` |
+| `criterion_parts_dont_match_triangles` | `sas`, `sss`, `asa`, `aas`, `rhl` | The criterion needs the parts it names (`sas`: two sides and the angle between them; `sss`: all three sides; `asa`: two angles and the side between them; `aas`: two angles and a side not between them; `rhl`: a right angle, the hypotenuse, and a leg) of `tri1` congruent to the corresponding parts of `tri2`, cited in that order, and the cited steps do not state them. | `tri1`, `tri2` |
+| `parts_not_corresponding_in_triangles` | `cpctc` | The conclusion pairs parts that do not correspond when the triangles are matched vertex by vertex, or in the way the earlier steps match them. | `tri1`, `tri2`, and `expected`: the part that does correspond to the conclusion's first object, when there is one |
+| `no_correspondence_established` | `cpctc` | `con_tri` does not say which vertices correspond, and none of the earlier steps establishes a correspondence. A given congruence meant for `cpctc` is written `con_tri_ordered`. | `tri1`, `tri2` |
+| `segs_not_subsegments_meeting_at_midpt` | `def_midpt` | The conclusion is not the two halves the midpoint makes. | `expected` |
+| `bisector_not_in_both_half_angles` | `def_ang_bisect` | The bisector splits the angle into the two angles between it and each side, and the conclusion is not those two. | `angle`, `bisector` |
+| `angle_centers_dont_match` | `def_ang_bisect` | Both halves of the bisected angle have their vertex at its vertex, and the concluded angles do not. | `vertex` |
+| `right_angles_dont_match_conclusion` | `def_con_right` | The conclusion does not relate the two cited right angles. | `expected` |
+| `angles_dont_share_centerpt` | `perp_con_ang` | Both angles must be right angles at the crossing point, between the perpendicular segments. | `point` |
+| `no_shared_congruent_element` | `con_seg_transitive`, `con_ang_transitive`, `con_tri_transitive` | Transitivity needs the two congruences to share a segment, angle, or triangle. | |
+| `no_shared_angle_bw_supp_pairs` | `con_supplements_same`, `con_complements_same` | The two cited pairs need an angle in common. | |
+| `non_shared_angles_dont_match_con_ang_conclusion` | `con_supplements_same`, `con_complements_same` | The conclusion must relate the two angles the cited pairs do not share. | |
+| `equilateral_and_equiangular_not_the_same_triangle` | `equilat_equiang`, `equiang_equilat` | The cited step and the conclusion are about different triangles. | `tri1`, `tri2` |
+| `no_intersecting_seg_produces_vert_angles` | `vert_ang` | `vert_ang` cites just the `intersect_seg` diagram premise whose crossing makes the angles vertical, as in `vert_ang(d_01)`; the cited label is not one, names something else, or its crossing does not make the concluded angles opposite. | `label`, and `premise` when the label names one |
+| `transversal_angles_or_parallel_segs_dont_form_valid_config` | `altint`, `altext`, `corresp_ang`, `sameside_ang`, and their converses | The parallel-line rules read the figure from a `transversal` diagram premise. Either the problem has none, or none crosses the two lines with the concluded angles as the pair the reason is about. | `hasTransversal` |
+| `segs_not_opp_sides_of_quad` | `pgram_opp_sides`, `def_parallelogram` | `pgram_opp_sides`: the concluded segments are not opposite sides. `def_parallelogram`: the cited steps must state both pairs of opposite sides parallel. | `quad`, `oppositeSides`, and `pair` for `pgram_opp_sides` |
+| `angles_not_opp_angles_of_quad` | `pgram_opp_angs`, `kite_opp_con_ang` | The concluded angles are not opposite corners (`pgram_opp_angs`), or not the two corners the kite premise selects (`kite_opp_con_ang`). | `quad`, and `pair` and `oppositeAngles`, or `expected` |
+| `angles_not_consecutive_in_quad` | `pgram_consec_angs` | Two corners are supplementary when they share a side, and these do not. | `a1`, `a2`, `quad` |
+| `angle_or_seg_not_within_quad` | `rhombus_opp_bisect` | A rhombus diagonal bisects the two corners it joins, and the concluded segment and angle are not such a pair. | `angle`, `segment`, `quad` |
+| `angles_not_base_angle_pair_of_trap` | `isos_trap_base_angs_conv` | The base angles of an isosceles trapezoid are the two corners at either end of one of its parallel sides. | `quad` |
+| `conclusion_elements_not_in_quad` | `rectangle` | A rectangle's corners are right angles and its opposite sides congruent; the conclusion must name corners or opposite sides of it. | `quad` |
+| `quad_stmts_refer_to_diff_quads` | `rectangle_pgram`, `rhombus_pgram`, and the rules that cite a parallelogram or trapezoid to conclude a rhombus, rectangle, or isosceles trapezoid | The cited and concluded quadrilaterals are different figures. A quadrilateral may be named by any rotation or reversal of its letters. | `pair` |
+| `segs_not_both_diagonals_of_quad` | `isos_trap_con_diags`, `pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp` | The cited congruence, or the conclusion, is not about the two diagonals. | `s1`, `s2`, `quad`, `diagonals` |
+| `no_intersect_seg_premise_for_diagonals_at_this_point` | `pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp` | The conclusion is about the two diagonals at a point no `intersect_seg` premise places at their crossing. Without it the point could sit anywhere in the figure. | `expected`: the premise that would place it |
+| `segs_not_radii_of_circle` | `def_radius` | The conclusion is not the congruence the cited radius gives. | `expected` |
+| `tangent_segs_have_no_common_ext_pt` | `con_tangents_ext` | Two tangents to one circle from one outside point are congruent; the cited tangents must share their outside endpoint. | |
+| `no_circ_order_premise` | `con_inscribed_angs`, `supp_inscribed_angs`, `inscribed_semi` | These rules read the circle through a `circ_order` premise listing its points in order, and the problem has none for this circle. | `circle` |
+| `circ_order_missing_point` | `con_inscribed_angs`, `supp_inscribed_angs`, `inscribed_semi` | The `circ_order` premise must list every point the premises place on its circle, the circle's own radius point among them, and it leaves some out. | `circle`, `missing` |
+| `vertex_not_in_circ_order` | `con_inscribed_angs`, `supp_inscribed_angs`, `inscribed_semi` | An inscribed angle's vertex is not one of the points the `circ_order` premise lists. | `angle` |
+| `ray_not_traced_to_circle_point` | `con_inscribed_angs`, `supp_inscribed_angs`, `inscribed_semi` | A ray of the angle cannot be traced to a listed point: its point is not listed and no `on_line`, `midpt`, or `intersect_seg` premise puts a listed point on the same ray from the vertex. Also used when both rays reach the same point. | `angle` |
+| `inscribed_angles_on_different_chords` | `con_inscribed_angs`, `supp_inscribed_angs` | The two angles' rays meet the circle at different pairs of points. | `chords` |
+| `vertices_on_opposite_arcs` | `con_inscribed_angs` | The vertices are on opposite arcs of the chord, so the angles are supplementary, not congruent (`supp_inscribed_angs`). | |
+| `vertices_on_same_arc` | `supp_inscribed_angs` | The vertices are on the same arc of the chord, so the angles are congruent, not supplementary (`con_inscribed_angs`). | |
+| `rays_dont_reach_diameter_ends` | `inscribed_semi` | The angle's rays do not meet the circle at the two ends of the cited diameter. | `chord`, `diameter` |
+| `tangent_and_radius_have_diff_tangency_pts` | `tangent_perp`, `tangent_perp_conv` | The tangent and the radius must meet at the point of tangency, on the same circle, and the perpendicular is between those two segments there. | |
+
+### What each rule needs
+
+What `reason_application_error` means for the rules whose failures have no
+more specific code.
+
+| Reason | Needs |
 |---|---|
-| `parser_error` | Premise construction failed; `details.message` explains why: unknown statement function, point not defined in `pt:`, statement needing its `_premise` counterpart, `ang_bisect` segment not overlapping the angle, invalid trapezoid bases, or a `transversal` statement without exactly 8 defined points. |
+| `aa_sim` | Two triangles with two pairs of congruent angles are similar: cite `con_ang` of two corresponding pairs and conclude `sim_tri` with the vertices in corresponding order. |
+| `ang_bisect_conv` | A ray splitting an angle into two congruent halves bisects it: cite `con_ang` of exactly the two halves and conclude `ang_bisect` of the whole angle and the ray. |
+| `base_angle` | A triangle with two congruent sides has the angles opposite them congruent: cite `con_seg` of the two legs from the apex and conclude `con_ang` of the base angles. |
+| `base_angle_conv` | A triangle with two congruent angles has the sides opposite them congruent: cite `con_ang` of the base angles and conclude `con_seg` of the two legs from the apex. |
+| `chord_bisect_conv` | The perpendicular bisector of a chord passes through the centre: cite the `perp_bisector` and the `chord` it bisects, and conclude `center_on_line` of the circle and the bisector. |
+| `con_chords_intersect_arcs` | Congruent arcs of one circle have congruent chords: cite `con_arc` of the two arcs and conclude `con_seg` of their chords. |
+| `con_complements` | Angles complementary to congruent angles are congruent: cite two complementary pairs and the `con_ang` relating one angle of each, and conclude `con_ang` of the other two. |
+| `con_inscribed_angs` | Two inscribed angles of a circle intercepting the same chord from the same arc are congruent: cite two `inscribed_angle` steps, with a `circ_order` premise placing both vertices on the same arc of the chord, and conclude `con_ang` of the two angles. |
+| `con_supplements` | Angles supplementary to congruent angles are congruent: cite two supplementary pairs and the `con_ang` relating one angle of each, and conclude `con_ang` of the other two. |
+| `def_con_tri` | Triangles with all six corresponding parts congruent are congruent: cite the three side and three angle congruences, in corresponding order. |
+| `def_equiangular` | A triangle whose three angles are congruent is equiangular: cite congruences covering each of its angles. |
+| `def_equilateral` | A triangle whose three sides are congruent is equilateral: cite congruences covering each of its sides. |
+| `def_linear_pair` | The two angles of a linear pair are supplementary: conclude `supplementary` of exactly the two angles of the cited `linear_pair`. |
+| `def_radius_conv` | A segment from a line through the centre to a point on the circle is a radius: cite `center_on_line` of the circle and a segment, with a premise placing the segment's end on the circle, and conclude `radius` of that end. |
+| `inscribed_semi` | An angle inscribed in a semicircle is right: cite the `inscribed_angle` step and the `diameter` whose ends its rays reach, with a `circ_order` premise for the circle, and conclude `right` of the angle. |
+| `isos_trap_base_angs` | A trapezoid with congruent base angles is isosceles: cite `con_ang` of the two corners at one end of a parallel side, and the trapezoid premise. |
+| `linear_pair_conv` | Two supplementary angles sharing a ray form a linear pair when their other rays are opposite: cite `supplementary` of the two angles, with an `on_line` premise placing their common vertex on the segment between the two other points, and conclude `linear_pair` of the same angles. |
+| `para_transitive` | Two lines parallel to a third are parallel: cite two `para` statements sharing a segment and conclude `para` of the other two. |
+| `perp_bisector` | A point on the perpendicular bisector of a segment is as far from both ends: cite the `perp` at the midpoint and the `midpt`, and conclude `con_seg` of the two distances. |
+| `pgram_opp_angs_conv` | Both pairs of opposite angles congruent make a parallelogram: cite `con_ang` of each pair of opposite corners. |
+| `pgram_opp_side_para` | One pair of opposite sides parallel and congruent makes a parallelogram: cite `con_seg` and `para` of the same two opposite sides. |
+| `pgram_opp_sides_conv` | Both pairs of opposite sides congruent make a parallelogram: cite `con_seg` of each pair of opposite sides. |
+| `radius_chord_bisect` | A radius perpendicular to a chord bisects it: cite the `perp`, the `radius`, and the `chord`, and conclude `seg_bisect` of the radius's line, the chord, and the foot. |
+| `rect_diag_con` | A rectangle's diagonals are congruent: conclude `con_seg` of its two diagonals. |
+| `rect_diag_con_conv` | A parallelogram with congruent diagonals is a rectangle: cite `con_seg` of its two diagonals and the parallelogram. |
+| `rhombus` | A rhombus's sides are congruent: conclude `con_seg` of two of its sides. |
+| `rhombus_consec_sides` | A parallelogram with two consecutive sides congruent is a rhombus: cite the parallelogram and `con_seg` of two sides that share a corner. |
+| `supp_inscribed_angs` | Two inscribed angles of a circle intercepting the same chord from opposite arcs are supplementary: cite two `inscribed_angle` steps, with a `circ_order` premise placing the vertices on opposite arcs of the chord, and conclude `supplementary` of the two angles. |
+| `third_angle` | Two triangles with two pairs of congruent angles have congruent third angles: cite the two pairs and conclude `con_ang` of the remaining corners. |
 
-## Structural validation (`checker/validators.ts`, `checker/graph.ts`)
+## Whole proof
 
-| Code | Meaning |
-|---|---|
-| `reason_stmt_mismatch` | The step's conclusion statement is not legal for its reason: not in the reason's allowed conclusions, doesn't match the cited `g_n` premise's function, or the statement is diagram-only/premises-only. |
-| `stmt_arg_num_args_incorrect` | A `given(g_n)` step's conclusion has a different argument count than the cited given premise. |
-| `stmt_arg_type_invalid` | A `given(g_n)` step's conclusion argument differs in type or value from the corresponding argument of the cited given premise. |
-| `reason_dep_missing` | The reason has the wrong number of dependency refs, or a ref points to a step that doesn't exist or has no statement. |
-| `reason_dep_type_mismatch` | A cited dependency's statement function doesn't match the type the reason expects in that slot (including allowed group substitutions). |
-| `object_not_in_premises` | A statement argument names a geometric object (point, segment, angle, triangle, quad, circle) that doesn't exist in the geometry built from the premises. |
-| `invalid_duplicate_stmt` | Two arguments of one statement resolve to the same geometric object (when the statement disallows duplicates), or two dependency slots of a reason cite the same statement. |
-| `duplicate_step` | Two proof steps are identical: same reason, reason arguments, statement function, and statement arguments. |
-| `duplicate_conclusion` | A valid proof step re-derives a fact an earlier valid step already concluded: same statement function and matching argument objects (compared via geometric equality, ignoring order for symmetric two-argument statements). Regardless of reason, e.g. `con_ang(a_CMA, a_DMB)` then `con_ang(a_AMC, a_DMB)`. |
-| `duplicate_step_number` | The same step number label (e.g. `[03]`) is used by more than one proof step. |
-| `invalid_step_number_labels` | Some proof step labels are not numeric, so sequential numbering can't be checked. |
-| `no_step_numbers` | The proof contains no numbered proof steps at all. |
-| `non_consecutive_step_numbers` | Sorted proof step numbers don't increase by exactly 1 from the first step (gaps or out-of-sequence labels). |
-| `illegal_diagram_dep` | A `[d_xx]` diagram premise uses a statement that isn't marked `isDiagramOnly`; such statements belong in given or proof steps. |
-| `missing_diagram_premise` | The reason declares `diagramDependencies` and the proof has no `[d_xx]` premise of the required statement type at all; `details.expected` lists the missing types. |
-| `forward_reference` | A proof step cites its own step number or a later one; steps may only depend on earlier numbered steps. |
-| `invalid_given_dep` | A `g_n` given-premise ref is used as a dependency of a reason other than `given(...)`. |
-| `upstream_dep_error` | The step itself may be fine, but a cited dependency step was already marked incorrect, so this step cannot be validated. |
-
-## Proof-level results (`proofChecker.ts`)
-
-| Code | Meaning |
-|---|---|
-| `goal_not_reached` | No proof step's statement exactly matches the goal (same function and same arguments in order). |
-| `cycle` | The step dependency graph contains a cycle (steps directly or indirectly depend on each other). |
-| `unused_step` | Steps whose conclusions are never used on any dependency path reaching the goal step. |
-| `unused_step_goal_already_met` | Unused steps that appear after the step where the goal was already reached. |
-| `unexpected_error` | An uncaught exception escaped the checking pipeline (CLI `proofCheckerCli.ts` / HTTP `server.ts`); `details.msg` holds the exception message. |
-| `reason_application_error` | A reason's geometric check itself threw an exception (`reasonApplication.ts` catch-all), usually from malformed or missing geometry. |
-
-## Reason application — shared helpers (`checker/reasonChecks/utils.ts`)
-
-| Code | Meaning |
-|---|---|
-| `objs_not_equal` | Two objects that the reason requires to be identical (same segment, angle, circle, quadrilateral, or point) are not equal. Used where no more specific code applies (e.g. `reflex`, inscribed angles' circles). |
-| `no_shared_congruent_element` | Transitivity: the two congruence dependencies share no common element, or the two non-shared elements don't match the concluded pair. |
-| `angles_dont_share_centerpt` | Right-angle-on-perpendicular check: the angle's vertex is not the intersection point of the two perpendicular segments. |
-| `shared_side_not_on_perp_segs` | Right-angle-on-perpendicular check: no name variant of the angle has its two outer points lying one on each perpendicular segment. |
-
-## Reason application — angles (`checker/reasonChecks/angleChecks.ts`)
-
-| Code | Meaning |
-|---|---|
-| `angles_not_linear_pair` | The supplementary pair doesn't equal the linear-pair angles (in either order). |
-| `no_shared_angle_bw_supp_pairs` | The two supplementary statements have no angle in common. |
-| `non_shared_angles_dont_match_con_ang_conclusion` | After removing the shared (or congruent) angles from each supplementary pair, the remaining angles don't equal the concluded congruent pair. |
-| `con_angles_appear_in_same_supp_pair` | Each angle of the given congruent pair must appear in exactly one supplementary statement; one appears in both or in neither. |
-| `con_angles_not_distributed_across_pairs` | Both angles of the given congruent pair fall in the same supplementary statement; they must be split across the two statements. |
-| `no_intersecting_seg_produces_vert_angles` | No `intersect_seg` diagram premise makes the concluded angles vertical: distinct angles, vertices at the intersection point, rays along both segments. |
-| `no_intersect_seg_premise_for_diagonals_at_this_point` | A diagonal theorem (`pgram_diag_bisect`, `rhombus_diag_perp`, `kite_diag_perp`) concludes about a point that no `intersect_seg` premise places at the crossing of those two diagonals. Without it the point could sit anywhere in the figure. |
-| `angle_centers_dont_match` | `def_ang_bisect`: the two concluded angles and the bisected angle don't all share the same vertex. |
-| `bisector_not_in_both_half_angles` | `def_ang_bisect`: the bisecting segment is not a ray of both concluded half-angles. |
-| `right_angles_dont_match_conclusion` | `def_con_right`: the two right angles don't equal the concluded congruent angle pair (in either order). |
-
-## Reason application — lines & transversals (`checker/reasonChecks/lineChecks.ts`)
-
-| Code | Meaning |
-|---|---|
-| `no_transversal_produces_alt_int_angles` | No `transversal` diagram premise validates the angles as alternate interior angles (emitted only if no transversal produced a more specific failure). |
-| `no_transversal_produces_alt_ext_angles` | Same as above, for alternate exterior angles. |
-| `no_transversal_produces_same_side_int_angles` | Same as above, for same-side interior angles. |
-| `no_transversal_produces_corresp_angles` | Same as above, for corresponding angles. |
-| `transversal_angles_or_parallel_segs_dont_form_valid_config` | Transversal setup is invalid: angles are equal, segments coincide, the parallel statement's segments don't match the crossed segments, or intersection points aren't on the crossed lines. |
-| `alt_int_angle_ctrs_not_at_inner_intersections` | Alt-interior: angle vertices are not at the declared intersection points (`i1`, `i2`) of the transversal statement. |
-| `alt_int_angles_not_directed_inward` | Alt-interior: each angle must have a ray toward the other declared intersection point (along the transversal's inner part). |
-| `alt_int_angles_not_on_alternating_sides` | Alt-interior: the angles open toward the same side of the transversal instead of opposite sides. |
-| `alt_ext_transversal_endpt_at_intersection` | Alt-exterior: a transversal endpoint coincides with an intersection point, so no exterior ray exists there. |
-| `alt_ext_intersections_not_on_transversal_line` | Alt-exterior: the intersection points don't lie on the transversal's line. |
-| `alt_ext_angle_ctrs_or_rays_not_at_outer_pts` | Alt-exterior: angle vertices aren't at the intersections, or their rays don't extend toward the transversal's outer endpoints. |
-| `alt_ext_angles_not_on_alternating_sides` | Alt-exterior: the angles are not on alternating sides of the transversal. |
-| `same_side_angle_ctrs_not_at_intersections` | Same-side interior: angle vertices are not at the two intersection points. |
-| `same_side_angles_not_directed_inward` | Same-side interior: each angle must have a ray toward the other intersection point. |
-| `same_side_angles_not_on_same_side` | Same-side interior: the angles don't open toward the same side of the transversal. |
-| `corresp_transversal_endpt_at_intersection` | Corresponding: a transversal endpoint coincides with an intersection point. |
-| `corresp_intersections_not_on_transversal_line` | Corresponding: the intersection points don't lie on the transversal's line. |
-| `corresp_angle_ctrs_not_at_intersections` | Corresponding: angle vertices are not at the two intersection points. |
-| `corresp_angles_not_in_corresponding_directions` | Corresponding: the angles don't point the same way along the transversal (one toward the other intersection, the other toward its outer endpoint). |
-| `corresp_angles_not_on_same_side` | Corresponding: the angles are not on the same side of the transversal. |
-| `segs_not_subsegments_meeting_at_midpt` | `midpt`: the concluded segments aren't two distinct subsegments of the bisected segment that both contain the midpoint. |
-| `points_do_not_share_intersection_on_both_segs` | `intersect_seg`: the two point-on statements don't name the same point lying on both segments and matching the intersection point. |
-| `no_intersect_pt_in_perp_stmt` | The cited `perp` statement has no intersection point, so perpendicularity checks can't proceed. |
-| `angles_not_adj_at_perp` | `perp_con_ang`: both right angles sit at the perpendicular, but they share no outer-ray endpoint, so they aren't adjacent. |
-| `midpt_not_at_perp_intersection` | `perp_bisector`: the midpoint is not the same point as the perpendicular intersection. |
-| `bisected_halves_dont_match_con_segs` | The concluded congruent segments aren't the two halves of the bisected segment split at the bisection point. |
-
-## Reason application — triangles (`checker/reasonChecks/triangleChecks.ts`)
-
-| Code | Meaning |
-|---|---|
-| `element_not_assignable_to_either_triangle` | A congruent-pair element (segment or angle) can't be matched into either cited triangle under any assignment or angle-name variant. |
-| `con_pair_not_assigned_to_separate_triangles` | The pair's elements don't map exclusively one-per-triangle; a shared (identical) element is allowed only if it belongs to both triangles. |
-| `angle_center_not_bw_both_con_segs` | SAS: the congruent angle's vertex is not an endpoint of both congruent segments, so it isn't the included angle. |
-| `seg_touches_both_or_neither_con_angle` | AAS: the congruent segment must touch exactly one of the two congruent angles' vertices; it touches both or neither. |
-| `seg_not_bw_both_con_angles` | ASA: the congruent segment doesn't have both congruent angles' vertices as endpoints, so it isn't the included side. |
-| `rhl_first_seg_must_be_hypotenuse_and_second_must_be_leg` | RHL: the leg must contain the right-angle vertex and the hypotenuse must not; the given segments violate this. |
-| `segs_not_corresponding_in_triangles` | CPCTC: mapping the first segment's endpoints through the cited step's vertex correspondence does not produce the second segment. `details.expected` names the segment that does correspond. |
-| `angles_not_corresponding_in_triangles` | CPCTC: mapping the first angle's vertex and rays through the cited step's vertex correspondence does not produce the second angle. |
-| `conclusion_must_be_con_seg_or_con_ang` | CPCTC: the conclusion statement is neither `con_seg` nor `con_ang`. |
-| `con_tri_dependency_has_no_vertex_correspondence` | CPCTC or `con_tri_transitive`: the cited `con_tri` step recorded no vertex correspondence, so no corresponding part can be derived from it. |
-| `con_tri_dependency_does_not_relate_these_two_triangles` | The cited step's correspondence is between a different pair of triangles than the ones this step names, or composing two correspondences did not yield a one-to-one vertex map. |
-| `con_seg_pairs_reuse_the_same_side_of_a_triangle` | SAS or RHL: two side slots cite the same side of one triangle, so the remaining sides carry no constraint. |
-| `con_ang_pairs_reuse_the_same_angle_of_a_triangle` | ASA or AAS: both angle slots cite the same angle of one triangle, so the triangle is not determined. |
-| `con_seg_pairs_dont_cover_all_three_sides_of_both_triangles_exactly_once` | SSS: the three segment pairs don't cover all three sides of each triangle exactly once, so at least one side is unconstrained. |
-| `derived_vertex_order_is_not_a_permutation_of_triangle` | The vertex order a congruence reason derived from its congruent-part pairs repeats a point or names a point outside the triangle. Reordering with it would drop a vertex, so the step is rejected. |
-| `con_pairs_dont_cover_each_side_and_angle_of_both_triangles_exactly_once` | `def_con_tri`: the three segment pairs and three angle pairs don't cover each triangle's sides and angles exactly once each. |
-| `triangle_not_found_from_con_angles` | No triangle (or no two distinct triangles) in the diagram contains the cited congruent angles. |
-| `con_angle_pairs_dont_cover_each_angle_of_both_triangles_exactly_once` | Third-angle: the three angle pairs don't cover each triangle's three angles exactly once each. |
-| `con_segs_not_two_distinct_sides_of_isosceles_triangle` | The concluded congruent segments aren't two distinct sides of the cited isosceles triangle. |
-| `base_angle_vertex_not_at_endpoint_of_exactly_one_leg` | Base angles: the segments aren't sides of the triangle, or an angle's vertex doesn't appear in exactly one congruent leg (apex angles fail this). |
-| `equilateral_and_equiangular_not_the_same_triangle` | The equilateral and equiangular statements refer to different triangles. |
-| `not_all_sides_appear_exactly_twice_in_con_segs` | Equilateral: some side of the triangle doesn't appear exactly twice among the six congruent-segment operands. |
-| `not_all_angles_appear_exactly_twice_in_con_angs` | Equiangular: some angle of the triangle doesn't appear exactly twice among the six congruent-angle operands. |
-
-## Reason application — circles (`checker/reasonChecks/circleChecks.ts`)
-
-| Code | Meaning |
-|---|---|
-| `tangent_and_radius_on_diff_circles` | The tangent and radius statements refer to different circles. |
-| `tangent_and_radius_have_diff_tangency_pts` | The tangent statement's tangency point is not the same point the radius statement touches on the circle. |
-| `perp_intersect_pt_doesnt_match_tangency_pt` | The `perp` statement's intersection point is not the tangency point. |
-| `tangent_seg_not_in_perp_stmt` | Neither segment of the `perp` statement matches the tangent segment (including sub/parent segment variants). |
-| `other_perp_seg_not_a_radius_to_tangency_pt` | The non-tangent perpendicular segment doesn't contain both the circle's center and the tangency point, so it isn't the radius. |
-| `tangent_stmts_on_diff_circles` | The two tangent statements refer to different circles. |
-| `tangent_stmts_share_same_tangency_pt` | The two tangent statements touch the circle at the same point; congruent tangents need two distinct tangency points. |
-| `con_segs_dont_match_tangent_segs` | The concluded congruent segments aren't the two tangent segments (in either order). |
-| `tangent_segs_have_no_common_ext_pt` | The two tangent segments' non-tangency endpoints are different points; congruent tangents must share one external endpoint. |
-| `radius_and_chord_on_diff_circles` | The radius and chord statements refer to different circles. |
-| `neither_perp_seg_matches_the_chord` | Neither segment of the `perp` statement equals the chord from the `chord` statement. |
-| `radius_dir_seg_doesnt_contain_circle_center` | The non-chord perpendicular segment doesn't contain the circle's center, so it can't lie along a radius. |
-| `conclusion_segs_dont_match_chord_and_radius_dir_segs` | The `seg_bisect` conclusion doesn't reference both the chord and the radius-direction segment. |
-| `conclusion_midpt_doesnt_match_perp_intersect_pt` | The `seg_bisect` conclusion's bisection point is not the perpendicular intersection point. |
-| `conclusion_and_chord_on_diff_circles` | The concluded radius statement's circle differs from the chord statement's circle. |
-| `bisected_seg_not_the_chord` | The segment bisected by the `perp_bisector` statement is not the chord. |
-| `conclusion_pt_not_endpoint_of_perp_bisector` | The concluded radius point is not an endpoint of the perpendicular bisecting segment. |
-| `inscribed_angles_dont_match_con_ang_conclusion` | The concluded congruent angles aren't the two cited inscribed angles (in either order). |
-| `inscribed_angles_dont_have_same_endpoints` | The two inscribed angles don't share the same endpoints, so they don't subtend the same arc. |
-| `angle_not_inscribed_in_circle` | A concluded inscribed angle has a point (vertex or endpoint) that does not lie on the circle. |
-
-## Reason application — quadrilaterals (`checker/reasonChecks/polyChecks.ts`)
-
-| Code | Meaning |
-|---|---|
-| `conclusion_elements_not_in_quad` | Rectangle reason: the concluded angles/segments aren't contained in the quadrilateral, or the conclusion statement type isn't supported. |
-| `angle_not_contained_in_rect` | The cited right angle is not one of the rectangle's angles. |
-| `rect_and_pgram_are_diff_quads` | The rectangle and parallelogram statements refer to different quadrilaterals. |
-| `segs_not_opp_sides_of_quad` | The segment pair is not a pair of opposite sides of the quadrilateral. |
-| `opp_side_pair_must_match_in_both_stmts` | `pgram_opp_side_para`: the congruent and parallel statements must cite the same opposite-side pair, but they differ. |
-| `both_pairs_are_the_same_opp_side_pair` | Parallelogram converse: the two statements cite the same opposite-side pair; two different pairs are required. |
-| `angles_not_opp_angles_of_quad` | The angle pair is not a pair of opposite angles of the quadrilateral (also used for kite opposite-angle mismatches). |
-| `both_pairs_are_the_same_angle_pair` | The two angle statements cite the same pair; two different angle pairs are required. |
-| `angles_not_consecutive_in_quad` | The angles aren't consecutive in the quadrilateral, or the supplementary statements don't share exactly one angle whose neighbors are the other two. |
-| `segs_not_both_diagonals_of_quad` | At least one of the concluded segments is not a diagonal of the quadrilateral. |
-| `seg_not_a_diagonal_of_quad` | A bisecting segment is not exactly a diagonal of the quadrilateral (no sub/parent substitution allowed in `pgram_diag_bisect`). |
-| `bisect_stmts_have_diff_midpts` | The two `seg_bisect` statements have different bisection points; the diagonals must bisect each other at one shared point. |
-| `bisect_stmts_have_diff_seg_pairs` | The two `seg_bisect` statements cite different segment pairs; both must bisect the same two diagonals. |
-| `segs_are_not_the_same_diagonal` | Rhombus angle-bisect: the two bisecting segments differ, or the segment is not a diagonal of the quadrilateral. |
-| `angle_or_seg_not_within_quad` | Rhombus angle-bisect (single form): the angle is not in the quadrilateral, or the segment is not one of its diagonals. |
-| `segs_not_consecutive_sides_of_quad` | The concluded congruent segments are not consecutive sides of the rhombus. |
-| `angles_not_base_angle_pair_of_trap` | The angles are not a base-angle pair of the (isosceles) trapezoid. |
-| `trap_and_isos_trap_are_diff_quads` | The trapezoid and isosceles-trapezoid statements refer to different quadrilaterals. |
-| `quad_stmts_refer_to_diff_quads` | Two quadrilateral-classification statements (e.g. parallelogram and rectangle) that must describe the same quadrilateral refer to different ones. |
+| Code | Type | Meaning |
+|---|---|---|
+| `non_consecutive_step_numbers` | 3 | Step labels do not run 1, 2, 3, ... Dependencies are counted by position, so every citation after the gap points somewhere else. `details.expected` and `details.found` say where it went wrong. |
+| `goal_not_reached` | 4 | The proof was not accepted and no accepted step states the goal. `details.goal` is the goal; `details.statedBy` is the step that states it without being accepted, absent when no step states it at all. |
+| `cycle` | 8 | Steps depend on each other in a cycle; `details.steps` lists them. |
+| `unused_step` | 5 | Steps no path to the goal uses. Not fatal. |
+| `duplicate_conclusion` | 14 | A step restates a fact a premise or earlier step already gives (`details.duplicateOf`). Not fatal. |
+| `unexpected_error` | 16 | An exception escaped the CLI (`proofCheckerCli.ts`) or HTTP server (`server.ts`); `details.msg` holds its message. |

@@ -1,0 +1,15 @@
+// fail on step 3
+title: "Test: con_inscribed_angs (incorrect - circ_order leaves out Q, a point on the circle)"
+premises:
+pt: O (5, 5, c), A (1, 2, bl), B (9, 2, br), P (2, 9, tl), Q (8, 9, tr)
+circ: c_OA
+seg: PA PB QA QB AB
+[d_01] circ_order(c_OA, A, B, P)
+[g_1] inscribed_angle(c_OA, a_APB)
+[g_2] inscribed_angle(c_OA, a_AQB)
+-> con_ang(a_APB, a_AQB)
+
+steps:
+[01] given(g_1) -> inscribed_angle(c_OA, a_APB)
+[02] given(g_2) -> inscribed_angle(c_OA, a_AQB)
+[03] con_inscribed_angs(1, 2) -> con_ang(a_APB, a_AQB)

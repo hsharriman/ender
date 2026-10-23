@@ -5,8 +5,8 @@ pt: K (14, 2, br), L (2, 2, bl), M (2, 9, l), N (14, 9, r)
 seg: MK
 tri: t_KLM t_MNK
 quad: q_KLMN
-[g_1] right(a_KLM) [01]
-[g_2] con_seg(LM,NK) [02]
+[g_1] right(a_KLM)
+[g_2] con_seg(LM,NK)
 -> con_tri(t_KLM,t_MNK)
 
 steps:

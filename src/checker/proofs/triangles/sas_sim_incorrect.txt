@@ -1,15 +1,13 @@
-// fail on step 4
+// fail on step 3
 title: "Test: sas_sim (incorrect - angle not included between the given sides)"
 premises:
 pt: A (1, 9, l), B (5, 1, b), C (9, 9, r), D (13, 9, l), E (17, 1, b), F (21, 9, r)
 tri: t_ABC t_DEF
-[g_1] sim_seg(AB, DE)
+[g_1] proportion(AB, DE, AC, DF)
 [g_2] con_ang(a_ACB, a_DFE)
-[g_3] sim_seg(AC, DF)
 -> sim_tri(t_ABC, t_DEF)
 
 steps:
-[01] given(g_1) -> sim_seg(AB, DE)
+[01] given(g_1) -> proportion(AB, DE, AC, DF)
 [02] given(g_2) -> con_ang(a_ACB, a_DFE)
-[03] given(g_3) -> sim_seg(AC, DF)
-[04] sas_sim(1, 2, 3) -> sim_tri(t_ABC, t_DEF)
+[03] sas_sim(1, 2) -> sim_tri(t_ABC, t_DEF)

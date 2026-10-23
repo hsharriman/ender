@@ -1,0 +1,11 @@
+// fail on step 2
+title: "Test: rhombus definition (incorrect - diagonal is not a side)"
+premises:
+pt: A (1, 1, bl), B (3, 5, tl), C (7, 5, tr), D (9, 1, br)
+quad: q_ABCD
+[g_1] rhombus(q_ABCD)
+-> con_seg(AB, AC)
+
+steps:
+[01] given(g_1) -> rhombus(q_ABCD)
+[02] rhombus(1) -> con_seg(AB, AC)

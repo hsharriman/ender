@@ -1,0 +1,11 @@
+// pass
+title: "Test: def_radius (correct - all radii are congruent)"
+premises:
+pt: O (5, 5, c), A (5, 9, t), B (9, 5, r)
+circ: c_OA
+[g_1] radius(c_OA, B)
+-> con_seg(OB, OA)
+
+steps:
+[01] given(g_1) -> radius(c_OA, B)
+[02] def_radius(1) -> con_seg(OB, OA)

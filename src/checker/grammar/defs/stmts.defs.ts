@@ -5,6 +5,7 @@ const point = (p: string) => `Point ${p}`;
 const quadrilateral = (q: string) => `Quadrilateral ${q}`;
 const circle = (c: string) => `Circle ${c}`;
 const arc = (a: string) => `Arc ${a}`;
+const point_list = (min: number) => `Points (at least ${min})`;
 
 export const STMTS_DEFS = {
   statements: {
@@ -114,9 +115,10 @@ export const STMTS_DEFS = {
       name: "parallelogram",
       parameters: [quadrilateral("q")],
     },
-    sim_seg: {
-      name: "sim_seg",
-      parameters: [segment("s1"), segment("s2")],
+    // proportion(AB, DE, AC, DF) says AB/DE = AC/DF.
+    proportion: {
+      name: "proportion",
+      parameters: [segment("s1"), segment("s2"), segment("s3"), segment("s4")],
     },
     sim_tri: {
       name: "sim_tri",
@@ -192,6 +194,25 @@ export const STMTS_DEFS = {
     inscribed_angle: {
       name: "inscribed_angle",
       parameters: [circle("c"), angle("a")],
+    },
+    // Every named point on the circle, in the order met going round it,
+    // starting anywhere and running either way.
+    circ_order: {
+      name: "circ_order",
+      parameters: [circle("c"), point_list(3)],
+      isPremisesOnly: true,
+      isDiagramOnly: true,
+    },
+    on_circle: {
+      name: "on_circle",
+      parameters: [circle("c"), point("p")],
+      isPremisesOnly: true,
+      isDiagramOnly: true,
+    },
+    // The circle's centre lies on the line through the segment.
+    center_on_line: {
+      name: "center_on_line",
+      parameters: [circle("c"), segment("s")],
     },
     // arc_bisect: {
     //   name: "arc_bisect",

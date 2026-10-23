@@ -4,6 +4,7 @@ premises:
 pt: A (0, 0, t), B (0, 0, t), C (0, 0, t), D (0, 0, t), O (0, 0, c)
 seg: AB AC CB AD DB
 circ: c_OA
+[d_01] circ_order(c_OA, A, C, D, B)
 [g_1] inscribed_angle(c_OA, a_ACB)
 [g_2] inscribed_angle(c_OA, a_ADB)
 -> con_ang(a_ACB,a_ADB)
