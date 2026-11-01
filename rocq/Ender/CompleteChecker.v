@@ -2192,21 +2192,16 @@ Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
       rewrite Hpart, Hpublic in Hcheck. discriminate.
   Qed.
 
-  (** The plane [Model.v] builds over the real algebraic numbers.  Its three
-      [lower_dim] points are the non-collinear triple, since [Col] is exactly
-      the disjunction that field negates. *)
+  (** The plane [Model.v] builds over the real algebraic numbers. *)
   Lemma euclidean_plane_exists :
     exists (Tn : Tarski_neutral_dimensionless)
            (TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality Tn)
            (T2D : @Tarski_2D Tn TnEQD)
-           (TE : @Tarski_euclidean Tn TnEQD)
-           (A B C : @Tpoint Tn),
-      ~ @Col Tn A B C.
+           (TE : @Tarski_euclidean Tn TnEQD),
+      True.
   Proof.
     exists Ender.Model.PlaneTn, Ender.Model.PlanePED,
       Ender.Model.Plane2D, Ender.Model.PlaneEuclid.
-    exists (@PA Ender.Model.PlaneTn), (@PB Ender.Model.PlaneTn),
-      (@PC Ender.Model.PlaneTn).
-    exact (@lower_dim Ender.Model.PlaneTn).
+    exact I.
   Qed.
 End CompleteVerifiedChecker.

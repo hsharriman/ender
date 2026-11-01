@@ -991,14 +991,13 @@ Module Type COMPLETE_VERIFIED_CHECKER.
 
   (** The geometry [checker_sound] quantifies over is inhabited, so acceptance
       claims something.  The binders are the ones [checker_sound] introduces,
-      in the same order; the body is three points that are not collinear,
-      which is what makes the witness a plane a figure can be drawn in rather
-      than a structure satisfying the axioms for want of any points. *)
+      in the same order, and they are the whole claim: every
+      [Tarski_neutral_dimensionless] already has three non-collinear points,
+      its [lower_dim] axiom. *)
   Parameter euclidean_plane_exists :
     exists (Tn : Tarski_neutral_dimensionless)
            (TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality Tn)
            (T2D : @Tarski_2D Tn TnEQD)
-           (TE : @Tarski_euclidean Tn TnEQD)
-           (A B C : @Tpoint Tn),
-      ~ @Col Tn A B C.
+           (TE : @Tarski_euclidean Tn TnEQD),
+      True.
 End COMPLETE_VERIFIED_CHECKER.
