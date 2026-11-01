@@ -5,9 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     geocoq = {
-      # Upstream's Rocq 9 port (GeoCoq PR 52, reverted in PR 53).  Master
-      # does not build on Rocq 9, which split out the standard library.
-      url = "github:GeoCoq/GeoCoq/1b1e7ad51d9139b6c98cde48a4516b78546cae9d";
+      url = "github:GeoCoq/GeoCoq";
       flake = false;
     };
   };
@@ -42,6 +40,9 @@
           mathcomp-solvable mathcomp-field mathcomp-character
           mathcomp-bigenough mathcomp-finmap mathcomp-real-closed
           hierarchy-builder rocq-elpi
+          # Nixpkgs packages it only in the Coq set, built against the same
+          # MathComp derivations as the Rocq set's.
+          pkgs.coqPackages_9_1.mathcomp-algebra-tactics
         ];
         # The OCaml that compiles the extracted checker has to be the one Rocq
         # itself was built with, because `rocq-elpi` is an OCaml plugin and
@@ -55,7 +56,7 @@
         # in one works in the other.
         nodejs = pkgs.nodejs_24;
 
-        mkGeoCoqPart = { pname, configure, dependencies ? [], patches ? [] }:
+        mkGeoCoqPart = { pname, configure, dependencies ? [] }:
           pkgs.stdenvNoCC.mkDerivation {
             inherit pname;
             version = geocoq.shortRev or "unstable";
@@ -63,7 +64,6 @@
             strictDeps = true;
             nativeBuildInputs = [ coq pkgs.gnumake stdlib ] ++ dependencies;
             buildInputs = [ stdlib ] ++ dependencies;
-            inherit patches;
             ROCQPATH = lib.concatStringsSep ":"
               (map (part: "${part}/${rocqLib}") ([ stdlib ] ++ dependencies));
             configurePhase = ''
@@ -92,8 +92,6 @@
           pname = "geocoq-axioms";
           configure = "configure-axioms.sh";
           dependencies = [ geocoqCoinc ];
-          # One example under Axioms imports Main, which builds after it.
-          patches = [ ./nix/geocoq-axioms-layering.patch ];
         };
         geocoqMain = mkGeoCoqPart {
           pname = "geocoq-main";
@@ -103,13 +101,10 @@
 
         # `Algebraic/POF_to_Tarski.v` builds a Euclidean plane over any real
         # closed field, which is what makes `checker_sound` non-vacuous.
-        # Upstream wrote it against MathComp 2.4; the patch ports the two files
-        # the model needs to the 2.5 this Nixpkgs ships and builds only those.
         geocoqAlgebraic = mkGeoCoqPart {
           pname = "geocoq-algebraic";
           configure = "configure-algebraic.sh";
           dependencies = [ geocoqCoinc geocoqAxioms geocoqMain ] ++ mathcomp;
-          patches = [ ./nix/geocoq-algebraic-mathcomp25.patch ];
         };
 
         # Everything the Ender development loads.  As `buildInputs` they reach

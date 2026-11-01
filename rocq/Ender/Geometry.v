@@ -712,9 +712,9 @@ Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 Context {TE : @Tarski_euclidean Tn TnEQD}.
 
 (** The sum of a triangle's angles is a straight angle.  GeoCoq also proves
-    this in [Annexes.inscribed_angle], but that route goes through [l12_21_a],
-    which depends on [Eqdep.Eq_rect_eq]; going through Playfair instead keeps
-    the whole development free of axioms. *)
+    this in [Annexes.inscribed_angle], through [l12_21_a], which depended on
+    [Eqdep.Eq_rect_eq] at GeoCoq commit 1b1e7ad but not at 87e8f9c.  This one
+    goes through Playfair, as the parallel facts below do. *)
 Lemma euclidean_trisuma__bet : forall A B C D E F,
   TriSumA A B C D E F -> Bet D E F.
 Proof.
