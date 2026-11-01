@@ -2,15 +2,12 @@
 
     This is GeoCoq's [Main/Annexes/inscribed_angle.v] (identical at GeoCoq
     commits 1b1e7ad and 87e8f9c), from its first lemma through Euclid III.22
-    ([cop_onc4_ts__suppa]), unchanged except for two proofs.  Upstream proves
+    ([cop_onc4_ts__suppa]), unchanged except for one proof.  Upstream proves
     [right_saccheris] through [postulates_in_euclidean_context], which rests
     on [Eqdep.Eq_rect_eq], and every lemma below inherits the axiom from it.
     Here it is [ender_rah] from [Geometry.v], which goes through Playfair
-    instead, so the file is axiom-free.  [trisuma__bet], that a triangle's
-    angles sum to a straight angle, is likewise [euclidean_trisuma__bet];
-    upstream's proof, through [l12_21_a], rested on the axiom at 1b1e7ad but
-    not at 87e8f9c.  GeoCoq is distributed under
-    the LGPL v3. *)
+    instead, so the file is axiom-free.  GeoCoq is distributed under the LGPL
+    v3. *)
 Require Export GeoCoq.Main.Annexes.circles.
 Require Export GeoCoq.Main.Annexes.half_angles.
 Require Export GeoCoq.Main.Tarski_dev.Ch12_parallel_inter_dec.
@@ -29,7 +26,9 @@ Context {TE : @Tarski_euclidean Tn TnEQD}.
 
 Lemma trisuma__bet : forall A B C D E F, TriSumA A B C D E F -> Bet D E F.
 Proof.
-  apply euclidean_trisuma__bet.
+  apply alternate_interior__triangle.
+  unfold alternate_interior_angles_postulate.
+  apply l12_21_a.
 Qed.
 
 Lemma bet__trisuma : forall A B C D E F, Bet D E F -> A <> B -> B <> C -> A <> C -> D <> E -> E <> F ->

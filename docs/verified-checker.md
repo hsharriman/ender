@@ -66,7 +66,7 @@ extraction, the OCaml compiler, and `wasm_of_ocaml` produce the programs.
 | `Syntax.v` | Reasons, steps, and declarations around the audited `Statement` type. |
 | `Semantics.v` | A statement's kernel meaning, defined as its audited meaning. |
 | `Geometry.v` | Geometry lemmas the rules need beyond GeoCoq: the triangle criteria, Playfair-based parallel facts, quadrilateral translations. |
-| `Inscribed.v` | GeoCoq's inscribed-angle theorems (Euclid III.20–22), with two lemmas re-proved through `Geometry.v`, one of which rests on an axiom upstream. |
+| `Inscribed.v` | GeoCoq's inscribed-angle theorems (Euclid III.20–22), with the one lemma that rests on an axiom upstream re-proved through `Geometry.v`. |
 | `Checker.v` | The reason kernel: one executable rule per reason, each with its soundness lemma. |
 | `Parser.v` | The step parser. |
 | `CompleteChecker.v` | Implements the contract, and builds the advisory report. |
