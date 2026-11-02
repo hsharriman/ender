@@ -361,15 +361,15 @@ Proof.
   now apply String.eqb_eq in Heq.
 Qed.
 
-Fixpoint parse_segment_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_segment_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | a::b::rest => match parse_segment_declarations rest with Some ds=>Some(SegmentDeclaration(segment_name a b)::ds)|_=>None end | _=>None end.
-Fixpoint parse_angle_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_angle_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | "a"%char::"_"%char::a::o::b::rest => match parse_angle_declarations rest with Some ds=>Some(AngleDeclaration(angle_name a o b)::ds)|_=>None end | _=>None end.
-Fixpoint parse_triangle_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_triangle_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | "t"%char::"_"%char::a::b::c::rest => match parse_triangle_declarations rest with Some ds=>Some(TriangleDeclaration(triangle_name a b c)::ds)|_=>None end | _=>None end.
-Fixpoint parse_quad_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_quad_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | "q"%char::"_"%char::a::b::c::d::rest => match parse_quad_declarations rest with Some ds=>Some(QuadrilateralDeclaration(quadrilateral_name a b c d)::ds)|_=>None end | _=>None end.
-Fixpoint parse_circle_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_circle_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | "c"%char::"_"%char::o::r::rest => match parse_circle_declarations rest with Some ds=>Some(CircleDeclaration(circle_name o r)::ds)|_=>None end | _=>None end.
 
 Lemma concat_empty_cons : forall first rest,
@@ -437,14 +437,14 @@ Proof.
 Qed.
 
 Definition parse_declaration_line_raw_chars (text : PChars)
-    : option (list PublicDeclaration) :=
+    : option (list Declaration) :=
   if Chars.starts_with (list_ascii_of_string "seg:") text then parse_segment_declarations(Chars.drop_chars 4 text) else
   if Chars.starts_with (list_ascii_of_string "ang:") text then parse_angle_declarations(Chars.drop_chars 4 text) else
   if Chars.starts_with (list_ascii_of_string "tri:") text then parse_triangle_declarations(Chars.drop_chars 4 text) else
   if Chars.starts_with (list_ascii_of_string "quad:") text then parse_quad_declarations(Chars.drop_chars 5 text) else
   if Chars.starts_with (list_ascii_of_string "circ:") text then parse_circle_declarations(Chars.drop_chars 5 text) else None.
 
-Definition parse_declaration_line_raw (line : string) : option (list PublicDeclaration) :=
+Definition parse_declaration_line_raw (line : string) : option (list Declaration) :=
   parse_declaration_line_raw_chars (list_ascii_of_string (normalized line)).
 
 Lemma parse_declaration_line_raw_chars_render : forall first rest,
@@ -464,7 +464,7 @@ Proof.
   - destruct c. cbn. now rewrite parse_circle_declarations_render by exact Htags.
 Qed.
 
-Definition declarations_text (declarations : list PublicDeclaration) : option string :=
+Definition declarations_text (declarations : list Declaration) : option string :=
   match declarations with
   | [] => None
   | first :: rest =>
@@ -475,10 +475,10 @@ Definition declarations_text (declarations : list PublicDeclaration) : option st
       else None
   end.
 
-Definition declarations_valid (declarations : list PublicDeclaration) : bool :=
+Definition declarations_valid (declarations : list Declaration) : bool :=
   forallb (fun declaration => pointsValid (declarationPoints declaration)) declarations.
 
-Definition parse_declaration_line (line : string) : option (list PublicDeclaration) :=
+Definition parse_declaration_line (line : string) : option (list Declaration) :=
   match parse_declaration_line_raw line with
   | Some declarations =>
       match declarations_text declarations with
@@ -545,7 +545,7 @@ Qed.
 (** A line contributes one [HeaderContribution]; a whole header adds those up
     into declarations, premises, and a conclusion at once. *)
 Definition HeaderAccumulator :=
-  (list PublicDeclaration * list Statement * option Statement)%type.
+  (list Declaration * list Statement * option Statement)%type.
 
 Definition parse_public_line (line : string) : option HeaderContribution :=
   match premiseBody line with
@@ -770,10 +770,10 @@ Proof.
     f_equal. now apply IH.
 Qed.
 
-Definition parsePublicProblem (source:string) : option PublicProblem :=
+Definition parsePublicProblem (source:string) : option Problem :=
   match parse_public_lines (splitLines source) with
   |Some (declarations, premises, Some goal) =>
-      Some (public_problem declarations premises goal)
+      Some (problem declarations premises goal)
   |Some (_, _, None) => None
   |None=>None end.
 

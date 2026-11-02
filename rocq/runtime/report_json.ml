@@ -157,10 +157,10 @@ let declaration_json_semantic declaration =
 let problem_json problem =
   `Assoc
     [ ("declarations", `List (List.map declaration_json_semantic
-        problem.EnderChecker.public_declarations))
+        problem.EnderChecker.problem_declarations))
     ; ("premises", `List (List.map statement_json
-        problem.EnderChecker.public_premises))
-    ; ("conclusion", statement_json problem.EnderChecker.public_conclusion)
+        problem.EnderChecker.problem_premises))
+    ; ("conclusion", statement_json problem.EnderChecker.problem_conclusion)
     ]
 
 let step_status_name = function
