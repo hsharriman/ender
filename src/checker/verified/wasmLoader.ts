@@ -23,6 +23,9 @@ const initialize = (): Promise<void> => {
   return initialization;
 };
 
+/** Start loading before the first debounced edit needs a result. */
+export const preloadVerifiedChecker = (): Promise<void> => initialize();
+
 export const checkVerifiedReport = async (
   source: string,
 ): Promise<VerifiedCheckReport> => {
