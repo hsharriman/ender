@@ -1,5 +1,5 @@
 ROCQFLAGS := -Q Ender Ender
-MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Inscribed Semantics Checker Parser Model CompleteChecker CertifiedAPI Tests
+MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Inscribed Semantics Checker Parser Model CompleteChecker CertifiedAPI OverlapExample Tests
 VOFILES := $(addprefix Ender/,$(addsuffix .vo,$(MODULES)))
 
 # Everything this Makefile writes goes under $(BUILD), except what Rocq insists
@@ -79,8 +79,9 @@ Ender/Checker.vo: Ender/Checker.v Ender/Syntax.vo Ender/Geometry.vo Ender/Inscri
 Ender/Parser.vo: Ender/Parser.v Ender/Syntax.vo Ender/Semantics.vo Ender/Checker.vo Ender/PublicParser.vo
 	rocq compile $(ROCQFLAGS) $<
 
-# The only module needing MathComp and GeoCoq's algebraic layer on the load
-# path; it reaches the rest of the build solely through CompleteChecker.vo.
+# Model.v and OverlapExample.v are the modules needing MathComp and GeoCoq's
+# algebraic layer on the load path.  Model.v reaches the rest of the build
+# solely through CompleteChecker.vo.
 Ender/Model.vo: Ender/Model.v
 	rocq compile $(ROCQFLAGS) $<
 
@@ -90,12 +91,15 @@ Ender/CompleteChecker.vo: Ender/CompleteChecker.v Ender/Parser.vo Ender/PublicPa
 Ender/CertifiedAPI.vo: Ender/CertifiedAPI.v Ender/CompleteChecker.vo
 	rocq compile $(ROCQFLAGS) $<
 
+Ender/OverlapExample.vo: Ender/OverlapExample.v Ender/Model.vo Ender/CertifiedAPI.vo
+	rocq compile $(ROCQFLAGS) $<
+
 # Tests.v ends in `Print Assumptions`, which reports "Axioms:" only when a proof
 # rests on one.  Some GeoCoq Euclidean routes do (see euclidean_trisuma__bet in
 # Geometry.v), so enforce the result here rather than leave it to whoever reads
 # the log.  The last of those lines is the non-vacuity witness, which needs the
 # check as much as the theorems do: a plane exhibited on an axiom is no plane.
-Ender/Tests.vo: Ender/Tests.v Ender/CertifiedAPI.vo
+Ender/Tests.vo: Ender/Tests.v Ender/CertifiedAPI.vo Ender/OverlapExample.vo
 	@mkdir -p $(BUILD)
 	rocq compile $(ROCQFLAGS) $< > $(BUILD)/tests.log 2>&1; \
 	  status=$$?; cat $(BUILD)/tests.log; [ $$status -eq 0 ] || exit $$status

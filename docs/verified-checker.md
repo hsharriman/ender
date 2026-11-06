@@ -72,6 +72,7 @@ extraction, the OCaml compiler, and `wasm_of_ocaml` produce the programs.
 | `CompleteChecker.v` | Implements the contract, and builds the advisory report. |
 | `PresentationParser.v` | Display-only parser for the interface; it decides nothing. |
 | `Model.v` | The Euclidean plane over the real algebraic numbers. |
+| `OverlapExample.v` | The paper's overlapping-triangles proof: the checker accepts it, and points in `Model.v`'s plane satisfy its premises. |
 | `CertifiedAPI.v`, `Extract.v` | The extracted entry points. |
 | `Chars.v` | Character-list helpers used by the parsers. |
 | `Tests.v` | Positive and negative examples, and the axiom check. |

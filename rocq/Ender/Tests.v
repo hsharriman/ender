@@ -1,5 +1,7 @@
 From Stdlib Require Import String List.
 Require Import Ender.Parser Ender.PublicParser Ender.CompleteChecker Ender.CertifiedAPI.
+(** Written in MathComp, so required but not imported, like [Model.v]. *)
+Require Ender.OverlapExample.
 Import ListNotations.
 Open Scope string_scope.
 
@@ -2667,3 +2669,5 @@ Proof. vm_compute. reflexivity. Qed.
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.
 Print Assumptions CertifiedAPI.euclidean_plane_exists.
+Print Assumptions OverlapExample.overlap_accepted.
+Print Assumptions OverlapExample.overlap_premises_hold.
