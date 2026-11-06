@@ -40,8 +40,8 @@ only rule that does, so every rule above each point is visibly free of it.
 
 Because the hypotheses are universally quantified, soundness would hold
 vacuously if no model satisfied them. The contract therefore also requires
-`euclidean_plane_exists`, three non-collinear points in a structure satisfying
-all of them, and [`Model.v`](../rocq/Ender/Model.v) discharges it with GeoCoq's
+`euclidean_plane_exists`, a structure satisfying all of them (every such
+structure has three non-collinear points, by the lower-dimension axiom), and [`Model.v`](../rocq/Ender/Model.v) discharges it with GeoCoq's
 model over the real algebraic numbers. It is in `Prop`, so extraction erases
 it.
 
