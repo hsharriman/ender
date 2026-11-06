@@ -551,7 +551,9 @@ Definition parse_public_line (line : string) : option HeaderContribution :=
   match premiseBody line with
   | Some body =>
       match parse_public_statement body with
-      | Some statement => Some (StatesPremise statement)
+      | Some statement =>
+          if premiseLabelMatches line statement
+          then Some (StatesPremise statement) else None
       | None => None
       end
   | None =>
@@ -576,7 +578,9 @@ Proof.
   intros line contribution H. unfold parse_public_line in H.
   destruct (premiseBody line) as [body|] eqn:Hpremise.
   - destruct (parse_public_statement body) as [statement|] eqn:Hstatement;
-      try discriminate. injection H as <-. econstructor; eauto using parse_public_statement_sound.
+      try discriminate.
+    destruct (premiseLabelMatches line statement) eqn:Hlabel; try discriminate.
+    injection H as <-. econstructor; eauto using parse_public_statement_sound.
   - destruct (goalBody line) as [body|] eqn:Hgoal.
     + destruct (parse_public_statement body) as [statement|] eqn:Hstatement;
         try discriminate. injection H as <-. econstructor; eauto using parse_public_statement_sound.
@@ -593,7 +597,7 @@ Proof.
   intros line contribution H. inversion H; subst; unfold parse_public_line.
   - rewrite H0, H1, (parse_declaration_line_complete line declarations H2).
     reflexivity.
-  - rewrite H0, (parse_public_statement_complete body statement H1). reflexivity.
+  - rewrite H0, (parse_public_statement_complete body statement H1), H2. reflexivity.
   - rewrite H0, H1, (parse_public_statement_complete body statement H2).
     reflexivity.
   - rewrite H0, H1. destruct (parse_declaration_line line) eqn:Hdeclaration.
