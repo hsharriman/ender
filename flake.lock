@@ -21,17 +21,16 @@
     "geocoq": {
       "flake": false,
       "locked": {
-        "lastModified": 1763380314,
-        "narHash": "sha256-lCBpuV85bMYBlQ8XiS/xWgoFPnMhg/7m3PLZ62gMSGw=",
+        "lastModified": 1792351592,
+        "narHash": "sha256-9PtkI2z6N10+zuzwqRx8kMzeOojFHQFesrj1qmqF+6g=",
         "owner": "GeoCoq",
         "repo": "GeoCoq",
-        "rev": "1b1e7ad51d9139b6c98cde48a4516b78546cae9d",
+        "rev": "87e8f9c3bc9cb2f782b86153bcf8d5bac52d7ef6",
         "type": "github"
       },
       "original": {
         "owner": "GeoCoq",
         "repo": "GeoCoq",
-        "rev": "1b1e7ad51d9139b6c98cde48a4516b78546cae9d",
         "type": "github"
       }
     },

@@ -8,7 +8,7 @@ Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.alternate_interior_an
 Require Import GeoCoq.Main.Annexes.quadrilaterals.
 Require Import GeoCoq.Main.Annexes.quadrilaterals_inter_dec.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.playfair_alternate_interior_angles.
-Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.alternate_interior_angles_triangle.
+Require Import GeoCoq.Main.Annexes.inscribed_angle.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.existential_triangle_rah.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.rah_thales_postulate.
 
@@ -711,18 +711,6 @@ Section EnderEuclideanGeometry.
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 Context {TE : @Tarski_euclidean Tn TnEQD}.
 
-(** The sum of a triangle's angles is a straight angle.  GeoCoq also proves
-    this in [Annexes.inscribed_angle], but that route goes through [l12_21_a],
-    which depends on [Eqdep.Eq_rect_eq]; going through Playfair instead keeps
-    the whole development free of axioms. *)
-Lemma euclidean_trisuma__bet : forall A B C D E F,
-  TriSumA A B C D E F -> Bet D E F.
-Proof.
-  apply alternate_interior__triangle, playfair__alternate_interior,
-        tarski_s_euclid_implies_playfair.
-  unfold tarski_s_parallel_postulate. exact euclid.
-Qed.
-
 (** Two angles of a triangle determine the third.  Both triangle sums are
     straight angles, so cancelling the two known angles in turn leaves the
     third pair congruent.  Each cancellation is legitimate because the two
@@ -739,8 +727,8 @@ Proof.
   apply not_col_distincts in Hncol'. spliter.
   destruct (ex_trisuma A B C) as [P [Q [R HTri]]]; auto.
   destruct (ex_trisuma A' B' C') as [P' [Q' [R' HTri']]]; auto.
-  pose proof (euclidean_trisuma__bet _ _ _ _ _ _ HTri) as HBet.
-  pose proof (euclidean_trisuma__bet _ _ _ _ _ _ HTri') as HBet'.
+  pose proof (trisuma__bet _ _ _ _ _ _ HTri) as HBet.
+  pose proof (trisuma__bet _ _ _ _ _ _ HTri') as HBet'.
   destruct HTri as [S1 [S2 [S3 [HInner HOuter]]]].
   destruct HTri' as [T1 [T2 [T3 [HInner' HOuter']]]].
   assert_diffs.
@@ -822,8 +810,7 @@ Proof.
 Qed.
 
 (** Alternate interior angles across a transversal of parallels, derived
-    through Playfair exactly as [euclidean_trisuma__bet] is: GeoCoq's own
-    [par_2_plg] route depends on [Eqdep.Eq_rect_eq], and this one keeps the
+    through Playfair: GeoCoq's own [par_2_plg] route depends on [Eqdep.Eq_rect_eq], and this one keeps the
     development free of axioms. *)
 Lemma ender_alternate_interior : forall A B C D,
   TS A C B D -> Par A B C D -> CongA B A C D C A.
@@ -1235,7 +1222,7 @@ Proof.
     |apply conga_refl; [assumption|now apply not_eq_sym]
     |].
   apply (bet_suma__suppa _ _ _ _ _ _ P Q R); [exact Hsum1|].
-  now apply (euclidean_trisuma__bet B C A P Q R).
+  now apply (trisuma__bet B C A P Q R).
 Qed.
 
 (** Both pairs of opposite corners congruent make consecutive corners
@@ -1890,7 +1877,7 @@ Qed.
     [Eqdep.Eq_rect_eq] (through [cop_par_perp__perp] and [right_saccheris]
     respectively).  The right-Saccheri hypothesis follows cleanly from the
     existence of one triangle with straight angle sum, witnessed by the
-    lower-dimension points and [euclidean_trisuma__bet]. *)
+    lower-dimension points and GeoCoq's [trisuma__bet]. *)
 Lemma ender_rah : postulate_of_right_saccheri_quadrilaterals.
 Proof.
   apply existential_triangle__rah.
@@ -1900,7 +1887,7 @@ Proof.
   destruct (ex_trisuma PA PB PC) as [P [Q [R Htri]]]; auto.
   exists PA, PB, PC, P, Q, R.
   split; [exact Hncol|]. split; [exact Htri|].
-  exact (euclidean_trisuma__bet _ _ _ _ _ _ Htri).
+  exact (trisuma__bet _ _ _ _ _ _ Htri).
 Qed.
 
 Lemma ender_thales : forall A B C M,
