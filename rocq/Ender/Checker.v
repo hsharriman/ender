@@ -689,11 +689,26 @@ Definition cpctc_rule decls premises facts (i : nat) (conclusion : Statement)
   | Some (ConTriOrdered t u) => is_cpctc_fact t u conclusion
   | Some (ConTri t u) =>
       declared_pair decls t u &&
-      existsb (fun u' => chain_witnessed decls premises facts t u' &&
-                         is_cpctc_fact t u' conclusion)
+      existsb (fun u' => is_cpctc_fact t u' conclusion &&
+                         chain_witnessed decls premises facts t u')
               (triangle_orderings u)
   | _ => false
   end.
+
+(** Reject impossible conclusions before searching correspondence chains.  The
+    search order changes no result, including on rejected steps. *)
+Lemma cpctc_conclusion_prefilter_equivalent : forall decls premises facts t u conclusion,
+  existsb (fun u' => is_cpctc_fact t u' conclusion &&
+                    chain_witnessed decls premises facts t u') (triangle_orderings u) =
+  existsb (fun u' => chain_witnessed decls premises facts t u' &&
+                    is_cpctc_fact t u' conclusion) (triangle_orderings u).
+Proof.
+  intros. assert (H : forall (f g : TriangleName -> bool) l,
+    existsb (fun x => f x && g x) l = existsb (fun x => g x && f x) l).
+  { intros f g l. induction l; cbn; [reflexivity|].
+    rewrite (andb_comm (f a) (g a)), IHl. reflexivity. }
+  apply H.
+Qed.
 
 (** Transitivity of congruence.  A dependency states a congruence between two
     like objects; the two dependencies must share one object, and the
@@ -4224,7 +4239,7 @@ Proof.
   - apply andb_true_iff in H. destruct H as [Hdecl H].
     apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht _].
     apply existsb_exists in H. destruct H as [u' [_ H]].
-    apply andb_true_iff in H. destruct H as [Hw Hc].
+    apply andb_true_iff in H. destruct H as [Hc Hw].
     apply (cpctc_sound a u' conclusion); [|exact Hc].
     eapply chain_witnessed_sound; eauto.
   - apply (cpctc_sound a b conclusion); [|exact H].

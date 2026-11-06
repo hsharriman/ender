@@ -2664,6 +2664,60 @@ Example inscribed_semi_not_the_diameter_rejects : complete_checker
 " "inscribed_angle(c_OA, a_APB)" "diameter(c_OA, SD)" "right(a_APB)") = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Regression oracle for advisory cycle reports, including their order and
+    exact cycle spelling.  Keep the old traversal here independently of the
+    optimized implementation. *)
+Definition latency_reference_cycles (nodes : list nat) (edges : list (nat * nat)) :=
+  fold_left (fun found node =>
+    match find_cycle edges (S (List.length nodes)) [] node with
+    | Some cycle => if existsb (same_cycle cycle) found then found
+                    else List.app found [cycle]
+    | None => found
+    end) nodes [].
+
+Fixpoint latency_subsets {A : Type} (xs : list A) : list (list A) :=
+  match xs with
+  | [] => [[]]
+  | x :: rest => let smaller := latency_subsets rest in
+                smaller ++ map (cons x) smaller
+  end.
+
+Fixpoint latency_lists_equal {A : Type} (eqb : A -> A -> bool)
+    (xs ys : list A) : bool :=
+  match xs, ys with
+  | [], [] => true
+  | x :: rest, y :: tail => eqb x y && latency_lists_equal eqb rest tail
+  | _, _ => false
+  end.
+
+Definition latency_cycles_equal nodes edges :=
+  latency_lists_equal (latency_lists_equal Nat.eqb)
+    (graph_cycles nodes edges) (latency_reference_cycles nodes edges).
+
+Definition latency_edges (nodes : list nat) :=
+  flat_map (fun x => map (fun y => (x, y)) nodes) nodes.
+
+(** All 65,536 directed graphs on four nodes, including self-loops. *)
+Example cached_cycles_preserve_four_node_reports :
+  forallb (latency_cycles_equal [0; 1; 2; 3])
+    (latency_subsets (latency_edges [0; 1; 2; 3])) = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Also exercise depth cutoffs with missing graph nodes and reversed
+    traversal orders.  A cutoff must never mark a branch finished. *)
+Example cached_cycles_preserve_bounded_reports :
+  forallb (fun edges => forallb (fun nodes =>
+    andb (latency_cycles_equal nodes edges) (latency_cycles_equal (rev nodes) (rev edges)))
+    (latency_subsets [0; 1; 2]))
+    (latency_subsets (latency_edges [0; 1; 2])) = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A shared acyclic suffix used to be visited once per path. *)
+Example cached_cycles_shared_dag :
+  graph_cycles (seq 0 30)
+    (flat_map (fun n => [(n, n + 1); (n, n + 2)]) (seq 0 28)) = [].
+Proof. vm_compute. reflexivity. Qed.
+
 Print Assumptions check_source_sound.
 Print Assumptions CompleteVerifiedChecker.checker_sound.
 Print Assumptions CertifiedAPI.euclidean_plane_exists.
