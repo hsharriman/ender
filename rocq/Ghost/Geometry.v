@@ -12,7 +12,7 @@ Require Import GeoCoq.Main.Annexes.inscribed_angle.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.existential_triangle_rah.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.rah_thales_postulate.
 
-Section EnderGeometry.
+Section GhostGeometry.
 
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 
@@ -85,7 +85,7 @@ Proof.
 Qed.
 
 (** SAS with the included angle at the first listed vertex. *)
-Lemma ender_sas A B C A' B' C' :
+Lemma ghost_sas A B C A' B' C' :
   ~ Col A B C ->
   Cong A B A' B' -> CongA B A C B' A' C' -> Cong A C A' C' ->
   TriangleCongruent A B C A' B' C'.
@@ -98,7 +98,7 @@ Proof.
 Qed.
 
 (** SSS in the ordered correspondence A↔A', B↔B', C↔C'. *)
-Lemma ender_sss A B C A' B' C' :
+Lemma ghost_sss A B C A' B' C' :
   ~ Col A B C ->
   Cong A B A' B' -> Cong B C B' C' -> Cong C A C' A' ->
   TriangleCongruent A B C A' B' C'.
@@ -110,7 +110,7 @@ Proof.
 Qed.
 
 (** ASA with the two angles at the first and second vertices. *)
-Lemma ender_asa A B C A' B' C' :
+Lemma ghost_asa A B C A' B' C' :
   ~ Col A B C ->
   CongA B A C B' A' C' -> Cong A B A' B' ->
   CongA A B C A' B' C' ->
@@ -123,7 +123,7 @@ Proof.
 Qed.
 
 (** AAS with angles at the second and third vertices and side AB. *)
-Lemma ender_aas A B C A' B' C' :
+Lemma ghost_aas A B C A' B' C' :
   ~ Col A B C ->
   CongA B C A B' C' A' -> CongA A B C A' B' C' ->
   Cong A B A' B' ->
@@ -139,13 +139,13 @@ Qed.
 
 (** Pons asinorum, stated with the apex first.  Both directions hold in
     neutral geometry. *)
-Lemma ender_base_angle A B C :
+Lemma ghost_base_angle A B C :
   ~ Col A B C -> Cong A B A C -> CongA A B C A C B.
 Proof.
   intros Hncol Hcong. apply (proj2 (l11_44_1 B A C ltac:(Col))). exact Hcong.
 Qed.
 
-Lemma ender_base_angle_conv A B C :
+Lemma ghost_base_angle_conv A B C :
   ~ Col A B C -> CongA A B C A C B -> Cong A B A C.
 Proof.
   intros Hncol Hang. apply (proj1 (l11_44_1 B A C ltac:(Col))). exact Hang.
@@ -153,30 +153,30 @@ Qed.
 
 (** Equilateral and equiangular coincide, by applying pons asinorum at two
     different apexes. *)
-Lemma ender_equilateral_equiangular A B C :
+Lemma ghost_equilateral_equiangular A B C :
   ~ Col A B C -> Cong A B B C -> Cong B C C A ->
   CongA C A B A B C /\ CongA A B C B C A.
 Proof.
   intros Hncol Hab Hbc. split.
   - assert (Hapex : Cong C A C B) by Cong.
     assert (Hbase : CongA C A B C B A)
-      by (apply ender_base_angle; [Col|exact Hapex]).
+      by (apply ghost_base_angle; [Col|exact Hapex]).
     CongA.
   - assert (Hapex : Cong A B A C) by (apply cong_transitivity with B C; Cong).
     assert (Hbase : CongA A B C A C B)
-      by (apply ender_base_angle; [Col|exact Hapex]).
+      by (apply ghost_base_angle; [Col|exact Hapex]).
     CongA.
 Qed.
 
-Lemma ender_equiangular_equilateral A B C :
+Lemma ghost_equiangular_equilateral A B C :
   ~ Col A B C -> CongA C A B A B C -> CongA A B C B C A ->
   Cong A B B C /\ Cong B C C A.
 Proof.
   intros Hncol HangA HangB.
   assert (Hca : Cong C A C B).
-  { apply ender_base_angle_conv; [Col|CongA]. }
+  { apply ghost_base_angle_conv; [Col|CongA]. }
   assert (Hab : Cong A B A C).
-  { apply ender_base_angle_conv; [Col|CongA]. }
+  { apply ghost_base_angle_conv; [Col|CongA]. }
   split; [|Cong].
   apply cong_transitivity with A C; [exact Hab|Cong].
 Qed.
@@ -185,7 +185,7 @@ Qed.
     audited [~ Col A B C] to no three vertices collinear: a line through
     three vertices would have to meet a segment that leaves it at one of the
     endpoints [BetS] forbids. *)
-Lemma ender_quad_no_three_collinear : forall A B C D X,
+Lemma ghost_quad_no_three_collinear : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   ~ Col B C D /\ ~ Col C D A /\ ~ Col D A B.
 Proof.
@@ -224,7 +224,7 @@ Qed.
     alone: the flanking points of each line are on opposite sides of the
     transversal, and with [A] and [C] sharing a side, the alternate pairs
     [(A, D)] and [(B, C)] are separated. *)
-Lemma ender_transversal_sides : forall I1 I2 A B C D,
+Lemma ghost_transversal_sides : forall I1 I2 A B C D,
   BetS A I1 B -> BetS C I2 D -> OS I1 I2 A C ->
   TS I1 I2 A D /\ TS I1 I2 B C.
 Proof.
@@ -259,7 +259,7 @@ Qed.
 
 (** The vertical angles of the transversal figure, from the configuration
     alone. *)
-Lemma ender_transversal_verticals : forall T1 I1 I2 T2 A B C D,
+Lemma ghost_transversal_verticals : forall T1 I1 I2 T2 A B C D,
   BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
   CongA T1 I1 A I2 I1 B /\ CongA T1 I1 B I2 I1 A /\
   CongA I1 I2 C T2 I2 D /\ CongA I1 I2 D T2 I2 C.
@@ -282,13 +282,13 @@ Qed.
 
 (** The converse master: either alternate interior congruence forces the
     lines parallel.  Purely neutral, through GeoCoq's [l12_21_b]. *)
-Lemma ender_transversal_master_conv : forall I1 I2 A B C D,
+Lemma ghost_transversal_master_conv : forall I1 I2 A B C D,
   BetS A I1 B -> BetS C I2 D -> OS I1 I2 A C ->
   CongA A I1 I2 D I2 I1 \/ CongA B I1 I2 C I2 I1 ->
   Par A B C D.
 Proof.
   intros I1 I2 A B C D Hab Hcd Hos Hconga.
-  destruct (ender_transversal_sides I1 I2 A B C D Hab Hcd Hos) as [HtsAD HtsBC].
+  destruct (ghost_transversal_sides I1 I2 A B C D Hab Hcd Hos) as [HtsAD HtsBC].
   destruct Hab as [HbetAB [HneAI1 HneI1B]].
   destruct Hcd as [HbetCD [HneCI2 HneI2D]].
   assert (HneAB : A <> B).
@@ -314,16 +314,16 @@ Qed.
     the figure pins an alternate interior congruence through vertical angles
     and linear pairs; all of it is neutral, so the converse parallel-line
     rules need no parallel postulate. *)
-Lemma ender_transversal_altext_conv : forall T1 I1 I2 T2 A B C D,
+Lemma ghost_transversal_altext_conv : forall T1 I1 I2 T2 A B C D,
   BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
   OS I1 I2 A C ->
   CongA T1 I1 A T2 I2 D \/ CongA T1 I1 B T2 I2 C ->
   Par A B C D.
 Proof.
   intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hconga.
-  destruct (ender_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
+  destruct (ghost_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
     as [Hv1 [Hv1' [Hv2 Hv2']]].
-  apply (ender_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
+  apply (ghost_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
   destruct Hconga as [Hin|Hin].
   - right. apply conga_comm.
     apply conga_trans with T1 I1 A; [apply conga_sym; exact Hv1|].
@@ -335,7 +335,7 @@ Proof.
     apply conga_sym. exact Hv2'.
 Qed.
 
-Lemma ender_transversal_corresp_conv : forall T1 I1 I2 T2 A B C D,
+Lemma ghost_transversal_corresp_conv : forall T1 I1 I2 T2 A B C D,
   BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
   OS I1 I2 A C ->
   CongA I2 I1 B T2 I2 D \/ CongA I2 I1 A T2 I2 C \/
@@ -343,9 +343,9 @@ Lemma ender_transversal_corresp_conv : forall T1 I1 I2 T2 A B C D,
   Par A B C D.
 Proof.
   intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hconga.
-  destruct (ender_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
+  destruct (ghost_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
     as [Hv1 [Hv1' [Hv2 Hv2']]].
-  apply (ender_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
+  apply (ghost_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
   destruct Hconga as [Hin|[Hin|[Hin|Hin]]].
   - right. apply conga_comm.
     apply conga_trans with T2 I2 D; [exact Hin|].
@@ -359,7 +359,7 @@ Proof.
     apply conga_trans with T1 I1 B; [apply conga_sym; exact Hv1'|exact Hin].
 Qed.
 
-Lemma ender_transversal_sameside_conv : forall T1 I1 I2 T2 A B C D,
+Lemma ghost_transversal_sameside_conv : forall T1 I1 I2 T2 A B C D,
   BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
   OS I1 I2 A C ->
   SuppA B I1 I2 I1 I2 D \/ SuppA A I1 I2 I1 I2 C ->
@@ -369,7 +369,7 @@ Proof.
   pose proof Hab as Hab0. pose proof Hcd as Hcd0.
   destruct Hab0 as [HbetAB [HneAI1 HneI1B]].
   destruct Hcd0 as [HbetCD [HneCI2 HneI2D]].
-  apply (ender_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
+  apply (ghost_transversal_master_conv I1 I2 A B C D Hab Hcd Hos).
   destruct Hsupp as [Hin|Hin].
   - destruct Hin as [HneBI1 [A' [HbetBA' Hconga']]].
     pose proof Hconga' as Hd.
@@ -403,20 +403,20 @@ Qed.
 
     A transversal may stop at its crossing points, and a crossed line may end
     at its crossing, so the drawn figure can lack a flanking point or an
-    exterior point.  [EnderTransversalRelaxed] is that figure: each crossed
+    exterior point.  [GhostTransversalRelaxed] is that figure: each crossed
     line has two distinct points with its crossing between them, and every
     flanking point off its crossing lies on the side of the transversal the
     full figure puts it.  [A] off [I1] and [B] off [I1] can't both fail, nor
     [C] and [D], so at least one side condition applies, and it keeps both
     crossed lines off the transversal. *)
-Definition EnderTransversalRelaxed I1 I2 A B C D : Prop :=
+Definition GhostTransversalRelaxed I1 I2 A B C D : Prop :=
   I1 <> I2 /\ Bet A I1 B /\ A <> B /\ Bet C I2 D /\ C <> D /\
   (A <> I1 -> C <> I2 -> OS I1 I2 A C) /\
   (A <> I1 -> D <> I2 -> TS I1 I2 A D) /\
   (B <> I1 -> C <> I2 -> TS I1 I2 B C) /\
   (B <> I1 -> D <> I2 -> OS I1 I2 B D).
 
-Lemma ender_extend_past : forall P Q, P <> Q -> exists X, BetS X P Q.
+Lemma ghost_extend_past : forall P Q, P <> Q -> exists X, BetS X P Q.
 Proof.
   intros P Q HPQ.
   destruct (segment_construction Q P P Q) as [X [Hbet Hcong]].
@@ -426,20 +426,20 @@ Qed.
 
 (** A line with its crossing between two distinct points gets a flanking
     point on each side, keeping every drawn point that is off the crossing. *)
-Lemma ender_complete_line : forall I A B,
+Lemma ghost_complete_line : forall I A B,
   Bet A I B -> A <> B ->
   exists A' B', BetS A' I B' /\ (A <> I -> A' = A) /\ (B <> I -> B' = B) /\
     Col A B A' /\ Col A B B'.
 Proof.
   intros I A B Hbet Hab.
   destruct (eq_dec_points A I) as [HAI|HAI].
-  - subst A. destruct (ender_extend_past I B) as [X HX]; [auto|].
+  - subst A. destruct (ghost_extend_past I B) as [X HX]; [auto|].
     pose proof HX as [HbetX _].
     exists X, B. split; [exact HX|]. split; [intro; contradiction|].
     split; [auto|]. split; [|Col].
     apply bet_col in HbetX. Col.
   - destruct (eq_dec_points B I) as [HBI|HBI].
-    + subst B. destruct (ender_extend_past I A) as [X HX]; [auto|].
+    + subst B. destruct (ghost_extend_past I A) as [X HX]; [auto|].
       pose proof HX as [HbetX _].
       exists A, X. split.
       { destruct HX as [HbetX' [HneXI HneIA]].
@@ -451,8 +451,8 @@ Proof.
 Qed.
 
 (** Every relaxed figure sits inside a full one on the same two lines. *)
-Lemma ender_transversal_complete : forall I1 I2 A B C D,
-  EnderTransversalRelaxed I1 I2 A B C D ->
+Lemma ghost_transversal_complete : forall I1 I2 A B C D,
+  GhostTransversalRelaxed I1 I2 A B C D ->
   exists A' B' C' D',
     BetS A' I1 B' /\ BetS C' I2 D' /\ OS I1 I2 A' C' /\
     (A <> I1 -> A' = A) /\ (B <> I1 -> B' = B) /\
@@ -460,9 +460,9 @@ Lemma ender_transversal_complete : forall I1 I2 A B C D,
     Col A B A' /\ Col A B B' /\ Col C D C' /\ Col C D D'.
 Proof.
   intros I1 I2 A B C D [HI12 [Hab [HneAB [Hcd [HneCD [Hac [Had [Hbc Hbd]]]]]]]].
-  destruct (ender_complete_line I1 A B Hab HneAB)
+  destruct (ghost_complete_line I1 A B Hab HneAB)
     as [A' [B' [Hab' [EA [EB [HcA HcB]]]]]].
-  destruct (ender_complete_line I2 C D Hcd HneCD)
+  destruct (ghost_complete_line I2 C D Hcd HneCD)
     as [C' [D' [Hcd' [EC [ED [HcC HcD]]]]]].
   exists A', B', C', D'.
   split; [exact Hab'|]. split; [exact Hcd'|].
@@ -514,21 +514,21 @@ Qed.
 (** An exterior point is either drawn beyond its crossing or not drawn at
     all, spelled as one of the crossings; either way the full figure has
     one, and keeps the drawn one. *)
-Lemma ender_complete_exterior : forall T I J,
+Lemma ghost_complete_exterior : forall T I J,
   I <> J -> (T = I \/ T = J \/ BetS T I J) ->
   exists T', BetS T' I J /\ (BetS T I J -> T' = T).
 Proof.
   intros T I J Hne HT.
   destruct HT as [->|[->|HT]].
-  - destruct (ender_extend_past I J Hne) as [X HX]. exists X.
+  - destruct (ghost_extend_past I J Hne) as [X HX]. exists X.
     split; [exact HX|]. intros [_ [Hd _]]. contradiction.
-  - destruct (ender_extend_past I J Hne) as [X HX]. exists X.
+  - destruct (ghost_extend_past I J Hne) as [X HX]. exists X.
     split; [exact HX|]. intros [Hb [_ Hd]].
     exfalso. apply Hd. symmetry. apply between_identity. exact Hb.
   - exists T. split; [exact HT|auto].
 Qed.
 
-Lemma ender_lines_par : forall A B C D A' B' C' D',
+Lemma ghost_lines_par : forall A B C D A' B' C' D',
   A' <> B' -> C' <> D' ->
   Col A B A' -> Col A B B' -> Col C D C' -> Col C D D' ->
   Par A B C D -> Par A' B' C' D'.
@@ -541,8 +541,8 @@ Qed.
 
 (** Reasoning about a relaxed transversal figure reduces to the full one:
     whatever holds of every completion holds of the drawn figure. *)
-Lemma ender_transversal_forward : forall T1 I1 I2 T2 A B C D (P : Prop),
-  EnderTransversalRelaxed I1 I2 A B C D ->
+Lemma ghost_transversal_forward : forall T1 I1 I2 T2 A B C D (P : Prop),
+  GhostTransversalRelaxed I1 I2 A B C D ->
   (T1 = I1 \/ T1 = I2 \/ BetS T1 I1 I2) ->
   (T2 = I2 \/ T2 = I1 \/ BetS I1 I2 T2) ->
   Par A B C D ->
@@ -556,27 +556,27 @@ Lemma ender_transversal_forward : forall T1 I1 I2 T2 A B C D (P : Prop),
 Proof.
   intros T1 I1 I2 T2 A B C D P Hrel HT1 HT2 Hpar Hk.
   pose proof Hrel as [HI12 _].
-  destruct (ender_transversal_complete _ _ _ _ _ _ Hrel)
+  destruct (ghost_transversal_complete _ _ _ _ _ _ Hrel)
     as [A' [B' [C' [D' [Hab [Hcd [Hos [EA [EB [EC [ED [HA [HB [HC HD]]]]]]]]]]]]]].
-  destruct (ender_complete_exterior T1 I1 I2 HI12 HT1) as [T1' [Ht1 ET1]].
+  destruct (ghost_complete_exterior T1 I1 I2 HI12 HT1) as [T1' [Ht1 ET1]].
   assert (HI21 : I2 <> I1) by auto.
   assert (HT2' : T2 = I2 \/ T2 = I1 \/ BetS T2 I2 I1).
   { destruct HT2 as [H|[H|[Hb [Hne1 Hne2]]]]; [left; exact H|right; left; exact H|].
     right; right. split; [apply between_symmetry; exact Hb|split; auto]. }
-  destruct (ender_complete_exterior T2 I2 I1 HI21 HT2') as [T2' [Ht2 ET2]].
+  destruct (ghost_complete_exterior T2 I2 I1 HI21 HT2') as [T2' [Ht2 ET2]].
   apply (Hk T1' A' B' C' D' T2'); try assumption.
   - destruct Ht2 as [Hb [Hne1 Hne2]].
     split; [apply between_symmetry; exact Hb|split; auto].
   - pose proof Hab as [_ [HA1 HB1]]. pose proof Hcd as [_ [HC2 HD2]].
-    apply (ender_lines_par A B C D); try assumption.
+    apply (ghost_lines_par A B C D); try assumption.
     + intro Heq. subst B'. apply HA1, between_identity. apply Hab.
     + intro Heq. subst D'. apply HC2, between_identity. apply Hcd.
   - intros [Hb [Hne1 Hne2]]. apply ET2.
     split; [apply between_symmetry; exact Hb|split; auto].
 Qed.
 
-Lemma ender_transversal_converse : forall T1 I1 I2 T2 A B C D,
-  EnderTransversalRelaxed I1 I2 A B C D ->
+Lemma ghost_transversal_converse : forall T1 I1 I2 T2 A B C D,
+  GhostTransversalRelaxed I1 I2 A B C D ->
   (T1 = I1 \/ T1 = I2 \/ BetS T1 I1 I2) ->
   (T2 = I2 \/ T2 = I1 \/ BetS I1 I2 T2) ->
   (forall T1' A' B' C' D' T2',
@@ -589,14 +589,14 @@ Lemma ender_transversal_converse : forall T1 I1 I2 T2 A B C D,
 Proof.
   intros T1 I1 I2 T2 A B C D Hrel HT1 HT2 Hk.
   pose proof Hrel as [HI12 [_ [HneAB [_ [HneCD _]]]]].
-  destruct (ender_transversal_complete _ _ _ _ _ _ Hrel)
+  destruct (ghost_transversal_complete _ _ _ _ _ _ Hrel)
     as [A' [B' [C' [D' [Hab [Hcd [Hos [EA [EB [EC [ED [HA [HB [HC HD]]]]]]]]]]]]]].
-  destruct (ender_complete_exterior T1 I1 I2 HI12 HT1) as [T1' [Ht1 ET1]].
+  destruct (ghost_complete_exterior T1 I1 I2 HI12 HT1) as [T1' [Ht1 ET1]].
   assert (HI21 : I2 <> I1) by auto.
   assert (HT2' : T2 = I2 \/ T2 = I1 \/ BetS T2 I2 I1).
   { destruct HT2 as [H|[H|[Hb [Hne1 Hne2]]]]; [left; exact H|right; left; exact H|].
     right; right. split; [apply between_symmetry; exact Hb|split; auto]. }
-  destruct (ender_complete_exterior T2 I2 I1 HI21 HT2') as [T2' [Ht2 ET2]].
+  destruct (ghost_complete_exterior T2 I2 I1 HI21 HT2') as [T2' [Ht2 ET2]].
   assert (Hpar : Par A' B' C' D').
   { apply (Hk T1' A' B' C' D' T2'); try assumption.
     - destruct Ht2 as [Hb [Hne1 Hne2]].
@@ -608,7 +608,7 @@ Proof.
     by (intro Heq; subst B'; apply HA1, between_identity; apply Hab).
   assert (HneCD' : C' <> D')
     by (intro Heq; subst D'; apply HC2, between_identity; apply Hcd).
-  apply (ender_lines_par A' B' C' D' A B C D HneAB HneCD).
+  apply (ghost_lines_par A' B' C' D' A B C D HneAB HneCD).
   - apply (col3 A B); Col.
   - apply (col3 A B); Col.
   - apply (col3 C D); Col.
@@ -618,12 +618,12 @@ Qed.
 
 (** A fully drawn figure is a relaxed one: the full configuration's single
     side condition gives the other three. *)
-Lemma ender_transversal_full_relaxed : forall I1 I2 A B C D,
+Lemma ghost_transversal_full_relaxed : forall I1 I2 A B C D,
   I1 <> I2 -> BetS A I1 B -> BetS C I2 D -> OS I1 I2 A C ->
-  EnderTransversalRelaxed I1 I2 A B C D.
+  GhostTransversalRelaxed I1 I2 A B C D.
 Proof.
   intros I1 I2 A B C D HI Hab Hcd Hos.
-  destruct (ender_transversal_sides I1 I2 A B C D Hab Hcd Hos) as [HtsAD HtsBC].
+  destruct (ghost_transversal_sides I1 I2 A B C D Hab Hcd Hos) as [HtsAD HtsBC].
   pose proof Hab as [HbetAB [HneAI1 HneI1B]].
   pose proof Hcd as [HbetCD [HneCI2 HneI2D]].
   assert (HneAB : A <> B)
@@ -645,7 +645,7 @@ Qed.
     its radius at a right angle, so the two right triangles share the segment
     from the centre to that point and have congruent radii for their other
     legs; [cong2_per2__cong] cancels those and leaves the tangents equal. *)
-Lemma ender_tangents_congruent : forall O E A B,
+Lemma ghost_tangents_congruent : forall O E A B,
   Per E A O -> Per E B O -> Cong A O B O -> Cong A E B E.
 Proof.
   intros O E A B HperA HperB Hradii.
@@ -657,7 +657,7 @@ Qed.
     into two legs of right triangles that share the leg running to the centre
     and whose hypotenuses are both radii, so the legs are congruent, and a
     point on the line congruent to both endpoints is their midpoint. *)
-Lemma ender_chord_foot_midpoint : forall O P E F,
+Lemma ghost_chord_foot_midpoint : forall O P E F,
   E <> F -> Col E P F -> Per E P O -> Per F P O -> Cong O E O F ->
   Midpoint P E F.
 Proof.
@@ -675,7 +675,7 @@ Qed.
     the two points lies off it and so makes the right angle.  No dimension
     axiom enters, because the line is given as meeting [UV]: this is what a
     kite's, and a rhombus's, diagonals are. *)
-Lemma ender_equidistant_line_perp_at : forall P Q U V M,
+Lemma ghost_equidistant_line_perp_at : forall P Q U V M,
   P <> Q -> Cong P U P V -> Cong Q U Q V ->
   Bet U M V -> U <> M -> Col P Q M ->
   Perp_at M P Q U V.
@@ -701,12 +701,12 @@ Proof.
   - apply bet_col in Hbet; Col.
 Qed.
 
-End EnderGeometry.
+End GhostGeometry.
 
 (** Rules that genuinely need the parallel postulate live here, in their own
     context, so that a reader can see at a glance which reasons force it.  The
     neutral section above is unaffected. *)
-Section EnderEuclideanGeometry.
+Section GhostEuclideanGeometry.
 
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 Context {TE : @Tarski_euclidean Tn TnEQD}.
@@ -716,7 +716,7 @@ Context {TE : @Tarski_euclidean Tn TnEQD}.
     third pair congruent.  Each cancellation is legitimate because the two
     summands never exceed a straight angle: [sams123231] for two angles of a
     triangle, and [bet_suma__sams] for a sum that is itself straight. *)
-Lemma ender_third_angle A B C A' B' C' :
+Lemma ghost_third_angle A B C A' B' C' :
   ~ Col A B C -> ~ Col A' B' C' ->
   CongA B A C B' A' C' -> CongA A B C A' B' C' ->
   CongA A C B A' C' B'.
@@ -764,7 +764,7 @@ Qed.
 (** The audited parallelogram in GeoCoq's own spelling.  Noncollinearity
     promotes the first [Par] to the strict relation, and the second then
     supplies the shared diagonal midpoint. *)
-Lemma ender_pgram_plg : forall A B C D,
+Lemma ghost_pgram_plg : forall A B C D,
   ~ Col A B C -> Par A B C D -> Par B C D A -> Plg A B C D.
 Proof.
   intros A B C D Hncol Hab Hbc.
@@ -776,13 +776,13 @@ Qed.
 (** The diagonals of the audited parallelogram bisect each other at any
     point lying on both.  [Plg] supplies a shared midpoint, and two lines that
     are not one meet at one point. *)
-Lemma ender_pgram_diagonals_bisect : forall A B C D M,
+Lemma ghost_pgram_diagonals_bisect : forall A B C D M,
   ~ Col A B C -> Par A B C D -> Par B C D A -> B <> D ->
   Col A C M -> Col B D M ->
   Midpoint M A C /\ Midpoint M B D.
 Proof.
   intros A B C D M Hncol Hab Hbc HBD HM1 HM2.
-  destruct (ender_pgram_plg A B C D Hncol Hab Hbc) as [_ [N [HNAC HNBD]]].
+  destruct (ghost_pgram_plg A B C D Hncol Hab Hbc) as [_ [N [HNAC HNBD]]].
   assert (Heq : M = N).
   { apply (l6_21 A C B D M N).
     - intro. apply Hncol. Col.
@@ -797,7 +797,7 @@ Qed.
 (** The converse of the diagonal-bisection theorem, read off GeoCoq's own
     midpoint spelling of the figure: two segments that share a
     midpoint are the diagonals of a parallelogram. *)
-Lemma ender_pgram_from_diagonal_midpoint : forall A B C D M,
+Lemma ghost_pgram_from_diagonal_midpoint : forall A B C D M,
   ~ Col A B C -> Midpoint M A C -> Midpoint M B D ->
   Par A B C D /\ Par B C D A.
 Proof.
@@ -812,7 +812,7 @@ Qed.
 (** Alternate interior angles across a transversal of parallels, derived
     through Playfair: GeoCoq's own [par_2_plg] route depends on [Eqdep.Eq_rect_eq], and this one keeps the
     development free of axioms. *)
-Lemma ender_alternate_interior : forall A B C D,
+Lemma ghost_alternate_interior : forall A B C D,
   TS A C B D -> Par A B C D -> CongA B A C D C A.
 Proof.
   apply playfair__alternate_interior, tarski_s_euclid_implies_playfair.
@@ -822,13 +822,13 @@ Qed.
 (** Opposite sides of a genuine parallelogram are congruent: the diagonal
     through the audited crossing point is a transversal of both parallel
     pairs, and ASA glues the two triangles it cuts. *)
-Lemma ender_pgram_opp_sides : forall A B C D X,
+Lemma ghost_pgram_opp_sides : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Par B C D A ->
   Cong A B C D /\ Cong B C D A.
 Proof.
   intros A B C D X Hncol HbetsAC HbetsBD Hpab Hpbc.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HbetsAC HbetsBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HbetsAC HbetsBD)
     as [Hbcd [Hcda Hdab]].
   destruct HbetsAC as [HbetAC [HAX HXC]].
   destruct HbetsBD as [HbetBD [HBX HXD]].
@@ -839,13 +839,13 @@ Proof.
     - intro. apply Hcda. Col.
     - exists X. split; assumption. }
   assert (Hconga1 : CongA B A C D C A)
-    by (apply ender_alternate_interior; assumption).
+    by (apply ghost_alternate_interior; assumption).
   assert (Hconga2 : CongA B C A D A C).
-  { apply ender_alternate_interior.
+  { apply ghost_alternate_interior.
     - apply invert_two_sides. exact Hts.
     - apply par_right_comm, par_left_comm. exact Hpbc. }
   assert (Htri : TriangleCongruent A C B C A D).
-  { apply ender_asa.
+  { apply ghost_asa.
     - intro. apply Hncol. Col.
     - apply conga_comm. exact Hconga1.
     - apply cong_pseudo_reflexivity.
@@ -859,16 +859,16 @@ Qed.
     agree side-angle-side: they share that side, their other legs are the
     parallelogram's congruent opposite sides, and the corners between are two
     of the rectangle's right angles. *)
-Lemma ender_rect_diagonals : forall A B C D X,
+Lemma ghost_rect_diagonals : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Par B C D A ->
   Per D A B -> Per A B C ->
   Cong A C B D.
 Proof.
   intros A B C D X Hncol HbetsAC HbetsBD Hpab Hpbc HperA HperB.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HbetsAC HbetsBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HbetsAC HbetsBD)
     as [_ [_ Hdab]].
-  destruct (ender_pgram_opp_sides A B C D X Hncol HbetsAC HbetsBD Hpab Hpbc)
+  destruct (ghost_pgram_opp_sides A B C D X Hncol HbetsAC HbetsBD Hpab Hpbc)
     as [_ Hbc_da].
   apply not_col_distincts in Hncol. destruct Hncol as [Hncol [HAB [HBC _]]].
   apply not_col_distincts in Hdab. destruct Hdab as [_ [HDA [_ HDB]]].
@@ -876,7 +876,7 @@ Proof.
   { apply l11_16;
       [exact HperB|exact HAB|now apply not_eq_sym
       |now apply l8_2|now apply not_eq_sym|exact HDA]. }
-  destruct (ender_sas B A C A B D) as [_ [Hdiagonals _]];
+  destruct (ghost_sas B A C A B D) as [_ [Hdiagonals _]];
     [intro; apply Hncol; Col
     |apply cong_pseudo_reflexivity
     |exact Hcorners
@@ -887,7 +887,7 @@ Qed.
 (** Opposite angles of the audited parallelogram.  Noncollinearity promotes
     the first broad [Par] relation to GeoCoq's strict one; the second parallel
     pair then supplies [Plg], whose standard angle theorem gives both pairs. *)
-Lemma ender_pgram_opp_angles : forall A B C D,
+Lemma ghost_pgram_opp_angles : forall A B C D,
   A <> B /\ A <> C /\ B <> C -> ~ Col A B C ->
   Par A B C D -> Par B C D A ->
   CongA A B C C D A /\ CongA B C D D A B.
@@ -901,7 +901,7 @@ Proof.
   now apply plg_to_parallelogram.
 Qed.
 
-Lemma ender_bets_sym : forall A X C, BetS A X C -> BetS C X A.
+Lemma ghost_bets_sym : forall A X C, BetS A X C -> BetS C X A.
 Proof.
   intros A X C [Hbet [H1 H2]]. repeat split;
     [now apply between_symmetry|now apply not_eq_sym|now apply not_eq_sym].
@@ -910,7 +910,7 @@ Qed.
 (** An angle supplementary to a right angle is right.  [SuppA] lays the two
     along a straight angle, so the second is congruent to the first's
     continuation, and a continuation of a right angle is right. *)
-Lemma ender_suppa_per : forall A B C D E F,
+Lemma ghost_suppa_per : forall A B C D E F,
   SuppA A B C D E F -> Per D E F -> Per A B C.
 Proof.
   intros A B C D E F [HneAB [A' [Hbet Hconga]]] Hper.
@@ -925,7 +925,7 @@ Qed.
 
 (** Consecutive interior angles between parallels, Euclidean by the same
     Playfair route the alternate interior angles take. *)
-Lemma ender_consecutive_interior : forall A B C D,
+Lemma ghost_consecutive_interior : forall A B C D,
   OS B C A D -> Par A B C D -> SuppA A B C B C D.
 Proof.
   apply alternate_interior__consecutive_interior,
@@ -941,11 +941,11 @@ Qed.
 (** The two corners at either end of a side are on one side of it, which is
     what the crossing diagonals are for: each far corner lies on the same ray
     from an end of that side as the crossing point does. *)
-Lemma ender_quad_same_side : forall A B C D X,
+Lemma ghost_quad_same_side : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D -> OS B C A D.
 Proof.
   intros A B C D X Hncol HAC HBD.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [Hbcd _].
   destruct HAC as [HbetAC [HAX HXC]].
   destruct HBD as [HbetBD [HBX HXD]].
@@ -961,25 +961,25 @@ Proof.
   apply one_side_transitivity with X; assumption.
 Qed.
 
-Lemma ender_pgram_consec_angles : forall A B C D X,
+Lemma ghost_pgram_consec_angles : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D -> Par A B C D ->
   SuppA A B C B C D.
 Proof.
   intros A B C D X Hncol HAC HBD Hpar.
-  apply ender_consecutive_interior;
-    [exact (ender_quad_same_side A B C D X Hncol HAC HBD)|exact Hpar].
+  apply ghost_consecutive_interior;
+    [exact (ghost_quad_same_side A B C D X Hncol HAC HBD)|exact Hpar].
 Qed.
 
 (** The converse, and neutral where the forward direction is not: continue one
     of the two sides past their shared corner, and the supplement makes the
     far corner congruent to the continuation.  That is an alternate interior
     pair, which [l12_21_b] turns into the parallel. *)
-Lemma ender_pgram_from_consec_angles : forall A B C D X,
+Lemma ghost_pgram_from_consec_angles : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   SuppA A B C B C D -> Par A B C D.
 Proof.
   intros A B C D X Hncol HAC HBD Hsuppa.
-  pose proof (ender_quad_same_side A B C D X Hncol HAC HBD) as Hos.
+  pose proof (ghost_quad_same_side A B C D X Hncol HAC HBD) as Hos.
   pose proof Hncol as Hdistinct. apply not_col_distincts in Hdistinct.
   destruct Hdistinct as [_ [HAB [HBC _]]].
   destruct (segment_construction A B A B) as [A' [HbetA' Hcong]].
@@ -1009,7 +1009,7 @@ Qed.
 
 (** One right corner makes a parallelogram a rectangle: the opposite corner is
     congruent to it, and each neighbour is supplementary to it. *)
-Lemma ender_pgram_right_corner : forall A B C D X,
+Lemma ghost_pgram_right_corner : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Par B C D A -> Per A B C ->
   Per D A B /\ Per A B C /\ Per B C D /\ Per C D A.
@@ -1017,12 +1017,12 @@ Proof.
   intros A B C D X Hncol HAC HBD Hpar1 Hpar2 Hper.
   pose proof Hncol as Hncol'. apply not_col_distincts in Hncol'.
   destruct Hncol' as [_ [HAB [HBC HACne]]].
-  destruct (ender_pgram_opp_angles A B C D (conj HAB (conj HACne HBC))
+  destruct (ghost_pgram_opp_angles A B C D (conj HAB (conj HACne HBC))
               Hncol Hpar1 Hpar2) as [Hopp1 Hopp2].
   assert (HperCDA : Per C D A) by (apply (l11_17 A B C); assumption).
   assert (HperBCD : Per B C D).
-  { apply (ender_suppa_per _ _ _ A B C);
-      [apply suppa_sym, (ender_pgram_consec_angles A B C D X); assumption
+  { apply (ghost_suppa_per _ _ _ A B C);
+      [apply suppa_sym, (ghost_pgram_consec_angles A B C D X); assumption
       |exact Hper]. }
   assert (HperDAB : Per D A B) by (apply (l11_17 B C D); assumption).
   auto.
@@ -1032,13 +1032,13 @@ Qed.
     cuts two triangles that agree side for side, so the alternate interior
     angles it makes are congruent, and the crossing point is the [TS] that
     [l12_21_b] turns them back into a parallel with -- all neutral. *)
-Lemma ender_pgram_from_opposite_sides : forall A B C D X,
+Lemma ghost_pgram_from_opposite_sides : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Cong A B C D -> Cong B C D A ->
   Par A B C D.
 Proof.
   intros A B C D X Hncol HAC HBD Hab Hbc.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [_ [Hcda _]].
   destruct HAC as [HbetAC [HAX HXC]]. destruct HBD as [HbetBD [HBX HXD]].
   assert (Hts : TS A C B D).
@@ -1046,21 +1046,21 @@ Proof.
     - intro. apply Hncol. Col.
     - intro. apply Hcda. Col.
     - exists X. split; [Col|assumption]. }
-  destruct (ender_sss A B C C D A) as [_ [_ [_ [Hangle _]]]];
+  destruct (ghost_sss A B C C D A) as [_ [_ [_ [Hangle _]]]];
     [exact Hncol|exact Hab|exact Hbc|apply cong_pseudo_reflexivity|].
   now apply l12_21_b.
 Qed.
 
 (** A parallelogram with one pair of congruent adjacent sides has all four
     sides congruent, spelled as the audited [IsRhombus] wants them. *)
-Lemma ender_rhombus_sides : forall A B C D X,
+Lemma ghost_rhombus_sides : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Par B C D A ->
   Cong A B B C \/ Cong B C C D \/ Cong C D D A \/ Cong D A A B ->
   Cong A B B C /\ Cong B C C D /\ Cong C D D A.
 Proof.
   intros A B C D X Hncol HAC HBD Hab Hbc Hadj.
-  destruct (ender_pgram_opp_sides A B C D X Hncol HAC HBD Hab Hbc)
+  destruct (ghost_pgram_opp_sides A B C D X Hncol HAC HBD Hab Hbc)
     as [Hopp1 Hopp2].
   assert (Hcd_ab : Cong C D A B) by Cong.
   assert (Hda_bc : Cong D A B C) by Cong.
@@ -1073,13 +1073,13 @@ Qed.
     diagonals of a well-formed quadrilateral, is already a parallelogram:
     the crossing point supplies the [TS] hypothesis of [par_cong_mid_ts],
     whose midpoint is the shared diagonal midpoint of [Plg]. *)
-Lemma ender_pgram_from_side : forall A B C D X,
+Lemma ghost_pgram_from_side : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Cong A B C D ->
   Par B C D A.
 Proof.
   intros A B C D X Hncol HAC HBD Hpar Hcong.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [Hbcd [Hcda Hdab]].
   destruct HAC as [HbetAC [HAX HXC]]. destruct HBD as [HbetBD [HBX HXD]].
   assert (HneAC : A <> C).
@@ -1107,23 +1107,23 @@ Qed.
     side, so the two corners on that side are congruent -- and being
     consecutive corners they are also supplementary, which leaves them
     right. *)
-Lemma ender_pgram_con_diagonals_right : forall A B C D X,
+Lemma ghost_pgram_con_diagonals_right : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Par B C D A -> Cong A C B D ->
   Per D A B /\ Per A B C /\ Per B C D /\ Per C D A.
 Proof.
   intros A B C D X Hncol HAC HBD Hpar1 Hpar2 Hdiag.
-  destruct (ender_pgram_opp_sides A B C D X Hncol HAC HBD Hpar1 Hpar2)
+  destruct (ghost_pgram_opp_sides A B C D X Hncol HAC HBD Hpar1 Hpar2)
     as [_ Hbc_da].
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [_ [_ Hdab]].
   pose proof Hncol as Hdistinct. apply not_col_distincts in Hdistinct.
   destruct Hdistinct as [_ [HAB [HBC _]]].
-  destruct (ender_sss A B C B A D) as [_ [_ [_ [_ [Hcorners _]]]]];
+  destruct (ghost_sss A B C B A D) as [_ [_ [_ [_ [Hcorners _]]]]];
     [exact Hncol|apply cong_pseudo_reflexivity|Cong|Cong|].
   assert (Hsupp : SuppA D A B A B C).
-  { apply (ender_pgram_consec_angles D A B C X Hdab
-             (ender_bets_sym _ _ _ HBD) HAC (par_symmetry _ _ _ _ Hpar2)). }
+  { apply (ghost_pgram_consec_angles D A B C X Hdab
+             (ghost_bets_sym _ _ _ HBD) HAC (par_symmetry _ _ _ _ Hpar2)). }
   assert (Hsame : CongA D A B A B C)
     by (apply conga_left_comm, conga_sym, Hcorners).
   assert (Hper : Per A B C).
@@ -1131,23 +1131,23 @@ Proof.
       [exact Hsame
       |apply conga_refl; [exact HAB|now apply not_eq_sym]
       |exact Hsupp]. }
-  exact (ender_pgram_right_corner A B C D X Hncol HAC HBD Hpar1 Hpar2 Hper).
+  exact (ghost_pgram_right_corner A B C D X Hncol HAC HBD Hpar1 Hpar2 Hper).
 Qed.
 
 (** Perpendicular diagonals make a parallelogram a rhombus.  GeoCoq's
     [perp_rmb] wants the figure in its own midpoint spelling and returns one
-    pair of congruent adjacent sides; [ender_rhombus_sides] spreads that
+    pair of congruent adjacent sides; [ghost_rhombus_sides] spreads that
     around the audited chain. *)
-Lemma ender_pgram_perp_diagonals_rhombus : forall A B C D X,
+Lemma ghost_pgram_perp_diagonals_rhombus : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Par B C D A -> Perp A C B D ->
   Cong A B B C /\ Cong B C C D /\ Cong C D D A.
 Proof.
   intros A B C D X Hncol HAC HBD Hpar1 Hpar2 Hperp.
   assert (Hplg : Plg A B C D)
-    by (apply ender_pgram_plg; assumption).
+    by (apply ghost_pgram_plg; assumption).
   destruct (perp_rmb A B C D Hplg Hperp) as [_ Hadjacent].
-  apply (ender_rhombus_sides A B C D X); auto.
+  apply (ghost_rhombus_sides A B C D X); auto.
 Qed.
 
 (** One diagonal of a parallelogram bisecting the corner it leaves makes the
@@ -1155,13 +1155,13 @@ Qed.
     parallel sides, so the half it cuts off at the far corner is congruent to
     the half at the near one; with the bisected halves congruent too, the
     triangle on that diagonal has congruent base angles. *)
-Lemma ender_pgram_bisector_rhombus : forall A B C D X,
+Lemma ghost_pgram_bisector_rhombus : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Par B C D A -> CongA B A C C A D ->
   Cong A B B C /\ Cong B C C D /\ Cong C D D A.
 Proof.
   intros A B C D X Hncol HAC HBD Hpar1 Hpar2 Hbisects.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [_ [Hcda _]].
   pose proof HAC as HACcopy. destruct HACcopy as [HbetAC [HAX HXC]].
   pose proof HBD as HBDcopy. destruct HBDcopy as [HbetBD [HBX HXD]].
@@ -1172,24 +1172,24 @@ Proof.
     - intro. apply Hcda. Col.
     - exists X. split; assumption. }
   assert (Halt : CongA B A C D C A)
-    by (apply ender_alternate_interior; assumption).
+    by (apply ghost_alternate_interior; assumption).
   assert (Hbase : CongA D A C D C A).
   { apply conga_left_comm.
     apply (conga_trans C A D B A C D C A); [now apply conga_sym|exact Halt]. }
   assert (Hlegs : Cong D A D C).
-  { apply ender_base_angle_conv; [intro; apply Hcda; Col|exact Hbase]. }
-  apply (ender_rhombus_sides A B C D X); auto.
+  { apply ghost_base_angle_conv; [intro; apply Hcda; Col|exact Hbase]. }
+  apply (ghost_rhombus_sides A B C D X); auto.
   right. right. left. Cong.
 Qed.
 
 (** The diagonal from [A] runs inside the corner there, so the corner is the
     sum of the two halves it cuts. *)
-Lemma ender_quad_corner_split : forall A B C D X,
+Lemma ghost_quad_corner_split : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   SumA D A C C A B D A B /\ SAMS D A C C A B.
 Proof.
   intros A B C D X Hncol HAC HBD.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [Hbcd [Hcda Hdab]].
   pose proof HAC as HACcopy. destruct HACcopy as [HbetAC [HAX HXC]].
   pose proof HBD as HBDcopy. destruct HBDcopy as [HbetBD [HBX HXD]].
@@ -1206,7 +1206,7 @@ Qed.
 (** The two angles of a triangle other than the one at [B] sum to its
     supplement: the Euclidean triangle sum, regrouped so that the angle to be
     cancelled is the one added last. *)
-Lemma ender_triangle_other_two : forall A B C G H I,
+Lemma ghost_triangle_other_two : forall A B C G H I,
   ~ Col A B C -> SumA B C A C A B G H I -> SuppA G H I A B C.
 Proof.
   intros A B C G H I Hncol Hsum.
@@ -1233,18 +1233,18 @@ Qed.
     cancellation: if one half were the larger the opposite-corner hypothesis
     would make its partner the larger too, and then the two triangles could
     not have the same angle sum. *)
-Lemma ender_quad_opposite_angles : forall A B C D X,
+Lemma ghost_quad_opposite_angles : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   CongA D A B B C D -> CongA A B C C D A ->
   SuppA A B C B C D.
 Proof.
   intros A B C D X Hncol HAC HBD HopA HopB.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [Hbcd [Hcda Hdab]].
-  destruct (ender_quad_corner_split A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_corner_split A B C D X Hncol HAC HBD)
     as [HsumA HsamsA].
-  destruct (ender_quad_corner_split C D A B X Hcda
-              (ender_bets_sym _ _ _ HAC) (ender_bets_sym _ _ _ HBD))
+  destruct (ghost_quad_corner_split C D A B X Hcda
+              (ghost_bets_sym _ _ _ HAC) (ghost_bets_sym _ _ _ HBD))
     as [HsumC HsamsC].
   pose proof Hncol as Hd1. apply not_col_distincts in Hd1.
   destruct Hd1 as [_ [HAB [HBC HACne]]].
@@ -1266,13 +1266,13 @@ Proof.
       |apply conga_pseudo_refl; auto using not_eq_sym
       |apply conga_refl; auto using not_eq_sym]. }
   (* both sums are the supplement of the same corner *)
-  pose proof (ender_triangle_other_two A B C G H I Hncol HsumG) as HsuppG.
+  pose proof (ghost_triangle_other_two A B C G H I Hncol HsumG) as HsuppG.
   assert (HsuppG' : SuppA G' H' I' A B C).
   { apply (conga2_suppa__suppa G' H' I' A D C);
       [apply conga_refl; auto using not_eq_sym
       |apply conga_sym, (conga_trans A B C C D A A D C);
          [exact HopB|apply conga_pseudo_refl; auto using not_eq_sym]
-      |apply (ender_triangle_other_two A D C);
+      |apply (ghost_triangle_other_two A D C);
          [intro; apply Hcda; Col|exact HsumG'']]. }
   assert (Hhalves : CongA G H I G' H' I')
     by (apply (suppa2__conga123 _ _ _ A B C); assumption).
@@ -1330,13 +1330,13 @@ Qed.
     congruent, so the triangle the crossing cuts off one parallel side is
     isosceles exactly when the one it cuts off the other is.  This is the
     congruent-diagonals direction. *)
-Lemma ender_isos_trap_base_angles : forall A B C D X,
+Lemma ghost_isos_trap_base_angles : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> Cong A C B D ->
   CongA D A B A B C.
 Proof.
   intros A B C D X Hncol HAC HBD Hpar Hdiag.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [Hbcd [Hcda Hdab]].
   pose proof Hncol as Hd1. apply not_col_distincts in Hd1.
   destruct Hd1 as [_ [HAB [HBC HACne]]].
@@ -1380,9 +1380,9 @@ Proof.
   { repeat split; [intro; apply Hdab; Col|intro; apply Hbcd; Col|].
     exists X. split; [Col|assumption]. }
   assert (Hu : CongA C A B A C D).
-  { apply conga_comm, ender_alternate_interior; assumption. }
+  { apply conga_comm, ghost_alternate_interior; assumption. }
   assert (Hv : CongA D B A B D C).
-  { apply conga_comm, ender_alternate_interior; [exact Hts2|Par]. }
+  { apply conga_comm, ghost_alternate_interior; [exact Hts2|Par]. }
   destruct (or_lt_cong_gt X A X B) as [Hlt|[Hgt|Hcong]].
   - (* the near half at A is the shorter, so the far half at C is too, and
        the diagonals cannot then agree *)
@@ -1417,13 +1417,13 @@ Proof.
   - (* congruent halves: the near triangle is isosceles, and the two halves
        of the figure then agree side-angle-side *)
     assert (Hbase : CongA X A B X B A)
-      by (apply ender_base_angle; [intro; apply HncolXAB; Col|exact Hcong]).
+      by (apply ghost_base_angle; [intro; apply HncolXAB; Col|exact Hcong]).
     assert (Hcorner : CongA C A B D B A).
     { apply (conga_trans C A B X B A);
         [apply (conga_trans C A B X A B);
            [now apply conga_sym|exact Hbase]
         |exact HangB]. }
-    destruct (ender_sas A B C B A D) as [_ [_ [_ [_ [Hangle _]]]]];
+    destruct (ghost_sas A B C B A D) as [_ [_ [_ [_ [Hangle _]]]]];
       [exact Hncol|apply cong_pseudo_reflexivity|now apply conga_comm
       |exact Hdiag|].
     apply conga_left_comm, conga_sym, Hangle.
@@ -1435,12 +1435,12 @@ Qed.
     have congruent vertical angles at the crossing, so those two agree
     side-angle-side -- and what is left over is an exterior angle on one side
     and an interior one on the other. *)
-Lemma ender_trap_half_lt : forall A B C D X,
+Lemma ghost_trap_half_lt : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D -> Par A B C D ->
   Lt X A X B -> LtA A B C D A B.
 Proof.
   intros A B C D X Hncol HAC HBD Hpar Hlt.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [Hbcd [Hcda Hdab]].
   pose proof Hncol as Hd1. apply not_col_distincts in Hd1.
   destruct Hd1 as [_ [HAB [HBC HACne]]].
@@ -1491,9 +1491,9 @@ Proof.
   { repeat split; [intro; apply Hdab; Col|intro; apply Hbcd; Col|].
     exists X. split; [Col|assumption]. }
   assert (Hu : CongA C A B A C D).
-  { apply conga_comm, ender_alternate_interior; assumption. }
+  { apply conga_comm, ghost_alternate_interior; assumption. }
   assert (Hv : CongA D B A B D C).
-  { apply conga_comm, ender_alternate_interior; [exact Hts2|Par]. }
+  { apply conga_comm, ghost_alternate_interior; [exact Hts2|Par]. }
   assert (Hnear : LtA X B A X A B)
     by (apply l11_44_2_a; [intro; apply HncolXAB; Col|exact Hlt]).
   assert (Hfar : LtA X D C X C D).
@@ -1536,7 +1536,7 @@ Proof.
   { intro Hcol. apply HncolXAD.
     apply (col3 X F); [now apply not_eq_sym|Col|Col|
       apply bet_col in HbetF; Col]. }
-  destruct (ender_sas X A F X E C) as [_ [_ [_ [_ [Hcut _]]]]];
+  destruct (ghost_sas X A F X E C) as [_ [_ [_ [_ [Hcut _]]]]];
     [exact HncolXAF|now apply cong_symmetry|exact Hvertical
     |exact HcongF|].
   (* what is left over: an exterior angle at [E], an interior one at [A] *)
@@ -1570,9 +1570,9 @@ Proof.
          |now apply conga_sym]
       |exact Houter]. }
   (* and the corners are the sums of the two halves *)
-  destruct (ender_quad_corner_split A B C D X Hncol HAC HBD) as [HsumA HsamsA].
-  destruct (ender_quad_corner_split B C D A X Hbcd HBD
-              (ender_bets_sym _ _ _ HAC)) as [HsumB _].
+  destruct (ghost_quad_corner_split A B C D X Hncol HAC HBD) as [HsumA HsamsA].
+  destruct (ghost_quad_corner_split B C D A X Hbcd HBD
+              (ghost_bets_sym _ _ _ HAC)) as [HsumB _].
   (* the corner at [B] is the smaller sum, half for half *)
   assert (Hleft : LtA D B C D A C).
   { apply (conga_preserves_lta X B C X A D);
@@ -1598,13 +1598,13 @@ Qed.
     diagonals congruent.  Either half-diagonal being the shorter would make
     the base angle over it the smaller, so the halves agree, and the two
     triangles the crossing cuts off the parallel sides are isosceles. *)
-Lemma ender_isos_trap_con_diagonals : forall A B C D X,
+Lemma ghost_isos_trap_con_diagonals : forall A B C D X,
   ~ Col A B C -> BetS A X C -> BetS B X D ->
   Par A B C D -> CongA D A B A B C ->
   Cong A C B D.
 Proof.
   intros A B C D X Hncol HAC HBD Hpar Hbase.
-  destruct (ender_quad_no_three_collinear A B C D X Hncol HAC HBD)
+  destruct (ghost_quad_no_three_collinear A B C D X Hncol HAC HBD)
     as [Hbcd [Hcda Hdab]].
   pose proof HAC as HACc. destruct HACc as [HbetAC [HAX HXC]].
   pose proof HBD as HBDc. destruct HBDc as [HbetBD [HBX HXD]].
@@ -1629,11 +1629,11 @@ Proof.
   destruct (or_lt_cong_gt X A X B) as [Hlt|[Hgt|Hcong]].
   - exfalso.
     apply (lta__nlea A B C D A B);
-      [exact (ender_trap_half_lt A B C D X Hncol HAC HBD Hpar Hlt)
+      [exact (ghost_trap_half_lt A B C D X Hncol HAC HBD Hpar Hlt)
       |now apply conga__lea].
   - exfalso.
     apply (lta__nlea B A D C B A);
-      [apply (ender_trap_half_lt B A D C X);
+      [apply (ghost_trap_half_lt B A D C X);
          [intro; apply Hdab; Col|exact HBD|exact HAC|Par|exact Hgt]
       |apply conga__lea, conga_comm, conga_sym, Hbase].
   - (* congruent halves at the near side, hence at the far side too *)
@@ -1656,11 +1656,11 @@ Proof.
       by (apply out2__conga; [now apply l6_6
                              |apply out_trivial; auto using not_eq_sym]).
     assert (Hu : CongA C A B A C D).
-    { apply conga_comm, ender_alternate_interior; assumption. }
+    { apply conga_comm, ghost_alternate_interior; assumption. }
     assert (Hv : CongA D B A B D C).
-    { apply conga_comm, ender_alternate_interior; [exact Hts2|Par]. }
+    { apply conga_comm, ghost_alternate_interior; [exact Hts2|Par]. }
     assert (Hbase' : CongA X A B X B A)
-      by (apply ender_base_angle; [intro; apply HncolXAB; Col|exact Hcong]).
+      by (apply ghost_base_angle; [intro; apply HncolXAB; Col|exact Hcong]).
     (* the near base angles are congruent, so the far ones are too *)
     assert (H1 : CongA X C D C A B)
       by (apply (conga_trans X C D A C D); [exact HangC|now apply conga_sym]).
@@ -1676,11 +1676,11 @@ Proof.
       by (apply (conga_trans X C D B D C); [exact H5|now apply conga_sym]).
     apply (l2_11 A X C B X D);
       [exact HbetAC|exact HbetBD|Cong|].
-    apply (ender_base_angle_conv X C D);
+    apply (ghost_base_angle_conv X C D);
       [intro; apply HncolXCD; Col|exact Hfar].
 Qed.
 
-Lemma ender_playfair : playfair_s_postulate.
+Lemma ghost_playfair : playfair_s_postulate.
 Proof.
   apply tarski_s_euclid_implies_playfair.
   unfold tarski_s_parallel_postulate. exact euclid.
@@ -1691,11 +1691,11 @@ Qed.
     by explicit plane pasting through [coplanar_pseudo_trans]: the reflection
     tactic's proof term depends on [Eqdep.Eq_rect_eq], and this development
     stays free of axioms. *)
-Lemma ender_par_trans : forall A1 A2 B1 B2 C1 C2,
+Lemma ghost_par_trans : forall A1 A2 B1 B2 C1 C2,
   Par A1 A2 B1 B2 -> Par B1 B2 C1 C2 -> Par A1 A2 C1 C2.
 Proof.
   intros A1 A2 B1 B2 C1 C2 HAB HBC.
-  pose proof ender_playfair as HP.
+  pose proof ghost_playfair as HP.
   assert_diffs.
   destruct (cop_dec A1 A2 C1 B1) as [Hcop|HNCop];
     [induction (col_dec A1 A2 C1)|].
@@ -1760,7 +1760,7 @@ Qed.
     configuration and the lines parallel, both alternate interior pairs are
     congruent.  Every other angle relation of the figure is neutral algebra
     over these two. *)
-Lemma ender_transversal_master : forall T1 I1 I2 T2 A B C D,
+Lemma ghost_transversal_master : forall T1 I1 I2 T2 A B C D,
   BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
   OS I1 I2 A C -> Par A B C D ->
   CongA A I1 I2 D I2 I1 /\ CongA B I1 I2 C I2 I1.
@@ -1806,21 +1806,21 @@ Proof.
   { apply par_symmetry.
     apply (par_col2_par I2 C A B I1 B HneI1B); [now apply par_symmetry|Col|Col]. }
   split.
-  - apply ender_alternate_interior; assumption.
-  - apply ender_alternate_interior; assumption.
+  - apply ghost_alternate_interior; assumption.
+  - apply ghost_alternate_interior; assumption.
 Qed.
 
 (** The remaining forward families are the master congruences carried around
     the figure by its vertical angles and linear pairs. *)
-Lemma ender_transversal_altext : forall T1 I1 I2 T2 A B C D,
+Lemma ghost_transversal_altext : forall T1 I1 I2 T2 A B C D,
   BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
   OS I1 I2 A C -> Par A B C D ->
   CongA T1 I1 A T2 I2 D /\ CongA T1 I1 B T2 I2 C.
 Proof.
   intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hpar.
-  destruct (ender_transversal_master T1 I1 I2 T2 A B C D
+  destruct (ghost_transversal_master T1 I1 I2 T2 A B C D
               Ht1 Ht2 Hab Hcd Hos Hpar) as [Hm1 Hm2].
-  destruct (ender_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
+  destruct (ghost_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
     as [Hv1 [Hv1' [Hv2 Hv2']]].
   split.
   - apply conga_trans with I2 I1 B; [exact Hv1|].
@@ -1831,16 +1831,16 @@ Proof.
     apply conga_comm. exact Hm1.
 Qed.
 
-Lemma ender_transversal_corresp : forall T1 I1 I2 T2 A B C D,
+Lemma ghost_transversal_corresp : forall T1 I1 I2 T2 A B C D,
   BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
   OS I1 I2 A C -> Par A B C D ->
   CongA I2 I1 B T2 I2 D /\ CongA I2 I1 A T2 I2 C /\
   CongA T1 I1 A I1 I2 C /\ CongA T1 I1 B I1 I2 D.
 Proof.
   intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hpar.
-  destruct (ender_transversal_master T1 I1 I2 T2 A B C D
+  destruct (ghost_transversal_master T1 I1 I2 T2 A B C D
               Ht1 Ht2 Hab Hcd Hos Hpar) as [Hm1 Hm2].
-  destruct (ender_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
+  destruct (ghost_transversal_verticals T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd)
     as [Hv1 [Hv1' [Hv2 Hv2']]].
   split; [|split; [|split]].
   - apply conga_trans with I1 I2 C; [|exact Hv2].
@@ -1853,13 +1853,13 @@ Proof.
     apply conga_comm. exact Hm1.
 Qed.
 
-Lemma ender_transversal_sameside : forall T1 I1 I2 T2 A B C D,
+Lemma ghost_transversal_sameside : forall T1 I1 I2 T2 A B C D,
   BetS T1 I1 I2 -> BetS I1 I2 T2 -> BetS A I1 B -> BetS C I2 D ->
   OS I1 I2 A C -> Par A B C D ->
   SuppA B I1 I2 I1 I2 D /\ SuppA A I1 I2 I1 I2 C.
 Proof.
   intros T1 I1 I2 T2 A B C D Ht1 Ht2 Hab Hcd Hos Hpar.
-  destruct (ender_transversal_master T1 I1 I2 T2 A B C D
+  destruct (ghost_transversal_master T1 I1 I2 T2 A B C D
               Ht1 Ht2 Hab Hcd Hos Hpar) as [Hm1 Hm2].
   destruct Hab as [HbetAB [HneAI1 HneI1B]].
   assert (HneBI1 : B <> I1) by (intro Heq; apply HneI1B; auto).
@@ -1878,7 +1878,7 @@ Qed.
     respectively).  The right-Saccheri hypothesis follows cleanly from the
     existence of one triangle with straight angle sum, witnessed by the
     lower-dimension points and GeoCoq's [trisuma__bet]. *)
-Lemma ender_rah : postulate_of_right_saccheri_quadrilaterals.
+Lemma ghost_rah : postulate_of_right_saccheri_quadrilaterals.
 Proof.
   apply existential_triangle__rah.
   assert (Hncol : ~ Col PA PB PC) by exact lower_dim.
@@ -1890,10 +1890,10 @@ Proof.
   exact (trisuma__bet _ _ _ _ _ _ Htri).
 Qed.
 
-Lemma ender_thales : forall A B C M,
+Lemma ghost_thales : forall A B C M,
   Midpoint M A B -> Cong M A M C -> Per A C B.
 Proof.
-  exact (rah__thales_postulate ender_rah).
+  exact (rah__thales_postulate ghost_rah).
 Qed.
 
-End EnderEuclideanGeometry.
+End GhostEuclideanGeometry.

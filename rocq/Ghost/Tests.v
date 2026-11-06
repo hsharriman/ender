@@ -1,5 +1,5 @@
 From Stdlib Require Import String List.
-Require Import Ender.Parser Ender.PublicParser Ender.CompleteChecker Ender.CertifiedAPI.
+Require Import Ghost.Parser Ghost.PublicParser Ghost.CompleteChecker Ghost.CertifiedAPI.
 Import ListNotations.
 Open Scope string_scope.
 
@@ -1894,7 +1894,7 @@ Example ref_ang_other_angle_stops_at_its_step :
 Proof. vm_compute. reflexivity. Qed.
 
 Example malformed_problem_is_parse_failure :
-  classify_source "this is not an Ender problem" = ParseFailure.
+  classify_source "this is not an Ghost problem" = ParseFailure.
 Proof. vm_compute. reflexivity. Qed.
 
 Definition unsupported_goal_source := common_header "" "right(a_BAC)" "".

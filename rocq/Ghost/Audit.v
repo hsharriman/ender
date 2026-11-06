@@ -1,5 +1,5 @@
-(** This is the complete human-audit surface for the Ender checker.  It
-    intentionally imports no Ender implementation module.
+(** This is the complete human-audit surface for the Ghost checker.  It
+    intentionally imports no Ghost implementation module.
 
     Five things carry the guarantee, and an auditor can read them in this
     order: [Statement] is the theorem language; [statementMeaning] and
@@ -684,7 +684,7 @@ Definition statementPoints (s : Statement) : list PointName :=
     text by normalization and rendering rather than by reusing the executable
     parser. *)
 
-(** Ender's lexical grammar admits exactly one upper-case ASCII letter as a
+(** Ghost's lexical grammar admits exactly one upper-case ASCII letter as a
     point label.  Keeping this restriction explicit prevents object names from
     containing punctuation used by the surrounding grammar. *)
 Definition upperCaseLetters : string := "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
@@ -920,7 +920,7 @@ Record GoalReport := goal_report {
   goal_proved_by : option nat;
   goal_diagnostics : list Diagnostic
 }.
-(** JSON-shaped values preserve the extensible [details] object of Ender's
+(** JSON-shaped values preserve the extensible [details] object of Ghost's
     existing TypeScript [ErrorDetails] interface without asking the unverified
     host wrapper to reconstruct checker facts. *)
 Inductive JsonValue :=

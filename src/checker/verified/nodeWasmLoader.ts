@@ -9,7 +9,7 @@ import {
 
 // Where `make -C rocq wasm` leaves its output.  Resolved against this file
 // rather than the working directory so that the checker is found from any
-// subdirectory.  ENDER_CHECKER_WASM_DIR overrides it, which is how a Nix-built
+// subdirectory.  GHOST_CHECKER_WASM_DIR overrides it, which is how a Nix-built
 // bundle or a container image gets used instead.
 const defaultWasmDirectory = path.resolve(
   __dirname,
@@ -17,9 +17,9 @@ const defaultWasmDirectory = path.resolve(
 );
 
 type WasmGlobals = typeof globalThis & {
-  enderCheckProof?: (source: string) => string;
-  enderParsePresentation?: (source: string) => string;
-  enderCheckReport?: (source: string) => string;
+  ghostCheckProof?: (source: string) => string;
+  ghostParsePresentation?: (source: string) => string;
+  ghostCheckReport?: (source: string) => string;
 };
 
 let initialization: Promise<WasmGlobals> | undefined;
@@ -29,11 +29,11 @@ export const initialize = async (): Promise<WasmGlobals> => {
   if (initialization) return initialization;
   initialization = (async () => {
     const directory =
-      process.env.ENDER_CHECKER_WASM_DIR ?? defaultWasmDirectory;
-    if (!fs.existsSync(path.join(directory, "ender-checker-api.js"))) {
+      process.env.GHOST_CHECKER_WASM_DIR ?? defaultWasmDirectory;
+    if (!fs.existsSync(path.join(directory, "ghost-checker-api.js"))) {
       throw new Error(
         `no verified checker in ${directory}; build it with \`make -C rocq wasm\`` +
-          " or point ENDER_CHECKER_WASM_DIR at one",
+          " or point GHOST_CHECKER_WASM_DIR at one",
       );
     }
     // The generated js_of_ocaml loader is CommonJS.  Loading it through a
@@ -42,13 +42,13 @@ export const initialize = async (): Promise<WasmGlobals> => {
     const requireFromProject = createRequire(
       path.join(process.cwd(), "package.json"),
     );
-    requireFromProject(path.join(directory, "ender-checker-api.js"));
+    requireFromProject(path.join(directory, "ghost-checker-api.js"));
     const globals = globalThis as WasmGlobals;
     for (let attempt = 0; attempt < 500; attempt += 1) {
       if (
-        typeof globals.enderCheckProof === "function" &&
-        typeof globals.enderParsePresentation === "function" &&
-        typeof globals.enderCheckReport === "function"
+        typeof globals.ghostCheckProof === "function" &&
+        typeof globals.ghostParsePresentation === "function" &&
+        typeof globals.ghostCheckReport === "function"
       ) {
         return globals;
       }
@@ -63,7 +63,7 @@ export const checkVerifiedProofNode = async (
   source: string,
 ): Promise<VerifiedCheckOutput> => {
   const wasm = await initialize();
-  return JSON.parse(wasm.enderCheckProof!(source)) as VerifiedCheckOutput;
+  return JSON.parse(wasm.ghostCheckProof!(source)) as VerifiedCheckOutput;
 };
 
 export const parsePresentationNode = async (
@@ -71,7 +71,7 @@ export const parsePresentationNode = async (
 ): Promise<PresentationFile> => {
   const wasm = await initialize();
   const result = JSON.parse(
-    wasm.enderParsePresentation!(source),
+    wasm.ghostParsePresentation!(source),
   ) as PresentationFile | null;
   if (!result) throw new Error("Rocq presentation parser rejected the source");
   return result;
@@ -81,5 +81,5 @@ export const checkVerifiedReportNode = async (
   source: string,
 ): Promise<VerifiedCheckReport> => {
   const wasm = await initialize();
-  return JSON.parse(wasm.enderCheckReport!(source)) as VerifiedCheckReport;
+  return JSON.parse(wasm.ghostCheckReport!(source)) as VerifiedCheckReport;
 };

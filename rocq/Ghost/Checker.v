@@ -2,10 +2,10 @@ From Stdlib Require Import List String Bool Lia PeanoNat.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
 Require Import GeoCoq.Main.Tarski_dev.Ch12_parallel.
 Require Import GeoCoq.Main.Annexes.suma.
-Require Import Ender.Syntax Ender.Geometry Ender.Semantics.
-Require Ender.Inscribed.
+Require Import Ghost.Syntax Ghost.Geometry Ghost.Semantics.
+Require Ghost.Inscribed.
 Import ListNotations.
-Import EnderSyntax.
+Import GhostSyntax.
 
 Definition rotate_triangle (t : TriangleName) : TriangleName :=
   triangle_name t.(triangle_second) t.(triangle_third) t.(triangle_first).
@@ -2654,7 +2654,7 @@ Proof.
   unfold Audit.TriangleCongruent, Audit.TriangleWellFormed in H. cbn in H.
   destruct H as [[Hab [Hbc [Hca Hncol]]] [[Hde [Hef [Hfd Hncol']]] [H1 [H2 H3]]]].
   split; [repeat split; assumption|]. split; [repeat split; assumption|].
-  rewrite triangle_congruence_unfold. apply ender_sss; assumption.
+  rewrite triangle_congruence_unfold. apply ghost_sss; assumption.
 Qed.
 
 Lemma ordered_congruence_of_parts : forall t u,
@@ -2800,10 +2800,10 @@ Lemma quad_wf_rotated : forall q,
 Proof.
   intros [A B C D] Hwf. unfold Audit.QuadrilateralWellFormed in *. cbn in *.
   destruct Hwf as [Hab [Hac [Had [Hbc [Hbd [Hcd [Hncol [X [H1 H2]]]]]]]]].
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol H1 H2) as [Hbcd _].
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol H1 H2) as [Hbcd _].
   refine (conj Hbc (conj Hbd (conj (not_eq_sym Hab) (conj Hcd
     (conj (not_eq_sym Hac) (conj (not_eq_sym Had) (conj Hbcd _))))))).
-  exists X. split; [exact H2|exact (ender_bets_sym _ _ _ H1)].
+  exists X. split; [exact H2|exact (ghost_bets_sym _ _ _ H1)].
 Qed.
 
 Lemma quad_wf_reversed : forall q,
@@ -2812,11 +2812,11 @@ Lemma quad_wf_reversed : forall q,
 Proof.
   intros [A B C D] Hwf. unfold Audit.QuadrilateralWellFormed in *. cbn in *.
   destruct Hwf as [Hab [Hac [Had [Hbc [Hbd [Hcd [Hncol [X [H1 H2]]]]]]]]].
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol H1 H2) as [Hbcd _].
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol H1 H2) as [Hbcd _].
   refine (conj (not_eq_sym Hcd) (conj (not_eq_sym Hbd) (conj (not_eq_sym Had)
     (conj (not_eq_sym Hbc) (conj (not_eq_sym Hac) (conj (not_eq_sym Hab)
     (conj (not_col_permutation_3 _ _ _ Hbcd) _))))))).
-  exists X. split; [exact (ender_bets_sym _ _ _ H2)|exact (ender_bets_sym _ _ _ H1)].
+  exists X. split; [exact (ghost_bets_sym _ _ _ H2)|exact (ghost_bets_sym _ _ _ H1)].
 Qed.
 
 Ltac quad_sides :=
@@ -3517,7 +3517,7 @@ Lemma sas_schema_sound : forall decls premises facts i j k t u,
 Proof.
   intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
   apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
-  destruct Hschema as [Hs1 [Ha Hs2]]. eapply ender_sas; eauto; Cong.
+  destruct Hschema as [Hs1 [Ha Hs2]]. eapply ghost_sas; eauto; Cong.
 Qed.
 
 Lemma sss_schema_sound : forall decls premises facts i j k t u,
@@ -3528,7 +3528,7 @@ Lemma sss_schema_sound : forall decls premises facts i j k t u,
 Proof.
   intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
   apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
-  destruct Hschema as [Hs1 [Hs2 Hs3]]. now apply ender_sss.
+  destruct Hschema as [Hs1 [Hs2 Hs3]]. now apply ghost_sss.
 Qed.
 
 Lemma asa_schema_sound : forall decls premises facts i j k t u,
@@ -3539,7 +3539,7 @@ Lemma asa_schema_sound : forall decls premises facts i j k t u,
 Proof.
   intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
   apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
-  destruct Hschema as [Ha [Hs Hb]]. now apply ender_asa.
+  destruct Hschema as [Ha [Hs Hb]]. now apply ghost_asa.
 Qed.
 
 Lemma aas_schema_sound : forall decls premises facts i j k t u,
@@ -3555,8 +3555,8 @@ Proof.
       Interp x /\ Interp y /\ Interp z)
     by (intros; eapply schema3_sound; eauto).
   destruct Hschema as [H|H]; apply Hparts in H; cbn in H |- *.
-  - destruct H as [Hc [Hb Hs]]. apply ender_aas; auto. now apply conga_comm.
-  - destruct H as [Hb [Hc Hs]]. apply ender_aas; auto. now apply conga_comm.
+  - destruct H as [Hc [Hb Hs]]. apply ghost_aas; auto. now apply conga_comm.
+  - destruct H as [Hb [Hc Hs]]. apply ghost_aas; auto. now apply conga_comm.
 Qed.
 
 Lemma rhl_schema_sound : forall decls premises facts i j k t u,
@@ -3581,7 +3581,7 @@ Proof.
                             (point D) (point E) (point F))
       by (apply cong2_per2__cong_3; auto; Cong).
     destruct Hcong3 as [Hab [Hac Hbc']]. cbn.
-    apply ender_sss; auto; Cong. }
+    apply ghost_sss; auto; Cong. }
   destruct Hschema as [H|H]; apply Hsides in H; cbn in H;
     destruct H as [[Hper Hper'] [H1 H2]]; now apply Hbuild.
 Qed.
@@ -4316,7 +4316,7 @@ Proof.
   apply (fact_eqb_sound _ _ Hsides) in Hdep.
   apply (fact_eqb_sound _ _ Hconclusion).
   destruct t as [A B C]. cbn in Hdep, Hdeclared |- *.
-  now apply ender_base_angle.
+  now apply ghost_base_angle.
 Qed.
 
 Lemma base_angle_conv_sound : forall decls facts i conclusion,
@@ -4334,7 +4334,7 @@ Proof.
   apply (fact_eqb_sound _ _ Hangles) in Hdep.
   apply (fact_eqb_sound _ _ Hconclusion).
   destruct t as [A B C]. cbn in Hdep, Hdeclared |- *.
-  now apply ender_base_angle_conv.
+  now apply ghost_base_angle_conv.
 Qed.
 
 Lemma def_equilateral_sound : forall decls premises facts i j k conclusion,
@@ -4380,7 +4380,7 @@ Proof.
   assert (Hdep : Interp (Equilateral t0)) by (eapply lookup_step_sound; eauto).
   destruct t0 as [A B C]. cbn in Hdep |- *.
   destruct Hdep as [Hnd [Hab Hbc]]. split; [exact Hnd|].
-  apply ender_equilateral_equiangular; [apply Hnd|exact Hab|exact Hbc].
+  apply ghost_equilateral_equiangular; [apply Hnd|exact Hab|exact Hbc].
 Qed.
 
 Lemma equiang_equilat_sound : forall facts i conclusion,
@@ -4396,7 +4396,7 @@ Proof.
   assert (Hdep : Interp (Equiangular t0)) by (eapply lookup_step_sound; eauto).
   destruct t0 as [A B C]. cbn in Hdep |- *.
   destruct Hdep as [Hnd [HangA HangB]]. split; [exact Hnd|].
-  apply ender_equiangular_equilateral; [apply Hnd|exact HangA|exact HangB].
+  apply ghost_equiangular_equilateral; [apply Hnd|exact HangA|exact HangB].
 Qed.
 
 Lemma supplement_realign : forall c b d,
@@ -5019,7 +5019,7 @@ Qed.
 
 Lemma transversal_relaxed : forall a b t1 i1 c d t2 i2,
   Audit.TransversalConfiguration point a b t1 i1 c d t2 i2 ->
-  EnderTransversalRelaxed (point i1) (point i2)
+  GhostTransversalRelaxed (point i1) (point i2)
     (point a) (point b) (point c) (point d) /\
   (point t1 = point i1 \/ point t1 = point i2 \/
    BetS (point t1) (point i1) (point i2)) /\
@@ -5065,7 +5065,7 @@ Proof.
     exact (Hac HA' HC').
   - intros [HT1 [HT2 [Hab [Hcd Hos]]]].
     pose proof HT1 as [_ [_ HI]].
-    destruct (ender_transversal_full_relaxed _ _ _ _ _ _ HI Hab Hcd Hos)
+    destruct (ghost_transversal_full_relaxed _ _ _ _ _ _ HI Hab Hcd Hos)
       as [_ [Hbab [HneAB [Hbcd [HneCD Hsides]]]]].
     pose proof Hab as [_ [HA HB]]. pose proof Hcd as [_ [HC HD]].
     split; [exact HI|]. split; [intros; exact HT1|].
@@ -5325,9 +5325,9 @@ Proof.
   destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
     as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
   destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ender_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
+  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
   intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
-  apply (ender_transversal_master_conv (point pi1) (point pi2)); try assumption.
+  apply (ghost_transversal_master_conv (point pi1) (point pi2)); try assumption.
   assert (HI : point pi1 <> point pi2) by (destruct Hrel as [HI _]; exact HI).
   unfold altint_pair in Hpairs. repeat rewrite orb_true_iff in Hpairs.
   destruct Hpairs as [[[Hm|Hm]|Hm]|Hm];
@@ -5371,9 +5371,9 @@ Proof.
   destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
     as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
   destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ender_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
+  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
   intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
-  apply (ender_transversal_altext_conv T1' (point pi1) (point pi2) T2');
+  apply (ghost_transversal_altext_conv T1' (point pi1) (point pi2) T2');
     try assumption.
   unfold altext_pair in Hpairs. apply orb_true_iff in Hpairs.
   destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[[Hg1 Hg2] Hg3] Hg4] Hm];
@@ -5402,9 +5402,9 @@ Proof.
   destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
     as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
   destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ender_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
+  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
   intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
-  apply (ender_transversal_corresp_conv T1' (point pi1) (point pi2) T2');
+  apply (ghost_transversal_corresp_conv T1' (point pi1) (point pi2) T2');
     try assumption.
   unfold corresp_pair in Hpairs. repeat rewrite orb_true_iff in Hpairs.
   destruct Hpairs as [[[Hm|Hm]|Hm]|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[Hg1 Hg2] Hg3] Hm];
@@ -5437,9 +5437,9 @@ Proof.
   destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
     as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
   destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ender_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
+  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
   intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
-  apply (ender_transversal_sameside_conv T1' (point pi1) (point pi2) T2');
+  apply (ghost_transversal_sameside_conv T1' (point pi1) (point pi2) T2');
     try assumption.
   unfold sameside_pair in Hpairs. apply orb_true_iff in Hpairs.
   destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm];
@@ -5619,7 +5619,7 @@ Proof.
   destruct Hdeps as [HatA HatB].
   apply (fact_eqb_sound _ _ Hconclusion).
   destruct c as [[A B C] [D E F]]. cbn in HatA, HatB, Hwt, Hwu |- *.
-  now apply ender_third_angle.
+  now apply ghost_third_angle.
 Qed.
 
 Lemma pgram_opp_sides_sound : forall facts i conclusion,
@@ -5639,7 +5639,7 @@ Proof.
   unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
     Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
     cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
-  pose proof (ender_pgram_opp_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2)
+  pose proof (ghost_pgram_opp_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2)
     as [Hc1 Hc2].
   apply orb_true_iff in Hrule. destruct Hrule as [Hm|Hm].
   - eapply cong_pair_conclude; [exact Hm|]. cbn. exact Hc1.
@@ -5661,7 +5661,7 @@ Proof.
   unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
     Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
     cbn in Hpar1, Hpar2, Hncol.
-  pose proof (ender_pgram_opp_angles
+  pose proof (ghost_pgram_opp_angles
     (point q.(quadrilateral_first)) (point q.(quadrilateral_second))
     (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth))
     (conj HAB (conj HAC HBC)) Hncol Hpar1 Hpar2) as [Hang1 Hang2].
@@ -5719,7 +5719,7 @@ Proof.
       cbn in HC. exact HC.
     - right; left. pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
       cbn in HC. exact HC. }
-  pose proof (ender_rhombus_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2 Hadj)
+  pose proof (ghost_rhombus_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2 Hadj)
     as [H1 [H2 H3]].
   cbn. split; [|split; [|split]].
   - split; [exact Hwfq|split; [exact Hpar1|exact Hpar2]].
@@ -5765,7 +5765,7 @@ Qed.
 (** [W] sees the two rays of the corner at [V] as the equal sides of an
     isosceles pair, so the two triangles the segment [V W] cuts share three
     pairs of congruent sides and its corner halves are congruent. *)
-Lemma ender_two_pairs_bisect : forall V P Q W,
+Lemma ghost_two_pairs_bisect : forall V P Q W,
   V <> P -> V <> W -> P <> W ->
   Cong V P V Q -> Cong W P W Q -> CongA P V W W V Q.
 Proof.
@@ -5875,25 +5875,25 @@ Proof.
   - apply (bisect_ray_conclude decls premises _ _ q.(quadrilateral_first) q.(quadrilateral_fourth)
              q.(quadrilateral_second) q.(quadrilateral_third) Hdecls Hprem Ha Hray);
       [now apply not_eq_sym|now apply not_eq_sym|now apply not_eq_sym|].
-    apply ender_two_pairs_bisect; auto.
+    apply ghost_two_pairs_bisect; auto.
     + apply cong_symmetry, cong_right_commutativity, Hda.
     + apply cong_right_commutativity, cong_symmetry, Hbc.
   - apply (bisect_ray_conclude decls premises _ _ q.(quadrilateral_third) q.(quadrilateral_second)
              q.(quadrilateral_fourth) q.(quadrilateral_first) Hdecls Hprem Ha Hray);
       [exact HBC|now apply not_eq_sym|exact HAC|].
-    apply ender_two_pairs_bisect; auto.
+    apply ghost_two_pairs_bisect; auto.
     + apply cong_left_commutativity, Hbc.
     + apply cong_right_commutativity, Hda.
   - apply (bisect_ray_conclude decls premises _ _ q.(quadrilateral_second) q.(quadrilateral_first)
              q.(quadrilateral_third) q.(quadrilateral_fourth) Hdecls Hprem Ha Hray);
       [exact HAB|now apply not_eq_sym|now apply not_eq_sym|].
-    apply ender_two_pairs_bisect; auto.
+    apply ghost_two_pairs_bisect; auto.
     + apply cong_left_commutativity, Hab.
     + apply cong_symmetry, cong_left_commutativity, Hcd.
   - apply (bisect_ray_conclude decls premises _ _ q.(quadrilateral_fourth) q.(quadrilateral_third)
              q.(quadrilateral_first) q.(quadrilateral_second) Hdecls Hprem Ha Hray);
       [exact HCD|now apply not_eq_sym|exact HBD|].
-    apply ender_two_pairs_bisect; auto.
+    apply ghost_two_pairs_bisect; auto.
     + apply cong_left_commutativity, Hcd.
     + apply cong_symmetry, cong_left_commutativity, Hab.
 Qed.
@@ -6008,19 +6008,19 @@ Proof.
   unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
     Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
     cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [Hbcd [Hcda Hdab]].
   (* one instance of the theorem per side of the figure, reading the four
      vertices from that side's own starting corner *)
   repeat rewrite orb_true_iff in Hrule.
   destruct Hrule as [[[Hm|Hm]|Hm]|Hm]; apply (fact_eqb_sound _ _ Hm); cbn.
-  - apply (ender_pgram_consec_angles _ _ _ _ X Hdab
-             (ender_bets_sym _ _ _ HXbd) HXac (par_symmetry _ _ _ _ Hpar2)).
-  - apply (ender_pgram_consec_angles _ _ _ _ X Hncol HXac HXbd Hpar1).
-  - apply (ender_pgram_consec_angles _ _ _ _ X Hbcd HXbd
-             (ender_bets_sym _ _ _ HXac) Hpar2).
-  - apply (ender_pgram_consec_angles _ _ _ _ X Hcda
-             (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd)
+  - apply (ghost_pgram_consec_angles _ _ _ _ X Hdab
+             (ghost_bets_sym _ _ _ HXbd) HXac (par_symmetry _ _ _ _ Hpar2)).
+  - apply (ghost_pgram_consec_angles _ _ _ _ X Hncol HXac HXbd Hpar1).
+  - apply (ghost_pgram_consec_angles _ _ _ _ X Hbcd HXbd
+             (ghost_bets_sym _ _ _ HXac) Hpar2).
+  - apply (ghost_pgram_consec_angles _ _ _ _ X Hcda
+             (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd)
              (par_symmetry _ _ _ _ Hpar1)).
 Qed.
 
@@ -6058,12 +6058,12 @@ Proof.
     - split; [exact (cong_pair_sound _ _ _ _ Hm2 Hs2)
              |exact (cong_pair_sound _ _ _ _ Hm1 Hs1)]. }
   destruct Hsides as [Hab Hbc].
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [Hbcd _].
   cbn. split; [exact Hwf|]. split.
-  - exact (ender_pgram_from_opposite_sides _ _ _ _ X Hncol HXac HXbd Hab Hbc).
-  - apply (ender_pgram_from_opposite_sides _ _ _ _ X Hbcd HXbd
-             (ender_bets_sym _ _ _ HXac) Hbc).
+  - exact (ghost_pgram_from_opposite_sides _ _ _ _ X Hncol HXac HXbd Hab Hbc).
+  - apply (ghost_pgram_from_opposite_sides _ _ _ _ X Hbcd HXbd
+             (ghost_bets_sym _ _ _ HXac) Hbc).
     now apply cong_symmetry.
 Qed.
 
@@ -6094,7 +6094,7 @@ Proof.
   pose proof Hwf as Hwfcopy.
   destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
   destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [_ [_ Hdab]].
   apply (proj1 (fact_eqb_sound _ _ Hrule)).
   (* the premise names which two corners it makes congruent, up to how each is
@@ -6114,7 +6114,7 @@ Proof.
   destruct Hcase as [[Hs1 [Hs2 Hpair]]|[Hs1 [Hs2 Hpair]]]; cbn in Hs1, Hs2, Hpair;
     apply (Hselected _ _ _ _ Hpair); cbn.
   - (* congruent sides meet at A and at C, so the corners at B and D agree *)
-    destruct (ender_sss (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
+    destruct (ghost_sss (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
                 (point q.(quadrilateral_first)) (point q.(quadrilateral_fourth)) (point q.(quadrilateral_third)))
       as [_ [_ [_ [_ [Hangle _]]]]].
     + exact Hncol.
@@ -6123,7 +6123,7 @@ Proof.
     + apply cong_reflexivity.
     + now apply conga_right_comm.
   - (* congruent sides meet at B and at D, so the corners at A and C agree *)
-    destruct (ender_sss (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth))
+    destruct (ghost_sss (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth))
                 (point q.(quadrilateral_third)) (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth)))
       as [_ [_ [_ [Hangle _]]]].
     + intro. apply Hdab. Col.
@@ -6154,7 +6154,7 @@ Proof.
   pose proof Hwf as Hwfcopy.
   destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
   destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [Hbcd [Hcda Hdab]].
   (* one supplementary pair per side direction, in either order and with the
      shared corner in either slot *)
@@ -6165,10 +6165,10 @@ Proof.
   { intros x y Hxy [Hm|Hm]; apply (proj2 (fact_eqb_sound _ _ Hm)) in Hxy;
       cbn in Hxy |- *; unfold Audit.Parallel, Audit.seg_start,
       Audit.seg_end; cbn.
-    - exact (ender_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd Hxy).
+    - exact (ghost_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd Hxy).
     - apply par_symmetry.
-      apply (ender_pgram_from_consec_angles _ _ _ _ X Hcda
-               (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd) Hxy). }
+      apply (ghost_pgram_from_consec_angles _ _ _ _ X Hcda
+               (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd) Hxy). }
   assert (Hsides' : forall x y : AngleName, Interp (Supplementary x y) ->
     (consec_pair_eqb x y (quad_corner_a q) (quad_corner_b q) = true \/
      consec_pair_eqb x y (quad_corner_c q) (quad_corner_d q) = true) ->
@@ -6177,10 +6177,10 @@ Proof.
       cbn in Hxy |- *; unfold Audit.Parallel, Audit.seg_start,
       Audit.seg_end; cbn.
     - apply par_symmetry.
-      apply (ender_pgram_from_consec_angles _ _ _ _ X Hdab
-               (ender_bets_sym _ _ _ HXbd) HXac Hxy).
-    - exact (ender_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
-               (ender_bets_sym _ _ _ HXac) Hxy). }
+      apply (ghost_pgram_from_consec_angles _ _ _ _ X Hdab
+               (ghost_bets_sym _ _ _ HXbd) HXac Hxy).
+    - exact (ghost_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
+               (ghost_bets_sym _ _ _ HXac) Hxy). }
   cbn. split; [exact Hwf|].
   apply orb_true_iff in Hmatch. destruct Hmatch as [Hm|Hm];
     apply andb_true_iff in Hm; destruct Hm as [Hm1 Hm2];
@@ -6215,7 +6215,7 @@ Proof.
   unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
     Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
     cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [Hbcd [Hcda Hdab]].
   (* whichever corner was declared right, rotate the figure so that it is the
      one the theorem takes, and read the four right angles back off *)
@@ -6228,31 +6228,31 @@ Proof.
     destruct Hcorner as [[[Ha|Ha]|Ha]|Ha];
       apply angle_u_eqb_cases in Ha; unfold reverse_angle in Ha;
       destruct Ha as [Ha|Ha]; subst a; cbn in Hper.
-    - destruct (ender_pgram_right_corner _ _ _ _ X Hdab
-                  (ender_bets_sym _ _ _ HXbd) HXac
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hdab
+                  (ghost_bets_sym _ _ _ HXbd) HXac
                   (par_symmetry _ _ _ _ Hpar2) Hpar1 Hper) as [H1 [H2 [H3 H4]]].
       auto.
-    - destruct (ender_pgram_right_corner _ _ _ _ X Hdab
-                  (ender_bets_sym _ _ _ HXbd) HXac
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hdab
+                  (ghost_bets_sym _ _ _ HXbd) HXac
                   (par_symmetry _ _ _ _ Hpar2) Hpar1 (l8_2 _ _ _ Hper))
         as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ender_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
                   Hper) as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ender_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
                   (l8_2 _ _ _ Hper)) as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ender_pgram_right_corner _ _ _ _ X Hbcd HXbd
-                  (ender_bets_sym _ _ _ HXac) Hpar2
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hbcd HXbd
+                  (ghost_bets_sym _ _ _ HXac) Hpar2
                   (par_symmetry _ _ _ _ Hpar1) Hper) as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ender_pgram_right_corner _ _ _ _ X Hbcd HXbd
-                  (ender_bets_sym _ _ _ HXac) Hpar2
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hbcd HXbd
+                  (ghost_bets_sym _ _ _ HXac) Hpar2
                   (par_symmetry _ _ _ _ Hpar1) (l8_2 _ _ _ Hper))
         as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ender_pgram_right_corner _ _ _ _ X Hcda
-                  (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd)
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hcda
+                  (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd)
                   (par_symmetry _ _ _ _ Hpar1) (par_symmetry _ _ _ _ Hpar2)
                   Hper) as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ender_pgram_right_corner _ _ _ _ X Hcda
-                  (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd)
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hcda
+                  (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd)
                   (par_symmetry _ _ _ _ Hpar1) (par_symmetry _ _ _ _ Hpar2)
                   (l8_2 _ _ _ Hper)) as [H1 [H2 [H3 H4]]]. auto. }
   destruct Hcorners as [Hpa [Hpb [Hpc Hpd]]].
@@ -6281,7 +6281,7 @@ Proof.
     Audit.ang_end in Hpar1, Hpar2, Hra, Hrb;
     cbn in Hpar1, Hpar2, Hra, Hrb, Hncol, HXac, HXbd.
   apply (fact_eqb_sound _ _ Hrule). cbn.
-  exact (ender_rect_diagonals _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2 Hra Hrb).
+  exact (ghost_rect_diagonals _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2 Hra Hrb).
 Qed.
 
 Lemma rectangle_def_sound : forall facts i conclusion,
@@ -6301,7 +6301,7 @@ Proof.
     unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
       Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
       cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
-    pose proof (ender_pgram_opp_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2)
+    pose proof (ghost_pgram_opp_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2)
       as [Hc1 Hc2].
     apply orb_true_iff in Hrule. destruct Hrule as [Hm|Hm].
     + eapply cong_pair_conclude; [exact Hm|]. cbn. exact Hc1.
@@ -6348,7 +6348,7 @@ Proof.
     cbn in HC, HP.
   - assert (Hother : Par (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
                          (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)))
-      by (eapply ender_pgram_from_side; eauto).
+      by (eapply ghost_pgram_from_side; eauto).
     unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
       Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
     split; [exact HP|exact Hother].
@@ -6358,11 +6358,11 @@ Proof.
         intro Heq; [apply Hd2|apply Hd1]; auto. }
     assert (Hncol2 : ~ Col (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
                            (point q.(quadrilateral_fourth))).
-    { destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    { destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
         as [Hn _]. exact Hn. }
     assert (Hother : Par (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth))
                          (point q.(quadrilateral_first)) (point q.(quadrilateral_second)))
-      by (eapply (ender_pgram_from_side (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
+      by (eapply (ghost_pgram_from_side (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
                     (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)) X); eauto).
     unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
       Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
@@ -6390,9 +6390,9 @@ Proof.
   destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
     as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
   destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ender_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
+  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
   intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
-  destruct (ender_transversal_master _ _ _ _ _ _ _ _
+  destruct (ghost_transversal_master _ _ _ _ _ _ _ _
               Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hm1 Hm2].
   unfold altint_pair in Hpairs. apply orb_true_iff in Hpairs.
   destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm];
@@ -6421,9 +6421,9 @@ Proof.
   destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
     as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
   destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ender_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
+  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
   intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
-  destruct (ender_transversal_altext _ _ _ _ _ _ _ _
+  destruct (ghost_transversal_altext _ _ _ _ _ _ _ _
               Hbt1 Hbt2 Hbab Hbcd Hos HP') as [He1 He2].
   unfold altext_pair in Hpairs. apply orb_true_iff in Hpairs.
   destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[[Hg1 Hg2] Hg3] Hg4] Hm];
@@ -6453,9 +6453,9 @@ Proof.
   destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
     as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
   destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ender_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
+  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
   intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
-  destruct (ender_transversal_corresp _ _ _ _ _ _ _ _
+  destruct (ghost_transversal_corresp _ _ _ _ _ _ _ _
               Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hc1 [Hc2 [Hc3 Hc4]]].
   unfold corresp_pair in Hpairs. repeat rewrite orb_true_iff in Hpairs.
   destruct Hpairs as [[[Hm|Hm]|Hm]|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[Hg1 Hg2] Hg3] Hm];
@@ -6486,9 +6486,9 @@ Proof.
   destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
     as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
   destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ender_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
+  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
   intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
-  destruct (ender_transversal_sameside _ _ _ _ _ _ _ _
+  destruct (ghost_transversal_sameside _ _ _ _ _ _ _ _
               Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hs1 Hs2].
   unfold sameside_pair in Hpairs. apply orb_true_iff in Hpairs.
   destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm];
@@ -6529,25 +6529,25 @@ Proof.
   apply orb_true_iff in Hrule. destruct Hrule as [Hrule|Hcase4].
   2:{ apply andb_true_iff in Hcase4. destruct Hcase4 as [Hshared Hconc].
       eapply para_pair_conclude; [exact Hconc|]. cbn.
-      apply ender_par_trans with (point s1.(segment_first)) (point s1.(segment_second)).
+      apply ghost_par_trans with (point s1.(segment_first)) (point s1.(segment_second)).
       - now apply par_symmetry.
       - apply (para_link_left s1 s4 _ _ Hshared).
         now apply par_symmetry. }
   apply orb_true_iff in Hrule. destruct Hrule as [Hrule|Hcase3].
   2:{ apply andb_true_iff in Hcase3. destruct Hcase3 as [Hshared Hconc].
       eapply para_pair_conclude; [exact Hconc|]. cbn.
-      apply ender_par_trans with (point s1.(segment_first)) (point s1.(segment_second)).
+      apply ghost_par_trans with (point s1.(segment_first)) (point s1.(segment_second)).
       - now apply par_symmetry.
       - apply (para_link_left s1 s3 _ _ Hshared). exact Hp2. }
   apply orb_true_iff in Hrule. destruct Hrule as [Hcase1|Hcase2].
   - apply andb_true_iff in Hcase1. destruct Hcase1 as [Hshared Hconc].
     eapply para_pair_conclude; [exact Hconc|]. cbn.
-    apply ender_par_trans with (point s2.(segment_first)) (point s2.(segment_second));
+    apply ghost_par_trans with (point s2.(segment_first)) (point s2.(segment_second));
       [exact Hp1|].
     apply (para_link_left s2 s3 _ _ Hshared). exact Hp2.
   - apply andb_true_iff in Hcase2. destruct Hcase2 as [Hshared Hconc].
     eapply para_pair_conclude; [exact Hconc|]. cbn.
-    apply ender_par_trans with (point s2.(segment_first)) (point s2.(segment_second));
+    apply ghost_par_trans with (point s2.(segment_first)) (point s2.(segment_second));
       [exact Hp1|].
     apply (para_link_left s2 s4 _ _ Hshared).
     now apply par_symmetry.
@@ -6642,18 +6642,18 @@ Proof.
   pose proof Hwf as Hwfcopy.
   destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
   destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [Hbcd [_ _]].
   cbn. split; [exact Hwf|].
   unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
     Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
   split.
-  - apply (ender_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd).
-    exact (ender_quad_opposite_angles _ _ _ _ X Hncol HXac HXbd HopA HopB).
-  - apply (ender_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
-             (ender_bets_sym _ _ _ HXac)).
-    apply (ender_quad_opposite_angles _ _ _ _ X Hbcd HXbd
-             (ender_bets_sym _ _ _ HXac));
+  - apply (ghost_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd).
+    exact (ghost_quad_opposite_angles _ _ _ _ X Hncol HXac HXbd HopA HopB).
+  - apply (ghost_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
+             (ghost_bets_sym _ _ _ HXac)).
+    apply (ghost_quad_opposite_angles _ _ _ _ X Hbcd HXbd
+             (ghost_bets_sym _ _ _ HXac));
       [exact HopB|now apply conga_sym].
 Qed.
 
@@ -6703,7 +6703,7 @@ Proof.
   pose proof Hshape as Hwf. destruct Hwf as [Hwf _].
   destruct Hwf as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
   destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [Hbcd [Hcda Hdab]].
   cbn. split; [exact Hshape|].
   unfold Audit.SegmentCongruent, Audit.seg_start, Audit.seg_end; cbn.
@@ -6716,24 +6716,24 @@ Proof.
     cbn in Hparallel;
     apply orb_true_iff in Hangs; destruct Hangs as [Hm|Hm];
     pose proof (conga_pair_sound _ _ _ _ Hm Hangles) as Hbase; cbn in Hbase.
-  - exact (ender_isos_trap_con_diagonals _ _ _ _ X Hncol HXac HXbd
+  - exact (ghost_isos_trap_con_diagonals _ _ _ _ X Hncol HXac HXbd
              Hparallel Hbase).
   - assert (Hrot : Cong (point q.(quadrilateral_third)) (point q.(quadrilateral_first))
                         (point q.(quadrilateral_fourth)) (point q.(quadrilateral_second))).
-    { apply (ender_isos_trap_con_diagonals _ _ _ _ X Hcda
-               (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd));
+    { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hcda
+               (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd));
         [now apply par_symmetry|exact Hbase]. }
     Cong.
   - assert (Hrot : Cong (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth))
                         (point q.(quadrilateral_third)) (point q.(quadrilateral_first))).
-    { apply (ender_isos_trap_con_diagonals _ _ _ _ X Hbcd HXbd
-               (ender_bets_sym _ _ _ HXac));
+    { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hbcd HXbd
+               (ghost_bets_sym _ _ _ HXac));
         [exact Hparallel|exact Hbase]. }
     Cong.
   - assert (Hrot : Cong (point q.(quadrilateral_fourth)) (point q.(quadrilateral_second))
                         (point q.(quadrilateral_first)) (point q.(quadrilateral_third))).
-    { apply (ender_isos_trap_con_diagonals _ _ _ _ X Hdab
-               (ender_bets_sym _ _ _ HXbd) HXac);
+    { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hdab
+               (ghost_bets_sym _ _ _ HXbd) HXac);
         [now apply par_symmetry|exact Hbase]. }
     Cong.
 Qed.
@@ -6754,7 +6754,7 @@ Proof.
   destruct (isos_trap_figure _ _ _ Hpremise)
     as [X [Hncol [HXac [HXbd Hdiag]]]].
   pose proof Hpremise as Hpar. cbn in Hpar. destruct Hpar as [_ Hpar].
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [Hbcd [Hcda Hdab]].
   (* the parallel pair the premise names, and then the base angles at either
      end of it: four readings of one theorem, one per rotation *)
@@ -6765,16 +6765,16 @@ Proof.
     cbn in Hparallel;
     apply orb_true_iff in Hangles; destruct Hangles as [Hm|Hm];
     apply (conga_pair_conclude _ _ _ _ Hm); cbn.
-  - exact (ender_isos_trap_base_angles _ _ _ _ X Hncol HXac HXbd
+  - exact (ghost_isos_trap_base_angles _ _ _ _ X Hncol HXac HXbd
              Hparallel Hdiag).
-  - apply (ender_isos_trap_base_angles _ _ _ _ X Hcda
-             (ender_bets_sym _ _ _ HXac) (ender_bets_sym _ _ _ HXbd));
+  - apply (ghost_isos_trap_base_angles _ _ _ _ X Hcda
+             (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd));
       [now apply par_symmetry|Cong].
-  - apply (ender_isos_trap_base_angles _ _ _ _ X Hbcd HXbd
-             (ender_bets_sym _ _ _ HXac));
+  - apply (ghost_isos_trap_base_angles _ _ _ _ X Hbcd HXbd
+             (ghost_bets_sym _ _ _ HXac));
       [exact Hparallel|Cong].
-  - apply (ender_isos_trap_base_angles _ _ _ _ X Hdab
-             (ender_bets_sym _ _ _ HXbd) HXac);
+  - apply (ghost_isos_trap_base_angles _ _ _ _ X Hdab
+             (ghost_bets_sym _ _ _ HXbd) HXac);
       [now apply par_symmetry|Cong].
 Qed.
 
@@ -6800,7 +6800,7 @@ Proof.
   pose proof (cong_pair_sound _ _ _ _ Hdiag Hcong) as Hdiagonals.
   cbn in Hdiagonals.
   destruct (pgram_figure q Hp) as [X [Hncol [HXac [HXbd [Hpar1 Hpar2]]]]].
-  destruct (ender_pgram_con_diagonals_right _ _ _ _ X Hncol HXac HXbd
+  destruct (ghost_pgram_con_diagonals_right _ _ _ _ X Hncol HXac HXbd
               Hpar1 Hpar2 Hdiagonals) as [HperA [HperB [HperC HperD]]].
   cbn. split; [exact Hp|].
   unfold Audit.RightAngle, Audit.quad_angle_a, Audit.quad_angle_b,
@@ -6828,9 +6828,9 @@ Proof.
     destruct H1 as [H1|H1]; destruct H2 as [H2|H2]; subst;
     unfold reverse_segment in Hs, Ht; cbn in Hs, Ht; cbn;
     first [ split; assumption
-          | split; [assumption|now apply ender_bets_sym]
-          | split; [now apply ender_bets_sym|assumption]
-          | split; now apply ender_bets_sym ].
+          | split; [assumption|now apply ghost_bets_sym]
+          | split; [now apply ghost_bets_sym|assumption]
+          | split; now apply ghost_bets_sym ].
 Qed.
 
 (** A fact stated of the two diagonals in [q]'s order holds of any spelling
@@ -6896,7 +6896,7 @@ Lemma equidistant_diagonals_perp : forall A B C D M,
   Perp_at M A C B D.
 Proof.
   intros A B C D M HAC HA HC [HbetAC _] [HbetBD [HBM _]].
-  apply ender_equidistant_line_perp_at; auto.
+  apply ghost_equidistant_line_perp_at; auto.
   apply bet_col in HbetAC. Col.
 Qed.
 
@@ -6932,7 +6932,7 @@ Proof.
       by (destruct Hac as [Hb _]; apply bet_col in Hb; Col).
     assert (Hcol2 : Col (point B) (point D) (point p))
       by (destruct Hbd as [Hb _]; apply bet_col in Hb; Col).
-    destruct (ender_pgram_diagonals_bisect _ _ _ _ _ Hncol Hpar1 Hpar2 HBD
+    destruct (ghost_pgram_diagonals_bisect _ _ _ _ _ Hncol Hpar1 Hpar2 HBD
                 Hcol1 Hcol2) as [Hm1 Hm2].
     exact (bisect_diagonals_conclude (quadrilateral_name A B C D) s t p
              Hnames HAC HBD Hac Hbd Hm1 Hm2).
@@ -6996,7 +6996,7 @@ Proof.
       unfold reverse_segment, quad_diagonal_ac, quad_diagonal_bd in Hperp;
       cbn in Hperp;
       eauto 6 using perp_sym, perp_left_comm, perp_right_comm, perp_comm. }
-  destruct (ender_pgram_perp_diagonals_rhombus _ _ _ _ X Hncol HXac HXbd
+  destruct (ghost_pgram_perp_diagonals_rhombus _ _ _ _ X Hncol HXac HXbd
               Hpar1 Hpar2 Hdiag) as [Hab [Hbc Hcd]].
   cbn. split; [exact Hp|].
   unfold Audit.SegmentCongruent, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
@@ -7048,7 +7048,7 @@ Proof.
       [split; [exact (Hmove _ _ Ht2 Hmid2)|exact (Hmove _ _ Ht1 Hmid1)]
       |split; [exact (Hmove _ _ Ht1 Hmid1)|exact (Hmove _ _ Ht2 Hmid2)]]. }
   destruct Hdiagonals as [Hac Hbd].
-  destruct (ender_pgram_from_diagonal_midpoint _ _ _ _ _ Hncol Hac Hbd)
+  destruct (ghost_pgram_from_diagonal_midpoint _ _ _ _ _ Hncol Hac Hbd)
     as [Hpar1 Hpar2].
   cbn. split; [exact Hwf|].
   unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
@@ -7166,7 +7166,7 @@ Proof.
   apply (cong_pair_conclude _ _ (segment_name p (other_endpoint p s1))
                                 (segment_name p0 (other_endpoint p s1)));
     [exact Hconc|cbn].
-  apply (ender_tangents_congruent (point c.(circle_center)));
+  apply (ghost_tangents_congruent (point c.(circle_center)));
     [now apply l8_2|now apply l8_2|].
   apply cong_transitivity with (point c.(circle_center)) (point c.(circle_radius_point));
     [Cong|Cong].
@@ -7206,7 +7206,7 @@ Proof.
   cbn in Hch. destruct Hch as [_ [[_ Hone] [_ Htwo]]].
   assert (Hmid : Midpoint (point p) (point s3.(segment_first))
                           (point s3.(segment_second))).
-  { apply (ender_chord_foot_midpoint (point c.(circle_center)));
+  { apply (ghost_chord_foot_midpoint (point c.(circle_center)));
       [exact Hchordwf|Col| | |].
     - apply l8_2, Hright; [apply col_trivial_1|apply col_trivial_1].
     - apply l8_2, Hright; [apply col_trivial_1|apply col_trivial_3].
@@ -7226,11 +7226,11 @@ Proof.
   destruct (pgram_figure q Hp) as [X [Hncol [HXac [HXbd [Hpar1 Hpar2]]]]].
   pose proof Hp as Hwf. cbn in Hwf. destruct Hwf as [Hwf _].
   destruct Hwf as [Hab [Hac [Had [Hbc [Hbd Hcd]]]]].
-  destruct (ender_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
     as [Hbcd _].
   cbn. split.
   - cbn. repeat split; try assumption; try (now apply not_eq_sym).
-    exists X. split; [exact HXbd|exact (ender_bets_sym _ _ _ HXac)].
+    exists X. split; [exact HXbd|exact (ghost_bets_sym _ _ _ HXac)].
   - unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
       Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
     split; [exact Hpar2|now apply par_symmetry].
@@ -7284,7 +7284,7 @@ Proof.
   assert (Hne : point r.(quadrilateral_first) <> point r.(quadrilateral_third))
     by (destruct Hwf as [_ [Hac _]]; exact Hac).
   pose proof (bisector_corner_conga _ _ _ Hmatch Hne Hbis) as Hconga.
-  destruct (ender_pgram_bisector_rhombus _ _ _ _ X Hncol HXac HXbd
+  destruct (ghost_pgram_bisector_rhombus _ _ _ _ X Hncol HXac HXbd
               Hpar1 Hpar2 Hconga) as [Hab [Hbc Hcd]].
   cbn. split; [exact Hp|].
   unfold Audit.SegmentCongruent, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
@@ -7423,7 +7423,7 @@ Proof.
   destruct c as [[A B C] [D E F]]. cbn in HatA, HatB, Hwt, Hwu |- *.
   unfold similar_angles. cbn.
   split; [exact HatA|]. split; [exact HatB|].
-  now apply ender_third_angle.
+  now apply ghost_third_angle.
 Qed.
 
 Lemma endpoint_of_cases : forall p s, endpoint_of p s = true ->
@@ -7501,7 +7501,7 @@ Qed.
     fill a plane, not a line. *)
 Context {T2D : @Tarski_2D Tn TnEQD}.
 
-Lemma ender_center_on_bisector : forall X Y A B M O,
+Lemma ghost_center_on_bisector : forall X Y A B M O,
   X <> Y -> Col X Y M -> Midpoint M A B -> Perp_at M X Y A B ->
   Cong O A O B -> Col X Y O.
 Proof.
@@ -7555,7 +7555,7 @@ Proof.
     - apply cong_symmetry. exact Htwo.
     - exact Htwo.
     - apply cong_symmetry. exact Hone. }
-  pose proof (ender_center_on_bisector _ _ _ _ _ _ Hwf Hcol Hmid Hperp Hcong)
+  pose proof (ghost_center_on_bisector _ _ _ _ _ _ Hwf Hcol Hmid Hperp Hcong)
     as Hcentre.
   cbn. split; [exact Hcwf|].
   apply segment_u_eqb_cases in Hline.
@@ -7800,7 +7800,7 @@ Proof.
   - destruct (Bool.eqb sa sb) eqn:Heq; [|discriminate].
     apply conga_trans with (point A) (point a.(angle_vertex)) (point B); [exact Ha|].
     apply conga_trans with (point A) (point b.(angle_vertex)) (point B); [|exact Hb].
-    apply (Inscribed.EnderInscribed.cop_onc4_os__conga
+    apply (Inscribed.GhostInscribed.cop_onc4_os__conga
              (point c1.(circle_center)) (point c1.(circle_radius_point))); try assumption.
     apply all_coplanar.
   - destruct (Bool.eqb sa sb) eqn:Heq; [discriminate|].
@@ -7808,7 +7808,7 @@ Proof.
              (point A) (point b.(angle_vertex)) (point B)).
     + apply conga_sym. exact Ha.
     + exact Hb.
-    + apply (Inscribed.EnderInscribed.cop_onc4_ts__suppa
+    + apply (Inscribed.GhostInscribed.cop_onc4_ts__suppa
                (point c1.(circle_center)) (point c1.(circle_radius_point))); try assumption.
       apply all_coplanar.
 Qed.
@@ -7859,7 +7859,7 @@ Proof.
         (point c1.(circle_radius_point)); unfold Audit.circ_center in *; Cong. }
   assert (Hper : Per (point s.(segment_first)) (point a.(angle_vertex))
                      (point s.(segment_second))).
-  { apply (ender_thales _ _ _ (point c1.(circle_center))); assumption. }
+  { apply (ghost_thales _ _ _ (point c1.(circle_center))); assumption. }
   assert (HperAB : Per (point A) (point a.(angle_vertex)) (point B)).
   { apply segment_u_eqb_cases in Hends. destruct Hends as [Hends|Hends].
     - rewrite <- Hends in Hper. exact Hper.

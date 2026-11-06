@@ -1,8 +1,8 @@
 From Stdlib Require Import Ascii String List Bool Nat.
-Require Export Ender.Audit.
+Require Export Ghost.Audit.
 Import ListNotations.
 
-Module EnderSyntax.
+Module GhostSyntax.
 
 (** The kernel reasons about the audited statements themselves: there is one
     [Statement] type, [Audit.Statement], read with its audited meaning.  What
@@ -308,4 +308,4 @@ Proof.
   - intros Hin. exists t. split; [assumption|]. apply triangle_eqb_eq. reflexivity.
 Qed.
 
-End EnderSyntax.
+End GhostSyntax.

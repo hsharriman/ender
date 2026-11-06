@@ -1,14 +1,14 @@
 From Stdlib Require Import Ascii List String Bool Numbers.DecimalString.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
-Require Import Ender.Audit Ender.PublicParser Ender.Syntax Ender.Geometry
-  Ender.Semantics Ender.Checker Ender.Parser Ender.PresentationParser.
+Require Import Ghost.Audit Ghost.PublicParser Ghost.Syntax Ghost.Geometry
+  Ghost.Semantics Ghost.Checker Ghost.Parser Ghost.PresentationParser.
 (** Required but deliberately not imported: [Model.v] is written in MathComp,
     whose [ssreflect] replaces the [rewrite] this file's proofs use.  Loading
     it without importing keeps its plane reachable by qualified name and its
     notations and tactics out of the way. *)
-Require Ender.Model.
+Require Ghost.Model.
 Import ListNotations.
-Import EnderSyntax.
+Import GhostSyntax.
 Open Scope string_scope.
 
 (** The kernel reads a problem's declarations into its bundle, by kind. *)
@@ -2200,8 +2200,8 @@ Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
            (TE : @Tarski_euclidean Tn TnEQD),
       True.
   Proof.
-    exists Ender.Model.PlaneTn, Ender.Model.PlanePED,
-      Ender.Model.Plane2D, Ender.Model.PlaneEuclid.
+    exists Ghost.Model.PlaneTn, Ghost.Model.PlanePED,
+      Ghost.Model.Plane2D, Ghost.Model.PlaneEuclid.
     exact I.
   Qed.
 End CompleteVerifiedChecker.

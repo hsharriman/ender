@@ -39,7 +39,7 @@ Ender is a geometric proof checker with a React frontend and Python LLM backend 
 
 The catalogs in `src/checker/grammar/defs/` are untrusted UI and solver-prompt
 metadata, not executable checking rules. The audited contract is
-`rocq/Ender/Audit.v`.
+`rocq/Ghost/Audit.v`.
 
 **Key types** (defined in `src/checker/types/checkerTypes.ts` and `src/geometry-object/types/types.ts`):
 

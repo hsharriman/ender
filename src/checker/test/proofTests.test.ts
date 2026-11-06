@@ -621,7 +621,7 @@ steps:
       [...catalog.matchAll(/^  ([a-zA-Z0-9_]+): \{/gm)].map((match) => match[1]),
     );
     const kernel = readFileSync(
-      join(__dirname, "../../../rocq/Ender/CompleteChecker.v"),
+      join(__dirname, "../../../rocq/Ghost/CompleteChecker.v"),
       "utf8",
     );
     const checked = [
