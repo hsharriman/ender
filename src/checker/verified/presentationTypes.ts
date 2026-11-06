@@ -85,8 +85,8 @@ export type VerifiedCheckReport = {
 
 declare global {
   interface Window {
-    enderCheckProof?: (source: string) => string;
-    enderParsePresentation?: (source: string) => string;
-    enderCheckReport?: (source: string) => string;
+    ghostCheckProof?: (source: string) => string;
+    ghostParsePresentation?: (source: string) => string;
+    ghostCheckReport?: (source: string) => string;
   }
 }

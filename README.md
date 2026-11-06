@@ -43,10 +43,10 @@ make -C rocq
 ```
 
 That kernel-checks the Rocq development, extracts it to OCaml, and compiles both
-a native binary (`rocq/_build/bin/ender-checker`) and a Wasm bundle
+a native binary (`rocq/_build/bin/ghost-checker`) and a Wasm bundle
 (`rocq/_build/wasm/`). Everything that consumes the checker looks in those two
-directories by default; `ENDER_CHECKER` and `ENDER_CHECKER_WASM_DIR` override
-them.
+directories by default; `GHOST_CHECKER_WASM_DIR` overrides the Wasm bundle
+directory.
 
 Rebuild it after editing anything under `rocq/`. `make` tracks the dependencies,
 so it recompiles only what an edit affects, and `make -C rocq clean` starts over.
@@ -214,9 +214,9 @@ Once running, the backend exposes:
 Ender source is parsed and checked by extracted Rocq code. The TypeScript code
 only adapts the presentation AST for rendering.
 
-- Add theorem-bearing syntax and semantics in `rocq/Ender/Audit.v`, and update
+- Add theorem-bearing syntax and semantics in `rocq/Ghost/Audit.v`, and update
   `PublicParser.v`, the verified kernel, and its proof.
-- Add display-only syntax in `rocq/Ender/PresentationParser.v`, then update the
+- Add display-only syntax in `rocq/Ghost/PresentationParser.v`, then update the
   JSON and TypeScript presentation types if its shape changes.
 - Update `presentationAdapter.ts` and the geometry/layout code when a new object
   needs to be drawn.
@@ -224,7 +224,7 @@ only adapts the presentation AST for rendering.
   the theorem browser and solver prompt; they do not determine acceptance.
 - Add or update a proof fixture and run `nix flake check -L` and `npm test`.
 
-A new reason needs a rule in `rocq/Ender/Checker.v` with its soundness lemma,
+A new reason needs a rule in `rocq/Ghost/Checker.v` with its soundness lemma,
 proved under the weakest GeoCoq assumptions that work, plus a `_correct` and an
 `_incorrect` fixture. See [`docs/verified-checker.md`](docs/verified-checker.md)
 for the conventions the rules follow and for which reasons still reject.

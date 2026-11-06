@@ -7,7 +7,7 @@
     [String.substring], and nothing here is used to say what the checker
     claims. *)
 From Stdlib Require Import Ascii String List Bool.
-Require Import Ender.Audit.
+Require Import Ghost.Audit.
 Import ListNotations.
 
 Definition chars := list ascii.

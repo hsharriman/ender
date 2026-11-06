@@ -35,11 +35,11 @@ yarn-error.log*
 # verified Rocq checker
 /result
 /result-*
-/rocq/Ender/*.aux
-/rocq/Ender/*.glob
-/rocq/Ender/*.vo
-/rocq/Ender/*.vok
-/rocq/Ender/*.vos
+/rocq/Ghost/*.aux
+/rocq/Ghost/*.glob
+/rocq/Ghost/*.vo
+/rocq/Ghost/*.vok
+/rocq/Ghost/*.vos
 /rocq/_build/
 
 # direnv

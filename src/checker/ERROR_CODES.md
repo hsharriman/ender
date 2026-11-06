@@ -2,7 +2,7 @@
 
 This is untrusted, human-readable documentation of what the checker reports.
 It does not drive proof acceptance. Every code below is emitted by
-`rocq/Ender/CompleteChecker.v`, except `unexpected_error`, which comes from the
+`rocq/Ghost/CompleteChecker.v`, except `unexpected_error`, which comes from the
 TypeScript wrappers; keep this file in sync with those sites.
 
 The checker emits only codes and structured details, never prose. This file is

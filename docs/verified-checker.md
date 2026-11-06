@@ -1,4 +1,4 @@
-# Verified Ender checker
+# Verified Ghost checker
 
 Ender proofs are parsed and checked by Rocq code, proved sound, and extracted
 to native OCaml and WebAssembly. It is the only checker: a statement or reason
@@ -6,7 +6,7 @@ it has no rule for is rejected, never guessed at.
 
 ## What is proved, and what is trusted
 
-[`Audit.v`](../rocq/Ender/Audit.v) is the single file a human has to audit. It
+[`Audit.v`](../rocq/Ghost/Audit.v) is the single file a human has to audit. It
 imports no implementation file and states:
 
 1. `problemPart`, the text between the `pt:` line and `steps:`;
@@ -41,7 +41,7 @@ only rule that does, so every rule above each point is visibly free of it.
 Because the hypotheses are universally quantified, soundness would hold
 vacuously if no model satisfied them. The contract therefore also requires
 `euclidean_plane_exists`, a structure satisfying all of them (every such
-structure has three non-collinear points, by the lower-dimension axiom), and [`Model.v`](../rocq/Ender/Model.v) discharges it with GeoCoq's
+structure has three non-collinear points, by the lower-dimension axiom), and [`Model.v`](../rocq/Ghost/Model.v) discharges it with GeoCoq's
 model over the real algebraic numbers. It is in `Prop`, so extraction erases
 it.
 
@@ -76,7 +76,7 @@ extraction, the OCaml compiler, and `wasm_of_ocaml` produce the programs.
 | `Chars.v` | Character-list helpers used by the parsers. |
 | `Tests.v` | Positive and negative examples, and the axiom check. |
 
-`rocq/runtime/` wraps the extracted checker as the `ender-checker` command and
+`rocq/runtime/` wraps the extracted checker as the `ghost-checker` command and
 the Wasm API the interface and Node code load.
 
 ## Reading statements
@@ -166,13 +166,13 @@ have no fixtures and have not been designed.
 
 ## Reports
 
-`ender-checker FILE`, `npm run checkProof`, and the checker server's `POST
+`ghost-checker FILE`, `npm run checkProof`, and the checker server's `POST
 /check` print `{isCorrect, issues}`, or `{isCorrect, errors}` when the problem
 header does not parse; the codes are in
-[`ERROR_CODES.md`](../src/checker/ERROR_CODES.md). `ender-checker` exits 0, 1,
+[`ERROR_CODES.md`](../src/checker/ERROR_CODES.md). `ghost-checker` exits 0, 1,
 or 2 for accepted, rejected, and unparsed.
 
-`ender-checker --report FILE` (or `enderCheckReport` in Wasm) prints the full
+`ghost-checker --report FILE` (or `ghostCheckReport` in Wasm) prints the full
 `CheckReport` from `Audit.v`: each step's status, dependencies, and the
 diagram premises it consulted; the dependency graph with cycles and unused
 steps; duplicate derivations; and the step the goal rests on. A failure
@@ -209,7 +209,7 @@ The flake's packages run the same Makefile over a clean checkout:
 ```sh
 nix flake check -L                                # proofs, axiom check, and integration tests
 nix run . -- src/checker/proofs/examples/tutorial.txt
-nix build .#ender-checker-wasm                    # the bundle, under result/share/ender-checker-wasm/
+nix build .#ghost-checker-wasm                    # the bundle, under result/share/ghost-checker-wasm/
 nix run .#serve                                   # the interface at http://localhost:3000/ender/
 ```
 

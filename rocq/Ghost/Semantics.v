@@ -1,8 +1,8 @@
 From Stdlib Require Import List.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
-Require Import Ender.Syntax Ender.Geometry.
+Require Import Ghost.Syntax Ghost.Geometry.
 Import ListNotations.
-Import EnderSyntax.
+Import GhostSyntax.
 
 (** The six orderings of a triangle's vertices. *)
 Notation triangle_orderings := Audit.triangleOrderings.
@@ -36,7 +36,7 @@ Arguments Audit.angle_a t /.
 Arguments Audit.angle_b t /.
 Arguments Audit.angle_c t /.
 
-Section EnderSemantics.
+Section GhostSemantics.
 
 Context `{TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality}.
 Variable point : PointId -> Tpoint.
@@ -118,7 +118,7 @@ Definition declarations_well_formed (d : Declarations) : Prop :=
   (forall s, In s d.(decl_segments) ->
      point s.(segment_first) <> point s.(segment_second)).
 
-End EnderSemantics.
+End GhostSemantics.
 
 (** The kernel's names for audited conditions unfold with them. *)
 Arguments triangle_nondegenerate {Tn} point t /.

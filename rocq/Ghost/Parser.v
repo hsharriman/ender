@@ -1,8 +1,8 @@
 From Stdlib Require Import Ascii String List Bool Nat.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
-Require Import Ender.Syntax Ender.Semantics Ender.Checker Ender.PublicParser.
+Require Import Ghost.Syntax Ghost.Semantics Ghost.Checker Ghost.PublicParser.
 Import ListNotations.
-Import EnderSyntax.
+Import GhostSyntax.
 Open Scope string_scope.
 
 Definition chars := list ascii.

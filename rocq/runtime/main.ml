@@ -9,7 +9,7 @@ let () =
   let mode = if Array.length Sys.argv = 3 then Some Sys.argv.(1) else None in
   let special_mode = mode = Some "--presentation" || mode = Some "--report" in
   if Array.length Sys.argv <> 2 && not special_mode then begin
-    prerr_endline "usage: ender-checker [--presentation|--report] PROOF_FILE";
+    prerr_endline "usage: ghost-checker [--presentation|--report] PROOF_FILE";
     exit 2
   end;
   let source_path = if special_mode then Sys.argv.(2) else Sys.argv.(1) in
@@ -22,9 +22,9 @@ let () =
     print_endline (Report_json.report_output source);
     exit 0
   end;
-  let report = EnderChecker.CertifiedChecker.check source in
+  let report = GhostChecker.CertifiedChecker.check source in
   print_endline (Report_json.checker_output_of_report report);
-  match report.EnderChecker.report_verdict with
-  | EnderChecker.Accepted -> exit 0
-  | EnderChecker.RejectedProof -> exit 1
-  | EnderChecker.FailedToParseProblem -> exit 2
+  match report.GhostChecker.report_verdict with
+  | GhostChecker.Accepted -> exit 0
+  | GhostChecker.RejectedProof -> exit 1
+  | GhostChecker.FailedToParseProblem -> exit 2

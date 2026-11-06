@@ -3,13 +3,13 @@ import fs from "fs";
 import path from "path";
 import { defineConfig, Plugin } from "vite";
 
-// Where `make -C rocq wasm` leaves its output; ENDER_CHECKER_WASM_DIR overrides
+// Where `make -C rocq wasm` leaves its output; GHOST_CHECKER_WASM_DIR overrides
 // it, which is how a Nix-built bundle or a container image gets used instead.
 const wasmDirectory = (): string | undefined => {
   const directory =
-    process.env.ENDER_CHECKER_WASM_DIR ??
+    process.env.GHOST_CHECKER_WASM_DIR ??
     path.resolve(__dirname, "rocq/_build/wasm");
-  return fs.existsSync(path.join(directory, "ender-checker-api.js"))
+  return fs.existsSync(path.join(directory, "ghost-checker-api.js"))
     ? directory
     : undefined;
 };
@@ -25,7 +25,7 @@ const verifiedCheckerAssets = (): Plugin => {
     name: "verified-checker-assets",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        const marker = "/ender-checker-wasm/";
+        const marker = "/ghost-checker-wasm/";
         const index = request.url?.indexOf(marker) ?? -1;
         if (!directory || index < 0) return next();
         const relative = decodeURIComponent(request.url!.slice(index + marker.length));
@@ -43,13 +43,13 @@ const verifiedCheckerAssets = (): Plugin => {
       if (!directory) {
         throw new Error(
           "no verified checker to bundle; build it with `make -C rocq wasm`" +
-            " or point ENDER_CHECKER_WASM_DIR at one",
+            " or point GHOST_CHECKER_WASM_DIR at one",
         );
       }
       for (const relative of files) {
         this.emitFile({
           type: "asset",
-          fileName: `ender-checker-wasm/${relative}`,
+          fileName: `ghost-checker-wasm/${relative}`,
           source: fs.readFileSync(path.join(directory, relative)),
         });
       }

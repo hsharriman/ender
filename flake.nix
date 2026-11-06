@@ -115,7 +115,7 @@
         ] ++ mathcomp;
 
         verifiedProofs = pkgs.stdenvNoCC.mkDerivation {
-          pname = "ender-proofs";
+          pname = "ghost-proofs";
           inherit version;
           src = ./rocq;
           strictDeps = true;
@@ -130,10 +130,10 @@
           '';
           installPhase = ''
             runHook preInstall
-            mkdir -p "$out/share/ender/rocq" "$out/share/ender/extracted"
-            cp Ender/*.v Ender/*.vo "$out/share/ender/rocq/"
-            cp extracted/EnderChecker.ml extracted/EnderChecker.mli \
-              "$out/share/ender/extracted/"
+            mkdir -p "$out/share/ghost/rocq" "$out/share/ghost/extracted"
+            cp Ghost/*.v Ghost/*.vo "$out/share/ghost/rocq/"
+            cp extracted/GhostChecker.ml extracted/GhostChecker.mli \
+              "$out/share/ghost/extracted/"
             runHook postInstall
           '';
         };
@@ -144,7 +144,7 @@
         # commands in the Makefile rather than here is what stops these packages
         # from drifting away from what the dev shell produces.
         nativeChecker = pkgs.stdenvNoCC.mkDerivation {
-          pname = "ender-checker";
+          pname = "ghost-checker";
           inherit version;
           src = ./rocq;
           strictDeps = true;
@@ -154,20 +154,20 @@
           ];
           buildInputs = [ ocamlPackages.yojson ];
           makeFlags = [
-            "EXTRACTED=${verifiedProofs}/share/ender/extracted"
+            "EXTRACTED=${verifiedProofs}/share/ghost/extracted"
           ];
           buildFlags = [ "native" ];
           installPhase = ''
             runHook preInstall
             mkdir -p "$out/bin"
-            cp _build/bin/ender-checker "$out/bin/"
+            cp _build/bin/ghost-checker "$out/bin/"
             runHook postInstall
           '';
-          meta.mainProgram = "ender-checker";
+          meta.mainProgram = "ghost-checker";
         };
 
         wasmChecker = pkgs.stdenvNoCC.mkDerivation {
-          pname = "ender-checker-wasm";
+          pname = "ghost-checker-wasm";
           inherit version;
           src = ./rocq;
           strictDeps = true;
@@ -180,13 +180,13 @@
           ];
           buildInputs = [ ocamlPackages.yojson ocamlPackages.js_of_ocaml ];
           makeFlags = [
-            "EXTRACTED=${verifiedProofs}/share/ender/extracted"
+            "EXTRACTED=${verifiedProofs}/share/ghost/extracted"
           ];
           buildFlags = [ "wasm" ];
           installPhase = ''
             runHook preInstall
             mkdir -p "$out/share"
-            cp -r _build/wasm "$out/share/ender-checker-wasm"
+            cp -r _build/wasm "$out/share/ghost-checker-wasm"
             runHook postInstall
           '';
         };
@@ -225,7 +225,7 @@
           npmDeps = npmSources;
           inherit (pkgs.importNpmLock) npmConfigHook;
           # The one input the npm build cannot produce itself.
-          ENDER_CHECKER_WASM_DIR = "${wasmChecker}/share/ender-checker-wasm";
+          GHOST_CHECKER_WASM_DIR = "${wasmChecker}/share/ghost-checker-wasm";
           # `vite.config.ts` sets `base: "/ender/"` for GitHub Pages, so the
           # bundle only resolves its assets under that path.  Install it at that
           # path instead of rebuilding with a different base, so what gets served
@@ -274,20 +274,20 @@
         };
 
         # The same script `make -C rocq check` runs, against the Nix builds.
-        integrationTests = pkgs.runCommand "ender-checker-tests" {
+        integrationTests = pkgs.runCommand "ghost-checker-tests" {
           nativeBuildInputs = [ pkgs.bash nodejs pkgs.jq ];
         } ''
           bash ${./rocq/runtime/test}/integration.sh \
             ${lib.getExe nativeChecker} \
-            ${wasmChecker}/share/ender-checker-wasm \
+            ${wasmChecker}/share/ghost-checker-wasm \
             ${./src/checker/proofs}
           touch "$out"
         '';
       in {
         packages = {
-          ender-proofs = verifiedProofs;
-          ender-checker = nativeChecker;
-          ender-checker-wasm = wasmChecker;
+          ghost-proofs = verifiedProofs;
+          ghost-checker = nativeChecker;
+          ghost-checker-wasm = wasmChecker;
           ender-web = webApp;
           default = nativeChecker;
         };

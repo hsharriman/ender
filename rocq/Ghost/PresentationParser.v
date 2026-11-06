@@ -1,5 +1,5 @@
 From Stdlib Require Import Ascii String List Bool Nat.
-Require Import Ender.Audit Ender.Chars Ender.PublicParser.
+Require Import Ghost.Audit Ghost.Chars Ghost.PublicParser.
 Import ListNotations.
 Open Scope string_scope.
 

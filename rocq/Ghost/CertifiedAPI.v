@@ -4,7 +4,7 @@
     and extracted. *)
 From Stdlib Require Import String.
 Require Import GeoCoq.Main.Tarski_dev.Ch11_angles.
-Require Import Ender.Audit Ender.CompleteChecker.
+Require Import Ghost.Audit Ghost.CompleteChecker.
 
 
 Module CertifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.

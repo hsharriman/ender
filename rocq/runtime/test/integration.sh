@@ -15,7 +15,7 @@ for proof in tutorial tutinc; do
   file="$proofs/examples/$proof.txt"
   "$checker" "$file" > "$out/native.json" || true
   diff -u "$here/$proof.expected.json" "$out/native.json"
-  node "$here/wasm_api.js" "$wasm/ender-checker-api.js" "$file" > "$out/wasm.json"
+  node "$here/wasm_api.js" "$wasm/ghost-checker-api.js" "$file" > "$out/wasm.json"
   diff -u "$here/$proof.expected.json" "$out/wasm.json"
 done
 
