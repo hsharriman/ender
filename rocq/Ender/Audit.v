@@ -120,6 +120,15 @@ Inductive Statement :=
 | RefAng (a b : AngleName)
 | ConArc (a b : ArcName).
 
+(** Premise classification: each statement form belongs to exactly one source
+    prefix. This classifies premises only, not goals or derived statements. *)
+Definition isDiagramPremise (statement : Statement) : bool :=
+  match statement with
+  | OnLine _ _ | Transversal _ _ _ _ _ _ _ _ | IntersectSeg _ _ _
+  | CircOrder _ _ | OnCirclePoint _ _ => true
+  | _ => false
+  end.
+
 Inductive PublicDeclaration :=
 | SegmentDeclaration (s : SegmentName)
 | AngleDeclaration (a : AngleName)
@@ -753,6 +762,9 @@ Definition premiseBody (line : string) : option string :=
   | _, _ => None
   end.
 
+Definition premiseLabelMatches (line : string) (statement : Statement) : bool :=
+  prefix (if isDiagramPremise statement then "[d_" else "[g_") line.
+
 Definition goalBody (line : string) : option string :=
   if prefix "->" (normalized line) then after "->" line else None.
 
@@ -770,6 +782,7 @@ Inductive HeaderLine : string -> HeaderContribution -> Prop :=
     HeaderLine text (DeclaresObjects declarations)
 | PremiseHeaderLine : forall line body statement,
     premiseBody line = Some body -> StatementText body statement ->
+    premiseLabelMatches line statement = true ->
     HeaderLine line (StatesPremise statement)
 | GoalHeaderLine : forall line body statement,
     premiseBody line = None ->

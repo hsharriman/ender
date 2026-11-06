@@ -2531,11 +2531,11 @@ Example def_radius_conv_on_circle_accepts : complete_checker
 " "radius(c_OR, T)") = true.
 Proof. vm_compute. reflexivity. Qed.
 Example def_radius_conv_chord_accepts : complete_checker
-  (def_radius_conv_source "[d_01] chord(c_OR, AT)
+  (def_radius_conv_source "[g_2] chord(c_OR, AT)
 " "radius(c_OR, T)") = true.
 Proof. vm_compute. reflexivity. Qed.
 Example def_radius_conv_inscribed_accepts : complete_checker
-  (def_radius_conv_source "[d_01] inscribed_angle(c_OR, a_ATB)
+  (def_radius_conv_source "[g_2] inscribed_angle(c_OR, a_ATB)
 " "radius(c_OR, T)") = true.
 Proof. vm_compute. reflexivity. Qed.
 (** Nothing places M on the circle. *)
@@ -2662,6 +2662,57 @@ Proof. vm_compute. reflexivity. Qed.
 Example inscribed_semi_not_the_diameter_rejects : complete_checker
   (inscribed_semi_source "[d_01] circ_order(c_OA, A, S, B, D, P)
 " "inscribed_angle(c_OA, a_APB)" "diameter(c_OA, SD)" "right(a_APB)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Premise classification is enforced by the audited header parser, including
+    the circle forms added after the original TypeScript checker. *)
+Definition diagram_premise_bodies : list string :=
+  ["on_line(AB,C)"; "transversal(A,B,A,B,C,D,C,D)";
+   "intersect_seg(AB,CD,E)"; "circ_order(c_OA,A,B,C)";
+   "on_circle(c_OA,B)"].
+
+Example diagram_premise_prefixes :
+  forallb (fun body =>
+    match PublicParser.parse_public_line ("[d_01] " ++ body),
+          PublicParser.parse_public_line ("[g_1] " ++ body) with
+    | Some (Audit.StatesPremise _), None => true
+    | _, _ => false
+    end) diagram_premise_bodies = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example given_premise_prefixes :
+  forallb (fun body =>
+    match PublicParser.parse_public_line ("[g_1] " ++ body),
+          PublicParser.parse_public_line ("[d_01] " ++ body) with
+    | Some (Audit.StatesPremise _), None => true
+    | _, _ => false
+    end) ["con_seg(AB,CD)"; "right(a_ABC)";
+          "trapezoid_premise(q_ABCD,AB,CD)";
+          "center_on_line(c_OA,AB)"] = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example mislabeled_given_rejected : complete_checker
+  (common_header "[d_01] con_seg(AB,DE)
+" "con_seg(AB,DE)" "[01] given(d_01) -> con_seg(AB,DE)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example mislabeled_diagram_rejected : complete_checker
+  (common_header "[g_1] on_line(AB,C)
+" "on_line(AB,C)" "[01] given(g_1) -> on_line(AB,C)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example premise_label_mismatch_diagnostic :
+  header_line_issue ["[d_01] con_seg(AB,DE)"] 1 =
+    Some (Audit.issue 3 "premise_label_mismatch" (Audit.JsonObject
+      [("line", Audit.JsonString "[d_01] con_seg(AB,DE)");
+       ("expectedPrefix", Audit.JsonString "g_")])).
+Proof. vm_compute. reflexivity. Qed.
+
+Example diagram_label_mismatch_diagnostic :
+  header_line_issue ["[g_1] on_line(AB,C)"] 1 =
+    Some (Audit.issue 3 "premise_label_mismatch" (Audit.JsonObject
+      [("line", Audit.JsonString "[g_1] on_line(AB,C)");
+       ("expectedPrefix", Audit.JsonString "d_")])).
 Proof. vm_compute. reflexivity. Qed.
 
 Print Assumptions check_source_sound.

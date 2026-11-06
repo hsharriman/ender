@@ -84,6 +84,11 @@ the Wasm API the interface and Node code load.
 These are the conventions a proof author is most likely to trip over. The
 audited meanings in `Audit.v` are authoritative.
 
+- **Premise labels are classified by statement form.** `on_line`,
+  `transversal`, `intersect_seg`, `circ_order`, and `on_circle` require `[d_…]`;
+  every other statement form requires `[g_…]` when used as a premise.
+  `Audit.isDiagramPremise` defines this classification, and the audited header
+  grammar and parser enforce it.
 - **Names are unoriented.** `AB` and `BA` are one segment, `a_XYZ` and `a_ZYX`
   one angle, and a congruence may be written either way round. A
   quadrilateral may be named from any corner, walking either way; the other
