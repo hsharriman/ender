@@ -199,6 +199,12 @@ const OUTCOME_ENFORCED = new Set([
   "triangles/equilat_equiang_correct.txt",
   "triangles/equilat_equiang_incorrect.txt",
   "triangles/sas_duplicate_side_incorrect.txt",
+  "triangles/castc_correct.txt",
+  "triangles/castc_incorrect.txt",
+  "triangles/sas_sim_correct.txt",
+  "triangles/sas_sim_incorrect.txt",
+  "triangles/sss_sim_correct.txt",
+  "triangles/sss_sim_incorrect.txt",
   "triangles/third_angle_correct.txt",
   "triangles/third_angle_incorrect.txt",
 ]);

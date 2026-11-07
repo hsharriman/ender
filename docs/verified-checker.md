@@ -155,14 +155,11 @@ theorem's meaning.
 
 ## Reasons that always reject
 
-The kernel has a rule for 83 of the 93 reasons in the
-[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 10 reject
-every step that cites them.
-
-`sas_sim` and `sss_sim` cite `proportion`, which the kernel has no rules for
-yet. The remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,
-`rect_para_right_opp`, `sim_tri_transitive`, `square`, `tangent_diam_perp`)
-have no fixtures and have not been designed.
+The kernel has a rule for 86 of the 94 reasons in the
+[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 8 (`con_arc`,
+`csstp`, `incenter`, `para_con_arcs`, `rect_para_right_opp`,
+`sim_tri_transitive`, `square`, `tangent_diam_perp`) reject every step that
+cites them; they have no fixtures and have not been designed.
 
 ## Reports
 

@@ -493,6 +493,9 @@ Definition reason_name (r : Reason) : string :=
   | RhombusDiagPerpConv _ _ => "rhombus_diag_perp_conv"
   | RhombusOppBisectConv _ _ _ => "rhombus_opp_bisect_conv"
   | AASim _ _ => "aa_sim"
+  | SSSSim _ _ => "sss_sim"
+  | SASSim _ _ => "sas_sim"
+  | CASTC _ => "castc"
   | LinearPairConv _ => "linear_pair_conv"
   | PgramDiagBisect _ => "pgram_diag_bisect"
   | RhombusDiagPerp _ => "rhombus_diag_perp"
@@ -508,7 +511,7 @@ Definition reason_name (r : Reason) : string :=
 Definition reason_dependencies (r : Reason) : list nat :=
   match r with
   | Given _ | Reflex | VertAng _ => []
-  | CPCTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
+  | CPCTC i | CASTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
   | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
   | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
   | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | KiteOppConAng i
@@ -528,7 +531,8 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
   | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
   | RectDiagConConv i j | RhombusDiagPerpConv i j
-  | AASim i j | ChordBisectConv i j | ConInscribedAngs i j
+  | AASim i j | SSSSim i j | SASSim i j | ChordBisectConv i j
+  | ConInscribedAngs i j
   | SuppInscribedAngs i j | InscribedSemi i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
   | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
@@ -1034,6 +1038,7 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("pgram_diag_bisect_conv", (2, 2)); ("pgram_opp_angs_conv", (2, 2));
    ("rect_diag_con_conv", (2, 2)); ("rhombus_diag_perp_conv", (2, 2));
    ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
+   ("sss_sim", (2, 2)); ("sas_sim", (2, 2)); ("castc", (1, 1));
    ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
    ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2));
    ("chord_bisect_conv", (2, 2)); ("def_radius_conv", (1, 2));
@@ -1149,7 +1154,8 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | TangentPerpConv _ _ => Some ["tangent"]
   | RadiusChordBisect _ _ _ => Some ["seg_bisect"]
   | InscribedSemi _ _ => Some ["right"]
-  | AASim _ _ => Some ["sim_tri"]
+  | AASim _ _ | SSSSim _ _ | SASSim _ _ => Some ["sim_tri"]
+  | CASTC _ => Some ["con_ang"]
   | LinearPairConv _ => Some ["linear_pair"]
   | PgramDiagBisect _ => Some ["seg_bisect"]
   | RhombusDiagPerp _ | KiteDiagPerp _ => Some ["perp"]
@@ -1204,6 +1210,10 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | IsosTrapConDiags i j => [(i, "con_seg"); (j, "trapezoid_premise")]
   | PgramDiagBisectConv i j => [(i, "seg_bisect"); (j, "seg_bisect")]
   | PgramOppAngsConv i j => [(i, "con_ang"); (j, "con_ang")]
+  | SSSSim i j => [(i, "proportion"); (j, "proportion")]
+  | CASTC i => [(i, "sim_tri")]
+  (* The angle may be cited as [con_right] or [ref_ang], as for [aa_sim]. *)
+  | SASSim i _ => [(i, "proportion")]
   | IsosTrapBaseAngs i j => [(i, "con_ang"); (j, "trapezoid_premise")]
   | RectDiagConConv i j => [(i, "con_seg"); (j, "parallelogram")]
   | RhombusDiagPerpConv i j => [(i, "perp"); (j, "parallelogram")]
@@ -1538,6 +1548,14 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
             issue "no_correspondence_established"
               [("tri1", tri_text t); ("tri2", tri_text u)]
           end
+      | _ => None
+      end
+  | CASTC i =>
+      match lookup_step facts i with
+      | Some (SimTri t u) =>
+          issue "parts_not_corresponding_in_triangles"
+            (List.app [("tri1", tri_text t); ("tri2", tri_text u)]
+               (corresponding_field t u conclusion))
       | _ => None
       end
   | KiteOppConAng i =>

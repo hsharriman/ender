@@ -312,6 +312,13 @@ export const REASONS_DEFS = {
     dependencies: ["proportion", "con_ang_ref_allow"],
     conclusion: "sim_tri",
   },
+  castc: {
+    name: "castc",
+    title: "CASTC",
+    body: "Corresponding Angles of Similar Triangles are Congruent (CASTC). If two triangles are similar, then their corresponding angles are congruent.",
+    dependencies: ["sim_tri"],
+    conclusion: "con_ang",
+  },
   def_equiangular: {
     name: "def_equiangular",
     title: "Def. Equiangular",

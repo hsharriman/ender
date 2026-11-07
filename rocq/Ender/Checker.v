@@ -4,6 +4,7 @@ Require Import GeoCoq.Main.Tarski_dev.Ch12_parallel.
 Require Import GeoCoq.Main.Annexes.suma.
 Require Import Ender.Syntax Ender.Geometry Ender.Semantics.
 Require Ender.Inscribed.
+Require Ender.Similarity.
 Import ListNotations.
 Import EnderSyntax.
 
@@ -970,6 +971,84 @@ Definition aa_sim (decls : Declarations) (premises : list Premise)
       declared_pair decls t u &&
       existsb (fun c => aa_sim_at decls premises facts i j (fst c) (snd c))
               (correspondences t u)
+  | _ => false
+  end.
+
+(** A [proportion] fact read as the expected four lengths, in any spelling
+    its meaning cannot tell apart: either end of a segment first, the two
+    ratios exchanged, or both ratios inverted. *)
+Definition proportion_matches (a b c d : SegmentName) (st : Statement) : bool :=
+  match st with
+  | Proportion a' b' c' d' =>
+      let reads w x y z :=
+        segment_u_eqb w a' && segment_u_eqb x b' &&
+        segment_u_eqb y c' && segment_u_eqb z d' in
+      reads a b c d || reads c d a b || reads b a d c || reads d c b a
+  | _ => false
+  end.
+
+Definition proportion_at (facts : list Statement) (i : nat)
+    (a b c d : SegmentName) : bool :=
+  match lookup_step facts i with
+  | Some x => proportion_matches a b c d x
+  | None => false
+  end.
+
+(** SAS similarity, with the congruent angle at the second vertex of the
+    correspondence: [proportion(AB, DE, BC, EF)] and [con_ang(a_ABC, a_DEF)].
+    The search over correspondences puts the angle at each vertex in turn. *)
+Definition sas_sim_at (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (i j : nat) (t u : TriangleName) : bool :=
+  proportion_at facts i (side_ab t) (side_ab u) (side_bc t) (side_bc u) &&
+  match lookup_step facts j with
+  | Some y => dependency_matches decls premises (ConAng (angle_b t) (angle_b u)) y
+  | None => false
+  end.
+
+Definition sas_sim (decls : Declarations) (premises : list Premise)
+    (facts : list Statement)
+    (i j : nat) (conclusion : Statement) : bool :=
+  match conclusion with
+  | SimTri t u =>
+      declared_pair decls t u &&
+      existsb (fun c => sas_sim_at decls premises facts i j (fst c) (snd c))
+              (correspondences t u)
+  | _ => false
+  end.
+
+(** SSS similarity, as two proportions sharing the pair of sides opposite the
+    first vertex: [proportion(AB, DE, BC, EF)] and
+    [proportion(BC, EF, CA, FD)]. *)
+Definition sss_sim_at (facts : list Statement) (i j : nat)
+    (t u : TriangleName) : bool :=
+  proportion_at facts i (side_ab t) (side_ab u) (side_bc t) (side_bc u) &&
+  proportion_at facts j (side_bc t) (side_bc u) (side_ca t) (side_ca u).
+
+Definition sss_sim (decls : Declarations) (facts : list Statement)
+    (i j : nat) (conclusion : Statement) : bool :=
+  match conclusion with
+  | SimTri t u =>
+      declared_pair decls t u &&
+      existsb (fun c => sss_sim_at facts i j (fst c) (snd c))
+              (correspondences t u)
+  | _ => false
+  end.
+
+(** Corresponding angles of similar triangles are congruent.  [sim_tri]
+    pairs the vertices in the order they are written, so, as for an ordered
+    congruence in [cpctc], the angles at matching positions correspond.  The
+    angles are spelled as the audited similarity spells them. *)
+Definition sim_tri_angles (t u : TriangleName) : list Statement :=
+  [ ConAng (Audit.angle_a t) (Audit.angle_a u)
+  ; ConAng (Audit.angle_b t) (Audit.angle_b u)
+  ; ConAng (Audit.angle_c t) (Audit.angle_c u)
+  ].
+
+Definition castc_rule (facts : list Statement) (i : nat)
+    (conclusion : Statement) : bool :=
+  match lookup_step facts i with
+  | Some (SimTri t u) =>
+      existsb (fun expected => fact_eqb expected conclusion) (sim_tri_angles t u)
   | _ => false
   end.
 
@@ -2445,6 +2524,9 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | RhombusOppBisectConv i j k =>
       rhombus_opp_bisect_conv_rule facts i j k conclusion
   | AASim i j => aa_sim decls premises facts i j conclusion
+  | SSSSim i j => sss_sim decls facts i j conclusion
+  | SASSim i j => sas_sim decls premises facts i j conclusion
+  | CASTC i => castc_rule facts i conclusion
   | LinearPairConv i => linear_pair_conv premises facts i conclusion
   | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
       diagonal_rule premises facts r conclusion
@@ -7876,6 +7958,141 @@ Proof.
     split; [split; assumption|]. unfold Audit.RightAngle. cbn. apply l8_2. exact Hrt.
 Qed.
 
+(** A congruent segment may stand in for any length of a proportion; a
+    matched segment is the expected one or its reversal. *)
+Lemma segment_u_eqb_cong : forall s s', segment_u_eqb s s' = true ->
+  Cong (point s'.(segment_first)) (point s'.(segment_second))
+       (point s.(segment_first)) (point s.(segment_second)).
+Proof.
+  intros s s' H. apply segment_u_eqb_cases in H.
+  destruct H as [Heq|Heq]; subst s; cbn; Cong.
+Qed.
+
+Lemma proportion_at_sound : forall facts i a b c d,
+  Forall Interp facts -> proportion_at facts i a b c d = true ->
+  Similarity.EnderSimilarity.Proportional
+    (point a.(segment_first)) (point a.(segment_second))
+    (point b.(segment_first)) (point b.(segment_second))
+    (point c.(segment_first)) (point c.(segment_second))
+    (point d.(segment_first)) (point d.(segment_second)).
+Proof.
+  intros facts i a b c d Hall H. unfold proportion_at in H.
+  destruct (lookup_step facts i) as [x|] eqn:Hx; [|discriminate].
+  pose proof (lookup_step_sound facts i x Hall Hx) as Hint.
+  destruct x; cbn in H; try discriminate. old_names_eq Hx.
+  cbn in Hint. destruct Hint as [_ [_ [_ [_ Hprop]]]].
+  change (Similarity.EnderSimilarity.Proportional
+    (point s.(segment_first)) (point s.(segment_second))
+    (point s0.(segment_first)) (point s0.(segment_second))
+    (point s1.(segment_first)) (point s1.(segment_second))
+    (point s2.(segment_first)) (point s2.(segment_second))) in Hprop.
+  repeat rewrite orb_true_iff in H. repeat rewrite andb_true_iff in H.
+  destruct H as [[[H|H]|H]|H]; destruct H as [[[Ha Hb] Hc] Hd];
+    apply segment_u_eqb_cong in Ha; apply segment_u_eqb_cong in Hb;
+    apply segment_u_eqb_cong in Hc; apply segment_u_eqb_cong in Hd.
+  - exact (Similarity.EnderSimilarity.proportional_cong _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
+  - apply Similarity.EnderSimilarity.proportional_swap.
+    exact (Similarity.EnderSimilarity.proportional_cong _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
+  - apply Similarity.EnderSimilarity.proportional_invert.
+    exact (Similarity.EnderSimilarity.proportional_cong _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
+  - apply Similarity.EnderSimilarity.proportional_swap,
+          Similarity.EnderSimilarity.proportional_invert.
+    exact (Similarity.EnderSimilarity.proportional_cong _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
+Qed.
+
+(** Both segments of a proportion read from their other ends. *)
+Lemma proportional_reverse : forall A B C D E F G H,
+  Similarity.EnderSimilarity.Proportional A B C D E F G H ->
+  Similarity.EnderSimilarity.Proportional B A D C F E H G.
+Proof.
+  intros A B C D E F G H Hp.
+  apply (Similarity.EnderSimilarity.proportional_cong A B C D E F G H); Cong.
+Qed.
+
+Lemma sas_sim_sound : forall decls premises facts i j conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  sas_sim decls premises facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros decls premises facts i j conclusion Hwf Hprem Hall Hrule.
+  unfold sas_sim in Hrule. destruct conclusion; try discriminate. all: try old_names_goal.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hsearch].
+  apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
+  apply existsb_exists in Hsearch. destruct Hsearch as [c [Hin Hmatch]].
+  pose proof (correspondences_well_formed _ _ _ Hin Ht Hu) as [Hwt Hwu].
+  apply similar_angles_sim; [exact Ht|exact Hu|].
+  apply (correspondences_similar _ _ _ Hin).
+  unfold sas_sim_at in Hmatch. apply andb_true_iff in Hmatch.
+  destruct Hmatch as [Hprop Hang].
+  apply proportion_at_sound in Hprop; [|exact Hall].
+  destruct (lookup_step facts j) as [y|] eqn:Hy; [|discriminate].
+  apply (dependency_matches_sound _ _ _ _ Hwf Hprem) in Hang;
+    [|exact (lookup_step_sound facts j y Hall Hy)].
+  destruct c as [[A B C] [D E F]].
+  cbn in Hwt, Hwu, Hprop, Hang |- *. unfold triangle_well_formed in Hwt, Hwu.
+  destruct (Similarity.EnderSimilarity.sas_similar
+    (point A) (point B) (point C) (point D) (point E) (point F) Hwt Hwu Hang)
+    as [HangA HangC].
+  { apply (Similarity.EnderSimilarity.proportional_cong
+      (point A) (point B) (point D) (point E) (point B) (point C) (point E) (point F));
+      [exact Hprop|Cong|Cong|Cong|Cong]. }
+  split; [exact HangA|]. split; [exact Hang|now apply conga_comm].
+Qed.
+
+Lemma sss_sim_sound : forall decls facts i j conclusion,
+  declarations_well_formed point decls -> Forall Interp facts ->
+  sss_sim decls facts i j conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros decls facts i j conclusion Hwf Hall Hrule.
+  unfold sss_sim in Hrule. destruct conclusion; try discriminate. all: try old_names_goal.
+  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hsearch].
+  apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
+  apply existsb_exists in Hsearch. destruct Hsearch as [c [Hin Hmatch]].
+  pose proof (correspondences_well_formed _ _ _ Hin Ht Hu) as [Hwt Hwu].
+  apply similar_angles_sim; [exact Ht|exact Hu|].
+  apply (correspondences_similar _ _ _ Hin).
+  unfold sss_sim_at in Hmatch. apply andb_true_iff in Hmatch.
+  destruct Hmatch as [Hprop1 Hprop2].
+  apply proportion_at_sound in Hprop1; [|exact Hall].
+  apply proportion_at_sound in Hprop2; [|exact Hall].
+  destruct c as [[A B C] [D E F]].
+  cbn in Hwt, Hwu, Hprop1, Hprop2 |- *. unfold triangle_well_formed in Hwt, Hwu.
+  destruct (Similarity.EnderSimilarity.sss_similar
+    (point A) (point B) (point C) (point D) (point E) (point F) Hwt Hwu)
+    as [HangA [HangB HangC]].
+  - apply (Similarity.EnderSimilarity.proportional_cong
+      (point A) (point B) (point D) (point E) (point B) (point C) (point E) (point F));
+      [exact Hprop1|Cong|Cong|Cong|Cong].
+  - apply (Similarity.EnderSimilarity.proportional_cong
+      (point B) (point C) (point E) (point F) (point C) (point A) (point F) (point D));
+      [exact Hprop2|Cong|Cong|Cong|Cong].
+  - split; [exact HangA|]. split; [exact HangB|now apply conga_comm].
+Qed.
+
+Lemma castc_rule_sound : forall facts i conclusion,
+  Forall Interp facts -> castc_rule facts i conclusion = true -> Interp conclusion.
+Proof.
+  intros facts i conclusion Hfacts H.
+  unfold castc_rule in H.
+  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
+  destruct dependency; try discriminate.
+  assert (Hsim : Interp (SimTri a b)) by (eapply lookup_step_sound; eauto).
+  destruct Hsim as [_ [_ [Ha [Hb Hc]]]].
+  unfold sim_tri_angles in H. cbn [existsb] in H.
+  repeat rewrite orb_true_iff in H.
+  repeat match goal with
+  | H : _ \/ _ |- _ => destruct H as [H|H]
+  end;
+  try discriminate;
+  apply fact_eqb_sound in H; apply H; first [exact Ha|exact Hb|exact Hc].
+Qed.
+
 Lemma rule_valid_sound : forall decls premises facts reason conclusion,
   declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -7982,6 +8199,9 @@ Proof.
   - eapply rhombus_diag_perp_conv_sound; eauto.
   - eapply rhombus_opp_bisect_conv_sound; eauto.
   - eapply aa_sim_sound; eauto.
+  - eapply sss_sim_sound; eauto.
+  - eapply sas_sim_sound; eauto.
+  - eapply castc_rule_sound; eauto.
   - eapply linear_pair_conv_sound; eauto.
   - eapply diagonal_rule_sound; eauto.
   - eapply diagonal_rule_sound; eauto.

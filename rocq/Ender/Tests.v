@@ -1014,6 +1014,181 @@ Example third_angle_same_vertex_rejects :
   complete_checker third_angle_same_vertex_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** SSS similarity: two proportions sharing the pair [BC]/[EF]. *)
+Definition sss_sim_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] proportion(AB,DE,BC,EF)
+[g_2] proportion(BC,EF,AC,DF)
+"
+  "sim_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> proportion(AB,DE,BC,EF)
+[02] given(g_2) -> proportion(BC,EF,AC,DF)
+[03] sss_sim(1,2) -> sim_tri(t_ABC,t_DEF)".
+
+(** The proportions may be written with their ratios exchanged or inverted,
+    and may share any pair of sides. *)
+Definition sss_sim_respelled_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] proportion(CA,FD,AB,DE)
+[g_2] proportion(EF,BC,DE,AB)
+"
+  "sim_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> proportion(CA,FD,AB,DE)
+[02] given(g_2) -> proportion(EF,BC,DE,AB)
+[03] sss_sim(1,2) -> sim_tri(t_ABC,t_DEF)".
+
+(** Each proportion must pair a side of one triangle with the corresponding
+    side of the other. *)
+Definition sss_sim_same_triangle_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] proportion(AB,DE,BC,EF)
+[g_2] proportion(BC,EF,AC,BC)
+"
+  "sim_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> proportion(AB,DE,BC,EF)
+[02] given(g_2) -> proportion(BC,EF,AC,BC)
+[03] sss_sim(1,2) -> sim_tri(t_ABC,t_DEF)".
+
+(** The conclusion states the correspondence the proportions fix. *)
+Definition sss_sim_wrong_order_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] proportion(AB,DE,BC,EF)
+[g_2] proportion(BC,EF,AC,DF)
+"
+  "sim_tri(t_ABC,t_DFE)"
+  "[01] given(g_1) -> proportion(AB,DE,BC,EF)
+[02] given(g_2) -> proportion(BC,EF,AC,DF)
+[03] sss_sim(1,2) -> sim_tri(t_ABC,t_DFE)".
+
+(** Undeclared triangles may be degenerate. *)
+Definition sss_sim_undeclared_source := transitive_header "tri: t_ABC
+"
+  "[g_1] proportion(AB,DE,BC,EF)
+[g_2] proportion(BC,EF,AC,DF)
+"
+  "sim_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> proportion(AB,DE,BC,EF)
+[02] given(g_2) -> proportion(BC,EF,AC,DF)
+[03] sss_sim(1,2) -> sim_tri(t_ABC,t_DEF)".
+
+Example sss_sim_accepts : complete_checker sss_sim_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example sss_sim_respelled_accepts :
+  complete_checker sss_sim_respelled_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example sss_sim_same_triangle_rejects :
+  complete_checker sss_sim_same_triangle_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example sss_sim_wrong_order_rejects :
+  complete_checker sss_sim_wrong_order_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example sss_sim_undeclared_rejects :
+  complete_checker sss_sim_undeclared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** SAS similarity: the sides around [A] in proportion, and the angle at [A]
+    congruent. *)
+Definition sas_sim_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] proportion(AB,DE,AC,DF)
+[g_2] con_ang(a_BAC,a_EDF)
+"
+  "sim_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> proportion(AB,DE,AC,DF)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] sas_sim(1,2) -> sim_tri(t_ABC,t_DEF)".
+
+Definition sas_sim_inverted_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] proportion(ED,BA,FD,CA)
+[g_2] con_ang(a_CAB,a_FDE)
+"
+  "sim_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> proportion(ED,BA,FD,CA)
+[02] given(g_2) -> con_ang(a_CAB,a_FDE)
+[03] sas_sim(1,2) -> sim_tri(t_ABC,t_DEF)".
+
+(** The angle must be the one between the two proportional sides. *)
+Definition sas_sim_not_included_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] proportion(AB,DE,AC,DF)
+[g_2] con_ang(a_ACB,a_DFE)
+"
+  "sim_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> proportion(AB,DE,AC,DF)
+[02] given(g_2) -> con_ang(a_ACB,a_DFE)
+[03] sas_sim(1,2) -> sim_tri(t_ABC,t_DEF)".
+
+(** A proportion within one ratio's terms is not alternando: [AB : AC] is a
+    different statement from [AB : DE]. *)
+Definition sas_sim_alternando_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] proportion(AB,AC,DE,DF)
+[g_2] con_ang(a_BAC,a_EDF)
+"
+  "sim_tri(t_ABC,t_DEF)"
+  "[01] given(g_1) -> proportion(AB,AC,DE,DF)
+[02] given(g_2) -> con_ang(a_BAC,a_EDF)
+[03] sas_sim(1,2) -> sim_tri(t_ABC,t_DEF)".
+
+Example sas_sim_accepts : complete_checker sas_sim_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example sas_sim_inverted_accepts :
+  complete_checker sas_sim_inverted_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example sas_sim_not_included_rejects :
+  complete_checker sas_sim_not_included_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example sas_sim_alternando_rejects :
+  complete_checker sas_sim_alternando_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Corresponding angles of similar triangles: [sim_tri] pairs the vertices in
+    the order written, so the angles at [B] and [E] correspond. *)
+Definition castc_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] sim_tri(t_ABC,t_DEF)
+"
+  "con_ang(a_ABC,a_DEF)"
+  "[01] given(g_1) -> sim_tri(t_ABC,t_DEF)
+[02] castc(1) -> con_ang(a_ABC,a_DEF)".
+
+(** Either angle may come first, and each may be spelled in reverse. *)
+Definition castc_respelled_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] sim_tri(t_ABC,t_DEF)
+"
+  "con_ang(a_FED,a_CBA)"
+  "[01] given(g_1) -> sim_tri(t_ABC,t_DEF)
+[02] castc(1) -> con_ang(a_FED,a_CBA)".
+
+Definition castc_third_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] sim_tri(t_ABC,t_DEF)
+"
+  "con_ang(a_BCA,a_EFD)"
+  "[01] given(g_1) -> sim_tri(t_ABC,t_DEF)
+[02] castc(1) -> con_ang(a_BCA,a_EFD)".
+
+(** [B] corresponds to [E], not to [F]. *)
+Definition castc_not_corresponding_source := transitive_header "tri: t_ABC t_DEF
+"
+  "[g_1] sim_tri(t_ABC,t_DEF)
+"
+  "con_ang(a_ABC,a_DFE)"
+  "[01] given(g_1) -> sim_tri(t_ABC,t_DEF)
+[02] castc(1) -> con_ang(a_ABC,a_DFE)".
+
+Example castc_accepts : complete_checker castc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example castc_respelled_accepts : complete_checker castc_respelled_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example castc_third_accepts : complete_checker castc_third_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example castc_not_corresponding_rejects :
+  complete_checker castc_not_corresponding_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Triangle shape statements and the reasons that produce or consume them. *)
 Definition shape_header (premises goal steps : string) : string :=
   transitive_header "tri: t_ABC
