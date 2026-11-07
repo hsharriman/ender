@@ -700,6 +700,42 @@ Fixpoint find_cycle (edges : list (nat * nat)) (fuel : nat) (path : list nat)
         scan (successors edges node)
   end.
 
+(** Completed branches contain no reachable cycle.  Cache only branches that
+    never exhausted the depth bound: a depth-limited failure is not evidence
+    that a node is finished.  Keep the original successor and root order so
+    the first cycle and its spelling stay unchanged. *)
+Record CycleSearch := cycle_search {
+  cycle_found : option (list nat);
+  cycle_finished : list nat;
+  cycle_exhaustive : bool
+}.
+
+Fixpoint find_cycle_cached (edges : list (nat * nat)) (fuel : nat)
+    (path finished : list nat) (node : nat) : CycleSearch :=
+  match fuel with
+  | O => cycle_search None finished false
+  | S remaining =>
+      if existsb (nat_eqb_report node) path then
+        cycle_search (Some (cycle_tail node path)) finished true
+      else if existsb (nat_eqb_report node) finished then
+        cycle_search None finished true
+      else
+        let extended := List.app path [node] in
+        let fix scan (candidates done : list nat) (exhaustive : bool) : CycleSearch :=
+          match candidates with
+          | [] => cycle_search None
+                    (if exhaustive then node :: done else done) exhaustive
+          | next :: rest =>
+              let result := find_cycle_cached edges remaining extended done next in
+              match result.(cycle_found) with
+              | Some _ => result
+              | None => scan rest result.(cycle_finished)
+                             (exhaustive && result.(cycle_exhaustive))
+              end
+          end in
+        scan (successors edges node) finished true
+  end.
+
 Definition same_cycle (a b : list nat) : bool :=
   Nat.eqb (List.length a) (List.length b) &&
   forallb (fun x => existsb (nat_eqb_report x) b) a.
@@ -711,7 +747,7 @@ Definition same_cycle (a b : list nat) : bool :=
 Definition graph_cycles (nodes : list nat) (edges : list (nat * nat))
     : list (list nat) :=
   fold_left (fun found node =>
-    match find_cycle edges (S (List.length nodes)) [] node with
+    match (find_cycle_cached edges (S (List.length nodes)) [] [] node).(cycle_found) with
     | Some cycle =>
         if existsb (same_cycle cycle) found then found
         else List.app found [cycle]
@@ -861,10 +897,11 @@ Definition report_data_of (source : string) : option ReportData :=
   | None => None
   end.
 
-Definition report_content (source : string)
-    : list Audit.StepReport * Audit.DependencyGraph *
-      list Audit.DuplicateDerivation * Audit.GoalReport :=
-  match report_data_of source with
+Definition ReportContent : Type := (list Audit.StepReport * Audit.DependencyGraph *
+  list Audit.DuplicateDerivation * Audit.GoalReport)%type.
+
+Definition report_content_from_data (data : option ReportData) : ReportContent :=
+  match data with
   | Some d =>
       let steps := map rs_step d.(rd_steps) in
       let reports :=
@@ -876,6 +913,9 @@ Definition report_content (source : string)
        goal_report_for d.(rd_goal) steps d.(rd_statuses))
   | None => ([], empty_graph, [], Audit.goal_report None [])
   end.
+
+Definition report_content (source : string) : ReportContent :=
+  report_content_from_data (report_data_of source).
 
 (** * Issues
 
@@ -1885,10 +1925,10 @@ Definition relabel_issue (labels : list (option nat)) (i : Audit.Issue)
   | _ => i
   end.
 
-Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :=
-  match report_data_of source with
+Definition proof_issues_from_data (data : option ReportData) (content : ReportContent)
+    (accepted : bool) : list Audit.Issue :=
+  match data with
   | Some d =>
-      let content := report_content source in
       let graph := snd (fst (fst content)) in
       let duplicates := snd (fst content) in
       let goal := snd content in
@@ -1984,6 +2024,18 @@ Definition problem_issue (source : string) : Audit.Issue :=
       end
   end.
 
+Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :=
+  let data := report_data_of source in
+  proof_issues_from_data data (report_content_from_data data) accepted.
+
+Definition report_issues_from_data (data : option ReportData) (content : ReportContent)
+    (result : CheckResult) : list Audit.Issue :=
+  match result with
+  | ParseFailure => []
+  | ProofRejected => proof_issues_from_data data content false
+  | ProofAccepted => proof_issues_from_data data content true
+  end.
+
 Definition report_issues_for (source : string) (result : CheckResult)
     : list Audit.Issue :=
   match result with
@@ -2001,13 +2053,30 @@ Definition report_errors_for (source : string) (result : CheckResult)
 
 Definition check_report (source : string) : Audit.CheckReport :=
   let result := classify_source source in
-  let content := report_content source in
+  let data := report_data_of source in
+  let content := report_content_from_data data in
   Audit.check_report (public_verdict result) (public_problem_of_source source)
     (PresentationParser.parsePresentation source)
     (fst (fst (fst content))) (snd (fst (fst content))) (snd (fst content))
     (snd content)
-    (report_issues_for source result) (report_errors_for source result)
+    (report_issues_from_data data content result) (report_errors_for source result)
     (verdict_diagnostics result).
+
+(** Sharing report parsing, statuses and graph construction preserves every
+    report field, not only the trusted verdict. *)
+Lemma check_report_sharing_equivalent : forall source,
+  check_report source =
+  let result := classify_source source in
+  let content := report_content source in
+  Audit.check_report (public_verdict result) (public_problem_of_source source)
+    (PresentationParser.parsePresentation source)
+    (fst (fst (fst content))) (snd (fst (fst content))) (snd (fst content))
+    (snd content) (report_issues_for source result) (report_errors_for source result)
+    (verdict_diagnostics result).
+Proof.
+  intro source. unfold check_report, report_issues_for, report_issues_from_data.
+  destruct (classify_source source); reflexivity.
+Qed.
 
 Lemma check_report_accepted : forall source,
   Audit.accepted (check_report source) = complete_checker source.
