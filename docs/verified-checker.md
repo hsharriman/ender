@@ -40,16 +40,16 @@ only rule that does, so every rule above each point is visibly free of it.
 
 Because the hypotheses are universally quantified, soundness would hold
 vacuously if no model satisfied them. The contract therefore also requires
-`euclidean_plane_exists`, three non-collinear points in a structure satisfying
-all of them, and [`Model.v`](../rocq/Ender/Model.v) discharges it with GeoCoq's
+`euclidean_plane_exists`, a structure satisfying all of them (every such
+structure has three non-collinear points, by the lower-dimension axiom), and [`Model.v`](../rocq/Ender/Model.v) discharges it with GeoCoq's
 model over the real algebraic numbers. It is in `Prop`, so extraction erases
 it.
 
 `make -C rocq test` and `nix flake check` fail if `Print Assumptions` reports
 any axiom for either theorem. Some GeoCoq routes rest on `Eqdep.Eq_rect_eq`
 (`par_2_plg`, `plg_per_rect`, `rect_per`, `midpoint_thales`, the `CopR`
-reflection in `par_trans`, `l12_21_a`, and through it every inscribed-angle
-theorem in GeoCoq's `inscribed_angle.v`); the development proves the same
+reflection in `par_trans`, `right_saccheris`, and through it every
+inscribed-angle theorem in GeoCoq's `inscribed_angle.v`); the development proves the same
 facts another way.
 
 What Rocq cannot check is that the audited meanings say what a reader means
@@ -66,7 +66,7 @@ extraction, the OCaml compiler, and `wasm_of_ocaml` produce the programs.
 | `Syntax.v` | Reasons, steps, and declarations around the audited `Statement` type. |
 | `Semantics.v` | A statement's kernel meaning, defined as its audited meaning. |
 | `Geometry.v` | Geometry lemmas the rules need beyond GeoCoq: the triangle criteria, Playfair-based parallel facts, quadrilateral translations. |
-| `Inscribed.v` | GeoCoq's inscribed-angle theorems (Euclid III.20–22), with the two lemmas that rested on an axiom re-proved through `Geometry.v`. |
+| `Inscribed.v` | GeoCoq's inscribed-angle theorems (Euclid III.20–22), with the one lemma that rests on an axiom upstream re-proved through `Geometry.v`. |
 | `Checker.v` | The reason kernel: one executable rule per reason, each with its soundness lemma. |
 | `Parser.v` | The step parser. |
 | `CompleteChecker.v` | Implements the contract, and builds the advisory report. |
@@ -197,9 +197,9 @@ make -C rocq
 `make -C rocq` kernel-checks the development, runs the axiom check, extracts
 the checker, and builds the native program and the Wasm bundle into
 `rocq/_build/`. Building without Nix means reproducing all of that by hand:
-GeoCoq at the pinned commit with both patches applied, its `Coinc`, `Main`,
-`Axioms`, and `Algebraic` layers installed, and MathComp 2.5 with
-`mathcomp-real-closed`.
+GeoCoq at the commit `flake.lock` pins, with its `Coinc`, `Axioms`, `Main`,
+and `Algebraic` layers installed, and MathComp 2.5 with
+`mathcomp-real-closed` and `mathcomp-algebra-tactics`.
 
 The flake's packages run the same Makefile over a clean checkout:
 
@@ -210,15 +210,5 @@ nix build .#ender-checker-wasm                    # the bundle, under result/sha
 nix run .#serve                                   # the interface at http://localhost:3000/ender/
 ```
 
-GeoCoq is pinned to
-[`1b1e7ad`](https://github.com/GeoCoq/GeoCoq/commit/1b1e7ad51d9139b6c98cde48a4516b78546cae9d),
-its Rocq 9 port, because upstream `master` does not build on Rocq 9. Two
-patches apply on top:
-
-- [`geocoq-axioms-layering.patch`](../nix/geocoq-axioms-layering.patch) leaves
-  `gelertner_inspired_axioms.v`, an example that imports `Main`, out of the
-  `Axioms` layer, so the layers build in order.
-- [`geocoq-algebraic-mathcomp25.patch`](../nix/geocoq-algebraic-mathcomp25.patch)
-  ports the two `Algebraic` files `Model.v` needs to MathComp 2.5: the
-  `ssreflect` import path moved, a local notation collides with a new MathComp
-  one, and two rewrite chains no longer apply.
+The flake follows GeoCoq's `master` branch, and `flake.lock` pins the commit.
+`nix flake update geocoq` moves it to the latest one.

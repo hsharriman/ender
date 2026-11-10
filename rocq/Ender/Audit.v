@@ -46,7 +46,7 @@ Definition problemPart (source : string) : option string :=
       end
   end.
 
-(** * The complete public theorem language
+(** * The complete theorem language
 
     A figure is named by the points it is drawn through. *)
 
@@ -120,17 +120,17 @@ Inductive Statement :=
 | RefAng (a b : AngleName)
 | ConArc (a b : ArcName).
 
-Inductive PublicDeclaration :=
+Inductive Declaration :=
 | SegmentDeclaration (s : SegmentName)
 | AngleDeclaration (a : AngleName)
 | TriangleDeclaration (t : TriangleName)
 | QuadrilateralDeclaration (q : QuadrilateralName)
 | CircleDeclaration (c : CircleName).
 
-Record PublicProblem := public_problem {
-  public_declarations : list PublicDeclaration;
-  public_premises : list Statement;
-  public_conclusion : Statement
+Record Problem := problem {
+  problem_declarations : list Declaration;
+  problem_premises : list Statement;
+  problem_conclusion : Statement
 }.
 
 (** * What a problem means
@@ -530,7 +530,7 @@ Definition statementMeaning (s : Statement) : Prop :=
   | ConArc a b => ArcCongruent a b
   end.
 
-Definition declarationMeaning (d : PublicDeclaration) : Prop :=
+Definition declarationMeaning (d : Declaration) : Prop :=
   match d with
   | SegmentDeclaration s => SegmentWellFormed s
   | AngleDeclaration a => AngleWellFormed a
@@ -539,14 +539,14 @@ Definition declarationMeaning (d : PublicDeclaration) : Prop :=
   | CircleDeclaration c => CircleWellFormed c
   end.
 
-Definition problemClaim (p : PublicProblem) : Prop :=
-  Forall declarationMeaning p.(public_declarations) ->
-  Forall statementMeaning p.(public_premises) ->
-  statementMeaning p.(public_conclusion).
+Definition problemClaim (p : Problem) : Prop :=
+  Forall declarationMeaning p.(problem_declarations) ->
+  Forall statementMeaning p.(problem_premises) ->
+  statementMeaning p.(problem_conclusion).
 
 End GeometryMeaning.
 
-(** * The public spelling of every statement form
+(** * The spelling of every statement form
 
     A figure is spelled as its kind tag followed by its points, so the points
     it names and the text that names it are read off one list. *)
@@ -712,7 +712,7 @@ Definition StatementText (text : string) (statement : Statement) : Prop :=
   Forall PointNameValid (statementPoints statement) /\
   normalized text = statementText statement.
 
-Definition declarationTag (d : PublicDeclaration) : string :=
+Definition declarationTag (d : Declaration) : string :=
   match d with
   | SegmentDeclaration _ => "seg:"
   | AngleDeclaration _ => "ang:"
@@ -720,7 +720,7 @@ Definition declarationTag (d : PublicDeclaration) : string :=
   | QuadrilateralDeclaration _ => "quad:"
   | CircleDeclaration _ => "circ:"
   end.
-Definition declarationObjectText (d : PublicDeclaration) : string :=
+Definition declarationObjectText (d : Declaration) : string :=
   match d with
   | SegmentDeclaration s => segmentText s
   | AngleDeclaration a => angleText a
@@ -728,7 +728,7 @@ Definition declarationObjectText (d : PublicDeclaration) : string :=
   | QuadrilateralDeclaration q => quadrilateralText q
   | CircleDeclaration c => circleText c
   end.
-Definition declarationPoints (d : PublicDeclaration) : list PointName :=
+Definition declarationPoints (d : Declaration) : list PointName :=
   match d with
   | SegmentDeclaration s => segmentPoints s
   | AngleDeclaration a => anglePoints a
@@ -737,7 +737,7 @@ Definition declarationPoints (d : PublicDeclaration) : list PointName :=
   | CircleDeclaration c => circlePoints c
   end.
 Definition DeclarationText (text : string)
-    (declarations : list PublicDeclaration) : Prop :=
+    (declarations : list Declaration) : Prop :=
   exists first rest,
     declarations = first :: rest /\
     Forall (fun d => declarationTag d = declarationTag first) rest /\
@@ -758,7 +758,7 @@ Definition goalBody (line : string) : option string :=
 
 (** Classification precedence makes the cases mutually exclusive. *)
 Inductive HeaderContribution :=
-| DeclaresObjects (declarations : list PublicDeclaration)
+| DeclaresObjects (declarations : list Declaration)
 | StatesPremise (premise : Statement)
 | StatesGoal (goal : Statement)
 | ContributesNothing.
@@ -791,7 +791,7 @@ Definition LineSplit (source : string) (lines : list string) : Prop :=
   lines <> [].
 
 Inductive HeaderLines :
-    list string -> list PublicDeclaration -> list Statement ->
+    list string -> list Declaration -> list Statement ->
     option Statement -> Prop :=
 | NoHeaderLines : HeaderLines [] [] [] None
 | DeclarationLines : forall line lines lineDeclarations declarations premises goal,
@@ -811,11 +811,11 @@ Inductive HeaderLines :
     HeaderLines lines declarations premises goal ->
     HeaderLines (line :: lines) declarations premises goal.
 
-Inductive ProblemGrammar : string -> PublicProblem -> Prop :=
+Inductive ProblemGrammar : string -> Problem -> Prop :=
 | ProblemGrammarLines : forall source lines declarations premises conclusion,
     LineSplit source lines ->
     HeaderLines lines declarations premises (Some conclusion) ->
-    ProblemGrammar source (public_problem declarations premises conclusion).
+    ProblemGrammar source (problem declarations premises conclusion).
 
 (** * The designated public API
 
@@ -937,7 +937,7 @@ Record Issue := issue {
 }.
 Record CheckReport := check_report {
   report_verdict : Verdict;
-  report_problem : option PublicProblem;
+  report_problem : option Problem;
   report_presentation : option PresentationFile;
   report_steps : list StepReport;
   report_graph : DependencyGraph;
@@ -969,7 +969,7 @@ Definition accepted (report : CheckReport) : bool :=
     owes a witness too, and [euclidean_plane_exists] below demands one.  See
     [docs/verified-checker.md]. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
-  Parameter parseProblem : string -> option PublicProblem.
+  Parameter parseProblem : string -> option Problem.
   Parameter parsePresentation : string -> option PresentationFile.
   Parameter check : string -> CheckReport.
   Definition checker (source : string) : bool := accepted (check source).
@@ -991,14 +991,13 @@ Module Type COMPLETE_VERIFIED_CHECKER.
 
   (** The geometry [checker_sound] quantifies over is inhabited, so acceptance
       claims something.  The binders are the ones [checker_sound] introduces,
-      in the same order; the body is three points that are not collinear,
-      which is what makes the witness a plane a figure can be drawn in rather
-      than a structure satisfying the axioms for want of any points. *)
+      in the same order, and they are the whole claim: every
+      [Tarski_neutral_dimensionless] already has three non-collinear points,
+      its [lower_dim] axiom. *)
   Parameter euclidean_plane_exists :
     exists (Tn : Tarski_neutral_dimensionless)
            (TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality Tn)
            (T2D : @Tarski_2D Tn TnEQD)
-           (TE : @Tarski_euclidean Tn TnEQD)
-           (A B C : @Tpoint Tn),
-      ~ @Col Tn A B C.
+           (TE : @Tarski_euclidean Tn TnEQD),
+      True.
 End COMPLETE_VERIFIED_CHECKER.

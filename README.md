@@ -52,8 +52,8 @@ Rebuild it after editing anything under `rocq/`. `make` tracks the dependencies,
 so it recompiles only what an edit affects, and `make -C rocq clean` starts over.
 Individual targets are `proofs`, `test`, `extract`, `native`, and `wasm`.
 
-Building without Nix means installing a patched, pinned GeoCoq and MathComp
-2.5 by hand; see [`docs/verified-checker.md`](docs/verified-checker.md#building),
+Building without Nix means installing GeoCoq at the commit `flake.lock` pins
+and MathComp 2.5 by hand; see [`docs/verified-checker.md`](docs/verified-checker.md#building),
 which also covers the Nix packages that build the same artifacts end to end.
 
 ### Interface (React app)

@@ -12,39 +12,39 @@ Import EnderSyntax.
 Open Scope string_scope.
 
 (** The kernel reads a problem's declarations into its bundle, by kind. *)
-Definition projected_triangles (ds : list Audit.PublicDeclaration) : list TriangleName :=
+Definition projected_triangles (ds : list Audit.Declaration) : list TriangleName :=
   fold_right (fun d rest => match d with
     | Audit.TriangleDeclaration t => t :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_angles (ds : list Audit.PublicDeclaration) : list AngleName :=
+Definition projected_angles (ds : list Audit.Declaration) : list AngleName :=
   fold_right (fun d rest => match d with
     | Audit.AngleDeclaration a => a :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_quadrilaterals (ds : list Audit.PublicDeclaration)
+Definition projected_quadrilaterals (ds : list Audit.Declaration)
     : list QuadrilateralName :=
   fold_right (fun d rest => match d with
     | Audit.QuadrilateralDeclaration q => q :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_circles (ds : list Audit.PublicDeclaration)
+Definition projected_circles (ds : list Audit.Declaration)
     : list CircleName :=
   fold_right (fun d rest => match d with
     | Audit.CircleDeclaration c => c :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_segments (ds : list Audit.PublicDeclaration) : list SegmentName :=
+Definition projected_segments (ds : list Audit.Declaration) : list SegmentName :=
   fold_right (fun d rest => match d with
     | Audit.SegmentDeclaration s => s :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_declarations (ds : list Audit.PublicDeclaration) : Declarations :=
+Definition projected_declarations (ds : list Audit.Declaration) : Declarations :=
   declarations (projected_triangles ds) (projected_angles ds)
                (projected_quadrilaterals ds) (projected_circles ds)
                (projected_segments ds).
@@ -104,15 +104,15 @@ Definition premise_statements (ps : list Premise) : list Statement :=
 (** The kernel checks the audited problem itself.  The header pass supplies
     what the audited problem does not carry -- the labels steps cite premises
     by -- and must agree with the audited parse on everything else. *)
-Definition build_kernel_problem (public : Audit.PublicProblem)
+Definition build_kernel_problem (public : Audit.Problem)
     (header : ProblemHeader) (steps : list Step) : option Problem :=
-  if declarations_eqb (projected_declarations public.(Audit.public_declarations))
+  if declarations_eqb (projected_declarations public.(Audit.problem_declarations))
                       header.(header_declarations) &&
-     statement_list_eqb public.(Audit.public_premises)
+     statement_list_eqb public.(Audit.problem_premises)
                         (premise_statements header.(header_premises)) &&
-     statement_eqb public.(Audit.public_conclusion) header.(header_goal)
+     statement_eqb public.(Audit.problem_conclusion) header.(header_goal)
   then Some (problem header.(header_declarations) header.(header_premises)
-                     public.(Audit.public_conclusion) steps)
+                     public.(Audit.problem_conclusion) steps)
   else None.
 
 Inductive CheckResult := ParseFailure | ProofRejected | ProofAccepted.
@@ -151,7 +151,7 @@ Definition complete_checker (source : string) : bool :=
 Definition empty_graph : Audit.DependencyGraph :=
   Audit.dependency_graph [] [] [] [].
 
-Definition public_problem_of_source (source : string) : option Audit.PublicProblem :=
+Definition public_problem_of_source (source : string) : option Audit.Problem :=
   match problemPart source with
   | Some part => parsePublicProblem part
   | None => None
@@ -704,6 +704,42 @@ Fixpoint find_cycle (edges : list (nat * nat)) (fuel : nat) (path : list nat)
         scan (successors edges node)
   end.
 
+(** Completed branches contain no reachable cycle.  Cache only branches that
+    never exhausted the depth bound: a depth-limited failure is not evidence
+    that a node is finished.  Keep the original successor and root order so
+    the first cycle and its spelling stay unchanged. *)
+Record CycleSearch := cycle_search {
+  cycle_found : option (list nat);
+  cycle_finished : list nat;
+  cycle_exhaustive : bool
+}.
+
+Fixpoint find_cycle_cached (edges : list (nat * nat)) (fuel : nat)
+    (path finished : list nat) (node : nat) : CycleSearch :=
+  match fuel with
+  | O => cycle_search None finished false
+  | S remaining =>
+      if existsb (nat_eqb_report node) path then
+        cycle_search (Some (cycle_tail node path)) finished true
+      else if existsb (nat_eqb_report node) finished then
+        cycle_search None finished true
+      else
+        let extended := List.app path [node] in
+        let fix scan (candidates done : list nat) (exhaustive : bool) : CycleSearch :=
+          match candidates with
+          | [] => cycle_search None
+                    (if exhaustive then node :: done else done) exhaustive
+          | next :: rest =>
+              let result := find_cycle_cached edges remaining extended done next in
+              match result.(cycle_found) with
+              | Some _ => result
+              | None => scan rest result.(cycle_finished)
+                             (exhaustive && result.(cycle_exhaustive))
+              end
+          end in
+        scan (successors edges node) finished true
+  end.
+
 Definition same_cycle (a b : list nat) : bool :=
   Nat.eqb (List.length a) (List.length b) &&
   forallb (fun x => existsb (nat_eqb_report x) b) a.
@@ -715,7 +751,7 @@ Definition same_cycle (a b : list nat) : bool :=
 Definition graph_cycles (nodes : list nat) (edges : list (nat * nat))
     : list (list nat) :=
   fold_left (fun found node =>
-    match find_cycle edges (S (List.length nodes)) [] node with
+    match (find_cycle_cached edges (S (List.length nodes)) [] [] node).(cycle_found) with
     | Some cycle =>
         if existsb (same_cycle cycle) found then found
         else List.app found [cycle]
@@ -865,10 +901,11 @@ Definition report_data_of (source : string) : option ReportData :=
   | None => None
   end.
 
-Definition report_content (source : string)
-    : list Audit.StepReport * Audit.DependencyGraph *
-      list Audit.DuplicateDerivation * Audit.GoalReport :=
-  match report_data_of source with
+Definition ReportContent : Type := (list Audit.StepReport * Audit.DependencyGraph *
+  list Audit.DuplicateDerivation * Audit.GoalReport)%type.
+
+Definition report_content_from_data (data : option ReportData) : ReportContent :=
+  match data with
   | Some d =>
       let steps := map rs_step d.(rd_steps) in
       let reports :=
@@ -880,6 +917,9 @@ Definition report_content (source : string)
        goal_report_for d.(rd_goal) steps d.(rd_statuses))
   | None => ([], empty_graph, [], Audit.goal_report None [])
   end.
+
+Definition report_content (source : string) : ReportContent :=
+  report_content_from_data (report_data_of source).
 
 (** * Issues
 
@@ -1903,10 +1943,10 @@ Definition relabel_issue (labels : list (option nat)) (i : Audit.Issue)
   | _ => i
   end.
 
-Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :=
-  match report_data_of source with
+Definition proof_issues_from_data (data : option ReportData) (content : ReportContent)
+    (accepted : bool) : list Audit.Issue :=
+  match data with
   | Some d =>
-      let content := report_content source in
       let graph := snd (fst (fst content)) in
       let duplicates := snd (fst content) in
       let goal := snd content in
@@ -2002,6 +2042,18 @@ Definition problem_issue (source : string) : Audit.Issue :=
       end
   end.
 
+Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :=
+  let data := report_data_of source in
+  proof_issues_from_data data (report_content_from_data data) accepted.
+
+Definition report_issues_from_data (data : option ReportData) (content : ReportContent)
+    (result : CheckResult) : list Audit.Issue :=
+  match result with
+  | ParseFailure => []
+  | ProofRejected => proof_issues_from_data data content false
+  | ProofAccepted => proof_issues_from_data data content true
+  end.
+
 Definition report_issues_for (source : string) (result : CheckResult)
     : list Audit.Issue :=
   match result with
@@ -2019,13 +2071,30 @@ Definition report_errors_for (source : string) (result : CheckResult)
 
 Definition check_report (source : string) : Audit.CheckReport :=
   let result := classify_source source in
-  let content := report_content source in
+  let data := report_data_of source in
+  let content := report_content_from_data data in
   Audit.check_report (public_verdict result) (public_problem_of_source source)
     (PresentationParser.parsePresentation source)
     (fst (fst (fst content))) (snd (fst (fst content))) (snd (fst content))
     (snd content)
-    (report_issues_for source result) (report_errors_for source result)
+    (report_issues_from_data data content result) (report_errors_for source result)
     (verdict_diagnostics result).
+
+(** Sharing report parsing, statuses and graph construction preserves every
+    report field, not only the trusted verdict. *)
+Lemma check_report_sharing_equivalent : forall source,
+  check_report source =
+  let result := classify_source source in
+  let content := report_content source in
+  Audit.check_report (public_verdict result) (public_problem_of_source source)
+    (PresentationParser.parsePresentation source)
+    (fst (fst (fst content))) (snd (fst (fst content))) (snd (fst content))
+    (snd content) (report_issues_for source result) (report_errors_for source result)
+    (verdict_diagnostics result).
+Proof.
+  intro source. unfold check_report, report_issues_for, report_issues_from_data.
+  destruct (classify_source source); reflexivity.
+Qed.
 
 Lemma check_report_accepted : forall source,
   Audit.accepted (check_report source) = complete_checker source.
@@ -2161,11 +2230,11 @@ Proof.
   destruct (parse_step_lines (Parser.split_lines stepText []) []) as [steps|]
     eqn:Hsteps; try discriminate.
   unfold build_kernel_problem in Hcheck.
-  destruct (declarations_eqb (projected_declarations (Audit.public_declarations public))
+  destruct (declarations_eqb (projected_declarations (Audit.problem_declarations public))
               (header_declarations header) &&
-            statement_list_eqb (Audit.public_premises public)
+            statement_list_eqb (Audit.problem_premises public)
               (premise_statements (header_premises header)) &&
-            statement_eqb (Audit.public_conclusion public) (header_goal header))
+            statement_eqb (Audit.problem_conclusion public) (header_goal header))
     eqn:Hmatches; try discriminate.
   apply andb_true_iff in Hmatches. destruct Hmatches as [Hrest _].
   apply andb_true_iff in Hrest. destruct Hrest as [Htriangles Hpremises].
@@ -2177,7 +2246,7 @@ Proof.
     as HkernelPremises.
   destruct (check_problem
     (problem (header_declarations header) (header_premises header)
-       (Audit.public_conclusion public) steps)) eqn:HkernelCheck; try discriminate.
+       (Audit.problem_conclusion public) steps)) eqn:HkernelCheck; try discriminate.
   exact (check_problem_sound point _ HkernelCheck Hwf HkernelPremises).
 Qed.
 
@@ -2210,21 +2279,16 @@ Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
       rewrite Hpart, Hpublic in Hcheck. discriminate.
   Qed.
 
-  (** The plane [Model.v] builds over the real algebraic numbers.  Its three
-      [lower_dim] points are the non-collinear triple, since [Col] is exactly
-      the disjunction that field negates. *)
+  (** The plane [Model.v] builds over the real algebraic numbers. *)
   Lemma euclidean_plane_exists :
     exists (Tn : Tarski_neutral_dimensionless)
            (TnEQD : Tarski_neutral_dimensionless_with_decidable_point_equality Tn)
            (T2D : @Tarski_2D Tn TnEQD)
-           (TE : @Tarski_euclidean Tn TnEQD)
-           (A B C : @Tpoint Tn),
-      ~ @Col Tn A B C.
+           (TE : @Tarski_euclidean Tn TnEQD),
+      True.
   Proof.
     exists Ender.Model.PlaneTn, Ender.Model.PlanePED,
       Ender.Model.Plane2D, Ender.Model.PlaneEuclid.
-    exists (@PA Ender.Model.PlaneTn), (@PB Ender.Model.PlaneTn),
-      (@PC Ender.Model.PlaneTn).
-    exact (@lower_dim Ender.Model.PlaneTn).
+    exact I.
   Qed.
 End CompleteVerifiedChecker.
