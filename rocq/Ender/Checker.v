@@ -4,6 +4,7 @@ Require Import GeoCoq.Main.Tarski_dev.Ch12_parallel.
 Require Import GeoCoq.Main.Annexes.suma.
 Require Import Ender.Syntax Ender.Geometry Ender.Semantics.
 Require Ender.Inscribed.
+Require Ender.Euclidean.
 Require Ender.Similarity.
 Import ListNotations.
 Import EnderSyntax.
@@ -8290,7 +8291,7 @@ Proof.
   intros N1 N2 L1 L2 M1 M2 Q HPerp HPar HN HM.
   apply l8_14_2_1b_bis; [|exact HN|exact HM].
   apply perp_sym.
-  apply (Similarity.EnderSimilarity.cop_par_perp__perp L1 L2 M1 M2 N1 N2 HPar);
+  apply (Euclidean.EnderEuclidean.cop_par_perp__perp L1 L2 M1 M2 N1 N2 HPar);
     [now apply perp_sym|apply all_coplanar].
 Qed.
 
