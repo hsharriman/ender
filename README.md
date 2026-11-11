@@ -221,13 +221,15 @@ only adapts the presentation AST for rendering.
 - Update `presentationAdapter.ts` and the geometry/layout code when a new object
   needs to be drawn.
 - The files under `src/checker/grammar/defs/` are untrusted prose metadata for
-  the theorem browser and solver prompt; they do not determine acceptance.
+  the theorem browser and solver prompt; they do not determine acceptance, but
+  they must list exactly what the kernel accepts. Update `stmts.defs.ts` with
+  every statement change and `reasons.defs.ts` with every reason change.
 - Add or update a proof fixture and run `nix flake check -L` and `npm test`.
 
 A new reason needs a rule in `rocq/Ender/Checker.v` with its soundness lemma,
-proved under the weakest GeoCoq assumptions that work, plus a `_correct` and an
-`_incorrect` fixture. See [`docs/verified-checker.md`](docs/verified-checker.md)
-for the conventions the rules follow and for which reasons still reject.
+proved under the weakest GeoCoq assumptions that work, a `reasons.defs.ts`
+entry, an `ERROR_CODES.md` hint, plus a `_correct` and an `_incorrect` fixture. See [`docs/verified-checker.md`](docs/verified-checker.md)
+for the conventions the rules follow and for which reasons are not yet designed.
 
 ### Editing the Rocq sources
 

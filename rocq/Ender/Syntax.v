@@ -83,6 +83,12 @@ Inductive Reason :=
 | RhombusDiagPerpConv : nat -> nat -> Reason
 | RhombusOppBisectConv : nat -> nat -> nat -> Reason
 | AASim : nat -> nat -> Reason
+| SSSSim : nat -> nat -> Reason
+| SASSim : nat -> nat -> Reason
+| CASTC : nat -> Reason
+| SimTriTrans : nat -> nat -> Reason
+| SuppTrans : nat -> nat -> Reason
+| PerpTransversal : nat -> nat -> Reason
 | LinearPairConv : nat -> Reason
 | PgramDiagBisect : nat -> Reason
 | RhombusDiagPerp : nat -> Reason

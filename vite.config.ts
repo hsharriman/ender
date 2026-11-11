@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { defineConfig, Plugin } from "vite";
@@ -14,13 +15,29 @@ const wasmDirectory = (): string | undefined => {
     : undefined;
 };
 
+const checkerFiles = (directory: string | undefined): string[] =>
+  directory
+    ? (fs.readdirSync(directory, { recursive: true, encoding: "utf8" }) as string[])
+        .filter((entry) => fs.statSync(path.join(directory, entry)).isFile())
+        .sort()
+    : [];
+
+// A digest of the whole bundle, appended to the loader's URL so a browser
+// holding an older checker in its cache fetches the new one after a deploy.
+const checkerVersion = (directory: string | undefined): string => {
+  if (!directory) return "missing";
+  const hash = crypto.createHash("sha256");
+  for (const relative of checkerFiles(directory)) {
+    hash.update(relative);
+    hash.update("\0");
+    hash.update(fs.readFileSync(path.join(directory, relative)));
+  }
+  return hash.digest("hex").slice(0, 16);
+};
+
 const verifiedCheckerAssets = (): Plugin => {
   const directory = wasmDirectory();
-  const files = directory
-    ? (fs.readdirSync(directory, { recursive: true, encoding: "utf8" }) as string[]).filter((entry) =>
-        fs.statSync(path.join(directory, entry)).isFile(),
-      )
-    : [];
+  const files = checkerFiles(directory);
   return {
     name: "verified-checker-assets",
     configureServer(server) {
@@ -28,7 +45,10 @@ const verifiedCheckerAssets = (): Plugin => {
         const marker = "/ender-checker-wasm/";
         const index = request.url?.indexOf(marker) ?? -1;
         if (!directory || index < 0) return next();
-        const relative = decodeURIComponent(request.url!.slice(index + marker.length));
+        // Drop the `?v=` cache-busting query the loader appends.
+        const relative = decodeURIComponent(
+          request.url!.slice(index + marker.length).split("?")[0],
+        );
         const target = path.resolve(directory, relative);
         if (!target.startsWith(`${path.resolve(directory)}${path.sep}`)) return next();
         if (!fs.existsSync(target) || !fs.statSync(target).isFile()) return next();
@@ -59,6 +79,9 @@ const verifiedCheckerAssets = (): Plugin => {
 
 export default defineConfig({
   plugins: [react(), verifiedCheckerAssets()],
+  define: {
+    __ENDER_CHECKER_VERSION__: JSON.stringify(checkerVersion(wasmDirectory())),
+  },
   base: "/ender/",
   resolve: {
     alias: {

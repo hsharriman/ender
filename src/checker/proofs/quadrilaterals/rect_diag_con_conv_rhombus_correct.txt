@@ -1,0 +1,14 @@
+// pass
+title: "Test: rect_diag_con_conv (correct - a rhombus with congruent diagonals is a rectangle)"
+premises:
+pt: E (1, 1, bl), F (5, 1, br), G (5, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+seg: EG FH
+[g_1] con_seg(EG, FH)
+[g_2] rhombus(q_EFGH)
+-> rectangle(q_EFGH)
+
+steps:
+[01] given(g_1) -> con_seg(EG, FH)
+[02] given(g_2) -> rhombus(q_EFGH)
+[03] rect_diag_con_conv(1, 2) -> rectangle(q_EFGH)

@@ -242,7 +242,8 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedLinearPair => []
   | ExpectedRhombus => []
   | ExpectedRectangle => []
-  | ExpectedParallelogram => []
+  (* A rhombus or a rectangle is read as the parallelogram it names. *)
+  | ExpectedParallelogram => ["rhombus"; "rectangle"]
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -261,7 +262,8 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedLinearPair, LinearPair _ _ => true
   | ExpectedRhombus, Rhombus _ => true
   | ExpectedRectangle, Rectangle _ => true
-  | ExpectedParallelogram, Parallelogram _ => true
+  | ExpectedParallelogram, Parallelogram _
+  | ExpectedParallelogram, Rhombus _ | ExpectedParallelogram, Rectangle _ => true
   | _, _ => false
   end.
 
@@ -493,6 +495,12 @@ Definition reason_name (r : Reason) : string :=
   | RhombusDiagPerpConv _ _ => "rhombus_diag_perp_conv"
   | RhombusOppBisectConv _ _ _ => "rhombus_opp_bisect_conv"
   | AASim _ _ => "aa_sim"
+  | SSSSim _ _ => "sss_sim"
+  | SASSim _ _ => "sas_sim"
+  | CASTC _ => "castc"
+  | SimTriTrans _ _ => "sim_tri_transitive"
+  | SuppTrans _ _ => "supp_transitive"
+  | PerpTransversal _ _ => "perp_transversal"
   | LinearPairConv _ => "linear_pair_conv"
   | PgramDiagBisect _ => "pgram_diag_bisect"
   | RhombusDiagPerp _ => "rhombus_diag_perp"
@@ -508,7 +516,7 @@ Definition reason_name (r : Reason) : string :=
 Definition reason_dependencies (r : Reason) : list nat :=
   match r with
   | Given _ | Reflex | VertAng _ => []
-  | CPCTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
+  | CPCTC i | CASTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
   | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
   | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
   | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | KiteOppConAng i
@@ -528,7 +536,9 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
   | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
   | RectDiagConConv i j | RhombusDiagPerpConv i j
-  | AASim i j | ChordBisectConv i j | ConInscribedAngs i j
+  | AASim i j | SSSSim i j | SASSim i j | ChordBisectConv i j
+  | SimTriTrans i j | SuppTrans i j | PerpTransversal i j
+  | ConInscribedAngs i j
   | SuppInscribedAngs i j | InscribedSemi i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
   | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
@@ -1074,6 +1084,9 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("pgram_diag_bisect_conv", (2, 2)); ("pgram_opp_angs_conv", (2, 2));
    ("rect_diag_con_conv", (2, 2)); ("rhombus_diag_perp_conv", (2, 2));
    ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
+   ("sss_sim", (2, 2)); ("sas_sim", (2, 2)); ("castc", (1, 1));
+   ("sim_tri_transitive", (2, 2)); ("supp_transitive", (2, 2));
+   ("perp_transversal", (2, 3));
    ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
    ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2));
    ("chord_bisect_conv", (2, 2)); ("def_radius_conv", (1, 2));
@@ -1189,7 +1202,10 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | TangentPerpConv _ _ => Some ["tangent"]
   | RadiusChordBisect _ _ _ => Some ["seg_bisect"]
   | InscribedSemi _ _ => Some ["right"]
-  | AASim _ _ => Some ["sim_tri"]
+  | AASim _ _ | SSSSim _ _ | SASSim _ _ | SimTriTrans _ _ => Some ["sim_tri"]
+  | SuppTrans _ _ => Some ["supplementary"]
+  | PerpTransversal _ _ => Some ["perp"]
+  | CASTC _ => Some ["con_ang"]
   | LinearPairConv _ => Some ["linear_pair"]
   | PgramDiagBisect _ => Some ["seg_bisect"]
   | RhombusDiagPerp _ | KiteDiagPerp _ => Some ["perp"]
@@ -1244,6 +1260,14 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | IsosTrapConDiags i j => [(i, "con_seg"); (j, "trapezoid_premise")]
   | PgramDiagBisectConv i j => [(i, "seg_bisect"); (j, "seg_bisect")]
   | PgramOppAngsConv i j => [(i, "con_ang"); (j, "con_ang")]
+  | SSSSim i j => [(i, "proportion"); (j, "proportion")]
+  | CASTC i => [(i, "sim_tri")]
+  | SimTriTrans i j => [(i, "sim_tri"); (j, "sim_tri")]
+  (* The congruence may be cited as [con_ang] or [ref_ang]. *)
+  | SuppTrans i _ => [(i, "supplementary")]
+  | PerpTransversal i j => [(i, "perp"); (j, "para")]
+  (* The angle may be cited as [con_right] or [ref_ang], as for [aa_sim]. *)
+  | SASSim i _ => [(i, "proportion")]
   | IsosTrapBaseAngs i j => [(i, "con_ang"); (j, "trapezoid_premise")]
   | RectDiagConConv i j => [(i, "con_seg"); (j, "parallelogram")]
   | RhombusDiagPerpConv i j => [(i, "perp"); (j, "parallelogram")]
@@ -1257,6 +1281,12 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | _ => []
   end.
 
+(** The statements a rule also accepts in a slot of a given kind.  Every
+    slot of kind ["parallelogram"] is read with [lookup_pgram], which takes a
+    rhombus or a rectangle as the parallelogram it names. *)
+Definition kind_extensions (kind : string) : list string :=
+  if String.eqb kind "parallelogram" then ["rhombus"; "rectangle"] else [].
+
 Fixpoint kinds_issue (facts : list Statement) (reason : string)
     (kinds : list (nat * string)) (index step_number : nat)
     : option Audit.Issue :=
@@ -1265,14 +1295,16 @@ Fixpoint kinds_issue (facts : list Statement) (reason : string)
   | (reference, expected) :: rest =>
       match lookup_step facts reference with
       | Some received =>
-          if String.eqb (statement_function received) expected
+          if String.eqb (statement_function received) expected ||
+             existsb (String.eqb (statement_function received))
+               (kind_extensions expected)
           then kinds_issue facts reason rest (S index) step_number
           else Some (Audit.issue 12 "reason_dep_type_mismatch" (Audit.JsonObject
             [("reason", Audit.JsonString reason);
              ("index", Audit.JsonNumber index);
              ("ref", Audit.JsonString (nat_text reference));
              ("expectedType", Audit.JsonString expected);
-             ("allowedTypes", Audit.JsonArray []);
+             ("allowedTypes", Audit.JsonArray (json_strings (kind_extensions expected)));
              ("receivedType", Audit.JsonString (statement_function received));
              ("steps", Audit.JsonArray [Audit.JsonString (nat_text step_number)])]))
       | None => kinds_issue facts reason rest (S index) step_number
@@ -1505,7 +1537,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | _, _ => None
       end
   | PgramOppSides i =>
-      match lookup_step facts i, conclusion with
+      match lookup_pgram facts i, conclusion with
       | Some (Parallelogram q), ConSeg a b =>
           issue "segs_not_opp_sides_of_quad"
             [("pair", Audit.JsonArray [seg_text a; seg_text b]);
@@ -1513,7 +1545,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | _, _ => None
       end
   | PgramOppAngles i =>
-      match lookup_step facts i, conclusion with
+      match lookup_pgram facts i, conclusion with
       | Some (Parallelogram q), ConAng a b =>
           issue "angles_not_opp_angles_of_quad"
             [("pair", Audit.JsonArray [ang_text a; ang_text b]);
@@ -1521,7 +1553,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | _, _ => None
       end
   | PgramConsecAngs i =>
-      match lookup_step facts i, conclusion with
+      match lookup_pgram facts i, conclusion with
       | Some (Parallelogram q), Supplementary a b =>
           issue "angles_not_consecutive_in_quad"
             [("a1", ang_text a); ("a2", ang_text b); ("quad", quad_text q)]
@@ -1578,6 +1610,14 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
             issue "no_correspondence_established"
               [("tri1", tri_text t); ("tri2", tri_text u)]
           end
+      | _ => None
+      end
+  | CASTC i =>
+      match lookup_step facts i with
+      | Some (SimTri t u) =>
+          issue "parts_not_corresponding_in_triangles"
+            (List.app [("tri1", tri_text t); ("tri2", tri_text u)]
+               (corresponding_field t u conclusion))
       | _ => None
       end
   | KiteOppConAng i =>
@@ -1660,7 +1700,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
   | RhombusDiagPerpConv _ _ | IsosTrapConDiags _ _ | IsosTrapBaseAngs _ _
   | RhombusOppBisectConv _ _ _ =>
       let quads :=
-        flat_map (fun d => match lookup_step facts d with
+        flat_map (fun d => match lookup_pgram facts d with
                            | Some (Parallelogram q) | Some (TrapezoidPremise q _ _) => [q]
                            | _ => []
                            end) (reason_dependencies r) in
@@ -1721,6 +1761,25 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
             []
       | _, _ => None
       end
+  | SimTriTrans i j =>
+      match lookup_step facts i, lookup_step facts j with
+      | Some (SimTri a b), Some (SimTri c d) =>
+          if triangle_eqb a c || triangle_eqb a d || triangle_eqb b c
+             || triangle_eqb b d then None
+          else issue "no_shared_congruent_element" []
+      | _, _ => None
+      end
+  | SuppTrans i j =>
+      match lookup_step facts i, lookup_step facts j with
+      | Some (Supplementary a b), Some (ConAng c d)
+      | Some (Supplementary a b), Some (RefAng c d) =>
+          if angles_share a b c d then None
+          else issue "no_shared_congruent_element" []
+      | _, _ => None
+      end
+  | PerpTransversal _ _ =>
+      issue "transversal_angles_or_parallel_segs_dont_form_valid_config"
+        [("hasTransversal", Audit.JsonBool (has_transversal premises))]
   | ConInscribedAngs _ _ | SuppInscribedAngs _ _ | InscribedSemi _ _ =>
       inscribed_issue premises facts r issue
   | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>

@@ -312,6 +312,13 @@ export const REASONS_DEFS = {
     dependencies: ["proportion", "con_ang_ref_allow"],
     conclusion: "sim_tri",
   },
+  castc: {
+    name: "castc",
+    title: "CASTC",
+    body: "Corresponding Angles of Similar Triangles are Congruent (CASTC). If two triangles are similar, then their corresponding angles are congruent.",
+    dependencies: ["sim_tri"],
+    conclusion: "con_ang",
+  },
   def_equiangular: {
     name: "def_equiangular",
     title: "Def. Equiangular",
@@ -383,7 +390,6 @@ export const REASONS_DEFS = {
     dependencies: ["con_seg", "para"],
     conclusion: "parallelogram",
   },
-  // unimplemented reasons that will always return true for now
   pgram_consec_angs: {
     name: "pgram_consec_angs",
     title: "Parallelogram Consecutive Angles",
@@ -496,21 +502,21 @@ export const REASONS_DEFS = {
     name: "kite_opp_con_ang",
     title: "Kite Opposite Congruent Angles",
     body: "If a quadrilateral is a kite, then exactly one pair of opposite angles are congruent. The congruent angles are the ones between the pairs of congruent sides.",
-    dependencies: ["kite_premise"], // requires knowing what angles of the kite are congruent
+    dependencies: ["kite_premise"],
     conclusion: "con_ang",
   },
   isos_trap_base_angs: {
     name: "isos_trap_base_angs",
     title: "Trapezoid with Congruent Base Angle",
     body: "If a trapezoid has one pair of congruent base angles, then the trapezoid is isosceles.",
-    dependencies: ["con_ang", "trapezoid_premise"], // should be both premise and regular
+    dependencies: ["con_ang", "trapezoid_premise"],
     conclusion: "isos_trapezoid",
   },
   isos_trap_base_angs_conv: {
     name: "isos_trap_base_angs_conv",
     title: "Isosceles Trapezoid Base Angles",
     body: "If a quadrilateral is an isosceles trapezoid, then each pair of base angles are congruent.",
-    dependencies: ["isos_trap_obj"], // should be BOTH isos_trapezoid_premise and isos_trapezoid
+    dependencies: ["isos_trapezoid_premise"],
     conclusion: "con_ang",
   },
   isos_trap_con_diags: {
@@ -546,7 +552,7 @@ export const REASONS_DEFS = {
     title: "Radius Chord Bisect",
     body: "If a radius of a circle is perpendicular to a chord, then it bisects the chord and its arc.",
     dependencies: ["perp", "radius", "chord"],
-    conclusion: "seg_bisect", // todo arc bisect?
+    conclusion: "seg_bisect",
   },
   chord_bisect_conv: {
     name: "chord_bisect_conv",
@@ -571,22 +577,6 @@ export const REASONS_DEFS = {
     dependencies: ["inscribed_angle", "inscribed_angle"],
     conclusion: "supplementary",
   },
-  // still implementing cutoff
-  // inscribed_quad: {
-  //   // todo need a quadrilateral and circle statement to work with this
-  //   name: "inscribed_quad",
-  //   title: "Inscribed Quadrilateral",
-  //   body: "If a quadrilateral is inscribed in a circle, then its opposite angles are supplementary.",
-  //   dependencies: [""],
-  //   conclusion: "supplementary",
-  // },
-  incenter: {
-    name: "incenter",
-    title: "Incenter Theorem",
-    body: "The incenter of a triangle is the point where the angle bisectors of the angles intersect. It is equidistant from the sides of the triangle.",
-    dependencies: ["ang_bisect", "ang_bisect", "ang_bisect"],
-    conclusion: "incenter",
-  },
   con_seg_transitive: {
     name: "con_seg_transitive",
     title: "Transitive Property of Congruence",
@@ -608,33 +598,12 @@ export const REASONS_DEFS = {
     dependencies: ["con_tri_any", "con_tri_any"],
     conclusion: "con_tri",
   },
-  // con_arc_transitive: {
-  //   name: "con_arc_transitive",
-  //   title: "Transitive Property of Congruence",
-  //   body: "If two geometric figures are congruent to the same figure, then they are congruent to each other.",
-  //   dependencies: ["con_arc", "con_arc"],
-  //   conclusion: "con_arc",
-  // },
-  square: {
-    name: "square",
-    title: "Def. Square",
-    body: "A square is a quadrilateral with four congruent sides and four right angles.",
-    dependencies: ["square"],
-    conclusion: "con_seg, con_ang, con_right",
-  },
   rhombus: {
     name: "rhombus",
     title: "Def. Rhombus",
     body: "A rhombus is a quadrilateral with four congruent sides.",
     dependencies: ["rhombus"],
     conclusion: "con_seg",
-  },
-  rect_para_right_opp: {
-    name: "rect_para_right_opp",
-    title: "Rectangle Parallel and Right",
-    body: "If a quadrilateral has one pair of parallel opposite sides and one pair of opposite right angles, then it is a rectangle.",
-    dependencies: ["para", "con_right"],
-    conclusion: "rectangle",
   },
   para_transitive: {
     name: "para_transitive",
@@ -643,19 +612,12 @@ export const REASONS_DEFS = {
     dependencies: ["para", "para"],
     conclusion: "para",
   },
-  con_arc: {
-    name: "con_arc",
-    title: "Congruent Arcs",
-    body: "If two arcs of a circle have the same measure, then they are congruent.",
-    dependencies: ["arc", "arc"],
-    conclusion: "con_arc",
-  },
-  csstp: {
-    name: "csstp",
-    title: "Corresponding Sides of Similar Triangles are Proportional",
-    body: "If two triangles are similar, then their corresponding sides are proportional.",
-    dependencies: ["sim_tri"],
-    conclusion: "proportion",
+  perp_transversal: {
+    name: "perp_transversal",
+    title: "Perpendicular Transversal Theorem",
+    body: "If a transversal is perpendicular to one of two parallel lines, then it is perpendicular to the other.",
+    dependencies: ["perp", "para"],
+    conclusion: "perp",
   },
   inscribed_semi: {
     name: "inscribed_semi",
@@ -664,13 +626,6 @@ export const REASONS_DEFS = {
     diagramDependencies: ["circ_order"],
     dependencies: ["inscribed_angle", "diameter"],
     conclusion: "right",
-  },
-  para_con_arcs: {
-    name: "para_con_arcs",
-    title: "Parallel Lines and Congruent Arcs",
-    body: "If two parallel lines intersect a circle, then the arcs between the lines are congruent.",
-    dependencies: ["para"],
-    conclusion: "con_arc",
   },
   con_chords_intersect_arcs: {
     name: "con_chords_intersect_arcs",
@@ -694,18 +649,18 @@ export const REASONS_DEFS = {
     diagramDependencies: ["on_circle"],
     conclusion: "radius",
   },
-  tangent_diam_perp: {
-    name: "tangent_diam_perp",
-    title: "Tangent and Diameter Perpendicularity",
-    body: "A tangent is perpendicular to a diameter of a circle at the point of tangency.",
-    dependencies: ["tangent", "diameter"],
-    conclusion: "perp",
-  },
   sim_tri_transitive: {
     name: "sim_tri_transitive",
     title: "Transitive Property of Similarity",
     body: "If two triangles are similar to the same triangle, then they are similar to each other.",
     dependencies: ["sim_tri", "sim_tri"],
     conclusion: "sim_tri",
+  },
+  supp_transitive: {
+    name: "supp_transitive",
+    title: "Supplements of Congruent Angles",
+    body: "If an angle is supplementary to an angle, then it is supplementary to every angle congruent to that angle.",
+    dependencies: ["supplementary", "con_ang"],
+    conclusion: "supplementary",
   },
 } as const;
