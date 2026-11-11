@@ -373,6 +373,9 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "sss_sim" text (parse_two SSSSim)
         (try_call "sas_sim" text (parse_two SASSim)
         (try_call "castc" text (parse_one CASTC)
+        (try_call "sim_tri_transitive" text (parse_two SimTriTrans)
+        (try_call "supp_transitive" text (parse_two SuppTrans)
+        (try_call "perp_transversal" text (parse_two_with_diagram PerpTransversal)
         (try_call "linear_pair_conv" text (parse_one_with_diagram LinearPairConv)
         (try_call "pgram_diag_bisect" text (parse_one_with_diagram PgramDiagBisect)
         (try_call "rhombus_diag_perp" text (parse_one_with_diagram RhombusDiagPerp)
@@ -382,7 +385,7 @@ Definition parse_reason_chars (raw : chars) : option Reason :=
         (try_call "con_inscribed_angs" text (parse_two_with_diagram ConInscribedAngs)
         (try_call "supp_inscribed_angs" text
           (parse_two_with_diagram SuppInscribedAngs)
-        None)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+        None))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
     end
   end.
 

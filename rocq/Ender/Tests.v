@@ -1189,6 +1189,544 @@ Example castc_not_corresponding_rejects :
   complete_checker castc_not_corresponding_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** Similarity is transitive through an exactly shared triangle, in either
+    position of either fact. *)
+Definition sim_tri_transitive_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] sim_tri(t_ABC,t_DEF)
+[g_2] sim_tri(t_DEF,t_GHI)
+"
+  "sim_tri(t_ABC,t_GHI)"
+  "[01] given(g_1) -> sim_tri(t_ABC,t_DEF)
+[02] given(g_2) -> sim_tri(t_DEF,t_GHI)
+[03] sim_tri_transitive(1,2) -> sim_tri(t_ABC,t_GHI)".
+
+Definition sim_tri_transitive_shared_first_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] sim_tri(t_ABC,t_DEF)
+[g_2] sim_tri(t_ABC,t_GHI)
+"
+  "sim_tri(t_DEF,t_GHI)"
+  "[01] given(g_1) -> sim_tri(t_ABC,t_DEF)
+[02] given(g_2) -> sim_tri(t_ABC,t_GHI)
+[03] sim_tri_transitive(1,2) -> sim_tri(t_DEF,t_GHI)".
+
+(** The vertex order is the correspondence, so a reordered shared triangle
+    is not shared. *)
+Definition sim_tri_transitive_reordered_source := transitive_header "tri: t_ABC t_DEF t_GHI
+"
+  "[g_1] sim_tri(t_ABC,t_DEF)
+[g_2] sim_tri(t_EDF,t_GHI)
+"
+  "sim_tri(t_ABC,t_GHI)"
+  "[01] given(g_1) -> sim_tri(t_ABC,t_DEF)
+[02] given(g_2) -> sim_tri(t_EDF,t_GHI)
+[03] sim_tri_transitive(1,2) -> sim_tri(t_ABC,t_GHI)".
+
+Example sim_tri_transitive_accepts :
+  complete_checker sim_tri_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example sim_tri_transitive_shared_first_accepts :
+  complete_checker sim_tri_transitive_shared_first_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example sim_tri_transitive_reordered_rejects :
+  complete_checker sim_tri_transitive_reordered_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A supplement carries across a congruence of either of its angles. *)
+Definition supp_transitive_source := transitive_header "ang: a_ABC a_DEF a_GHI
+"
+  "[g_1] supplementary(a_ABC,a_DEF)
+[g_2] con_ang(a_DEF,a_GHI)
+"
+  "supplementary(a_ABC,a_GHI)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_DEF)
+[02] given(g_2) -> con_ang(a_DEF,a_GHI)
+[03] supp_transitive(1,2) -> supplementary(a_ABC,a_GHI)".
+
+(** The replaced angle may be either one, in either position of the
+    congruence, spelled in reverse; the conclusion may list its angles in
+    either order. *)
+Definition supp_transitive_respelled_source := transitive_header "ang: a_ABC a_DEF a_GHI
+"
+  "[g_1] supplementary(a_ABC,a_DEF)
+[g_2] con_ang(a_GHI,a_CBA)
+"
+  "supplementary(a_DEF,a_GHI)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_DEF)
+[02] given(g_2) -> con_ang(a_GHI,a_CBA)
+[03] supp_transitive(1,2) -> supplementary(a_DEF,a_GHI)".
+
+(** The congruence must name an angle of the supplement. *)
+Definition supp_transitive_unshared_source := transitive_header "ang: a_ABC a_DEF a_GHI a_JKL
+"
+  "[g_1] supplementary(a_ABC,a_DEF)
+[g_2] con_ang(a_JKL,a_GHI)
+"
+  "supplementary(a_ABC,a_GHI)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_DEF)
+[02] given(g_2) -> con_ang(a_JKL,a_GHI)
+[03] supp_transitive(1,2) -> supplementary(a_ABC,a_GHI)".
+
+(** The supplement replaces the congruent angle; it does not keep it. *)
+Definition supp_transitive_kept_source := transitive_header "ang: a_ABC a_DEF a_GHI
+"
+  "[g_1] supplementary(a_ABC,a_DEF)
+[g_2] con_ang(a_DEF,a_GHI)
+"
+  "supplementary(a_DEF,a_GHI)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_DEF)
+[02] given(g_2) -> con_ang(a_DEF,a_GHI)
+[03] supp_transitive(1,2) -> supplementary(a_DEF,a_GHI)".
+
+Example supp_transitive_accepts :
+  complete_checker supp_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example supp_transitive_respelled_accepts :
+  complete_checker supp_transitive_respelled_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example supp_transitive_unshared_rejects :
+  complete_checker supp_transitive_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example supp_transitive_kept_rejects :
+  complete_checker supp_transitive_kept_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A transversal perpendicular to one parallel is perpendicular to the
+    other at the other crossing. *)
+Definition perp_transversal_header (goal step : string) : string :=
+  "title: perpendicular transversal
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), T (8,11), E (8,8), F (8,2), R (8,0)
+[d_01] transversal(A,B,T,E,C,D,R,F)
+[g_1] para(AB,CD)
+[g_2] perp(TR,AB,E)
+-> " ++ goal ++ "
+
+steps:
+[01] given(g_1) -> para(AB,CD)
+[02] given(g_2) -> perp(TR,AB,E)
+[03] " ++ step ++ " -> " ++ goal.
+
+Example perp_transversal_accepts : complete_checker
+  (perp_transversal_header "perp(TR,CD,F)" "perp_transversal(2,1)") = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The diagram label may be cited, and either segment of the conclusion
+    may come first, spelled in reverse. *)
+Example perp_transversal_respelled_accepts : complete_checker
+  (perp_transversal_header "perp(DC,RT,F)" "perp_transversal(2,1,d_01)") = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The perpendicular is at the other line's crossing, not at the first. *)
+Example perp_transversal_wrong_crossing_rejects : complete_checker
+  (perp_transversal_header "perp(TR,CD,E)" "perp_transversal(2,1)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The conclusion is about the other parallel, not the one already
+    perpendicular. *)
+Example perp_transversal_same_line_rejects : complete_checker
+  (perp_transversal_header "perp(TR,AB,F)" "perp_transversal(2,1)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The dependencies are the [perp] step, then the [para] step. *)
+Example perp_transversal_swapped_rejects : complete_checker
+  (perp_transversal_header "perp(TR,CD,F)" "perp_transversal(1,2)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Without the [transversal] premise nothing places [F] on both lines. *)
+Definition perp_transversal_no_figure_source := "title: no transversal
+premises:
+pt: A (2,8), B (15,8), C (2,2), D (15,2), T (8,11), E (8,8), F (8,2), R (8,0)
+[g_1] para(AB,CD)
+[g_2] perp(TR,AB,E)
+-> perp(TR,CD,F)
+
+steps:
+[01] given(g_1) -> para(AB,CD)
+[02] given(g_2) -> perp(TR,AB,E)
+[03] perp_transversal(2,1) -> perp(TR,CD,F)".
+
+Example perp_transversal_no_figure_rejects :
+  complete_checker perp_transversal_no_figure_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+
+(** Where a rule needs a parallelogram, a rhombus or a rectangle is one: each
+    of these is the rule's own fixture with that slot respelled. *)
+
+Definition pgram_opp_sides_from_rhombus_source := "title: ""Test: pgram_opp_sides (correct - opposite sides are congruent)""
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] rhombus(q_ABCD)
+-> con_seg(AB, CD)
+
+steps:
+[01] given(g_1) -> rhombus(q_ABCD)
+[02] pgram_opp_sides(1) -> con_seg(AB, CD)".
+Example pgram_opp_sides_from_rhombus_accepts : complete_checker pgram_opp_sides_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition pgram_opp_sides_from_rectangle_source := "title: ""Test: pgram_opp_sides (correct - opposite sides are congruent)""
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] rectangle(q_ABCD)
+-> con_seg(AB, CD)
+
+steps:
+[01] given(g_1) -> rectangle(q_ABCD)
+[02] pgram_opp_sides(1) -> con_seg(AB, CD)".
+Example pgram_opp_sides_from_rectangle_accepts : complete_checker pgram_opp_sides_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition pgram_opp_angs_from_rhombus_source := "title: ""Test: pgram_opp_angs (correct - opposite angles are congruent)""
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] rhombus(q_ABCD)
+-> con_ang(a_ABC, a_CDA)
+
+steps:
+[01] given(g_1) -> rhombus(q_ABCD)
+[02] pgram_opp_angs(1) -> con_ang(a_ABC, a_CDA)".
+Example pgram_opp_angs_from_rhombus_accepts : complete_checker pgram_opp_angs_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition pgram_opp_angs_from_rectangle_source := "title: ""Test: pgram_opp_angs (correct - opposite angles are congruent)""
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] rectangle(q_ABCD)
+-> con_ang(a_ABC, a_CDA)
+
+steps:
+[01] given(g_1) -> rectangle(q_ABCD)
+[02] pgram_opp_angs(1) -> con_ang(a_ABC, a_CDA)".
+Example pgram_opp_angs_from_rectangle_accepts : complete_checker pgram_opp_angs_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition pgram_consec_angs_from_rhombus_source := "title: ""Test: pgram_consec_angs (correct - consecutive angles are supplementary)""
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] rhombus(q_ABCD)
+-> supplementary(a_ABC, a_BCD)
+
+steps:
+[01] given(g_1) -> rhombus(q_ABCD)
+[02] pgram_consec_angs(1) -> supplementary(a_ABC, a_BCD)".
+Example pgram_consec_angs_from_rhombus_accepts : complete_checker pgram_consec_angs_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition pgram_consec_angs_from_rectangle_source := "title: ""Test: pgram_consec_angs (correct - consecutive angles are supplementary)""
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl)
+quad: q_ABCD
+[g_1] rectangle(q_ABCD)
+-> supplementary(a_ABC, a_BCD)
+
+steps:
+[01] given(g_1) -> rectangle(q_ABCD)
+[02] pgram_consec_angs(1) -> supplementary(a_ABC, a_BCD)".
+Example pgram_consec_angs_from_rectangle_accepts : complete_checker pgram_consec_angs_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition pgram_diag_bisect_from_rhombus_source := "title: ""Test: pgram_diag_bisect (correct - diagonals bisect each other)""
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl), M (5, 4, b)
+quad: q_ABCD
+seg: AC BD
+[g_1] rhombus(q_ABCD)
+[d_01] intersect_seg(AC, BD, M)
+-> seg_bisect(AC, BD, M)
+
+steps:
+[01] given(g_1) -> rhombus(q_ABCD)
+[02] pgram_diag_bisect(1) -> seg_bisect(AC, BD, M)".
+Example pgram_diag_bisect_from_rhombus_accepts : complete_checker pgram_diag_bisect_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition pgram_diag_bisect_from_rectangle_source := "title: ""Test: pgram_diag_bisect (correct - diagonals bisect each other)""
+premises:
+pt: A (1, 2, bl), B (7, 2, br), C (9, 6, tr), D (3, 6, tl), M (5, 4, b)
+quad: q_ABCD
+seg: AC BD
+[g_1] rectangle(q_ABCD)
+[d_01] intersect_seg(AC, BD, M)
+-> seg_bisect(AC, BD, M)
+
+steps:
+[01] given(g_1) -> rectangle(q_ABCD)
+[02] pgram_diag_bisect(1) -> seg_bisect(AC, BD, M)".
+Example pgram_diag_bisect_from_rectangle_accepts : complete_checker pgram_diag_bisect_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rect_pgram_ang_from_rhombus_source := "title: ""Test: rect_pgram_ang (correct - right angle in parallelogram implies rectangle)""
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+ang: a_EFG
+[g_1] right(a_EFG)
+[g_2] rhombus(q_EFGH)
+-> rectangle(q_EFGH)
+
+steps:
+[01] given(g_1) -> right(a_EFG)
+[02] given(g_2) -> rhombus(q_EFGH)
+[03] rect_pgram_ang(1, 2) -> rectangle(q_EFGH)".
+Example rect_pgram_ang_from_rhombus_accepts : complete_checker rect_pgram_ang_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rect_pgram_ang_from_rectangle_source := "title: ""Test: rect_pgram_ang (correct - right angle in parallelogram implies rectangle)""
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+ang: a_EFG
+[g_1] right(a_EFG)
+[g_2] rectangle(q_EFGH)
+-> rectangle(q_EFGH)
+
+steps:
+[01] given(g_1) -> right(a_EFG)
+[02] given(g_2) -> rectangle(q_EFGH)
+[03] rect_pgram_ang(1, 2) -> rectangle(q_EFGH)".
+Example rect_pgram_ang_from_rectangle_accepts : complete_checker rect_pgram_ang_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_consec_sides_from_rhombus_source := "title: ""Test: rhombus_consec_sides (correct - consecutive congruent sides in parallelogram)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l)
+quad: q_PQRS
+[g_1] rhombus(q_PQRS)
+[g_2] con_seg(PQ, QR)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> rhombus(q_PQRS)
+[02] given(g_2) -> con_seg(PQ, QR)
+[03] rhombus_consec_sides(1, 2) -> rhombus(q_PQRS)".
+Example rhombus_consec_sides_from_rhombus_accepts : complete_checker rhombus_consec_sides_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_consec_sides_from_rectangle_source := "title: ""Test: rhombus_consec_sides (correct - consecutive congruent sides in parallelogram)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l)
+quad: q_PQRS
+[g_1] rectangle(q_PQRS)
+[g_2] con_seg(PQ, QR)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> rectangle(q_PQRS)
+[02] given(g_2) -> con_seg(PQ, QR)
+[03] rhombus_consec_sides(1, 2) -> rhombus(q_PQRS)".
+Example rhombus_consec_sides_from_rectangle_accepts : complete_checker rhombus_consec_sides_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_diag_perp_conv_from_rhombus_source := "title: ""Test: rhombus_diag_perp_conv (correct - perpendicular diagonals in parallelogram → rhombus)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR QS
+[g_1] perp(PR, QS, N)
+[g_2] rhombus(q_PQRS)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> perp(PR, QS, N)
+[02] given(g_2) -> rhombus(q_PQRS)
+[03] rhombus_diag_perp_conv(1, 2) -> rhombus(q_PQRS)".
+Example rhombus_diag_perp_conv_from_rhombus_accepts : complete_checker rhombus_diag_perp_conv_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_diag_perp_conv_from_rectangle_source := "title: ""Test: rhombus_diag_perp_conv (correct - perpendicular diagonals in parallelogram → rhombus)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR QS
+[g_1] perp(PR, QS, N)
+[g_2] rectangle(q_PQRS)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> perp(PR, QS, N)
+[02] given(g_2) -> rectangle(q_PQRS)
+[03] rhombus_diag_perp_conv(1, 2) -> rhombus(q_PQRS)".
+Example rhombus_diag_perp_conv_from_rectangle_accepts : complete_checker rhombus_diag_perp_conv_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_opp_bisect_conv_from_rhombus_source := "title: ""Test: rhombus_opp_bisect_conv (correct - diagonal bisects both opposite angle pairs)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR
+ang: a_QPR a_SPR a_QPS
+[g_1] ang_bisect(a_QPS, PR)
+[g_2] ang_bisect(a_QRS, PR)
+[g_3] rhombus(q_PQRS)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> ang_bisect(a_QPS, PR)
+[02] given(g_2) -> ang_bisect(a_QRS, PR)
+[03] given(g_3) -> rhombus(q_PQRS)
+[04] rhombus_opp_bisect_conv(1, 2, 3) -> rhombus(q_PQRS)".
+Example rhombus_opp_bisect_conv_from_rhombus_accepts : complete_checker rhombus_opp_bisect_conv_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_opp_bisect_conv_from_rectangle_source := "title: ""Test: rhombus_opp_bisect_conv (correct - diagonal bisects both opposite angle pairs)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR
+ang: a_QPR a_SPR a_QPS
+[g_1] ang_bisect(a_QPS, PR)
+[g_2] ang_bisect(a_QRS, PR)
+[g_3] rectangle(q_PQRS)
+-> rhombus(q_PQRS)
+
+steps:
+[01] given(g_1) -> ang_bisect(a_QPS, PR)
+[02] given(g_2) -> ang_bisect(a_QRS, PR)
+[03] given(g_3) -> rectangle(q_PQRS)
+[04] rhombus_opp_bisect_conv(1, 2, 3) -> rhombus(q_PQRS)".
+Example rhombus_opp_bisect_conv_from_rectangle_accepts : complete_checker rhombus_opp_bisect_conv_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rect_diag_con_conv_from_rhombus_source := "title: ""Test: rect_diag_con_conv (correct - congruent diagonals in parallelogram → rectangle)""
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+seg: EG FH
+[g_1] con_seg(EG, FH)
+[g_2] rhombus(q_EFGH)
+-> rectangle(q_EFGH)
+
+steps:
+[01] given(g_1) -> con_seg(EG, FH)
+[02] given(g_2) -> rhombus(q_EFGH)
+[03] rect_diag_con_conv(1, 2) -> rectangle(q_EFGH)".
+Example rect_diag_con_conv_from_rhombus_accepts : complete_checker rect_diag_con_conv_from_rhombus_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rect_diag_con_conv_from_rectangle_source := "title: ""Test: rect_diag_con_conv (correct - congruent diagonals in parallelogram → rectangle)""
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+seg: EG FH
+[g_1] con_seg(EG, FH)
+[g_2] rectangle(q_EFGH)
+-> rectangle(q_EFGH)
+
+steps:
+[01] given(g_1) -> con_seg(EG, FH)
+[02] given(g_2) -> rectangle(q_EFGH)
+[03] rect_diag_con_conv(1, 2) -> rectangle(q_EFGH)".
+Example rect_diag_con_conv_from_rectangle_accepts : complete_checker rect_diag_con_conv_from_rectangle_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The reading goes one way only: a rule that needs a rhombus or a
+    rectangle still rejects a plain parallelogram. *)
+
+Definition rhombus_def_from_parallelogram_source := "title: ""Test: rhombus definition (correct - nonadjacent chain endpoints)""
+premises:
+pt: A (1, 1, bl), B (3, 5, tl), C (7, 5, tr), D (9, 1, br)
+quad: q_ABCD
+[g_1] parallelogram(q_ABCD)
+-> con_seg(AB, DA)
+
+steps:
+[01] given(g_1) -> parallelogram(q_ABCD)
+[02] rhombus(1) -> con_seg(AB, DA)".
+Example rhombus_def_from_parallelogram_rejects : complete_checker rhombus_def_from_parallelogram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rectangle_def_from_parallelogram_source := "title: ""Test: rectangle definition (correct - exact opposite corners)""
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+ang: a_FEH a_GHE
+[g_1] parallelogram(q_EFGH)
+-> con_ang(a_FEH, a_GHE)
+
+steps:
+[01] given(g_1) -> parallelogram(q_EFGH)
+[02] rectangle(1) -> con_ang(a_FEH, a_GHE)".
+Example rectangle_def_from_parallelogram_rejects : complete_checker rectangle_def_from_parallelogram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rect_diag_con_from_parallelogram_source := "title: ""Test: rect_diag_con (correct - rectangle diagonals are congruent)""
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+seg: EG FH
+[g_1] parallelogram(q_EFGH)
+-> con_seg(EG, FH)
+
+steps:
+[01] given(g_1) -> parallelogram(q_EFGH)
+[02] rect_diag_con(1) -> con_seg(EG, FH)".
+Example rect_diag_con_from_parallelogram_rejects : complete_checker rect_diag_con_from_parallelogram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_opp_bisect_from_parallelogram_source := "title: ""Test: rhombus_opp_bisect (correct - rhombus diagonal bisects opposite angles)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR QS
+ang: a_QPR a_RPS a_QPS
+[g_1] parallelogram(q_PQRS)
+-> ang_bisect(a_QPS, PR)
+
+steps:
+[01] given(g_1) -> parallelogram(q_PQRS)
+[02] rhombus_opp_bisect(1) -> ang_bisect(a_QPS, PR)".
+Example rhombus_opp_bisect_from_parallelogram_rejects : complete_checker rhombus_opp_bisect_from_parallelogram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_diag_perp_from_parallelogram_source := "title: ""Test: rhombus_diag_perp (correct - rhombus diagonals are perpendicular)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l), N (5, 5, b)
+quad: q_PQRS
+seg: PR QS
+[g_1] parallelogram(q_PQRS)
+[d_01] intersect_seg(PR, QS, N)
+-> perp(PR, QS, N)
+
+steps:
+[01] given(g_1) -> parallelogram(q_PQRS)
+[02] rhombus_diag_perp(1) -> perp(PR, QS, N)".
+Example rhombus_diag_perp_from_parallelogram_rejects : complete_checker rhombus_diag_perp_from_parallelogram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rhombus_pgram_from_parallelogram_source := "title: ""Test: rhombus_pgram (correct - rhombus is a parallelogram)""
+premises:
+pt: P (5, 1, b), Q (9, 5, r), R (5, 9, t), S (1, 5, l)
+quad: q_PQRS
+[g_1] parallelogram(q_PQRS)
+-> parallelogram(q_PQRS)
+
+steps:
+[01] given(g_1) -> parallelogram(q_PQRS)
+[02] rhombus_pgram(1) -> parallelogram(q_PQRS)".
+Example rhombus_pgram_from_parallelogram_rejects : complete_checker rhombus_pgram_from_parallelogram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Definition rectangle_pgram_from_parallelogram_source := "title: ""Test: rectangle_pgram (correct - rectangle is a parallelogram)""
+premises:
+pt: E (1, 1, bl), F (9, 1, br), G (9, 5, tr), H (1, 5, tl)
+quad: q_EFGH
+[g_1] parallelogram(q_EFGH)
+-> parallelogram(q_EFGH)
+
+steps:
+[01] given(g_1) -> parallelogram(q_EFGH)
+[02] rectangle_pgram(1) -> parallelogram(q_EFGH)".
+Example rectangle_pgram_from_parallelogram_rejects : complete_checker rectangle_pgram_from_parallelogram_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Triangle shape statements and the reasons that produce or consume them. *)
 Definition shape_header (premises goal steps : string) : string :=
   transitive_header "tri: t_ABC

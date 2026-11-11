@@ -153,13 +153,25 @@ audited meanings in `Audit.v` are authoritative.
 Coordinates on the `pt:` line are display-only and contribute nothing to a
 theorem's meaning.
 
-## Reasons that always reject
+## The catalogs
 
-The kernel has a rule for 86 of the 94 reasons in the
-[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 8 (`con_arc`,
-`csstp`, `incenter`, `para_con_arcs`, `rect_para_right_opp`,
-`sim_tri_transitive`, `square`, `tangent_diam_perp`) reject every step that
-cites them; they have no fixtures and have not been designed.
+[`reasons.defs.ts`](../src/checker/grammar/defs/reasons.defs.ts) and
+[`stmts.defs.ts`](../src/checker/grammar/defs/stmts.defs.ts) list exactly the
+reasons and statements the kernel accepts: the reasons of `reason_arities` in
+`CompleteChecker.v` and the statements `PublicParser.v` parses. The solver agent
+reads both files verbatim as its list of what it may use, so each entry's
+dependencies and conclusion name the statements the rule actually matches.
+
+A rule that needs a parallelogram reads a cited `rhombus` or `rectangle` step
+as the parallelogram it is (`lookup_pgram` in `Checker.v`), since each audited
+meaning begins with `IsParallelogram`; the catalog marks those slots
+`pgram_obj`. The reading goes one way only: a rule that needs a rhombus or a
+rectangle still requires that statement, not a plain `parallelogram`.
+
+Reasons with no rule yet are left out rather than listed: `con_arc`, `csstp`,
+`incenter`, `para_con_arcs`, `rect_para_right_opp`, `square`, and
+`tangent_diam_perp` have no fixtures and have not been designed. A step citing
+any name the kernel does not know is rejected.
 
 ## Reports
 
