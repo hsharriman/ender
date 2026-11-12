@@ -426,7 +426,7 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
 
 Definition reason_name (r : Reason) : string :=
   match r with
-  | Given _ => "given" | Reflex => "reflex"
+  | Given _ => "given" | Reflex => "reflex" | Incomplete => "incomplete"
   | SAS _ _ _ => "sas" | SSS _ _ _ => "sss"
   | ASA _ _ _ => "asa" | AAS _ _ _ => "aas"
   | CPCTC _ => "cpctc"
@@ -515,7 +515,7 @@ Definition reason_name (r : Reason) : string :=
     label rather than a step, and [reflex] cites nothing. *)
 Definition reason_dependencies (r : Reason) : list nat :=
   match r with
-  | Given _ | Reflex | VertAng _ => []
+  | Given _ | Reflex | VertAng _ | Incomplete => []
   | CPCTC i | CASTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
   | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
   | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
@@ -565,7 +565,8 @@ Record ReportStep := report_step {
   rs_source : string;
   rs_label : option nat;
   rs_step : option Step;
-  rs_line : list ascii
+  rs_line : list ascii;
+  rs_kind : Parser.StepLine
 }.
 
 Definition step_label (compact : list ascii) : option nat :=
@@ -584,16 +585,33 @@ Fixpoint report_step_lines (lines : list (list ascii)) : list ReportStep :=
   | line :: rest =>
       let compact := Parser.remove_space (Parser.take_until "/"%char line) in
       if Parser.starts_with ["["%char] compact then
+        let kind := Parser.classify_step_line line in
         report_step (string_of_list_ascii line) (step_label compact)
-          (Parser.parse_step line) line :: report_step_lines rest
+          (match kind with Parser.LineStep s => Some s | _ => None end) line kind
+          :: report_step_lines rest
       else report_step_lines rest
   end.
 
+(** Lines in the steps section that are not blank and do not start a step:
+    they hold no step number, so they reject the proof without occupying a
+    step's place. *)
+Fixpoint stray_step_lines (lines : list (list ascii)) : list string :=
+  match lines with
+  | [] => []
+  | line :: rest =>
+      let compact := Parser.remove_space (Parser.take_until "/"%char line) in
+      match compact with
+      | [] => stray_step_lines rest
+      | "["%char :: _ => stray_step_lines rest
+      | _ => string_of_list_ascii line :: stray_step_lines rest
+      end
+  end.
+
 (** A line that does not parse states nothing.  It still occupies its place,
-    so later citations keep pointing where the writer meant; the placeholder
-    names no real point, so no rule can use it. *)
-Definition placeholder_fact : Statement :=
-  ConSeg (segment_name "?"%char "?"%char) (segment_name "?"%char "?"%char).
+    so later citations keep pointing where the writer meant; it stands for the
+    kernel's own [incomplete_fact], so the report judges later steps against
+    exactly the facts the verdict does. *)
+Definition placeholder_fact : Statement := incomplete_fact.
 
 Definition fact_of (s : option Step) : Statement :=
   match s with Some st => st.(step_conclusion) | None => placeholder_fact end.
@@ -615,15 +633,19 @@ Definition dependency_blocked (statuses : list (nat * Audit.StepStatus))
     end) dependencies.
 
 Fixpoint step_statuses (decls : Declarations) (premises : list Premise)
-    (facts : list Statement) (steps : list (option Step)) (number : nat)
+    (facts : list Statement) (steps : list Parser.StepLine) (number : nat)
     (statuses : list (nat * Audit.StepStatus))
     : list (nat * Audit.StepStatus) :=
   match steps with
   | [] => statuses
-  | None :: rest =>
+  | Parser.LineIncomplete :: rest =>
+      step_statuses decls premises (List.app facts [placeholder_fact])
+        rest (S number) (List.app statuses [(number, Audit.StepIncomplete)])
+  (* malformed: the verdict rejects the proof, and this step with it *)
+  | (Parser.LineMalformed | Parser.LineBlank) :: rest =>
       step_statuses decls premises (List.app facts [placeholder_fact])
         rest (S number) (List.app statuses [(number, Audit.StepRejected)])
-  | Some current :: rest =>
+  | Parser.LineStep current :: rest =>
       (* Blocking comes first: a rule may need its cited step's facts to
          judge the step at all, as [cpctc] does for an unordered [con_tri]. *)
       let status :=
@@ -646,8 +668,12 @@ Definition status_of (statuses : list (nat * Audit.StepStatus)) (number : nat)
   end.
 
 Definition step_unparsed_diagnostic : Audit.Diagnostic :=
+  Audit.diagnostic Audit.ProofParsing Audit.DiagnosticWarning Audit.MalformedProof
+    "this step is incomplete, so it was skipped".
+
+Definition step_malformed_diagnostic : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofParsing Audit.DiagnosticError Audit.MalformedProof
-    "this step could not be read".
+    "this step is malformed, so the proof is rejected".
 
 Fixpoint step_reports (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (statuses : list (nat * Audit.StepStatus))
@@ -667,11 +693,14 @@ Fixpoint step_reports (decls : Declarations) (premises : list Premise)
             (match status with
              | Audit.StepRejected => [step_failure_diagnostic]
              | Audit.StepBlocked => [step_blocked_diagnostic]
-             | Audit.StepAccepted => []
+             | Audit.StepAccepted | Audit.StepIncomplete => []
              end)
       | None =>
           Audit.step_report number rs.(rs_source) None None status [] []
-            [step_unparsed_diagnostic]
+            [match status with
+             | Audit.StepIncomplete => step_unparsed_diagnostic
+             | _ => step_malformed_diagnostic
+             end]
       end
       :: step_reports decls premises
            (List.app facts [fact_of rs.(rs_step)]) statuses rest (S number)
@@ -777,8 +806,16 @@ Definition step_graph (reports : list Audit.StepReport) (stated_by : option nat)
   let cited n := existsb (fun e => nat_eqb_report (fst e) n) edges in
   let goal_step n :=
     match stated_by with Some g => nat_eqb_report g n | None => false end in
+  (* a line that did not read as a step proves nothing, so it is not "unused"
+     either: the issue for it already says what is wrong *)
+  let incomplete n :=
+    existsb (fun r => nat_eqb_report r.(Audit.step_number) n &&
+                      match r.(Audit.step_reason_name) with
+                      | None => true
+                      | Some _ => false
+                      end) reports in
   Audit.dependency_graph nodes edges (graph_cycles nodes edges)
-    (filter (fun n => negb (cited n || goal_step n)) nodes).
+    (filter (fun n => negb (cited n || goal_step n || incomplete n)) nodes).
 
 (** A fact proved twice.  Sameness is the checker's own [fact_eqb], so a
     congruence restated with its sides exchanged counts, as it should.
@@ -878,7 +915,8 @@ Record ReportData := report_data {
   rd_premises : list Premise;
   rd_goal : Statement;
   rd_steps : list ReportStep;
-  rd_statuses : list (nat * Audit.StepStatus)
+  rd_statuses : list (nat * Audit.StepStatus);
+  rd_stray : list string
 }.
 
 Definition report_data_of (source : string) : option ReportData :=
@@ -899,7 +937,8 @@ Definition report_data_of (source : string) : option ReportData :=
               Some (report_data decls p.(problem_premises)
                       p.(problem_goal) steps
                       (step_statuses decls
-                         p.(problem_premises) [] (map rs_step steps) 1 []))
+                         p.(problem_premises) [] (map rs_kind steps) 1 [])
+                      (stray_step_lines (Parser.split_lines stepText [])))
           | None => None
           end
       | _, _, _ => None
@@ -1139,28 +1178,66 @@ Definition reason_issue (number : nat) (raw : list ascii) : Audit.Issue :=
   end.
 
 (** Why a step line did not parse.  Spaces and a trailing [//] comment do not
-    count, so [[01]  // todo] is an empty step. *)
+    count, so [[01]  // todo] is an empty step.  The first five cases are the
+    lines [Parser.classify_step_line] calls malformed, which reject the proof;
+    the rest are incomplete steps, which are skipped. *)
 Definition step_parse_issue (number : nat) (line : list ascii) : Audit.Issue :=
   let compact := Parser.remove_space (Parser.take_until "/"%char line) in
-  let issue code := Audit.issue 3 code (Audit.JsonObject [step_field number]) in
+  let with_fields code extra :=
+    Audit.issue 3 code (Audit.JsonObject (step_field number :: extra)) in
+  let issue code := with_fields code [] in
+  let text t := string_of_list_ascii t in
   match compact with
   | "["%char :: rest =>
-      match Parser.find_after ["]"%char] rest with
-      | None => issue "unclosed_step_number"
-      | Some [] => issue "empty_step"
-      | Some after =>
+      match Parser.take_before ["]"%char] rest, Parser.find_after ["]"%char] rest with
+      | Some label, Some after =>
+          if negb (Parser.all_digits label) then
+            with_fields "invalid_step_number" [string_field "label" (text label)]
+          else
+          match find (fun c => negb (Parser.step_char c)) after with
+          | Some c =>
+              with_fields "unsupported_character"
+                [string_field "character" (String c EmptyString)]
+          | None =>
+          if Parser.arrow_missing after then
+            match Parser.call_split after [] 0 with
+            | Some (reason, statement) =>
+                with_fields "missing_arrow"
+                  [string_field "reason" (text reason);
+                   string_field "statement" (text statement)]
+            | None => issue "missing_arrow"
+            end
+          else
           match Parser.split_arrow after with
-          | None => issue "missing_arrow"
+          | None =>
+              match after with
+              | [] => issue "empty_step"
+              | _ =>
+                  match Parser.parse_reason_chars after with
+                  | Some _ => issue "empty_statement"
+                  | None => reason_issue number after
+                  end
+              end
           | Some ([], []) => issue "empty_step"
           | Some ([], _) => issue "empty_reason"
           | Some (reason_text, statement_text) =>
+              if Parser.statement_trailing statement_text then
+                match Parser.call_split statement_text [] 0 with
+                | Some (statement, trailing) =>
+                    with_fields "trailing_text"
+                      [string_field "statement" (text statement);
+                       string_field "trailing" (text trailing)]
+                | None => issue "trailing_text"
+                end
+              else
               match Parser.parse_reason_chars reason_text with
               | None => reason_issue number reason_text
               | Some _ =>
-                  statement_issue [step_field number]
-                    (string_of_list_ascii statement_text)
+                  statement_issue [step_field number] (text statement_text)
               end
           end
+          end
+      | _, _ => issue "unclosed_step_number"
       end
   | _ => issue "missing_step_number"
   end.
@@ -1168,7 +1245,7 @@ Definition step_parse_issue (number : nat) (line : list ascii) : Audit.Issue :=
 (** The statements each reason can conclude. *)
 Definition reason_conclusions (r : Reason) : option (list string) :=
   match r with
-  | Given _ => None
+  | Given _ | Incomplete => None
   | Reflex => Some ["ref_seg"; "ref_ang"]
   | SAS _ _ _ | SSS _ _ _ | ASA _ _ _ | AAS _ _ _ | RHL _ _ _
   | DefConTri _ _ _ _ _ _ | ConTriTrans _ _ => Some ["con_tri"; "con_tri_ordered"]
@@ -1904,6 +1981,8 @@ Fixpoint step_issues (decls : Declarations) (premises : list Premise)
         match status_of statuses number, rs.(rs_step) with
         | Audit.StepAccepted, _ => []
         | _, None => [step_parse_issue number rs.(rs_line)]
+        (* only an unread line is incomplete, and that is the case above *)
+        | Audit.StepIncomplete, Some _ => []
         | Audit.StepBlocked, Some current =>
             let failed :=
               filter (fun d =>
@@ -2024,7 +2103,10 @@ Definition proof_issues_from_data (data : option ReportData) (content : ReportCo
                 ("steps", Audit.JsonArray
                    [Audit.JsonString (origin_text dup.(Audit.duplicate_again))])]))
             duplicates in
-      numbering ++ map (relabel_issue (map rs_label d.(rd_steps)))
+      let stray :=
+        map (fun line => Audit.issue 3 "missing_step_number"
+               (Audit.JsonObject [string_field "line" line])) d.(rd_stray) in
+      stray ++ numbering ++ map (relabel_issue (map rs_label d.(rd_steps)))
                      (steps ++ cycles ++ goal_issue ++ unused ++ repeated)
   | None =>
       if accepted then []

@@ -891,7 +891,10 @@ Record Diagnostic := diagnostic {
   diagnostic_message : string
 }.
 
-Inductive StepStatus := StepAccepted | StepRejected | StepBlocked.
+(** [StepIncomplete] is a step line that could not be read -- empty, cut off,
+    or otherwise malformed.  It is skipped: it proves nothing, and a step that
+    cites it is [StepBlocked], but it does not by itself reject the proof. *)
+Inductive StepStatus := StepAccepted | StepRejected | StepBlocked | StepIncomplete.
 Record StepReport := step_report {
   step_number : nat;
   step_source : string;

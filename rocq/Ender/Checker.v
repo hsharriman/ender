@@ -2533,6 +2533,15 @@ Definition rule_diagram_premises (decls : Declarations) (premises : list Premise
   dedup_statements []
     (rule_diagram_premises_raw decls premises facts reason conclusion).
 
+(** What an incomplete step stands for.  It is true in every model -- a
+    segment is congruent to itself whatever its ends -- so admitting it costs
+    soundness nothing, and it names the point [?], which no source text can
+    spell, so no later step can cite it as a fact about the figure. *)
+Definition incomplete_point : PointId := Ascii.ascii_of_nat 63.  (* [?] *)
+Definition incomplete_fact : Statement :=
+  RefSeg (segment_name incomplete_point incomplete_point)
+         (segment_name incomplete_point incomplete_point).
+
 Definition rule_valid (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
   match r with
@@ -2645,6 +2654,7 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
   | DefRadiusConv i => def_radius_conv_rule premises facts i conclusion
   | ConInscribedAngs i j => inscribed_pair_rule premises facts i j true conclusion
   | SuppInscribedAngs i j => inscribed_pair_rule premises facts i j false conclusion
+  | Incomplete => statement_eqb incomplete_fact conclusion
   | RHL i j k =>
       criterion_conclusion rhl_schema decls premises facts i j k conclusion
   end.
@@ -8547,6 +8557,13 @@ Proof.
   - eapply def_radius_conv_sound; eauto.
   - eapply inscribed_pair_sound; eauto.
   - eapply inscribed_pair_sound; eauto.
+  - (* an incomplete step concludes only the always-true placeholder *)
+    change (statement_eqb incomplete_fact conclusion = true) in Hvalid.
+    apply statement_eqb_eq in Hvalid. subst conclusion.
+    unfold incomplete_fact.
+    rewrite (ref_seg_iff (segment_name incomplete_point incomplete_point)
+               (segment_name incomplete_point incomplete_point)) by reflexivity.
+    cbn. apply cong_reflexivity.
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,

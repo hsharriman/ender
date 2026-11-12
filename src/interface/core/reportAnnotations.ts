@@ -40,6 +40,12 @@ export function reportFindings(report: VerifiedCheckReport): string[] {
       `Not judged, because a cited step was not accepted: ${blocked.join(", ")}`,
     );
   }
+  const incomplete = listed("incomplete");
+  if (incomplete.length) {
+    findings.push(
+      `Incomplete, so skipped: step${plural(incomplete)} ${incomplete.join(", ")}`,
+    );
+  }
   if (report.graph.cycles.length) {
     findings.push(
       `Cycles: ${report.graph.cycles
@@ -133,6 +139,9 @@ export function describeStep(step: VerifiedStepReport): string {
   const head = `Step ${step.number}: ${step.reason ?? "unknown reason"}${cites}`;
   if (step.status === "blocked") {
     return `${head}\nNot checked: an earlier step was rejected, so this step's dependencies were never established.`;
+  }
+  if (step.status === "incomplete") {
+    return `Step ${step.number}: incomplete\nThis step could not be read, so it was skipped. The rest of the proof is still checked; a step that cites this one is not.`;
   }
   const detail = step.diagnostics.length
     ? step.diagnostics.map((d) => d.message).join("\n")
