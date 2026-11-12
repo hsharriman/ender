@@ -123,3 +123,10 @@ lists every point on the circle in the order met going round it, from any
 start and in either direction. `inscribed_angle(c_OA, a_XPY)` puts only the
 vertex P on the circle; X and Y may be any points along rays that reach a
 listed point.
+
+An arc is named `r_OAB`, the minor arc AB of the circle centred at O; there
+is no major-arc form. Declare arcs on an `arc:` line (`arc: r_OAB r_OCD`)
+before a premise or the goal names them. The checker rejects the proof unless
+exactly one declared circle is centred at O, A and B are distinct points other
+than O that the circle's name or a premise puts on it, and no `diameter`
+premise names AB.

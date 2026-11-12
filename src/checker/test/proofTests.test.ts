@@ -717,6 +717,64 @@ steps:
     });
   });
 
+  test("rejects arcs the problem does not show to be minor arcs", async () => {
+    const proof = (arcs: string, premises: string[] = []) =>
+      [
+        'title: "x"',
+        "premises:",
+        "pt: O (5, 5, c), B (3, 8, tl), R (7, 8, tr), Y (8, 3, br), D (2, 3, bl), Q (4, 4, b), F (5, 7, t)",
+        "circ: c_OB",
+        `arc: ${arcs}`,
+        "[d_1] circ_order(c_OB, B, R, Y, D)",
+        ...premises,
+        "[g_1] con_arc(r_OBR, r_OYD)",
+        "-> con_seg(BR, YD)",
+        "",
+        "steps:",
+        "[01] given(g_1) -> con_arc(r_OBR, r_OYD)",
+        "[02] con_chords_intersect_arcs(1) -> con_seg(BR, YD)",
+      ].join("\n");
+    const check = async (arcs: string, premises: string[] = []) => {
+      const report = await checkVerifiedProofNode(proof(arcs, premises));
+      const issues = "issues" in report ? report.issues : report.errors;
+      return {
+        isCorrect: report.isCorrect,
+        issues: issues
+          .filter((i) => i.type === 11)
+          .map((i) => ({ code: i.code, details: i.details })),
+      };
+    };
+    expect(await check("r_OBR r_OYD")).toEqual({ isCorrect: true, issues: [] });
+    expect(await check("r_ORB r_ODY")).toEqual({ isCorrect: true, issues: [] });
+    expect(await check("r_OBR")).toEqual({
+      isCorrect: false,
+      issues: [{ code: "arc_not_declared", details: { arc: "r_OYD" } }],
+    });
+    expect(await check("r_OBR r_OYD r_QBR")).toEqual({
+      isCorrect: false,
+      issues: [{ code: "arc_center_not_circle", details: { arc: "r_QBR" } }],
+    });
+    expect(await check("r_OBR r_OYD r_OBQ")).toEqual({
+      isCorrect: false,
+      issues: [
+        {
+          code: "arc_point_not_on_circle",
+          details: { arc: "r_OBQ", point: "Q" },
+        },
+      ],
+    });
+    expect(await check("r_OBR r_OYD r_OBB")).toEqual({
+      isCorrect: false,
+      issues: [{ code: "arc_points_not_distinct", details: { arc: "r_OBB" } }],
+    });
+    expect(
+      await check("r_OBR r_OYD r_OBY", ["[d_2] diameter(c_OB, BY)"]),
+    ).toEqual({
+      isCorrect: false,
+      issues: [{ code: "arc_is_diameter", details: { arc: "r_OBY" } }],
+    });
+  });
+
   test("names what the problem header is missing", async () => {
     const header = (lines: string[]) =>
       checkVerifiedProofNode(['title: "x"', "premises:", ...lines].join("\n"));

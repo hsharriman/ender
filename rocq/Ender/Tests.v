@@ -138,14 +138,20 @@ steps:
   end.
 Proof. vm_compute. repeat split; reflexivity. Qed.
 
-(** The complete public parser already covers statement forms outside the
-    currently executable reason kernel, including nested arc syntax. *)
+(** An arc is named [r_OAB]: its centre, then its endpoints. *)
 Example public_arc_statement_parses :
-  match parse_public_statement
-    "con_arc(minor_arc(c_OA,A,B),major_arc(c_OD,D,E))" with
+  match parse_public_statement "con_arc(r_OAB,r_ODE)" with
   | Some (Audit.ConArc _ _) => true
   | _ => false
   end = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Arcs are always minor, so the old kind-tagged spellings are gone. *)
+Example public_minor_arc_statement_gone :
+  match parse_public_statement "minor_arc(c_OA,A,B)" with
+  | Some _ => true
+  | None => false
+  end = false.
 Proof. vm_compute. reflexivity. Qed.
 
 Example lowercase_point_label_is_rejected :
@@ -3177,19 +3183,19 @@ Example crossed_pgram_rejects :
 Proof. vm_compute. reflexivity. Qed.
 
 (** The circle statement layer: a circle declaration, premises of every new
-    form including the nested arc spelling, a [def_radius] step, and a
+    form including declared arcs, a [def_radius] step, and a
     congruent-radii goal, through both checker paths. *)
 Definition circle_layer_source := "title: circle statements
 premises:
 pt: O (5,5), A (5,9), B (9,5), C (1,5), P (5,1)
 circ: c_OA
+arc: r_OAB r_OBP
 [g_1] radius(c_OA, B)
 [g_2] chord(c_OA, AB)
 [g_3] diameter(c_OA, AP)
 [g_4] tangent(c_OA, CB, A)
 [g_5] inscribed_angle(c_OA, a_ABP)
-[g_6] con_arc(minor_arc(c_OA, A, B), minor_arc(c_OA, B, P))
-[g_7] minor_arc(c_OA, A, B)
+[g_6] con_arc(r_OAB, r_OBP)
 -> con_seg(OB, OA)
 
 steps:
@@ -3200,6 +3206,103 @@ Example circle_layer_accepts : check_source circle_layer_source = true.
 Proof. vm_compute. reflexivity. Qed.
 Example complete_circle_layer_accepts :
   complete_checker circle_layer_source = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** * Arcs
+
+    [arc: r_OAB] declares the minor arc AB of the circle centred at O.  The
+    declaration stands only if one declared circle is centred at O, A and B
+    are distinct points of it other than O, a premise (or the circle's own
+    name) puts each on it, and no premise makes AB a diameter.  Statements
+    may name only declared arcs, in either endpoint order. *)
+Definition arc_header (arcs premises : string) : string :=
+  "title: arcs
+premises:
+pt: O (5,5), A (5,9), B (9,5), D (1,5), E (5,1), Q (3,3)
+circ: c_OA
+arc: " ++ arcs ++ "
+[d_1] circ_order(c_OA, A, B, E, D)
+" ++ premises ++ "-> con_seg(AB, DE)
+
+steps:
+[01] given(g_1) -> con_arc(r_OAB, r_ODE)
+[02] con_chords_intersect_arcs(1) -> con_seg(AB, DE)".
+
+Example arcs_declared_accept :
+  complete_checker (arc_header "r_OAB r_ODE"
+    "[g_1] con_arc(r_OAB, r_ODE)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A premise other than [circ_order] can put the endpoints on the circle;
+    A is the circle's radius point, so it needs none. *)
+Example arcs_on_circle_by_radius_accept :
+  complete_checker ("title: arcs
+premises:
+pt: O (5,5), A (5,9), B (9,5), D (1,5), E (5,1)
+circ: c_OA
+arc: r_OAB r_ODE
+[d_1] radius(c_OA, B)
+[d_2] on_circle(c_OA, D)
+[d_3] chord(c_OA, DE)
+[g_1] con_arc(r_OAB, r_ODE)
+-> con_seg(AB, DE)
+
+steps:
+[01] given(g_1) -> con_arc(r_OAB, r_ODE)
+[02] con_chords_intersect_arcs(1) -> con_seg(AB, DE)") = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example arcs_reversed_name_accepts :
+  complete_checker (arc_header "r_OBA r_ODE"
+    "[g_1] con_arc(r_OAB, r_ODE)
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example arc_undeclared_rejects :
+  complete_checker (arc_header "r_OAB"
+    "[g_1] con_arc(r_OAB, r_ODE)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example arc_center_not_a_circle_rejects :
+  complete_checker (arc_header "r_OAB r_ODE r_QAB"
+    "[g_1] con_arc(r_OAB, r_ODE)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example arc_point_off_circle_rejects :
+  complete_checker (arc_header "r_OAB r_ODE r_OAQ"
+    "[g_1] con_arc(r_OAB, r_ODE)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example arc_repeated_point_rejects :
+  complete_checker (arc_header "r_OAB r_ODE r_OAA"
+    "[g_1] con_arc(r_OAB, r_ODE)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example arc_on_diameter_rejects :
+  complete_checker (arc_header "r_OAB r_ODE r_OAE"
+    "[d_2] diameter(c_OA, AE)
+[g_1] con_arc(r_OAB, r_ODE)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example arc_ambiguous_center_rejects :
+  complete_checker ("title: arcs
+premises:
+pt: O (5,5), A (5,9), B (9,5), D (1,5), E (5,1), F (5,7)
+circ: c_OA c_OF
+arc: r_OAB r_ODE
+[d_1] circ_order(c_OA, A, B, E, D)
+[g_1] con_arc(r_OAB, r_ODE)
+-> con_seg(AB, DE)
+
+steps:
+[01] given(g_1) -> con_arc(r_OAB, r_ODE)
+[02] con_chords_intersect_arcs(1) -> con_seg(AB, DE)") = false.
 Proof. vm_compute. reflexivity. Qed.
 
 (** The goal is closed by a derived fact spelled with reversed segments,

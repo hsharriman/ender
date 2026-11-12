@@ -54,7 +54,7 @@ with `details.line`.
 |---|---|---|
 | `missing_points_line` | 3 | The file has no `pt:` line. |
 | `missing_steps_line` | 3 | The file has a `pt:` line but no `steps:` line after it. |
-| `unrecognized_line` | 3 | A header line is not a declaration (`pt:`, `seg:`, `ang:`, `tri:`, `quad:`, `circ:`), a premise (`[g_n]`, `[d_n]`), or the goal (`-> ...`). |
+| `unrecognized_line` | 3 | A header line is not a declaration (`pt:`, `seg:`, `ang:`, `tri:`, `quad:`, `circ:`, `arc:`), a premise (`[g_n]`, `[d_n]`), or the goal (`-> ...`). |
 | `missing_goal` | 3 | No header line states the goal. |
 | `multiple_goals` | 3 | More than one header line states a goal. |
 | `parser_error` | 3 | Every line reads and there is exactly one goal, but the header as a whole still is not a problem the audited grammar accepts. The checker has nothing more specific to say. |
@@ -199,7 +199,7 @@ more specific code.
 | `base_angle` | A triangle with two congruent sides has the angles opposite them congruent: cite `con_seg` of the two legs from the apex and conclude `con_ang` of the base angles. |
 | `base_angle_conv` | A triangle with two congruent angles has the sides opposite them congruent: cite `con_ang` of the base angles and conclude `con_seg` of the two legs from the apex. |
 | `chord_bisect_conv` | The perpendicular bisector of a chord passes through the centre: cite the `perp_bisector` and the `chord` it bisects, and conclude `center_on_line` of the circle and the bisector. |
-| `con_chords_intersect_arcs` | Congruent arcs of one circle have congruent chords: cite `con_arc` of the two arcs and conclude `con_seg` of their chords. |
+| `con_chords_intersect_arcs` | Congruent arcs have congruent chords: cite `con_arc(r_OAB, r_OCD)` and conclude `con_seg(AB, CD)`. Both arcs must be declared on an `arc:` line. |
 | `con_complements` | Angles complementary to congruent angles are congruent: cite two complementary pairs and the `con_ang` relating one angle of each, and conclude `con_ang` of the other two. |
 | `con_inscribed_angs` | Two inscribed angles of a circle intercepting the same chord from the same arc are congruent: cite two `inscribed_angle` steps, with a `circ_order` premise placing both vertices on the same arc of the chord, and conclude `con_ang` of the two angles. |
 | `con_supplements` | Angles supplementary to congruent angles are congruent: cite two supplementary pairs and the `con_ang` relating one angle of each, and conclude `con_ang` of the other two. |
@@ -239,4 +239,10 @@ more specific code.
 | `cycle` | 8 | Steps depend on each other in a cycle; `details.steps` lists them. |
 | `unused_step` | 5 | Steps no path to the goal uses. Not fatal. |
 | `duplicate_conclusion` | 14 | A step restates a fact a premise or earlier step already gives (`details.duplicateOf`). Not fatal. |
+| `arc_center_not_circle` | 11 | An `arc:` declaration names a centre no declared circle has. `details.arc` is the arc. |
+| `arc_center_ambiguous` | 11 | More than one declared circle has the arc's centre, so `r_OAB` does not say which circle it is on. `details.arc` is the arc. |
+| `arc_points_not_distinct` | 11 | The arc's two endpoints are the same point, or one of them is its centre. `details.arc` is the arc. |
+| `arc_point_not_on_circle` | 11 | No premise puts the arc's endpoint `details.point` on its circle, and it is not the circle's radius point. `details.arc` is the arc. |
+| `arc_is_diameter` | 11 | A `diameter` premise makes the arc's chord a diameter, which has no minor arc. `details.arc` is the arc. |
+| `arc_not_declared` | 11 | A premise or the goal names an arc no `arc:` line declares. `details.arc` is the arc. |
 | `unexpected_error` | 16 | An exception escaped the CLI (`proofCheckerCli.ts`) or HTTP server (`server.ts`); `details.msg` holds its message. |

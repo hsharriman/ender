@@ -178,14 +178,6 @@ export const STMTS_DEFS = {
       name: "chord",
       parameters: [circle("c"), segment("s")],
     },
-    minor_arc: {
-      name: "minor_arc",
-      parameters: [circle("c"), point("p1"), point("p2")],
-    },
-    major_arc: {
-      name: "major_arc",
-      parameters: [circle("c"), point("p1"), point("p2")],
-    },
     radius: {
       name: "radius",
       parameters: [circle("c"), point("p")],
@@ -227,9 +219,13 @@ export const STMTS_DEFS = {
       parameters: [angle("a1"), angle("a2")],
       allowDupeArgs: true,
     },
+    // An arc r_OAB is the minor arc AB of the circle centred at O. Declare
+    // it on an `arc:` line, such as `arc: r_OAB r_OCD`, before naming it.
+    // A and B must be on that circle, and AB must not be a diameter.
     con_arc: {
       name: "con_arc",
       parameters: [arc("a1"), arc("a2")],
+      isPremisesOnly: true,
     },
   },
   groups: {

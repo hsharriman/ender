@@ -71,6 +71,7 @@ Definition declaration_tokens (kind : Audit.DisplayObjectKind) (text : C)
   | Audit.DisplayTriangle => chunks 5 text
   | Audit.DisplayQuadrilateral => chunks 6 text
   | Audit.DisplayCircle => chunks 4 text
+  | Audit.DisplayArc => chunks 5 text
   end.
 
 Definition parse_declaration (prefix : string) (kind : Audit.DisplayObjectKind)
@@ -242,6 +243,9 @@ Definition parse_presentation_line (line : C) (state : PresentationState)
     | Some d => Some (add_declaration state d) | None => None end
   else if Chars.starts_with (list_ascii_of_string "circ:") compact then
     match parse_declaration "circ:" Audit.DisplayCircle line with
+    | Some d => Some (add_declaration state d) | None => None end
+  else if Chars.starts_with (list_ascii_of_string "arc:") compact then
+    match parse_declaration "arc:" Audit.DisplayArc line with
     | Some d => Some (add_declaration state d) | None => None end
   else if state.(ps_in_steps) then
     match parse_step_line line with
