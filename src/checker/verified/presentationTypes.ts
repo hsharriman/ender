@@ -6,7 +6,7 @@ export type DisplayPoint = {
   offsetCode: string | null;
 };
 export type DisplayDeclaration = {
-  kind: "segment" | "angle" | "triangle" | "quadrilateral" | "circle";
+  kind: "segment" | "angle" | "triangle" | "quadrilateral" | "circle" | "arc";
   objects: string[];
 };
 export type LabeledSurfaceCall = { label: string; call: SurfaceCall };

@@ -134,6 +134,16 @@ audited meanings in `Audit.v` are authoritative.
   outer points, so a rule that needs a point on the circle, like
   `def_radius_conv`, finds it in any of them. `center_on_line(c, s)` says
   the centre lies on the line through `s`.
+- **Arcs.** An arc is named `r_OAB` and is always the minor arc AB of the
+  circle centred at O: A and B are equally far from O and not collinear
+  with it, so AB is a chord but not a diameter. An `arc:` line declares
+  arcs, as in `arc: r_OAB r_OCD`, and a premise or goal may name only
+  declared arcs, with the endpoints in either order. The checker rejects a
+  declaration unless exactly one declared circle is centred at O, A and B
+  are distinct and not O, each is the circle's radius point or put on it by
+  a premise, and no `diameter` premise names AB. `con_arc(r_OAB, r_OCD)`
+  says the radii and the central angles AOB and COD are congruent; there is
+  no major-arc form, since no rule needs one.
 - **Inscribed angles.** `inscribed_angle(c, a_XPY)` puts the vertex P on the
   circle and says each ray, P→X and P→Y, meets the circle again; X and Y
   themselves may lie anywhere along those rays. `circ_order(c, A, B, C, ...)`

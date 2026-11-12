@@ -22,6 +22,7 @@ import { SimilarTriangles } from "../reasons/SimilarTriangles";
 import { Supplementary } from "../reasons/Supplementary";
 import { Tangent } from "../reasons/Tangent";
 import { TriangleClassification } from "../reasons/TriangleClassification";
+import { arcStr, congruent } from "../geometryText";
 
 export const stmtToText =
   (stmt?: Stmt, ctx?: ProofContent) => (isActive: boolean) => {
@@ -76,6 +77,17 @@ export const stmtToText =
     }
     if (stmt.function === "sim_tri" && args.length === 2) {
       return SimilarTriangles.text([args[0], args[1]])(isActive);
+    }
+    if (stmt.function === "con_arc" && args.length === 2) {
+      // `r_OAB` is drawn as the arc AB.
+      const [first, second] = args.map((arc) => arc.slice(3));
+      return (
+        <span>
+          {arcStr(first, isActive)}
+          {congruent}
+          {arcStr(second, isActive)}
+        </span>
+      );
     }
     if (stmt.function === "linear_pair" && args.length === 2) {
       return LinearPair.text([args[0], args[1]])(isActive);

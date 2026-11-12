@@ -44,10 +44,16 @@ Definition projected_segments (ds : list Audit.Declaration) : list SegmentName :
     | _ => rest
     end) [] ds.
 
+Definition projected_arcs (ds : list Audit.Declaration) : list ArcName :=
+  fold_right (fun d rest => match d with
+    | Audit.ArcDeclaration a => a :: rest
+    | _ => rest
+    end) [] ds.
+
 Definition projected_declarations (ds : list Audit.Declaration) : Declarations :=
   declarations (projected_triangles ds) (projected_angles ds)
                (projected_quadrilaterals ds) (projected_circles ds)
-               (projected_segments ds).
+               (projected_segments ds) (projected_arcs ds).
 
 Fixpoint statement_list_eqb (a b : list Statement) : bool :=
   match a, b with
@@ -91,12 +97,20 @@ Fixpoint segment_list_eqb (a b : list SegmentName) : bool :=
   | _, _ => false
   end.
 
+Fixpoint arc_list_eqb (a b : list ArcName) : bool :=
+  match a, b with
+  | [], [] => true
+  | x :: xs, y :: ys => arc_eqb x y && arc_list_eqb xs ys
+  | _, _ => false
+  end.
+
 Definition declarations_eqb (a b : Declarations) : bool :=
   triangle_list_eqb a.(decl_triangles) b.(decl_triangles) &&
   angle_list_eqb a.(decl_angles) b.(decl_angles) &&
   quadrilateral_list_eqb a.(decl_quadrilaterals) b.(decl_quadrilaterals) &&
   circle_list_eqb a.(decl_circles) b.(decl_circles) &&
-  segment_list_eqb a.(decl_segments) b.(decl_segments).
+  segment_list_eqb a.(decl_segments) b.(decl_segments) &&
+  arc_list_eqb a.(decl_arcs) b.(decl_arcs).
 
 Definition premise_statements (ps : list Premise) : list Statement :=
   map premise_statement ps.
@@ -210,7 +224,7 @@ Definition statement_function (s : Statement) : string :=
   | InscribedAngle _ _ => "inscribed_angle"
   | OnCirclePoint _ _ => "on_circle" | CenterOnLine _ _ => "center_on_line"
   | CircOrder _ _ => "circ_order"
-  | ArcStatement _ => "arc" | ConArc _ _ => "con_arc"
+  | ConArc _ _ => "con_arc"
   | Proportion _ _ _ _ => "proportion" | Circumcenter _ _ => "circumcenter"
   | Incenter _ _ => "incenter" | PerpBisector _ _ _ => "perp_bisector"
   end.
@@ -1016,8 +1030,6 @@ Definition statement_signatures : list (string * list string) :=
    ("rhombus", [quad]);
    ("tangent", [circ; seg; pt]);
    ("chord", [circ; seg]);
-   ("minor_arc", [circ; pt; pt]);
-   ("major_arc", [circ; pt; pt]);
    ("radius", [circ; pt]);
    ("diameter", [circ; seg]);
    ("inscribed_angle", [circ; ang]);
@@ -2063,6 +2075,29 @@ Definition relabel_issue (labels : list (option nat)) (i : Audit.Issue)
   | _ => i
   end.
 
+(** Why the problem's arcs do not stand: a declaration the problem does not
+    show to be a minor arc, or an arc a premise or the goal names without
+    declaring.  [check_problem] rejects the proof on the same tests. *)
+Definition arc_issues (d : ReportData) : list Audit.Issue :=
+  let arc_issue code a extra :=
+    Audit.issue 11 code (Audit.JsonObject
+      (string_field "arc" (Audit.arcText a) :: extra)) in
+  let declared :=
+    flat_map (fun a =>
+      match arc_declaration_problem d.(rd_declarations) d.(rd_premises) a with
+      | None => []
+      | Some ArcCenterNotCircle => [arc_issue "arc_center_not_circle" a []]
+      | Some ArcCenterAmbiguous => [arc_issue "arc_center_ambiguous" a []]
+      | Some ArcPointsNotDistinct => [arc_issue "arc_points_not_distinct" a []]
+      | Some (ArcPointNotOnCircle p) =>
+          [arc_issue "arc_point_not_on_circle" a [string_field "point" (Audit.pointText p)]]
+      | Some ArcIsDiameter => [arc_issue "arc_is_diameter" a []]
+      end) d.(rd_declarations).(decl_arcs) in
+  let undeclared :=
+    map (fun a => arc_issue "arc_not_declared" a [])
+      (undeclared_arcs d.(rd_declarations) d.(rd_premises) d.(rd_goal)) in
+  declared ++ undeclared.
+
 Definition proof_issues_from_data (data : option ReportData) (content : ReportContent)
     (accepted : bool) : list Audit.Issue :=
   match data with
@@ -2106,7 +2141,7 @@ Definition proof_issues_from_data (data : option ReportData) (content : ReportCo
       let stray :=
         map (fun line => Audit.issue 3 "missing_step_number"
                (Audit.JsonObject [string_field "line" line])) d.(rd_stray) in
-      stray ++ numbering ++ map (relabel_issue (map rs_label d.(rd_steps)))
+      arc_issues d ++ stray ++ numbering ++ map (relabel_issue (map rs_label d.(rd_steps)))
                      (steps ++ cycles ++ goal_issue ++ unused ++ repeated)
   | None =>
       if accepted then []
@@ -2277,13 +2312,22 @@ Proof.
   - intros H. inversion H. auto.
 Qed.
 
+Lemma arc_list_eqb_eq : forall a b, arc_list_eqb a b = true <-> a = b.
+Proof.
+  induction a as [|x xs IH]; destruct b as [|y ys]; cbn; try easy.
+  rewrite andb_true_iff, arc_eqb_eq, IH. split.
+  - intros [-> ->]. reflexivity.
+  - intros H. inversion H. auto.
+Qed.
+
 Lemma declarations_eqb_eq : forall a b, declarations_eqb a b = true <-> a = b.
 Proof.
-  intros [t1 a1 q1 c1 s1] [t2 a2 q2 c2 s2]. unfold declarations_eqb. cbn.
+  intros [t1 a1 q1 c1 s1 r1] [t2 a2 q2 c2 s2 r2]. unfold declarations_eqb. cbn.
   rewrite !andb_true_iff, triangle_list_eqb_eq, angle_list_eqb_eq,
-    quadrilateral_list_eqb_eq, circle_list_eqb_eq, segment_list_eqb_eq. split.
-  - intros [[[[-> ->] ->] ->] ->]. reflexivity.
-  - intros H. inversion H. auto.
+    quadrilateral_list_eqb_eq, circle_list_eqb_eq, segment_list_eqb_eq,
+    arc_list_eqb_eq. split.
+  - intros [[[[[-> ->] ->] ->] ->] ->]. reflexivity.
+  - intros H. inversion H. repeat split.
 Qed.
 
 Section Bridge.

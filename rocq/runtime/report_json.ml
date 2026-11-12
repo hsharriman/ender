@@ -66,6 +66,7 @@ let declaration_kind = function
   | EnderChecker.DisplayTriangle -> "triangle"
   | EnderChecker.DisplayQuadrilateral -> "quadrilateral"
   | EnderChecker.DisplayCircle -> "circle"
+  | EnderChecker.DisplayArc -> "arc"
 
 let declaration_json declaration =
   `Assoc

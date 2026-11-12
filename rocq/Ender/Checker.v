@@ -153,7 +153,6 @@ Definition fact_eqb (expected actual : Statement) : bool :=
       circle_eqb c c' && angle_eqb a a'
   | OnCirclePoint c p, OnCirclePoint c' p' => circle_eqb c c' && ascii_eqb p p'
   | CenterOnLine c s, CenterOnLine c' s' => circle_eqb c c' && segment_eqb s s'
-  | ArcStatement a, ArcStatement a' => arc_eqb a a'
   | ConArc a b, ConArc a' b' => arc_eqb a a' && arc_eqb b b'
   | _, _ => false
   end.
@@ -2231,17 +2230,12 @@ Definition chord_bisect_conv_rule (facts : list Statement) (i j : nat)
     every circle statement puts the points it names on the circle, except the
     centre and any point a tangent or a [center_on_line] names off it. *)
 Definition places_on_circle (c : CircleName) (p : PointId) (s : Statement) : bool :=
-  let on_arc (a : ArcName) :=
-    circle_eqb c a.(arc_circle) &&
-    (ascii_eqb p a.(arc_first) || ascii_eqb p a.(arc_second)) in
   match s with
   | OnCirclePoint c' q | Radius c' q | Tangent c' _ q =>
       circle_eqb c c' && ascii_eqb p q
   | Chord c' s | Diameter c' s => circle_eqb c c' && endpoint_of p s
   | InscribedAngle c' a => circle_eqb c c' && ascii_eqb p a.(angle_vertex)
   | CircOrder c' ps => circle_eqb c c' && existsb (ascii_eqb p) ps
-  | ArcStatement a => on_arc a
-  | ConArc a b => on_arc a || on_arc b
   | _ => false
   end.
 
@@ -2691,9 +2685,82 @@ Definition kernel_declarations (decls : Declarations) (premises : list Premise)
     : Declarations :=
   declarations decls.(decl_triangles) decls.(decl_angles)
     decls.(decl_quadrilaterals) decls.(decl_circles)
-    (decls.(decl_segments) ++ flat_map crossing_segments premises).
+    (decls.(decl_segments) ++ flat_map crossing_segments premises)
+    decls.(decl_arcs).
+
+(** * Arcs
+
+    An arc [r_OAB] is the minor arc from [A] to [B] of the circle centred at
+    [O].  An [arc:] line declares it, and a statement may name only declared
+    arcs.  A declaration is accepted only when the problem shows the arc
+    exists: one declared circle is centred at [O], [A] and [B] are two
+    points of it other than [O], each is the circle's radius point or put on
+    it by a premise, and no premise makes [AB] a diameter, which has no minor
+    arc.  These checks only reject problems; what an arc means comes from its
+    declaration's audited meaning. *)
+Definition circles_centered_at (decls : Declarations) (o : PointId) : list CircleName :=
+  filter (fun c => ascii_eqb c.(circle_center) o) decls.(decl_circles).
+
+Definition point_on_declared_circle (premises : list Premise) (c : CircleName)
+    (p : PointId) : bool :=
+  ascii_eqb p c.(circle_radius_point) || premise_found (on_circle_premise c p) premises.
+
+Definition diameter_premise (c : CircleName) (a : ArcName) (pr : Premise) : bool :=
+  match pr.(premise_statement) with
+  | Diameter c' s =>
+      circle_eqb c c' &&
+      segment_u_eqb s (segment_name a.(arc_first) a.(arc_second))
+  | _ => false
+  end.
+
+(** Why an arc declaration is rejected, if it is. *)
+Inductive ArcProblem :=
+| ArcCenterNotCircle | ArcCenterAmbiguous | ArcPointsNotDistinct
+| ArcPointNotOnCircle (p : PointId) | ArcIsDiameter.
+
+Definition arc_declaration_problem (decls : Declarations) (premises : list Premise)
+    (a : ArcName) : option ArcProblem :=
+  match circles_centered_at decls a.(arc_center) with
+  | [] => Some ArcCenterNotCircle
+  | [c] =>
+      if ascii_eqb a.(arc_first) a.(arc_second) ||
+         ascii_eqb a.(arc_first) a.(arc_center) ||
+         ascii_eqb a.(arc_second) a.(arc_center)
+      then Some ArcPointsNotDistinct
+      else if negb (point_on_declared_circle premises c a.(arc_first))
+      then Some (ArcPointNotOnCircle a.(arc_first))
+      else if negb (point_on_declared_circle premises c a.(arc_second))
+      then Some (ArcPointNotOnCircle a.(arc_second))
+      else if premise_found (diameter_premise c a) premises
+      then Some ArcIsDiameter
+      else None
+  | _ => Some ArcCenterAmbiguous
+  end.
+
+Definition statement_arcs (s : Statement) : list ArcName :=
+  match s with
+  | ConArc a b => [a; b]
+  | _ => []
+  end.
+
+Definition arc_declared (decls : Declarations) (a : ArcName) : bool :=
+  existsb (arc_u_eqb a) decls.(decl_arcs).
+
+(** The arcs the premises and the goal name without declaring. *)
+Definition undeclared_arcs (decls : Declarations) (premises : list Premise)
+    (goal : Statement) : list ArcName :=
+  filter (fun a => negb (arc_declared decls a))
+    (flat_map (fun pr => statement_arcs pr.(premise_statement)) premises ++
+     statement_arcs goal).
+
+Definition arcs_valid (decls : Declarations) (premises : list Premise)
+    (goal : Statement) : bool :=
+  forallb (fun a => match arc_declaration_problem decls premises a with
+                    | None => true | Some _ => false end) decls.(decl_arcs) &&
+  match undeclared_arcs decls premises goal with [] => true | _ => false end.
 
 Definition check_problem (p : Problem) : bool :=
+  arcs_valid p.(problem_declarations) p.(problem_premises) p.(problem_goal) &&
   match check_steps (kernel_declarations p.(problem_declarations) p.(problem_premises))
           p.(problem_premises) [] p.(problem_steps) with
   | Some facts => existsb (fact_eqb p.(problem_goal)) facts
@@ -5687,27 +5754,17 @@ Proof.
   all: try old_names_eq Hx.
   assert (Hc : Interp (ConArc a a0)) by (eapply lookup_step_sound; eauto).
   cbn in Hc.
-  destruct Hc as [Hwf1 [Hwf2 [Hkind [Hrad Hconga]]]].
-  destruct Hwf1 as [Hne1 [Hon11 Hon12]].
-  destruct Hwf2 as [Hne2 [Hon21 Hon22]].
-  destruct Hon11 as [_ HcX1]. destruct Hon12 as [_ HcY1].
-  destruct Hon21 as [_ HcX2]. destruct Hon22 as [_ HcY2].
-  cbn in HcX1, HcY1, HcX2, HcY2, Hrad, Hconga.
-  assert (HOX : Cong (point (a.(arc_circle)).(circle_center)) (point a.(arc_first))
-                     (point (a0.(arc_circle)).(circle_center)) (point a0.(arc_first))).
-  { apply cong_transitivity with (point (a.(arc_circle)).(circle_center))
-        (point (a.(arc_circle)).(circle_radius_point)); [exact HcX1|].
-    apply cong_transitivity with (point (a0.(arc_circle)).(circle_center))
-        (point (a0.(arc_circle)).(circle_radius_point)); [exact Hrad|Cong]. }
-  assert (HOY : Cong (point (a.(arc_circle)).(circle_center)) (point a.(arc_second))
-                     (point (a0.(arc_circle)).(circle_center)) (point a0.(arc_second))).
-  { apply cong_transitivity with (point (a.(arc_circle)).(circle_center))
-        (point (a.(arc_circle)).(circle_radius_point)); [exact HcY1|].
-    apply cong_transitivity with (point (a0.(arc_circle)).(circle_center))
-        (point (a0.(arc_circle)).(circle_radius_point)); [exact Hrad|Cong]. }
-  destruct (l11_49 (point a.(arc_first)) (point (a.(arc_circle)).(circle_center))
+  destruct Hc as [[Hr1 _] [[Hr2 _] [HOX Hconga]]].
+  (* Each arc's endpoints are equally far from its centre, so the second
+     radii match through the first. *)
+  assert (HOY : Cong (point a.(arc_center)) (point a.(arc_second))
+                     (point a0.(arc_center)) (point a0.(arc_second))).
+  { apply cong_transitivity with (point a.(arc_center)) (point a.(arc_first)); [Cong|].
+    apply cong_transitivity with (point a0.(arc_center)) (point a0.(arc_first));
+      [exact HOX|exact Hr2]. }
+  destruct (l11_49 (point a.(arc_first)) (point a.(arc_center))
               (point a.(arc_second)) (point a0.(arc_first))
-              (point (a0.(arc_circle)).(circle_center)) (point a0.(arc_second))
+              (point a0.(arc_center)) (point a0.(arc_second))
               Hconga HOX HOY) as [Hchord _].
   eapply cong_pair_conclude; [exact Hrule|]. cbn. exact Hchord.
 Qed.
@@ -7665,9 +7722,6 @@ Proof.
   - (* chord *)
     apply endpoint_of_cases in H. destruct Hst as [_ [H1 H2]].
     destruct H as [->| ->]; assumption.
-  - (* arc *)
-    apply orb_true_iff in H. destruct Hst as [_ [H1 H2]].
-    destruct H as [H|H]; apply Ascii.eqb_eq in H; subst; assumption.
   - (* radius *)
     apply Ascii.eqb_eq in H. subst. exact Hst.
   - (* diameter *)
@@ -7683,12 +7737,6 @@ Proof.
     unfold Audit.IsCircOrder in Hst. cbv beta zeta in Hst.
     destruct Hst as [_ [Hon _]].
     exact ((proj1 (Forall_forall _ _)) Hon p Hin).
-  - (* congruent arcs *)
-    destruct Hst as [[_ [Ha1 Ha2]] [[_ [Hb1 Hb2]] _]].
-    apply orb_true_iff in H.
-    destruct H as [H|H]; apply andb_true_iff in H; destruct H as [Hc H];
-      apply circle_eqb_eq in Hc; subst; apply orb_true_iff in H;
-      destruct H as [H|H]; apply Ascii.eqb_eq in H; subst; assumption.
 Qed.
 
 (** The conclusion is the [on_circle] fact itself, read as [radius]: the two
@@ -8617,6 +8665,7 @@ Theorem check_problem_sound : forall p,
   Interp p.(problem_goal).
 Proof.
   intros p Hcheck Hwf0 Hprem. unfold check_problem in Hcheck.
+  apply andb_true_iff in Hcheck. destruct Hcheck as [_ Hcheck].
   pose proof (kernel_declarations_well_formed _ _ Hwf0 Hprem) as Hwf.
   destruct (check_steps (kernel_declarations (problem_declarations p) (problem_premises p))
             (problem_premises p) []

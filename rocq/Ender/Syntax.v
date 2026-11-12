@@ -112,7 +112,8 @@ Record Declarations := declarations {
   decl_angles : list AngleName;
   decl_quadrilaterals : list QuadrilateralName;
   decl_circles : list CircleName;
-  decl_segments : list SegmentName
+  decl_segments : list SegmentName;
+  decl_arcs : list ArcName
 }.
 
 Record ProblemHeader := problem_header {
@@ -145,15 +146,15 @@ Definition quadrilateral_eqb (x y : QuadrilateralName) : bool :=
 Definition circle_eqb (x y : CircleName) : bool :=
   ascii_eqb x.(circle_center) y.(circle_center) && ascii_eqb x.(circle_radius_point) y.(circle_radius_point).
 
-Definition arc_kind_eqb (x y : Audit.ArcKind) : bool :=
-  match x, y with
-  | Audit.MinorArc, Audit.MinorArc | Audit.MajorArc, Audit.MajorArc => true
-  | _, _ => false
-  end.
-
 Definition arc_eqb (x y : ArcName) : bool :=
-  arc_kind_eqb x.(arc_kind) y.(arc_kind) && circle_eqb x.(arc_circle) y.(arc_circle) &&
+  ascii_eqb x.(arc_center) y.(arc_center) &&
   ascii_eqb x.(arc_first) y.(arc_first) && ascii_eqb x.(arc_second) y.(arc_second).
+
+(** [r_OAB] and [r_OBA] name the same arc. *)
+Definition arc_u_eqb (x y : ArcName) : bool :=
+  ascii_eqb x.(arc_center) y.(arc_center) &&
+  ((ascii_eqb x.(arc_first) y.(arc_first) && ascii_eqb x.(arc_second) y.(arc_second)) ||
+   (ascii_eqb x.(arc_first) y.(arc_second) && ascii_eqb x.(arc_second) y.(arc_first))).
 
 Fixpoint points_eqb (xs ys : list PointName) : bool :=
   match xs, ys with
@@ -209,7 +210,6 @@ Definition statement_eqb (x y : Statement) : bool :=
   | InscribedAngle c a, InscribedAngle c' a' =>
       circle_eqb c c' && angle_eqb a a'
   | CircOrder c ps, CircOrder c' ps' => circle_eqb c c' && points_eqb ps ps'
-  | ArcStatement a, ArcStatement a' => arc_eqb a a'
   | ConArc a b, ConArc a' b' => arc_eqb a a' && arc_eqb b b'
   | Proportion a b c d, Proportion a' b' c' d' =>
       segment_eqb a a' && segment_eqb b b' && segment_eqb c c' && segment_eqb d d'
@@ -262,18 +262,13 @@ Proof.
   - intros H. inversion H. split; reflexivity.
 Qed.
 
-Lemma arc_kind_eqb_eq : forall x y, arc_kind_eqb x y = true <-> x = y.
-Proof.
-  intros [|] [|]; cbn; split; intro H; congruence.
-Qed.
-
 Lemma arc_eqb_eq : forall x y, arc_eqb x y = true <-> x = y.
 Proof.
-  intros [k c a b] [k' c' a' b']. unfold arc_eqb. cbn.
-  rewrite !andb_true_iff, arc_kind_eqb_eq, circle_eqb_eq.
+  intros [o a b] [o' a' b']. unfold arc_eqb. cbn.
+  rewrite !andb_true_iff.
   unfold ascii_eqb. rewrite !Ascii.eqb_eq.
   split.
-  - intros [[[-> ->] ->] ->]. reflexivity.
+  - intros [[-> ->] ->]. reflexivity.
   - intros H. inversion H. repeat split; reflexivity.
 Qed.
 

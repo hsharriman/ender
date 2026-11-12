@@ -156,14 +156,11 @@ Fixpoint split_top_commas (text current : chars) (depth : nat) : list chars :=
            end
   end.
 
-Definition parse_arc_body (kind : Audit.ArcKind) (body : chars) : option ArcName :=
-  match split_on ","%char body [] with
-  | [c; [p]; [q]] =>
-      match parse_circle c with
-      | Some x => Some (arc_name kind x p q)
-      | None => None
-      end
-  | _ => None
+Fixpoint arc_tokens (text : chars) : list ArcName :=
+  match text with
+  | "r"%char :: "_"%char :: o :: a :: b :: rest => arc_name o a b :: arc_tokens rest
+  | _ :: rest => arc_tokens rest
+  | [] => []
   end.
 
 Definition parse_quadrilateral (text : chars) : option QuadrilateralName :=
@@ -189,16 +186,6 @@ Definition try_call {A : Type} (name : string) (text : chars)
   match strip_call name text with
   | Some body => build body
   | None => fallback
-  end.
-
-Definition parse_arc (text : chars) : option ArcName :=
-  match strip_call "minor_arc" text with
-  | Some body => parse_arc_body Audit.MinorArc body
-  | None =>
-      match strip_call "major_arc" text with
-      | Some body => parse_arc_body Audit.MajorArc body
-      | None => None
-      end
   end.
 
 (** Statements are read by the verified public parser, so a step's
@@ -434,6 +421,7 @@ Record HeaderState := header_state {
   hs_quadrilaterals : list QuadrilateralName;
   hs_circles : list CircleName;
   hs_segments : list SegmentName;
+  hs_arcs : list ArcName;
   hs_premises : list Premise;
   hs_goal : option Statement
 }.
@@ -449,32 +437,39 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
           (header_state (state.(hs_triangles) ++ point_tokens line)
                         state.(hs_angles) state.(hs_quadrilaterals)
                         state.(hs_circles) state.(hs_segments)
-                        state.(hs_premises) state.(hs_goal))
+                        state.(hs_arcs) state.(hs_premises) state.(hs_goal))
       else if starts_with (list_ascii_of_string "ang:") compact then
         parse_header_lines rest
           (header_state state.(hs_triangles)
                         (state.(hs_angles) ++ angle_tokens line)
                         state.(hs_quadrilaterals)
                         state.(hs_circles) state.(hs_segments)
-                        state.(hs_premises) state.(hs_goal))
+                        state.(hs_arcs) state.(hs_premises) state.(hs_goal))
       else if starts_with (list_ascii_of_string "quad:") compact then
         parse_header_lines rest
           (header_state state.(hs_triangles) state.(hs_angles)
                         (state.(hs_quadrilaterals) ++ quad_tokens line)
                         state.(hs_circles) state.(hs_segments)
-                        state.(hs_premises) state.(hs_goal))
+                        state.(hs_arcs) state.(hs_premises) state.(hs_goal))
       else if starts_with (list_ascii_of_string "seg:") compact then
         parse_header_lines rest
           (header_state state.(hs_triangles) state.(hs_angles)
                         state.(hs_quadrilaterals) state.(hs_circles)
                         (state.(hs_segments) ++ seg_tokens (drop_chars 4 compact))
-                        state.(hs_premises) state.(hs_goal))
+                        state.(hs_arcs) state.(hs_premises) state.(hs_goal))
       else if starts_with (list_ascii_of_string "circ:") compact then
         parse_header_lines rest
           (header_state state.(hs_triangles) state.(hs_angles)
                         state.(hs_quadrilaterals)
                         (state.(hs_circles) ++ circ_tokens line)
                         state.(hs_segments)
+                        state.(hs_arcs) state.(hs_premises) state.(hs_goal))
+      else if starts_with (list_ascii_of_string "arc:") compact then
+        parse_header_lines rest
+          (header_state state.(hs_triangles) state.(hs_angles)
+                        state.(hs_quadrilaterals) state.(hs_circles)
+                        state.(hs_segments)
+                        (state.(hs_arcs) ++ arc_tokens (drop_chars 4 compact))
                         state.(hs_premises) state.(hs_goal))
       else if starts_with ["["%char] compact then
         match parse_labeled_premise line with
@@ -482,6 +477,7 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
             (header_state state.(hs_triangles) state.(hs_angles)
                           state.(hs_quadrilaterals) state.(hs_circles)
                           state.(hs_segments)
+                          state.(hs_arcs)
                           (state.(hs_premises) ++ [prem]) state.(hs_goal))
         | None => None
         end
@@ -493,7 +489,7 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
                 (header_state state.(hs_triangles) state.(hs_angles)
                               state.(hs_quadrilaterals) state.(hs_circles)
                               state.(hs_segments)
-                              state.(hs_premises) (Some goal))
+                              state.(hs_arcs) state.(hs_premises) (Some goal))
             | None => None
             end
         | _, _ => None
@@ -603,14 +599,15 @@ Fixpoint parse_step_lines (lines : list chars) (steps : list Step) : option (lis
 
 Definition parseProblemPart (part : string) : option ProblemHeader :=
   match parse_header_lines (split_lines (list_ascii_of_string part) [])
-                           (header_state [] [] [] [] [] [] None) with
+                           (header_state [] [] [] [] [] [] [] None) with
   | Some header =>
       match header.(hs_goal) with
       | Some goal =>
           Some (problem_header
                   (declarations header.(hs_triangles) header.(hs_angles)
                                 header.(hs_quadrilaterals)
-                                header.(hs_circles) header.(hs_segments))
+                                header.(hs_circles) header.(hs_segments)
+                                header.(hs_arcs))
                   header.(hs_premises) goal)
       | None => None
       end
