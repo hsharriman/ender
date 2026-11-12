@@ -167,6 +167,7 @@ let step_status_name = function
   | EnderChecker.StepAccepted -> "accepted"
   | EnderChecker.StepRejected -> "rejected"
   | EnderChecker.StepBlocked -> "blocked"
+  | EnderChecker.StepIncomplete -> "incomplete"
 
 let step_report_json step =
   `Assoc

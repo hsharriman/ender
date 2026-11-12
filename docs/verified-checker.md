@@ -188,6 +188,17 @@ steps; duplicate derivations; and the step the goal rests on. A failure
 spreads only along the graph: a step citing one that was not accepted is
 `blocked`, and every other step is still judged.
 
+A step line that does not parse -- empty, cut off, or naming an unknown
+reason or statement -- is `incomplete` and skipped rather than fatal, in the
+verdict as well as the report. A malformed line is still fatal: no step
+number `[n]`, a character no step uses, a whole step missing its `->`, or a
+whole statement followed by more text (`Parser.classify_step_line`). The parser puts an `Incomplete` step in its place, so the numbering
+of later steps is unchanged. That step concludes only `incomplete_fact`
+(`Checker.v`), a `ref_seg` of the point `?`, which is true in every model and
+which no source text can name, so it cannot help prove anything; a step
+citing it is rejected. The proof is accepted when the readable steps prove
+the goal.
+
 None of the report is proved, and none of it is trusted: the verdict alone
 decides acceptance. Each diagram premise a report names comes from the same
 search the rule ran, so it cannot name one the rule did not use, and the test

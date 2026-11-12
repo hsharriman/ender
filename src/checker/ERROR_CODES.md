@@ -11,8 +11,9 @@ where the explanations live.
 `npm run checkProof` and `POST /check` return one of two shapes:
 
 - `{ "isCorrect": ..., "issues": [...] }` once the problem header parses. A
-  proof can be accepted and still carry `unused_step` or
-  `duplicate_conclusion` issues; neither is fatal.
+  proof can be accepted and still carry `unused_step`,
+  `duplicate_conclusion`, or [incomplete-step](#a-step-that-does-not-parse)
+  issues; none of them is fatal.
 - `{ "isCorrect": false, "errors": [...] }` when the header does not parse.
   `errors` holds exactly one issue, for the first header line that does not
   read or for what the header is missing as a whole.
@@ -82,13 +83,35 @@ issue, and the steps after it are still judged.
 Spaces and a trailing `//` comment are ignored, so `[04]  // todo` is an
 empty step.
 
+A step line that does not parse is either **malformed** or **incomplete**.
+
+A **malformed** line rejects the proof. It is not a step the writer could
+still be finishing: it has no step number `[n]` with `n` all digits, it
+contains a character no step uses (anything but letters, digits, spaces, and
+`_ ( ) , - >`), or it is a whole step written wrongly -- a reason and a
+statement with no `->` between them, or a statement followed by more text.
+Its report status is `rejected`. The codes marked **fatal** below are these.
+
+Any other line that does not parse is **incomplete**: empty, cut off, or
+naming a reason or statement the checker does not know. It is skipped, not
+fatal. Its report status is `incomplete`, it keeps its number so later
+citations still point where the writer meant, and it proves nothing, so a
+step that cites it is `blocked`. The rest of the proof is still checked, and
+the proof is accepted if the steps that do parse prove the goal.
+
+Neither kind is ever listed as `unused_step`; the issue below already says
+what is wrong.
+
 | Code | Type | Meaning |
 |---|---|---|
-| `empty_step` | 3 | The line holds only a step number, as in `[01]`, or a number and a bare `->`. |
-| `empty_reason` | 3 | Nothing comes before the `->`, as in `[01] -> con_seg(AB, BC)`. |
-| `missing_step_number` | 3 | The line does not start with a step number in brackets. |
-| `unclosed_step_number` | 3 | The step number's `]` is missing. |
-| `missing_arrow` | 3 | The line has a reason or statement but no `->` between them. |
+| `missing_step_number` | 3 | **Fatal.** A non-blank line in the steps section does not start with `[`. It is not a step, so it has no number; `details.line` holds it. |
+| `unclosed_step_number` | 3 | **Fatal.** The step number's `]` is missing, as in `[05 reflex() -> ...`. |
+| `invalid_step_number` | 3 | **Fatal.** The step number is not all digits, as in `[x5]` or `[]`; `details.label` holds what was written. |
+| `unsupported_character` | 3 | **Fatal.** The step contains a character no step uses; `details.character` is the first one. |
+| `missing_arrow` | 3 | **Fatal.** The line is a whole reason followed by a whole statement with no `->` between them; `details.reason` and `details.statement` hold the two parts it found. |
+| `trailing_text` | 3 | **Fatal** when a step's whole statement is followed by more text; `details.statement` is the statement and `details.trailing` what follows. (A premise or goal statement with trailing text uses the same code; see [Statements](#statements).) |
+| `empty_step` | 3 | Incomplete. The line holds only a step number, as in `[01]`, or a number and a bare `->`. |
+| `empty_reason` | 3 | Incomplete. Nothing comes before the `->`, as in `[01] -> con_seg(AB, BC)`. |
 | `unknown_function` | 3 | The reason name is not one the checker has a rule for; `details.token` holds it. |
 | `unreadable_given_citation` | 3 | A `given(...)` citation could not be read; `details.text` holds the reason. |
 | `unreadable_dependencies` | 3 | The reason's dependency numbers could not be read; `details.text` holds the reason. |

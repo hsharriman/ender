@@ -501,17 +501,104 @@ Fixpoint parse_header_lines (lines : list chars) (state : HeaderState)
       else parse_header_lines rest state
   end.
 
+(** * Reading the steps section
+
+    Each line of the steps section is blank, a step, an incomplete step, or
+    malformed.  An incomplete step -- empty, cut off, or naming a reason or
+    statement the checker does not know -- is skipped.  A malformed line
+    rejects the proof, because it is not a step the writer could still be
+    finishing: it has no step number of the form [[n]], it uses a character
+    no step can contain, or it is a whole step written wrongly (a reason and
+    a statement with no [->] between them, or a statement followed by more
+    text). *)
+Inductive StepLine := LineBlank | LineStep (s : Step) | LineIncomplete | LineMalformed.
+
+(** The characters a step may contain after its number. *)
+Definition step_char (c : ascii) : bool :=
+  let n := nat_of_ascii c in
+  (Nat.leb 48 n && Nat.leb n 57) || (Nat.leb 65 n && Nat.leb n 90) ||
+  (Nat.leb 97 n && Nat.leb n 122) || is_space c ||
+  existsb (Ascii.eqb c) ["_"%char; "("%char; ")"%char; ","%char; "-"%char; ">"%char].
+
+Definition all_digits (text : chars) : bool :=
+  match text with
+  | [] => false
+  | _ => forallb (fun c => match digit_value c with Some _ => true | None => false end) text
+  end.
+
+(** Split [text] after the parenthesis that closes its first call. *)
+Fixpoint call_split (text acc : chars) (depth : nat) : option (chars * chars) :=
+  match text with
+  | [] => None
+  | c :: rest =>
+      if Ascii.eqb c "("%char then call_split rest (List.app acc [c]) (S depth)
+      else if Ascii.eqb c ")"%char then
+        match depth with
+        | O => None
+        | S O => Some (List.app acc [c], rest)
+        | S d => call_split rest (List.app acc [c]) d
+        end
+      else call_split rest (List.app acc [c]) depth
+  end.
+
+(** A whole step with its arrow left out: a reason, then a statement. *)
+Definition arrow_missing (body : chars) : bool :=
+  match call_split (remove_space body) [] 0 with
+  | Some (reason, statement) =>
+      match parse_reason_chars reason, parse_statement_chars statement with
+      | Some _, Some _ => true
+      | _, _ => false
+      end
+  | None => false
+  end.
+
+(** A whole statement followed by more text. *)
+Definition statement_trailing (statement_text : chars) : bool :=
+  match call_split (remove_space statement_text) [] 0 with
+  | Some (statement, _ :: _) =>
+      match parse_statement_chars statement with Some _ => true | None => false end
+  | _ => false
+  end.
+
+Definition classify_step_line (line : chars) : StepLine :=
+  let text := take_until "/"%char line in
+  match remove_space text with
+  | [] => LineBlank
+  | "["%char :: rest =>
+      match take_before ["]"%char] rest, find_after ["]"%char] rest with
+      | Some label, Some after =>
+          if negb (all_digits label) then LineMalformed
+          else if negb (forallb step_char after) then LineMalformed
+          else
+            match parse_step text with
+            | Some parsed => LineStep parsed
+            | None =>
+                if arrow_missing after then LineMalformed
+                else match split_arrow after with
+                     | Some (_, statement_text) =>
+                         if statement_trailing statement_text then LineMalformed
+                         else LineIncomplete
+                     | None => LineIncomplete
+                     end
+            end
+      | _, _ => LineMalformed
+      end
+  | _ => LineMalformed
+  end.
+
 Fixpoint parse_step_lines (lines : list chars) (steps : list Step) : option (list Step) :=
   match lines with
   | [] => Some steps
   | line :: rest =>
-      let compact := remove_space (take_until "/"%char line) in
-      if starts_with ["["%char] compact then
-        match parse_step line with
-        | Some parsed => parse_step_lines rest (steps ++ [parsed])
-        | None => None
-        end
-      else parse_step_lines rest steps
+      match classify_step_line line with
+      | LineBlank => parse_step_lines rest steps
+      | LineStep parsed => parse_step_lines rest (steps ++ [parsed])
+      (* An incomplete step is skipped, not fatal: it keeps its place so later
+         citations still point where the writer meant, and proves only
+         [incomplete_fact]. *)
+      | LineIncomplete => parse_step_lines rest (steps ++ [step Incomplete incomplete_fact])
+      | LineMalformed => None
+      end
   end.
 
 Definition parseProblemPart (part : string) : option ProblemHeader :=

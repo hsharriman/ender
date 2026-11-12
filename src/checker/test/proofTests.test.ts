@@ -85,6 +85,7 @@ const OUTCOME_ENFORCED = new Set([
   "examples/con_transitive_alias.txt",
   "examples/goal_reversed_correct.txt",
   "examples/goal_reversed_incorrect.txt",
+  "examples/incomplete_steps_skipped.txt",
   "examples/inscribed_angles.txt",
   "examples/overlap.txt",
   "examples/rhombusOutside.txt",
@@ -445,6 +446,53 @@ steps:
     ]);
   });
 
+  test("skips incomplete steps and checks the rest", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(
+        join(PROOFS_DIR, "examples/incomplete_steps_skipped.txt"),
+        "utf8",
+      ),
+    );
+    expect(report.steps.map((step) => step.status)).toEqual([
+      "accepted",
+      "incomplete",
+      "accepted",
+      "incomplete",
+      "accepted",
+      "accepted",
+      "incomplete",
+    ]);
+    expect(summarizeReport(report)).toBe(
+      "Accepted by the verified checker. (goal reached at step 6)",
+    );
+    expect(reportFindings(report)).toEqual([
+      "Incomplete, so skipped: steps 2, 4, 7",
+    ]);
+    // An incomplete step proves nothing, so it is never "unused" either.
+    expect(report.graph.unusedSteps).toEqual([]);
+
+    // A step that cites an incomplete one is still not accepted.
+    const cited = await checkVerifiedReportNode(
+      [
+        'title: "x"',
+        "premises:",
+        "pt: A (0, 0, t), B (1, 0, t), C (2, 0, t), D (3, 0, t)",
+        "seg: AB CD",
+        "[g_1] con_seg(AB, CD)",
+        "-> con_seg(CD, AB)",
+        "",
+        "steps:",
+        "[01] given(g_1) ->",
+        "[02] con_seg_transitive(1, 1) -> con_seg(CD, AB)",
+      ].join("\n"),
+    );
+    expect(cited.steps.map((step) => step.status)).toEqual([
+      "incomplete",
+      "blocked",
+    ]);
+    expect(summarizeReport(cited)).toBe("Rejected by the verified checker.");
+  });
+
   test("lists each issue the findings do not already state", async () => {
     const rejected = await checkVerifiedReportNode(
       readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8"),
@@ -603,6 +651,70 @@ steps:
     for (const issue of issues) {
       expect(issue.details).not.toHaveProperty("message");
     }
+    // Lines that are not steps the writer could still be finishing -- no
+    // closed step number, a whole step missing its arrow, a statement followed
+    // by more text -- are malformed and reject the proof.  The rest are
+    // incomplete and skipped.
+    expect(report.isCorrect).toBe(false);
+    const full = await checkVerifiedReportNode(source);
+    expect(full.steps.map((step) => step.status)).toEqual([
+      "incomplete",
+      "incomplete",
+      "incomplete",
+      "incomplete",
+      "rejected",
+      "rejected",
+      "incomplete",
+      "incomplete",
+      "rejected",
+      "incomplete",
+    ]);
+    expect(full.graph.unusedSteps).toEqual([]);
+    const arrow = issues.find((issue) => issue.code === "missing_arrow");
+    expect(arrow?.details).toMatchObject({
+      reason: "reflex()",
+      statement: "ref_seg(AB,AB)",
+    });
+  });
+
+  test("rejects lines a step cannot contain", async () => {
+    const proof = (line: string) =>
+      [
+        'title: "x"',
+        "premises:",
+        "pt: A (0, 0, t), B (1, 1, t)",
+        "seg: AB",
+        "-> ref_seg(AB, AB)",
+        "",
+        "steps:",
+        "[01] reflex() -> ref_seg(AB, AB)",
+        line,
+      ].join("\n");
+    const codes = async (line: string) => {
+      const report = await checkVerifiedProofNode(proof(line));
+      const issues = "issues" in report ? report.issues : report.errors;
+      return {
+        isCorrect: report.isCorrect,
+        codes: issues.filter((i) => i.type === 3).map((i) => i.code),
+      };
+    };
+    expect(await codes("reflex() -> ref_seg(AB, AB)")).toEqual({
+      isCorrect: false,
+      codes: ["missing_step_number"],
+    });
+    expect(await codes("[] reflex() -> ref_seg(AB, AB)")).toEqual({
+      isCorrect: false,
+      codes: ["invalid_step_number"],
+    });
+    expect(await codes("[02] reflex() -> ref_seg(AB, AB);")).toEqual({
+      isCorrect: false,
+      codes: ["unsupported_character"],
+    });
+    // An incomplete line beside a complete proof is skipped.
+    expect(await codes("[02] reflex(")).toEqual({
+      isCorrect: true,
+      codes: ["unreadable_dependencies"],
+    });
   });
 
   test("names what the problem header is missing", async () => {

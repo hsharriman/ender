@@ -1727,6 +1727,107 @@ steps:
 Example rectangle_pgram_from_parallelogram_rejects : complete_checker rectangle_pgram_from_parallelogram_source = false.
 Proof. vm_compute. reflexivity. Qed.
 
+(** An incomplete step -- empty, cut off, or otherwise unreadable -- is
+    skipped rather than fatal.  It keeps its number, so the citations after it
+    still point where the writer meant. *)
+Definition incomplete_steps (steps : string) : string :=
+  transitive_header "seg: AB CD EF
+"
+  "[g_1] con_seg(AB,CD)
+[g_2] con_seg(CD,EF)
+"
+  "con_seg(AB,EF)" steps.
+
+Example incomplete_empty_step_skipped : complete_checker (incomplete_steps
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02]
+[03] given(g_2) -> con_seg(CD,EF)
+[04] con_seg_transitive(1,3) -> con_seg(AB,EF)") = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example incomplete_partial_steps_skipped : complete_checker (incomplete_steps
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] con_seg_transitive(1,
+[03] given(g_2) -> con_seg(CD,EF)
+[04] sas(1, 2, 3) ->
+[05] con_seg_transitiv(1,3) -> con_seg(AB,EF)
+[06]   // still to do
+[07] con_seg_transitive(1,3) -> con_seg(AB,EF)
+[08]") = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Skipping proves nothing: a step citing an incomplete one is not
+    accepted, so neither is a proof that needs it. *)
+Example incomplete_step_cited_rejects : complete_checker (incomplete_steps
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) ->
+[03] con_seg_transitive(1,2) -> con_seg(AB,EF)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example incomplete_goal_unreached_rejects : complete_checker (incomplete_steps
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(CD,EF)
+[03]
+[04]") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A line that is not a step the writer could still be finishing rejects
+    the proof: one with no step number, or a malformed one; one with a
+    character no step uses; a whole step missing its arrow; a whole
+    statement followed by more text.  Each sits beside steps that would
+    otherwise prove the goal. *)
+Definition with_bad_line (line : string) : string := incomplete_steps
+  ("[01] given(g_1) -> con_seg(AB,CD)
+[02] given(g_2) -> con_seg(CD,EF)
+" ++ line ++ "
+[04] con_seg_transitive(1,2) -> con_seg(AB,EF)").
+
+Example step_without_number_rejects :
+  complete_checker (with_bad_line "con_seg_transitive(1,2) -> con_seg(AB,EF)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example step_number_unclosed_rejects :
+  complete_checker (with_bad_line "[03 con_seg_transitive(1,2) -> con_seg(AB,EF)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example step_number_not_numeric_rejects :
+  complete_checker (with_bad_line "[x3] con_seg_transitive(1,2) -> con_seg(AB,EF)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example step_number_empty_rejects :
+  complete_checker (with_bad_line "[] con_seg_transitive(1,2) -> con_seg(AB,EF)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example step_unsupported_character_rejects :
+  complete_checker (with_bad_line "[03] con_seg_transitive(1,2) -> con_seg(AB,EF);") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example step_only_unsupported_characters_rejects :
+  complete_checker (with_bad_line "[03] @#!") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example step_missing_arrow_rejects :
+  complete_checker (with_bad_line "[03] con_seg_transitive(1,2) con_seg(AB,EF)") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example step_trailing_text_rejects :
+  complete_checker (with_bad_line "[03] con_seg_transitive(1,2) -> con_seg(AB,EF) extra") = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The same proof with an incomplete line, a blank line, or a comment there
+    is accepted. *)
+Example step_incomplete_line_accepts :
+  complete_checker (with_bad_line "[03] con_seg_transitive(1,") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example step_blank_line_accepts :
+  complete_checker (with_bad_line "   // a note") = true.
+Proof. vm_compute. reflexivity. Qed.
+Example step_comment_after_step_accepts :
+  complete_checker (with_bad_line "[03] con_seg_transitive(1,2) -> con_seg(AB,EF) // done") = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A readable step that is wrong still rejects the proof. *)
+Example incomplete_does_not_excuse_wrong_step : complete_checker (incomplete_steps
+  "[01] given(g_1) -> con_seg(AB,CD)
+[02]
+[03] given(g_2) -> con_seg(CD,EF)
+[04] con_seg_transitive(1,1) -> con_seg(AB,CD)
+[05] con_seg_transitive(1,3) -> con_seg(AB,EF)") = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Triangle shape statements and the reasons that produce or consume them. *)
 Definition shape_header (premises goal steps : string) : string :=
   transitive_header "tri: t_ABC

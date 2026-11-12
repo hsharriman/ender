@@ -96,7 +96,11 @@ Inductive Reason :=
 | ChordBisectConv : nat -> nat -> Reason
 | DefRadiusConv : nat -> Reason
 | ConInscribedAngs : nat -> nat -> Reason
-| SuppInscribedAngs : nat -> nat -> Reason.
+| SuppInscribedAngs : nat -> nat -> Reason
+(** A step line that could not be read.  No source text spells it: the
+    parser supplies it in the line's place, so later citations keep pointing
+    where the writer meant. *)
+| Incomplete : Reason.
 
 Record Premise := premise { premise_label : string; premise_statement : Statement }.
 Record Step := step { step_reason : Reason; step_conclusion : Statement }.

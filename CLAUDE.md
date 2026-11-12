@@ -98,6 +98,14 @@ steps:
 
 Sample proofs in `src/checker/proofs/`, organized into category subdirectories (e.g., `examples/tutorial.txt`, `examples/s1c1.txt`).
 
+A step line that does not parse (empty, cut off, a misspelled reason) is
+skipped as `incomplete` rather than rejecting the proof: it keeps its number,
+proves nothing, and blocks any step that cites it, and the proof is accepted
+if the readable steps prove the goal. A malformed line still rejects the
+proof: one without a step number `[n]` (`n` all digits), one with a character
+other than letters, digits, spaces, and `_ ( ) , - >`, a whole step missing
+its `->`, or a whole statement followed by more text.
+
 Triangle congruence in premises uses `con_tri_ordered`, not `con_tri`. The
 vertex order states the correspondence, so `con_tri_ordered(t_ABC, t_DEF)`
 pairs A with D, B with E, and C with F. A `con_tri` step gets its
