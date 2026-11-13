@@ -5,17 +5,17 @@
     ([cop_onc4_ts__suppa]), unchanged except for one proof.  Upstream proves
     [right_saccheris] through [postulates_in_euclidean_context], which rests
     on [Eqdep.Eq_rect_eq], and every lemma below inherits the axiom from it.
-    Here it is [ender_rah] from [Geometry.v], which goes through Playfair
+    Here it is [ghost_rah] from [Geometry.v], which goes through Playfair
     instead, so the file is axiom-free.  GeoCoq is distributed under the LGPL
     v3. *)
 Require Export GeoCoq.Main.Annexes.circles.
 Require Export GeoCoq.Main.Annexes.half_angles.
 Require Export GeoCoq.Main.Tarski_dev.Ch12_parallel_inter_dec.
-Require Import Ender.Geometry.
+Require Import Ghost.Geometry.
 
 Import circles.
 
-Module EnderInscribed.
+Module GhostInscribed.
 
 Section Inscribed_angle.
 
@@ -45,7 +45,7 @@ Qed.
 
 Lemma right_saccheris : forall A B C D, Saccheri A B C D -> Per A B C.
 Proof.
-  exact ender_rah.
+  exact ghost_rah.
 Qed.
 
 Lemma not_obtuse_saccheris : ~ hypothesis_of_obtuse_saccheri_quadrilaterals.
@@ -460,4 +460,4 @@ Qed.
 
 End Inscribed_angle.
 
-End EnderInscribed.
+End GhostInscribed.

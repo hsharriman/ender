@@ -1,4 +1,4 @@
-# Verified Ender checker integration
+# Verified Ghost checker integration
 
 Proof source is parsed and checked by Rocq code extracted to native OCaml and
 WebAssembly. There is no TypeScript proof-checking backend.
@@ -20,6 +20,6 @@ npm run checkProof -- src/checker/proofs/examples/tutorial.txt
 npm test -- --runInBand
 ```
 
-The audited contract is [`rocq/Ender/Audit.v`](../../rocq/Ender/Audit.v); see
+The audited contract is [`rocq/Ghost/Audit.v`](../../rocq/Ghost/Audit.v); see
 [`docs/verified-checker.md`](../../docs/verified-checker.md) for its scope and
 trusted-computing boundary.

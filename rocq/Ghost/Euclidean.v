@@ -9,10 +9,10 @@
     [all_coplanar], which is why the section assumes a plane.
 
     The lemmas keep GeoCoq's names.  A file that copies a GeoCoq proof needing
-    them imports [EnderEuclidean] after GeoCoq, so the copy's references
+    them imports [GhostEuclidean] after GeoCoq, so the copy's references
     resolve here and the copy stays axiom-free unchanged; [Similarity.v] does
     this for Desargues' theorem.  Any other file should name them qualified,
-    as [Euclidean.EnderEuclidean.cop_par_perp__perp], so its own proofs keep
+    as [Euclidean.GhostEuclidean.cop_par_perp__perp], so its own proofs keep
     resolving to GeoCoq.  GeoCoq is distributed under the LGPL v3. *)
 Require Export GeoCoq.Main.Tarski_dev.Ch13_6_Desargues_Hessenberg.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.tarski_euclid.
@@ -20,9 +20,9 @@ Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.euclid_5_original_euc
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.original_euclid_original_spp.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.original_spp_inverse_projection_postulate.
 Require Import GeoCoq.Main.Meta_theory.Parallel_postulates.SPP_ID.
-Require Import Ender.Geometry.
+Require Import Ghost.Geometry.
 
-Module EnderEuclidean.
+Module GhostEuclidean.
 
 Section Euclidean.
 
@@ -34,7 +34,7 @@ Context {T2D : @Tarski_2D Tn TnEQD}.
 
 Lemma par_trans : forall A1 A2 B1 B2 C1 C2,
   Par A1 A2 B1 B2 -> Par B1 B2 C1 C2 -> Par A1 A2 C1 C2.
-Proof. exact ender_par_trans. Qed.
+Proof. exact ghost_par_trans. Qed.
 
 Lemma par_dec : forall A B C D, Par A B C D \/ ~ Par A B C D.
 Proof. exact (par_trans__par_dec par_trans). Qed.
@@ -48,7 +48,7 @@ Qed.
 
 Lemma l12_21_a : forall A B C D,
   TS A C B D -> (Par A B C D -> CongA B A C D C A).
-Proof. exact ender_alternate_interior. Qed.
+Proof. exact ghost_alternate_interior. Qed.
 
 Lemma inverse_projection_postulate__proclus_bis :
   inverse_projection_postulate -> alternative_proclus_postulate.
@@ -366,4 +366,4 @@ Qed.
 
 End Euclidean.
 
-End EnderEuclidean.
+End GhostEuclidean.

@@ -11,12 +11,12 @@
     [l13_15] so that each copy's proof resolves the four names there.  GeoCoq
     is distributed under the LGPL v3. *)
 Require Export GeoCoq.Main.Tarski_dev.Ch13_6_Desargues_Hessenberg.
-Require Import Ender.Geometry.
+Require Import Ghost.Geometry.
 (* Last, so that the names it restates shadow GeoCoq's. *)
-Require Import Ender.Euclidean.
-Import EnderEuclidean.
+Require Import Ghost.Euclidean.
+Import GhostEuclidean.
 
-Module EnderSimilarity.
+Module GhostSimilarity.
 
 Section Similarity.
 
@@ -1323,4 +1323,4 @@ Qed.
 
 End Similarity.
 
-End EnderSimilarity.
+End GhostSimilarity.

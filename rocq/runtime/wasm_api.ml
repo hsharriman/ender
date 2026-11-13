@@ -13,6 +13,6 @@ let check_report source =
   |> Report_json.report_output |> Js.string
 
 let () =
-  Js.export "enderCheckProof" (Js.wrap_callback check_source);
-  Js.export "enderParsePresentation" (Js.wrap_callback parse_presentation);
-  Js.export "enderCheckReport" (Js.wrap_callback check_report)
+  Js.export "ghostCheckProof" (Js.wrap_callback check_source);
+  Js.export "ghostParsePresentation" (Js.wrap_callback parse_presentation);
+  Js.export "ghostCheckReport" (Js.wrap_callback check_report)
