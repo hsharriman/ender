@@ -1,30 +1,34 @@
 #!/usr/bin/env bash
-# Check that the native and Wasm checkers give the expected output on one
-# accepted and one rejected proof, that the native report has every audited
-# field, and that every fixture's presentation parses.
-# Usage: integration.sh CHECKER WASM_DIR PROOFS_DIR
+# Check the native CLI's verdict, exit status, and structured output.
+# Usage: integration.sh CHECKER
 set -euo pipefail
 checker=$1
-wasm=$2
-proofs=$3
 here=$(cd "$(dirname "$0")" && pwd)
 out=$(mktemp -d)
 trap 'rm -rf "$out"' EXIT
 
-for proof in tutorial tutinc; do
-  file="$proofs/examples/$proof.txt"
-  "$checker" "$file" > "$out/native.json" || true
-  diff -u "$here/$proof.expected.json" "$out/native.json"
-  node "$here/wasm_api.js" "$wasm/ghost-checker-api.js" "$file" > "$out/wasm.json"
-  diff -u "$here/$proof.expected.json" "$out/wasm.json"
-done
+"$checker" "$here/proofs/tutorial.txt" > "$out/tutorial.json"
+diff -u "$here/tutorial.expected.json" "$out/tutorial.json"
+cat "$here/proofs/tutorial.txt" | "$checker" - > "$out/tutorial-stdin.json"
+diff -u "$out/tutorial.json" "$out/tutorial-stdin.json"
 
-if "$checker" "$proofs/examples/tutinc.txt" > /dev/null; then
-  echo "invalid SSS proof was accepted" >&2
+status=0
+"$checker" "$here/proofs/tutinc.txt" > "$out/tutinc.json" || status=$?
+if [[ $status -ne 1 ]]; then
+  echo "expected the invalid proof to exit with status 1, got $status" >&2
   exit 1
 fi
+diff -u "$here/tutinc.expected.json" "$out/tutinc.json"
 
-"$checker" --report "$proofs/examples/tutorial.txt" \
+status=0
+cat "$here/proofs/tutinc.txt" | "$checker" - > "$out/tutinc-stdin.json" || status=$?
+if [[ $status -ne 1 ]]; then
+  echo "expected the invalid proof on stdin to exit with status 1, got $status" >&2
+  exit 1
+fi
+diff -u "$out/tutinc.json" "$out/tutinc-stdin.json"
+
+"$checker" --report "$here/proofs/tutorial.txt" \
   | jq -e '.verdict == "accepted" and
            .problem.conclusion == "con_tri(t_ABC,t_ADC)" and
            (.presentation.steps | length > 0) and
@@ -32,6 +36,6 @@ fi
            (.duplicates | type == "array") and (.goal | type == "object") and
            (.diagnostics | type == "array")' > /dev/null
 
-find "$proofs" -name '*.txt' -print0 | while IFS= read -r -d $'\0' proof; do
+for proof in "$here"/proofs/*.txt; do
   "$checker" --presentation "$proof" | jq -e 'type == "object"' > /dev/null
 done

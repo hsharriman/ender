@@ -7,7 +7,6 @@ VOFILES := $(addprefix Ghost/,$(addsuffix .vo,$(MODULES)))
 # extracted OCaml in `extracted/`.
 BUILD := _build
 NATIVE := $(BUILD)/bin/ghost-checker
-WASMDIR := $(BUILD)/wasm
 
 # Directory holding the extracted OCaml.  Override it with a directory that
 # already contains `GhostChecker.ml` and `GhostChecker.mli` to compile the
@@ -20,16 +19,14 @@ EXTRACTED := extracted
 EXTRACT_HERE := yes
 endif
 
-.PHONY: all proofs test extract native wasm check clean
+.PHONY: all proofs test extract native check clean
 
 # A recipe that fails partway must not leave its target looking up to date:
 # `Tests.vo` is written before the axiom check below can reject it.
 .DELETE_ON_ERROR:
 
-# `all` is the whole verified checker: kernel-checked proofs, the axiom check,
-# the extracted OCaml, and both compiled artifacts.  This is the same work the
-# `ghost-checker` and `ghost-checker-wasm` Nix packages do.
-all: proofs test extract native wasm
+# Build the native checker after checking the Rocq development and its axioms.
+all: proofs test extract native
 
 proofs: $(VOFILES)
 
@@ -46,8 +43,6 @@ $(EXTRACTED)/GhostChecker.ml: Ghost/Extract.v Ghost/CertifiedAPI.vo
 endif
 
 native: $(NATIVE)
-
-wasm: $(WASMDIR)/ghost-checker-api.js
 
 Ghost/Audit.vo: Ghost/Audit.v
 	rocq compile $(ROCQFLAGS) $<
@@ -111,9 +106,8 @@ Ghost/Tests.vo: Ghost/Tests.v Ghost/CertifiedAPI.vo
 	  exit 1; \
 	fi
 
-# Both runtimes compile the extracted checker together with the hand-written
-# entry points, in a scratch directory so the `.cm*` files stay out of the
-# artifact directories.
+# Compile the extracted checker and command-line wrapper in a build directory
+# so the intermediate OCaml files stay out of the source tree.
 $(NATIVE): $(EXTRACTED)/GhostChecker.ml runtime/main.ml runtime/report_json.ml
 	rm -rf $(BUILD)/native
 	mkdir -p $(BUILD)/native $(BUILD)/bin
@@ -127,36 +121,9 @@ $(NATIVE): $(EXTRACTED)/GhostChecker.ml runtime/main.ml runtime/report_json.ml
 	    GhostChecker.cmx report_json.cmx main.ml
 	cp $(BUILD)/native/ghost-checker $@
 
-# `ghost-checker-api.js` installs the callable entry points on the global
-# object for the browser and for Node.  wasm_of_ocaml writes its runtime assets
-# into a sibling `.assets` directory, which has to travel with it.
-$(WASMDIR)/ghost-checker-api.js: $(EXTRACTED)/GhostChecker.ml \
-    runtime/report_json.ml runtime/wasm_api.ml
-	rm -rf $(BUILD)/wasm-obj $(WASMDIR)
-	mkdir -p $(BUILD)/wasm-obj $(WASMDIR)
-	cp $(EXTRACTED)/GhostChecker.ml $(EXTRACTED)/GhostChecker.mli \
-	  runtime/report_json.ml runtime/wasm_api.ml $(BUILD)/wasm-obj/
-	cd $(BUILD)/wasm-obj && \
-	  ocamlfind ocamlc -package yojson -c GhostChecker.mli && \
-	  ocamlfind ocamlc -package yojson -c GhostChecker.ml && \
-	  ocamlfind ocamlc -package yojson -c report_json.ml && \
-	  ocamlfind ocamlc -package yojson,js_of_ocaml -c wasm_api.ml && \
-	  ocamlfind ocamlc -package yojson,js_of_ocaml -linkpkg \
-	    -o ghost-checker-api.byte \
-	    GhostChecker.cmo report_json.cmo wasm_api.cmo && \
-	  wasm_of_ocaml ghost-checker-api.byte -o ghost-checker-api.js
-	# The generated loader locates its Wasm through `require.main.filename`,
-	# which is null when Node loads it as a library rather than as the entry
-	# script.  Fail loudly if a wasm_of_ocaml update stops emitting it.
-	grep -q 'require\.main\.filename' $(BUILD)/wasm-obj/ghost-checker-api.js
-	sed 's/require\.main\.filename/__filename/g' \
-	  $(BUILD)/wasm-obj/ghost-checker-api.js > $(WASMDIR)/ghost-checker-api.js
-	cp -r $(BUILD)/wasm-obj/ghost-checker-api.assets $(WASMDIR)/
-
-# Run both runtimes against the repository's proof files; needs `node` and
-# `jq`.  `nix flake check` runs the same script against the Nix-built ones.
-check: $(NATIVE) $(WASMDIR)/ghost-checker-api.js
-	runtime/test/integration.sh $(NATIVE) $(WASMDIR) ../src/checker/proofs
+# Run the command-line checks against the two bundled examples. Needs jq.
+check: $(NATIVE)
+	bash runtime/test/integration.sh $(NATIVE)
 
 clean:
 	find Ghost -type f \( -name '*.vo' -o -name '*.vos' -o -name '*.vok' -o -name '*.glob' -o -name '*.aux' \) -delete
