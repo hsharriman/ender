@@ -85,6 +85,7 @@ const OUTCOME_ENFORCED = new Set([
   "examples/con_transitive_alias.txt",
   "examples/goal_reversed_correct.txt",
   "examples/goal_reversed_incorrect.txt",
+  "examples/incomplete_steps_skipped.txt",
   "examples/inscribed_angles.txt",
   "examples/overlap.txt",
   "examples/rhombusOutside.txt",
@@ -127,6 +128,10 @@ const OUTCOME_ENFORCED = new Set([
   "lines_angles/con_supplements_same_incorrect.txt",
   "lines_angles/corresp_ang_correct.txt",
   "lines_angles/corresp_ang_incorrect.txt",
+  "lines_angles/perp_transversal_correct.txt",
+  "lines_angles/perp_transversal_incorrect.txt",
+  "lines_angles/supp_transitive_correct.txt",
+  "lines_angles/supp_transitive_incorrect.txt",
   "lines_angles/def_con_right_incorrect.txt",
   "lines_angles/linear_pair_conv_correct.txt",
   "lines_angles/linear_pair_conv_incorrect.txt",
@@ -162,6 +167,8 @@ const OUTCOME_ENFORCED = new Set([
   "quadrilaterals/pgram_opp_sides_incorrect.txt",
   "quadrilaterals/rect_diag_con_correct.txt",
   "quadrilaterals/rect_diag_con_incorrect.txt",
+  "quadrilaterals/rect_diag_con_pgram_incorrect.txt",
+  "quadrilaterals/rect_diag_con_conv_rhombus_correct.txt",
   "quadrilaterals/rect_pgram_ang_correct.txt",
   "quadrilaterals/rect_pgram_ang_incorrect.txt",
   "quadrilaterals/rectangle_def_correct.txt",
@@ -199,6 +206,14 @@ const OUTCOME_ENFORCED = new Set([
   "triangles/equilat_equiang_correct.txt",
   "triangles/equilat_equiang_incorrect.txt",
   "triangles/sas_duplicate_side_incorrect.txt",
+  "triangles/castc_correct.txt",
+  "triangles/castc_incorrect.txt",
+  "triangles/sas_sim_correct.txt",
+  "triangles/sas_sim_incorrect.txt",
+  "triangles/sss_sim_correct.txt",
+  "triangles/sss_sim_incorrect.txt",
+  "triangles/sim_tri_transitive_correct.txt",
+  "triangles/sim_tri_transitive_incorrect.txt",
   "triangles/third_angle_correct.txt",
   "triangles/third_angle_incorrect.txt",
 ]);
@@ -431,6 +446,53 @@ steps:
     ]);
   });
 
+  test("skips incomplete steps and checks the rest", async () => {
+    const report = await checkVerifiedReportNode(
+      readFileSync(
+        join(PROOFS_DIR, "examples/incomplete_steps_skipped.txt"),
+        "utf8",
+      ),
+    );
+    expect(report.steps.map((step) => step.status)).toEqual([
+      "accepted",
+      "incomplete",
+      "accepted",
+      "incomplete",
+      "accepted",
+      "accepted",
+      "incomplete",
+    ]);
+    expect(summarizeReport(report)).toBe(
+      "Accepted by the verified checker. (goal reached at step 6)",
+    );
+    expect(reportFindings(report)).toEqual([
+      "Incomplete, so skipped: steps 2, 4, 7",
+    ]);
+    // An incomplete step proves nothing, so it is never "unused" either.
+    expect(report.graph.unusedSteps).toEqual([]);
+
+    // A step that cites an incomplete one is still not accepted.
+    const cited = await checkVerifiedReportNode(
+      [
+        'title: "x"',
+        "premises:",
+        "pt: A (0, 0, t), B (1, 0, t), C (2, 0, t), D (3, 0, t)",
+        "seg: AB CD",
+        "[g_1] con_seg(AB, CD)",
+        "-> con_seg(CD, AB)",
+        "",
+        "steps:",
+        "[01] given(g_1) ->",
+        "[02] con_seg_transitive(1, 1) -> con_seg(CD, AB)",
+      ].join("\n"),
+    );
+    expect(cited.steps.map((step) => step.status)).toEqual([
+      "incomplete",
+      "blocked",
+    ]);
+    expect(summarizeReport(cited)).toBe("Rejected by the verified checker.");
+  });
+
   test("lists each issue the findings do not already state", async () => {
     const rejected = await checkVerifiedReportNode(
       readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8"),
@@ -589,6 +651,128 @@ steps:
     for (const issue of issues) {
       expect(issue.details).not.toHaveProperty("message");
     }
+    // Lines that are not steps the writer could still be finishing -- no
+    // closed step number, a whole step missing its arrow, a statement followed
+    // by more text -- are malformed and reject the proof.  The rest are
+    // incomplete and skipped.
+    expect(report.isCorrect).toBe(false);
+    const full = await checkVerifiedReportNode(source);
+    expect(full.steps.map((step) => step.status)).toEqual([
+      "incomplete",
+      "incomplete",
+      "incomplete",
+      "incomplete",
+      "rejected",
+      "rejected",
+      "incomplete",
+      "incomplete",
+      "rejected",
+      "incomplete",
+    ]);
+    expect(full.graph.unusedSteps).toEqual([]);
+    const arrow = issues.find((issue) => issue.code === "missing_arrow");
+    expect(arrow?.details).toMatchObject({
+      reason: "reflex()",
+      statement: "ref_seg(AB,AB)",
+    });
+  });
+
+  test("rejects lines a step cannot contain", async () => {
+    const proof = (line: string) =>
+      [
+        'title: "x"',
+        "premises:",
+        "pt: A (0, 0, t), B (1, 1, t)",
+        "seg: AB",
+        "-> ref_seg(AB, AB)",
+        "",
+        "steps:",
+        "[01] reflex() -> ref_seg(AB, AB)",
+        line,
+      ].join("\n");
+    const codes = async (line: string) => {
+      const report = await checkVerifiedProofNode(proof(line));
+      const issues = "issues" in report ? report.issues : report.errors;
+      return {
+        isCorrect: report.isCorrect,
+        codes: issues.filter((i) => i.type === 3).map((i) => i.code),
+      };
+    };
+    expect(await codes("reflex() -> ref_seg(AB, AB)")).toEqual({
+      isCorrect: false,
+      codes: ["missing_step_number"],
+    });
+    expect(await codes("[] reflex() -> ref_seg(AB, AB)")).toEqual({
+      isCorrect: false,
+      codes: ["invalid_step_number"],
+    });
+    expect(await codes("[02] reflex() -> ref_seg(AB, AB);")).toEqual({
+      isCorrect: false,
+      codes: ["unsupported_character"],
+    });
+    // An incomplete line beside a complete proof is skipped.
+    expect(await codes("[02] reflex(")).toEqual({
+      isCorrect: true,
+      codes: ["unreadable_dependencies"],
+    });
+  });
+
+  test("rejects arcs the problem does not show to be minor arcs", async () => {
+    const proof = (arcs: string, premises: string[] = []) =>
+      [
+        'title: "x"',
+        "premises:",
+        "pt: O (5, 5, c), B (3, 8, tl), R (7, 8, tr), Y (8, 3, br), D (2, 3, bl), Q (4, 4, b), F (5, 7, t)",
+        "circ: c_OB",
+        `arc: ${arcs}`,
+        "[d_1] circ_order(c_OB, B, R, Y, D)",
+        ...premises,
+        "[g_1] con_arc(r_OBR, r_OYD)",
+        "-> con_seg(BR, YD)",
+        "",
+        "steps:",
+        "[01] given(g_1) -> con_arc(r_OBR, r_OYD)",
+        "[02] con_chords_intersect_arcs(1) -> con_seg(BR, YD)",
+      ].join("\n");
+    const check = async (arcs: string, premises: string[] = []) => {
+      const report = await checkVerifiedProofNode(proof(arcs, premises));
+      const issues = "issues" in report ? report.issues : report.errors;
+      return {
+        isCorrect: report.isCorrect,
+        issues: issues
+          .filter((i) => i.type === 11)
+          .map((i) => ({ code: i.code, details: i.details })),
+      };
+    };
+    expect(await check("r_OBR r_OYD")).toEqual({ isCorrect: true, issues: [] });
+    expect(await check("r_ORB r_ODY")).toEqual({ isCorrect: true, issues: [] });
+    expect(await check("r_OBR")).toEqual({
+      isCorrect: false,
+      issues: [{ code: "arc_not_declared", details: { arc: "r_OYD" } }],
+    });
+    expect(await check("r_OBR r_OYD r_QBR")).toEqual({
+      isCorrect: false,
+      issues: [{ code: "arc_center_not_circle", details: { arc: "r_QBR" } }],
+    });
+    expect(await check("r_OBR r_OYD r_OBQ")).toEqual({
+      isCorrect: false,
+      issues: [
+        {
+          code: "arc_point_not_on_circle",
+          details: { arc: "r_OBQ", point: "Q" },
+        },
+      ],
+    });
+    expect(await check("r_OBR r_OYD r_OBB")).toEqual({
+      isCorrect: false,
+      issues: [{ code: "arc_points_not_distinct", details: { arc: "r_OBB" } }],
+    });
+    expect(
+      await check("r_OBR r_OYD r_OBY", ["[d_2] diameter(c_OB, BY)"]),
+    ).toEqual({
+      isCorrect: false,
+      issues: [{ code: "arc_is_diameter", details: { arc: "r_OBY" } }],
+    });
   });
 
   test("names what the problem header is missing", async () => {

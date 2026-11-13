@@ -1,7 +1,10 @@
 import { ProofObj } from "checker/types/checkerTypes";
 import { presentationToProofObj } from "checker/verified/presentationAdapter";
 import { VerifiedStepReport } from "checker/verified/presentationTypes";
-import { checkVerifiedReport } from "checker/verified/wasmLoader";
+import {
+  checkVerifiedReport,
+  preloadVerifiedChecker,
+} from "checker/verified/wasmLoader";
 import { ProofContent } from "geometry-object";
 import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
@@ -142,6 +145,8 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
   }
 
   componentDidMount(): void {
+    // The check path surfaces any initialization error in the existing status UI.
+    void preloadVerifiedChecker().catch(() => {});
     this.fetchSelectedProof(this.state.selectedProofKey);
     this.scheduleProofParseDebounce();
     this.setupEditorOutsideClick(this.state.isEditorOpen);
@@ -435,7 +440,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                         ? "bg-red-100 rounded px-1 -mx-1"
                         : line.status === "blocked"
                           ? "bg-amber-50 rounded px-1 -mx-1"
-                          : undefined
+                          : line.status === "incomplete"
+                            ? "bg-slate-100 rounded px-1 -mx-1"
+                            : undefined
                     }
                   >
                     {line.text || " "}
@@ -471,7 +478,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                       className={`absolute left-[2px] w-2 h-2 rounded-full ${
                         line.status === "rejected"
                           ? "bg-red-600"
-                          : "bg-amber-400"
+                          : line.status === "incomplete"
+                            ? "bg-slate-400"
+                            : "bg-amber-400"
                       }`}
                       style={{ top: `${dotY}px` }}
                       onMouseEnter={() => {

@@ -77,18 +77,7 @@ Definition parse_circle (text : PChars) : option CircleName :=
   match text with ["c"%char; "_"%char; o; r] => Some (circle_name o r) | _ => None end.
 
 Definition parse_arc (text : PChars) : option ArcName :=
-  match parse_call text with
-  | Some (name, [c; a; b]) =>
-      match parse_circle c, parse_point a, parse_point b with
-      | Some circle, Some first, Some last =>
-          if chars_eqb name (list_ascii_of_string "minor_arc")
-          then Some (arc_name MinorArc circle first last)
-          else if chars_eqb name (list_ascii_of_string "major_arc")
-               then Some (arc_name MajorArc circle first last) else None
-      | _, _, _ => None
-      end
-  | _ => None
-  end.
+  match text with ["r"%char; "_"%char; o; a; b] => Some (arc_name o a b) | _ => None end.
 
 Definition parse_public_statement_chars_generic (text : PChars) : option Statement :=
   match parse_call text with
@@ -138,8 +127,6 @@ Definition parse_public_statement_chars_generic (text : PChars) : option Stateme
     if named "rhombus" then match args with [q] => match parse_quadrilateral q with Some Q=>Some(Rhombus Q)|_=>None end|_=>None end else
     if named "tangent" then match args with [c;s;p] => match parse_circle c,parse_segment s,parse_point p with Some C,Some ss,Some P=>Some(Tangent C ss P)|_,_,_=>None end|_=>None end else
     if named "chord" then match args with [c;s] => match parse_circle c,parse_segment s with Some C,Some ss=>Some(Chord C ss)|_,_=>None end|_=>None end else
-    if named "minor_arc" then match args with [c;a;b] => match parse_circle c,parse_point a,parse_point b with Some C,Some A,Some B=>Some(ArcStatement(arc_name MinorArc C A B))|_,_,_=>None end|_=>None end else
-    if named "major_arc" then match args with [c;a;b] => match parse_circle c,parse_point a,parse_point b with Some C,Some A,Some B=>Some(ArcStatement(arc_name MajorArc C A B))|_,_,_=>None end|_=>None end else
     if named "radius" then match args with [c;p] => match parse_circle c,parse_point p with Some C,Some P=>Some(Radius C P)|_,_=>None end|_=>None end else
     if named "diameter" then match args with [c;s] => match parse_circle c,parse_segment s with Some C,Some ss=>Some(Diameter C ss)|_,_=>None end|_=>None end else
     if named "inscribed_angle" then match args with [c;a] => match parse_circle c,parse_angle a with Some C,Some A=>Some(InscribedAngle C A)|_,_=>None end|_=>None end else
@@ -189,17 +176,12 @@ Definition parse_rendered_statement (x : PChars) : option Statement :=
   | ["r"%char;"h"%char;"o"%char;"m"%char;"b"%char;"u"%char;"s"%char;"("%char;"q"%char;"_"%char;a;b;c;d;")"%char] => Some (Rhombus (quadrilateral_name a b c d))
   | ["t"%char;"a"%char;"n"%char;"g"%char;"e"%char;"n"%char;"t"%char;"("%char;"c"%char;"_"%char;o;r;","%char;a;b;","%char;p;")"%char] => Some (Tangent (circle_name o r) (segment_name a b) p)
   | ["c"%char;"h"%char;"o"%char;"r"%char;"d"%char;"("%char;"c"%char;"_"%char;o;r;","%char;a;b;")"%char] => Some (Chord (circle_name o r) (segment_name a b))
-  | ["m"%char;"i"%char;"n"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o;r;","%char;a;","%char;b;")"%char] => Some (ArcStatement (arc_name MinorArc (circle_name o r) a b))
-  | ["m"%char;"a"%char;"j"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o;r;","%char;a;","%char;b;")"%char] => Some (ArcStatement (arc_name MajorArc (circle_name o r) a b))
   | ["r"%char;"a"%char;"d"%char;"i"%char;"u"%char;"s"%char;"("%char;"c"%char;"_"%char;o;r;","%char;p;")"%char] => Some (Radius (circle_name o r) p)
   | ["d"%char;"i"%char;"a"%char;"m"%char;"e"%char;"t"%char;"e"%char;"r"%char;"("%char;"c"%char;"_"%char;o;r;","%char;a;b;")"%char] => Some (Diameter (circle_name o r) (segment_name a b))
   | ["i"%char;"n"%char;"s"%char;"c"%char;"r"%char;"i"%char;"b"%char;"e"%char;"d"%char;"_"%char;"a"%char;"n"%char;"g"%char;"l"%char;"e"%char;"("%char;"c"%char;"_"%char;o;r;","%char;"a"%char;"_"%char;a;b;c;")"%char] => Some (InscribedAngle (circle_name o r) (angle_name a b c))
   | ["r"%char;"e"%char;"f"%char;"_"%char;"s"%char;"e"%char;"g"%char;"("%char;a;b;","%char;c;d;")"%char] => Some (RefSeg (segment_name a b) (segment_name c d))
   | ["r"%char;"e"%char;"f"%char;"_"%char;"a"%char;"n"%char;"g"%char;"("%char;"a"%char;"_"%char;a;b;c;","%char;"a"%char;"_"%char;d;e;f;")"%char] => Some (RefAng (angle_name a b c) (angle_name d e f))
-  | ["c"%char;"o"%char;"n"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"m"%char;"i"%char;"n"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o1;r1;","%char;a1;","%char;b1;")"%char;","%char;"m"%char;"i"%char;"n"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o2;r2;","%char;a2;","%char;b2;")"%char;")"%char] => Some (ConArc (arc_name MinorArc (circle_name o1 r1) a1 b1) (arc_name MinorArc (circle_name o2 r2) a2 b2))
-  | ["c"%char;"o"%char;"n"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"m"%char;"i"%char;"n"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o1;r1;","%char;a1;","%char;b1;")"%char;","%char;"m"%char;"a"%char;"j"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o2;r2;","%char;a2;","%char;b2;")"%char;")"%char] => Some (ConArc (arc_name MinorArc (circle_name o1 r1) a1 b1) (arc_name MajorArc (circle_name o2 r2) a2 b2))
-  | ["c"%char;"o"%char;"n"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"m"%char;"a"%char;"j"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o1;r1;","%char;a1;","%char;b1;")"%char;","%char;"m"%char;"i"%char;"n"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o2;r2;","%char;a2;","%char;b2;")"%char;")"%char] => Some (ConArc (arc_name MajorArc (circle_name o1 r1) a1 b1) (arc_name MinorArc (circle_name o2 r2) a2 b2))
-  | ["c"%char;"o"%char;"n"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"m"%char;"a"%char;"j"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o1;r1;","%char;a1;","%char;b1;")"%char;","%char;"m"%char;"a"%char;"j"%char;"o"%char;"r"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"c"%char;"_"%char;o2;r2;","%char;a2;","%char;b2;")"%char;")"%char] => Some (ConArc (arc_name MajorArc (circle_name o1 r1) a1 b1) (arc_name MajorArc (circle_name o2 r2) a2 b2))
+  | ["c"%char;"o"%char;"n"%char;"_"%char;"a"%char;"r"%char;"c"%char;"("%char;"r"%char;"_"%char;o1;a1;b1;","%char;"r"%char;"_"%char;o2;a2;b2;")"%char] => Some (ConArc (arc_name o1 a1 b1) (arc_name o2 a2 b2))
   | ["o"%char;"n"%char;"_"%char;"c"%char;"i"%char;"r"%char;"c"%char;"l"%char;"e"%char;"("%char;"c"%char;"_"%char;o;r;","%char;p;")"%char] => Some (OnCirclePoint (circle_name o r) p)
   | ["c"%char;"e"%char;"n"%char;"t"%char;"e"%char;"r"%char;"_"%char;"o"%char;"n"%char;"_"%char;"l"%char;"i"%char;"n"%char;"e"%char;"("%char;"c"%char;"_"%char;o;r;","%char;a;b;")"%char] => Some (CenterOnLine (circle_name o r) (segment_name a b))
   | _ => None
@@ -324,7 +306,6 @@ Ltac solve_statement_render :=
   | q : QuadrilateralName |- _ => destruct q
   | c : CircleName |- _ => destruct c
   | a : ArcName |- _ => destruct a
-  | k : ArcKind |- _ => destruct k
   end;
   reflexivity.
 
@@ -361,16 +342,18 @@ Proof.
   now apply String.eqb_eq in Heq.
 Qed.
 
-Fixpoint parse_segment_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_segment_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | a::b::rest => match parse_segment_declarations rest with Some ds=>Some(SegmentDeclaration(segment_name a b)::ds)|_=>None end | _=>None end.
-Fixpoint parse_angle_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_angle_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | "a"%char::"_"%char::a::o::b::rest => match parse_angle_declarations rest with Some ds=>Some(AngleDeclaration(angle_name a o b)::ds)|_=>None end | _=>None end.
-Fixpoint parse_triangle_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_triangle_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | "t"%char::"_"%char::a::b::c::rest => match parse_triangle_declarations rest with Some ds=>Some(TriangleDeclaration(triangle_name a b c)::ds)|_=>None end | _=>None end.
-Fixpoint parse_quad_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_quad_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | "q"%char::"_"%char::a::b::c::d::rest => match parse_quad_declarations rest with Some ds=>Some(QuadrilateralDeclaration(quadrilateral_name a b c d)::ds)|_=>None end | _=>None end.
-Fixpoint parse_circle_declarations (text : PChars) : option (list PublicDeclaration) :=
+Fixpoint parse_circle_declarations (text : PChars) : option (list Declaration) :=
   match text with []=>Some[] | "c"%char::"_"%char::o::r::rest => match parse_circle_declarations rest with Some ds=>Some(CircleDeclaration(circle_name o r)::ds)|_=>None end | _=>None end.
+Fixpoint parse_arc_declarations (text : PChars) : option (list Declaration) :=
+  match text with []=>Some[] | "r"%char::"_"%char::o::a::b::rest => match parse_arc_declarations rest with Some ds=>Some(ArcDeclaration(arc_name o a b)::ds)|_=>None end | _=>None end.
 
 Lemma concat_empty_cons : forall first rest,
   String.concat "" (first :: rest) = first ++ String.concat "" rest.
@@ -436,15 +419,27 @@ Proof.
   destruct d; cbn in Hd; try discriminate. destruct c. cbn. now rewrite IH.
 Qed.
 
+Lemma parse_arc_declarations_render : forall declarations,
+  Forall (fun d => declarationTag d = "arc:") declarations ->
+  parse_arc_declarations
+    (list_ascii_of_string (String.concat "" (map declarationObjectText declarations))) =
+  Some declarations.
+Proof.
+  intros declarations H. induction H as [|d ds Hd Hds IH]; [reflexivity|].
+  cbn [map]. rewrite concat_empty_cons, list_ascii_append.
+  destruct d; cbn in Hd; try discriminate. destruct a. cbn. now rewrite IH.
+Qed.
+
 Definition parse_declaration_line_raw_chars (text : PChars)
-    : option (list PublicDeclaration) :=
+    : option (list Declaration) :=
   if Chars.starts_with (list_ascii_of_string "seg:") text then parse_segment_declarations(Chars.drop_chars 4 text) else
   if Chars.starts_with (list_ascii_of_string "ang:") text then parse_angle_declarations(Chars.drop_chars 4 text) else
   if Chars.starts_with (list_ascii_of_string "tri:") text then parse_triangle_declarations(Chars.drop_chars 4 text) else
   if Chars.starts_with (list_ascii_of_string "quad:") text then parse_quad_declarations(Chars.drop_chars 5 text) else
-  if Chars.starts_with (list_ascii_of_string "circ:") text then parse_circle_declarations(Chars.drop_chars 5 text) else None.
+  if Chars.starts_with (list_ascii_of_string "circ:") text then parse_circle_declarations(Chars.drop_chars 5 text) else
+  if Chars.starts_with (list_ascii_of_string "arc:") text then parse_arc_declarations(Chars.drop_chars 4 text) else None.
 
-Definition parse_declaration_line_raw (line : string) : option (list PublicDeclaration) :=
+Definition parse_declaration_line_raw (line : string) : option (list Declaration) :=
   parse_declaration_line_raw_chars (list_ascii_of_string (normalized line)).
 
 Lemma parse_declaration_line_raw_chars_render : forall first rest,
@@ -462,9 +457,10 @@ Proof.
   - destruct t. cbn. now rewrite parse_triangle_declarations_render by exact Htags.
   - destruct q. cbn. now rewrite parse_quad_declarations_render by exact Htags.
   - destruct c. cbn. now rewrite parse_circle_declarations_render by exact Htags.
+  - destruct a. cbn. now rewrite parse_arc_declarations_render by exact Htags.
 Qed.
 
-Definition declarations_text (declarations : list PublicDeclaration) : option string :=
+Definition declarations_text (declarations : list Declaration) : option string :=
   match declarations with
   | [] => None
   | first :: rest =>
@@ -475,10 +471,10 @@ Definition declarations_text (declarations : list PublicDeclaration) : option st
       else None
   end.
 
-Definition declarations_valid (declarations : list PublicDeclaration) : bool :=
+Definition declarations_valid (declarations : list Declaration) : bool :=
   forallb (fun declaration => pointsValid (declarationPoints declaration)) declarations.
 
-Definition parse_declaration_line (line : string) : option (list PublicDeclaration) :=
+Definition parse_declaration_line (line : string) : option (list Declaration) :=
   match parse_declaration_line_raw line with
   | Some declarations =>
       match declarations_text declarations with
@@ -545,7 +541,7 @@ Qed.
 (** A line contributes one [HeaderContribution]; a whole header adds those up
     into declarations, premises, and a conclusion at once. *)
 Definition HeaderAccumulator :=
-  (list PublicDeclaration * list Statement * option Statement)%type.
+  (list Declaration * list Statement * option Statement)%type.
 
 Definition parse_public_line (line : string) : option HeaderContribution :=
   match premiseBody line with
@@ -770,10 +766,10 @@ Proof.
     f_equal. now apply IH.
 Qed.
 
-Definition parsePublicProblem (source:string) : option PublicProblem :=
+Definition parsePublicProblem (source:string) : option Problem :=
   match parse_public_lines (splitLines source) with
   |Some (declarations, premises, Some goal) =>
-      Some (public_problem declarations premises goal)
+      Some (problem declarations premises goal)
   |Some (_, _, None) => None
   |None=>None end.
 

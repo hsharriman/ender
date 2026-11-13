@@ -56,7 +56,6 @@ export const STMTS_DEFS = {
     right: {
       name: "right",
       parameters: [angle("a")],
-      isPremisesOnly: true,
     },
     con_seg: {
       name: "con_seg",
@@ -179,10 +178,6 @@ export const STMTS_DEFS = {
       name: "chord",
       parameters: [circle("c"), segment("s")],
     },
-    arc: {
-      name: "arc",
-      parameters: [circle("c"), point("p1"), point("p2")],
-    },
     radius: {
       name: "radius",
       parameters: [circle("c"), point("p")],
@@ -214,10 +209,6 @@ export const STMTS_DEFS = {
       name: "center_on_line",
       parameters: [circle("c"), segment("s")],
     },
-    // arc_bisect: {
-    //   name: "arc_bisect",
-    //   parameters: [arc("a"), segment("s"), point("p")],
-    // },
     ref_seg: {
       name: "ref_seg",
       parameters: [segment("s1"), segment("s2")],
@@ -228,17 +219,16 @@ export const STMTS_DEFS = {
       parameters: [angle("a1"), angle("a2")],
       allowDupeArgs: true,
     },
+    // An arc r_OAB is the minor arc AB of the circle centred at O. Declare
+    // it on an `arc:` line, such as `arc: r_OAB r_OCD`, before naming it.
+    // A and B must be on that circle, and AB must not be a diameter.
     con_arc: {
       name: "con_arc",
       parameters: [arc("a1"), arc("a2")],
+      isPremisesOnly: true,
     },
   },
   groups: {
-    congruent_angs: {
-      name: "congruent_angs",
-      base: "con_ang",
-      extensions: ["con_right"],
-    },
     con_seg_ref_allow: {
       name: "con_seg_ref_allow",
       base: "con_seg",
@@ -249,26 +239,19 @@ export const STMTS_DEFS = {
       base: "con_ang",
       extensions: ["ref_ang", "con_right"],
     },
-    /** Either form of triangle congruence; both carry a correspondence. */
-    con_tri_any: {
-      name: "con_tri_any",
-      base: "con_tri",
-      extensions: ["con_tri_ordered"],
-    },
+    /** A rhombus or a rectangle is a parallelogram, so a rule that needs a
+        parallelogram accepts either; a rule that needs a rhombus or a
+        rectangle does not accept a plain parallelogram. */
     pgram_obj: {
       name: "pgram_obj",
       base: "parallelogram",
       extensions: ["rhombus", "rectangle"],
     },
-    trapez_prem_obj: {
-      name: "trapez_obj",
-      base: "trapezoid_premise",
-      extensions: ["isos_trapezoid_premise"],
-    },
-    isos_trap_obj: {
-      name: "isos_trap_obj",
-      base: "isos_trapezoid_premise",
-      extensions: ["isos_trapezoid"],
+    /** Either form of triangle congruence; both carry a correspondence. */
+    con_tri_any: {
+      name: "con_tri_any",
+      base: "con_tri",
+      extensions: ["con_tri_ordered"],
     },
   },
 } as const;

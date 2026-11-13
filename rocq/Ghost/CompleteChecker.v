@@ -12,42 +12,48 @@ Import GhostSyntax.
 Open Scope string_scope.
 
 (** The kernel reads a problem's declarations into its bundle, by kind. *)
-Definition projected_triangles (ds : list Audit.PublicDeclaration) : list TriangleName :=
+Definition projected_triangles (ds : list Audit.Declaration) : list TriangleName :=
   fold_right (fun d rest => match d with
     | Audit.TriangleDeclaration t => t :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_angles (ds : list Audit.PublicDeclaration) : list AngleName :=
+Definition projected_angles (ds : list Audit.Declaration) : list AngleName :=
   fold_right (fun d rest => match d with
     | Audit.AngleDeclaration a => a :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_quadrilaterals (ds : list Audit.PublicDeclaration)
+Definition projected_quadrilaterals (ds : list Audit.Declaration)
     : list QuadrilateralName :=
   fold_right (fun d rest => match d with
     | Audit.QuadrilateralDeclaration q => q :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_circles (ds : list Audit.PublicDeclaration)
+Definition projected_circles (ds : list Audit.Declaration)
     : list CircleName :=
   fold_right (fun d rest => match d with
     | Audit.CircleDeclaration c => c :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_segments (ds : list Audit.PublicDeclaration) : list SegmentName :=
+Definition projected_segments (ds : list Audit.Declaration) : list SegmentName :=
   fold_right (fun d rest => match d with
     | Audit.SegmentDeclaration s => s :: rest
     | _ => rest
     end) [] ds.
 
-Definition projected_declarations (ds : list Audit.PublicDeclaration) : Declarations :=
+Definition projected_arcs (ds : list Audit.Declaration) : list ArcName :=
+  fold_right (fun d rest => match d with
+    | Audit.ArcDeclaration a => a :: rest
+    | _ => rest
+    end) [] ds.
+
+Definition projected_declarations (ds : list Audit.Declaration) : Declarations :=
   declarations (projected_triangles ds) (projected_angles ds)
                (projected_quadrilaterals ds) (projected_circles ds)
-               (projected_segments ds).
+               (projected_segments ds) (projected_arcs ds).
 
 Fixpoint statement_list_eqb (a b : list Statement) : bool :=
   match a, b with
@@ -91,12 +97,20 @@ Fixpoint segment_list_eqb (a b : list SegmentName) : bool :=
   | _, _ => false
   end.
 
+Fixpoint arc_list_eqb (a b : list ArcName) : bool :=
+  match a, b with
+  | [], [] => true
+  | x :: xs, y :: ys => arc_eqb x y && arc_list_eqb xs ys
+  | _, _ => false
+  end.
+
 Definition declarations_eqb (a b : Declarations) : bool :=
   triangle_list_eqb a.(decl_triangles) b.(decl_triangles) &&
   angle_list_eqb a.(decl_angles) b.(decl_angles) &&
   quadrilateral_list_eqb a.(decl_quadrilaterals) b.(decl_quadrilaterals) &&
   circle_list_eqb a.(decl_circles) b.(decl_circles) &&
-  segment_list_eqb a.(decl_segments) b.(decl_segments).
+  segment_list_eqb a.(decl_segments) b.(decl_segments) &&
+  arc_list_eqb a.(decl_arcs) b.(decl_arcs).
 
 Definition premise_statements (ps : list Premise) : list Statement :=
   map premise_statement ps.
@@ -104,15 +118,15 @@ Definition premise_statements (ps : list Premise) : list Statement :=
 (** The kernel checks the audited problem itself.  The header pass supplies
     what the audited problem does not carry -- the labels steps cite premises
     by -- and must agree with the audited parse on everything else. *)
-Definition build_kernel_problem (public : Audit.PublicProblem)
+Definition build_kernel_problem (public : Audit.Problem)
     (header : ProblemHeader) (steps : list Step) : option Problem :=
-  if declarations_eqb (projected_declarations public.(Audit.public_declarations))
+  if declarations_eqb (projected_declarations public.(Audit.problem_declarations))
                       header.(header_declarations) &&
-     statement_list_eqb public.(Audit.public_premises)
+     statement_list_eqb public.(Audit.problem_premises)
                         (premise_statements header.(header_premises)) &&
-     statement_eqb public.(Audit.public_conclusion) header.(header_goal)
+     statement_eqb public.(Audit.problem_conclusion) header.(header_goal)
   then Some (problem header.(header_declarations) header.(header_premises)
-                     public.(Audit.public_conclusion) steps)
+                     public.(Audit.problem_conclusion) steps)
   else None.
 
 Inductive CheckResult := ParseFailure | ProofRejected | ProofAccepted.
@@ -151,7 +165,7 @@ Definition complete_checker (source : string) : bool :=
 Definition empty_graph : Audit.DependencyGraph :=
   Audit.dependency_graph [] [] [] [].
 
-Definition public_problem_of_source (source : string) : option Audit.PublicProblem :=
+Definition public_problem_of_source (source : string) : option Audit.Problem :=
   match problemPart source with
   | Some part => parsePublicProblem part
   | None => None
@@ -210,7 +224,7 @@ Definition statement_function (s : Statement) : string :=
   | InscribedAngle _ _ => "inscribed_angle"
   | OnCirclePoint _ _ => "on_circle" | CenterOnLine _ _ => "center_on_line"
   | CircOrder _ _ => "circ_order"
-  | ArcStatement _ => "arc" | ConArc _ _ => "con_arc"
+  | ConArc _ _ => "con_arc"
   | Proportion _ _ _ _ => "proportion" | Circumcenter _ _ => "circumcenter"
   | Incenter _ _ => "incenter" | PerpBisector _ _ _ => "perp_bisector"
   end.
@@ -242,7 +256,8 @@ Definition allowed_functions (expected : ExpectedFact) : list string :=
   | ExpectedLinearPair => []
   | ExpectedRhombus => []
   | ExpectedRectangle => []
-  | ExpectedParallelogram => []
+  (* A rhombus or a rectangle is read as the parallelogram it names. *)
+  | ExpectedParallelogram => ["rhombus"; "rectangle"]
   end.
 
 Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bool :=
@@ -261,7 +276,8 @@ Definition fact_has_expected_type (expected : ExpectedFact) (s : Statement) : bo
   | ExpectedLinearPair, LinearPair _ _ => true
   | ExpectedRhombus, Rhombus _ => true
   | ExpectedRectangle, Rectangle _ => true
-  | ExpectedParallelogram, Parallelogram _ => true
+  | ExpectedParallelogram, Parallelogram _
+  | ExpectedParallelogram, Rhombus _ | ExpectedParallelogram, Rectangle _ => true
   | _, _ => false
   end.
 
@@ -424,7 +440,7 @@ Definition reason_dependency_issue (facts : list Statement) (reason : Reason)
 
 Definition reason_name (r : Reason) : string :=
   match r with
-  | Given _ => "given" | Reflex => "reflex"
+  | Given _ => "given" | Reflex => "reflex" | Incomplete => "incomplete"
   | SAS _ _ _ => "sas" | SSS _ _ _ => "sss"
   | ASA _ _ _ => "asa" | AAS _ _ _ => "aas"
   | CPCTC _ => "cpctc"
@@ -493,6 +509,12 @@ Definition reason_name (r : Reason) : string :=
   | RhombusDiagPerpConv _ _ => "rhombus_diag_perp_conv"
   | RhombusOppBisectConv _ _ _ => "rhombus_opp_bisect_conv"
   | AASim _ _ => "aa_sim"
+  | SSSSim _ _ => "sss_sim"
+  | SASSim _ _ => "sas_sim"
+  | CASTC _ => "castc"
+  | SimTriTrans _ _ => "sim_tri_transitive"
+  | SuppTrans _ _ => "supp_transitive"
+  | PerpTransversal _ _ => "perp_transversal"
   | LinearPairConv _ => "linear_pair_conv"
   | PgramDiagBisect _ => "pgram_diag_bisect"
   | RhombusDiagPerp _ => "rhombus_diag_perp"
@@ -507,8 +529,8 @@ Definition reason_name (r : Reason) : string :=
     label rather than a step, and [reflex] cites nothing. *)
 Definition reason_dependencies (r : Reason) : list nat :=
   match r with
-  | Given _ | Reflex | VertAng _ => []
-  | CPCTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
+  | Given _ | Reflex | VertAng _ | Incomplete => []
+  | CPCTC i | CASTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
   | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
   | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
   | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | KiteOppConAng i
@@ -528,7 +550,9 @@ Definition reason_dependencies (r : Reason) : list nat :=
   | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
   | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
   | RectDiagConConv i j | RhombusDiagPerpConv i j
-  | AASim i j | ChordBisectConv i j | ConInscribedAngs i j
+  | AASim i j | SSSSim i j | SASSim i j | ChordBisectConv i j
+  | SimTriTrans i j | SuppTrans i j | PerpTransversal i j
+  | ConInscribedAngs i j
   | SuppInscribedAngs i j | InscribedSemi i j => [i; j]
   | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
   | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
@@ -555,7 +579,8 @@ Record ReportStep := report_step {
   rs_source : string;
   rs_label : option nat;
   rs_step : option Step;
-  rs_line : list ascii
+  rs_line : list ascii;
+  rs_kind : Parser.StepLine
 }.
 
 Definition step_label (compact : list ascii) : option nat :=
@@ -574,16 +599,33 @@ Fixpoint report_step_lines (lines : list (list ascii)) : list ReportStep :=
   | line :: rest =>
       let compact := Parser.remove_space (Parser.take_until "/"%char line) in
       if Parser.starts_with ["["%char] compact then
+        let kind := Parser.classify_step_line line in
         report_step (string_of_list_ascii line) (step_label compact)
-          (Parser.parse_step line) line :: report_step_lines rest
+          (match kind with Parser.LineStep s => Some s | _ => None end) line kind
+          :: report_step_lines rest
       else report_step_lines rest
   end.
 
+(** Lines in the steps section that are not blank and do not start a step:
+    they hold no step number, so they reject the proof without occupying a
+    step's place. *)
+Fixpoint stray_step_lines (lines : list (list ascii)) : list string :=
+  match lines with
+  | [] => []
+  | line :: rest =>
+      let compact := Parser.remove_space (Parser.take_until "/"%char line) in
+      match compact with
+      | [] => stray_step_lines rest
+      | "["%char :: _ => stray_step_lines rest
+      | _ => string_of_list_ascii line :: stray_step_lines rest
+      end
+  end.
+
 (** A line that does not parse states nothing.  It still occupies its place,
-    so later citations keep pointing where the writer meant; the placeholder
-    names no real point, so no rule can use it. *)
-Definition placeholder_fact : Statement :=
-  ConSeg (segment_name "?"%char "?"%char) (segment_name "?"%char "?"%char).
+    so later citations keep pointing where the writer meant; it stands for the
+    kernel's own [incomplete_fact], so the report judges later steps against
+    exactly the facts the verdict does. *)
+Definition placeholder_fact : Statement := incomplete_fact.
 
 Definition fact_of (s : option Step) : Statement :=
   match s with Some st => st.(step_conclusion) | None => placeholder_fact end.
@@ -605,15 +647,19 @@ Definition dependency_blocked (statuses : list (nat * Audit.StepStatus))
     end) dependencies.
 
 Fixpoint step_statuses (decls : Declarations) (premises : list Premise)
-    (facts : list Statement) (steps : list (option Step)) (number : nat)
+    (facts : list Statement) (steps : list Parser.StepLine) (number : nat)
     (statuses : list (nat * Audit.StepStatus))
     : list (nat * Audit.StepStatus) :=
   match steps with
   | [] => statuses
-  | None :: rest =>
+  | Parser.LineIncomplete :: rest =>
+      step_statuses decls premises (List.app facts [placeholder_fact])
+        rest (S number) (List.app statuses [(number, Audit.StepIncomplete)])
+  (* malformed: the verdict rejects the proof, and this step with it *)
+  | (Parser.LineMalformed | Parser.LineBlank) :: rest =>
       step_statuses decls premises (List.app facts [placeholder_fact])
         rest (S number) (List.app statuses [(number, Audit.StepRejected)])
-  | Some current :: rest =>
+  | Parser.LineStep current :: rest =>
       (* Blocking comes first: a rule may need its cited step's facts to
          judge the step at all, as [cpctc] does for an unordered [con_tri]. *)
       let status :=
@@ -636,8 +682,12 @@ Definition status_of (statuses : list (nat * Audit.StepStatus)) (number : nat)
   end.
 
 Definition step_unparsed_diagnostic : Audit.Diagnostic :=
+  Audit.diagnostic Audit.ProofParsing Audit.DiagnosticWarning Audit.MalformedProof
+    "this step is incomplete, so it was skipped".
+
+Definition step_malformed_diagnostic : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofParsing Audit.DiagnosticError Audit.MalformedProof
-    "this step could not be read".
+    "this step is malformed, so the proof is rejected".
 
 Fixpoint step_reports (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (statuses : list (nat * Audit.StepStatus))
@@ -657,11 +707,14 @@ Fixpoint step_reports (decls : Declarations) (premises : list Premise)
             (match status with
              | Audit.StepRejected => [step_failure_diagnostic]
              | Audit.StepBlocked => [step_blocked_diagnostic]
-             | Audit.StepAccepted => []
+             | Audit.StepAccepted | Audit.StepIncomplete => []
              end)
       | None =>
           Audit.step_report number rs.(rs_source) None None status [] []
-            [step_unparsed_diagnostic]
+            [match status with
+             | Audit.StepIncomplete => step_unparsed_diagnostic
+             | _ => step_malformed_diagnostic
+             end]
       end
       :: step_reports decls premises
            (List.app facts [fact_of rs.(rs_step)]) statuses rest (S number)
@@ -700,6 +753,42 @@ Fixpoint find_cycle (edges : list (nat * nat)) (fuel : nat) (path : list nat)
         scan (successors edges node)
   end.
 
+(** Completed branches contain no reachable cycle.  Cache only branches that
+    never exhausted the depth bound: a depth-limited failure is not evidence
+    that a node is finished.  Keep the original successor and root order so
+    the first cycle and its spelling stay unchanged. *)
+Record CycleSearch := cycle_search {
+  cycle_found : option (list nat);
+  cycle_finished : list nat;
+  cycle_exhaustive : bool
+}.
+
+Fixpoint find_cycle_cached (edges : list (nat * nat)) (fuel : nat)
+    (path finished : list nat) (node : nat) : CycleSearch :=
+  match fuel with
+  | O => cycle_search None finished false
+  | S remaining =>
+      if existsb (nat_eqb_report node) path then
+        cycle_search (Some (cycle_tail node path)) finished true
+      else if existsb (nat_eqb_report node) finished then
+        cycle_search None finished true
+      else
+        let extended := List.app path [node] in
+        let fix scan (candidates done : list nat) (exhaustive : bool) : CycleSearch :=
+          match candidates with
+          | [] => cycle_search None
+                    (if exhaustive then node :: done else done) exhaustive
+          | next :: rest =>
+              let result := find_cycle_cached edges remaining extended done next in
+              match result.(cycle_found) with
+              | Some _ => result
+              | None => scan rest result.(cycle_finished)
+                             (exhaustive && result.(cycle_exhaustive))
+              end
+          end in
+        scan (successors edges node) finished true
+  end.
+
 Definition same_cycle (a b : list nat) : bool :=
   Nat.eqb (List.length a) (List.length b) &&
   forallb (fun x => existsb (nat_eqb_report x) b) a.
@@ -711,7 +800,7 @@ Definition same_cycle (a b : list nat) : bool :=
 Definition graph_cycles (nodes : list nat) (edges : list (nat * nat))
     : list (list nat) :=
   fold_left (fun found node =>
-    match find_cycle edges (S (List.length nodes)) [] node with
+    match (find_cycle_cached edges (S (List.length nodes)) [] [] node).(cycle_found) with
     | Some cycle =>
         if existsb (same_cycle cycle) found then found
         else List.app found [cycle]
@@ -731,8 +820,16 @@ Definition step_graph (reports : list Audit.StepReport) (stated_by : option nat)
   let cited n := existsb (fun e => nat_eqb_report (fst e) n) edges in
   let goal_step n :=
     match stated_by with Some g => nat_eqb_report g n | None => false end in
+  (* a line that did not read as a step proves nothing, so it is not "unused"
+     either: the issue for it already says what is wrong *)
+  let incomplete n :=
+    existsb (fun r => nat_eqb_report r.(Audit.step_number) n &&
+                      match r.(Audit.step_reason_name) with
+                      | None => true
+                      | Some _ => false
+                      end) reports in
   Audit.dependency_graph nodes edges (graph_cycles nodes edges)
-    (filter (fun n => negb (cited n || goal_step n)) nodes).
+    (filter (fun n => negb (cited n || goal_step n || incomplete n)) nodes).
 
 (** A fact proved twice.  Sameness is the checker's own [fact_eqb], so a
     congruence restated with its sides exchanged counts, as it should.
@@ -832,7 +929,8 @@ Record ReportData := report_data {
   rd_premises : list Premise;
   rd_goal : Statement;
   rd_steps : list ReportStep;
-  rd_statuses : list (nat * Audit.StepStatus)
+  rd_statuses : list (nat * Audit.StepStatus);
+  rd_stray : list string
 }.
 
 Definition report_data_of (source : string) : option ReportData :=
@@ -853,7 +951,8 @@ Definition report_data_of (source : string) : option ReportData :=
               Some (report_data decls p.(problem_premises)
                       p.(problem_goal) steps
                       (step_statuses decls
-                         p.(problem_premises) [] (map rs_step steps) 1 []))
+                         p.(problem_premises) [] (map rs_kind steps) 1 [])
+                      (stray_step_lines (Parser.split_lines stepText [])))
           | None => None
           end
       | _, _, _ => None
@@ -861,10 +960,11 @@ Definition report_data_of (source : string) : option ReportData :=
   | None => None
   end.
 
-Definition report_content (source : string)
-    : list Audit.StepReport * Audit.DependencyGraph *
-      list Audit.DuplicateDerivation * Audit.GoalReport :=
-  match report_data_of source with
+Definition ReportContent : Type := (list Audit.StepReport * Audit.DependencyGraph *
+  list Audit.DuplicateDerivation * Audit.GoalReport)%type.
+
+Definition report_content_from_data (data : option ReportData) : ReportContent :=
+  match data with
   | Some d =>
       let steps := map rs_step d.(rd_steps) in
       let reports :=
@@ -876,6 +976,9 @@ Definition report_content (source : string)
        goal_report_for d.(rd_goal) steps d.(rd_statuses))
   | None => ([], empty_graph, [], Audit.goal_report None [])
   end.
+
+Definition report_content (source : string) : ReportContent :=
+  report_content_from_data (report_data_of source).
 
 (** * Issues
 
@@ -927,8 +1030,6 @@ Definition statement_signatures : list (string * list string) :=
    ("rhombus", [quad]);
    ("tangent", [circ; seg; pt]);
    ("chord", [circ; seg]);
-   ("minor_arc", [circ; pt; pt]);
-   ("major_arc", [circ; pt; pt]);
    ("radius", [circ; pt]);
    ("diameter", [circ; seg]);
    ("inscribed_angle", [circ; ang]);
@@ -1034,6 +1135,9 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("pgram_diag_bisect_conv", (2, 2)); ("pgram_opp_angs_conv", (2, 2));
    ("rect_diag_con_conv", (2, 2)); ("rhombus_diag_perp_conv", (2, 2));
    ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
+   ("sss_sim", (2, 2)); ("sas_sim", (2, 2)); ("castc", (1, 1));
+   ("sim_tri_transitive", (2, 2)); ("supp_transitive", (2, 2));
+   ("perp_transversal", (2, 3));
    ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
    ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2));
    ("chord_bisect_conv", (2, 2)); ("def_radius_conv", (1, 2));
@@ -1086,28 +1190,66 @@ Definition reason_issue (number : nat) (raw : list ascii) : Audit.Issue :=
   end.
 
 (** Why a step line did not parse.  Spaces and a trailing [//] comment do not
-    count, so [[01]  // todo] is an empty step. *)
+    count, so [[01]  // todo] is an empty step.  The first five cases are the
+    lines [Parser.classify_step_line] calls malformed, which reject the proof;
+    the rest are incomplete steps, which are skipped. *)
 Definition step_parse_issue (number : nat) (line : list ascii) : Audit.Issue :=
   let compact := Parser.remove_space (Parser.take_until "/"%char line) in
-  let issue code := Audit.issue 3 code (Audit.JsonObject [step_field number]) in
+  let with_fields code extra :=
+    Audit.issue 3 code (Audit.JsonObject (step_field number :: extra)) in
+  let issue code := with_fields code [] in
+  let text t := string_of_list_ascii t in
   match compact with
   | "["%char :: rest =>
-      match Parser.find_after ["]"%char] rest with
-      | None => issue "unclosed_step_number"
-      | Some [] => issue "empty_step"
-      | Some after =>
+      match Parser.take_before ["]"%char] rest, Parser.find_after ["]"%char] rest with
+      | Some label, Some after =>
+          if negb (Parser.all_digits label) then
+            with_fields "invalid_step_number" [string_field "label" (text label)]
+          else
+          match find (fun c => negb (Parser.step_char c)) after with
+          | Some c =>
+              with_fields "unsupported_character"
+                [string_field "character" (String c EmptyString)]
+          | None =>
+          if Parser.arrow_missing after then
+            match Parser.call_split after [] 0 with
+            | Some (reason, statement) =>
+                with_fields "missing_arrow"
+                  [string_field "reason" (text reason);
+                   string_field "statement" (text statement)]
+            | None => issue "missing_arrow"
+            end
+          else
           match Parser.split_arrow after with
-          | None => issue "missing_arrow"
+          | None =>
+              match after with
+              | [] => issue "empty_step"
+              | _ =>
+                  match Parser.parse_reason_chars after with
+                  | Some _ => issue "empty_statement"
+                  | None => reason_issue number after
+                  end
+              end
           | Some ([], []) => issue "empty_step"
           | Some ([], _) => issue "empty_reason"
           | Some (reason_text, statement_text) =>
+              if Parser.statement_trailing statement_text then
+                match Parser.call_split statement_text [] 0 with
+                | Some (statement, trailing) =>
+                    with_fields "trailing_text"
+                      [string_field "statement" (text statement);
+                       string_field "trailing" (text trailing)]
+                | None => issue "trailing_text"
+                end
+              else
               match Parser.parse_reason_chars reason_text with
               | None => reason_issue number reason_text
               | Some _ =>
-                  statement_issue [step_field number]
-                    (string_of_list_ascii statement_text)
+                  statement_issue [step_field number] (text statement_text)
               end
           end
+          end
+      | _, _ => issue "unclosed_step_number"
       end
   | _ => issue "missing_step_number"
   end.
@@ -1115,7 +1257,7 @@ Definition step_parse_issue (number : nat) (line : list ascii) : Audit.Issue :=
 (** The statements each reason can conclude. *)
 Definition reason_conclusions (r : Reason) : option (list string) :=
   match r with
-  | Given _ => None
+  | Given _ | Incomplete => None
   | Reflex => Some ["ref_seg"; "ref_ang"]
   | SAS _ _ _ | SSS _ _ _ | ASA _ _ _ | AAS _ _ _ | RHL _ _ _
   | DefConTri _ _ _ _ _ _ | ConTriTrans _ _ => Some ["con_tri"; "con_tri_ordered"]
@@ -1149,7 +1291,10 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | TangentPerpConv _ _ => Some ["tangent"]
   | RadiusChordBisect _ _ _ => Some ["seg_bisect"]
   | InscribedSemi _ _ => Some ["right"]
-  | AASim _ _ => Some ["sim_tri"]
+  | AASim _ _ | SSSSim _ _ | SASSim _ _ | SimTriTrans _ _ => Some ["sim_tri"]
+  | SuppTrans _ _ => Some ["supplementary"]
+  | PerpTransversal _ _ => Some ["perp"]
+  | CASTC _ => Some ["con_ang"]
   | LinearPairConv _ => Some ["linear_pair"]
   | PgramDiagBisect _ => Some ["seg_bisect"]
   | RhombusDiagPerp _ | KiteDiagPerp _ => Some ["perp"]
@@ -1204,6 +1349,14 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | IsosTrapConDiags i j => [(i, "con_seg"); (j, "trapezoid_premise")]
   | PgramDiagBisectConv i j => [(i, "seg_bisect"); (j, "seg_bisect")]
   | PgramOppAngsConv i j => [(i, "con_ang"); (j, "con_ang")]
+  | SSSSim i j => [(i, "proportion"); (j, "proportion")]
+  | CASTC i => [(i, "sim_tri")]
+  | SimTriTrans i j => [(i, "sim_tri"); (j, "sim_tri")]
+  (* The congruence may be cited as [con_ang] or [ref_ang]. *)
+  | SuppTrans i _ => [(i, "supplementary")]
+  | PerpTransversal i j => [(i, "perp"); (j, "para")]
+  (* The angle may be cited as [con_right] or [ref_ang], as for [aa_sim]. *)
+  | SASSim i _ => [(i, "proportion")]
   | IsosTrapBaseAngs i j => [(i, "con_ang"); (j, "trapezoid_premise")]
   | RectDiagConConv i j => [(i, "con_seg"); (j, "parallelogram")]
   | RhombusDiagPerpConv i j => [(i, "perp"); (j, "parallelogram")]
@@ -1217,6 +1370,12 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | _ => []
   end.
 
+(** The statements a rule also accepts in a slot of a given kind.  Every
+    slot of kind ["parallelogram"] is read with [lookup_pgram], which takes a
+    rhombus or a rectangle as the parallelogram it names. *)
+Definition kind_extensions (kind : string) : list string :=
+  if String.eqb kind "parallelogram" then ["rhombus"; "rectangle"] else [].
+
 Fixpoint kinds_issue (facts : list Statement) (reason : string)
     (kinds : list (nat * string)) (index step_number : nat)
     : option Audit.Issue :=
@@ -1225,14 +1384,16 @@ Fixpoint kinds_issue (facts : list Statement) (reason : string)
   | (reference, expected) :: rest =>
       match lookup_step facts reference with
       | Some received =>
-          if String.eqb (statement_function received) expected
+          if String.eqb (statement_function received) expected ||
+             existsb (String.eqb (statement_function received))
+               (kind_extensions expected)
           then kinds_issue facts reason rest (S index) step_number
           else Some (Audit.issue 12 "reason_dep_type_mismatch" (Audit.JsonObject
             [("reason", Audit.JsonString reason);
              ("index", Audit.JsonNumber index);
              ("ref", Audit.JsonString (nat_text reference));
              ("expectedType", Audit.JsonString expected);
-             ("allowedTypes", Audit.JsonArray []);
+             ("allowedTypes", Audit.JsonArray (json_strings (kind_extensions expected)));
              ("receivedType", Audit.JsonString (statement_function received));
              ("steps", Audit.JsonArray [Audit.JsonString (nat_text step_number)])]))
       | None => kinds_issue facts reason rest (S index) step_number
@@ -1465,7 +1626,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | _, _ => None
       end
   | PgramOppSides i =>
-      match lookup_step facts i, conclusion with
+      match lookup_pgram facts i, conclusion with
       | Some (Parallelogram q), ConSeg a b =>
           issue "segs_not_opp_sides_of_quad"
             [("pair", Audit.JsonArray [seg_text a; seg_text b]);
@@ -1473,7 +1634,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | _, _ => None
       end
   | PgramOppAngles i =>
-      match lookup_step facts i, conclusion with
+      match lookup_pgram facts i, conclusion with
       | Some (Parallelogram q), ConAng a b =>
           issue "angles_not_opp_angles_of_quad"
             [("pair", Audit.JsonArray [ang_text a; ang_text b]);
@@ -1481,7 +1642,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
       | _, _ => None
       end
   | PgramConsecAngs i =>
-      match lookup_step facts i, conclusion with
+      match lookup_pgram facts i, conclusion with
       | Some (Parallelogram q), Supplementary a b =>
           issue "angles_not_consecutive_in_quad"
             [("a1", ang_text a); ("a2", ang_text b); ("quad", quad_text q)]
@@ -1538,6 +1699,14 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
             issue "no_correspondence_established"
               [("tri1", tri_text t); ("tri2", tri_text u)]
           end
+      | _ => None
+      end
+  | CASTC i =>
+      match lookup_step facts i with
+      | Some (SimTri t u) =>
+          issue "parts_not_corresponding_in_triangles"
+            (List.app [("tri1", tri_text t); ("tri2", tri_text u)]
+               (corresponding_field t u conclusion))
       | _ => None
       end
   | KiteOppConAng i =>
@@ -1620,7 +1789,7 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
   | RhombusDiagPerpConv _ _ | IsosTrapConDiags _ _ | IsosTrapBaseAngs _ _
   | RhombusOppBisectConv _ _ _ =>
       let quads :=
-        flat_map (fun d => match lookup_step facts d with
+        flat_map (fun d => match lookup_pgram facts d with
                            | Some (Parallelogram q) | Some (TrapezoidPremise q _ _) => [q]
                            | _ => []
                            end) (reason_dependencies r) in
@@ -1681,6 +1850,25 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
             []
       | _, _ => None
       end
+  | SimTriTrans i j =>
+      match lookup_step facts i, lookup_step facts j with
+      | Some (SimTri a b), Some (SimTri c d) =>
+          if triangle_eqb a c || triangle_eqb a d || triangle_eqb b c
+             || triangle_eqb b d then None
+          else issue "no_shared_congruent_element" []
+      | _, _ => None
+      end
+  | SuppTrans i j =>
+      match lookup_step facts i, lookup_step facts j with
+      | Some (Supplementary a b), Some (ConAng c d)
+      | Some (Supplementary a b), Some (RefAng c d) =>
+          if angles_share a b c d then None
+          else issue "no_shared_congruent_element" []
+      | _, _ => None
+      end
+  | PerpTransversal _ _ =>
+      issue "transversal_angles_or_parallel_segs_dont_form_valid_config"
+        [("hasTransversal", Audit.JsonBool (has_transversal premises))]
   | ConInscribedAngs _ _ | SuppInscribedAngs _ _ | InscribedSemi _ _ =>
       inscribed_issue premises facts r issue
   | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
@@ -1805,6 +1993,8 @@ Fixpoint step_issues (decls : Declarations) (premises : list Premise)
         match status_of statuses number, rs.(rs_step) with
         | Audit.StepAccepted, _ => []
         | _, None => [step_parse_issue number rs.(rs_line)]
+        (* only an unread line is incomplete, and that is the case above *)
+        | Audit.StepIncomplete, Some _ => []
         | Audit.StepBlocked, Some current =>
             let failed :=
               filter (fun d =>
@@ -1885,10 +2075,33 @@ Definition relabel_issue (labels : list (option nat)) (i : Audit.Issue)
   | _ => i
   end.
 
-Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :=
-  match report_data_of source with
+(** Why the problem's arcs do not stand: a declaration the problem does not
+    show to be a minor arc, or an arc a premise or the goal names without
+    declaring.  [check_problem] rejects the proof on the same tests. *)
+Definition arc_issues (d : ReportData) : list Audit.Issue :=
+  let arc_issue code a extra :=
+    Audit.issue 11 code (Audit.JsonObject
+      (string_field "arc" (Audit.arcText a) :: extra)) in
+  let declared :=
+    flat_map (fun a =>
+      match arc_declaration_problem d.(rd_declarations) d.(rd_premises) a with
+      | None => []
+      | Some ArcCenterNotCircle => [arc_issue "arc_center_not_circle" a []]
+      | Some ArcCenterAmbiguous => [arc_issue "arc_center_ambiguous" a []]
+      | Some ArcPointsNotDistinct => [arc_issue "arc_points_not_distinct" a []]
+      | Some (ArcPointNotOnCircle p) =>
+          [arc_issue "arc_point_not_on_circle" a [string_field "point" (Audit.pointText p)]]
+      | Some ArcIsDiameter => [arc_issue "arc_is_diameter" a []]
+      end) d.(rd_declarations).(decl_arcs) in
+  let undeclared :=
+    map (fun a => arc_issue "arc_not_declared" a [])
+      (undeclared_arcs d.(rd_declarations) d.(rd_premises) d.(rd_goal)) in
+  declared ++ undeclared.
+
+Definition proof_issues_from_data (data : option ReportData) (content : ReportContent)
+    (accepted : bool) : list Audit.Issue :=
+  match data with
   | Some d =>
-      let content := report_content source in
       let graph := snd (fst (fst content)) in
       let duplicates := snd (fst content) in
       let goal := snd content in
@@ -1925,7 +2138,10 @@ Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :
                 ("steps", Audit.JsonArray
                    [Audit.JsonString (origin_text dup.(Audit.duplicate_again))])]))
             duplicates in
-      numbering ++ map (relabel_issue (map rs_label d.(rd_steps)))
+      let stray :=
+        map (fun line => Audit.issue 3 "missing_step_number"
+               (Audit.JsonObject [string_field "line" line])) d.(rd_stray) in
+      arc_issues d ++ stray ++ numbering ++ map (relabel_issue (map rs_label d.(rd_steps)))
                      (steps ++ cycles ++ goal_issue ++ unused ++ repeated)
   | None =>
       if accepted then []
@@ -1984,6 +2200,18 @@ Definition problem_issue (source : string) : Audit.Issue :=
       end
   end.
 
+Definition proof_issues (source : string) (accepted : bool) : list Audit.Issue :=
+  let data := report_data_of source in
+  proof_issues_from_data data (report_content_from_data data) accepted.
+
+Definition report_issues_from_data (data : option ReportData) (content : ReportContent)
+    (result : CheckResult) : list Audit.Issue :=
+  match result with
+  | ParseFailure => []
+  | ProofRejected => proof_issues_from_data data content false
+  | ProofAccepted => proof_issues_from_data data content true
+  end.
+
 Definition report_issues_for (source : string) (result : CheckResult)
     : list Audit.Issue :=
   match result with
@@ -2001,13 +2229,30 @@ Definition report_errors_for (source : string) (result : CheckResult)
 
 Definition check_report (source : string) : Audit.CheckReport :=
   let result := classify_source source in
-  let content := report_content source in
+  let data := report_data_of source in
+  let content := report_content_from_data data in
   Audit.check_report (public_verdict result) (public_problem_of_source source)
     (PresentationParser.parsePresentation source)
     (fst (fst (fst content))) (snd (fst (fst content))) (snd (fst content))
     (snd content)
-    (report_issues_for source result) (report_errors_for source result)
+    (report_issues_from_data data content result) (report_errors_for source result)
     (verdict_diagnostics result).
+
+(** Sharing report parsing, statuses and graph construction preserves every
+    report field, not only the trusted verdict. *)
+Lemma check_report_sharing_equivalent : forall source,
+  check_report source =
+  let result := classify_source source in
+  let content := report_content source in
+  Audit.check_report (public_verdict result) (public_problem_of_source source)
+    (PresentationParser.parsePresentation source)
+    (fst (fst (fst content))) (snd (fst (fst content))) (snd (fst content))
+    (snd content) (report_issues_for source result) (report_errors_for source result)
+    (verdict_diagnostics result).
+Proof.
+  intro source. unfold check_report, report_issues_for, report_issues_from_data.
+  destruct (classify_source source); reflexivity.
+Qed.
 
 Lemma check_report_accepted : forall source,
   Audit.accepted (check_report source) = complete_checker source.
@@ -2067,13 +2312,22 @@ Proof.
   - intros H. inversion H. auto.
 Qed.
 
+Lemma arc_list_eqb_eq : forall a b, arc_list_eqb a b = true <-> a = b.
+Proof.
+  induction a as [|x xs IH]; destruct b as [|y ys]; cbn; try easy.
+  rewrite andb_true_iff, arc_eqb_eq, IH. split.
+  - intros [-> ->]. reflexivity.
+  - intros H. inversion H. auto.
+Qed.
+
 Lemma declarations_eqb_eq : forall a b, declarations_eqb a b = true <-> a = b.
 Proof.
-  intros [t1 a1 q1 c1 s1] [t2 a2 q2 c2 s2]. unfold declarations_eqb. cbn.
+  intros [t1 a1 q1 c1 s1 r1] [t2 a2 q2 c2 s2 r2]. unfold declarations_eqb. cbn.
   rewrite !andb_true_iff, triangle_list_eqb_eq, angle_list_eqb_eq,
-    quadrilateral_list_eqb_eq, circle_list_eqb_eq, segment_list_eqb_eq. split.
-  - intros [[[[-> ->] ->] ->] ->]. reflexivity.
-  - intros H. inversion H. auto.
+    quadrilateral_list_eqb_eq, circle_list_eqb_eq, segment_list_eqb_eq,
+    arc_list_eqb_eq. split.
+  - intros [[[[[-> ->] ->] ->] ->] ->]. reflexivity.
+  - intros H. inversion H. repeat split.
 Qed.
 
 Section Bridge.
@@ -2143,11 +2397,11 @@ Proof.
   destruct (parse_step_lines (Parser.split_lines stepText []) []) as [steps|]
     eqn:Hsteps; try discriminate.
   unfold build_kernel_problem in Hcheck.
-  destruct (declarations_eqb (projected_declarations (Audit.public_declarations public))
+  destruct (declarations_eqb (projected_declarations (Audit.problem_declarations public))
               (header_declarations header) &&
-            statement_list_eqb (Audit.public_premises public)
+            statement_list_eqb (Audit.problem_premises public)
               (premise_statements (header_premises header)) &&
-            statement_eqb (Audit.public_conclusion public) (header_goal header))
+            statement_eqb (Audit.problem_conclusion public) (header_goal header))
     eqn:Hmatches; try discriminate.
   apply andb_true_iff in Hmatches. destruct Hmatches as [Hrest _].
   apply andb_true_iff in Hrest. destruct Hrest as [Htriangles Hpremises].
@@ -2159,7 +2413,7 @@ Proof.
     as HkernelPremises.
   destruct (check_problem
     (problem (header_declarations header) (header_premises header)
-       (Audit.public_conclusion public) steps)) eqn:HkernelCheck; try discriminate.
+       (Audit.problem_conclusion public) steps)) eqn:HkernelCheck; try discriminate.
   exact (check_problem_sound point _ HkernelCheck Hwf HkernelPremises).
 Qed.
 

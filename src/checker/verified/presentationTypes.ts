@@ -6,7 +6,7 @@ export type DisplayPoint = {
   offsetCode: string | null;
 };
 export type DisplayDeclaration = {
-  kind: "segment" | "angle" | "triangle" | "quadrilateral" | "circle";
+  kind: "segment" | "angle" | "triangle" | "quadrilateral" | "circle" | "arc";
   objects: string[];
 };
 export type LabeledSurfaceCall = { label: string; call: SurfaceCall };
@@ -49,7 +49,8 @@ export type VerifiedStepReport = {
   source: string;
   reason: string | null;
   conclusion: string | null;
-  status: "accepted" | "rejected" | "blocked";
+  /** "incomplete": the step line could not be read, so it was skipped. */
+  status: "accepted" | "rejected" | "blocked" | "incomplete";
   dependencies: number[];
   diagramDependencies: string[];
   diagnostics: VerifiedDiagnostic[];

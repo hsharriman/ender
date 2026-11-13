@@ -14,7 +14,7 @@ const initialize = (): Promise<void> => {
   if (initialization) return initialization;
   initialization = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `${import.meta.env.BASE_URL}ghost-checker-wasm/ghost-checker-api.js`;
+    script.src = `${import.meta.env.BASE_URL}ghost-checker-wasm/ghost-checker-api.js?v=${__GHOST_CHECKER_VERSION__}`;
     script.async = true;
     script.onerror = () => reject(new Error(`Unable to load ${script.src}`));
     script.onload = () => waitForExports().then(resolve, reject);
@@ -22,6 +22,9 @@ const initialize = (): Promise<void> => {
   });
   return initialization;
 };
+
+/** Start loading before the first debounced edit needs a result. */
+export const preloadVerifiedChecker = (): Promise<void> => initialize();
 
 export const checkVerifiedReport = async (
   source: string,

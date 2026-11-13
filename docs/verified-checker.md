@@ -134,6 +134,16 @@ audited meanings in `Audit.v` are authoritative.
   outer points, so a rule that needs a point on the circle, like
   `def_radius_conv`, finds it in any of them. `center_on_line(c, s)` says
   the centre lies on the line through `s`.
+- **Arcs.** An arc is named `r_OAB` and is always the minor arc AB of the
+  circle centred at O: A and B are equally far from O and not collinear
+  with it, so AB is a chord but not a diameter. An `arc:` line declares
+  arcs, as in `arc: r_OAB r_OCD`, and a premise or goal may name only
+  declared arcs, with the endpoints in either order. The checker rejects a
+  declaration unless exactly one declared circle is centred at O, A and B
+  are distinct and not O, each is the circle's radius point or put on it by
+  a premise, and no `diameter` premise names AB. `con_arc(r_OAB, r_OCD)`
+  says the radii and the central angles AOB and COD are congruent; there is
+  no major-arc form, since no rule needs one.
 - **Inscribed angles.** `inscribed_angle(c, a_XPY)` puts the vertex P on the
   circle and says each ray, P→X and P→Y, meets the circle again; X and Y
   themselves may lie anywhere along those rays. `circ_order(c, A, B, C, ...)`
@@ -153,16 +163,25 @@ audited meanings in `Audit.v` are authoritative.
 Coordinates on the `pt:` line are display-only and contribute nothing to a
 theorem's meaning.
 
-## Reasons that always reject
+## The catalogs
 
-The kernel has a rule for 83 of the 93 reasons in the
-[catalog](../src/checker/grammar/defs/reasons.defs.ts). The other 10 reject
-every step that cites them.
+[`reasons.defs.ts`](../src/checker/grammar/defs/reasons.defs.ts) and
+[`stmts.defs.ts`](../src/checker/grammar/defs/stmts.defs.ts) list exactly the
+reasons and statements the kernel accepts: the reasons of `reason_arities` in
+`CompleteChecker.v` and the statements `PublicParser.v` parses. The solver agent
+reads both files verbatim as its list of what it may use, so each entry's
+dependencies and conclusion name the statements the rule actually matches.
 
-`sas_sim` and `sss_sim` cite `proportion`, which the kernel has no rules for
-yet. The remaining eight (`con_arc`, `csstp`, `incenter`, `para_con_arcs`,
-`rect_para_right_opp`, `sim_tri_transitive`, `square`, `tangent_diam_perp`)
-have no fixtures and have not been designed.
+A rule that needs a parallelogram reads a cited `rhombus` or `rectangle` step
+as the parallelogram it is (`lookup_pgram` in `Checker.v`), since each audited
+meaning begins with `IsParallelogram`; the catalog marks those slots
+`pgram_obj`. The reading goes one way only: a rule that needs a rhombus or a
+rectangle still requires that statement, not a plain `parallelogram`.
+
+Reasons with no rule yet are left out rather than listed: `con_arc`, `csstp`,
+`incenter`, `para_con_arcs`, `rect_para_right_opp`, `square`, and
+`tangent_diam_perp` have no fixtures and have not been designed. A step citing
+any name the kernel does not know is rejected.
 
 ## Reports
 
@@ -178,6 +197,17 @@ diagram premises it consulted; the dependency graph with cycles and unused
 steps; duplicate derivations; and the step the goal rests on. A failure
 spreads only along the graph: a step citing one that was not accepted is
 `blocked`, and every other step is still judged.
+
+A step line that does not parse -- empty, cut off, or naming an unknown
+reason or statement -- is `incomplete` and skipped rather than fatal, in the
+verdict as well as the report. A malformed line is still fatal: no step
+number `[n]`, a character no step uses, a whole step missing its `->`, or a
+whole statement followed by more text (`Parser.classify_step_line`). The parser puts an `Incomplete` step in its place, so the numbering
+of later steps is unchanged. That step concludes only `incomplete_fact`
+(`Checker.v`), a `ref_seg` of the point `?`, which is true in every model and
+which no source text can name, so it cannot help prove anything; a step
+citing it is rejected. The proof is accepted when the readable steps prove
+the goal.
 
 None of the report is proved, and none of it is trusted: the verdict alone
 decides acceptance. Each diagram premise a report names comes from the same

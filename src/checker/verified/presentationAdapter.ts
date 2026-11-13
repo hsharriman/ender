@@ -27,11 +27,13 @@ const parseObject = (raw: string): ParseObj => {
   if (/^c_[A-Z]{2}$/.test(raw)) return { type: Obj.Circle, v: raw.slice(2) };
   if (/^[A-Z]{2}$/.test(raw)) return { type: Obj.Segment, v: raw };
   if (/^[A-Z]$/.test(raw)) return { type: Obj.Point, v: raw };
-  // A nested call — the audited arc spelling, for one — is vocabulary the
-  // renderer has no object for; it passes through as text because the
-  // presentation layer never determines acceptance.  Legacy non-call tokens
-  // (BR_OB-style arcs) still throw: reproducing their lossy old rendering
-  // is deliberately refused.
+  // An arc `r_OAB` has no drawable object; it passes through as text, which
+  // the statement renderer shows with an arc over its endpoints.
+  if (/^r_[A-Z]{3}$/.test(raw)) return { type: Obj.Text, v: raw };
+  // A nested call is vocabulary the renderer has no object for; it passes
+  // through as text because the presentation layer never determines
+  // acceptance.  Legacy non-call tokens (BR_OB-style arcs) still throw:
+  // reproducing their lossy old rendering is deliberately refused.
   if (raw.includes("(")) return { type: Obj.Text, v: raw };
   throw new Error(`Unsupported presentation object: ${raw}`);
 };

@@ -39,7 +39,9 @@ Ender is a geometric proof checker with a React frontend and Python LLM backend 
 
 The catalogs in `src/checker/grammar/defs/` are untrusted UI and solver-prompt
 metadata, not executable checking rules. The audited contract is
-`rocq/Ghost/Audit.v`.
+`rocq/Ghost/Audit.v`. The catalogs must still list exactly what the kernel
+accepts, because `backend/solver_agent.py` pastes both files, comments and all,
+into the solver's prompt as the reasons and statements it may use.
 
 **Key types** (defined in `src/checker/types/checkerTypes.ts` and `src/geometry-object/types/types.ts`):
 
@@ -55,9 +57,28 @@ metadata, not executable checking rules. The audited contract is
 
 Change theorem syntax, semantics, and checking in Rocq. Change the presentation
 parser and TypeScript adapter when display syntax changes. See `README.md` for
-the concise checklist. Unsupported reasons must fail closed. Rerun `make -C rocq`
-after any `rocq/` edit; the TypeScript side loads the artifacts in
-`rocq/_build/`, so an unbuilt edit has no effect on anything but the Rocq files.
+the concise checklist. Unsupported reasons must fail closed.
+
+Any change to the Rocq checker that adds, removes, renames, or changes what a
+reason or statement accepts must update the catalogs in the same change:
+
+- `src/checker/grammar/defs/reasons.defs.ts` holds one entry per reason in
+  `reason_arities` (`rocq/Ghost/CompleteChecker.v`), and no others. Each
+  entry's `dependencies` lists, in citation order, the statements the rule in
+  `rocq/Ghost/Checker.v` matches (a group from `stmts.defs.ts` only when the
+  rule accepts every member), and `conclusion` the statements it can prove.
+  Leave out reasons with no rule rather than listing them.
+- `src/checker/grammar/defs/stmts.defs.ts` holds one entry per statement
+  `rocq/Ghost/PublicParser.v` parses, with the same parameters in the same
+  order. Mark `isPremisesOnly` only when no reason concludes it.
+- Add the reason's hint row, and any new issue code, to
+  `src/checker/ERROR_CODES.md`.
+- Keep stale or speculative entries out, including commented-out ones: the
+  solver reads the raw file.
+
+Rerun `make -C rocq` after any `rocq/` edit; the TypeScript side loads the
+artifacts in `rocq/_build/`, so an unbuilt edit has no effect on anything but
+the Rocq files.
 
 ## Proof File Format
 
@@ -77,6 +98,14 @@ steps:
 
 Sample proofs in `src/checker/proofs/`, organized into category subdirectories (e.g., `examples/tutorial.txt`, `examples/s1c1.txt`).
 
+A step line that does not parse (empty, cut off, a misspelled reason) is
+skipped as `incomplete` rather than rejecting the proof: it keeps its number,
+proves nothing, and blocks any step that cites it, and the proof is accepted
+if the readable steps prove the goal. A malformed line still rejects the
+proof: one without a step number `[n]` (`n` all digits), one with a character
+other than letters, digits, spaces, and `_ ( ) , - >`, a whole step missing
+its `->`, or a whole statement followed by more text.
+
 Triangle congruence in premises uses `con_tri_ordered`, not `con_tri`. The
 vertex order states the correspondence, so `con_tri_ordered(t_ABC, t_DEF)`
 pairs A with D, B with E, and C with F. A `con_tri` step gets its
@@ -94,3 +123,10 @@ lists every point on the circle in the order met going round it, from any
 start and in either direction. `inscribed_angle(c_OA, a_XPY)` puts only the
 vertex P on the circle; X and Y may be any points along rays that reach a
 listed point.
+
+An arc is named `r_OAB`, the minor arc AB of the circle centred at O; there
+is no major-arc form. Declare arcs on an `arc:` line (`arc: r_OAB r_OCD`)
+before a premise or the goal names them. The checker rejects the proof unless
+exactly one declared circle is centred at O, A and B are distinct points other
+than O that the circle's name or a premise puts on it, and no `diameter`
+premise names AB.

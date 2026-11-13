@@ -66,6 +66,7 @@ let declaration_kind = function
   | GhostChecker.DisplayTriangle -> "triangle"
   | GhostChecker.DisplayQuadrilateral -> "quadrilateral"
   | GhostChecker.DisplayCircle -> "circle"
+  | GhostChecker.DisplayArc -> "arc"
 
 let declaration_json declaration =
   `Assoc
@@ -157,16 +158,17 @@ let declaration_json_semantic declaration =
 let problem_json problem =
   `Assoc
     [ ("declarations", `List (List.map declaration_json_semantic
-        problem.GhostChecker.public_declarations))
+        problem.GhostChecker.problem_declarations))
     ; ("premises", `List (List.map statement_json
-        problem.GhostChecker.public_premises))
-    ; ("conclusion", statement_json problem.GhostChecker.public_conclusion)
+        problem.GhostChecker.problem_premises))
+    ; ("conclusion", statement_json problem.GhostChecker.problem_conclusion)
     ]
 
 let step_status_name = function
   | GhostChecker.StepAccepted -> "accepted"
   | GhostChecker.StepRejected -> "rejected"
   | GhostChecker.StepBlocked -> "blocked"
+  | GhostChecker.StepIncomplete -> "incomplete"
 
 let step_report_json step =
   `Assoc

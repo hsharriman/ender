@@ -1,5 +1,5 @@
 ROCQFLAGS := -Q Ghost Ghost
-MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Inscribed Semantics Checker Parser Model CompleteChecker CertifiedAPI Tests
+MODULES := Audit Chars PublicParser PresentationParser Syntax Geometry Euclidean Inscribed Similarity Semantics Checker Parser Model CompleteChecker CertifiedAPI Tests
 VOFILES := $(addprefix Ghost/,$(addsuffix .vo,$(MODULES)))
 
 # Everything this Makefile writes goes under $(BUILD), except what Rocq insists
@@ -70,10 +70,16 @@ Ghost/Geometry.vo: Ghost/Geometry.v
 Ghost/Inscribed.vo: Ghost/Inscribed.v Ghost/Geometry.vo
 	rocq compile $(ROCQFLAGS) $<
 
+Ghost/Euclidean.vo: Ghost/Euclidean.v Ghost/Geometry.vo
+	rocq compile $(ROCQFLAGS) $<
+
+Ghost/Similarity.vo: Ghost/Similarity.v Ghost/Geometry.vo Ghost/Euclidean.vo
+	rocq compile $(ROCQFLAGS) $<
+
 Ghost/Semantics.vo: Ghost/Semantics.v Ghost/Syntax.vo Ghost/Geometry.vo
 	rocq compile $(ROCQFLAGS) $<
 
-Ghost/Checker.vo: Ghost/Checker.v Ghost/Syntax.vo Ghost/Geometry.vo Ghost/Inscribed.vo Ghost/Semantics.vo
+Ghost/Checker.vo: Ghost/Checker.v Ghost/Syntax.vo Ghost/Geometry.vo Ghost/Euclidean.vo Ghost/Inscribed.vo Ghost/Similarity.vo Ghost/Semantics.vo
 	rocq compile $(ROCQFLAGS) $<
 
 Ghost/Parser.vo: Ghost/Parser.v Ghost/Syntax.vo Ghost/Semantics.vo Ghost/Checker.vo Ghost/PublicParser.vo

@@ -46,7 +46,7 @@ Definition problemPart (source : string) : option string :=
       end
   end.
 
-(** * The complete public theorem language
+(** * The complete theorem language
 
     A figure is named by the points it is drawn through. *)
 
@@ -68,10 +68,10 @@ Record QuadrilateralName := quadrilateral_name {
 Record CircleName := circle_name {
   circle_center : PointName; circle_radius_point : PointName
 }.
-Inductive ArcKind := MinorArc | MajorArc.
+(** A minor arc, named [r_OAB]: the shorter arc from [A] to [B] of the
+    circle centred at [O] through them. *)
 Record ArcName := arc_name {
-  arc_kind : ArcKind; arc_circle : CircleName;
-  arc_first : PointName; arc_second : PointName
+  arc_center : PointName; arc_first : PointName; arc_second : PointName
 }.
 
 Inductive Statement :=
@@ -109,7 +109,6 @@ Inductive Statement :=
 | Rhombus (q : QuadrilateralName)
 | Tangent (c : CircleName) (s : SegmentName) (p : PointName)
 | Chord (c : CircleName) (s : SegmentName)
-| ArcStatement (a : ArcName)
 | Radius (c : CircleName) (p : PointName)
 | Diameter (c : CircleName) (s : SegmentName)
 | InscribedAngle (c : CircleName) (a : AngleName)
@@ -120,17 +119,18 @@ Inductive Statement :=
 | RefAng (a b : AngleName)
 | ConArc (a b : ArcName).
 
-Inductive PublicDeclaration :=
+Inductive Declaration :=
 | SegmentDeclaration (s : SegmentName)
 | AngleDeclaration (a : AngleName)
 | TriangleDeclaration (t : TriangleName)
 | QuadrilateralDeclaration (q : QuadrilateralName)
-| CircleDeclaration (c : CircleName).
+| CircleDeclaration (c : CircleName)
+| ArcDeclaration (a : ArcName).
 
-Record PublicProblem := public_problem {
-  public_declarations : list PublicDeclaration;
-  public_premises : list Statement;
-  public_conclusion : Statement
+Record Problem := problem {
+  problem_declarations : list Declaration;
+  problem_premises : list Statement;
+  problem_conclusion : Statement
 }.
 
 (** * What a problem means
@@ -446,18 +446,22 @@ Definition TransversalConfiguration (a b t1 i1 c d t2 i2 : PointName) : Prop :=
   (B <> I1 -> C <> I2 -> TS I1 I2 B C) /\
   (B <> I1 -> D <> I2 -> OS I1 I2 B D).
 
+(** The minor arc [r_OAB] exists when [A] and [B] are equally far from [O]
+    and [A], [O], [B] are not collinear.  Collinear points would make [AB] a
+    diameter, which has no minor arc, or no chord at all. *)
 Definition ArcWellFormed (a : ArcName) : Prop :=
-  point a.(arc_first) <> point a.(arc_second) /\
-  OnCircle a.(arc_circle) a.(arc_first) /\ OnCircle a.(arc_circle) a.(arc_second).
-(** Arc congruence requires congruent circles as well as equal central angles;
-    otherwise equal-angle arcs of different radii would compare equal.
-    Matching [ArcKind] makes the central-angle test valid for major arcs too. *)
+  Cong (point a.(arc_center)) (point a.(arc_first))
+       (point a.(arc_center)) (point a.(arc_second)) /\
+  ~ Col (point a.(arc_first)) (point a.(arc_center)) (point a.(arc_second)).
+(** Two minor arcs are congruent when their circles have congruent radii and
+    their central angles are congruent.  A minor arc's central angle is less
+    than a straight angle, so it determines the arc's measure. *)
 Definition ArcCongruent (a b : ArcName) : Prop :=
-  ArcWellFormed a /\ ArcWellFormed b /\ a.(arc_kind) = b.(arc_kind) /\
-  Cong (circ_center a.(arc_circle)) (point a.(arc_circle).(circle_radius_point))
-       (circ_center b.(arc_circle)) (point b.(arc_circle).(circle_radius_point)) /\
-  CongA (point a.(arc_first)) (circ_center a.(arc_circle)) (point a.(arc_second))
-        (point b.(arc_first)) (circ_center b.(arc_circle)) (point b.(arc_second)).
+  ArcWellFormed a /\ ArcWellFormed b /\
+  Cong (point a.(arc_center)) (point a.(arc_first))
+       (point b.(arc_center)) (point b.(arc_first)) /\
+  CongA (point a.(arc_first)) (point a.(arc_center)) (point a.(arc_second))
+        (point b.(arc_first)) (point b.(arc_center)) (point b.(arc_second)).
 
 Definition statementMeaning (s : Statement) : Prop :=
   match s with
@@ -518,7 +522,6 @@ Definition statementMeaning (s : Statement) : Prop :=
   | Rhombus q => IsRhombus q
   | Tangent c s p => IsTangent c s p
   | Chord c s => IsChord c s
-  | ArcStatement a => ArcWellFormed a
   | Radius c p => OnCircle c p
   | Diameter c s => IsDiameter c s
   | InscribedAngle c a => IsInscribedAngle c a
@@ -530,23 +533,24 @@ Definition statementMeaning (s : Statement) : Prop :=
   | ConArc a b => ArcCongruent a b
   end.
 
-Definition declarationMeaning (d : PublicDeclaration) : Prop :=
+Definition declarationMeaning (d : Declaration) : Prop :=
   match d with
   | SegmentDeclaration s => SegmentWellFormed s
   | AngleDeclaration a => AngleWellFormed a
   | TriangleDeclaration t => TriangleWellFormed t
   | QuadrilateralDeclaration q => QuadrilateralWellFormed q
   | CircleDeclaration c => CircleWellFormed c
+  | ArcDeclaration a => ArcWellFormed a
   end.
 
-Definition problemClaim (p : PublicProblem) : Prop :=
-  Forall declarationMeaning p.(public_declarations) ->
-  Forall statementMeaning p.(public_premises) ->
-  statementMeaning p.(public_conclusion).
+Definition problemClaim (p : Problem) : Prop :=
+  Forall declarationMeaning p.(problem_declarations) ->
+  Forall statementMeaning p.(problem_premises) ->
+  statementMeaning p.(problem_conclusion).
 
 End GeometryMeaning.
 
-(** * The public spelling of every statement form
+(** * The spelling of every statement form
 
     A figure is spelled as its kind tag followed by its points, so the points
     it names and the text that names it are read off one list. *)
@@ -563,7 +567,7 @@ Definition quadrilateralPoints (q : QuadrilateralName) :=
 Definition circlePoints (c : CircleName) :=
   [c.(circle_center); c.(circle_radius_point)].
 Definition arcPoints (a : ArcName) :=
-  (circlePoints a.(arc_circle) ++ [a.(arc_first); a.(arc_second)])%list.
+  [a.(arc_center); a.(arc_first); a.(arc_second)].
 
 Definition call (name : string) (arguments : list string) : string :=
   name ++ "(" ++ String.concat "," arguments ++ ")".
@@ -579,12 +583,7 @@ Definition quadrilateralText (q : QuadrilateralName) : string :=
 Definition circleText (c : CircleName) : string :=
   "c_" ++ string_of_list_ascii (circlePoints c).
 Definition arcText (a : ArcName) : string :=
-  let kind := match a.(arc_kind) with
-              | MinorArc => "minor_arc"
-              | MajorArc => "major_arc"
-              end in
-  call kind
-    [circleText a.(arc_circle); pointText a.(arc_first); pointText a.(arc_second)].
+  "r_" ++ string_of_list_ascii (arcPoints a).
 
 Definition statementText (s : Statement) : string :=
   match s with
@@ -632,7 +631,6 @@ Definition statementText (s : Statement) : string :=
   | Rhombus q => call "rhombus" [quadrilateralText q]
   | Tangent c s p => call "tangent" [circleText c; segmentText s; pointText p]
   | Chord c s => call "chord" [circleText c; segmentText s]
-  | ArcStatement a => arcText a
   | Radius c p => call "radius" [circleText c; pointText p]
   | Diameter c s => call "diameter" [circleText c; segmentText s]
   | InscribedAngle c a => call "inscribed_angle" [circleText c; angleText a]
@@ -670,7 +668,6 @@ Definition statementPoints (s : Statement) : list PointName :=
    | Circumcenter p t | Incenter p t => p :: trianglePoints t
    | Tangent c s p => circlePoints c ++ segmentPoints s ++ [p]
    | Chord c s | Diameter c s => circlePoints c ++ segmentPoints s
-   | ArcStatement a => arcPoints a
    | Radius c p | OnCirclePoint c p => circlePoints c ++ [p]
    | CenterOnLine c s => circlePoints c ++ segmentPoints s
    | InscribedAngle c a => circlePoints c ++ anglePoints a
@@ -712,32 +709,35 @@ Definition StatementText (text : string) (statement : Statement) : Prop :=
   Forall PointNameValid (statementPoints statement) /\
   normalized text = statementText statement.
 
-Definition declarationTag (d : PublicDeclaration) : string :=
+Definition declarationTag (d : Declaration) : string :=
   match d with
   | SegmentDeclaration _ => "seg:"
   | AngleDeclaration _ => "ang:"
   | TriangleDeclaration _ => "tri:"
   | QuadrilateralDeclaration _ => "quad:"
   | CircleDeclaration _ => "circ:"
+  | ArcDeclaration _ => "arc:"
   end.
-Definition declarationObjectText (d : PublicDeclaration) : string :=
+Definition declarationObjectText (d : Declaration) : string :=
   match d with
   | SegmentDeclaration s => segmentText s
   | AngleDeclaration a => angleText a
   | TriangleDeclaration t => triangleText t
   | QuadrilateralDeclaration q => quadrilateralText q
   | CircleDeclaration c => circleText c
+  | ArcDeclaration a => arcText a
   end.
-Definition declarationPoints (d : PublicDeclaration) : list PointName :=
+Definition declarationPoints (d : Declaration) : list PointName :=
   match d with
   | SegmentDeclaration s => segmentPoints s
   | AngleDeclaration a => anglePoints a
   | TriangleDeclaration t => trianglePoints t
   | QuadrilateralDeclaration q => quadrilateralPoints q
   | CircleDeclaration c => circlePoints c
+  | ArcDeclaration a => arcPoints a
   end.
 Definition DeclarationText (text : string)
-    (declarations : list PublicDeclaration) : Prop :=
+    (declarations : list Declaration) : Prop :=
   exists first rest,
     declarations = first :: rest /\
     Forall (fun d => declarationTag d = declarationTag first) rest /\
@@ -758,7 +758,7 @@ Definition goalBody (line : string) : option string :=
 
 (** Classification precedence makes the cases mutually exclusive. *)
 Inductive HeaderContribution :=
-| DeclaresObjects (declarations : list PublicDeclaration)
+| DeclaresObjects (declarations : list Declaration)
 | StatesPremise (premise : Statement)
 | StatesGoal (goal : Statement)
 | ContributesNothing.
@@ -791,7 +791,7 @@ Definition LineSplit (source : string) (lines : list string) : Prop :=
   lines <> [].
 
 Inductive HeaderLines :
-    list string -> list PublicDeclaration -> list Statement ->
+    list string -> list Declaration -> list Statement ->
     option Statement -> Prop :=
 | NoHeaderLines : HeaderLines [] [] [] None
 | DeclarationLines : forall line lines lineDeclarations declarations premises goal,
@@ -811,11 +811,11 @@ Inductive HeaderLines :
     HeaderLines lines declarations premises goal ->
     HeaderLines (line :: lines) declarations premises goal.
 
-Inductive ProblemGrammar : string -> PublicProblem -> Prop :=
+Inductive ProblemGrammar : string -> Problem -> Prop :=
 | ProblemGrammarLines : forall source lines declarations premises conclusion,
     LineSplit source lines ->
     HeaderLines lines declarations premises (Some conclusion) ->
-    ProblemGrammar source (public_problem declarations premises conclusion).
+    ProblemGrammar source (problem declarations premises conclusion).
 
 (** * The designated public API
 
@@ -841,7 +841,7 @@ Record DisplayPoint := display_point {
 }.
 Inductive DisplayObjectKind :=
 | DisplaySegment | DisplayAngle | DisplayTriangle
-| DisplayQuadrilateral | DisplayCircle.
+| DisplayQuadrilateral | DisplayCircle | DisplayArc.
 Record DisplayDeclaration := display_declaration {
   display_declaration_kind : DisplayObjectKind;
   display_declaration_objects : list string
@@ -891,7 +891,10 @@ Record Diagnostic := diagnostic {
   diagnostic_message : string
 }.
 
-Inductive StepStatus := StepAccepted | StepRejected | StepBlocked.
+(** [StepIncomplete] is a step line that could not be read -- empty, cut off,
+    or otherwise malformed.  It is skipped: it proves nothing, and a step that
+    cites it is [StepBlocked], but it does not by itself reject the proof. *)
+Inductive StepStatus := StepAccepted | StepRejected | StepBlocked | StepIncomplete.
 Record StepReport := step_report {
   step_number : nat;
   step_source : string;
@@ -937,7 +940,7 @@ Record Issue := issue {
 }.
 Record CheckReport := check_report {
   report_verdict : Verdict;
-  report_problem : option PublicProblem;
+  report_problem : option Problem;
   report_presentation : option PresentationFile;
   report_steps : list StepReport;
   report_graph : DependencyGraph;
@@ -969,7 +972,7 @@ Definition accepted (report : CheckReport) : bool :=
     owes a witness too, and [euclidean_plane_exists] below demands one.  See
     [docs/verified-checker.md]. *)
 Module Type COMPLETE_VERIFIED_CHECKER.
-  Parameter parseProblem : string -> option PublicProblem.
+  Parameter parseProblem : string -> option Problem.
   Parameter parsePresentation : string -> option PresentationFile.
   Parameter check : string -> CheckReport.
   Definition checker (source : string) : bool := accepted (check source).
