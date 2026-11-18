@@ -1,0 +1,48 @@
+Criterion 1: Step Validity (6 points)
+
+Each step correctly applies a rule to produce a valid mathematical statement.
+
+Level	Description
+6	All steps correctly apply valid rules and produce accurate statements
+5	One minor error in rule application or resulting statement
+3–4	Multiple errors, but some correct applications are present
+1–2	Most steps are incorrect or unjustified
+0	No correct steps
+Criterion 2: Logical Progression (5 points)
+
+Steps follow a coherent and valid chain of reasoning.
+
+Level	Description
+5	Each step follows logically from prior steps; no gaps in reasoning
+4	Mostly logical with a minor gap or unnecessary step
+3	Some gaps or weak connections between steps
+2	Major gaps; progression is difficult to follow
+0–1	No coherent logical structure
+Criterion 3: Goal Achievement (4 points)
+
+The proof reaches the intended conclusion.
+
+Level	Description
+4	Correct conclusion fully established
+3	Conclusion nearly correct with minor error
+2	Partial progress toward the conclusion
+1	Minimal progress toward the goal
+0	Does not address the intended conclusion
+Criterion 4: Appropriate Rule Selection (3 points)
+
+Rules (reasons) are relevant and effectively applied.
+
+Level	Description
+3	Rules are consistently appropriate and efficient
+2	Mostly appropriate, with minor inefficiencies or misuses
+1	Frequent misuse or inappropriate rule selection
+0	Rules do not correspond to the given information or goal
+Criterion 5: Completeness (2 points)
+
+All necessary steps are included; no critical reasoning is omitted.
+
+Level	Description
+2	Complete proof with no missing steps
+1	One minor omitted step that can be inferred
+0	Multiple missing or critical steps omitted
+Total Score: ______ / 20
