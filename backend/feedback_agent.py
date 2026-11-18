@@ -8,8 +8,8 @@ from solver_agent import run_solver_agent
 import feedback_preprocessors
 
 SOLVER_PROMPT_PATH = "backend/prompt/solver_final.txt"
-FEEDBACK_PROMPT_PATH = "backend/prompt/feedbacks_3_2.txt"
-
+FEEDBACK_PROMPT_PATH = "backend/prompt/actionable_feedback_rubric.txt"
+RUBRIC_PATH = "backend/prompt/feedback_rubric.txt"
 
 def give_feedback(
     system_prompt,
@@ -17,28 +17,38 @@ def give_feedback(
     student_proof,
     checker_output,
     error_code_explanation="",
-) -> str:
-def give_feedback(
-    system_prompt,
-    solution_proof,
-    student_proof,
-    checker_output,
-    error_code_explanation="",
+    rubric = "",
 ) -> str:
     """Use LLM to provide feedback on the proof"""
     load_dotenv()
+    combined_feedback = f"{checker_output}\n\n{error_code_explanation}\n\nRubric:\n{rubric}"
 
     response = completion(
         model="gpt-5.5",
         api_base=os.getenv("OPENAI_API_BASE"),
         api_key=os.getenv("OPENAI_API_KEY"),
         messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "assistant", "content": solution_proof},
-            {"role": "user", "content": student_proof},
-            {"role": "assistant", "content": checker_output + error_code_explanation},
-            {"role": "assistant", "content": checker_output + error_code_explanation},
-        ],
+        {"role": "system", "content": system_prompt},
+        {
+            "role": "user",
+            "content": f"""
+            Reference Solution:
+            {solution_proof}
+
+            Student Proof:
+            {student_proof}
+
+            Checker Output:
+            {checker_output}
+
+            Error Code Explanation:
+            {error_code_explanation}
+
+            Rubric:
+            {rubric}
+            """
+        },
+    ],
     )
 
     print("Successfully got LLM response")
@@ -140,6 +150,9 @@ def run_feedback_agent(
                 checker_output_no_dependencies = (
                     feedback_preprocessors.remove_checker_dependencies(checker_output)
                 )
+                with open(RUBRIC_PATH, encoding="utf-8") as f:
+                    rubric = f.read() 
+                    print(rubric[:25])
 
                 if solution_proof_no_reason_params != "":
                     corrections_needed = feedback_preprocessors.find_solution_changes(
@@ -151,6 +164,7 @@ def run_feedback_agent(
                         checker_output_no_dependencies,
                         error_code_explanation,
                         corrections_needed,
+                        rubric,
                     )
 
                     feedback, hint = postprocess_output(llm_output)
@@ -184,6 +198,6 @@ def run_feedback_agent(
 
 
 if __name__ == "__main__":
-    target_dir = sys.argv[1]
+    target_dir = "geo-proof-dataset/wrong_proofs/s1inc2"
     output = run_feedback_agent(target_dir)
     print(json.dumps(output))
