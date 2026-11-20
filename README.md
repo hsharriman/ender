@@ -9,6 +9,12 @@ builds Ender and serves it:
 nix run github:hsharriman/ender#serve
 ```
 
+If you run into errors with missing experimental features, you can run the following command instead:
+
+```bash
+nix run github:hsharriman/ender#serve --extra-experimental-features nix-command --extra-experimental-features flakes
+```
+
 Then open [http://localhost:3000/ender/](http://localhost:3000/ender/) (pass a
 different port as an argument). Proof checking runs entirely in the browser
 against the verified Wasm checker, so nothing else is needed — but the LLM
@@ -31,6 +37,12 @@ npm install
 ```
 
 ### Building the verified checker
+
+### Download and Set up Nix
+
+Nix is used to supply the Rocq checker source code, GeoCoq, MathComp, and OCaml necessary to compile to WASM:
+
+1. Install Nix [here](https://nixos.org/download/)
 
 Every proof is parsed and checked by extracted Rocq code, so the UI, the CLI,
 the tests, and the HTTP server all need that checker built before they work.

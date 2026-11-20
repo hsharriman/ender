@@ -207,6 +207,46 @@ Example certified_sss_type_mismatch_is_structured :
             [Audit.JsonString "4"])])).
 Proof. vm_compute. reflexivity. Qed.
 
+(** Sessions check a step against the accepted steps before it.
+    In [bad_sss_source], steps 1-3 are accepted and step 4 is not. *)
+Definition bad_sss_accepts (position : nat) (reason conclusion : string) :=
+  option_map (fun data => CertifiedAPI.sessionAccepts data position reason conclusion)
+    (CertifiedAPI.openSession bad_sss_source).
+
+Example session_accepts_the_criterion_that_fits :
+  bad_sss_accepts 4 "sas(1,2,3)" "con_tri(t_ABC,t_DEF)" = Some true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_refuses_the_criterion_written :
+  bad_sss_accepts 4 "sss(1,2,3)" "con_tri(t_ABC,t_DEF)" = Some false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_refuses_a_step_not_before_it :
+  bad_sss_accepts 3 "sas(1,2,3)" "con_tri(t_ABC,t_DEF)" = Some false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_refuses_a_rejected_step :
+  bad_sss_accepts 5 "cpctc(4)" "con_seg(BC,EF)" = Some false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_refuses_an_unreadable_candidate :
+  bad_sss_accepts 4 "sas(1,2" "con_tri(t_ABC,t_DEF)" = Some false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_satisfies_up_to_spelling :
+  option_map (fun data =>
+    (CertifiedAPI.sessionSatisfies data "con_seg(DE,AB)" "con_seg(AB,DE)",
+     CertifiedAPI.sessionSatisfies data "con_seg(AB,DE)" "con_seg(AC,DF)"))
+    (CertifiedAPI.openSession bad_sss_source) = Some (true, false).
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_needs_a_problem :
+  match CertifiedAPI.openSession "not a proof" with
+  | Some _ => false
+  | None => true
+  end = true.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Transitivity of congruence, for each supported object kind. *)
 Definition transitive_header (declarations premises goal steps : string) : string :=
   "title: Transitivity

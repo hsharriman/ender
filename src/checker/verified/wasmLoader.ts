@@ -1,4 +1,5 @@
 import { VerifiedCheckReport } from "./presentationTypes";
+import { CheckerSession, openSessionWith, SessionExports } from "./session";
 
 let initialization: Promise<void> | undefined;
 
@@ -31,4 +32,12 @@ export const checkVerifiedReport = async (
 ): Promise<VerifiedCheckReport> => {
   await initialize();
   return JSON.parse(window.ghostCheckReport!(source)) as VerifiedCheckReport;
+};
+
+/** Parse `source` once so steps can be checked against it. Close it when done. */
+export const openCheckerSession = async (
+  source: string,
+): Promise<CheckerSession | null> => {
+  await initialize();
+  return openSessionWith(window as SessionExports, source);
 };

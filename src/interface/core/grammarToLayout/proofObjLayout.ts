@@ -1,5 +1,5 @@
 import { ProofObj, ProofStep, Stmt } from "checker/types/checkerTypes";
-import { ProofContent } from "geometry-object";
+import { Obj, ParseObj, ProofContent } from "geometry-object";
 import React from "react";
 import { reasonFromFunction } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
@@ -7,6 +7,7 @@ import { DiagramContent } from "../builder/DiagramContent";
 import { AspectRatio } from "../diagramSvg/svgTypes";
 import { Transversal } from "../reasons/Transversal";
 import { VerticalAngles } from "../reasons/VerticalAngles";
+import type { StepHint } from "../reportAnnotations";
 import { SVGModes } from "../types/diagramTypes";
 import { LayoutProps } from "../types/layoutTypes";
 import { StepMeta } from "../types/stepTypes";
@@ -24,11 +25,38 @@ const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
+/**
+ * Draw one angle or segment in `mode` for `frame`.  An angle is only drawn
+ * with a tick, so it gets one.
+ */
+const markObject = (
+  ctx: DiagramContent,
+  frame: string,
+  mode: SVGModes,
+  o: ParseObj,
+) => {
+  if (o.type === Obj.Angle)
+    ctx.getAngle(o.v)?.addTick(frame, Obj.EqualAngleTick).mode(frame, mode);
+  else if (o.type === Obj.Segment) ctx.getSegment(o.v)?.mode(frame, mode);
+};
+
+/** Wide figures (any point past x = 10) get the landscape canvas. */
+export const diagramAspectFor = (proof: ProofObj): AspectRatio => {
+  const maxX = Math.max(
+    ...proof.premises.points.map((p) => p.pt?.[0] ?? -Infinity),
+  );
+  return maxX > 10 ? AspectRatio.Landscape : AspectRatio.Square;
+};
+
 export const interactiveLayoutFromProofObj = (
   proof: ProofObj,
   ctx: ProofContent,
   diagramCtx: DiagramContent,
   incorrectSteps?: Set<string>,
+  /** Per step number, the 0-based reason arguments that cite the wrong kind of fact. */
+  wrongDependencies?: Map<string, Set<number>>,
+  /** Per step number, what the checker says the step needed. */
+  stepHints?: Map<string, StepHint>,
 ): LayoutProps => {
   const givenSteps = proof.steps.filter((s) => s.type === "given");
   const proofSteps = proof.steps.filter((s) => s.type === "proof");
@@ -104,10 +132,15 @@ export const interactiveLayoutFromProofObj = (
   const stepMetas: StepMeta[] = [];
   proofSteps.forEach((step, idx) => {
     const currStep = idx + 1;
+    const wrongArgs = step.stepNumber
+      ? wrongDependencies?.get(String(parseInt(step.stepNumber, 10)))
+      : undefined;
     const dependsOn =
       step.reason?.arguments
-        ?.map((arg) => {
+        ?.map((arg, argIndex) => {
           if (!/^\d+$/.test(arg)) return undefined;
+          // setup for "?" relies on
+          if (wrongArgs?.has(argIndex)) return "?";
           const stepLabelNumber = parseInt(arg, 10);
           const uiIndex = stepLabelToUiIndex.get(stepLabelNumber);
           // Future-step dependencies imply a cycle/invalid reference for this row:
@@ -118,6 +151,7 @@ export const interactiveLayoutFromProofObj = (
         .filter((dep): dep is string => dep !== undefined) ?? [];
 
     const dependencyStatements = dependsOn
+      .filter((n) => n !== "?")
       .map((n) => proofSteps[Number(n) - 1])
       .filter((depStep): depStep is ProofStep => Boolean(depStep?.statement))
       .map((depStep) => ({
@@ -139,6 +173,16 @@ export const interactiveLayoutFromProofObj = (
     //   isVertAngReason(step.reason?.function) &&
     //   intersectSegDep?.statement.arguments?.length === 3;
 
+    const hint = step.stepNumber
+      ? stepHints?.get(String(parseInt(step.stepNumber, 10)))
+      : undefined;
+    const hasHint = Boolean(
+      hint &&
+      (hint.missing.length ||
+        hint.unestablished.length ||
+        hint.neededObjects.length ||
+        hint.incorrectObjects.length),
+    );
     const prevStep = idx === 0 ? givensMeta : stepMetas[idx - 1];
     const isIncorrect = Boolean(
       step.stepNumber && incorrectSteps?.has(step.stepNumber),
@@ -157,7 +201,9 @@ export const interactiveLayoutFromProofObj = (
       },
       highlight:
         !isGivenReason &&
-        (dependencyStatements.length > 0 || Boolean(step.diagramDeps?.length))
+        (dependencyStatements.length > 0 ||
+          Boolean(step.diagramDeps?.length) ||
+          hasHint)
           ? ({ ctx, frame }) => {
               dependencyStatements.forEach((dep) =>
                 applyStmtObjects(ctx, frame, SVGModes.ReliesOn, dep.stmt, {
@@ -173,6 +219,17 @@ export const interactiveLayoutFromProofObj = (
               }
               for (const dep of transversalDeps) {
                 Transversal.highlight({ ctx, frame }, dep.statement);
+              }
+              if (hint) {
+                hint.missing.forEach((stmt) =>
+                  applyStmtObjects(ctx, frame, SVGModes.Inconsistent, stmt),
+                );
+                hint.unestablished.forEach((stmt) =>
+                  applyStmtObjects(ctx, frame, SVGModes.Unestablished, stmt),
+                );
+                hint.neededObjects.forEach((o) =>
+                  markObject(ctx, frame, SVGModes.Inconsistent, o),
+                );
               }
             }
           : undefined,

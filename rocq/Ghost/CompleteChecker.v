@@ -2417,11 +2417,66 @@ Proof.
   exact (check_problem_sound point _ HkernelCheck Hwf HkernelPremises).
 Qed.
 
+(** * Proof sessions
+
+    Check hypotheical steps that are not in the proof, for external code that relies on
+    the checker's answers:
+    - [session_accepts]: would this reason and conclusion be accepted at
+      step n, using only the accepted steps before n?
+    - [session_satisfies]: does one statement count as another when a step
+      cites it (argument order, reversed segments, ref_ forms)?
+    Accepting or rejecting a proof never calls these functions. *)
+Definition session_accepted (data : ReportData) (n : nat) : bool :=
+  match status_of data.(rd_statuses) n with
+  | Audit.StepAccepted => true
+  | _ => false
+  end.
+
+(** The facts a step at [position] can cite: the conclusions of accepted
+    steps before it.  A rejected step is replaced by a placeholder fact, so
+    the step numbers stay the same. *)
+Definition session_facts (data : ReportData) (position : nat) : list Statement :=
+  firstn (Nat.pred position)
+    (map (fun numbered =>
+            if session_accepted data (fst numbered)
+            then fact_of (snd numbered).(rs_step) else placeholder_fact)
+         (combine (seq 1 (List.length data.(rd_steps))) data.(rd_steps))).
+
+(** Whether [reason -> conclusion] would be accepted as step [position].
+    It may cite only accepted steps before [position].  The text is parsed
+    like any step line, and [false] if it does not parse. *)
+Definition session_accepts (data : ReportData) (position : nat)
+    (reason conclusion : string) : bool :=
+  let line := "[" ++ nat_text position ++ "] " ++ reason ++ " -> " ++ conclusion in
+  match Parser.parse_step (list_ascii_of_string line) with
+  | Some candidate =>
+      forallb (fun d => Nat.ltb d position && session_accepted data d)
+        (reason_dependencies candidate.(step_reason)) &&
+      rule_valid data.(rd_declarations) data.(rd_premises)
+        (session_facts data position)
+        candidate.(step_reason) candidate.(step_conclusion)
+  | None => false
+  end.
+
+(** Whether a step that states [actual] can be cited where [expected] is
+    needed, using the same matching as [dependency_matches]. *)
+Definition session_satisfies (data : ReportData) (expected actual : string)
+    : bool :=
+  match Parser.parse_statement_chars (list_ascii_of_string expected),
+        Parser.parse_statement_chars (list_ascii_of_string actual) with
+  | Some e, Some a => dependency_matches data.(rd_declarations) data.(rd_premises) e a
+  | _, _ => false
+  end.
+
 Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
   Definition parseProblem := parsePublicProblem.
   Definition parsePresentation := PresentationParser.parsePresentation.
   Definition check := check_report.
   Definition checker (source : string) : bool := Audit.accepted (check source).
+  Definition ProofSession := ReportData.
+  Definition openSession := report_data_of.
+  Definition sessionAccepts := session_accepts.
+  Definition sessionSatisfies := session_satisfies.
   Definition parser_sound := parsePublicProblem_sound.
   Definition parser_complete := parsePublicProblem_complete.
 

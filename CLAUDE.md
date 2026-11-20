@@ -24,6 +24,12 @@ docker compose build && docker compose up   # build and start all three services
 docker compose down                         # stop
 ```
 
+## Code Style
+
+- In TypeScript, always define functions as arrow functions
+  (`const f = (x: T): R => ...`), never with the `function` keyword. Older
+  code still uses `function`; write new and rewritten code as arrows.
+
 ## Architecture
 
 Ender is a geometric proof checker with a React frontend and Python LLM backend agents.
@@ -42,6 +48,14 @@ metadata, not executable checking rules. The audited contract is
 `rocq/Ghost/Audit.v`. The catalogs must still list exactly what the kernel
 accepts, because `backend/solver_agent.py` pastes both files, comments and all,
 into the solver's prompt as the reasons and statements it may use.
+
+Diagnoses of what a rejected step was missing live in TypeScript
+(`src/interface/core/diagnosis/`), not in `rocq/`. They are advice, not
+checking: they get every judgement from the kernel through a checker session
+(`openCheckerSession`), which only answers whether a candidate step would be
+accepted and whether a statement satisfies a dependency slot. Keep search,
+ranking, and templates out of the Rocq checker; add a session primitive only
+when a diagnosis needs a judgement the kernel alone can make.
 
 **Key types** (defined in `src/checker/types/checkerTypes.ts` and `src/geometry-object/types/types.ts`):
 

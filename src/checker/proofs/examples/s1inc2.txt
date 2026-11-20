@@ -1,5 +1,5 @@
 // fail on step 5
-title: "S1INC2 - Prove Angles Congruent #2"
+title: "Prove Angles Congruent #2"
 premises:
 pt: J (2, 9, bl), K (5.5, 1, b), L (9, 9, br), M (5.5, 9, t)
 tri: t_JMK t_LMK

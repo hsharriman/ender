@@ -4,4 +4,6 @@ Require Import Ghost.CertifiedAPI.
 Extraction Language OCaml.
 Extraction "extracted/GhostChecker.ml"
   CertifiedAPI.parseProblem CertifiedAPI.parsePresentation
-  CertifiedAPI.check CertifiedAPI.checker.
+  CertifiedAPI.check CertifiedAPI.checker
+  CertifiedAPI.openSession CertifiedAPI.sessionAccepts
+  CertifiedAPI.sessionSatisfies.

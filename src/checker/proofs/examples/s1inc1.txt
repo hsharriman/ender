@@ -1,5 +1,5 @@
 // fail on step 4
-title: "S1INC1 - Prove Angles Congruent #1"
+title: "Prove Angles Congruent #1"
 premises:
 pt: A (1, 2, bl), B (10, 2, br), C (14, 9, r), D (5, 9, l)
 tri: t_ABD t_BCD

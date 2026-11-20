@@ -23,6 +23,8 @@ export enum SVGModes {
   ReliesOn = "relieson",
   Derived = "derived",
   Inconsistent = "inconsistent",
+  /** A fact the step needed that nothing before it establishes. */
+  Unestablished = "unestablished",
 }
 // for determining what type of styling to apply to an object
 export enum HighlightType {

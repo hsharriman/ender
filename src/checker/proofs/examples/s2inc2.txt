@@ -1,5 +1,5 @@
 // fail on step 5
-title: "S2INC2 - Prove Segments Parallel #3"
+title: "Prove Segments Parallel #3"
 premises:
 pt: X (9, 9, r), W (2, 9, l), Y (2, 1, bl), Z (9, 1, br), M (5.5, 5, r)
 tri: t_MWX t_MYZ

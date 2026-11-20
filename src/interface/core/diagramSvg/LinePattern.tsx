@@ -14,6 +14,7 @@ const colors: PatternColors[] = [
   { id: SVGModes.Unfocused, class: ModeCSS.UNFOCUSED },
   { id: SVGModes.ReliesOn, class: ModeCSS.RELIES },
   { id: SVGModes.Inconsistent, class: ModeCSS.INCONSISTENT },
+  { id: SVGModes.Unestablished, class: ModeCSS.UNESTABLISHED },
 ];
 
 const patternEle = (rotate: number, c: PatternColors) => (

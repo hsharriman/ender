@@ -1,23 +1,38 @@
 import { ProofObj } from "checker/types/checkerTypes";
 import { presentationToProofObj } from "checker/verified/presentationAdapter";
-import { VerifiedStepReport } from "checker/verified/presentationTypes";
+import {
+  VerifiedCheckReport,
+  VerifiedStepReport,
+} from "checker/verified/presentationTypes";
 import {
   checkVerifiedReport,
+  openCheckerSession,
   preloadVerifiedChecker,
 } from "checker/verified/wasmLoader";
 import { ProofContent } from "geometry-object";
-import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
-import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
 import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
+import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
+import {
+  diagramAspectFor,
+  interactiveLayoutFromProofObj,
+} from "interface/core/grammarToLayout/proofObjLayout";
 import {
   attachDiagramDependencies,
   buildAnnotatedLines,
   otherIssues,
   reportFindings,
+  StepHint,
+  stepHints,
   summarizeReport,
+  wrongDependencies,
+  WrongDependencies,
 } from "interface/core/reportAnnotations";
 import { waysToProve } from "interface/core/waysToProve";
-import { Component, createRef } from "react";
+import {
+  diagnoseCriteria,
+  StepReadings,
+} from "interface/core/diagnosis/criteria";
+import { Component, createRef, ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
 import {
@@ -66,19 +81,22 @@ function prettifyDirName(dir: string): string {
 
 // Build one group per subdirectory of proofs/, derived from the proofs present
 // rather than a hard-coded list, so new proof directories appear automatically.
-const proofGroups: Array<{ dir: string; label: string; proofs: ProofOption[] }> =
-  Array.from(
-    proofOptions
-      .reduce((acc, p) => {
-        const dir = proofGroupDir(p.key);
-        if (dir === null) return acc;
-        (acc.get(dir) ?? acc.set(dir, []).get(dir)!).push(p);
-        return acc;
-      }, new Map<string, ProofOption[]>())
-      .entries(),
-  )
-    .map(([dir, proofs]) => ({ dir, label: prettifyDirName(dir), proofs }))
-    .sort((a, b) => a.label.localeCompare(b.label));
+const proofGroups: Array<{
+  dir: string;
+  label: string;
+  proofs: ProofOption[];
+}> = Array.from(
+  proofOptions
+    .reduce((acc, p) => {
+      const dir = proofGroupDir(p.key);
+      if (dir === null) return acc;
+      (acc.get(dir) ?? acc.set(dir, []).get(dir)!).push(p);
+      return acc;
+    }, new Map<string, ProofOption[]>())
+    .entries(),
+)
+  .map(([dir, proofs]) => ({ dir, label: prettifyDirName(dir), proofs }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 // Any proof not placed in a group (loose .txt files directly in proofs/) is
 // shown as a flat option.
@@ -86,6 +104,12 @@ const groupedKeys = new Set(
   proofGroups.flatMap((g) => g.proofs.map((p) => p.key)),
 );
 const ungroupedProofs = proofOptions.filter((p) => !groupedKeys.has(p.key));
+
+/** The proof named by `?proof=<key>` (a path under proofs/), if there is one. */
+const requestedProofKey = (): string | undefined => {
+  const key = new URLSearchParams(window.location.search).get("proof");
+  return proofOptions.find((p) => p.key === key)?.key;
+};
 
 const DEFAULT_PROOF_KEY =
   proofOptions.find((p) => p.key.endsWith("tutorial.txt"))?.key ??
@@ -103,6 +127,11 @@ type ProofObjHarnessState = {
   statusMessage: string;
   accepted: boolean;
   incorrectSteps: Set<string>;
+  wrongDeps: WrongDependencies;
+  hints: Map<string, StepHint>;
+  lastReport: VerifiedCheckReport | null;
+  /** What each rejected triangle criterion was missing. */
+  readings: Map<string, StepReadings>;
   proofWideIssues: string[];
   unacceptedSteps: Map<string, VerifiedStepReport>;
   proofParseSucceeded: boolean;
@@ -127,7 +156,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.state = {
       isEditorOpen: true,
       isInteractiveLayout: true,
-      selectedProofKey: DEFAULT_PROOF_KEY,
+      selectedProofKey: requestedProofKey() ?? DEFAULT_PROOF_KEY,
       proofText: "",
       lastGoodProof: null,
       lastGoodCtx: null,
@@ -135,6 +164,10 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       statusMessage: "Loading proof...",
       accepted: false,
       incorrectSteps: new Set(),
+      wrongDeps: new Map(),
+      hints: new Map(),
+      lastReport: null,
+      readings: new Map(),
       proofWideIssues: [],
       unacceptedSteps: new Map(),
       proofParseSucceeded: true,
@@ -207,12 +240,18 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             proofWideIssues: nextProofIssues,
             unacceptedSteps: new Map(),
             incorrectSteps: new Set(),
+            wrongDeps: new Map(),
+            hints: new Map(),
+            lastReport: report,
+            readings: new Map(),
             proofParseSucceeded: false,
           });
           return;
         }
         const proof = presentationToProofObj(report.presentation);
         attachDiagramDependencies(proof, report);
+        const readings = await this.diagnose(report);
+        if (generation !== this.proofParseGeneration) return;
         // Only a rejected step is the reader's problem; a blocked one is
         // waiting on the step above it, and marking it wrong would send them
         // to the wrong line.
@@ -230,7 +269,8 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
         // The editor draws a mini-figure per step from the parts its reason
         // relates; the checker has no opinion on these.
         const ctx = presentationContent(proof);
-        for (const step of proof.steps) step.waysToProve = waysToProve(step, ctx);
+        for (const step of proof.steps)
+          step.waysToProve = waysToProve(step, ctx);
 
         this.setState((prev) => ({
           unacceptedSteps: unaccepted,
@@ -240,6 +280,10 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           lastGoodProof: proof,
           lastGoodCtx: ctx,
           incorrectSteps: rejected,
+          wrongDeps: wrongDependencies(report, readings),
+          hints: stepHints(report, readings),
+          lastReport: report,
+          readings,
           proofParseSucceeded: true,
           parseVersion: prev.parseVersion + 1,
         }));
@@ -251,11 +295,34 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           proofWideIssues: [],
           unacceptedSteps: new Map(),
           incorrectSteps: new Set(),
+          wrongDeps: new Map(),
+          hints: new Map(),
+          lastReport: null,
+          readings: new Map(),
           proofParseSucceeded: false,
         });
       }
     }, 500);
   }
+
+  /**
+   * Ask the checker what each rejected triangle criterion was missing.  Only
+   * a rejected step is worth the search, so a proof without one opens no
+   * session.
+   */
+  private diagnose = async (
+    report: VerifiedCheckReport,
+  ): Promise<Map<string, StepReadings>> => {
+    if (!report.steps.some((step) => step.status === "rejected"))
+      return new Map();
+    const session = await openCheckerSession(this.state.proofText);
+    if (!session) return new Map();
+    try {
+      return diagnoseCriteria(session, report);
+    } finally {
+      session.close();
+    }
+  };
 
   private fetchSelectedProof(selectedProofKey: string): void {
     this.selectedProofFetchGen += 1;
@@ -300,7 +367,8 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     interactive: InteractiveAppPageProps & { diagramAspect: AspectRatio };
     static: StaticAppPageProps & { diagramAspect: AspectRatio };
   } | null {
-    const { lastGoodProof, lastGoodCtx, incorrectSteps } = this.state;
+    const { lastGoodProof, lastGoodCtx, incorrectSteps, wrongDeps, hints } =
+      this.state;
     if (!lastGoodProof || !lastGoodCtx) return null;
     const diagramCtx = seedBaseContentFromPremises(lastGoodProof, lastGoodCtx);
     const layoutProps = interactiveLayoutFromProofObj(
@@ -308,12 +376,10 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       lastGoodCtx,
       diagramCtx,
       incorrectSteps,
+      wrongDeps,
+      hints,
     );
-    const maxX = Math.max(
-      ...lastGoodProof.premises.points.map((p) => p.pt?.[0] ?? -Infinity),
-    );
-    const diagramAspect =
-      maxX > 10 ? AspectRatio.Landscape : AspectRatio.Square;
+    const diagramAspect = diagramAspectFor(lastGoodProof);
     return {
       interactive: {
         ...(interactiveLayout(layoutProps).props as InteractiveAppPageProps),
@@ -345,11 +411,18 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       hoverTooltip,
       hoverPos,
       editorScrollTop,
+      lastReport,
+      readings,
     } = this.state;
 
     const layouts = this.getLayouts();
     const interactiveProps = this.getInteractiveProps();
-    const annotatedLines = buildAnnotatedLines(proofText, unacceptedSteps);
+    const annotatedLines = buildAnnotatedLines(
+      proofText,
+      unacceptedSteps,
+      lastReport ?? undefined,
+      readings,
+    );
     const lineHeightPx = 16;
     const editorPaddingTopPx = 8;
 
@@ -363,7 +436,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
               className="h-12 w-auto shadow-sm"
             />
           </NavLink>
-          <div className="font-semibold">ProofObj Harness</div>
+          <div className="font-semibold">
+            {this.state.lastGoodProof?.title ?? "Proof Harness"}
+          </div>
           <div ref={this.controlsRef} className="flex items-center gap-4">
             <button
               type="button"
@@ -445,7 +520,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                             : undefined
                     }
                   >
-                    {line.text || " "}
+                    {line.squiggles
+                      ? withSquiggles(line.text, line.squiggles)
+                      : line.text || " "}
                   </div>
                 ))}
               </pre>
@@ -544,3 +621,28 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     );
   }
 }
+
+/** `text` with each span underlined by a red squiggle. */
+const withSquiggles = (
+  text: string,
+  spans: Array<{ start: number; end: number }>,
+): ReactNode[] => {
+  const parts: ReactNode[] = [];
+  let at = 0;
+  [...spans]
+    .sort((a, b) => a.start - b.start)
+    .forEach(({ start, end }, i) => {
+      if (start > at) parts.push(text.slice(at, start));
+      parts.push(
+        <span
+          key={i}
+          className="underline decoration-wavy decoration-red-600 underline-offset-2"
+        >
+          {text.slice(start, end)}
+        </span>,
+      );
+      at = end;
+    });
+  if (at < text.length) parts.push(text.slice(at));
+  return parts;
+};

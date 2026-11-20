@@ -1,5 +1,5 @@
 // fail on step 8
-title: "S2INC1 - Prove Triangle Congruence #3"
+title: "Prove Triangle Congruence #3"
 premises:
 pt: L (2, 1, bl), N (3.5, 4, l), Q (8.5, 4, tr), R (6, 2.85, tl), S (6, 1, b), P (6, 9, r), U (10, 1, br)
 tri: t_PSL t_PSU t_LNU t_UQL

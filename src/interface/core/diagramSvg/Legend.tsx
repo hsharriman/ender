@@ -5,6 +5,7 @@ export const Legend = () => {
     ["New Statement", ModeCSS.DERIVEDFILL],
     ["Relies on", ModeCSS.RELIESFILL],
     ["Inconsistency", ModeCSS.INCONSISTENTFILL],
+    ["Not established", ModeCSS.UNESTABLISHEDFILL],
   ];
   const renderItem = (mode: string, text: string, isLast?: boolean) => (
     <div className="inline-flex flex-row pr-2 pb-1">

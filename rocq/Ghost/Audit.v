@@ -976,6 +976,18 @@ Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parsePresentation : string -> option PresentationFile.
   Parameter check : string -> CheckReport.
   Definition checker (source : string) : bool := accepted (check source).
+
+  (** Proof sessions, used by external code.  No theorem covers these, and
+      [checker] never calls them, so they cannot change whether a proof is
+      accepted.  [openSession] parses a proof once.  [sessionAccepts] says
+      whether a given step would be accepted at step n, using only the
+      accepted steps before n.  [sessionSatisfies] says whether one statement
+      counts as another when a step cites it. *)
+  Parameter ProofSession : Type.
+  Parameter openSession : string -> option ProofSession.
+  Parameter sessionAccepts : ProofSession -> nat -> string -> string -> bool.
+  Parameter sessionSatisfies : ProofSession -> string -> string -> bool.
+
   Parameter parser_sound : forall source problem,
     parseProblem source = Some problem -> ProblemGrammar source problem.
   Parameter parser_complete : forall source problem,

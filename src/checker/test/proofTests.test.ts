@@ -4,16 +4,23 @@ import { presentationToProofObj } from "../verified/presentationAdapter";
 import {
   checkVerifiedProofNode,
   checkVerifiedReportNode,
+  openCheckerSessionNode,
   parsePresentationNode,
 } from "../verified/nodeWasmLoader";
+import { diagnoseCriteria } from "../../interface/core/diagnosis/criteria";
+import { VerifiedCheckReport } from "../verified/presentationTypes";
 import { presentationContent } from "../../interface/core/grammarToLayout/presentationContent";
 import {
   attachDiagramDependencies,
   buildAnnotatedLines,
   otherIssues,
   reportFindings,
+  stepHints,
   summarizeReport,
+  wrongDependencies,
 } from "../../interface/core/reportAnnotations";
+import { interactiveLayoutFromProofObj } from "../../interface/core/grammarToLayout/proofObjLayout";
+import { seedBaseContentFromPremises } from "../../interface/core/grammarToLayout/proofObjBaseContent";
 import { VerifiedCheckOutput } from "../verified/presentationTypes";
 
 const PROOFS_DIR = join(__dirname, "../proofs");
@@ -548,6 +555,212 @@ steps:
       .filter((line) => line.status !== undefined)
       .map((line) => [line.text.trim().slice(0, 4), line.status]);
     expect(marked).toEqual([["[04]", "rejected"]]);
+  });
+
+  test("marks a dependency of the wrong kind in the editor and layout", async () => {
+    const source = readFileSync(join(PROOFS_DIR, "examples/tutinc.txt"), "utf8");
+    const report = await checkVerifiedReportNode(source);
+    const unaccepted = new Map(
+      report.steps
+        .filter((step) => step.status !== "accepted")
+        .map((step) => [String(step.number), step] as const),
+    );
+    // sss(1, 2, 3): step 2 states con_ang, so the "2" is squiggled.
+    const step4 = buildAnnotatedLines(source, unaccepted, report).find((line) =>
+      line.text.startsWith("[04]"),
+    )!;
+    expect(
+      step4.squiggles!.map(({ start, end }) => step4.text.slice(start, end)),
+    ).toEqual(["2"]);
+
+    const wrong = wrongDependencies(report);
+    expect(wrong).toEqual(new Map([["4", new Set([1])]]));
+    const proof = presentationToProofObj(report.presentation!);
+    const ctx = presentationContent(proof);
+    const layout = interactiveLayoutFromProofObj(
+      proof,
+      ctx,
+      seedBaseContentFromPremises(proof, ctx),
+      new Set(["4"]),
+      wrong,
+    );
+    // Connected to steps 1 and 3; step 2 is replaced by the red "?".
+    expect(layout.steps[3].dependsOn).toEqual(["1", "?", "3"]);
+  });
+
+  describe("checker sessions", () => {
+    const s1inc1 = readFileSync(join(PROOFS_DIR, "examples/s1inc1.txt"), "utf8");
+
+    test("judge a candidate step against the steps accepted before it", async () => {
+      const session = (await openCheckerSessionNode(s1inc1))!;
+      try {
+        expect(session.accepts(4, "reflex()", "ref_seg(BD,BD)")).toBe(true);
+        // Reflexivity relates an object to itself only.
+        expect(session.accepts(4, "reflex()", "ref_seg(AB,CD)")).toBe(false);
+        // Step 4 is not before position 4, and step 5 was never accepted.
+        expect(session.accepts(4, "cpctc(4)", "con_ang(a_BAD,a_DCB)")).toBe(false);
+        expect(session.accepts(6, "cpctc(4)", "con_ang(a_BAD,a_DCB)")).toBe(false);
+      } finally {
+        session.close();
+      }
+    });
+
+    test("match a fact to a slot up to its spellings", async () => {
+      const session = (await openCheckerSessionNode(s1inc1))!;
+      try {
+        expect(session.satisfies("con_seg(BD,DB)", "ref_seg(BD,BD)")).toBe(true);
+        expect(session.satisfies("con_seg(DC,AB)", "con_seg(AB,DC)")).toBe(true);
+        expect(session.satisfies("con_seg(BD,DB)", "con_seg(AB,DC)")).toBe(false);
+      } finally {
+        session.close();
+      }
+    });
+
+    test("a source whose problem does not parse opens no session", async () => {
+      expect(await openCheckerSessionNode("not a proof")).toBeNull();
+    });
+  });
+
+  describe("criterion diagnosis", () => {
+    const diagnose = async (report: VerifiedCheckReport, source: string) => {
+      const session = (await openCheckerSessionNode(source))!;
+      try {
+        return diagnoseCriteria(session, report);
+      } finally {
+        session.close();
+      }
+    };
+    const annotate = async (file: string) => {
+      const source = readFileSync(join(PROOFS_DIR, file), "utf8");
+      const report = await checkVerifiedReportNode(source);
+      const readings = await diagnose(report, source);
+      const unaccepted = new Map(
+        report.steps
+          .filter((step) => step.status !== "accepted")
+          .map((step) => [String(step.number), step] as const),
+      );
+      const lines = buildAnnotatedLines(source, unaccepted, report, readings);
+      const squiggled = (prefix: string) => {
+        const line = lines.find((l) => l.text.startsWith(prefix))!;
+        return (line.squiggles ?? []).map(({ start, end }) =>
+          line.text.slice(start, end),
+        );
+      };
+      return { report, readings, squiggled };
+    };
+
+    test("s1inc1 is read as SAS at B, one reflexive step short", async () => {
+      const { readings } = await annotate("examples/s1inc1.txt");
+      expect([...readings.get("4")!]).toEqual([
+        {
+          reason: "sas",
+          tri1: "t_BDA",
+          tri2: "t_DBC",
+          parts: [
+            {
+              index: 0,
+              requires: "con_seg(BD,DB)",
+              status: "derivable",
+              by: "reflex()",
+              statement: "ref_seg(BD,BD)",
+              cited: "1",
+            },
+            {
+              index: 1,
+              requires: "con_ang(a_DBA,a_BDC)",
+              status: "cited",
+              ref: "3",
+            },
+            {
+              index: 2,
+              requires: "con_seg(AB,CD)",
+              status: "cited",
+              ref: "2",
+            },
+          ],
+        },
+      ]);
+      expect(readings.get("4")!.ownReason).toBe("sas");
+    });
+
+    test("templates agree with the kernel on every accepted criterion step", async () => {
+      // A template that drifted from Checker.v would grade a step the kernel
+      // accepted as missing a part.
+      for (const file of proofFiles) {
+        const source = readFileSync(file, "utf8");
+        const report = await checkVerifiedReportNode(source);
+        const criteria = report.steps.filter(
+          (s) =>
+            s.status === "accepted" &&
+            ["sas", "sss", "asa", "aas", "rhl"].includes(s.reason ?? ""),
+        );
+        if (!criteria.length) continue;
+        // Re-check each accepted criterion step as if it had been rejected.
+        const asRejected = {
+          ...report,
+          steps: report.steps.map((s) =>
+            criteria.includes(s) ? { ...s, status: "rejected" as const } : s,
+          ),
+        };
+        const readings = await diagnose(asRejected, source);
+        for (const step of criteria) {
+          const best = readings.get(String(step.number));
+          const allCited = best?.[0]?.parts.every((p) => p.status === "cited");
+          expect([relative(PROOFS_DIR, file), step.number, allCited]).toEqual([
+            relative(PROOFS_DIR, file),
+            step.number,
+            true,
+          ]);
+        }
+      }
+    });
+
+    test("s1inc1: the shared side is missing, not the angle", async () => {
+      const { report, readings, squiggled } = await annotate(
+        "examples/s1inc1.txt",
+      );
+      // sas(1, 3, 2): read as SAS at B, slot 1 needs BD, so the "1" is wrong.
+      expect(squiggled("[04]")).toEqual(["1"]);
+      expect(wrongDependencies(report, readings).get("4")).toEqual(new Set([0]));
+      const hint = stepHints(report, readings).get("4")!;
+      expect(hint.missing.map((s) => s.arguments.map((a) => a.v))).toEqual([
+        ["BD", "DB"],
+      ]);
+      expect(hint.unestablished).toEqual([]);
+    });
+
+    test("tutinc: the parts cited fit sas", async () => {
+      const { report, readings, squiggled } = await annotate(
+        "examples/tutinc.txt",
+      );
+      // The reason name and the angle cited where sss wants a side.
+      expect(squiggled("[04]")).toEqual(["sss", "2"]);
+      // Nothing is missing, so the diagram marks nothing extra.
+      expect(stepHints(report, readings).get("4")).toBeUndefined();
+    });
+
+    test("s1inc2: parts cited in the wrong slots are not missing", async () => {
+      const { report, readings, squiggled } = await annotate(
+        "examples/s1inc2.txt",
+      );
+      // aas(2, 3, 4): the parts cited fit rhl, with 2 and 3 swapped.
+      expect(squiggled("[05]")).toEqual(["aas", "2"]);
+      // The right angle and the hypotenuse are cited, so nothing is drawn
+      // as missing.
+      expect(stepHints(report, readings).get("5")).toBeUndefined();
+    });
+
+    test("s2inc2: cpctc names the part that does not correspond", async () => {
+      const { report, readings, squiggled } = await annotate(
+        "examples/s2inc2.txt",
+      );
+      // Its criterion step is accepted, so there is nothing to diagnose.
+      expect(readings.size).toBe(0);
+      expect(squiggled("[05]")).toEqual(["a_MWX"]);
+      const hint = stepHints(report, readings).get("5")!;
+      expect(hint.neededObjects.map((o) => o.v)).toEqual(["MXW"]);
+      expect(hint.incorrectObjects.map((o) => o.v)).toEqual(["MWX"]);
+    });
   });
 
   test("names the diagram premise a step consulted", async () => {

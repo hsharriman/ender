@@ -49,6 +49,8 @@ export const updateStyle = (mode: SVGModes, fill?: boolean) => {
       return fill ? ModeCSS.DERIVEDFILL : ModeCSS.DERIVED;
     case SVGModes.Inconsistent:
       return fill ? ModeCSS.INCONSISTENTFILL : ModeCSS.INCONSISTENT;
+    case SVGModes.Unestablished:
+      return fill ? ModeCSS.UNESTABLISHEDFILL : ModeCSS.UNESTABLISHED;
     case SVGModes.Hidden:
     default:
       return ModeCSS.HIDDEN;

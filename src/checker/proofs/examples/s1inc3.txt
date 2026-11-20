@@ -1,5 +1,5 @@
 // fail on step 3
-title: "S1INC3 - Prove Rectangle"
+title: "Prove Rectangle"
 premises:
 pt: K (14, 2, br), L (2, 2, bl), M (2, 9, l), N (14, 9, r)
 seg: MK

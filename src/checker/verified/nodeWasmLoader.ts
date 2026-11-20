@@ -6,6 +6,7 @@ import {
   VerifiedCheckOutput,
   VerifiedCheckReport,
 } from "./presentationTypes";
+import { CheckerSession, openSessionWith, SessionExports } from "./session";
 
 // Where `make -C rocq wasm` leaves its output.  Resolved against this file
 // rather than the working directory so that the checker is found from any
@@ -16,11 +17,12 @@ const defaultWasmDirectory = path.resolve(
   "../../../rocq/_build/wasm",
 );
 
-type WasmGlobals = typeof globalThis & {
-  ghostCheckProof?: (source: string) => string;
-  ghostParsePresentation?: (source: string) => string;
-  ghostCheckReport?: (source: string) => string;
-};
+type WasmGlobals = typeof globalThis &
+  SessionExports & {
+    ghostCheckProof?: (source: string) => string;
+    ghostParsePresentation?: (source: string) => string;
+    ghostCheckReport?: (source: string) => string;
+  };
 
 let initialization: Promise<WasmGlobals> | undefined;
 
@@ -83,3 +85,9 @@ export const checkVerifiedReportNode = async (
   const wasm = await initialize();
   return JSON.parse(wasm.ghostCheckReport!(source)) as VerifiedCheckReport;
 };
+
+/** Parse `source` once so steps can be checked against it. Close it when done. */
+export const openCheckerSessionNode = async (
+  source: string,
+): Promise<CheckerSession | null> =>
+  openSessionWith(await initialize(), source);

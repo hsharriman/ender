@@ -19,7 +19,7 @@ const normalizeReference = (value: string): string => {
   return normalizeNumber(value);
 };
 
-const parseObject = (raw: string): ParseObj => {
+export const parseObject = (raw: string): ParseObj => {
   if (/^a_[A-Z]{3}$/.test(raw)) return { type: Obj.Angle, v: raw.slice(2) };
   if (/^t_[A-Z]{3}$/.test(raw)) return { type: Obj.Triangle, v: raw.slice(2) };
   if (/^q_[A-Z]{4}$/.test(raw))
@@ -36,6 +36,24 @@ const parseObject = (raw: string): ParseObj => {
   // reproducing their lossy old rendering is deliberately refused.
   if (raw.includes("(")) return { type: Obj.Text, v: raw };
   throw new Error(`Unsupported presentation object: ${raw}`);
+};
+
+/** A statement as the checker's report spells it, e.g. `con_seg(AB,CD)`. */
+export const parseStatementText = (text: string): Stmt | undefined => {
+  const m = text.match(/^\s*([a-z_]+)\((.*)\)\s*$/);
+  if (!m) return undefined;
+  try {
+    return {
+      function: m[1],
+      arguments: m[2]
+        .split(",")
+        .map((arg) => arg.trim())
+        .filter(Boolean)
+        .map(parseObject),
+    };
+  } catch {
+    return undefined;
+  }
 };
 
 const statement = (call: SurfaceCall): Stmt => ({

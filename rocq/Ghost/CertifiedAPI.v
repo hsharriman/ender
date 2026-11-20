@@ -12,6 +12,10 @@ Module CertifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
   Definition parsePresentation := CompleteVerifiedChecker.parsePresentation.
   Definition check := CompleteVerifiedChecker.check.
   Definition checker := CompleteVerifiedChecker.checker.
+  Definition ProofSession := CompleteVerifiedChecker.ProofSession.
+  Definition openSession := CompleteVerifiedChecker.openSession.
+  Definition sessionAccepts := CompleteVerifiedChecker.sessionAccepts.
+  Definition sessionSatisfies := CompleteVerifiedChecker.sessionSatisfies.
   Definition parser_sound := CompleteVerifiedChecker.parser_sound.
   Definition parser_complete := CompleteVerifiedChecker.parser_complete.
   Definition checker_sound := CompleteVerifiedChecker.checker_sound.
@@ -24,6 +28,9 @@ Definition parseProblem := CertifiedChecker.parseProblem.
 Definition parsePresentation := CertifiedChecker.parsePresentation.
 Definition check := CertifiedChecker.check.
 Definition checker := CertifiedChecker.checker.
+Definition openSession := CertifiedChecker.openSession.
+Definition sessionAccepts := CertifiedChecker.sessionAccepts.
+Definition sessionSatisfies := CertifiedChecker.sessionSatisfies.
 
 (** Named proof bindings make it easy to inspect assumptions in CI or with
     [Print Assumptions], without knowing the implementation module layout. *)

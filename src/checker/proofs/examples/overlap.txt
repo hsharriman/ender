@@ -1,5 +1,5 @@
 // pass
-title: "Overlapping triangle congruence"
+title: "Overlapping Triangle Congruence"
 premises:
 pt: E (2, 9, l), F (4.92, 5.5, bl), G (7, 3, b), H (9.08, 5.5, br), D (12, 9, r)
 tri: t_EHG t_DFG

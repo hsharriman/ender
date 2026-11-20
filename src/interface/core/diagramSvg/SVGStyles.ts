@@ -5,10 +5,12 @@ export const ModeCSS = {
   DERIVED: "stroke-blue-500 stroke-[3px] fill-none",
   RELIES: "stroke-black stroke-[3px] fill-none",
   INCONSISTENT: "stroke-red-500 stroke-[3px] fill-none",
+  UNESTABLISHED: "stroke-slate-400 stroke-[3px] fill-none",
 
   // for text/fills in single-diagram
   UNFOCUSEDFILL: "opacity-30 fill-black",
   DERIVEDFILL: "fill-blue-500",
   RELIESFILL: "fill-black font-bold",
   INCONSISTENTFILL: "fill-red-500 stroke-none",
+  UNESTABLISHEDFILL: "fill-slate-400 stroke-none",
 };
