@@ -32,9 +32,10 @@ import {
   diagnoseCriteria,
   StepReadings,
 } from "interface/core/diagnosis/criteria";
-import { Component, createRef, ReactNode } from "react";
+import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
+import { DSLEditor } from "../components/editor/DSLEditor";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
@@ -135,15 +136,11 @@ type ProofObjHarnessState = {
   proofWideIssues: string[];
   unacceptedSteps: Map<string, VerifiedStepReport>;
   proofParseSucceeded: boolean;
-  hoverTooltip: string;
-  hoverPos: { x: number; y: number } | null;
-  editorScrollTop: number;
 };
 
 export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
   editorRef = createRef<HTMLDivElement>();
   controlsRef = createRef<HTMLDivElement>();
-  editorOverlayRef = createRef<HTMLPreElement>();
 
   private proofParseTimeoutId: number | null = null;
   private selectedProofFetchGen = 0;
@@ -171,9 +168,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       proofWideIssues: [],
       unacceptedSteps: new Map(),
       proofParseSucceeded: true,
-      hoverTooltip: "",
-      hoverPos: null,
-      editorScrollTop: 0,
     };
   }
 
@@ -408,9 +402,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       accepted,
       proofWideIssues,
       unacceptedSteps,
-      hoverTooltip,
-      hoverPos,
-      editorScrollTop,
       lastReport,
       readings,
     } = this.state;
@@ -423,8 +414,6 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       lastReport ?? undefined,
       readings,
     );
-    const lineHeightPx = 16;
-    const editorPaddingTopPx = 8;
 
     return (
       <div className="h-screen">
@@ -501,88 +490,13 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                 </optgroup>
               ))}
             </select>
-            <div className="relative w-full h-full border border-slate-200 rounded font-mono text-xs overflow-hidden">
-              <pre
-                ref={this.editorOverlayRef}
-                aria-hidden
-                className="absolute inset-0 m-0 p-2 leading-4 whitespace-pre-wrap break-words pointer-events-none overflow-auto"
-              >
-                {annotatedLines.map((line, i) => (
-                  <div
-                    key={`${i}-${line.text}`}
-                    className={
-                      line.status === "rejected"
-                        ? "bg-red-100 rounded px-1 -mx-1"
-                        : line.status === "blocked"
-                          ? "bg-amber-50 rounded px-1 -mx-1"
-                          : line.status === "incomplete"
-                            ? "bg-slate-100 rounded px-1 -mx-1"
-                            : undefined
-                    }
-                  >
-                    {line.squiggles
-                      ? withSquiggles(line.text, line.squiggles)
-                      : line.text || " "}
-                  </div>
-                ))}
-              </pre>
-              <textarea
-                className="absolute inset-0 w-full h-full p-2 m-0 resize-none bg-transparent text-transparent caret-black selection:bg-blue-200 border-0 rounded focus:outline-none leading-4 whitespace-pre-wrap break-words overflow-auto"
-                value={proofText}
-                onChange={(e) => this.setState({ proofText: e.target.value })}
-                onScroll={(e) => {
-                  const overlay = this.editorOverlayRef.current;
-                  if (!overlay) return;
-                  const scrollTop = e.currentTarget.scrollTop;
-                  this.setState({ editorScrollTop: scrollTop });
-                  overlay.scrollTop = scrollTop;
-                  overlay.scrollLeft = e.currentTarget.scrollLeft;
-                }}
-                spellCheck={false}
-              />
-              <div className="absolute left-0 top-0 w-3 h-full">
-                {annotatedLines.map((line, idx) => {
-                  if (!line.status || !line.tooltip) return null;
-                  const dotY =
-                    editorPaddingTopPx +
-                    idx * lineHeightPx +
-                    lineHeightPx / 2 -
-                    editorScrollTop;
-                  return (
-                    <button
-                      key={`dot-${idx}`}
-                      type="button"
-                      className={`absolute left-[2px] w-2 h-2 rounded-full ${
-                        line.status === "rejected"
-                          ? "bg-red-600"
-                          : line.status === "incomplete"
-                            ? "bg-slate-400"
-                            : "bg-amber-400"
-                      }`}
-                      style={{ top: `${dotY}px` }}
-                      onMouseEnter={() => {
-                        this.setState({
-                          hoverTooltip: line.tooltip ?? "",
-                          hoverPos: { x: 16, y: Math.max(8, dotY - 8) },
-                        });
-                      }}
-                      onMouseLeave={() => {
-                        this.setState({ hoverTooltip: "", hoverPos: null });
-                      }}
-                      aria-label={`Show checker report for line ${idx + 1}`}
-                    />
-                  );
-                })}
-              </div>
-              {hoverTooltip && hoverPos && (
-                <div
-                  className="absolute z-20 max-w-[420px] rounded border border-slate-300 bg-white/95 px-2 py-1 text-[11px] leading-4 text-slate-900 shadow pointer-events-none whitespace-pre-wrap"
-                  style={{ left: hoverPos.x, top: hoverPos.y }}
-                >
-                  {hoverTooltip}
-                </div>
-              )}
-            </div>
+            <DSLEditor
+              value={proofText}
+              onChange={(text) => this.setState({ proofText: text })}
+              lines={annotatedLines}
+              size={{ width: "100%", height: "100%" }}
+              className="min-h-0 flex-1"
+            />
             <div
               className={`mt-2 text-xs ${
                 accepted ? "text-green-700" : "text-red-600"
@@ -621,28 +535,3 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     );
   }
 }
-
-/** `text` with each span underlined by a red squiggle. */
-const withSquiggles = (
-  text: string,
-  spans: Array<{ start: number; end: number }>,
-): ReactNode[] => {
-  const parts: ReactNode[] = [];
-  let at = 0;
-  [...spans]
-    .sort((a, b) => a.start - b.start)
-    .forEach(({ start, end }, i) => {
-      if (start > at) parts.push(text.slice(at, start));
-      parts.push(
-        <span
-          key={i}
-          className="underline decoration-wavy decoration-red-600 underline-offset-2"
-        >
-          {text.slice(start, end)}
-        </span>,
-      );
-      at = end;
-    });
-  if (at < text.length) parts.push(text.slice(at));
-  return parts;
-};
