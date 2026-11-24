@@ -1,15 +1,12 @@
 import { ParseDiagramStmt, ProofObj, Stmt } from "checker/types/checkerTypes";
-import {
-  parseObject,
-  parseStatementText,
-} from "checker/verified/presentationAdapter";
+import { parseStatementText } from "checker/verified/presentationAdapter";
 import {
   VerifiedCheckReport,
   VerifiedIssue,
   VerifiedStepReport,
 } from "checker/verified/presentationTypes";
-import { ParseObj } from "geometry-object";
 import { StepReadings } from "./diagnosis/criteria";
+import { Diagnoses, readingsOf } from "./diagnosis/steps";
 
 /** One line: the verdict, then where the goal was reached if it was. */
 export function summarizeReport(report: VerifiedCheckReport): string {
@@ -187,7 +184,7 @@ const dependencyMismatches = (
 
 export const wrongDependencies = (
   report: VerifiedCheckReport,
-  readings: Map<string, StepReadings> = new Map(),
+  diagnoses: Diagnoses = new Map(),
 ): WrongDependencies => {
   const wrong: WrongDependencies = new Map();
   const add = (step: string, index: number) => {
@@ -197,6 +194,11 @@ export const wrongDependencies = (
   for (const mismatch of dependencyMismatches(report)) {
     for (const step of mismatch.steps) add(step, mismatch.index);
   }
+  // Citations an accepted edit of the step changed.
+  for (const [step, d] of diagnoses) {
+    if (d.kind === "citation") d.slots.forEach((slot) => add(step, slot));
+  }
+  const readings = readingsOf(diagnoses);
   // A citation every reading of a rejected criterion says does not supply
   // its slot.  Only readings for the reason the step names count: when the
   // best reading is a different criterion, the reason is what is wrong.
@@ -220,34 +222,37 @@ export type StepHint = {
   missing: Stmt[];
   /** Facts the step needed that nothing before it establishes. */
   unestablished: Stmt[];
-  /** Single parts the step should have named; drawn in the inconsistent style. */
-  neededObjects: ParseObj[];
-  /** Single parts the step named wrongly; marked in the editor only. */
-  incorrectObjects: ParseObj[];
+  /**
+   * The conclusion names the wrong objects: some edit of one of its
+   * objects is accepted.  All its objects are drawn red and squiggled.
+   */
+  wrongConclusion: boolean;
+  /**
+   * The conclusion is a statement the reason cannot conclude.  All its
+   * objects are drawn red, and its statement name is squiggled.
+   */
+  wrongStatementType: boolean;
 };
 
-type CorrespondenceMismatch = {
-  steps: string[];
-  expected?: string;
-};
-
-const tryParseObject = (raw: string | undefined): ParseObj | undefined => {
-  if (!raw) return undefined;
-  try {
-    return parseObject(raw);
-  } catch {
-    return undefined;
-  }
-};
+/** Steps whose conclusion is a statement their reason cannot conclude. */
+const statementMismatchSteps = (report: VerifiedCheckReport): string[] =>
+  [...report.issues, ...report.errors]
+    .filter((issue) => issue.code === "reason_stmt_mismatch")
+    .flatMap(
+      (issue) =>
+        (issue.details as { steps?: string[] } | undefined)?.steps ?? [],
+    )
+    .map((s) => String(parseInt(s, 10)));
 
 /**
  * Per step number, the parts the diagram marks for a rejected step: for a
  * criterion, the parts its best reading needed but the step did not cite;
- * for `cpctc`, the part that does correspond and the one the step named.
+ * for a conclusion that names the wrong objects or a statement its reason
+ * cannot conclude, the conclusion itself.
  */
 export const stepHints = (
   report: VerifiedCheckReport,
-  readings: Map<string, StepReadings> = new Map(),
+  diagnoses: Diagnoses = new Map(),
 ): Map<string, StepHint> => {
   const hints = new Map<string, StepHint>();
   const hintFor = (step: string) => {
@@ -258,8 +263,8 @@ export const stepHints = (
         .set(key, {
           missing: [],
           unestablished: [],
-          neededObjects: [],
-          incorrectObjects: [],
+          wrongConclusion: false,
+          wrongStatementType: false,
         })
         .get(key)!
     );
@@ -267,7 +272,7 @@ export const stepHints = (
   const citations = new Map(
     report.steps.map((s) => [String(s.number), s.dependencies.map(String)]),
   );
-  for (const [step, stepReadings] of readings) {
+  for (const [step, stepReadings] of readingsOf(diagnoses)) {
     const best = stepReadings[0];
     const cited = citations.get(step) ?? [];
     for (const part of best.parts) {
@@ -282,23 +287,11 @@ export const stepHints = (
       else hintFor(step).missing.push(stmt);
     }
   }
-  const conclusions = new Map(
-    report.steps.map((s) => [String(s.number), s.conclusion] as const),
-  );
-  for (const issue of [...report.issues, ...report.errors]) {
-    if (issue.code !== "parts_not_corresponding_in_triangles") continue;
-    const details = issue.details as CorrespondenceMismatch | undefined;
-    if (!details?.steps) continue;
-    for (const step of details.steps) {
-      const key = String(parseInt(step, 10));
-      const conclusion = parseStatementText(conclusions.get(key) ?? "");
-      const expected = tryParseObject(details.expected);
-      if (expected) hintFor(key).neededObjects.push(expected);
-      // The expected part is the partner of the conclusion's first part,
-      // so the second is the one named wrongly.
-      const named = conclusion?.arguments[1];
-      if (named) hintFor(key).incorrectObjects.push(named);
-    }
+  for (const [step, d] of diagnoses) {
+    if (d.kind === "conclusion") hintFor(step).wrongConclusion = true;
+  }
+  for (const step of statementMismatchSteps(report)) {
+    hintFor(step).wrongStatementType = true;
   }
   return hints;
 };
@@ -325,6 +318,18 @@ export const reasonNameSpan = (
   const m = line.match(/^(\s*\[\d+\]\s*)([A-Za-z0-9_]+)\s*\(/);
   if (!m) return undefined;
   return { start: m[1].length, end: m[1].length + m[2].length };
+};
+
+/** The span of a step line's conclusion statement name, as in `con_seg(`. */
+export const conclusionNameSpan = (
+  line: string,
+): { start: number; end: number } | undefined => {
+  const arrow = line.indexOf("->");
+  if (arrow === -1) return undefined;
+  const m = line.slice(arrow + 2).match(/^(\s*)([A-Za-z0-9_]+)\s*\(/);
+  if (!m) return undefined;
+  const start = arrow + 2 + m[1].length;
+  return { start, end: start + m[2].length };
 };
 
 /** The character span of each of a step line's conclusion arguments. */
@@ -374,8 +379,8 @@ export const buildAnnotatedLines = (
   text: string,
   stepsByNumber: Map<string, VerifiedStepReport>,
   report?: VerifiedCheckReport,
-  /** The criterion diagnoses of `diagnoseCriteria`, if they were run. */
-  readings: Map<string, StepReadings> = new Map(),
+  /** The diagnoses of `diagnoseSteps`, if they were run. */
+  diagnoses: Diagnoses = new Map(),
 ): Array<{
   text: string;
   tooltip?: string;
@@ -383,10 +388,11 @@ export const buildAnnotatedLines = (
   /** Character spans to underline as wrong. */
   squiggles?: Array<{ start: number; end: number }>;
 }> => {
-  const wrong = report ? wrongDependencies(report, readings) : new Map();
+  const wrong = report ? wrongDependencies(report, diagnoses) : new Map();
   const hints = report
-    ? stepHints(report, readings)
+    ? stepHints(report, diagnoses)
     : new Map<string, StepHint>();
+  const readings = readingsOf(diagnoses);
   return text.split("\n").map((line) => {
     const m = line.match(/^\s*\[(\d+)\]/);
     if (!m) return { text: line };
@@ -406,10 +412,14 @@ export const buildAnnotatedLines = (
     ) {
       squiggles.unshift(nameSpan);
     }
-    // A conclusion part named wrongly (cpctc): mark it.
-    if (hints.get(number)?.incorrectObjects.length) {
-      const second = conclusionArgumentSpans(line)[1];
-      if (second) squiggles.push(second);
+    // A conclusion that names the wrong objects: mark every object.
+    if (hints.get(number)?.wrongConclusion) {
+      squiggles.push(...conclusionArgumentSpans(line));
+    }
+    // A statement the reason cannot conclude: mark its name.
+    const statementName = conclusionNameSpan(line);
+    if (hints.get(number)?.wrongStatementType && statementName) {
+      squiggles.push(statementName);
     }
     const reasons = report ? mismatchText(report, number) : [];
     const tooltip = reasons.length

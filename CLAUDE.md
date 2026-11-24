@@ -56,6 +56,11 @@ checking: they get every judgement from the kernel through a checker session
 accepted and whether a statement satisfies a dependency slot. Keep search,
 ranking, and templates out of the Rocq checker; add a session primitive only
 when a diagnosis needs a judgement the kernel alone can make.
+`diagnoseSteps` (`diagnosis/steps.ts`) searches each rejected step in a fixed
+order, stopping at the first accepted edit: one citation changed, then one
+conclusion object changed, then deeper citation searches (criterion readings,
+two citations). Every rejected step is searched the same way, whatever its
+issue code or note.
 
 **Key types** (defined in `src/checker/types/checkerTypes.ts` and `src/geometry-object/types/types.ts`):
 

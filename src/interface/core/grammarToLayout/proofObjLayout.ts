@@ -25,21 +25,6 @@ const normalizeStepNumber = (step: ProofStep, fallback: number): number => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
-/**
- * Draw one angle or segment in `mode` for `frame`.  An angle is only drawn
- * with a tick, so it gets one.
- */
-const markObject = (
-  ctx: DiagramContent,
-  frame: string,
-  mode: SVGModes,
-  o: ParseObj,
-) => {
-  if (o.type === Obj.Angle)
-    ctx.getAngle(o.v)?.addTick(frame, Obj.EqualAngleTick).mode(frame, mode);
-  else if (o.type === Obj.Segment) ctx.getSegment(o.v)?.mode(frame, mode);
-};
-
 /** Wide figures (any point past x = 10) get the landscape canvas. */
 export const diagramAspectFor = (proof: ProofObj): AspectRatio => {
   const maxX = Math.max(
@@ -177,11 +162,7 @@ export const interactiveLayoutFromProofObj = (
       ? stepHints?.get(String(parseInt(step.stepNumber, 10)))
       : undefined;
     const hasHint = Boolean(
-      hint &&
-      (hint.missing.length ||
-        hint.unestablished.length ||
-        hint.neededObjects.length ||
-        hint.incorrectObjects.length),
+      hint && (hint.missing.length || hint.unestablished.length),
     );
     const prevStep = idx === 0 ? givensMeta : stepMetas[idx - 1];
     const isIncorrect = Boolean(
@@ -195,7 +176,14 @@ export const interactiveLayoutFromProofObj = (
       dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
       text: stmtToText(step.statement, ctx),
       additions: ({ ctx, frame, mode }) => {
-        applyStmtObjects(ctx, frame, mode, step.statement, {
+        // In its own frame, a conclusion that names the wrong objects, or
+        // that its reason cannot conclude, is drawn red.
+        const conclusionMode =
+          (hint?.wrongConclusion || hint?.wrongStatementType) &&
+          mode === SVGModes.Derived
+            ? SVGModes.Inconsistent
+            : mode;
+        applyStmtObjects(ctx, frame, conclusionMode, step.statement, {
           isRightAngleEquality: isRightAngleEqualityStep,
         });
       },
@@ -226,9 +214,6 @@ export const interactiveLayoutFromProofObj = (
                 );
                 hint.unestablished.forEach((stmt) =>
                   applyStmtObjects(ctx, frame, SVGModes.Unestablished, stmt),
-                );
-                hint.neededObjects.forEach((o) =>
-                  markObject(ctx, frame, SVGModes.Inconsistent, o),
                 );
               }
             }

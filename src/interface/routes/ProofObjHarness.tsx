@@ -28,10 +28,7 @@ import {
   WrongDependencies,
 } from "interface/core/reportAnnotations";
 import { waysToProve } from "interface/core/waysToProve";
-import {
-  diagnoseCriteria,
-  StepReadings,
-} from "interface/core/diagnosis/criteria";
+import { Diagnoses, diagnoseSteps } from "interface/core/diagnosis/steps";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -132,7 +129,7 @@ type ProofObjHarnessState = {
   hints: Map<string, StepHint>;
   lastReport: VerifiedCheckReport | null;
   /** What each rejected triangle criterion was missing. */
-  readings: Map<string, StepReadings>;
+  diagnoses: Diagnoses;
   proofWideIssues: string[];
   unacceptedSteps: Map<string, VerifiedStepReport>;
   proofParseSucceeded: boolean;
@@ -164,7 +161,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       wrongDeps: new Map(),
       hints: new Map(),
       lastReport: null,
-      readings: new Map(),
+      diagnoses: new Map(),
       proofWideIssues: [],
       unacceptedSteps: new Map(),
       proofParseSucceeded: true,
@@ -219,7 +216,8 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.proofParseTimeoutId = window.setTimeout(async () => {
       this.proofParseTimeoutId = null;
       try {
-        const report = await checkVerifiedReport(this.state.proofText);
+        const source = this.state.proofText;
+        const report = await checkVerifiedReport(source);
         if (generation !== this.proofParseGeneration) return;
         const nextProofIssues = [
           ...reportFindings(report),
@@ -237,14 +235,14 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             wrongDeps: new Map(),
             hints: new Map(),
             lastReport: report,
-            readings: new Map(),
+            diagnoses: new Map(),
             proofParseSucceeded: false,
           });
           return;
         }
         const proof = presentationToProofObj(report.presentation);
         attachDiagramDependencies(proof, report);
-        const readings = await this.diagnose(report);
+        const diagnoses = await this.diagnose(report, source);
         if (generation !== this.proofParseGeneration) return;
         // Only a rejected step is the reader's problem; a blocked one is
         // waiting on the step above it, and marking it wrong would send them
@@ -274,10 +272,10 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           lastGoodProof: proof,
           lastGoodCtx: ctx,
           incorrectSteps: rejected,
-          wrongDeps: wrongDependencies(report, readings),
-          hints: stepHints(report, readings),
+          wrongDeps: wrongDependencies(report, diagnoses),
+          hints: stepHints(report, diagnoses),
           lastReport: report,
-          readings,
+          diagnoses,
           proofParseSucceeded: true,
           parseVersion: prev.parseVersion + 1,
         }));
@@ -292,7 +290,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           wrongDeps: new Map(),
           hints: new Map(),
           lastReport: null,
-          readings: new Map(),
+          diagnoses: new Map(),
           proofParseSucceeded: false,
         });
       }
@@ -306,13 +304,14 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
    */
   private diagnose = async (
     report: VerifiedCheckReport,
-  ): Promise<Map<string, StepReadings>> => {
+    source: string,
+  ): Promise<Diagnoses> => {
     if (!report.steps.some((step) => step.status === "rejected"))
       return new Map();
-    const session = await openCheckerSession(this.state.proofText);
+    const session = await openCheckerSession(source);
     if (!session) return new Map();
     try {
-      return diagnoseCriteria(session, report);
+      return diagnoseSteps(session, report, source);
     } finally {
       session.close();
     }
@@ -403,7 +402,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       proofWideIssues,
       unacceptedSteps,
       lastReport,
-      readings,
+      diagnoses,
     } = this.state;
 
     const layouts = this.getLayouts();
@@ -412,7 +411,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       proofText,
       unacceptedSteps,
       lastReport ?? undefined,
-      readings,
+      diagnoses,
     );
 
     return (

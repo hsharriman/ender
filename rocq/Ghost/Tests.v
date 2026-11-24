@@ -2717,13 +2717,20 @@ Definition ref_ang_undeclared_source := transitive_header "seg: AB
   "[01] reflex() -> ref_ang(a_ABC,a_ABC)
 [02] reflex() -> ref_seg(AB,CD)".
 
+(** The first issue's note, or its code when it has no note, and the steps
+    it blames. *)
 Definition first_blame (source : string) : option (string * Audit.JsonValue) :=
   match (CertifiedAPI.check source).(Audit.report_issues) with
   | issue :: _ =>
       match issue.(Audit.issue_details) with
       | Audit.JsonObject fields =>
+          let cause :=
+            match find (fun f => String.eqb (fst f) "note") fields with
+            | Some (_, Audit.JsonString note) => note
+            | _ => issue.(Audit.issue_code)
+            end in
           match find (fun f => String.eqb (fst f) "steps") fields with
-          | Some (_, steps) => Some (issue.(Audit.issue_code), steps)
+          | Some (_, steps) => Some (cause, steps)
           | None => None
           end
       | _ => None

@@ -1579,8 +1579,11 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
   let r := current.(step_reason) in
   let conclusion := current.(step_conclusion) in
   let base := [string_field "reason" (reason_name r); step_field number] in
-  let issue code extra :=
-    Some (Audit.issue 1 code (Audit.JsonObject (base ++ extra))) in
+  (* Every cause is a [reason_application_error]; [note] says which rule
+     check failed. *)
+  let issue note extra :=
+    Some (Audit.issue 1 "reason_application_error"
+      (Audit.JsonObject (base ++ string_field "note" note :: extra))) in
   match r with
   | Reflex =>
       match conclusion with
@@ -1925,8 +1928,9 @@ Definition rejected_step_issue (decls : Declarations) (premises : list Premise)
               [string_field "ref" label])))
         | Some stated =>
             if String.eqb (statement_function stated) (statement_function conclusion)
-            then Some (Audit.issue 11 "stmt_arg_type_invalid" (Audit.JsonObject (base ++
-              [string_field "ref" label;
+            then Some (Audit.issue 1 "reason_application_error" (Audit.JsonObject (base ++
+              [string_field "note" "given_restated_differently";
+               string_field "ref" label;
                string_field "expected" (Audit.statementText stated);
                string_field "actual" (Audit.statementText conclusion)])))
             else Some (Audit.issue 10 "reason_stmt_mismatch" (Audit.JsonObject (base ++

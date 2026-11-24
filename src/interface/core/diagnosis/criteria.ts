@@ -92,7 +92,10 @@ const TEMPLATES: Record<string, Template[]> = {
 };
 
 /** The relabelings the kernel's `six_correspondences` searches. */
-const jointRelabelings = (t: Triangle, u: Triangle): Array<[Triangle, Triangle]> => {
+const jointRelabelings = (
+  t: Triangle,
+  u: Triangle,
+): Array<[Triangle, Triangle]> => {
   const turns = (a: Triangle, b: Triangle): Array<[Triangle, Triangle]> => [
     [a, b],
     [rotate(a), rotate(b)],
@@ -179,7 +182,9 @@ const CITING_REASONS = Object.values(REASONS_DEFS)
 const tuples = (items: number[], length: number): number[][] =>
   length === 0
     ? [[]]
-    : tuples(items, length - 1).flatMap((rest) => items.map((i) => [...rest, i]));
+    : tuples(items, length - 1).flatMap((rest) =>
+        items.map((i) => [...rest, i]),
+      );
 
 /**
  * One step, citing only `earlier`, that the kernel accepts at `position` and
@@ -216,7 +221,10 @@ const oneStepWitness = (
     if (!forms.some((f) => reason.concludes.includes(call(f)?.[0] ?? "")))
       continue;
     for (const args of tuples(earlier, reason.arity)) {
-      const found = attempt(`${reason.name}(${args.join(", ")})`, reason.concludes);
+      const found = attempt(
+        `${reason.name}(${args.join(", ")})`,
+        reason.concludes,
+      );
       if (found) return found;
     }
   }
@@ -297,43 +305,66 @@ const diagnoseStep = (
     .slice(0, 3);
 };
 
-/**
- * Per step number, the best readings of each rejected triangle-criterion
- * step whose triangles are declared.
- */
-export const diagnoseCriteria = (
-  session: CheckerSession,
-  report: VerifiedCheckReport,
-): Map<string, StepReadings> => {
+/** Whether `satisfies` should be asked through a cache; it is called often. */
+export const cachedSatisfies = (session: CheckerSession) => {
   const cache = new Map<string, boolean>();
-  const satisfies = (expected: string, actual: string) => {
+  return (expected: string, actual: string) => {
     const key = `${expected}|${actual}`;
     if (!cache.has(key)) cache.set(key, session.satisfies(expected, actual));
     return cache.get(key)!;
   };
-  const undeclared = new Set(
+};
+
+/** Steps whose triangles the checker says are not declared. */
+const undeclaredSteps = (report: VerifiedCheckReport): Set<number> =>
+  new Set(
     [...report.issues, ...report.errors]
-      .filter((issue) => issue.code === "triangle_not_declared")
+      .filter(
+        (issue) =>
+          issue.code === "reason_application_error" &&
+          (issue.details as { note?: string } | undefined)?.note ===
+            "triangle_not_declared",
+      )
       .flatMap(
-        (issue) => (issue.details as { steps?: string[] } | undefined)?.steps ?? [],
+        (issue) =>
+          (issue.details as { steps?: string[] } | undefined)?.steps ?? [],
       )
       .map((s) => parseInt(s, 10)),
   );
+
+/**
+ * The best readings of one rejected triangle-criterion step, or undefined
+ * when the step is not one or its triangles are not declared.
+ */
+export const criterionReadings = (
+  session: CheckerSession,
+  satisfies: (expected: string, actual: string) => boolean,
+  report: VerifiedCheckReport,
+  step: VerifiedStepReport,
+): StepReadings | undefined => {
+  if (
+    step.status !== "rejected" ||
+    !CRITERIA.includes(step.reason ?? "") ||
+    step.dependencies.length !== 3 ||
+    undeclaredSteps(report).has(step.number)
+  )
+    return undefined;
+  const readings = diagnoseStep(session, satisfies, report, step);
+  return readings.length
+    ? Object.assign(readings, { ownReason: step.reason ?? "" })
+    : undefined;
+};
+
+/** Per step number, the best readings of each rejected criterion step. */
+export const diagnoseCriteria = (
+  session: CheckerSession,
+  report: VerifiedCheckReport,
+): Map<string, StepReadings> => {
+  const satisfies = cachedSatisfies(session);
   const diagnoses = new Map<string, StepReadings>();
   for (const step of report.steps) {
-    if (
-      step.status !== "rejected" ||
-      !CRITERIA.includes(step.reason ?? "") ||
-      step.dependencies.length !== 3 ||
-      undeclared.has(step.number)
-    )
-      continue;
-    const readings = diagnoseStep(session, satisfies, report, step);
-    if (readings.length)
-      diagnoses.set(
-        String(step.number),
-        Object.assign(readings, { ownReason: step.reason ?? "" }),
-      );
+    const readings = criterionReadings(session, satisfies, report, step);
+    if (readings) diagnoses.set(String(step.number), readings);
   }
   return diagnoses;
 };
