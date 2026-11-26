@@ -6,7 +6,7 @@ import {
   diagramAspectFor,
   interactiveLayoutFromProofObj,
 } from "interface/core/grammarToLayout/proofObjLayout";
-import { reasonFromFunction } from "interface/theorems/reasons";
+import { isGiven } from "interface/theorems/reasons";
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
 import S1_C1 from "../../checker/proofs/examples/s1c1.txt?raw";
@@ -65,10 +65,7 @@ const buildTile = async ({ source }: ExampleProof): Promise<ExampleTile> => {
     ctx,
     seedBaseContentFromPremises(proof, ctx),
   );
-  const givenTitle = reasonFromFunction("given").title;
-  const givens = layout.steps.filter(
-    (s) => s.reason.title === givenTitle,
-  ).length;
+  const givens = layout.steps.filter((s) => isGiven(s.reason)).length;
   return {
     title: layout.title,
     ctx: (staticLayout(layout).props as StaticAppPageProps).ctx,

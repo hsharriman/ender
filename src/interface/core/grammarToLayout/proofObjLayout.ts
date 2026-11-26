@@ -170,7 +170,6 @@ export const interactiveLayoutFromProofObj = (
     );
     const stepMeta = makeStepMeta({
       reason: reasonFromFunction(step.reason?.function),
-      waysToProve: step.waysToProve,
       isIncorrect,
       prevStep,
       dependsOn: dependsOn.length > 0 ? dependsOn : undefined,

@@ -1,29 +1,45 @@
 /**
- * What a rejected triangle criterion was missing.
+ * What a rejected step was missing, read through the templates of its reason.
  *
- * A criterion is a template of three facts about two labelled triangles
- * (`sas_schema` and its siblings in `rocq/Ghost/Checker.v`).  When a
- * criterion step is rejected, every criterion is laid over every vertex
- * correspondence the conclusion allows, and each fact the template then
- * requires is graded against what is established before the step: cited in
- * its slot, known but cited elsewhere or not at all, one step away, or
- * unknown.  The readings with the best grades say which part was missing.
+ * The kernel gives many reasons as templates (`reason_needs` in
+ * `rocq/Ghost/Checker.v`): for a conclusion, the statements each cited step
+ * must match.  The session hands out the templates of the step's reason and
+ * of every other reason that concludes the same kind of statement.  Each
+ * needed statement is graded against what is established before the step:
+ * cited in its slot, known but cited elsewhere or not at all, one step away,
+ * or unknown.  The readings with the best grades say which part was missing,
+ * and whether another reason fits better.
  *
  * This is interface advice, not checking.  Every judgement it makes comes
- * from the kernel through a `CheckerSession`: whether a fact satisfies a slot
- * is `dependency_matches`, and "one step away" names a step `rule_valid`
- * accepts, citing only steps accepted before this one.  The templates below
- * are copied from the kernel's; one that drifted could only give worse
- * advice, never change a verdict.
+ * from the kernel through a `CheckerSession`: the templates are the ones
+ * `rule_valid` checks, whether a fact fills a slot is the slot's own
+ * matcher, "one step away" names a step `rule_valid` accepts, and a reading
+ * whose every part is established is kept only when the kernel accepts the
+ * step it describes.
  */
-import { REASONS_DEFS } from "checker/grammar/defs/reasons.defs";
+import { reasonDef, ReasonDef, REASONS } from "checker/grammar/catalog";
+import {
+  isFree,
+  parseStatementText,
+  reasonText,
+  sameObject,
+  stmtText,
+} from "checker/grammar/syntax";
 import {
   VerifiedCheckReport,
   VerifiedStepReport,
 } from "checker/verified/presentationTypes";
-import { CheckerSession } from "checker/verified/session";
+import { stmtOf } from "checker/verified/presentationAdapter";
+import { CheckerSession, TemplateSlot } from "checker/verified/session";
 
-/** One part a criterion reading requires, graded against what is known. */
+/** Whether a fact matches a template statement under a named matcher. */
+export type Matches = (
+  matcher: string,
+  expected: string,
+  actual: string,
+) => boolean;
+
+/** One part a reading requires, graded against what is known. */
 export type CriterionPart = {
   index: number;
   requires: string;
@@ -37,146 +53,57 @@ export type CriterionPart = {
   cited?: string;
 };
 
-/** A criterion laid over one vertex correspondence of the two triangles. */
+/** One template of one reason, graded. */
 export type CriterionReading = {
   reason: string;
-  tri1: string;
-  tri2: string;
   parts: CriterionPart[];
 };
 
-/** The best readings of a rejected criterion step, and the reason it named. */
+/** The best readings of a rejected step, and the reason it named. */
 export type StepReadings = CriterionReading[] & { ownReason: string };
 
-type Triangle = [string, string, string];
-
-const CRITERIA = ["sas", "sss", "asa", "aas", "rhl"];
-
-const triangle = (name: string): Triangle | undefined => {
-  const m = name.match(/^t_([A-Z])([A-Z])([A-Z])$/);
-  return m ? [m[1], m[2], m[3]] : undefined;
-};
-const triText = (t: Triangle) => `t_${t.join("")}`;
-const rotate = ([a, b, c]: Triangle): Triangle => [b, c, a];
-const reverse = ([a, b, c]: Triangle): Triangle => [c, b, a];
-
-const sideAB = (t: Triangle) => t[0] + t[1];
-const sideBC = (t: Triangle) => t[1] + t[2];
-const sideCA = (t: Triangle) => t[2] + t[0];
-const angleA = (t: Triangle) => `a_${t[1]}${t[0]}${t[2]}`;
-const angleB = (t: Triangle) => `a_${t[0]}${t[1]}${t[2]}`;
-const angleC = (t: Triangle) => `a_${t[0]}${t[2]}${t[1]}`;
-
-const conSeg = (f: (t: Triangle) => string) => (t: Triangle, u: Triangle) =>
-  `con_seg(${f(t)},${f(u)})`;
-const conAng = (f: (t: Triangle) => string) => (t: Triangle, u: Triangle) =>
-  `con_ang(${f(t)},${f(u)})`;
-const conRight = (f: (t: Triangle) => string) => (t: Triangle, u: Triangle) =>
-  `con_right(${f(t)},${f(u)})`;
-
-type Template = Array<(t: Triangle, u: Triangle) => string>;
-
-/** Each criterion's templates, slot by slot, as `Checker.v` spells them. */
-const TEMPLATES: Record<string, Template[]> = {
-  sas: [[conSeg(sideAB), conAng(angleA), conSeg(sideCA)]],
-  sss: [[conSeg(sideAB), conSeg(sideBC), conSeg(sideCA)]],
-  asa: [[conAng(angleA), conSeg(sideAB), conAng(angleB)]],
-  aas: [
-    [conAng(angleC), conAng(angleB), conSeg(sideAB)],
-    [conAng(angleB), conAng(angleC), conSeg(sideAB)],
-  ],
-  rhl: [
-    [conRight(angleB), conSeg(sideCA), conSeg(sideBC)],
-    [conRight(angleB), conSeg(sideBC), conSeg(sideCA)],
-  ],
-};
-
-/** The relabelings the kernel's `six_correspondences` searches. */
-const jointRelabelings = (
-  t: Triangle,
-  u: Triangle,
-): Array<[Triangle, Triangle]> => {
-  const turns = (a: Triangle, b: Triangle): Array<[Triangle, Triangle]> => [
-    [a, b],
-    [rotate(a), rotate(b)],
-    [rotate(rotate(a)), rotate(rotate(b))],
-  ];
-  return [...turns(t, u), ...turns(reverse(t), reverse(u))];
-};
-
-const orderings = ([a, b, c]: Triangle): Triangle[] => [
-  [a, b, c],
-  [a, c, b],
-  [b, a, c],
-  [b, c, a],
-  [c, a, b],
-  [c, b, a],
-];
-
-/** The pairings a conclusion allows: an unordered `con_tri` allows any. */
-const pairings = (conclusion: string): Array<[Triangle, Triangle]> => {
-  const m = conclusion.match(/^(con_tri|con_tri_ordered)\((t_\w+),(t_\w+)\)$/);
-  const t = m && triangle(m[2]);
-  const u = m && triangle(m[3]);
-  if (!m || !t || !u) return [];
-  return m[1] === "con_tri_ordered"
-    ? jointRelabelings(t, u)
-    : orderings(u).flatMap((u2) => jointRelabelings(t, u2));
-};
+/** A statement's name, or "" if it does not parse. */
+const nameOf = (statement: string): string =>
+  parseStatementText(statement)?.function ?? "";
 
 const COST = { cited: 0, known: 10, derivable: 100, unknown: 1000 };
 
 const readingCost = (own: string, r: CriterionReading): number =>
   r.parts.reduce((sum, p) => sum + COST[p.status], r.reason === own ? 0 : 1);
 
-/** A statement's call name and arguments, as the report spells it. */
-const call = (text: string): [string, string[]] | undefined => {
-  const m = text.match(/^([a-z_]+)\((.*)\)$/);
-  return m ? [m[1], m[2].split(",").map((a) => a.trim())] : undefined;
-};
-
-/** The same segment or angle, in either direction. */
-const sameObject = (a: string, b: string): boolean => {
-  const flip = (x: string) =>
-    x.startsWith("a_")
-      ? `a_${x.slice(2).split("").reverse().join("")}`
-      : x.split("").reverse().join("");
-  return a === b || a === flip(b);
-};
+/** Whether a needed statement still has an argument the figure left open. */
+export const isOpen = (requires: string) =>
+  parseStatementText(requires)?.arguments.some(isFree) ?? false;
 
 /**
  * The spellings under which a step could state `goal`: either order of a
  * symmetric pair, and the reflexive form when both sides are one object.
  */
 const spellings = (goal: string): string[] => {
-  const parsed = call(goal);
-  if (!parsed) return [goal];
-  const [name, args] = parsed;
-  if (args.length !== 2) return [goal];
-  const [a, b] = args;
-  const swapped = `${name}(${b},${a})`;
+  const stmt = parseStatementText(goal);
+  if (!stmt || stmt.arguments.length !== 2) return [goal];
+  const [a, b] = stmt.arguments;
+  const swapped = stmtText({ ...stmt, arguments: [b, a] });
+  const name = stmt.function;
   const reflexive =
     (name === "con_seg" || name === "con_ang") && sameObject(a, b)
-      ? [`${name.replace("con_", "ref_")}(${a},${a})`]
+      ? [
+          stmtText({
+            function: name.replace("con_", "ref_"),
+            arguments: [a, a],
+          }),
+        ]
       : [];
   return [goal, swapped, ...reflexive];
 };
 
-/** Reasons citing one or two steps, and the statements each may conclude. */
-const CITING_REASONS = Object.values(REASONS_DEFS)
-  .map((def) => ({
-    name: def.name,
-    arity: def.dependencies.length,
-    concludes: String(def.conclusion)
-      .split(",")
-      .map((c) => c.trim()),
-  }))
-  .filter(
-    (r) =>
-      r.arity >= 1 &&
-      r.arity <= 2 &&
-      !["given", "reflex", "vert_ang"].includes(r.name),
-  );
+/** Reasons citing one or two steps. */
+const CITING_REASONS = REASONS.filter(
+  (r) =>
+    r.dependencies.length >= 1 &&
+    r.dependencies.length <= 2 &&
+    !["given", "reflex", "vert_ang"].includes(r.name),
+);
 
 /** Every tuple of `length` items drawn from `items`, repeats allowed. */
 const tuples = (items: number[], length: number): number[][] =>
@@ -192,22 +119,24 @@ const tuples = (items: number[], length: number): number[][] =>
  */
 const oneStepWitness = (
   session: CheckerSession,
-  satisfies: (expected: string, actual: string) => boolean,
+  matches: Matches,
   report: VerifiedCheckReport,
   position: number,
   earlier: number[],
   goal: string,
 ): { by: string; statement: string } | undefined => {
+  const satisfies = (expected: string, actual: string) =>
+    matches("loose", expected, actual);
   for (const given of report.presentation?.givens ?? []) {
-    const stated = `${given.call.name}(${given.call.arguments.join(",")})`;
+    const stated = stmtText(stmtOf(given.call));
     const by = `given(${given.label})`;
     if (satisfies(goal, stated) && session.accepts(position, by, stated))
       return { by, statement: stated };
   }
   const forms = spellings(goal);
-  const attempt = (by: string, concludes?: string[]) => {
+  const attempt = (by: string, conclusions?: readonly string[]) => {
     for (const form of forms) {
-      if (concludes && !concludes.includes(call(form)?.[0] ?? "")) continue;
+      if (conclusions && !conclusions.includes(nameOf(form))) continue;
       if (session.accepts(position, by, form) && satisfies(goal, form))
         return { by, statement: form };
     }
@@ -218,12 +147,11 @@ const oneStepWitness = (
     if (found) return found;
   }
   for (const reason of CITING_REASONS) {
-    if (!forms.some((f) => reason.concludes.includes(call(f)?.[0] ?? "")))
-      continue;
-    for (const args of tuples(earlier, reason.arity)) {
+    if (!forms.some((f) => reason.conclusions.includes(nameOf(f)))) continue;
+    for (const args of tuples(earlier, reason.dependencies.length)) {
       const found = attempt(
         `${reason.name}(${args.join(", ")})`,
-        reason.concludes,
+        reason.conclusions,
       );
       if (found) return found;
     }
@@ -231,17 +159,90 @@ const oneStepWitness = (
   return undefined;
 };
 
+/** Statement names a fact of name `actual` can stand in for. */
+const standsFor = (expected: string, actual: string) =>
+  expected === actual ||
+  (expected === "con_ang" && ["con_right", "ref_ang"].includes(actual)) ||
+  (expected === "con_seg" && actual === "ref_seg") ||
+  (expected === "ref_ang" && actual === "con_ang") ||
+  (expected === "ref_seg" && actual === "con_seg") ||
+  (expected === "parallelogram" && ["rectangle", "rhombus"].includes(actual));
+
+/** `expected` with each argument its matcher ignores taken from `stated`. */
+const withFree = (expected: string, stated: string): string => {
+  const want = parseStatementText(expected);
+  const have = parseStatementText(stated);
+  if (!want || !have || want.function !== have.function) return expected;
+  const free = want.arguments.some(isFree);
+  if (want.arguments.length !== have.arguments.length || !free) return expected;
+  return stmtText({
+    ...want,
+    arguments: want.arguments.map((a, i) =>
+      isFree(a) ? have.arguments[i] : a,
+    ),
+  });
+};
+
+/** The needed statement `stated` supplies for a slot, if any. */
+const fill =
+  (matches: Matches) =>
+  (slot: TemplateSlot, stated: string): string | undefined => {
+    const statedName = nameOf(stated);
+    for (const expected of slot.statements) {
+      if (!standsFor(nameOf(expected), statedName)) continue;
+      if (matches(slot.matcher, expected, stated))
+        return withFree(expected, stated);
+    }
+    return undefined;
+  };
+
+/** A reason written with placeholder citations, for asking its templates. */
+const placeholder = (name: string, arity: number) =>
+  reasonText({ function: name, arguments: Array<string>(arity).fill("1") });
+
+/**
+ * The templates of the step's reason and of every other reason that
+ * concludes the same kind of statement, or undefined when the step's own
+ * reason has a rule of its own.
+ */
+const stepTemplates = (
+  session: CheckerSession,
+  step: VerifiedStepReport,
+): Array<{ reason: string; slots: TemplateSlot[] }> | undefined => {
+  const own = reasonDef(step.reason ?? "");
+  const conclusion = step.conclusion ?? "";
+  const name = parseStatementText(conclusion)?.function;
+  if (!own || !name) return undefined;
+  const of = (r: ReasonDef) =>
+    session.needs(
+      step.number,
+      placeholder(r.name, r.dependencies.length),
+      conclusion,
+    );
+  if (!of(own)) return undefined;
+  return REASONS.filter(
+    (r) => r.name === own.name || r.conclusions.includes(name),
+  ).flatMap((r) =>
+    (of(r) ?? [])
+      // A slot listing nothing, such as an angle pair the figure does not
+      // draw, can never be filled.
+      .filter((t) => t.slots.every((slot) => slot.statements.length))
+      .map((t) => ({ reason: r.name, slots: t.slots })),
+  );
+};
+
 const sameReading = (a: CriterionReading, b: CriterionReading) =>
   a.reason === b.reason &&
   a.parts.length === b.parts.length &&
   a.parts.every((p, i) => p.requires === b.parts[i].requires);
 
-/** The best readings of one rejected criterion step, at most three. */
+/** The best readings of one rejected step, at most three. */
 const diagnoseStep = (
   session: CheckerSession,
-  satisfies: (expected: string, actual: string) => boolean,
+  matches: Matches,
   report: VerifiedCheckReport,
   step: VerifiedStepReport,
+  templates: Array<{ reason: string; slots: TemplateSlot[] }>,
 ): CriterionReading[] => {
   const own = step.reason ?? "";
   const cited = step.dependencies;
@@ -251,66 +252,105 @@ const diagnoseStep = (
   const earlier = report.steps
     .filter((s) => s.number < step.number && s.status === "accepted")
     .map((s) => s.number);
-  const holds = (req: string, n: number) => {
+  const fits = fill(matches);
+  const suppliedBy = (slot: TemplateSlot, n: number) => {
     const stated = conclusionOf.get(n);
-    return stated ? satisfies(req, stated) : false;
+    return stated ? fits(slot, stated) : undefined;
   };
+  const grade = (index: number, slot: TemplateSlot): CriterionPart => {
+    const inSlot = cited[index];
+    const instead = inSlot !== undefined ? { cited: String(inSlot) } : {};
+    if (inSlot !== undefined && earlier.includes(inSlot)) {
+      const requires = suppliedBy(slot, inSlot);
+      if (requires)
+        return { index, requires, status: "cited", ref: String(inSlot) };
+    }
+    for (const n of earlier) {
+      const requires = suppliedBy(slot, n);
+      if (requires)
+        return { index, requires, status: "known", ref: String(n), ...instead };
+    }
+    return {
+      index,
+      requires: slot.statements[0],
+      status: "unknown",
+      ...instead,
+    };
+  };
+
+  const graded: CriterionReading[] = templates.map((t) => ({
+    reason: t.reason,
+    parts: t.slots.map((slot, i) => grade(i, slot)),
+  }));
+  if (!graded.length) return [];
+
+  // A one-step derivation turns an unknown part (1000) into a derivable one
+  // (100), so only readings that could then tie the best are searched.
+  const best0 = Math.min(...graded.map((r) => readingCost(own, r)));
+  const gain = COST.unknown - COST.derivable;
   const witnesses = new Map<string, ReturnType<typeof oneStepWitness>>();
   const witness = (req: string) => {
     if (!witnesses.has(req))
       witnesses.set(
         req,
-        oneStepWitness(session, satisfies, report, step.number, earlier, req),
+        oneStepWitness(session, matches, report, step.number, earlier, req),
       );
     return witnesses.get(req);
   };
-  const grade = (slot: number, req: string): CriterionPart => {
-    const inSlot = cited[slot];
-    const base = { index: slot, requires: req };
-    const instead = inSlot !== undefined ? { cited: String(inSlot) } : {};
-    if (inSlot !== undefined && earlier.includes(inSlot) && holds(req, inSlot))
-      return { ...base, status: "cited", ref: String(inSlot) };
-    const known = earlier.find((n) => holds(req, n));
-    if (known !== undefined)
-      return { ...base, status: "known", ref: String(known), ...instead };
-    return { ...base, status: "unknown", ...instead };
-  };
+  const readings = graded.map((r) => {
+    const open = r.parts.filter((p) => p.status === "unknown").length;
+    if (!open || readingCost(own, r) - gain * open > best0) return r;
+    return {
+      ...r,
+      parts: r.parts.map((p): CriterionPart => {
+        if (p.status !== "unknown" || isOpen(p.requires)) return p;
+        const found = witness(p.requires);
+        return found ? { ...p, status: "derivable", ...found } : p;
+      }),
+    };
+  });
 
-  const graded: CriterionReading[] = CRITERIA.flatMap((reason) =>
-    pairings(step.conclusion ?? "").flatMap(([t, u]) =>
-      TEMPLATES[reason].map((template) => ({
-        reason,
-        tri1: triText(t),
-        tri2: triText(u),
-        parts: template.map((part, slot) => grade(slot, part(t, u))),
-      })),
-    ),
-  );
-  // Search for one-step derivations last, and only for facts still open.
-  const readings = graded.map((r) => ({
-    ...r,
-    parts: r.parts.map((p): CriterionPart => {
-      if (p.status !== "unknown") return p;
-      const found = witness(p.requires);
-      return found ? { ...p, status: "derivable", ...found } : p;
-    }),
-  }));
-  const best = Math.min(...readings.map((r) => readingCost(own, r)));
-  return readings
-    .filter((r) => readingCost(own, r) === best)
-    .reduce<CriterionReading[]>(
-      (kept, r) => (kept.some((k) => sameReading(k, r)) ? kept : [...kept, r]),
-      [],
+  // A reading whose every part is established describes a whole step; keep
+  // it only if the kernel accepts that step.  Grading is looser than some
+  // rules (angles may be read along their rays), so this is what keeps a
+  // reading from claiming a step the kernel would reject.
+  const stands = (r: CriterionReading) => {
+    if (r.parts.some((p) => p.status !== "cited" && p.status !== "known"))
+      return true;
+    const reason = reasonText({
+      function: r.reason,
+      arguments: r.parts.map((p) => p.ref ?? ""),
+    });
+    return session.accepts(step.number, reason, step.conclusion ?? "");
+  };
+  // Another reason is worth naming only if something it needs is in hand;
+  // one needing only unknown facts would be a guess, and a reason with fewer
+  // slots would win just by needing fewer.
+  const ranked = readings
+    .filter(
+      (r) => r.reason === own || r.parts.some((p) => p.status !== "unknown"),
     )
-    .slice(0, 3);
+    .map((r) => ({ r, cost: readingCost(own, r) }))
+    .sort((a, b) => a.cost - b.cost);
+  const kept: CriterionReading[] = [];
+  let bestCost: number | undefined;
+  for (const { r, cost } of ranked) {
+    if (bestCost !== undefined && cost > bestCost) break;
+    if (kept.some((k) => sameReading(k, r)) || !stands(r)) continue;
+    bestCost = cost;
+    kept.push(r);
+    if (kept.length === 3) break;
+  }
+  return kept;
 };
 
-/** Whether `satisfies` should be asked through a cache; it is called often. */
-export const cachedSatisfies = (session: CheckerSession) => {
+/** `session.matches` through a cache; it is called often. */
+export const cachedMatches = (session: CheckerSession): Matches => {
   const cache = new Map<string, boolean>();
-  return (expected: string, actual: string) => {
-    const key = `${expected}|${actual}`;
-    if (!cache.has(key)) cache.set(key, session.satisfies(expected, actual));
+  return (matcher, expected, actual) => {
+    const key = `${matcher}|${expected}|${actual}`;
+    if (!cache.has(key))
+      cache.set(key, session.matches(matcher, expected, actual));
     return cache.get(key)!;
   };
 };
@@ -333,37 +373,34 @@ const undeclaredSteps = (report: VerifiedCheckReport): Set<number> =>
   );
 
 /**
- * The best readings of one rejected triangle-criterion step, or undefined
- * when the step is not one or its triangles are not declared.
+ * The best readings of one rejected step, or undefined when its reason has
+ * no templates or its triangles are not declared.
  */
 export const criterionReadings = (
   session: CheckerSession,
-  satisfies: (expected: string, actual: string) => boolean,
+  matches: Matches,
   report: VerifiedCheckReport,
   step: VerifiedStepReport,
 ): StepReadings | undefined => {
-  if (
-    step.status !== "rejected" ||
-    !CRITERIA.includes(step.reason ?? "") ||
-    step.dependencies.length !== 3 ||
-    undeclaredSteps(report).has(step.number)
-  )
+  if (step.status !== "rejected" || undeclaredSteps(report).has(step.number))
     return undefined;
-  const readings = diagnoseStep(session, satisfies, report, step);
+  const templates = stepTemplates(session, step);
+  if (!templates) return undefined;
+  const readings = diagnoseStep(session, matches, report, step, templates);
   return readings.length
     ? Object.assign(readings, { ownReason: step.reason ?? "" })
     : undefined;
 };
 
-/** Per step number, the best readings of each rejected criterion step. */
+/** Per step number, the best readings of each rejected step. */
 export const diagnoseCriteria = (
   session: CheckerSession,
   report: VerifiedCheckReport,
 ): Map<string, StepReadings> => {
-  const satisfies = cachedSatisfies(session);
+  const matches = cachedMatches(session);
   const diagnoses = new Map<string, StepReadings>();
   for (const step of report.steps) {
-    const readings = criterionReadings(session, satisfies, report, step);
+    const readings = criterionReadings(session, matches, report, step);
     if (readings) diagnoses.set(String(step.number), readings);
   }
   return diagnoses;

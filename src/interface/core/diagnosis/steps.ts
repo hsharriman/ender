@@ -9,8 +9,8 @@
  *    citations swapped.
  * 2. One object in the conclusion replaced by another object of the same
  *    kind that the proof mentions or that its declarations determine.
- * 3. Deeper citation searches: for a triangle criterion, the criterion
- *    readings of `criteria.ts`; otherwise, two citations replaced.
+ * 3. Deeper citation searches: for a reason the kernel gives as templates,
+ *    the readings of `criteria.ts`; otherwise, two citations replaced.
  *
  * The order puts the edits the diagram can show first: a wrong citation is
  * drawn as a "?" dependency, a wrong conclusion as red objects.  Every
@@ -18,12 +18,21 @@
  * decides whether a step is valid.  Problems are assumed complete: the
  * objects a fix needs are already in the proof.
  */
+import { canonicalObject, reasonText, stmtText } from "checker/grammar/syntax";
+import { ProofObj, ProofStep, Reason, Stmt } from "checker/types/checkerTypes";
+import { presentationToProofObj } from "checker/verified/presentationAdapter";
 import {
   VerifiedCheckReport,
   VerifiedStepReport,
 } from "checker/verified/presentationTypes";
 import { CheckerSession } from "checker/verified/session";
-import { cachedSatisfies, criterionReadings, StepReadings } from "./criteria";
+import {
+  cachedMatches,
+  criterionReadings,
+  Matches,
+  StepReadings,
+} from "./criteria";
+import { Obj, ParseObj } from "geometry-object";
 
 /** How one rejected step could be made acceptable. */
 export type StepDiagnosis =
@@ -52,69 +61,55 @@ export const readingsOf = (diagnoses: Diagnoses): Map<string, StepReadings> =>
     ),
   );
 
-/** A call such as `sas(1, 2, 3)`, split into its name and arguments. */
-type Call = { name: string; args: string[] };
-
-const parseCall = (text: string): Call | undefined => {
-  const m = text.match(/^\s*([A-Za-z0-9_]+)\s*\((.*)\)\s*$/);
-  if (!m) return undefined;
-  const inner = m[2].trim();
-  return {
-    name: m[1],
-    args: inner ? inner.split(",").map((a) => a.trim()) : [],
-  };
-};
-
-const callText = ({ name, args }: Call): string =>
-  `${name}(${args.join(", ")})`;
-
-/** A step line's reason and conclusion, as written. */
+/** A step's reason and conclusion, as the checker's parser read them. */
 const stepParts = (
-  step: VerifiedStepReport,
-): { reason: Call; conclusion: Call } | undefined => {
-  // A trailing `//` or `#` comment is not part of the step.
-  const line = step.source.replace(/\s*(\/\/|#).*$/, "");
-  const m = line.match(/^\s*\[\d+\]\s*(.*?)\s*->\s*(.*?)\s*$/);
-  if (!m) return undefined;
-  const reason = parseCall(m[1]);
-  const conclusion = parseCall(m[2]);
-  return reason && conclusion ? { reason, conclusion } : undefined;
-};
+  step: ProofStep | undefined,
+): { reason: Reason; conclusion: Stmt } | undefined =>
+  step?.reason && step.statement
+    ? { reason: step.reason, conclusion: step.statement }
+    : undefined;
 
-const withArgs = (call: Call, edits: Array<[number, string]>): Call => {
-  const args = [...call.args];
+/** The reason with the citations at some positions replaced. */
+const withCitations = (
+  reason: Reason,
+  edits: Array<[number, string]>,
+): Reason => {
+  const args = [...reason.arguments];
   edits.forEach(([i, value]) => (args[i] = value));
-  return { ...call, args };
+  return { ...reason, arguments: args };
 };
 
 // ---------------------------------------------------------------------------
 // Citations
 
 /** Positions of the reason's arguments that cite steps. */
-const citationSlots = (reason: Call): number[] =>
-  reason.args.flatMap((arg, i) => (/^\d+$/.test(arg) ? [i] : []));
+const citationSlots = (reason: Reason): number[] =>
+  reason.arguments.flatMap((arg, i) => (/^\d+$/.test(arg) ? [i] : []));
 
 /** One citation replaced by another step, or two citations swapped. */
 const oneCitationEdits = (
-  reason: Call,
+  reason: Reason,
   position: number,
-): Array<{ slots: number[]; reason: Call }> => {
+): Array<{ slots: number[]; reason: Reason }> => {
   const slots = citationSlots(reason);
   const earlier = Array.from({ length: position - 1 }, (_, i) => String(i + 1));
   const replaced = slots.flatMap((slot) =>
     earlier
-      .filter((n) => n !== reason.args[slot])
-      .map((n) => ({ slots: [slot], reason: withArgs(reason, [[slot, n]]) })),
+      .filter((n) => n !== reason.arguments[slot])
+      .map((n) => ({
+        slots: [slot],
+        reason: withCitations(reason, [[slot, n]]),
+      })),
   );
   const swapped = slots.flatMap((a, i) =>
     slots
       .slice(i + 1)
-      .filter((b) => reason.args[a] !== reason.args[b])
+      .filter((b) => reason.arguments[a] !== reason.arguments[b])
       .map((b) => ({
         slots: [a, b],
-        reason: withArgs(reason, [
-          [a, reason.args[b]],
-          [b, reason.args[a]],
+        reason: withCitations(reason, [
+          [a, reason.arguments[b]],
+          [b, reason.arguments[a]],
         ]),
       })),
   );
@@ -123,21 +118,21 @@ const oneCitationEdits = (
 
 /** Two citations replaced by other steps. */
 const twoCitationEdits = (
-  reason: Call,
+  reason: Reason,
   position: number,
-): Array<{ slots: number[]; reason: Call }> => {
+): Array<{ slots: number[]; reason: Reason }> => {
   const slots = citationSlots(reason);
   const earlier = Array.from({ length: position - 1 }, (_, i) => String(i + 1));
   return slots.flatMap((a, i) =>
     slots.slice(i + 1).flatMap((b) =>
       earlier
-        .filter((n) => n !== reason.args[a])
+        .filter((n) => n !== reason.arguments[a])
         .flatMap((x) =>
           earlier
-            .filter((n) => n !== reason.args[b])
+            .filter((n) => n !== reason.arguments[b])
             .map((y) => ({
               slots: [a, b],
-              reason: withArgs(reason, [
+              reason: withCitations(reason, [
                 [a, x],
                 [b, y],
               ]),
@@ -150,31 +145,10 @@ const twoCitationEdits = (
 // ---------------------------------------------------------------------------
 // Conclusion objects
 
-type Kind =
-  "point" | "segment" | "angle" | "triangle" | "quad" | "circle" | "arc";
-
-const kindOf = (token: string): Kind | undefined => {
-  if (/^[A-Z]$/.test(token)) return "point";
-  if (/^[A-Z]{2}$/.test(token)) return "segment";
-  if (/^a_[A-Z]{3}$/.test(token)) return "angle";
-  if (/^t_[A-Z]{3}$/.test(token)) return "triangle";
-  if (/^q_[A-Z]{4}$/.test(token)) return "quad";
-  if (/^c_[A-Z]{2}$/.test(token)) return "circle";
-  if (/^r_[A-Z]{3}$/.test(token)) return "arc";
-  return undefined;
-};
-
-/** One spelling per object: a segment or angle read backwards is the same. */
-const canonical = (token: string): string => {
-  const kind = kindOf(token);
-  if (kind === "segment")
-    return [token, [...token].reverse().join("")].sort()[0];
-  if (kind === "angle") {
-    const v = token.slice(2);
-    return `a_${[v, [...v].reverse().join("")].sort()[0]}`;
-  }
-  return token;
-};
+/** One key per object; triangles keep every vertex order, which states a
+ * correspondence. */
+const objectKey = (o: ParseObj): string =>
+  o.type === Obj.Triangle ? `${o.type}:${o.v}` : canonicalObject(o);
 
 const permutations = <T>(items: T[]): T[][] =>
   items.length <= 1
@@ -190,85 +164,99 @@ const permutations = <T>(items: T[]): T[][] =>
  * mentions, the segments between its points, the corners of its triangles
  * and quadrilaterals, and every vertex order of its triangles.
  */
-const vocabulary = (source: string): Map<Kind, string[]> => {
-  const text = source
-    .split("\n")
-    .filter((line) => !/^\s*title:/.test(line))
-    .map((line) => line.replace(/(\/\/|#).*$/, ""))
-    .join("\n");
-  const tokens = new Set(text.match(/\b(?:[a-z]_[A-Z]+|[A-Z]{1,2})\b/g) ?? []);
-  const points = [...tokens].filter((t) => kindOf(t) === "point");
-  const triangles = [...tokens].filter((t) => kindOf(t) === "triangle");
-  const quads = [...tokens].filter((t) => kindOf(t) === "quad");
-  points.forEach((p, i) =>
-    points.slice(i + 1).forEach((q) => tokens.add(p + q)),
-  );
-  triangles.forEach((t) =>
-    permutations([...t.slice(2)]).forEach((order) => {
-      tokens.add(`t_${order.join("")}`);
-      tokens.add(`a_${order.join("")}`);
-    }),
-  );
-  quads.forEach((q) => {
-    const v = [...q.slice(2)];
-    v.forEach((_, i) =>
-      tokens.add(`a_${v[(i + 3) % 4]}${v[i]}${v[(i + 1) % 4]}`),
-    );
-  });
-  const byKind = new Map<Kind, string[]>();
+const vocabulary = (proof: ProofObj): Map<Obj, ParseObj[]> => {
+  const { premises } = proof;
+  const statements = [
+    ...premises.diagramStatements.map((d) => d.statement),
+    ...proof.steps.flatMap((step) => (step.statement ? [step.statement] : [])),
+    ...(proof.goal ? [proof.goal] : []),
+  ];
+  const mentioned: ParseObj[] = [
+    ...premises.points.map(({ type, v }) => ({ type, v })),
+    ...premises.segments,
+    ...premises.angles,
+    ...premises.triangles,
+    ...premises.quadrilaterals,
+    ...premises.circles,
+    ...premises.arcs,
+    ...statements.flatMap((s) => s.arguments),
+  ];
+  const ofType = (type: Obj) =>
+    mentioned.filter((o) => o.type === type).map((o) => o.v);
+  const points = [...new Set(ofType(Obj.Point))];
+  const derived: ParseObj[] = [
+    ...points.flatMap((p, i) =>
+      points.slice(i + 1).map((q) => ({ type: Obj.Segment, v: p + q })),
+    ),
+    ...ofType(Obj.Triangle).flatMap((t) =>
+      permutations([...t]).flatMap((order) => [
+        { type: Obj.Triangle, v: order.join("") },
+        { type: Obj.Angle, v: order.join("") },
+      ]),
+    ),
+    ...ofType(Obj.Quadrilateral).flatMap((q) =>
+      [...q].map((corner, i) => ({
+        type: Obj.Angle,
+        v: `${q[(i + 3) % 4]}${corner}${q[(i + 1) % 4]}`,
+      })),
+    ),
+  ] as ParseObj[];
+  const byType = new Map<Obj, ParseObj[]>();
   const seen = new Set<string>();
-  [...tokens].sort().forEach((token) => {
-    const kind = kindOf(token);
-    // Triangles keep every vertex order: the order states a correspondence.
-    const key = kind === "triangle" ? token : canonical(token);
-    if (!kind || seen.has(key)) return;
-    seen.add(key);
-    byKind.set(kind, [...(byKind.get(kind) ?? []), token]);
-  });
-  return byKind;
+  [...mentioned, ...derived]
+    .filter((o) => o.type !== Obj.Text)
+    .sort((a, b) => (a.v < b.v ? -1 : a.v > b.v ? 1 : 0))
+    .forEach((o) => {
+      const key = objectKey(o);
+      if (seen.has(key)) return;
+      seen.add(key);
+      byType.set(o.type, [...(byType.get(o.type) ?? []), o]);
+    });
+  return byType;
 };
 
-/** The conclusion with one object replaced by another of the same kind. */
+/** The conclusion with one object replaced by another of the same type. */
 const oneObjectEdits = (
-  conclusion: Call,
-  objects: Map<Kind, string[]>,
-): Call[] =>
-  conclusion.args.flatMap((arg, i) => {
-    const kind = kindOf(arg);
-    if (!kind) return [];
-    const same = kind === "triangle" ? arg : canonical(arg);
-    return (objects.get(kind) ?? [])
-      .filter((o) => (kind === "triangle" ? o : canonical(o)) !== same)
-      .map((o) => withArgs(conclusion, [[i, o]]));
-  });
+  conclusion: Stmt,
+  objects: Map<Obj, ParseObj[]>,
+): Stmt[] =>
+  conclusion.arguments.flatMap((arg, i) =>
+    (objects.get(arg.type) ?? [])
+      .filter((o) => objectKey(o) !== objectKey(arg))
+      .map((o) => ({
+        ...conclusion,
+        arguments: conclusion.arguments.map((a, j) => (j === i ? o : a)),
+      })),
+  );
 
 // ---------------------------------------------------------------------------
 
 /** The diagnosis of one rejected step, or undefined if no search finds one. */
 const diagnoseStep = (
   session: CheckerSession,
-  satisfies: (expected: string, actual: string) => boolean,
+  matches: Matches,
   report: VerifiedCheckReport,
-  objects: Map<Kind, string[]>,
+  objects: Map<Obj, ParseObj[]>,
   step: VerifiedStepReport,
+  written: ProofStep | undefined,
 ): StepDiagnosis | undefined => {
-  const parts = stepParts(step);
+  const parts = stepParts(written);
   if (!parts) return undefined;
   const { reason, conclusion } = parts;
   const position = step.number;
-  const conclusionText = callText(conclusion);
-  const accepts = (r: Call, c: string) =>
-    session.accepts(position, callText(r), c);
+  const conclusionText = stmtText(conclusion);
+  const accepts = (r: Reason, c: string) =>
+    session.accepts(position, reasonText(r), c);
 
   const citationFix = (
-    edits: Array<{ slots: number[]; reason: Call }>,
+    edits: Array<{ slots: number[]; reason: Reason }>,
   ): StepDiagnosis | undefined => {
     const found = edits.find((e) => accepts(e.reason, conclusionText));
     return (
       found && {
         kind: "citation",
         slots: found.slots,
-        fix: callText(found.reason),
+        fix: reasonText(found.reason),
       }
     );
   };
@@ -277,12 +265,12 @@ const diagnoseStep = (
   if (oneCitation) return oneCitation;
 
   const conclusionFix = oneObjectEdits(conclusion, objects).find((c) =>
-    accepts(reason, callText(c)),
+    accepts(reason, stmtText(c)),
   );
   if (conclusionFix)
-    return { kind: "conclusion", fix: callText(conclusionFix) };
+    return { kind: "conclusion", fix: stmtText(conclusionFix) };
 
-  const readings = criterionReadings(session, satisfies, report, step);
+  const readings = criterionReadings(session, matches, report, step);
   if (readings) return { kind: "criterion", readings };
 
   return citationFix(twoCitationEdits(reason, position));
@@ -292,14 +280,27 @@ const diagnoseStep = (
 export const diagnoseSteps = (
   session: CheckerSession,
   report: VerifiedCheckReport,
-  source: string,
 ): Diagnoses => {
-  const satisfies = cachedSatisfies(session);
-  const objects = vocabulary(source);
+  if (!report.presentation) return new Map();
+  const proof = presentationToProofObj(report.presentation);
+  const matches = cachedMatches(session);
+  const objects = vocabulary(proof);
+  const written = new Map(
+    proof.steps
+      .filter((s) => s.type === "proof")
+      .map((s) => [Number(s.stepNumber), s]),
+  );
   const diagnoses: Diagnoses = new Map();
   for (const step of report.steps) {
     if (step.status !== "rejected") continue;
-    const found = diagnoseStep(session, satisfies, report, objects, step);
+    const found = diagnoseStep(
+      session,
+      matches,
+      report,
+      objects,
+      step,
+      written.get(step.number),
+    );
     if (found) diagnoses.set(String(step.number), found);
   }
   return diagnoses;

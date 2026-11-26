@@ -233,11 +233,35 @@ Example session_refuses_an_unreadable_candidate :
   bad_sss_accepts 4 "sas(1,2" "con_tri(t_ABC,t_DEF)" = Some false.
 Proof. vm_compute. reflexivity. Qed.
 
-Example session_satisfies_up_to_spelling :
+Example session_matches_up_to_spelling :
   option_map (fun data =>
-    (CertifiedAPI.sessionSatisfies data "con_seg(DE,AB)" "con_seg(AB,DE)",
-     CertifiedAPI.sessionSatisfies data "con_seg(AB,DE)" "con_seg(AC,DF)"))
-    (CertifiedAPI.openSession bad_sss_source) = Some (true, false).
+    (CertifiedAPI.sessionMatches data "loose" "con_seg(DE,AB)" "con_seg(AB,DE)",
+     CertifiedAPI.sessionMatches data "loose" "con_seg(AB,DE)" "con_seg(AC,DF)",
+     CertifiedAPI.sessionMatches data "no_such_matcher" "con_seg(DE,AB)" "con_seg(AB,DE)"))
+    (CertifiedAPI.openSession bad_sss_source) = Some (true, false, false).
+Proof. vm_compute. reflexivity. Qed.
+
+(** The first template [sas] has for the conclusion of step 4 is the
+    correspondence as written: the three parts steps 1-3 state. *)
+Example session_needs_lists_the_written_correspondence :
+  option_map (fun data =>
+    match CertifiedAPI.sessionNeeds data 4 "sas(1,2,3)" "con_tri_ordered(t_ABC,t_DEF)" with
+    | Audit.JsonArray (Audit.JsonObject (("slots", Audit.JsonArray slots) :: _) :: _) =>
+        map (fun slot => match slot with
+             | Audit.JsonObject [(_, Audit.JsonString m);
+                                 (_, Audit.JsonArray [Audit.JsonString st])] => (m, st)
+             | _ => (""%string, ""%string)
+             end) slots
+    | _ => []
+    end)
+    (CertifiedAPI.openSession bad_sss_source) =
+  Some [("loose", "con_seg(AB,DE)"); ("loose", "con_ang(a_BAC,a_EDF)");
+        ("loose", "con_seg(CA,FD)")]%string.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_needs_nothing_for_a_rule_of_its_own :
+  option_map (fun data => CertifiedAPI.sessionNeeds data 5 "cpctc(4)" "con_seg(BC,EF)")
+    (CertifiedAPI.openSession bad_sss_source) = Some Audit.JsonNull.
 Proof. vm_compute. reflexivity. Qed.
 
 Example session_needs_a_problem :

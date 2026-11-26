@@ -16,7 +16,8 @@ import {
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
-import { REASONS_DEFS } from "checker/grammar/defs/reasons.defs";
+import { reasonDef, ReasonDef, REASONS } from "checker/grammar/catalog";
+import { STEP_NUMBER } from "checker/grammar/syntax";
 import { STMTS_DEFS } from "checker/grammar/defs/stmts.defs";
 
 /*
@@ -109,17 +110,10 @@ type StatementDef = {
   isPremisesOnly?: boolean;
   isDiagramOnly?: boolean;
 };
-type ReasonDef = {
-  name: string;
-  title: string;
-  dependencies: readonly string[];
-  conclusion: string;
-};
 
 const statementDefs = Object.values(
   STMTS_DEFS.statements,
 ) as readonly StatementDef[];
-const reasonDefs = Object.values(REASONS_DEFS) as readonly ReasonDef[];
 const groupBase: Record<string, string> = Object.fromEntries(
   Object.values(STMTS_DEFS.groups).map((g) => [g.name, g.base]),
 );
@@ -164,7 +158,7 @@ const reasonCompletion = (def: ReasonDef): Completion =>
     },
   );
 
-const reasonCompletions = reasonDefs.map(reasonCompletion);
+const reasonCompletions = REASONS.map(reasonCompletion);
 const diagramStatementCompletions = statementDefs
   .filter((def) => def.isPremisesOnly)
   .map((def) => statementCompletion(def));
@@ -184,17 +178,6 @@ const sectionAt = (state: EditorState, pos: number): Section => {
   if (/^\s*steps:/m.test(before)) return "steps";
   if (/^\s*premises:/m.test(before)) return "premises";
   return "header";
-};
-
-/** The statements a reason can conclude, from its catalog entry. */
-const conclusionsOf = (reason: string): Set<string> => {
-  const def = reasonDefs.find((r) => r.name === reason);
-  return new Set(
-    (def?.conclusion ?? "")
-      .split(",")
-      .map((name) => name.trim())
-      .filter(Boolean),
-  );
 };
 
 type CompletionSlot =
@@ -241,12 +224,13 @@ const completeProof = (context: CompletionContext): CompletionResult | null => {
     case "diagram":
       return { from, options: diagramStatementCompletions, validFor };
     case "statement": {
-      const concludes = slot.reason ? conclusionsOf(slot.reason) : new Set();
+      const conclusions =
+        (slot.reason && reasonDef(slot.reason)?.conclusions) || [];
       const options = slot.reason
         ? statementDefs
             .filter((def) => !def.isPremisesOnly)
             .map((def) =>
-              statementCompletion(def, concludes.has(def.name) ? 50 : 0),
+              statementCompletion(def, conclusions.includes(def.name) ? 50 : 0),
             )
         : allStatementCompletions;
       return { from, options, validFor };
@@ -257,13 +241,11 @@ const completeProof = (context: CompletionContext): CompletionResult | null => {
 // ---------------------------------------------------------------------------
 // Tab
 
-const STEP_LINE = /^\s*\[(\d+)\]/;
-
 /** One more than the largest step number at or above `lineNumber`. */
 const nextStepNumber = (state: EditorState, lineNumber: number): number => {
   let largest = 0;
   for (let n = 1; n <= lineNumber; n++) {
-    const match = state.doc.line(n).text.match(STEP_LINE);
+    const match = state.doc.line(n).text.match(STEP_NUMBER);
     if (match) largest = Math.max(largest, Number(match[1]));
   }
   return largest + 1;
@@ -280,7 +262,7 @@ const insertStep = (view: EditorView): boolean => {
   const line = state.doc.lineAt(range.head);
   if (range.head !== line.to) return false;
   const blank = line.text.trim() === "";
-  if (!blank && !STEP_LINE.test(line.text)) return false;
+  if (!blank && !STEP_NUMBER.test(line.text)) return false;
   const label = `[${String(nextStepNumber(state, line.number)).padStart(2, "0")}] `;
   const insert = blank ? label : `\n${label}`;
   view.dispatch({

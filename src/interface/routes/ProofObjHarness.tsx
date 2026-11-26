@@ -27,7 +27,6 @@ import {
   wrongDependencies,
   WrongDependencies,
 } from "interface/core/reportAnnotations";
-import { waysToProve } from "interface/core/waysToProve";
 import { Diagnoses, diagnoseSteps } from "interface/core/diagnosis/steps";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
@@ -258,11 +257,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             .map((step) => String(step.number)),
         );
 
-        // The editor draws a mini-figure per step from the parts its reason
-        // relates; the checker has no opinion on these.
         const ctx = presentationContent(proof);
-        for (const step of proof.steps)
-          step.waysToProve = waysToProve(step, ctx);
 
         this.setState((prev) => ({
           unacceptedSteps: unaccepted,
@@ -311,7 +306,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     const session = await openCheckerSession(source);
     if (!session) return new Map();
     try {
-      return diagnoseSteps(session, report, source);
+      return diagnoseSteps(session, report);
     } finally {
       session.close();
     }

@@ -7,7 +7,11 @@ import {
   openCheckerSessionNode,
   parsePresentationNode,
 } from "../verified/nodeWasmLoader";
-import { diagnoseCriteria } from "../../interface/core/diagnosis/criteria";
+import {
+  cachedMatches,
+  criterionReadings,
+  diagnoseCriteria,
+} from "../../interface/core/diagnosis/criteria";
 import { Diagnoses, diagnoseSteps } from "../../interface/core/diagnosis/steps";
 import { CheckerSession } from "../verified/session";
 import { VerifiedCheckReport } from "../verified/presentationTypes";
@@ -633,15 +637,28 @@ steps:
     test("match a fact to a slot up to its spellings", async () => {
       const session = (await openCheckerSessionNode(s1inc1))!;
       try {
-        expect(session.satisfies("con_seg(BD,DB)", "ref_seg(BD,BD)")).toBe(
-          true,
-        );
-        expect(session.satisfies("con_seg(DC,AB)", "con_seg(AB,DC)")).toBe(
-          true,
-        );
-        expect(session.satisfies("con_seg(BD,DB)", "con_seg(AB,DC)")).toBe(
-          false,
-        );
+        const loose = (expected: string, actual: string) =>
+          session.matches("loose", expected, actual);
+        expect(loose("con_seg(BD,DB)", "ref_seg(BD,BD)")).toBe(true);
+        expect(loose("con_seg(DC,AB)", "con_seg(AB,DC)")).toBe(true);
+        expect(loose("con_seg(BD,DB)", "con_seg(AB,DC)")).toBe(false);
+      } finally {
+        session.close();
+      }
+    });
+
+    test("list the templates a reason is checked against", async () => {
+      const session = (await openCheckerSessionNode(s1inc1))!;
+      try {
+        const sas = session.needs(4, "sas(1, 1, 1)", "con_tri(t_ABD,t_CDB)");
+        expect(sas?.length).toBeGreaterThan(0);
+        expect(sas![0].slots.map((s) => s.matcher)).toEqual([
+          "loose",
+          "loose",
+          "loose",
+        ]);
+        // cpctc has a rule of its own.
+        expect(session.needs(5, "cpctc(4)", "con_seg(AB,CD)")).toBeNull();
       } finally {
         session.close();
       }
@@ -668,7 +685,7 @@ steps:
     const annotateSource = async (source: string) => {
       const report = await checkVerifiedReportNode(source);
       const diagnoses = await withSession(source, (session) =>
-        diagnoseSteps(session, report, source),
+        diagnoseSteps(session, report),
       );
       const unaccepted = new Map(
         report.steps
@@ -708,8 +725,6 @@ steps:
       expect([...readingsAt(diagnoses, "4")!]).toEqual([
         {
           reason: "sas",
-          tri1: "t_BDA",
-          tri2: "t_DBC",
           parts: [
             {
               index: 0,
@@ -737,38 +752,41 @@ steps:
       expect(readingsAt(diagnoses, "4")!.ownReason).toBe("sas");
     });
 
-    test("templates agree with the kernel on every accepted criterion step", async () => {
-      // A template that drifted from Checker.v would grade a step the kernel
-      // accepted as missing a part.
+    test("every accepted templated step reads as fully cited", async () => {
+      // Grading reads the kernel's own templates, so a step the kernel
+      // accepted must grade as its own reason with every part cited.  Each
+      // accepted step is re-diagnosed as if it alone had been rejected.
+      const drifted: Array<[string, number, string]> = [];
       for (const file of proofFiles) {
         const source = readFileSync(file, "utf8");
         const report = await checkVerifiedReportNode(source);
-        const criteria = report.steps.filter(
-          (s) =>
-            s.status === "accepted" &&
-            ["sas", "sss", "asa", "aas", "rhl"].includes(s.reason ?? ""),
-        );
-        if (!criteria.length) continue;
-        // Re-check each accepted criterion step as if it had been rejected.
-        const asRejected = {
-          ...report,
-          steps: report.steps.map((s) =>
-            criteria.includes(s) ? { ...s, status: "rejected" as const } : s,
-          ),
-        };
-        const readings = await withSession(source, (session) =>
-          diagnoseCriteria(session, asRejected),
-        );
-        for (const step of criteria) {
-          const best = readings.get(String(step.number));
-          const allCited = best?.[0]?.parts.every((p) => p.status === "cited");
-          expect([relative(PROOFS_DIR, file), step.number, allCited]).toEqual([
-            relative(PROOFS_DIR, file),
-            step.number,
-            true,
-          ]);
-        }
+        const steps = report.steps.filter((s) => s.status === "accepted");
+        if (!steps.length) continue;
+        await withSession(source, (session) => {
+          const matches = cachedMatches(session);
+          for (const step of steps) {
+            const asRejected = { ...step, status: "rejected" as const };
+            const best = criterionReadings(
+              session,
+              matches,
+              report,
+              asRejected,
+            );
+            if (!best) continue;
+            const own = best[0];
+            if (
+              own?.reason !== step.reason ||
+              !own.parts.every((p) => p.status === "cited")
+            )
+              drifted.push([
+                relative(PROOFS_DIR, file),
+                step.number,
+                step.reason ?? "",
+              ]);
+          }
+        });
       }
+      expect(drifted).toEqual([]);
     });
 
     test("s1inc1: the shared side is missing, not the angle", async () => {
@@ -795,6 +813,61 @@ steps:
       expect(squiggled("[04]")).toEqual(["sss", "2"]);
       // Nothing is missing, so the diagram marks nothing extra.
       expect(stepHints(report, diagnoses).get("4")).toBeUndefined();
+    });
+
+    test("rect_pgram_ang: the parallelogram cited is not this quadrilateral", async () => {
+      const { report, diagnoses, squiggled } = await annotate(
+        "quadrilaterals/rect_pgram_ang_incorrect.txt",
+      );
+      expect(readingsAt(diagnoses, "3")![0].reason).toBe("rect_pgram_ang");
+      expect(squiggled("[03]")).toEqual(["2"]);
+      const hint = stepHints(report, diagnoses).get("3")!;
+      expect(hint.unestablished.map((s) => s.function)).toEqual([
+        "parallelogram",
+      ]);
+      expect(hint.unestablished[0].arguments.map((a) => a.v)).toEqual(["EFGH"]);
+    });
+
+    test("def_con_tri: three established parts already fit sas", async () => {
+      const { diagnoses, squiggled } = await annotate(
+        "triangles/def_con_tri_incorrect.txt",
+      );
+      const readings = readingsAt(diagnoses, "7")!;
+      expect(readings.ownReason).toBe("def_con_tri");
+      expect(readings[0].reason).toBe("sas");
+      expect(readings[0].parts.every((p) => p.status !== "unknown")).toBe(true);
+      expect(squiggled("[07]")[0]).toBe("def_con_tri");
+    });
+
+    test("sss_sim: the second proportion is the wrong one", async () => {
+      const { report, diagnoses, squiggled } = await annotate(
+        "triangles/sss_sim_incorrect.txt",
+      );
+      const [best] = readingsAt(diagnoses, "3")!;
+      expect(best.reason).toBe("sss_sim");
+      expect(best.parts.map((p) => p.status)).toEqual(["cited", "unknown"]);
+      expect(squiggled("[03]")).toEqual(["2"]);
+      const hint = stepHints(report, diagnoses).get("3")!;
+      expect(hint.unestablished.map((s) => s.function)).toEqual(["proportion"]);
+    });
+
+    test("altint_conv: an angle spelled along its rays still fits", async () => {
+      // s1c1 cites con_ang(a_CAM, a_DBM); the transversal names the angles
+      // a_CAB and a_DBA, and M lies on AB.  Re-diagnosed as if rejected, the
+      // citation must still be read as supplying the slot.
+      const source = readFileSync(
+        join(PROOFS_DIR, "examples/s1c1.txt"),
+        "utf8",
+      );
+      const report = await checkVerifiedReportNode(source);
+      const step = report.steps.find((s) => s.reason === "altint_conv")!;
+      const readings = await withSession(source, (session) =>
+        criterionReadings(session, cachedMatches(session), report, {
+          ...step,
+          status: "rejected",
+        }),
+      );
+      expect(readings![0].parts.map((p) => p.status)).toEqual(["cited"]);
     });
 
     test("s1inc2: parts cited in the wrong slots are not missing", async () => {

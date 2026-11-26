@@ -20,13 +20,6 @@ export interface LayoutProps {
   title: string;
   diagramAspect: AspectRatio;
 }
-export interface Reason {
-  title: string;
-  body: string;
-  src?: string;
-  expectedDependenciesDescription?: string;
-}
-
 export interface ProofMeta {
   layout: LayoutOptions;
   props: StaticAppPageProps | InteractiveAppPageProps;

@@ -525,42 +525,6 @@ Definition reason_name (r : Reason) : string :=
   | SuppInscribedAngs _ _ => "supp_inscribed_angs"
   end.
 
-(** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
-    label rather than a step, and [reflex] cites nothing. *)
-Definition reason_dependencies (r : Reason) : list nat :=
-  match r with
-  | Given _ | Reflex | VertAng _ | Incomplete => []
-  | CPCTC i | CASTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
-  | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
-  | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
-  | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | KiteOppConAng i
-  | RectanglePgram i
-  | RhombusPgram i | RhombusDef i | RhombusOppBisect i | RectDiagCon i
-  | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
-  | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
-  | DefRadius i | ConChordsArcs i
-  | IsosTrapBaseAngsConv i | LinearPairConv i
-  | PgramDiagBisect i | RhombusDiagPerp i | KiteDiagPerp i
-  | DefRadiusConv i => [i]
-  | PgramOppSidesConv i j | PgramConsecAngsConv i j | RectPgramAng i j
-  | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
-  | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
-  | DefParallelogram i j | PgramOppSidePara i j | RhombusConsecSides i j
-  | ParaTrans i j | TangentPerp i j | TangentPerpConv i j
-  | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
-  | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
-  | RectDiagConConv i j | RhombusDiagPerpConv i j
-  | AASim i j | SSSSim i j | SASSim i j | ChordBisectConv i j
-  | SimTriTrans i j | SuppTrans i j | PerpTransversal i j
-  | ConInscribedAngs i j
-  | SuppInscribedAngs i j | InscribedSemi i j => [i; j]
-  | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
-  | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
-  | RadiusChordBisect i j k | RhombusOppBisectConv i j k
-  | ConComplements i j k => [i; j; k]
-  | DefConTri i j k l m n => [i; j; k; l; m; n]
-  end.
-
 Definition nat_eqb_report (a b : nat) : bool := Nat.eqb a b.
 
 Definition step_failure_diagnostic : Audit.Diagnostic :=
@@ -2427,8 +2391,9 @@ Qed.
     the checker's answers:
     - [session_accepts]: would this reason and conclusion be accepted at
       step n, using only the accepted steps before n?
-    - [session_satisfies]: does one statement count as another when a step
-      cites it (argument order, reversed segments, ref_ forms)?
+    - [session_needs]: the templates a reason would be checked against.
+    - [session_matches]: does one statement count as a template's statement
+      under a given matcher (argument order, reversed segments, ref_ forms)?
     Accepting or rejecting a proof never calls these functions. *)
 Definition session_accepted (data : ReportData) (n : nat) : bool :=
   match status_of data.(rd_statuses) n with
@@ -2462,14 +2427,63 @@ Definition session_accepts (data : ReportData) (position : nat)
   | None => false
   end.
 
-(** Whether a step that states [actual] can be cited where [expected] is
-    needed, using the same matching as [dependency_matches]. *)
-Definition session_satisfies (data : ReportData) (expected actual : string)
+(** The names external code uses for the template matchers. *)
+Definition matcher_names : list (string * Matcher) :=
+  [("as_written", AsWritten); ("loose", Loose); ("pgram_like", PgramLike);
+   ("proportion", ProportionMatch); ("ray_angles", RayAngles);
+   ("perp_any_point", PerpAnyPoint); ("trapezoid_any_sides", TrapezoidAnySides);
+   ("radius_any_point", RadiusAnyPoint)].
+
+Definition matcher_name (m : Matcher) : string :=
+  match m with
+  | AsWritten => "as_written" | Loose => "loose" | PgramLike => "pgram_like"
+  | ProportionMatch => "proportion" | RayAngles => "ray_angles"
+  | PerpAnyPoint => "perp_any_point" | TrapezoidAnySides => "trapezoid_any_sides"
+  | RadiusAnyPoint => "radius_any_point"
+  end.
+
+Definition statement_texts (ss : list Statement) : Audit.JsonValue :=
+  Audit.JsonArray (map (fun s => Audit.JsonString (Audit.statementText s)) ss).
+
+Definition template_json (t : Template) : Audit.JsonValue :=
+  Audit.JsonObject
+    [("slots", Audit.JsonArray (map (fun s =>
+        Audit.JsonObject
+          [("matcher", Audit.JsonString (matcher_name s.(slot_matcher)));
+           ("statements", statement_texts s.(slot_statements))])
+       t.(template_slots)));
+     ("premises", statement_texts t.(template_premises))].
+
+(** The templates [reason] has for concluding [conclusion] as step
+    [position], read with the accepted steps before it as the facts proved
+    so far: the same list [rule_valid] checks the step against.  [null] when
+    the reason has a rule of its own, or the text does not parse.  The
+    citation numbers in [reason] are not read. *)
+Definition session_needs (data : ReportData) (position : nat)
+    (reason conclusion : string) : Audit.JsonValue :=
+  let line := "[" ++ nat_text position ++ "] " ++ reason ++ " -> " ++ conclusion in
+  match Parser.parse_step (list_ascii_of_string line) with
+  | Some candidate =>
+      match reason_needs data.(rd_declarations) data.(rd_premises)
+              (session_facts data position)
+              candidate.(step_reason) candidate.(step_conclusion) with
+      | Some ts => Audit.JsonArray (map template_json ts)
+      | None => Audit.JsonNull
+      end
+  | None => Audit.JsonNull
+  end.
+
+(** Whether a step that states [actual] matches a template statement
+    [expected] under the named matcher ([loose] is how most rules compare
+    a cited fact with what they need). *)
+Definition session_matches (data : ReportData) (matcher expected actual : string)
     : bool :=
-  match Parser.parse_statement_chars (list_ascii_of_string expected),
+  match lookup_text matcher matcher_names,
+        Parser.parse_statement_chars (list_ascii_of_string expected),
         Parser.parse_statement_chars (list_ascii_of_string actual) with
-  | Some e, Some a => dependency_matches data.(rd_declarations) data.(rd_premises) e a
-  | _, _ => false
+  | Some m, Some e, Some a =>
+      matcher_accepts data.(rd_declarations) data.(rd_premises) m e a
+  | _, _, _ => false
   end.
 
 Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
@@ -2480,7 +2494,8 @@ Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
   Definition ProofSession := ReportData.
   Definition openSession := report_data_of.
   Definition sessionAccepts := session_accepts.
-  Definition sessionSatisfies := session_satisfies.
+  Definition sessionNeeds := session_needs.
+  Definition sessionMatches := session_matches.
   Definition parser_sound := parsePublicProblem_sound.
   Definition parser_complete := parsePublicProblem_complete.
 

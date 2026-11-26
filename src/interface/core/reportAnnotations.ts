@@ -1,11 +1,16 @@
 import { ParseDiagramStmt, ProofObj, Stmt } from "checker/types/checkerTypes";
-import { parseStatementText } from "checker/verified/presentationAdapter";
+import {
+  parseStatementText,
+  STEP_NUMBER,
+  stmtText,
+} from "checker/grammar/syntax";
+import { stmtOf } from "checker/verified/presentationAdapter";
 import {
   VerifiedCheckReport,
   VerifiedIssue,
   VerifiedStepReport,
 } from "checker/verified/presentationTypes";
-import { StepReadings } from "./diagnosis/criteria";
+import { isOpen, StepReadings } from "./diagnosis/criteria";
 import { Diagnoses, readingsOf } from "./diagnosis/steps";
 
 /** One line: the verdict, then where the goal was reached if it was. */
@@ -93,16 +98,16 @@ function issueText(issue: VerifiedIssue): string {
 
 /**
  * Give each proof step the diagram premises the checker says it consulted,
- * which the layout highlights.  The report names a premise by its call text,
- * as the presentation spells it.
+ * which the layout highlights.  The report names a premise by its statement
+ * text.
  */
 export function attachDiagramDependencies(
   proof: ProofObj,
   report: VerifiedCheckReport,
 ): void {
   const premises = new Map(
-    (report.presentation?.diagramPremises ?? []).map(({ call }, i) => [
-      `${call.name}(${call.arguments.join(",")})`,
+    (report.presentation?.diagramPremises ?? []).map(({ call: premise }, i) => [
+      stmtText(stmtOf(premise)),
       proof.premises.diagramStatements[i],
     ]),
   );
@@ -113,7 +118,7 @@ export function attachDiagramDependencies(
     if (step.type !== "proof" || !step.stepNumber) continue;
     const deps = steps
       .get(step.stepNumber)
-      ?.diagramDependencies.map((call) => premises.get(call))
+      ?.diagramDependencies.map((stmt) => premises.get(stmt))
       .filter((premise): premise is ParseDiagramStmt => premise !== undefined);
     if (deps?.length) step.diagramDeps = deps;
   }
@@ -281,6 +286,8 @@ export const stepHints = (
       // another criterion: the step does rely on it, so it is not missing.
       if (part.status === "known" && part.ref && cited.includes(part.ref))
         continue;
+      // An argument the figure left open has nothing to draw.
+      if (isOpen(part.requires)) continue;
       const stmt = parseStatementText(part.requires);
       if (!stmt) continue;
       if (part.status === "unknown") hintFor(step).unestablished.push(stmt);
@@ -311,45 +318,11 @@ const mismatchText = (
     });
 };
 
-/** The span of a step line's reason name, if it has a `[n] reason(` head. */
-export const reasonNameSpan = (
-  line: string,
-): { start: number; end: number } | undefined => {
-  const m = line.match(/^(\s*\[\d+\]\s*)([A-Za-z0-9_]+)\s*\(/);
-  if (!m) return undefined;
-  return { start: m[1].length, end: m[1].length + m[2].length };
-};
+type Span = { start: number; end: number };
 
-/** The span of a step line's conclusion statement name, as in `con_seg(`. */
-export const conclusionNameSpan = (
-  line: string,
-): { start: number; end: number } | undefined => {
-  const arrow = line.indexOf("->");
-  if (arrow === -1) return undefined;
-  const m = line.slice(arrow + 2).match(/^(\s*)([A-Za-z0-9_]+)\s*\(/);
-  if (!m) return undefined;
-  const start = arrow + 2 + m[1].length;
-  return { start, end: start + m[2].length };
-};
-
-/** The character span of each of a step line's conclusion arguments. */
-export const conclusionArgumentSpans = (
-  line: string,
-): Array<{ start: number; end: number }> => {
-  const arrow = line.indexOf("->");
-  if (arrow === -1) return [];
-  const open = line.indexOf("(", arrow);
-  const close = open === -1 ? -1 : line.indexOf(")", open);
-  if (close === -1) return [];
-  return argumentSpans(line, open + 1, close);
-};
-
-const argumentSpans = (
-  line: string,
-  open: number,
-  close: number,
-): Array<{ start: number; end: number }> => {
-  const spans: Array<{ start: number; end: number }> = [];
+/** Each argument's span between the parentheses at `open` and `close`. */
+const argumentSpans = (line: string, open: number, close: number): Span[] => {
+  const spans: Span[] = [];
   let start = open;
   for (let i = open; i <= close; i++) {
     if (i === close || line[i] === ",") {
@@ -364,15 +337,33 @@ const argumentSpans = (
   return spans;
 };
 
-export const reasonArgumentSpans = (
+/**
+ * The name and argument spans of the reason or statement written at `from`,
+ * if one is.
+ */
+const spansFrom = (
   line: string,
-): Array<{ start: number; end: number }> => {
-  const head = line.match(/^\s*\[\d+\]\s*[A-Za-z0-9_]+\s*\(/);
-  if (!head) return [];
-  const open = head[0].length;
+  from: number,
+): { name: Span; args: Span[] } | undefined => {
+  const m = line.slice(from).match(/^(\s*)([A-Za-z0-9_]+)\s*\(/);
+  if (!m) return undefined;
+  const start = from + m[1].length;
+  const open = from + m[0].length;
   const close = line.indexOf(")", open);
-  if (close === -1) return [];
-  return argumentSpans(line, open, close);
+  return {
+    name: { start, end: start + m[2].length },
+    args: close === -1 ? [] : argumentSpans(line, open, close),
+  };
+};
+
+/** The spans of a step line's reason and conclusion. */
+const stepSpans = (line: string) => {
+  const head = line.match(STEP_NUMBER);
+  const arrow = line.indexOf("->");
+  return {
+    reason: head ? spansFrom(line, head[0].length) : undefined,
+    conclusion: arrow === -1 ? undefined : spansFrom(line, arrow + 2),
+  };
 };
 
 export const buildAnnotatedLines = (
@@ -386,7 +377,7 @@ export const buildAnnotatedLines = (
   tooltip?: string;
   status?: VerifiedStepReport["status"];
   /** Character spans to underline as wrong. */
-  squiggles?: Array<{ start: number; end: number }>;
+  squiggles?: Span[];
 }> => {
   const wrong = report ? wrongDependencies(report, diagnoses) : new Map();
   const hints = report
@@ -394,17 +385,19 @@ export const buildAnnotatedLines = (
     : new Map<string, StepHint>();
   const readings = readingsOf(diagnoses);
   return text.split("\n").map((line) => {
-    const m = line.match(/^\s*\[(\d+)\]/);
+    const m = line.match(STEP_NUMBER);
     if (!m) return { text: line };
     const number = String(parseInt(m[1], 10));
     const step = stepsByNumber.get(number);
     if (!step || step.status === "accepted") return { text: line };
+    const spans = stepSpans(line);
     const wrongIndices = wrong.get(number);
-    const spans = wrongIndices ? reasonArgumentSpans(line) : [];
-    const squiggles = spans.filter((_, i) => wrongIndices?.has(i));
+    const squiggles = (spans.reason?.args ?? []).filter((_, i) =>
+      wrongIndices?.has(i),
+    );
     // A different criterion fits better than the one named: mark the name.
     const stepReadings: StepReadings | undefined = readings.get(number);
-    const nameSpan = reasonNameSpan(line);
+    const nameSpan = spans.reason?.name;
     if (
       stepReadings &&
       nameSpan &&
@@ -414,10 +407,10 @@ export const buildAnnotatedLines = (
     }
     // A conclusion that names the wrong objects: mark every object.
     if (hints.get(number)?.wrongConclusion) {
-      squiggles.push(...conclusionArgumentSpans(line));
+      squiggles.push(...(spans.conclusion?.args ?? []));
     }
     // A statement the reason cannot conclude: mark its name.
-    const statementName = conclusionNameSpan(line);
+    const statementName = spans.conclusion?.name;
     if (hints.get(number)?.wrongStatementType && statementName) {
       squiggles.push(statementName);
     }

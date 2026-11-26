@@ -40,12 +40,22 @@ let session_accepts id position reason conclusion =
            (chars reason) (chars conclusion)
      | None -> false)
 
-let session_satisfies id expected actual =
+let session_needs id position reason conclusion =
+  Js.string
+    (match Hashtbl.find_opt sessions (to_int id) with
+     | Some data ->
+         Yojson.Safe.to_string
+           (Report_json.json_value
+              (GhostChecker.CertifiedChecker.sessionNeeds data (to_int position)
+                 (chars reason) (chars conclusion)))
+     | None -> "null")
+
+let session_matches id matcher expected actual =
   Js.bool
     (match Hashtbl.find_opt sessions (to_int id) with
      | Some data ->
-         GhostChecker.CertifiedChecker.sessionSatisfies data (chars expected)
-           (chars actual)
+         GhostChecker.CertifiedChecker.sessionMatches data (chars matcher)
+           (chars expected) (chars actual)
      | None -> false)
 
 let close_session id = Hashtbl.remove sessions (to_int id)
@@ -53,7 +63,8 @@ let close_session id = Hashtbl.remove sessions (to_int id)
 let () =
   Js.export "ghostOpenSession" (Js.wrap_callback open_session);
   Js.export "ghostSessionAccepts" (Js.wrap_callback session_accepts);
-  Js.export "ghostSessionSatisfies" (Js.wrap_callback session_satisfies);
+  Js.export "ghostSessionNeeds" (Js.wrap_callback session_needs);
+  Js.export "ghostSessionMatches" (Js.wrap_callback session_matches);
   Js.export "ghostCloseSession" (Js.wrap_callback close_session);
   Js.export "ghostCheckProof" (Js.wrap_callback check_source);
   Js.export "ghostParsePresentation" (Js.wrap_callback parse_presentation);

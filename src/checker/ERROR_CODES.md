@@ -74,15 +74,27 @@ blocked, grey for incomplete.
          from the proof. → **Editor**: every argument of the conclusion.
          **Diagram**: the conclusion's objects in red.
       3. Deeper dependency searches.
-         - For `sas`, `sss`, `asa`, `aas`, `rhl`: every way of matching the
-           two triangles' sides and angles to the reason is tried.
-           → **Editor**: each dependency that doesn't fit the named reason
-           (say `sas`), and the reason
-           name when a different reason fits better. **Relies on**: `?` for
-           those dependencies. **Diagram**: the sides and angles the best
-           match still needs but the step doesn't depend on. They're red when an
-           earlier step states them or they're one step away, and grey when
-           nothing does.
+         - For a reason the checker gives as templates (`reason_needs` in
+           `rocq/Ghost/Checker.v`, read by `diagnosis/criteria.ts`), the
+           dependencies it needs are read from the conclusion, along with
+           those of every other templated reason that concludes the same
+           kind of statement. The reasons are:
+           - triangle congruence: `sas`, `sss`, `asa`, `aas`, `rhl`,
+             `def_con_tri`
+           - similarity: `aa_sim`, `sas_sim`, `sss_sim`
+           - parallelogram, rectangle, rhombus and isosceles-trapezoid
+             converses
+           - `def_equilateral`, `def_equiangular` and their converses
+           - `third_angle`, `def_con_right`
+           - the parallel-line angle rules and their converses
+           - the tangent and inscribed-angle rules
+           Another reason is only suggested when something it needs is
+           established. → **Editor**: each dependency that doesn't fit the
+           named reason (say `sas`), and the reason name when a different
+           reason fits better. **Relies on**: `?` for those dependencies.
+           **Diagram**: the facts the best match still needs but the step
+           doesn't depend on. They're red when an earlier step states them or
+           they're one step away, and grey when nothing does.
          - Otherwise, two dependencies replaced. → as stage 1.
 6. **The proof as a whole.**
    - `cycle` → `*` "Cycles: ...".
