@@ -1,7 +1,6 @@
 import { DiagramContent } from "../builder/DiagramContent";
 import { SVGModes, TickType } from "./diagramTypes";
-import { Reason } from "./layoutTypes";
-import { WaysToProveSummary } from "checker/types/checkerTypes";
+import { ReasonVis } from "../../theorems/reasons";
 
 // -------- TYPES RELATED TO RENDERING STEPS OF A PROOF --------
 export interface StepProps {
@@ -17,7 +16,6 @@ export interface ProofTextItem {
   k: string;
   v: (isActive: boolean) => JSX.Element;
   reason?: string;
-  waysToProve?: WaysToProveSummary;
   dependsOn?: Set<string>;
   alwaysActive?: boolean;
   /** Set when layout is built from a checked proof; used for harness / checker UX */
@@ -49,8 +47,7 @@ export interface SetupStepMeta {
   highlight?: (props: StepProps) => void;
 }
 export interface StepMeta extends SetupStepMeta {
-  reason: Reason;
-  waysToProve?: WaysToProveSummary;
+  reason: ReasonVis;
   dependsOn?: string[];
   /** True when the checker marked this proof step as incorrect */
   isIncorrect?: boolean;

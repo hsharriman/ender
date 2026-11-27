@@ -1,9 +1,10 @@
 import { resizedStrs } from "../core/geometryText";
-import { Reason } from "../core/types/layoutTypes";
-
+/** A term the static page explains, such as "Parallel". */
 export type Definition = {
   symbol: JSX.Element;
-} & Reason;
+  title: string;
+  body: string;
+};
 
 const Parallel: Definition = {
   symbol: resizedStrs.parallel,

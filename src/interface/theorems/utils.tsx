@@ -1,16 +1,14 @@
 import { DiagramContent } from "../core/builder/DiagramContent";
 import { SVGModes } from "../core/types/diagramTypes";
-import { Reason } from "../core/types/layoutTypes";
 import { StepFocusProps, StepMeta, StepProps } from "../core/types/stepTypes";
-import { reasonFromFunction } from "./reasons";
+import { reasonFromFunction, ReasonVis } from "./reasons";
 
 export const GIVEN_ID = "given";
 export const PROVE_ID = "prove";
 
 export const getReasonFn =
-  (reasonMap: Map<string, Reason>) => (activeFrame: string) => {
-    return reasonMap.get(activeFrame) || { title: "", body: "" };
-  };
+  (reasonMap: Map<string, ReasonVis>) => (activeFrame: string) =>
+    reasonMap.get(activeFrame) ?? reasonFromFunction();
 
 export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
   const defaultStaticText = () => <></>;
@@ -44,7 +42,6 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
 
   return {
     reason: meta.reason || reasonFromFunction(),
-    waysToProve: meta.waysToProve,
     dependsOn: meta.dependsOn,
     isIncorrect: meta.isIncorrect,
     unfocused: meta.unfocused || defaultUnfocused,

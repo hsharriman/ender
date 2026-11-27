@@ -1,19 +1,17 @@
-import { reasonFromFunction } from "interface/theorems/reasons";
+import { isGiven, ReasonVis } from "interface/theorems/reasons";
 import React from "react";
-import { Reason } from "../../core/types/layoutTypes";
 
 export interface ReasonTextProps {
   activeFrame: string;
-  textFn: (activeFrame: string) => Reason;
+  textFn: (activeFrame: string) => ReasonVis;
 }
 export class ReasonText extends React.Component<ReasonTextProps> {
   render() {
-    const { title, body, expectedDependenciesDescription } = this.props.textFn(
-      this.props.activeFrame,
-    );
+    const reason = this.props.textFn(this.props.activeFrame);
+    const { title, body } = reason;
     if (
       this.props.activeFrame === "prove" ||
-      title === reasonFromFunction("given").title ||
+      isGiven(reason) ||
       title.length === 0
     ) {
       return <></>;
@@ -32,11 +30,6 @@ export class ReasonText extends React.Component<ReasonTextProps> {
             </div>
           </div>
           <div className="text-base">{body}</div>
-          {expectedDependenciesDescription ? (
-            <div className="text-base text-slate-600 mt-2">
-              {expectedDependenciesDescription}
-            </div>
-          ) : null}
         </div>
       </>
     );

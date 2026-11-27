@@ -1,181 +1,170 @@
-import { reasonFromFunction } from "interface/theorems/reasons";
+import { presentationToProofObj } from "checker/verified/presentationAdapter";
+import { checkVerifiedReport } from "checker/verified/wasmLoader";
+import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
+import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
+import {
+  diagramAspectFor,
+  interactiveLayoutFromProofObj,
+} from "interface/core/grammarToLayout/proofObjLayout";
+import { isGiven } from "interface/theorems/reasons";
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import CIRC_1 from "../../checker/proofs/examples/circ_1.txt?raw";
+import CIRC_2 from "../../checker/proofs/examples/circ_2.txt?raw";
+import OVERLAP from "../../checker/proofs/examples/overlap.txt?raw";
+import RHOMBUS from "../../checker/proofs/examples/rhombusOutside.txt?raw";
+import S1_C1 from "../../checker/proofs/examples/s1c1.txt?raw";
+import S1_C2 from "../../checker/proofs/examples/s1c2.txt?raw";
+import S1_C3 from "../../checker/proofs/examples/s1c3.txt?raw";
+import S1_IN1 from "../../checker/proofs/examples/s1inc1.txt?raw";
+import S1_IN2 from "../../checker/proofs/examples/s1inc2.txt?raw";
+import S1_IN3 from "../../checker/proofs/examples/s1inc3.txt?raw";
+import S2_C1 from "../../checker/proofs/examples/s2c1.txt?raw";
+import S2_C2 from "../../checker/proofs/examples/s2c2.txt?raw";
+import S2_IN1 from "../../checker/proofs/examples/s2inc1.txt?raw";
+import S2_IN2 from "../../checker/proofs/examples/s2inc2.txt?raw";
+import TUTORIAL_2 from "../../checker/proofs/examples/tutinc.txt?raw";
+import TUTORIAL_1 from "../../checker/proofs/examples/tutorial.txt?raw";
 import ender from "../assets/ender.png";
-import {
-  InteractiveAppPage,
-  InteractiveAppPageProps,
-} from "../components/ender/InteractiveAppPage";
-import {
-  StaticAppPage,
-  StaticAppPageProps,
-} from "../components/ender/StaticAppPage";
+import { StaticAppPageProps } from "../components/ender/StaticAppPage";
 import { StaticDiagram } from "../components/ender/StaticDiagram";
-import {
-  interactiveLayout,
-  staticLayout,
-} from "../core/grammarToLayout/setupLayout";
-import { LayoutProps } from "../core/types/layoutTypes";
-// import { Reasons } from "../theorems/reasons";
-// import { T1_S1_C1 } from "../theorems/testA/stage1/C1";
-// import { T1_S1_C2 } from "../theorems/testA/stage1/C2";
-// import { T1_S1_C3 } from "../theorems/testA/stage1/C3";
-// import { T1_S1_IN1 } from "../theorems/testA/stage1/IN1";
-// import { T1_S1_IN2 } from "../theorems/testA/stage1/IN2";
-// import { T1_S1_IN3 } from "../theorems/testA/stage1/IN3";
-// import { T1_S2_C1 } from "../theorems/testA/stage2/C1";
-// import { T1_S2_C2 } from "../theorems/testA/stage2/C2";
-// import { T1_S2_IN1 } from "../theorems/testA/stage2/IN1";
-// import { T1_S2_IN2 } from "../theorems/testA/stage2/IN2";
-// import { TutorialProof1, TutorialProof2 } from "../theorems/tutorial/tutorial1";
+import { AspectRatio } from "../core/diagramSvg/svgTypes";
+import { staticLayout } from "../core/grammarToLayout/setupLayout";
+
+/** A gallery proof: its text, and its key in the harness's proof list. */
+interface ExampleProof {
+  key: string;
+  source: string;
+}
+
+/** What a gallery tile draws, once the checker has read the proof. */
+interface ExampleTile {
+  title: string;
+  ctx: StaticAppPageProps["ctx"];
+  diagramAspect: AspectRatio;
+  /** The frame after the givens, so the tile shows the given marks. */
+  frame: string;
+  hasMistake: boolean;
+}
 
 export interface ExamplesProps {}
 export interface ExamplesState {
-  activePage: number;
-  isInteractive: boolean;
+  /** Indexed like `proofs`; null until the checker has read that proof. */
+  tiles: Array<ExampleTile | null>;
 }
 
+const example = (file: string, source: string): ExampleProof => ({
+  key: `examples/${file}`,
+  source,
+});
+
+/** Run the checker on a proof and lay out its figure for a tile. */
+const buildTile = async ({ source }: ExampleProof): Promise<ExampleTile> => {
+  const report = await checkVerifiedReport(source);
+  if (!report.presentation) throw new Error("proof did not parse");
+  const proof = presentationToProofObj(report.presentation);
+  const ctx = presentationContent(proof);
+  const layout = interactiveLayoutFromProofObj(
+    proof,
+    ctx,
+    seedBaseContentFromPremises(proof, ctx),
+  );
+  const givens = layout.steps.filter((s) => isGiven(s.reason)).length;
+  return {
+    title: layout.title,
+    ctx: (staticLayout(layout).props as StaticAppPageProps).ctx,
+    diagramAspect: diagramAspectFor(proof),
+    frame: `s${givens}`,
+    hasMistake: report.verdict !== "accepted",
+  };
+};
+
 export class Examples extends React.Component<ExamplesProps, ExamplesState> {
-  private proofs: LayoutProps[];
+  private proofs: ExampleProof[];
+  private unmounted = false;
+
   constructor(props: ExamplesProps) {
     // add other proofs to examples
     super(props);
     this.proofs = [
-      // T1_S1_C1,
-      // TutorialProof1,
-      // TutorialProof2,
-      // T1_S1_C2,
-      // T1_S1_IN1,
-      // T1_S1_C3,
-      // T1_S1_IN2,
-      // T1_S1_IN3,
-      // T1_S2_C1,
-      // T1_S2_C2,
-      // T1_S2_IN1,
-      // T1_S2_IN2,
+      example("s1c1.txt", S1_C1),
+      example("tutorial.txt", TUTORIAL_1),
+      example("tutinc.txt", TUTORIAL_2),
+      example("s1c2.txt", S1_C2),
+      example("s1inc1.txt", S1_IN1),
+      example("s1c3.txt", S1_C3),
+      example("s1inc2.txt", S1_IN2),
+      example("s1inc3.txt", S1_IN3),
+      example("s2c1.txt", S2_C1),
+      example("s2c2.txt", S2_C2),
+      example("s2inc1.txt", S2_IN1),
+      example("s2inc2.txt", S2_IN2),
+      example("overlap.txt", OVERLAP),
+      example("circ_2.txt", CIRC_2),
+      example("circ_1.txt", CIRC_1),
+      example("rhombusOutside.txt", RHOMBUS),
     ];
-    this.state = {
-      activePage: -1,
-      isInteractive: true,
-    };
+    this.state = { tiles: this.proofs.map(() => null) };
   }
-  onLayoutToggle = () => {
-    this.setState({
-      isInteractive: !this.state.isInteractive,
+
+  componentDidMount = () => {
+    // StrictMode remounts the same instance after unmounting it.
+    this.unmounted = false;
+    this.proofs.forEach((proof, idx) => {
+      buildTile(proof)
+        .then((tile) => {
+          if (this.unmounted) return;
+          this.setState((prev) => {
+            const tiles = [...prev.tiles];
+            tiles[idx] = tile;
+            return { tiles };
+          });
+        })
+        .catch((err) =>
+          console.error(`Could not load example ${proof.key}:`, err),
+        );
     });
   };
 
-  renderSwitch = () => {
-    const styling = this.state.isInteractive
-      ? "bg-blue-500 border-blue-500 border-2 text-white"
-      : "border-slate-500 border-2 fill-none";
+  componentWillUnmount = () => {
+    this.unmounted = true;
+  };
+
+  renderExampleTile = (proof: ExampleProof, idx: number) => {
+    const tile = this.state.tiles[idx];
     return (
-      <button
-        className={
-          "inline-flex items-baseline text-xs italic rounded-md py-1 px-2 mr-1 transition-all " +
-          styling
-        }
-        onClick={this.onLayoutToggle}
+      <Link
+        key={proof.key}
+        to={`/ender/harness?proof=${encodeURIComponent(proof.key)}`}
+        className="m-4 w-72 h-72 border-2 bg-slate-50 shadow-md rounded-md flex flex-col"
       >
-        Toggle Interactive Layout
-      </button>
-    );
-  };
-
-  renderHeader = (title: string) => {
-    return (
-      <div
-        className="sticky top-0 left-0 bg-slate-100 shadow-sm w-full p-3 z-30 flex justify-between"
-        id="header"
-      >
-        <button
-          onClick={this.onClickTile(-1)}
-          className="px-3 underline underline-offset-2 z-30 text-sm"
-        >
-          {"Back"}
-        </button>
-        <div className="font-semibold">{`Proof: ${title}`}</div>
-        {this.renderSwitch()}
-      </div>
-    );
-  };
-
-  onClickTile = (idx: number) => () => {
-    this.setState({ activePage: idx });
-  };
-
-  renderProof = (proof: LayoutProps) => {
-    const layout = this.state.isInteractive
-      ? interactiveLayout(proof)
-      : staticLayout(proof);
-    if (layout) {
-      return (
-        <div className="h-full">
-          {this.renderHeader(proof.title)}
-          <div className="w-full flex justify-start">
-            {this.state.isInteractive ? (
-              <InteractiveAppPage
-                {...(layout.props as InteractiveAppPageProps)}
-                key={"interactive-pg" + this.state.activePage}
-              />
-            ) : (
-              <StaticAppPage
-                {...(layout.props as StaticAppPageProps)}
-                key={"static-pg" + this.state.activePage}
-              />
-            )}
-          </div>
+        <div className="w-full flex justify-between border-b-2 border-slate-500 border-dotted bg-slate-50 font-mono text-xs py-1 px-2">
+          {tile?.title ?? proof.key}
+          {tile?.hasMistake && (
+            <div className="font-mono text-orange-500 font-bold text-xs">
+              {"[M]"}
+            </div>
+          )}
         </div>
-      );
-    }
-    return <></>;
-  };
-
-  renderExampleTile = (proof: LayoutProps, idx: number) => {
-    const layout = staticLayout(proof);
-    const givens = proof.steps.filter(
-      (s) => s.reason === reasonFromFunction("given"),
-    ).length;
-    if (layout) {
-      const diagramCtx = layout.props as StaticAppPageProps;
-      return (
-        <button
-          className="m-4 w-72 h-72 border-2 bg-slate-50 shadow-md rounded-md flex flex-col"
-          onClick={this.onClickTile(idx)}
-        >
-          <div className="w-full flex justify-between border-b-2 border-slate-500 border-dotted bg-slate-50 font-mono text-xs py-1 px-2">
-            {proof.title.replace("[M]", "")}
-            {proof.title.includes("[M]") && (
-              <div className="font-mono text-orange-500 font-bold text-xs">
-                {"[M]"}
-              </div>
-            )}
-          </div>
-          <div className="flex justify-center items-center w-full h-full flex-col">
+        <div className="flex justify-center items-center w-full h-full flex-col">
+          {tile ? (
             <StaticDiagram
-              svgIdSuffix={proof.name}
+              svgIdSuffix={`example-${idx}`}
               width="260px"
               height="auto"
-              ctx={diagramCtx.ctx}
-              diagramAspect={proof.diagramAspect}
-              activeFrame={`s${givens}`}
+              ctx={tile.ctx}
+              diagramAspect={tile.diagramAspect}
+              activeFrame={tile.frame}
             />
-            {/* <Diagram
-              width="260px"
-              height="auto"
-              svgIdSuffix={proof.name}
-              activeFrame={"given"}
-              ctx={diagramCtx.ctx}
-              miniScale={false}
-            /> */}
-          </div>
-        </button>
-      );
-    }
-    return <></>;
+          ) : (
+            <div className="text-xs italic text-slate-400">Loading...</div>
+          )}
+        </div>
+      </Link>
+    );
   };
 
-  renderExamplesGallery = () => {
+  render() {
     return (
       <>
         <div
@@ -189,7 +178,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
         </div>
         <div className="w-screen h-full bg-white p-8">
           <div className="font-notoSans font-medium text-slate-700 text-3xl border-b-2 border-slate-300 mb-2 pb-4 flex flex-row justify-start gap-4">
-            Triangle Congruence Proof Examples
+            Ender Proof Examples
             <div>
               <span className="font-mono text-sm text-orange-500 font-bold">
                 {"[M]"}
@@ -200,20 +189,10 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
             </div>
           </div>
           <div className="flex flex-row flex-wrap">
-            {this.proofs.map((proof, idx) =>
-              this.renderExampleTile(proof, idx),
-            )}
+            {this.proofs.map(this.renderExampleTile)}
           </div>
         </div>
       </>
     );
-  };
-
-  render() {
-    if (this.state.activePage >= 0) {
-      return this.renderProof(this.proofs[this.state.activePage]);
-    } else {
-      return this.renderExamplesGallery();
-    }
   }
 }

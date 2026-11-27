@@ -8,9 +8,11 @@ import {
   Triangle,
   Vector,
 } from "geometry-object";
+import { Arc } from "geometry-object/geometry/Arc";
 import { DiagramRenderCtx, ShowPoint } from "../types/diagramTypes";
 import {
   AngleBuilder,
+  ArcBuilder,
   CircleBuilder,
   PointBuilder,
   QuadrilateralBuilder,
@@ -30,6 +32,7 @@ export class DiagramContent {
       triangles: [],
       quads: [],
       circles: [],
+      arcs: [],
       frames: [],
       deps: new Map(),
     };
@@ -115,6 +118,14 @@ export class DiagramContent {
     return this.findCircle(c.label);
   };
 
+  addArc = (a: Arc) => {
+    const existing = this.ctx.arcs.find((b) => b.obj.id === a.id);
+    if (existing) return existing;
+    const aBuilder = new ArcBuilder(a);
+    this.ctx.arcs.push(aBuilder);
+    return aBuilder;
+  };
+
   addSegments = (propsArr: Segment[]) => {
     return propsArr.map((s) => this.addSegment(s));
   };
@@ -124,7 +135,7 @@ export class DiagramContent {
   };
 
   private warnMissing = (
-    kind: "segment" | "angle" | "triangle" | "quadrilateral" | "circle",
+    kind: "segment" | "angle" | "triangle" | "quadrilateral" | "circle" | "arc",
     label: string,
   ) => {
     const key = `${kind}:${label}`;
@@ -145,6 +156,8 @@ export class DiagramContent {
     this.ctx.quads.filter((r) => r.obj.matches(label))[0];
   private findCircle = (label: string) =>
     this.ctx.circles.filter((c) => c.obj.matches(label))[0];
+  private findArc = (label: string) =>
+    this.ctx.arcs.filter((a) => a.obj.matches(label))[0];
 
   getPoint = (label: string) => this.findPoint(label);
   getSegment = (label: string) => {
@@ -171,5 +184,10 @@ export class DiagramContent {
     const circle = this.findCircle(label);
     if (!circle) this.warnMissing("circle", label);
     return circle;
+  };
+  getArc = (label: string) => {
+    const arc = this.findArc(label);
+    if (!arc) this.warnMissing("arc", label);
+    return arc;
   };
 }

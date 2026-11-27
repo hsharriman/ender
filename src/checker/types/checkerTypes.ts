@@ -11,40 +11,12 @@ export interface Reason {
   arguments: string[];
 }
 
-export interface WaysToProveSlot {
-  slotId: string;
-  expected: string;
-  state: "matched" | "missing" | "conflicting";
-  sourceRef?: string;
-  visualRef?: string;
-  visualRefs?: string[];
-}
-
-export interface WaysToProveCandidate {
-  reasonFunction: string;
-  templateId: string;
-  completion: number;
-  slots: WaysToProveSlot[];
-  dependencyRefs: string[];
-  diagramRefs: string[];
-  statementRefs: string[];
-  contributors: string[];
-}
-
-export interface WaysToProveSummary {
-  reasonFunction: string;
-  totalSlots: number;
-  matchedSlots: number;
-  candidates: WaysToProveCandidate[];
-}
-
 export interface ProofStep {
   type: "given" | "proof" | "goal";
   reason?: Reason;
   statement?: Stmt;
   stepNumber?: string;
   diagramDeps?: ParseDiagramStmt[];
-  waysToProve?: WaysToProveSummary;
 }
 
 export interface ParseDiagramStmt {
@@ -62,6 +34,7 @@ export interface ProofObj {
     segments: ParseObj[];
     angles: ParseObj[];
     circles: ParseObj[];
+    arcs: ParseObj[];
     diagramStatements: ParseDiagramStmt[];
   };
   steps: ProofStep[];

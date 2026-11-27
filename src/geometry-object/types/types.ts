@@ -14,22 +14,30 @@ export type LCircle = {
   label: string;
 };
 
+export type LArc = {
+  center: Vector;
+  start: Vector;
+  end: Vector;
+  opposite?: Vector;
+  label: string;
+};
+
 export enum Obj {
   Point = "point",
   Segment = "segment",
   Text = "text",
-  // Circle,
   Angle = "angle",
   ParallelTick = "parallel",
   EqualLengthTick = "equallength",
   Triangle = "triangle",
+  Arc = "arc",
   EqualAngleTick = "equalangle",
   Tick = "tick",
-  HiddenTick = "hiddentick",
   RightTick = "righttick",
   Quadrilateral = "rectangle",
   Circle = "circle",
   SimilarTick = "similartick",
+  AngleHighlight = "highlight",
 }
 
 export interface ParseObj {
@@ -40,8 +48,10 @@ export interface ParseObj {
     | Obj.Triangle
     | Obj.Quadrilateral
     | Obj.Circle
+    // A minor arc `r_OAB`, kept as its letters `OAB`: centre, then ends.
+    | Obj.Arc
     // An argument with no drawable object, kept as its source text, such
-    // as the arc `r_OBR` in `con_arc(r_OBR, r_OYD)`.
+    // as a nested call.
     | Obj.Text;
   v: string;
 }

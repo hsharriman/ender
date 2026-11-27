@@ -1,3 +1,4 @@
+import { SVGGeoArc } from "interface/core/diagramSvg/SVGGeoArc";
 import React from "react";
 import { LinePatternDefs } from "../../core/diagramSvg/LinePattern";
 import { SVGGeoAngle } from "../../core/diagramSvg/SVGGeoAngle";
@@ -146,6 +147,24 @@ export class Diagram extends React.Component<DiagramProps> {
     });
   };
 
+  renderArcs = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
+    return ctx.arcs.flatMap((arc, i) => {
+      const mode = this.props.isStatic
+        ? SVGModes.Default
+        : (arc.modes.get(frame) ?? SVGModes.Hidden);
+      return (
+        <SVGGeoArc
+          geoId={this.geoId(arc.obj.id, layer)}
+          mode={mode}
+          hoverable={false}
+          {...{ a: arc.obj.labeled(), miniScale: this.props.miniScale }}
+          key={this.keyId(arc.obj.id, layer, i)}
+          isHighlight={layer === 1}
+        />
+      );
+    });
+  };
+
   renderObjectsFromCtx = (ctx: DiagramRenderCtx, layer: number) => {
     return (
       <>
@@ -153,6 +172,7 @@ export class Diagram extends React.Component<DiagramProps> {
         {this.renderTriangles(ctx, this.props.activeFrame, layer)}
         {this.renderAngles(ctx, this.props.activeFrame, layer)}
         {this.renderCircles(ctx, this.props.activeFrame, layer)}
+        {this.renderArcs(ctx, this.props.activeFrame, layer)}
       </>
     );
   };

@@ -1,5 +1,5 @@
 // pass
-title: "S1C3 - Prove Midpoint #2"
+title: "Prove Midpoint #2"
 premises:
 pt: Q (2, 10, bl), P (2, 5.5, bl), R (8, 5.5, t), M (14, 5.5, br), N (14, 1, r)
 tri: t_QPR t_RMN

@@ -12,7 +12,7 @@ npm test                           # Run Jest tests (single file: src/checker/te
 npm run checkProof -- <file>       # CLI: check a proof file
 npm run scanProofs -- <dir>        # CLI: check every proof under a directory
 npm run checker-server             # HTTP checker service on port 4000 (used by Docker backend)
-npm run deploy                     # Build and publish to gh-pages
+nix develop -c npm run deploy      # Rebuild the Wasm checker, build, publish to gh-pages
 ```
 
 Run tests in watch mode: `npm test -- --watch`
@@ -23,6 +23,21 @@ Docker (see README for full docs):
 docker compose build && docker compose up   # build and start all three services
 docker compose down                         # stop
 ```
+
+## Code Style
+
+- In TypeScript, always define functions as arrow functions
+  (`const f = (x: T): R => ...`), never with the `function` keyword. Older
+  code still uses `function`; write new and rewritten code as arrows.
+- Name things for what they are in the proof language. A reason is always a
+  reason (`Reason`, `reason`), a statement always a statement or stmt
+  (`Stmt`, `stmt`), and a geometric object a `ParseObj`. Never use a generic
+  word such as "call" or "term" for either, even where they share the
+  `name(args)` shape. Use the existing types in
+  `src/checker/types/checkerTypes.ts`; parse object names once with
+  `parseObject` (`src/checker/grammar/syntax.ts`) and pass `ParseObj`s, not
+  name strings. Write text back only at the checker boundary, with
+  `stmtText`, `reasonText`, and `objectName`.
 
 ## Architecture
 
@@ -42,6 +57,31 @@ metadata, not executable checking rules. The audited contract is
 `rocq/Ghost/Audit.v`. The catalogs must still list exactly what the kernel
 accepts, because `backend/solver_agent.py` pastes both files, comments and all,
 into the solver's prompt as the reasons and statements it may use.
+
+Diagnoses of what a rejected step was missing live in TypeScript
+(`src/interface/core/diagnosis/`), not in `rocq/`. They are advice, not
+checking: they get every judgement from the kernel through a checker session
+(`openCheckerSession`), which answers whether a candidate step would be
+accepted, which templates a reason is checked against, and whether a
+statement matches a template statement. Keep search and ranking out of the
+Rocq checker; add a session primitive only when a diagnosis needs a
+judgement the kernel alone can make.
+`diagnoseSteps` (`diagnosis/steps.ts`) searches each rejected step in a fixed
+order, stopping at the first accepted edit: one citation changed, then one
+conclusion object changed, then deeper citation searches (template readings,
+two citations). Every rejected step is searched the same way, whatever its
+issue code or note.
+
+Most reasons are given in the kernel as templates rather than hand-written
+rules: `reason_needs` (`rocq/Ghost/Checker.v`) lists, for a conclusion, the
+statements each cited step must match and how each is compared (a
+`Matcher`), and `rule_valid` accepts a step when its citations match one
+template. Template readings (`diagnosis/criteria.ts`) grade the same
+templates, read through `session.needs`, so diagnosis and checking cannot
+disagree. To add or change such a reason, edit its `*_needs` function and
+its `*_needs_sound` lemma; a reason whose citations depend on each other
+(transitivity, the forward quadrilateral rules) keeps a rule of its own in
+`bespoke_rule_valid`.
 
 **Key types** (defined in `src/checker/types/checkerTypes.ts` and `src/geometry-object/types/types.ts`):
 
@@ -66,7 +106,8 @@ reason or statement accepts must update the catalogs in the same change:
   `reason_arities` (`rocq/Ghost/CompleteChecker.v`), and no others. Each
   entry's `dependencies` lists, in citation order, the statements the rule in
   `rocq/Ghost/Checker.v` matches (a group from `stmts.defs.ts` only when the
-  rule accepts every member), and `conclusion` the statements it can prove.
+  rule accepts every member), and `conclusions` the statements it can prove.
+  Entries are checked against `ReasonDef` (`src/checker/grammar/catalog.ts`).
   Leave out reasons with no rule rather than listing them.
 - `src/checker/grammar/defs/stmts.defs.ts` holds one entry per statement
   `rocq/Ghost/PublicParser.v` parses, with the same parameters in the same
@@ -105,6 +146,20 @@ if the readable steps prove the goal. A malformed line still rejects the
 proof: one without a step number `[n]` (`n` all digits), one with a character
 other than letters, digits, spaces, and `_ ( ) , - >`, a whole step missing
 its `->`, or a whole statement followed by more text.
+
+`on_line(AB, P)` places P strictly inside AB: never at A or B. A point at an
+end of a segment needs no `on_line`; it is already named by the segment.
+
+An angle may be named through any point on each of its rays: with
+`[d_n] on_line(PR, T)`, `a_QPT` and `a_QPR` are the same angle, in any step,
+citation, or the goal. The point must differ from the vertex, which
+`on_line` and `intersect_seg` guarantee; a point linked only another way (a
+midpoint) must be declared apart from the vertex instead (a `seg:` line, or two
+corners of a declared triangle or quadrilateral). The kernel compares angles
+through a canonical spelling (`canonical_statement` in
+`rocq/Ghost/Checker.v`) used only for checking; proofs, reports, and the
+interface keep the spelling as written. `ref_ang`, `linear_pair`, and
+`inscribed_angle` are compared as written.
 
 Triangle congruence in premises uses `con_tri_ordered`, not `con_tri`. The
 vertex order states the correspondence, so `con_tri_ordered(t_ABC, t_DEF)`

@@ -1,0 +1,27 @@
+// pass
+title: "Prove Congruent Arcs Have Congruent Central Angles"
+premises:
+pt: A (7.5, 5.5, b), B (11.5, 5.5, r), C (9.5, 8.96410162, tr), D (5.5, 8.96410162, tl), E (3.5, 5.5, l)
+circ: c_AB
+arc: r_ABC r_ADE
+seg: AB AC AD AE BC DE
+tri: t_ABC t_ADE
+[g_1] con_arc(r_ABC,r_ADE)
+[g_2] radius(c_AB,C)
+[g_3] radius(c_AB,D)
+[g_4] radius(c_AB,E)
+-> con_ang(a_BAC,a_DAE)
+
+steps:
+[01] given(g_1) -> con_arc(r_ABC,r_ADE)
+[02] con_chords_intersect_arcs(1) -> con_seg(BC,DE)
+[03] given(g_3) -> radius(c_AB,D)
+[04] def_radius(3) -> con_seg(AD,AB)
+[05] given(g_2) -> radius(c_AB,C)
+[06] def_radius(5) -> con_seg(AC,AB)
+[07] given(g_4) -> radius(c_AB,E)
+[08] def_radius(7) -> con_seg(AE,AB)
+[09] con_seg_transitive(6,8) -> con_seg(AC,AE)
+[10] sss(4,2,9) -> con_tri(t_ABC,t_ADE)
+[11] cpctc(10) -> con_ang(a_BAC,a_DAE)
+

@@ -1,5 +1,6 @@
 import {
   AngleProps,
+  ArcProps,
   CircleProps,
   PointProps,
   ProofCtx,
@@ -8,6 +9,7 @@ import {
   TriangleProps,
 } from "../types/geometryTypes";
 import { Angle } from "./Angle";
+import { Arc } from "./Arc";
 import { Circle } from "./Circle";
 import { Point } from "./Point";
 import { Quadrilateral } from "./Quadrilateral";
@@ -25,6 +27,7 @@ export class ProofContent {
       triangles: [],
       quads: [],
       circles: [],
+      arcs: [],
       frames: [],
       deps: new Map(),
     };
@@ -83,6 +86,12 @@ export class ProofContent {
     return this.getCircle(c.label) ?? c;
   };
 
+  addArc = (props: ArcProps) => {
+    const a = new Arc(props);
+    if (!this.getArc(a.label)) this.ctx.arcs.push(a);
+    return this.getArc(a.label) ?? a;
+  };
+
   addQuadrilateral = (props: QuadrilateralProps) => {
     const q = new Quadrilateral(props);
     const existing = this.getQuadrilateral(q.label);
@@ -106,14 +115,6 @@ export class ProofContent {
 
   addAngles = (propsArr: AngleProps[]) => {
     return propsArr.map((props) => this.addAngle(props));
-  };
-
-  addTriangles = (propsArr: TriangleProps[]) => {
-    return propsArr.map((props) => this.addTriangle(props));
-  };
-
-  addQuadrilaterals = (propsArr: QuadrilateralProps[]) => {
-    return propsArr.map((props) => this.addQuadrilateral(props));
   };
 
   addSegmentFromStr = (str: string) => {
@@ -156,6 +157,17 @@ export class ProofContent {
     return this.addCircle({ center, radius });
   };
 
+  addArcFromStr = (str: string) => {
+    if (str.startsWith("r_")) {
+      str.slice(2);
+    }
+    const [center, start, end] = str
+      .replace("_", "")
+      .split("")
+      .map((p) => this.getPoint(p));
+    return this.addArc({ center, start, end });
+  };
+
   getPoint = (label: string) =>
     this.ctx.points.filter((p) => p.matches(label))[0];
   getSegment = (label: string) =>
@@ -168,6 +180,7 @@ export class ProofContent {
     this.ctx.quads.filter((r) => r.matches(label))[0];
   getCircle = (label: string) =>
     this.ctx.circles.filter((c) => c.matches(label))[0];
+  getArc = (label: string) => this.ctx.arcs.filter((a) => a.matches(label))[0];
 
   checkAngleOverlaps = () => {
     this.ctx.angles.forEach((a) => this.overlap(a));

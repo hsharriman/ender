@@ -34,6 +34,8 @@ export class BaseGeometryObject {
     if (objectType === Obj.Angle || objectType === Obj.EqualAngleTick) {
       const endPts = [label[0], label[2]].sort().toString().replaceAll(",", "");
       label = `${label[1]}-${endPts}`;
+    } else if (objectType === Obj.Arc) {
+      label = `arc-${Array.from(label).sort().toString().replaceAll(",", "")}`;
     } else {
       label = Array.from(label).sort().toString().replaceAll(",", "");
     }

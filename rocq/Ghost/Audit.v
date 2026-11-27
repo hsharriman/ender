@@ -465,9 +465,10 @@ Definition ArcCongruent (a b : ArcName) : Prop :=
 
 Definition statementMeaning (s : Statement) : Prop :=
   match s with
-  (* Every corpus diagram places the named point on the drawn segment, so
-     the meaning is endpoint-inclusive betweenness, not mere collinearity. *)
-  | OnLine s p => SegmentWellFormed s /\ OnSegment s p
+  (* The named point lies strictly inside the segment: it is neither end.
+     A point at an end is already named by the segment, and a strict point
+     is what lets the kernel name a ray through it. *)
+  | OnLine s p => BetS (seg_start s) (point p) (seg_end s)
   | Transversal a b t1 i1 c d t2 i2 =>
       TransversalConfiguration a b t1 i1 c d t2 i2
   (* Two segments crossing at a point interior to both: the crossing differs
@@ -976,6 +977,20 @@ Module Type COMPLETE_VERIFIED_CHECKER.
   Parameter parsePresentation : string -> option PresentationFile.
   Parameter check : string -> CheckReport.
   Definition checker (source : string) : bool := accepted (check source).
+
+  (** Proof sessions, used by external code.  No theorem covers these, and
+      [checker] never calls them, so they cannot change whether a proof is
+      accepted.  [openSession] parses a proof once.  [sessionAccepts] says
+      whether a given step would be accepted at step n, using only the
+      accepted steps before n.  [sessionNeeds] lists, as JSON, what a reason
+      needs cited to conclude a statement at step n.  [sessionMatches] says
+      whether one statement counts as another under a named comparison. *)
+  Parameter ProofSession : Type.
+  Parameter openSession : string -> option ProofSession.
+  Parameter sessionAccepts : ProofSession -> nat -> string -> string -> bool.
+  Parameter sessionNeeds : ProofSession -> nat -> string -> string -> JsonValue.
+  Parameter sessionMatches : ProofSession -> string -> string -> string -> bool.
+
   Parameter parser_sound : forall source problem,
     parseProblem source = Some problem -> ProblemGrammar source problem.
   Parameter parser_complete : forall source problem,

@@ -1,5 +1,5 @@
 // pass
-title: "Tutorial #1 - Prove Triangles Congruent"
+title: "Prove Triangles Congruent"
 premises:
 pt: A (5.5, 9, t), B (2, 3, l), C (5.5, 1, b), D (9, 3, r)
 tri: t_ABC t_ADC

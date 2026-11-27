@@ -32,6 +32,7 @@ export const presentationContent = (proof: ProofObj): ProofContent => {
   proof.premises.circles.forEach((object) => ctx.addCircleFromStr(object.v));
   proof.premises.segments.forEach((object) => ctx.addSegmentFromStr(object.v));
   proof.premises.angles.forEach((object) => addAngleWithSides(ctx, object.v));
+  proof.premises.arcs.forEach((object) => ctx.addArcFromStr(object.v));
 
   const premiseStatements = [
     ...proof.steps.filter((step) => step.type === "given"),
@@ -84,6 +85,9 @@ const addObject = (ctx: ProofContent, arg: ParseObj) => {
     case Obj.Circle:
       ctx.addCircleFromStr(arg.v);
       break;
+    case Obj.Arc:
+      ctx.addArcFromStr(arg.v);
+      break;
     default:
       break;
   }
@@ -103,6 +107,7 @@ const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
     case "para":
     case "center_on_line":
     case "proportion":
+    case "con_arc":
     case "con_seg":
       addAllObjects(ctx, statement);
       break;
@@ -210,6 +215,9 @@ const circlePremise = (ctx: ProofContent, statement: Stmt) => {
   statement.arguments.forEach((arg) => addObject(ctx, arg));
   const c = ctx.getCircle(circle.v);
   object.v.split("").forEach((label) => c.addPt(ctx.getPoint(label)));
+  // A radius names only its outer end; draw it from the centre.
+  if (statement.function === "radius")
+    ctx.addSegmentFromStr(`${c.center.label}${object.v}`);
 };
 
 // Only the vertex is on the circle; the rays are drawn to the points that
@@ -288,13 +296,18 @@ const transversal = (ctx: ProofContent, args: ParseObj[]) => {
   ctx.addSegmentFromStr(`${a}${b}`);
   ctx.addSegmentFromStr(`${c}${d}`);
   const t = ctx.addSegmentFromStr(line);
-  // A transversal that stops at its crossings splits nothing.
-  const atEndpoints = (i1 === t1 && i2 === t2) || (i1 === t2 && i2 === t1);
-  if (!atEndpoints) {
-    intersectSeg(ctx, [segmentObj(`${a}${b}`), segmentObj(line), pointObj(i1)]);
-    intersectSeg(ctx, [segmentObj(`${c}${d}`), segmentObj(line), pointObj(i2)]);
+  // Split each line at a crossing strictly inside it. used for initializing segments
+  const split = (segment: string, i: string) => {
+    if (!segment.includes(i)) onLine(ctx, [segmentObj(segment), pointObj(i)]);
+  };
+  [
+    [`${a}${b}`, i1],
+    [line, i1],
+    [`${c}${d}`, i2],
+    [line, i2],
+  ].forEach(([segment, i]) => split(segment, i));
+  if (new Set([i1, i2, t1, t2]).size > 2)
     ctx.addSegmentFromStr(`${i1}${i2}`).addParentSegment(t);
-  }
 };
 
 const midpt = (ctx: ProofContent, args: ParseObj[]) => {

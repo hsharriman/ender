@@ -1,9 +1,10 @@
 // pass
 title: "Test: radius_chord_bisect (correct - radius perpendicular to chord bisects it)"
 premises:
-pt: O (5, 5, c), R (5, 0, b), A (1, 8, tl), B (9, 8, tr), M (5, 8, t)
+pt: O (5, 5, c), R (5, 10, t), A (1, 8, l), B (9, 8, r), M (5, 8, br)
 circ: c_OR
 seg: OM AB
+[d_1] on_line(OR, M)
 [g_1] perp(OM, AB, M)
 [g_2] radius(c_OR, R)
 [g_3] chord(c_OR, AB)

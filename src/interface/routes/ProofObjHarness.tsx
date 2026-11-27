@@ -1,25 +1,37 @@
 import { ProofObj } from "checker/types/checkerTypes";
 import { presentationToProofObj } from "checker/verified/presentationAdapter";
-import { VerifiedStepReport } from "checker/verified/presentationTypes";
+import {
+  VerifiedCheckReport,
+  VerifiedStepReport,
+} from "checker/verified/presentationTypes";
 import {
   checkVerifiedReport,
+  openCheckerSession,
   preloadVerifiedChecker,
 } from "checker/verified/wasmLoader";
 import { ProofContent } from "geometry-object";
-import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
-import { interactiveLayoutFromProofObj } from "interface/core/grammarToLayout/proofObjLayout";
+import { Diagnoses, diagnoseSteps } from "interface/core/diagnosis/steps";
 import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
+import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
+import {
+  diagramAspectFor,
+  interactiveLayoutFromProofObj,
+} from "interface/core/grammarToLayout/proofObjLayout";
 import {
   attachDiagramDependencies,
   buildAnnotatedLines,
   otherIssues,
   reportFindings,
+  StepHint,
+  stepHints,
   summarizeReport,
+  wrongDependencies,
+  WrongDependencies,
 } from "interface/core/reportAnnotations";
-import { waysToProve } from "interface/core/waysToProve";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
+import { DSLEditor } from "../components/editor/DSLEditor";
 import {
   InteractiveAppPage,
   InteractiveAppPageProps,
@@ -66,19 +78,22 @@ function prettifyDirName(dir: string): string {
 
 // Build one group per subdirectory of proofs/, derived from the proofs present
 // rather than a hard-coded list, so new proof directories appear automatically.
-const proofGroups: Array<{ dir: string; label: string; proofs: ProofOption[] }> =
-  Array.from(
-    proofOptions
-      .reduce((acc, p) => {
-        const dir = proofGroupDir(p.key);
-        if (dir === null) return acc;
-        (acc.get(dir) ?? acc.set(dir, []).get(dir)!).push(p);
-        return acc;
-      }, new Map<string, ProofOption[]>())
-      .entries(),
-  )
-    .map(([dir, proofs]) => ({ dir, label: prettifyDirName(dir), proofs }))
-    .sort((a, b) => a.label.localeCompare(b.label));
+const proofGroups: Array<{
+  dir: string;
+  label: string;
+  proofs: ProofOption[];
+}> = Array.from(
+  proofOptions
+    .reduce((acc, p) => {
+      const dir = proofGroupDir(p.key);
+      if (dir === null) return acc;
+      (acc.get(dir) ?? acc.set(dir, []).get(dir)!).push(p);
+      return acc;
+    }, new Map<string, ProofOption[]>())
+    .entries(),
+)
+  .map(([dir, proofs]) => ({ dir, label: prettifyDirName(dir), proofs }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 // Any proof not placed in a group (loose .txt files directly in proofs/) is
 // shown as a flat option.
@@ -86,6 +101,12 @@ const groupedKeys = new Set(
   proofGroups.flatMap((g) => g.proofs.map((p) => p.key)),
 );
 const ungroupedProofs = proofOptions.filter((p) => !groupedKeys.has(p.key));
+
+/** The proof named by `?proof=<key>` (a path under proofs/), if there is one. */
+const requestedProofKey = (): string | undefined => {
+  const key = new URLSearchParams(window.location.search).get("proof");
+  return proofOptions.find((p) => p.key === key)?.key;
+};
 
 const DEFAULT_PROOF_KEY =
   proofOptions.find((p) => p.key.endsWith("tutorial.txt"))?.key ??
@@ -103,18 +124,19 @@ type ProofObjHarnessState = {
   statusMessage: string;
   accepted: boolean;
   incorrectSteps: Set<string>;
+  wrongDeps: WrongDependencies;
+  hints: Map<string, StepHint>;
+  lastReport: VerifiedCheckReport | null;
+  /** What each rejected triangle criterion was missing. */
+  diagnoses: Diagnoses;
   proofWideIssues: string[];
   unacceptedSteps: Map<string, VerifiedStepReport>;
   proofParseSucceeded: boolean;
-  hoverTooltip: string;
-  hoverPos: { x: number; y: number } | null;
-  editorScrollTop: number;
 };
 
 export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
   editorRef = createRef<HTMLDivElement>();
   controlsRef = createRef<HTMLDivElement>();
-  editorOverlayRef = createRef<HTMLPreElement>();
 
   private proofParseTimeoutId: number | null = null;
   private selectedProofFetchGen = 0;
@@ -127,7 +149,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.state = {
       isEditorOpen: true,
       isInteractiveLayout: true,
-      selectedProofKey: DEFAULT_PROOF_KEY,
+      selectedProofKey: requestedProofKey() ?? DEFAULT_PROOF_KEY,
       proofText: "",
       lastGoodProof: null,
       lastGoodCtx: null,
@@ -135,12 +157,13 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       statusMessage: "Loading proof...",
       accepted: false,
       incorrectSteps: new Set(),
+      wrongDeps: new Map(),
+      hints: new Map(),
+      lastReport: null,
+      diagnoses: new Map(),
       proofWideIssues: [],
       unacceptedSteps: new Map(),
       proofParseSucceeded: true,
-      hoverTooltip: "",
-      hoverPos: null,
-      editorScrollTop: 0,
     };
   }
 
@@ -192,7 +215,8 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     this.proofParseTimeoutId = window.setTimeout(async () => {
       this.proofParseTimeoutId = null;
       try {
-        const report = await checkVerifiedReport(this.state.proofText);
+        const source = this.state.proofText;
+        const report = await checkVerifiedReport(source);
         if (generation !== this.proofParseGeneration) return;
         const nextProofIssues = [
           ...reportFindings(report),
@@ -207,12 +231,18 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             proofWideIssues: nextProofIssues,
             unacceptedSteps: new Map(),
             incorrectSteps: new Set(),
+            wrongDeps: new Map(),
+            hints: new Map(),
+            lastReport: report,
+            diagnoses: new Map(),
             proofParseSucceeded: false,
           });
           return;
         }
         const proof = presentationToProofObj(report.presentation);
         attachDiagramDependencies(proof, report);
+        const diagnoses = await this.diagnose(report, source);
+        if (generation !== this.proofParseGeneration) return;
         // Only a rejected step is the reader's problem; a blocked one is
         // waiting on the step above it, and marking it wrong would send them
         // to the wrong line.
@@ -227,10 +257,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
             .map((step) => String(step.number)),
         );
 
-        // The editor draws a mini-figure per step from the parts its reason
-        // relates; the checker has no opinion on these.
         const ctx = presentationContent(proof);
-        for (const step of proof.steps) step.waysToProve = waysToProve(step, ctx);
 
         this.setState((prev) => ({
           unacceptedSteps: unaccepted,
@@ -240,6 +267,10 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           lastGoodProof: proof,
           lastGoodCtx: ctx,
           incorrectSteps: rejected,
+          wrongDeps: wrongDependencies(report, diagnoses),
+          hints: stepHints(report, diagnoses),
+          lastReport: report,
+          diagnoses,
           proofParseSucceeded: true,
           parseVersion: prev.parseVersion + 1,
         }));
@@ -251,11 +282,35 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           proofWideIssues: [],
           unacceptedSteps: new Map(),
           incorrectSteps: new Set(),
+          wrongDeps: new Map(),
+          hints: new Map(),
+          lastReport: null,
+          diagnoses: new Map(),
           proofParseSucceeded: false,
         });
       }
     }, 500);
   }
+
+  /**
+   * Ask the checker what each rejected triangle criterion was missing.  Only
+   * a rejected step is worth the search, so a proof without one opens no
+   * session.
+   */
+  private diagnose = async (
+    report: VerifiedCheckReport,
+    source: string,
+  ): Promise<Diagnoses> => {
+    if (!report.steps.some((step) => step.status === "rejected"))
+      return new Map();
+    const session = await openCheckerSession(source);
+    if (!session) return new Map();
+    try {
+      return diagnoseSteps(session, report);
+    } finally {
+      session.close();
+    }
+  };
 
   private fetchSelectedProof(selectedProofKey: string): void {
     this.selectedProofFetchGen += 1;
@@ -300,7 +355,8 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     interactive: InteractiveAppPageProps & { diagramAspect: AspectRatio };
     static: StaticAppPageProps & { diagramAspect: AspectRatio };
   } | null {
-    const { lastGoodProof, lastGoodCtx, incorrectSteps } = this.state;
+    const { lastGoodProof, lastGoodCtx, incorrectSteps, wrongDeps, hints } =
+      this.state;
     if (!lastGoodProof || !lastGoodCtx) return null;
     const diagramCtx = seedBaseContentFromPremises(lastGoodProof, lastGoodCtx);
     const layoutProps = interactiveLayoutFromProofObj(
@@ -308,12 +364,10 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       lastGoodCtx,
       diagramCtx,
       incorrectSteps,
+      wrongDeps,
+      hints,
     );
-    const maxX = Math.max(
-      ...lastGoodProof.premises.points.map((p) => p.pt?.[0] ?? -Infinity),
-    );
-    const diagramAspect =
-      maxX > 10 ? AspectRatio.Landscape : AspectRatio.Square;
+    const diagramAspect = diagramAspectFor(lastGoodProof);
     return {
       interactive: {
         ...(interactiveLayout(layoutProps).props as InteractiveAppPageProps),
@@ -342,16 +396,18 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
       accepted,
       proofWideIssues,
       unacceptedSteps,
-      hoverTooltip,
-      hoverPos,
-      editorScrollTop,
+      lastReport,
+      diagnoses,
     } = this.state;
 
     const layouts = this.getLayouts();
     const interactiveProps = this.getInteractiveProps();
-    const annotatedLines = buildAnnotatedLines(proofText, unacceptedSteps);
-    const lineHeightPx = 16;
-    const editorPaddingTopPx = 8;
+    const annotatedLines = buildAnnotatedLines(
+      proofText,
+      unacceptedSteps,
+      lastReport ?? undefined,
+      diagnoses,
+    );
 
     return (
       <div className="h-screen">
@@ -363,7 +419,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
               className="h-12 w-auto shadow-sm"
             />
           </NavLink>
-          <div className="font-semibold">ProofObj Harness</div>
+          <div className="font-semibold">
+            {this.state.lastGoodProof?.title ?? "Proof Harness"}
+          </div>
           <div ref={this.controlsRef} className="flex items-center gap-4">
             <button
               type="button"
@@ -388,7 +446,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                 : "Show Interactive Layout"}
             </button>
             <NavLink
-              to={"/ender/examples"}
+              to={"/ender/"}
               className="px-3 underline underline-offset-2 text-sm"
             >
               Examples
@@ -426,86 +484,13 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                 </optgroup>
               ))}
             </select>
-            <div className="relative w-full h-full border border-slate-200 rounded font-mono text-xs overflow-hidden">
-              <pre
-                ref={this.editorOverlayRef}
-                aria-hidden
-                className="absolute inset-0 m-0 p-2 leading-4 whitespace-pre-wrap break-words pointer-events-none overflow-auto"
-              >
-                {annotatedLines.map((line, i) => (
-                  <div
-                    key={`${i}-${line.text}`}
-                    className={
-                      line.status === "rejected"
-                        ? "bg-red-100 rounded px-1 -mx-1"
-                        : line.status === "blocked"
-                          ? "bg-amber-50 rounded px-1 -mx-1"
-                          : line.status === "incomplete"
-                            ? "bg-slate-100 rounded px-1 -mx-1"
-                            : undefined
-                    }
-                  >
-                    {line.text || " "}
-                  </div>
-                ))}
-              </pre>
-              <textarea
-                className="absolute inset-0 w-full h-full p-2 m-0 resize-none bg-transparent text-transparent caret-black selection:bg-blue-200 border-0 rounded focus:outline-none leading-4 whitespace-pre-wrap break-words overflow-auto"
-                value={proofText}
-                onChange={(e) => this.setState({ proofText: e.target.value })}
-                onScroll={(e) => {
-                  const overlay = this.editorOverlayRef.current;
-                  if (!overlay) return;
-                  const scrollTop = e.currentTarget.scrollTop;
-                  this.setState({ editorScrollTop: scrollTop });
-                  overlay.scrollTop = scrollTop;
-                  overlay.scrollLeft = e.currentTarget.scrollLeft;
-                }}
-                spellCheck={false}
-              />
-              <div className="absolute left-0 top-0 w-3 h-full">
-                {annotatedLines.map((line, idx) => {
-                  if (!line.status || !line.tooltip) return null;
-                  const dotY =
-                    editorPaddingTopPx +
-                    idx * lineHeightPx +
-                    lineHeightPx / 2 -
-                    editorScrollTop;
-                  return (
-                    <button
-                      key={`dot-${idx}`}
-                      type="button"
-                      className={`absolute left-[2px] w-2 h-2 rounded-full ${
-                        line.status === "rejected"
-                          ? "bg-red-600"
-                          : line.status === "incomplete"
-                            ? "bg-slate-400"
-                            : "bg-amber-400"
-                      }`}
-                      style={{ top: `${dotY}px` }}
-                      onMouseEnter={() => {
-                        this.setState({
-                          hoverTooltip: line.tooltip ?? "",
-                          hoverPos: { x: 16, y: Math.max(8, dotY - 8) },
-                        });
-                      }}
-                      onMouseLeave={() => {
-                        this.setState({ hoverTooltip: "", hoverPos: null });
-                      }}
-                      aria-label={`Show checker report for line ${idx + 1}`}
-                    />
-                  );
-                })}
-              </div>
-              {hoverTooltip && hoverPos && (
-                <div
-                  className="absolute z-20 max-w-[420px] rounded border border-slate-300 bg-white/95 px-2 py-1 text-[11px] leading-4 text-slate-900 shadow pointer-events-none whitespace-pre-wrap"
-                  style={{ left: hoverPos.x, top: hoverPos.y }}
-                >
-                  {hoverTooltip}
-                </div>
-              )}
-            </div>
+            <DSLEditor
+              value={proofText}
+              onChange={(text) => this.setState({ proofText: text })}
+              lines={annotatedLines}
+              size={{ width: "100%", height: "100%" }}
+              className="min-h-0 flex-1"
+            />
             <div
               className={`mt-2 text-xs ${
                 accepted ? "text-green-700" : "text-red-600"

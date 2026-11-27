@@ -14,7 +14,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "jest --passWithNoTests",
-    "predeploy": "npm run build",
+    "predeploy": "make -C rocq wasm && npm run build",
     "deploy": "gh-pages -d dist",
     "checkProof": "tsx src/checker/proofCheckerCli.ts",
     "scanProofs": "tsx scripts/scanProofsCli.ts",
@@ -23,6 +23,12 @@
     "docker:standalone": "docker compose -f docker-compose.standalone.yml up --build"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.20.4",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",

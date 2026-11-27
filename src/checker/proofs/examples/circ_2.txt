@@ -1,0 +1,18 @@
+// pass
+title: "Prove Similar Triangles from Secants"
+premises:
+pt:  A (4.67560322, 4.97695684), C (2.69360398, 1.5, bl), D (7.55, 2.22, b), E (1.35, 7.1397952, l), F (8.67, 4.55, tr), G (13, 3.03621068, r)
+tri: t_CFG t_EDG
+[d_01] on_line(CG, D)
+[d_02] on_line(EG, F)
+[d_03] circ_order(c_AC, C, D, F, E)
+[g_1] inscribed_angle(c_AC,a_FCD)
+[g_2] inscribed_angle(c_AC,a_FED)
+-> sim_tri(t_CFG,t_EDG)
+
+steps:
+[01] given(g_1) -> inscribed_angle(c_AC,a_FCD)
+[02] given(g_2) -> inscribed_angle(c_AC,a_FED)
+[03] con_inscribed_angs(1,2) -> con_ang(a_FCD,a_FED)
+[04] reflex() -> ref_ang(a_CGF,a_CGF)
+[05] aa_sim(3,4) -> sim_tri(t_CFG,t_EDG)

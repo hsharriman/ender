@@ -1,7 +1,7 @@
 import React from "react";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { DiagramRenderCtx } from "../../core/types/diagramTypes";
-import { Reason } from "../../core/types/layoutTypes";
+import { ReasonVis } from "../../theorems/reasons";
 import { StaticProofTextItem } from "../../core/types/stepTypes";
 import { Definition, definitionArr } from "../../theorems/definitions";
 import { StaticDiagram } from "./StaticDiagram";
@@ -9,7 +9,7 @@ import { StaticDiagram } from "./StaticDiagram";
 export interface StaticAppPageProps {
   name: string;
   ctx: DiagramRenderCtx;
-  reasons: Reason[];
+  reasons: ReasonVis[];
   texts: StaticProofTextItem[];
   givenText: JSX.Element;
   provesText: JSX.Element;
@@ -126,13 +126,13 @@ export class StaticAppPage extends React.Component<
     );
   };
 
-  renderReason = (item: Reason) => {
+  renderReason = (item: ReasonVis) => {
     return (
       <>
         <div className="flex flex-row py-2 border-b-2 border-slate-300 justify-between max-w-[600px]">
           <div className="flex flex-col justify-start max-w-[400px]">
             {/* <div className="font-bold text-base text-slate-500 py-2 flex justify-between">
-            Reason Applied:
+            ReasonVis Applied:
           </div> */}
             <div className="font-semibold text-base">{item.title}</div>
             <div className="text-base">{item.body}</div>

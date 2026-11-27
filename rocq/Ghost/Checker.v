@@ -216,6 +216,23 @@ Definition declared_angle (decls : Declarations) (a : AngleName) : bool :=
    declared_segment decls (segment_name a.(angle_last) a.(angle_vertex))) ||
   existsb (angle_u_eqb a) decls.(decl_angles).
 
+(** Two points the declarations make distinct: the ends of a declared
+    segment, or two different vertices of a declared triangle or
+    quadrilateral.  A well-formed triangle or quadrilateral has pairwise
+    distinct vertices, so a figure that names [PR] only as a side of [t_QPR]
+    need not repeat it on a [seg:] line. *)
+Definition declared_distinct (decls : Declarations) (x y : PointId) : bool :=
+  let vertices_of (vs : list PointId) :=
+    existsb (ascii_eqb x) vs && existsb (ascii_eqb y) vs in
+  negb (ascii_eqb x y) &&
+  (declared_segment decls (segment_name x y) ||
+   existsb (fun t => vertices_of [t.(triangle_first); t.(triangle_second);
+                                  t.(triangle_third)])
+     decls.(decl_triangles) ||
+   existsb (fun q => vertices_of [q.(quadrilateral_first); q.(quadrilateral_second);
+                                  q.(quadrilateral_third); q.(quadrilateral_fourth)])
+     decls.(decl_quadrilaterals)).
+
 (** [q] names the same ray from [v] as [p]: the names are equal, or an
     [on_line] diagram premise places one of the two on the segment from [v]
     through the other.  [on_line] is audited as segment membership, so the
@@ -331,6 +348,185 @@ Definition angle_pair_used (decls : Declarations) (premises : list Premise)
       end
   end.
 
+(** ** One spelling per angle
+
+    An angle may be named through any point on each of its rays: with
+    [on_line(PR, T)], [a_QPT] and [a_QPR] are the same angle.  For checking
+    only, each angle is given one canonical spelling: each ray is named by
+    the least point, in character order, that the diagram premises place on
+    it.  Steps, facts and reports keep the spelling the proof wrote; the
+    canonical one is used to compare them.
+
+    The points a ray can be named through are the ones the premises link
+    to it, followed in chains: [U] on [PT] and [T] on [PR] put [U], [T] and
+    [R] on one ray from [P].  A point counts only when it is known to differ
+    from the vertex -- [on_line] and [intersect_seg] place their point
+    strictly inside the segment, and declarations can say so too -- which is
+    what makes the renaming an [Out] fact. *)
+Definition statement_ray_points (s : Statement) : list PointId :=
+  match s with
+  | OnLine t r | Midpt t r => [t.(segment_first); t.(segment_second); r]
+  | IntersectSeg t u r =>
+      [t.(segment_first); t.(segment_second); u.(segment_first); u.(segment_second); r]
+  | _ => []
+  end.
+
+Definition ray_points (premises : list Premise) : list PointId :=
+  flat_map (fun pr => statement_ray_points pr.(premise_statement)) premises.
+
+(** A link through a premise that places its point strictly inside a
+    segment, as [on_line] and [intersect_seg] do: both linked points then
+    differ from the vertex. *)
+Definition strict_ray_link (v p q : PointId) (pr : Premise) : bool :=
+  match pr.(premise_statement) with
+  | OnLine t r => on_segment_match v p q t r
+  | IntersectSeg t u r => on_segment_match v p q t r || on_segment_match v p q u r
+  | _ => false
+  end.
+
+Definition strict_ray_linked (premises : list Premise) (v p q : PointId) : bool :=
+  premise_found (strict_ray_link v p q) premises.
+
+(** The points one premise links to the ray from [v] through [y], each
+    known to differ from [v]: declared apart from it, or placed by a strict
+    premise. *)
+Definition ray_step (decls : Declarations) (premises : list Premise) (v y : PointId)
+    : list PointId :=
+  filter (fun x => (declared_distinct decls v x || strict_ray_linked premises v y x) &&
+                   ray_linked premises v y x)
+         (ray_points premises).
+
+(** Whether [p] is known to differ from [v], so that a ray from [v] through
+    it exists to be renamed. *)
+Definition ray_anchored (decls : Declarations) (premises : list Premise) (v p : PointId)
+    : bool :=
+  declared_distinct decls v p ||
+  existsb (strict_ray_linked premises v p) (ray_points premises).
+
+Fixpoint ray_grow (fuel : nat) (step : PointId -> list PointId) (seen : list PointId)
+    : list PointId :=
+  match fuel with
+  | O => seen
+  | S n =>
+      match filter (fun x => negb (existsb (ascii_eqb x) seen)) (flat_map step seen) with
+      | [] => seen
+      | fresh => ray_grow n step (seen ++ fresh)
+      end
+  end.
+
+(** Every point on the ray from [v] through [p], [p] included. *)
+Definition ray_class (decls : Declarations) (premises : list Premise) (v p : PointId)
+    : list PointId :=
+  if ray_anchored decls premises v p
+  then ray_grow (S (List.length (ray_points premises))) (ray_step decls premises v) [p]
+  else [p].
+
+Definition point_ltb (x y : PointId) : bool :=
+  Nat.ltb (Ascii.nat_of_ascii x) (Ascii.nat_of_ascii y).
+
+Definition least_point (p : PointId) (xs : list PointId) : PointId :=
+  fold_left (fun m x => if point_ltb x m then x else m) xs p.
+
+Definition ray_rep (decls : Declarations) (premises : list Premise) (v p : PointId)
+    : PointId :=
+  least_point p (ray_class decls premises v p).
+
+Definition canonical_angle (decls : Declarations) (premises : list Premise)
+    (a : AngleName) : AngleName :=
+  let v := a.(angle_vertex) in
+  angle_name (ray_rep decls premises v a.(angle_first)) v
+             (ray_rep decls premises v a.(angle_last)).
+
+(** A segment from [v], read as the ray it names. *)
+Definition canonical_ray (decls : Declarations) (premises : list Premise)
+    (v : PointId) (s : SegmentName) : SegmentName :=
+  if ascii_eqb s.(segment_first) v
+  then segment_name v (ray_rep decls premises v s.(segment_second))
+  else if ascii_eqb s.(segment_second) v
+  then segment_name (ray_rep decls premises v s.(segment_first)) v
+  else s.
+
+(** The statements whose meaning depends only on their angles' rays.  The
+    rest -- among them [ref_ang], whose meaning names the angle, and
+    [linear_pair] and [inscribed_angle], which place points -- keep their
+    spelling. *)
+Definition canonical_statement (decls : Declarations) (premises : list Premise)
+    (st : Statement) : Statement :=
+  let ang := canonical_angle decls premises in
+  match st with
+  | Right a => Right (ang a)
+  | ConAng a b => ConAng (ang a) (ang b)
+  | ConRight a b => ConRight (ang a) (ang b)
+  | Supplementary a b => Supplementary (ang a) (ang b)
+  | Complementary a b => Complementary (ang a) (ang b)
+  | AngBisect a s => AngBisect (ang a) (canonical_ray decls premises a.(angle_vertex) s)
+  | _ => st
+  end.
+
+(** Whether two statements are the same once their angles are spelled
+    canonically. *)
+Definition canonical_eqb (decls : Declarations) (premises : list Premise)
+    (expected actual : Statement) : bool :=
+  fact_eqb (canonical_statement decls premises expected)
+           (canonical_statement decls premises actual).
+
+(** Every spelling of an angle through points on its rays. *)
+Definition angle_spellings (decls : Declarations) (premises : list Premise)
+    (a : AngleName) : list AngleName :=
+  let v := a.(angle_vertex) in
+  flat_map (fun p => map (fun q => angle_name p v q)
+                         (ray_class decls premises v a.(angle_last)))
+           (ray_class decls premises v a.(angle_first)).
+
+(** Every spelling of a statement, the written one first.  A rule builds
+    the angles it expects from the figure -- a triangle's corners, a
+    quadrilateral's -- so a conclusion is tried in each spelling, not only
+    the canonical one. *)
+Definition statement_spellings (decls : Declarations) (premises : list Premise)
+    (st : Statement) : list Statement :=
+  let angs := angle_spellings decls premises in
+  let pairs (k : AngleName -> AngleName -> Statement) a b :=
+    flat_map (fun a' => map (k a') (angs b)) (angs a) in
+  match st with
+  | Right a => map Right (angs a)
+  | ConAng a b => pairs ConAng a b
+  | ConRight a b => pairs ConRight a b
+  | Supplementary a b => pairs Supplementary a b
+  | Complementary a b => pairs Complementary a b
+  | _ => [st]
+  end.
+
+(** The premises that put two points of one ray class on the same ray: the
+    ones a renaming of [st]'s angles leaned on. *)
+Definition ray_class_premises (decls : Declarations) (premises : list Premise)
+    (v p : PointId) : list Statement :=
+  let cls := ray_class decls premises v p in
+  map premise_statement
+    (filter (fun pr => existsb (fun y => existsb (fun x =>
+                 negb (ascii_eqb x y) && ray_link_premise v y x pr) cls) cls)
+            premises).
+
+Definition angle_ray_premises (decls : Declarations) (premises : list Premise)
+    (a : AngleName) : list Statement :=
+  ray_class_premises decls premises a.(angle_vertex) a.(angle_first) ++
+  ray_class_premises decls premises a.(angle_vertex) a.(angle_last).
+
+Definition statement_ray_premises (decls : Declarations) (premises : list Premise)
+    (st : Statement) : list Statement :=
+  let angs := angle_ray_premises decls premises in
+  match st with
+  | Right a => angs a
+  | ConAng a b | ConRight a b | Supplementary a b | Complementary a b => angs a ++ angs b
+  | AngBisect a s =>
+      angs a ++
+      (if ascii_eqb s.(segment_first) a.(angle_vertex)
+       then ray_class_premises decls premises a.(angle_vertex) s.(segment_second)
+       else if ascii_eqb s.(segment_second) a.(angle_vertex)
+       then ray_class_premises decls premises a.(angle_vertex) s.(segment_first)
+       else [])
+  | _ => []
+  end.
+
 Definition dependency_used (decls : Declarations) (premises : list Premise)
     (expected actual : Statement) : option (list Statement) :=
   if fact_eqb expected actual then Some []
@@ -381,179 +577,15 @@ Proof.
             end; cbn); reflexivity.
 Qed.
 
-Definition schema3_used (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j k : nat) (a b c : Statement) : option (list Statement) :=
-  match lookup_step facts i, lookup_step facts j, lookup_step facts k with
-  | Some x, Some y, Some z =>
-      match dependency_used decls premises a x,
-            dependency_used decls premises b y,
-            dependency_used decls premises c z with
-      | Some p, Some q, Some r => Some (p ++ q ++ r)
-      | _, _, _ => None
-      end
-  | _, _, _ => None
-  end.
-
-Definition schema3 (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j k : nat) (a b c : Statement) : bool :=
-  match schema3_used decls premises facts i j k a b c with
-  | Some _ => true
-  | None => false
-  end.
-
-Lemma schema3_unfold : forall decls premises facts i j k a b c,
-  schema3 decls premises facts i j k a b c =
-  match lookup_step facts i, lookup_step facts j, lookup_step facts k with
-  | Some x, Some y, Some z =>
-      dependency_matches decls premises a x &&
-      dependency_matches decls premises b y &&
-      dependency_matches decls premises c z
-  | _, _, _ => false
-  end.
-Proof.
-  intros decls premises facts i j k a b c.
-  unfold schema3, schema3_used, dependency_matches.
-  destruct (lookup_step facts i); [|reflexivity].
-  destruct (lookup_step facts j); [|reflexivity].
-  destruct (lookup_step facts k); [|reflexivity].
-  destruct (dependency_used decls premises a s);
-    destruct (dependency_used decls premises b s0);
-    destruct (dependency_used decls premises c s1); reflexivity.
-Qed.
-
-Definition sas_schema decls premises facts i j k (t u : TriangleName) : bool :=
-  schema3 decls premises facts i j k
-    (ConSeg (side_ab t) (side_ab u))
-    (ConAng (angle_a t) (angle_a u))
-    (ConSeg (side_ca t) (side_ca u)).
-
-Definition sss_schema decls premises facts i j k (t u : TriangleName) : bool :=
-  schema3 decls premises facts i j k
-    (ConSeg (side_ab t) (side_ab u))
-    (ConSeg (side_bc t) (side_bc u))
-    (ConSeg (side_ca t) (side_ca u)).
-
-Definition asa_schema decls premises facts i j k (t u : TriangleName) : bool :=
-  schema3 decls premises facts i j k
-    (ConAng (angle_a t) (angle_a u))
-    (ConSeg (side_ab t) (side_ab u))
-    (ConAng (angle_b t) (angle_b u)).
-
-(** The two angles are interchangeable in the citation: swapping them names
-    the same three facts, so both orders are accepted. *)
-Definition aas_schema decls premises facts i j k (t u : TriangleName) : bool :=
-  schema3 decls premises facts i j k
-    (ConAng (angle_c t) (angle_c u))
-    (ConAng (angle_b t) (angle_b u))
-    (ConSeg (side_ab t) (side_ab u)) ||
-  schema3 decls premises facts i j k
-    (ConAng (angle_b t) (angle_b u))
-    (ConAng (angle_c t) (angle_c u))
-    (ConSeg (side_ab t) (side_ab u)).
-
-(** Right-hypotenuse-leg.  The bundled fixtures disagree about whether the
-    hypotenuse or the leg is cited second, and the catalog only says both are
-    segment congruences, so both readings are accepted; each is separately
-    sound.  Two legs are still refused, and the correspondence search already
-    covers which leg is cited. *)
-Definition rhl_schema decls premises facts i j k (t u : TriangleName) : bool :=
-  schema3 decls premises facts i j k
-    (ConRight (angle_b t) (angle_b u))
-    (ConSeg (side_ca t) (side_ca u))
-    (ConSeg (side_bc t) (side_bc u)) ||
-  schema3 decls premises facts i j k
-    (ConRight (angle_b t) (angle_b u))
-    (ConSeg (side_bc t) (side_bc u))
-    (ConSeg (side_ca t) (side_ca u)).
-
-Definition three_rotations
-    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
-              TriangleName -> TriangleName -> bool)
-    decls premises facts i j k t u : bool :=
-  schema decls premises facts i j k t u ||
-  schema decls premises facts i j k (rotate_triangle t) (rotate_triangle u) ||
-  schema decls premises facts i j k (rotate_triangle (rotate_triangle t))
-                               (rotate_triangle (rotate_triangle u)).
-
-(** A criterion's dependency order fixes which vertex plays which role, so the
-    correspondence must be searched in both orientations, not only in its three
-    rotations. *)
+(** A triangle read from its last vertex back to its first. *)
 Definition reverse_triangle (t : TriangleName) : TriangleName :=
   triangle_name t.(triangle_third) t.(triangle_second) t.(triangle_first).
 
-Definition six_correspondences
-    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
-              TriangleName -> TriangleName -> bool)
-    decls premises facts i j k t u : bool :=
-  three_rotations schema decls premises facts i j k t u ||
-  three_rotations schema decls premises facts i j k
-    (reverse_triangle t) (reverse_triangle u).
-
-(** The same search, keeping the premises the winning correspondence used.  It
-    tries the readings in the order the rule tries them, so it finds the same
-    one. *)
+(** The first of [xs] for which [f] finds the premises a match used. *)
 Definition first_used {A : Type} (f : A -> option (list Statement)) (xs : list A)
     : option (list Statement) :=
   fold_right (fun x rest => match f x with Some p => Some p | None => rest end)
     None xs.
-
-Definition six_correspondences_used
-    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
-              TriangleName -> TriangleName -> option (list Statement))
-    decls premises facts i j k t u : option (list Statement) :=
-  first_used (fun c => schema decls premises facts i j k (fst c) (snd c))
-    [(t, u);
-     (rotate_triangle t, rotate_triangle u);
-     (rotate_triangle (rotate_triangle t), rotate_triangle (rotate_triangle u));
-     (reverse_triangle t, reverse_triangle u);
-     (rotate_triangle (reverse_triangle t), rotate_triangle (reverse_triangle u));
-     (rotate_triangle (rotate_triangle (reverse_triangle t)),
-      rotate_triangle (rotate_triangle (reverse_triangle u)))].
-
-Definition either_used (a b : option (list Statement)) : option (list Statement) :=
-  match a with Some p => Some p | None => b end.
-
-Definition asa_schema_used decls premises facts i j k (t u : TriangleName) :=
-  schema3_used decls premises facts i j k
-    (ConAng (angle_a t) (angle_a u))
-    (ConSeg (side_ab t) (side_ab u))
-    (ConAng (angle_b t) (angle_b u)).
-
-Definition aas_schema_used decls premises facts i j k (t u : TriangleName) :=
-  either_used
-    (schema3_used decls premises facts i j k
-      (ConAng (angle_c t) (angle_c u))
-      (ConAng (angle_b t) (angle_b u))
-      (ConSeg (side_ab t) (side_ab u)))
-    (schema3_used decls premises facts i j k
-      (ConAng (angle_b t) (angle_b u))
-      (ConAng (angle_c t) (angle_c u))
-      (ConSeg (side_ab t) (side_ab u))).
-
-Definition rhl_schema_used decls premises facts i j k (t u : TriangleName) :=
-  either_used
-    (schema3_used decls premises facts i j k
-      (ConRight (angle_b t) (angle_b u))
-      (ConSeg (side_ca t) (side_ca u))
-      (ConSeg (side_bc t) (side_bc u)))
-    (schema3_used decls premises facts i j k
-      (ConRight (angle_b t) (angle_b u))
-      (ConSeg (side_bc t) (side_bc u))
-      (ConSeg (side_ca t) (side_ca u))).
-
-Definition sas_schema_used decls premises facts i j k (t u : TriangleName) :=
-  schema3_used decls premises facts i j k
-    (ConSeg (side_ab t) (side_ab u))
-    (ConAng (angle_a t) (angle_a u))
-    (ConSeg (side_ca t) (side_ca u)).
-
-Definition sss_schema_used decls premises facts i j k (t u : TriangleName) :=
-  schema3_used decls premises facts i j k
-    (ConSeg (side_ab t) (side_ab u))
-    (ConSeg (side_bc t) (side_bc u))
-    (ConSeg (side_ca t) (side_ca u)).
 
 (** Declaring [t_ABC] asserts that its vertices are noncollinear, and that is
     invariant under renaming the triangle's vertices. *)
@@ -566,8 +598,9 @@ Definition triangle_declared (decls : Declarations) (t : TriangleName) : bool :=
   existsb (fun d => triangle_mem t (triangle_permutations d))
           decls.(decl_triangles).
 
-(** The same six readings [six_correspondences] searches, as data, for rules
-    whose shape does not fit the three-dependency schema. *)
+(** The six readings of a pair of triangles: the three rotations of the
+    correspondence as written, and of its reversal.  A criterion's citation
+    order fixes which vertex plays which role, so all six are tried. *)
 Definition correspondences (t u : TriangleName) : list (TriangleName * TriangleName) :=
   let r := rotate_triangle in
   let t' := reverse_triangle t in
@@ -578,35 +611,34 @@ Definition correspondences (t u : TriangleName) : list (TriangleName * TriangleN
 Definition declared_pair (decls : Declarations) (t u : TriangleName) : bool :=
   triangle_declared decls t && triangle_declared decls u.
 
-(** A congruence criterion concludes [con_tri_ordered] for the correspondence
-    as written, read in any of its six ways, and [con_tri] for any ordering of
-    the second triangle. *)
-Definition criterion_conclusion
-    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
-              TriangleName -> TriangleName -> bool)
-    decls premises facts i j k (conclusion : Statement) : bool :=
-  match conclusion with
-  | ConTriOrdered t u =>
-      declared_pair decls t u &&
-      six_correspondences schema decls premises facts i j k t u
-  | ConTri t u =>
-      declared_pair decls t u &&
-      existsb (six_correspondences schema decls premises facts i j k t)
-              (triangle_orderings u)
-  | _ => false
-  end.
-
-Definition criterion_used
-    (schema : Declarations -> list Premise -> list Statement -> nat -> nat -> nat ->
-              TriangleName -> TriangleName -> option (list Statement))
-    decls premises facts i j k (conclusion : Statement) : option (list Statement) :=
-  match conclusion with
-  | ConTriOrdered t u => six_correspondences_used schema decls premises facts i j k t u
-  | ConTri t u =>
-      first_used (six_correspondences_used schema decls premises facts i j k t)
-                 (triangle_orderings u)
-  | _ => None
-  end.
+(** The parts a congruence criterion cites, for one correspondence.  [aas]
+    and [rhl] accept two orders. *)
+Definition sas_parts (t u : TriangleName) : list (list Statement) :=
+  [[ConSeg (side_ab t) (side_ab u); ConAng (angle_a t) (angle_a u);
+    ConSeg (side_ca t) (side_ca u)]].
+Definition sss_parts (t u : TriangleName) : list (list Statement) :=
+  [[ConSeg (side_ab t) (side_ab u); ConSeg (side_bc t) (side_bc u);
+    ConSeg (side_ca t) (side_ca u)]].
+Definition asa_parts (t u : TriangleName) : list (list Statement) :=
+  [[ConAng (angle_a t) (angle_a u); ConSeg (side_ab t) (side_ab u);
+    ConAng (angle_b t) (angle_b u)]].
+Definition aas_parts (t u : TriangleName) : list (list Statement) :=
+  [[ConAng (angle_c t) (angle_c u); ConAng (angle_b t) (angle_b u);
+    ConSeg (side_ab t) (side_ab u)];
+   [ConAng (angle_b t) (angle_b u); ConAng (angle_c t) (angle_c u);
+    ConSeg (side_ab t) (side_ab u)]].
+(** Right-hypotenuse-leg.  The bundled fixtures disagree about whether the
+    hypotenuse or the leg is cited second, so both orders are accepted; two
+    legs are not. *)
+Definition rhl_parts (t u : TriangleName) : list (list Statement) :=
+  [[ConRight (angle_b t) (angle_b u); ConSeg (side_ca t) (side_ca u);
+    ConSeg (side_bc t) (side_bc u)];
+   [ConRight (angle_b t) (angle_b u); ConSeg (side_bc t) (side_bc u);
+    ConSeg (side_ca t) (side_ca u)]].
+Definition def_con_tri_parts (t u : TriangleName) : list (list Statement) :=
+  [[ConSeg (side_ab t) (side_ab u); ConSeg (side_bc t) (side_bc u);
+    ConSeg (side_ca t) (side_ca u); ConAng (angle_a t) (angle_a u);
+    ConAng (angle_b t) (angle_b u); ConAng (angle_c t) (angle_c u)]].
 
 (** What [cpctc] needs from an unordered [con_tri] is a correspondence, and
     the statement does not carry one.  The facts already established can: a
@@ -616,31 +648,12 @@ Definition supported decls premises (facts : list Statement)
     (expected : Statement) : bool :=
   existsb (dependency_matches decls premises expected) facts.
 
-Definition supported3 decls premises facts (a b c : Statement) : bool :=
-  supported decls premises facts a && supported decls premises facts b &&
-  supported decls premises facts c.
+(** The part lists of the five criteria, as one list of readings. *)
+Definition criterion_readings (t u : TriangleName) : list (list Statement) :=
+  sas_parts t u ++ sss_parts t u ++ asa_parts t u ++ aas_parts t u ++ rhl_parts t u.
 
 Definition reading_witnessed decls premises facts (t u : TriangleName) : bool :=
-  (* SAS *)
-  supported3 decls premises facts
-    (ConSeg (side_ab t) (side_ab u)) (ConAng (angle_a t) (angle_a u))
-    (ConSeg (side_ca t) (side_ca u)) ||
-  (* SSS *)
-  supported3 decls premises facts
-    (ConSeg (side_ab t) (side_ab u)) (ConSeg (side_bc t) (side_bc u))
-    (ConSeg (side_ca t) (side_ca u)) ||
-  (* ASA *)
-  supported3 decls premises facts
-    (ConAng (angle_a t) (angle_a u)) (ConSeg (side_ab t) (side_ab u))
-    (ConAng (angle_b t) (angle_b u)) ||
-  (* AAS *)
-  supported3 decls premises facts
-    (ConAng (angle_c t) (angle_c u)) (ConAng (angle_b t) (angle_b u))
-    (ConSeg (side_ab t) (side_ab u)) ||
-  (* HL *)
-  supported3 decls premises facts
-    (ConRight (angle_b t) (angle_b u)) (ConSeg (side_ca t) (side_ca u))
-    (ConSeg (side_bc t) (side_bc u)) ||
+  existsb (forallb (supported decls premises facts)) (criterion_readings t u) ||
   existsb (fact_eqb (ConTriOrdered t u)) facts.
 
 Definition correspondence_witnessed decls premises facts (t u : TriangleName) : bool :=
@@ -776,23 +789,6 @@ Definition con_tri_transitive facts i j conclusion : bool :=
   | _ => false
   end.
 
-(** Two right angles are congruent.  The audited [right] meaning supplies the
-    nondegenerate rays that GeoCoq's [l11_16] needs, so this rule may conclude
-    either [con_right] or [con_ang]. *)
-Definition def_con_right_conclusion (a b : AngleName) (conclusion : Statement) : bool :=
-  match conclusion with
-  | ConRight c d | ConAng c d =>
-      (angle_u_eqb a c && angle_u_eqb b d) || (angle_u_eqb a d && angle_u_eqb b c)
-  | _ => false
-  end.
-
-Definition def_con_right (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match lookup_step facts i, lookup_step facts j with
-  | Some (Right a), Some (Right b) => def_con_right_conclusion a b conclusion
-  | _, _ => false
-  end.
-
 (** Every angle whose vertex is the foot of a perpendicular and whose rays end
     on the two perpendicular segments is right.  [Perp_at] states exactly this
     for all points collinear with either segment, and segment endpoints are
@@ -864,18 +860,23 @@ Definition vert_ang_witness (decls : Declarations) (premises : list Premise)
 
 (** An angle bisector halves its angle.  The audited meaning is a disjunction
     over which endpoint of the ray names the vertex, and that is a condition on
-    names, so the checker can decide which disjunct is available. *)
-Definition def_ang_bisect (facts : list Statement) (i : nat)
-    (conclusion : Statement) : bool :=
+    names, so the checker can decide which disjunct is available.  [far] is
+    the ray's other endpoint. *)
+Definition bisector_halves (a : AngleName) (far : PointId) : Statement :=
+  ConAng (angle_name a.(angle_first) a.(angle_vertex) far)
+         (angle_name far a.(angle_vertex) a.(angle_last)).
+
+(** The halves may be named through any points along their rays, as a cited
+    congruence may: with [on_line(PR, T)], the bisector [PR] halves [a_QPS]
+    into [a_QPT] and [a_TPS]. *)
+Definition def_ang_bisect (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
   match lookup_step facts i with
   | Some (AngBisect a s) =>
-      let halves far :=
-        ConAng (angle_name a.(angle_first) a.(angle_vertex) far)
-               (angle_name far a.(angle_vertex) a.(angle_last)) in
       (ascii_eqb s.(segment_first) a.(angle_vertex) &&
-        fact_eqb (halves s.(segment_second)) conclusion) ||
+        dependency_matches decls premises conclusion (bisector_halves a s.(segment_second))) ||
       (ascii_eqb s.(segment_second) a.(angle_vertex) &&
-        fact_eqb (halves s.(segment_first)) conclusion)
+        dependency_matches decls premises conclusion (bisector_halves a s.(segment_first)))
   | _ => false
   end.
 
@@ -951,56 +952,6 @@ Definition midpt_conv (premises : list Premise) (facts : list Statement)
   | _ => false
   end.
 
-(** Two angles of a triangle determine the third.  The rule needs both
-    triangles, and they are not named by the conclusion, so it searches the
-    declared pairs; declaring them is also what rules out degenerate ones. *)
-Definition schema2 (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j : nat) (a b : Statement) : bool :=
-  match lookup_step facts i, lookup_step facts j with
-  | Some x, Some y =>
-      dependency_matches decls premises a x && dependency_matches decls premises b y
-  | _, _ => false
-  end.
-
-Definition third_angle_at (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j : nat) (t u : TriangleName) (conclusion : Statement) : bool :=
-  schema2 decls premises facts i j
-    (ConAng (angle_a t) (angle_a u))
-    (ConAng (angle_b t) (angle_b u)) &&
-  fact_eqb (ConAng (angle_c t) (angle_c u)) conclusion.
-
-Definition third_angle (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j : nat) (conclusion : Statement) : bool :=
-  existsb (fun t => existsb (fun u =>
-      existsb (fun c => third_angle_at decls premises facts i j (fst c) (snd c) conclusion)
-              (correspondences t u))
-    decls.(decl_triangles)) decls.(decl_triangles).
-
-(** Two congruent angle pairs make the triangles similar.  The audited
-    similarity is the three angle congruences, so this is [third_angle] with
-    the pair of triangles read off the conclusion instead of searched for, and
-    all three congruences reported rather than only the new one. *)
-Definition aa_sim_at (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j : nat) (t u : TriangleName) : bool :=
-  schema2 decls premises facts i j
-    (ConAng (angle_a t) (angle_a u))
-    (ConAng (angle_b t) (angle_b u)).
-
-Definition aa_sim (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion with
-  | SimTri t u =>
-      declared_pair decls t u &&
-      existsb (fun c => aa_sim_at decls premises facts i j (fst c) (snd c))
-              (correspondences t u)
-  | _ => false
-  end.
-
 (** A [proportion] fact read as the expected four lengths, in any spelling
     its meaning cannot tell apart: either end of a segment first, the two
     ratios exchanged, or both ratios inverted. *)
@@ -1011,53 +962,6 @@ Definition proportion_matches (a b c d : SegmentName) (st : Statement) : bool :=
         segment_u_eqb w a' && segment_u_eqb x b' &&
         segment_u_eqb y c' && segment_u_eqb z d' in
       reads a b c d || reads c d a b || reads b a d c || reads d c b a
-  | _ => false
-  end.
-
-Definition proportion_at (facts : list Statement) (i : nat)
-    (a b c d : SegmentName) : bool :=
-  match lookup_step facts i with
-  | Some x => proportion_matches a b c d x
-  | None => false
-  end.
-
-(** SAS similarity, with the congruent angle at the second vertex of the
-    correspondence: [proportion(AB, DE, BC, EF)] and [con_ang(a_ABC, a_DEF)].
-    The search over correspondences puts the angle at each vertex in turn. *)
-Definition sas_sim_at (decls : Declarations) (premises : list Premise)
-    (facts : list Statement) (i j : nat) (t u : TriangleName) : bool :=
-  proportion_at facts i (side_ab t) (side_ab u) (side_bc t) (side_bc u) &&
-  match lookup_step facts j with
-  | Some y => dependency_matches decls premises (ConAng (angle_b t) (angle_b u)) y
-  | None => false
-  end.
-
-Definition sas_sim (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion with
-  | SimTri t u =>
-      declared_pair decls t u &&
-      existsb (fun c => sas_sim_at decls premises facts i j (fst c) (snd c))
-              (correspondences t u)
-  | _ => false
-  end.
-
-(** SSS similarity, as two proportions sharing the pair of sides opposite the
-    first vertex: [proportion(AB, DE, BC, EF)] and
-    [proportion(BC, EF, CA, FD)]. *)
-Definition sss_sim_at (facts : list Statement) (i j : nat)
-    (t u : TriangleName) : bool :=
-  proportion_at facts i (side_ab t) (side_ab u) (side_bc t) (side_bc u) &&
-  proportion_at facts j (side_bc t) (side_bc u) (side_ca t) (side_ca u).
-
-Definition sss_sim (decls : Declarations) (facts : list Statement)
-    (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion with
-  | SimTri t u =>
-      declared_pair decls t u &&
-      existsb (fun c => sss_sim_at facts i j (fst c) (snd c))
-              (correspondences t u)
   | _ => false
   end.
 
@@ -1088,24 +992,6 @@ Definition similarity_pair (s : Statement) : option (TriangleName * TriangleName
 Definition sim_tri_transitive facts i j conclusion : bool :=
   transitive_rule triangle_eqb SimTri similarity_pair facts i j conclusion.
 
-(** A supplement of an angle is a supplement of any angle congruent to it:
-    [supplementary(A, B)] and [con_ang(B, C)] give [supplementary(A, C)]. *)
-Definition supp_substitute (keep old x y : AngleName) (conclusion : Statement) : bool :=
-  (angle_u_eqb old x && fact_eqb (Supplementary keep y) conclusion) ||
-  (angle_u_eqb old y && fact_eqb (Supplementary keep x) conclusion).
-
-Definition supp_transitive_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match lookup_step facts i, lookup_step facts j with
-  | Some (Supplementary a b), Some w =>
-      match angle_congruence_pair w with
-      | Some (x, y) =>
-          supp_substitute a b x y conclusion || supp_substitute b a x y conclusion
-      | None => false
-      end
-  | _, _ => false
-  end.
-
 (** The two halves a midpoint cuts its segment into are congruent.  The
     perpendicularity is cited because the catalog's reason is the definition
     of a perpendicular bisector, but the halves follow from the midpoint
@@ -1117,39 +1003,6 @@ Definition perp_bisector_rule (facts : list Statement) (i j : nat)
       ascii_eqb p q && segment_u_eqb s2 s &&
       segment_pair_eqb x y (segment_name s.(segment_first) q) (segment_name q s.(segment_second))
   | _, _, _ => false
-  end.
-
-Definition schema6 (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i1 i2 i3 i4 i5 i6 : nat) (a b c d e f : Statement) : bool :=
-  schema3 decls premises facts i1 i2 i3 a b c &&
-  schema3 decls premises facts i4 i5 i6 d e f.
-
-(** All six corresponding parts, cited explicitly.  The dependency order fixes
-    the correspondence, so the six readings of the conclusion are searched as
-    they are for the other criteria. *)
-Definition def_con_tri_at (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i1 i2 i3 i4 i5 i6 : nat) (t u : TriangleName) : bool :=
-  schema6 decls premises facts i1 i2 i3 i4 i5 i6
-    (ConSeg (side_ab t) (side_ab u))
-    (ConSeg (side_bc t) (side_bc u))
-    (ConSeg (side_ca t) (side_ca u))
-    (ConAng (angle_a t) (angle_a u))
-    (ConAng (angle_b t) (angle_b u))
-    (ConAng (angle_c t) (angle_c u)).
-
-Definition def_con_tri (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i1 i2 i3 i4 i5 i6 : nat) (conclusion : Statement) : bool :=
-  let at_some := fun t u =>
-    existsb (fun c => def_con_tri_at decls premises facts i1 i2 i3 i4 i5 i6
-                        (fst c) (snd c))
-            (correspondences t u) in
-  match conclusion with
-  | ConTriOrdered t u => declared_pair decls t u && at_some t u
-  | ConTri t u => declared_pair decls t u && existsb (at_some t) (triangle_orderings u)
-  | _ => false
   end.
 
 (** Triangle shape statements.  Each names one declared triangle, which is
@@ -1206,95 +1059,69 @@ Definition base_angle_conv (decls : Declarations) (facts : list Statement)
   | None => false
   end.
 
-Definition def_equilateral (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j k : nat) (conclusion : Statement) : bool :=
-  match conclusion with
-  | Equilateral t =>
-      triangle_declared decls t &&
-      schema3 decls premises facts i j k
-        (ConSeg (side_ab t) (side_bc t))
-        (ConSeg (side_bc t) (side_ca t))
-        (ConSeg (side_ca t) (side_ab t))
-  | _ => false
-  end.
+(** ** Angle pairs with a fixed total
 
-Definition def_equiangular (decls : Declarations) (premises : list Premise)
-    (facts : list Statement)
-    (i j k : nat) (conclusion : Statement) : bool :=
-  match conclusion with
-  | Equiangular t =>
-      triangle_declared decls t &&
-      schema3 decls premises facts i j k
-        (ConAng (angle_a t) (angle_b t))
-        (ConAng (angle_b t) (angle_c t))
-        (ConAng (angle_c t) (angle_a t))
-  | _ => false
-  end.
+    [supplementary] and [complementary] say that two angles' measures add up
+    to a straight angle or a right angle.  Their rules are the same, so each
+    is written once, over [pair], the statement, and [pair_of], which reads
+    one back from a cited step. *)
+Definition supplementary_pair (s : Statement) : option (AngleName * AngleName) :=
+  match s with Supplementary a b => Some (a, b) | _ => None end.
+Definition complementary_pair (s : Statement) : option (AngleName * AngleName) :=
+  match s with Complementary a b => Some (a, b) | _ => None end.
 
-Definition equilat_equiang (facts : list Statement) (i : nat)
+Section AnglePairs.
+Context (pair : AngleName -> AngleName -> Statement)
+        (pair_of : Statement -> option (AngleName * AngleName)).
+
+Definition cited_pair (facts : list Statement) (i : nat)
+    : option (AngleName * AngleName) :=
+  match lookup_step facts i with Some s => pair_of s | None => None end.
+
+(** Two pairs give a congruence between their other angles when their
+    partners are [linked].  Either angle of each pair may be the partner. *)
+Definition partners_link (linked : AngleName -> AngleName -> bool)
+    (a b c d : AngleName) (conclusion : Statement) : bool :=
+  (linked b d && fact_eqb (ConAng a c) conclusion) ||
+  (linked b c && fact_eqb (ConAng a d) conclusion) ||
+  (linked a d && fact_eqb (ConAng b c) conclusion) ||
+  (linked a c && fact_eqb (ConAng b d) conclusion).
+
+(** Angles paired with congruent angles are congruent: the third citation
+    is the congruence between the partners. *)
+Definition congruent_partners_rule (facts : list Statement) (i j k : nat)
     (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Equiangular t, Some (Equilateral u) => triangle_eqb t u
-  | _, _ => false
-  end.
-
-Definition equiang_equilat (facts : list Statement) (i : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Equilateral t, Some (Equiangular u) => triangle_eqb t u
-  | _, _ => false
-  end.
-
-(** Angles supplementary to congruent angles are congruent, and so are two
-    supplements of the same angle. *)
-Definition con_supplements (facts : list Statement) (i j k : nat)
-    (conclusion : Statement) : bool :=
-  match lookup_step facts i, lookup_step facts j, lookup_step facts k with
-  | Some (Supplementary a b), Some (Supplementary c d), Some witness =>
-      (fact_eqb (ConAng b d) witness && fact_eqb (ConAng a c) conclusion) ||
-      (fact_eqb (ConAng b c) witness && fact_eqb (ConAng a d) conclusion) ||
-      (fact_eqb (ConAng a d) witness && fact_eqb (ConAng b c) conclusion) ||
-      (fact_eqb (ConAng a c) witness && fact_eqb (ConAng b d) conclusion)
+  match cited_pair facts i, cited_pair facts j, lookup_step facts k with
+  | Some (a, b), Some (c, d), Some witness =>
+      partners_link (fun x y => fact_eqb (ConAng x y) witness) a b c d conclusion
   | _, _, _ => false
   end.
 
-Definition con_supplements_same (facts : list Statement) (i j : nat)
+(** Angles paired with the same angle are congruent. *)
+Definition shared_partner_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
-  match lookup_step facts i, lookup_step facts j with
-  | Some (Supplementary a b), Some (Supplementary c d) =>
-      (angle_u_eqb d b && fact_eqb (ConAng a c) conclusion) ||
-      (angle_u_eqb c b && fact_eqb (ConAng a d) conclusion) ||
-      (angle_u_eqb d a && fact_eqb (ConAng b c) conclusion) ||
-      (angle_u_eqb c a && fact_eqb (ConAng b d) conclusion)
+  match cited_pair facts i, cited_pair facts j with
+  | Some (a, b), Some (c, d) => partners_link angle_u_eqb a b c d conclusion
   | _, _ => false
   end.
 
-(** The same two rules for complements.  [SAMS] in the audited meaning is
-    what makes them hold: without it the shared right angle could be reached
-    from either side, and a null angle would be a complement of the same
-    angle a straight one is. *)
-Definition con_complements (facts : list Statement) (i j k : nat)
-    (conclusion : Statement) : bool :=
-  match lookup_step facts i, lookup_step facts j, lookup_step facts k with
-  | Some (Complementary a b), Some (Complementary c d), Some witness =>
-      (fact_eqb (ConAng b d) witness && fact_eqb (ConAng a c) conclusion) ||
-      (fact_eqb (ConAng b c) witness && fact_eqb (ConAng a d) conclusion) ||
-      (fact_eqb (ConAng a d) witness && fact_eqb (ConAng b c) conclusion) ||
-      (fact_eqb (ConAng a c) witness && fact_eqb (ConAng b d) conclusion)
-  | _, _, _ => false
-  end.
+(** A pair carries across a congruence of either of its angles:
+    [pair(A, B)] and [con_ang(B, C)] give [pair(A, C)]. *)
+Definition substitute_link (keep old x y : AngleName) (conclusion : Statement) : bool :=
+  (angle_u_eqb old x && fact_eqb (pair keep y) conclusion) ||
+  (angle_u_eqb old y && fact_eqb (pair keep x) conclusion).
 
-Definition con_complements_same (facts : list Statement) (i j : nat)
+Definition substitute_rule (facts : list Statement) (i j : nat)
     (conclusion : Statement) : bool :=
-  match lookup_step facts i, lookup_step facts j with
-  | Some (Complementary a b), Some (Complementary c d) =>
-      (angle_u_eqb d b && fact_eqb (ConAng a c) conclusion) ||
-      (angle_u_eqb c b && fact_eqb (ConAng a d) conclusion) ||
-      (angle_u_eqb d a && fact_eqb (ConAng b c) conclusion) ||
-      (angle_u_eqb c a && fact_eqb (ConAng b d) conclusion)
+  match cited_pair facts i, lookup_step facts j with
+  | Some (a, b), Some w =>
+      match angle_congruence_pair w with
+      | Some (x, y) => substitute_link a b x y conclusion || substitute_link b a x y conclusion
+      | None => false
+      end
   | _, _ => false
   end.
+End AnglePairs.
 
 Definition def_linear_pair (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
@@ -1406,32 +1233,6 @@ Definition quad_diagonal_ac (q : QuadrilateralName) : SegmentName :=
 Definition quad_diagonal_bd (q : QuadrilateralName) : SegmentName :=
   segment_name q.(quadrilateral_second) q.(quadrilateral_fourth).
 
-Definition def_parallelogram_rule (decls : Declarations)
-    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Parallelogram q, Some (Para s1 s2), Some (Para s3 s4) =>
-      declared_quadrilateral decls q &&
-      ((segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_cd q) &&
-        segment_pair_eqb s3 s4 (quad_side_bc q) (quad_side_da q)) ||
-       (segment_pair_eqb s1 s2 (quad_side_bc q) (quad_side_da q) &&
-        segment_pair_eqb s3 s4 (quad_side_ab q) (quad_side_cd q)))
-  | _, _, _ => false
-  end.
-
-Definition rectangle_pgram_rule (facts : list Statement) (i : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Parallelogram q, Some (Rectangle r) => same_quadrilateral q r
-  | _, _ => false
-  end.
-
-Definition rhombus_pgram_rule (facts : list Statement) (i : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Parallelogram q, Some (Rhombus r) => same_quadrilateral q r
-  | _, _ => false
-  end.
-
 Definition pgram_opp_sides_rule (facts : list Statement) (i : nat)
     (conclusion : Statement) : bool :=
   match conclusion, lookup_pgram facts i with
@@ -1450,18 +1251,6 @@ Definition pgram_opp_angles_rule (facts : list Statement) (i : nat)
   | _, _ => false
   end.
 
-Definition rhombus_consec_sides_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_pgram facts i, lookup_step facts j with
-  | Rhombus q, Some (Parallelogram r), Some (ConSeg s1 s2) =>
-      same_quadrilateral q r &&
-      (segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_bc q) ||
-       segment_pair_eqb s1 s2 (quad_side_bc q) (quad_side_cd q) ||
-       segment_pair_eqb s1 s2 (quad_side_cd q) (quad_side_da q) ||
-       segment_pair_eqb s1 s2 (quad_side_da q) (quad_side_ab q))
-  | _, _, _ => false
-  end.
-
 (** Two corners of a parallelogram that share a side are supplementary.  Only
     consecutive pairs: opposite corners are congruent instead, which is
     [pgram_opp_angs]. *)
@@ -1476,22 +1265,6 @@ Definition pgram_consec_angs_rule (facts : list Statement) (i : nat)
   | _ => false
   end.
 
-(** Both pairs of opposite sides congruent make a parallelogram.  The
-    conclusion is a quadrilateral statement, so unlike a rule that reads one
-    off a dependency this one must supply the well-formedness itself, and the
-    declaration is where that comes from. *)
-Definition pgram_opp_sides_conv_rule (decls : Declarations)
-    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Parallelogram q, Some (ConSeg a b), Some (ConSeg c d) =>
-      declared_quadrilateral decls q &&
-      ((segment_pair_eqb a b (quad_side_ab q) (quad_side_cd q) &&
-        segment_pair_eqb c d (quad_side_bc q) (quad_side_da q)) ||
-       (segment_pair_eqb a b (quad_side_bc q) (quad_side_da q) &&
-        segment_pair_eqb c d (quad_side_ab q) (quad_side_cd q)))
-  | _, _, _ => false
-  end.
-
 (** A kite's premise already names which pair of opposite angles it makes
     congruent -- the pair between the two pairs of congruent sides -- so the
     rule reads the conclusion straight off it. *)
@@ -1500,43 +1273,6 @@ Definition kite_opp_con_ang_rule (facts : list Statement) (i : nat)
   match lookup_step facts i with
   | Some (KitePremise _ a b) => fact_eqb (ConAng a b) conclusion
   | _ => false
-  end.
-
-(** Two corners supplementary to a third make a parallelogram: each
-    supplementary pair shares a side, and that side is the transversal of the
-    two the pair forces parallel.  The shared corner may sit on either side of
-    either dependency, as [SuppA] is symmetric. *)
-Definition consec_pair_eqb (a b : AngleName) (first second : AngleName) : bool :=
-  fact_eqb (Supplementary first second) (Supplementary a b).
-
-Definition pgram_consec_angs_conv_rule (decls : Declarations)
-    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Parallelogram q, Some (Supplementary a b), Some (Supplementary c d) =>
-      let along_ab := consec_pair_eqb a b (quad_corner_a q) (quad_corner_b q) in
-      let along_bc := consec_pair_eqb a b (quad_corner_b q) (quad_corner_c q) in
-      let along_cd := consec_pair_eqb a b (quad_corner_c q) (quad_corner_d q) in
-      let along_da := consec_pair_eqb a b (quad_corner_d q) (quad_corner_a q) in
-      let along_ab' := consec_pair_eqb c d (quad_corner_a q) (quad_corner_b q) in
-      let along_bc' := consec_pair_eqb c d (quad_corner_b q) (quad_corner_c q) in
-      let along_cd' := consec_pair_eqb c d (quad_corner_c q) (quad_corner_d q) in
-      let along_da' := consec_pair_eqb c d (quad_corner_d q) (quad_corner_a q) in
-      declared_quadrilateral decls q &&
-      (* one pair from each of the two side directions *)
-      (((along_bc || along_da) && (along_ab' || along_cd')) ||
-       ((along_ab || along_cd) && (along_bc' || along_da')))
-  | _, _, _ => false
-  end.
-
-(** One right corner of a parallelogram makes it a rectangle. *)
-Definition rect_pgram_ang_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_pgram facts j with
-  | Rectangle q, Some (Right a), Some (Parallelogram r) =>
-      same_quadrilateral q r &&
-      (angle_u_eqb a (quad_corner_a q) || angle_u_eqb a (quad_corner_b q) ||
-       angle_u_eqb a (quad_corner_c q) || angle_u_eqb a (quad_corner_d q))
-  | _, _, _ => false
   end.
 
 (** The audited rhombus meaning carries a congruence chain around all four
@@ -1565,13 +1301,13 @@ Definition rhombus_def_rule (facts : list Statement) (i : nat)
     the opposite corner -- the crossing point, or a point beyond it -- which
     is how the corpus writes it when the figure labels that point.  Such a
     segment must run from the corner, its far end must name the same ray as
-    the diagonal does, and it must be declared, since [out2__conga] carries
-    the halves across the renaming only if that end is not the corner
-    itself. *)
+    the diagonal does, and the declarations must make its ends distinct
+    ([declared_distinct]), since [out2__conga] carries the halves across the
+    renaming only if that end is not the corner itself. *)
 Definition bisector_ray (decls : Declarations) (premises : list Premise)
     (s : SegmentName) (vertex opposite : PointId) : bool :=
   segment_u_eqb s (segment_name vertex opposite) ||
-  (declared_segment decls s &&
+  (declared_distinct decls s.(segment_first) s.(segment_second) &&
    ((ascii_eqb s.(segment_first) vertex &&
        ray_linked premises vertex opposite s.(segment_second)) ||
     (ascii_eqb s.(segment_second) vertex &&
@@ -1582,7 +1318,8 @@ Definition bisector_ray (decls : Declarations) (premises : list Premise)
 Definition bisector_ray_used (decls : Declarations) (premises : list Premise)
     (s : SegmentName) (vertex opposite : PointId) : option Statement :=
   if segment_u_eqb s (segment_name vertex opposite) then None
-  else if negb (declared_segment decls s) then None
+  else if negb (declared_distinct decls s.(segment_first) s.(segment_second))
+  then None
   else if ascii_eqb s.(segment_first) vertex then
     ray_link_witness premises vertex opposite s.(segment_second)
   else if ascii_eqb s.(segment_second) vertex then
@@ -1660,47 +1397,6 @@ Definition rectangle_def_rule (facts : list Statement) (i : nat)
   | _, _ => false
   end.
 
-(** One pair of opposite sides both parallel and congruent.  The conclusion's
-    declared quadrilateral supplies the crossing diagonals that separate a
-    parallelogram from the crossed quadrilateral with the same side facts. *)
-Definition pgram_opp_side_para_rule (decls : Declarations)
-    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Parallelogram q, Some (ConSeg c1 c2), Some (Para p1 p2) =>
-      declared_quadrilateral decls q &&
-      ((segment_pair_eqb c1 c2 (quad_side_ab q) (quad_side_cd q) &&
-        segment_pair_eqb p1 p2 (quad_side_ab q) (quad_side_cd q)) ||
-       (segment_pair_eqb c1 c2 (quad_side_bc q) (quad_side_da q) &&
-        segment_pair_eqb p1 p2 (quad_side_bc q) (quad_side_da q)))
-  | _, _, _ => false
-  end.
-
-(** Both pairs of opposite corners congruent make a quadrilateral a
-    parallelogram.  As with the other converses the conclusion is a
-    quadrilateral statement, so the declaration is what supplies its
-    well-formedness. *)
-Definition pgram_opp_angs_conv_rule (decls : Declarations)
-    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Parallelogram q, Some (ConAng a1 b1), Some (ConAng a2 b2) =>
-      declared_quadrilateral decls q &&
-      ((angle_pair_eqb a1 b1 (quad_corner_a q) (quad_corner_c q) &&
-        angle_pair_eqb a2 b2 (quad_corner_b q) (quad_corner_d q)) ||
-       (angle_pair_eqb a1 b1 (quad_corner_b q) (quad_corner_d q) &&
-        angle_pair_eqb a2 b2 (quad_corner_a q) (quad_corner_c q)))
-  | _, _, _ => false
-  end.
-
-(** Congruent diagonals in a parallelogram make it a rectangle. *)
-Definition rect_diag_con_conv_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_pgram facts j with
-  | Rectangle q, Some (ConSeg s1 s2), Some (Parallelogram r) =>
-      same_quadrilateral q r &&
-      segment_pair_eqb s1 s2 (quad_diagonal_ac q) (quad_diagonal_bd q)
-  | _, _, _ => false
-  end.
-
 (** Perpendicular diagonals in a parallelogram make it a rhombus.  Only the
     two lines matter, so where the perpendicularity premise puts their meeting
     point is left alone: [Perp_at] already places it on both. *)
@@ -1770,37 +1466,6 @@ Definition diagonal_rule_used (premises : list Premise) (facts : list Statement)
   | None => None
   end.
 
-Definition rhombus_diag_perp_conv_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_pgram facts j with
-  | Rhombus q, Some (Perp s1 s2 _), Some (Parallelogram r) =>
-      same_quadrilateral q r &&
-      ((segment_u_eqb s1 (quad_diagonal_ac q) &&
-        segment_u_eqb s2 (quad_diagonal_bd q)) ||
-       (segment_u_eqb s1 (quad_diagonal_bd q) &&
-        segment_u_eqb s2 (quad_diagonal_ac q)))
-  | _, _, _ => false
-  end.
-
-(** Diagonals that bisect each other make a parallelogram.  As with the other
-    converses the conclusion is a quadrilateral statement, so the declaration
-    supplies the well-formedness the dependencies cannot. *)
-Definition pgram_diag_bisect_conv_rule (decls : Declarations)
-    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Parallelogram q, Some (SegBisect b1 t1 p), Some (SegBisect b2 t2 p') =>
-      declared_quadrilateral decls q && ascii_eqb p p' &&
-      ((segment_u_eqb b1 (quad_diagonal_ac q) &&
-        segment_u_eqb t1 (quad_diagonal_bd q) &&
-        segment_u_eqb b2 (quad_diagonal_bd q) &&
-        segment_u_eqb t2 (quad_diagonal_ac q)) ||
-       (segment_u_eqb b1 (quad_diagonal_bd q) &&
-        segment_u_eqb t1 (quad_diagonal_ac q) &&
-        segment_u_eqb b2 (quad_diagonal_ac q) &&
-        segment_u_eqb t2 (quad_diagonal_bd q)))
-  | _, _, _ => false
-  end.
-
 (** A diagonal bisecting the corners it runs between makes a parallelogram a
     rhombus.  Reading the figure from each corner in turn is what
     [quad_rotations] is for: the audited parallelogram says the same thing
@@ -1815,47 +1480,6 @@ Definition quad_rotations (q : QuadrilateralName) : list QuadrilateralName :=
 Definition bisector_at_corner (a : AngleName) (s : SegmentName)
     (r : QuadrilateralName) : bool :=
   angle_u_eqb a (quad_corner_a r) && segment_u_eqb s (quad_diagonal_ac r).
-
-Definition rhombus_opp_bisect_conv_rule (facts : list Statement) (i j k : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j,
-        lookup_pgram facts k with
-  | Rhombus q, Some (AngBisect a1 s1), Some (AngBisect a2 s2), Some (Parallelogram r) =>
-      same_quadrilateral q r &&
-      existsb (fun rot =>
-                 bisector_at_corner a1 s1 rot &&
-                 bisector_at_corner a2 s2 (rotate_quad (rotate_quad rot)))
-              (quad_rotations q)
-  | _, _, _, _ => false
-  end.
-
-(** A trapezoid with congruent diagonals is isosceles.  That is the audited
-    meaning of [isos_trapezoid] itself, so the rule is the two dependencies
-    put side by side. *)
-Definition isos_trap_con_diags_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | IsosTrapezoid q, Some (ConSeg s1 s2), Some (TrapezoidPremise r _ _) =>
-      same_quadrilateral q r &&
-      segment_pair_eqb s1 s2 (quad_diagonal_ac q) (quad_diagonal_bd q)
-  | _, _, _ => false
-  end.
-
-(** Congruent base angles make a trapezoid isosceles -- congruent diagonals
-    being what the audited [isos_trapezoid] means. *)
-Definition isos_trap_base_angs_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | IsosTrapezoid q, Some (ConAng a b), Some (TrapezoidPremise r s1 s2) =>
-      same_quadrilateral q r &&
-      ((segment_pair_eqb s1 s2 (quad_side_ab q) (quad_side_cd q) &&
-        (angle_pair_eqb a b (quad_corner_a q) (quad_corner_b q) ||
-         angle_pair_eqb a b (quad_corner_c q) (quad_corner_d q))) ||
-       (segment_pair_eqb s1 s2 (quad_side_bc q) (quad_side_da q) &&
-        (angle_pair_eqb a b (quad_corner_b q) (quad_corner_c q) ||
-         angle_pair_eqb a b (quad_corner_d q) (quad_corner_a q))))
-  | _, _, _ => false
-  end.
 
 (** An isosceles trapezoid's base angles are congruent -- at either end of
     whichever pair of sides the premise names parallel. *)
@@ -1982,95 +1606,6 @@ Definition sameside_pair (a b i1 c d i2 : PointId) (x y : AngleName) : bool :=
   (named_apart a i1 && named_apart c i2 &&
    angle_pair_eqb x y (angle_name a i1 i2) (angle_name i1 i2 c)).
 
-Definition altint_check (s1 s2 : SegmentName) (x y : AngleName)
-    (a b t1 i1 c d t2 i2 : PointId) : bool :=
-  transversal_lines_match s1 s2 a b i1 c d i2 && altint_pair a b i1 c d i2 x y.
-
-Definition altint_rule (premises : list Premise) (facts : list Statement)
-    (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | ConAng x y, Some (Para s1 s2) =>
-      transversal_premise_check (altint_check s1 s2 x y) premises
-  | _, _ => false
-  end.
-
-Definition altext_check (s1 s2 : SegmentName) (x y : AngleName)
-    (a b t1 i1 c d t2 i2 : PointId) : bool :=
-  transversal_lines_match s1 s2 a b i1 c d i2 && altext_pair a b t1 i1 c d t2 i2 x y.
-
-Definition altext_rule (premises : list Premise) (facts : list Statement)
-    (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | ConAng x y, Some (Para s1 s2) =>
-      transversal_premise_check (altext_check s1 s2 x y) premises
-  | _, _ => false
-  end.
-
-Definition corresp_ang_check (s1 s2 : SegmentName) (x y : AngleName)
-    (a b t1 i1 c d t2 i2 : PointId) : bool :=
-  transversal_lines_match s1 s2 a b i1 c d i2 && corresp_pair a b t1 i1 c d t2 i2 x y.
-
-Definition corresp_ang_rule (premises : list Premise) (facts : list Statement)
-    (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | ConAng x y, Some (Para s1 s2) =>
-      transversal_premise_check (corresp_ang_check s1 s2 x y) premises
-  | _, _ => false
-  end.
-
-Definition sameside_ang_check (s1 s2 : SegmentName) (x y : AngleName)
-    (a b t1 i1 c d t2 i2 : PointId) : bool :=
-  transversal_lines_match s1 s2 a b i1 c d i2 && sameside_pair a b i1 c d i2 x y.
-
-Definition sameside_ang_rule (premises : list Premise) (facts : list Statement)
-    (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Supplementary x y, Some (Para s1 s2) =>
-      transversal_premise_check (sameside_ang_check s1 s2 x y) premises
-  | _, _ => false
-  end.
-
-Definition altint_conv_check (premises : list Premise) (s1 s2 : SegmentName)
-    (x y : AngleName) (a b t1 i1 c d t2 i2 : PointId) : bool :=
-  transversal_lines_match s1 s2 a b i1 c d i2 &&
-  (altint_pair a b i1 c d i2 x y ||
-   (named_apart a i1 && named_apart d i2 &&
-    conga_ray_pair premises (angle_name a i1 i2) (angle_name d i2 i1) x y) ||
-   (named_apart b i1 && named_apart c i2 &&
-    conga_ray_pair premises (angle_name b i1 i2) (angle_name c i2 i1) x y)).
-
-Definition altint_conv_rule (premises : list Premise) (facts : list Statement)
-    (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Para s1 s2, Some (ConAng x y) =>
-      transversal_premise_check (altint_conv_check premises s1 s2 x y) premises
-  | _, _ => false
-  end.
-
-Definition altext_conv_rule (premises : list Premise) (facts : list Statement)
-    (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Para s1 s2, Some (ConAng x y) =>
-      transversal_premise_check (altext_check s1 s2 x y) premises
-  | _, _ => false
-  end.
-
-Definition corresp_ang_conv_rule (premises : list Premise)
-    (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Para s1 s2, Some (ConAng x y) =>
-      transversal_premise_check (corresp_ang_check s1 s2 x y) premises
-  | _, _ => false
-  end.
-
-Definition sameside_ang_conv_rule (premises : list Premise)
-    (facts : list Statement) (i : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i with
-  | Para s1 s2, Some (Supplementary x y) =>
-      transversal_premise_check (sameside_ang_check s1 s2 x y) premises
-  | _, _ => false
-  end.
-
 (** A line perpendicular to one of two parallels is perpendicular to the
     other.  The [transversal] figure supplies where it crosses that other
     line: the concluded perpendicular names a segment on the transversal,
@@ -2149,68 +1684,6 @@ Definition con_chords_arcs_rule (facts : list Statement) (i : nat)
       segment_pair_eqb s1 s2 (segment_name x.(arc_first) x.(arc_second))
                              (segment_name y.(arc_first) y.(arc_second))
   | _, _ => false
-  end.
-
-(** The radius dependency names the point of tangency, anchoring the radius
-    segment's spelling; the tangent fact itself carries the geometry. *)
-Definition tangent_perp_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Perp s1 s2 q, Some (Tangent c s p), Some (Radius c' p') =>
-      circle_eqb c c' && ascii_eqb p' p && ascii_eqb q p &&
-      ((segment_u_eqb s1 s && segment_u_eqb s2 (segment_name c.(circle_center) p)) ||
-       (segment_u_eqb s2 s && segment_u_eqb s1 (segment_name c.(circle_center) p)))
-  | _, _, _ => false
-  end.
-
-(** The converse.  The audited tangent meaning is exactly this figure -- the
-    point of tangency on the circle, the segment through it, and the right
-    angle to the radius -- so the rule assembles it from the perpendicularity
-    and the radius rather than deriving anything.  The point of tangency has
-    to be an endpoint of the tangent segment, which is where the segment's own
-    nondegeneracy comes back as the [Q <> p] the meaning asks for. *)
-Definition tangent_perp_conv_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Tangent c s p, Some (Perp s1 s2 q), Some (Radius c' p') =>
-      circle_eqb c c' && ascii_eqb p' p && ascii_eqb q p && endpoint_of p s &&
-      ((segment_u_eqb s1 s && segment_u_eqb s2 (segment_name c.(circle_center) p)) ||
-       (segment_u_eqb s2 s && segment_u_eqb s1 (segment_name c.(circle_center) p)))
-  | _, _, _ => false
-  end.
-
-(** Two tangents drawn to one circle from one outside point are congruent.
-    Each dependency carries its own right angle to a radius; the shared far
-    endpoint is what makes the two right triangles comparable. *)
-Definition con_tangents_ext_rule (facts : list Statement) (i j : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | ConSeg x y, Some (Tangent c s p), Some (Tangent c' s' p') =>
-      let e := other_endpoint p s in
-      circle_eqb c c' &&
-      segment_u_eqb s (segment_name p e) && segment_u_eqb s' (segment_name p' e) &&
-      segment_pair_eqb x y (segment_name p e) (segment_name p' e)
-  | _, _, _ => false
-  end.
-
-(** A radius perpendicular to a chord bisects it.  The perpendicularity names
-    the foot, and both the concluded bisector and the perpendicular's own
-    first segment have to run from the centre to it; the chord dependency is
-    what puts the chord's two endpoints the same distance away.  The radius
-    dependency names the circle and nothing else -- the point it carries is
-    free, as the corpus writes it (`radius(c_OR, R)` for a chord of `c_OR`
-    met at `M`). *)
-Definition radius_chord_bisect_rule (facts : list Statement) (i j k : nat)
-    (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j,
-        lookup_step facts k with
-  | SegBisect b t p, Some (Perp s1 s2 q), Some (Radius c _),
-    Some (Chord c' ch) =>
-      circle_eqb c c' && ascii_eqb q p &&
-      segment_u_eqb b (segment_name c.(circle_center) p) &&
-      segment_u_eqb s1 (segment_name c.(circle_center) p) &&
-      segment_u_eqb t ch && segment_u_eqb s2 ch
-  | _, _, _, _ => false
   end.
 
 (** The converse: the perpendicular bisector of a chord passes through the
@@ -2336,53 +1809,887 @@ Definition inscribed_pair_check (premises : list Premise) (c : CircleName)
   | _ => false
   end.
 
-Definition inscribed_pair_rule (premises : list Premise) (facts : list Statement)
-    (i j : nat) (same : bool) (conclusion : Statement) : bool :=
-  match lookup_step facts i, lookup_step facts j with
-  | Some (InscribedAngle c a), Some (InscribedAngle c' b) =>
-      circle_eqb c c' &&
-      fact_eqb conclusion (if same then ConAng a b else Supplementary a b) &&
-      premise_found (inscribed_pair_check premises c a b same) premises
-  | _, _ => false
+(** * Templates
+
+    For most reasons, what a step must cite follows from what it concludes,
+    read together with the problem's declarations, its diagram premises, and
+    the facts proved so far.  Such a reason is given as a list of templates.
+    A template lists, for each cited step in order, the statements that may
+    be cited there and how a cited statement is compared with them.  A step
+    is accepted when every step it cites matches some one template.
+
+    External code reads the same templates to say what a rejected step was
+    missing, so these lists are the only statement of those rules.  A
+    template may read the facts proved so far, but never which of them the
+    step cites: where an object the conclusion does not name has to be shared
+    between two cited steps (the circle of two tangents, the point where two
+    diagonals cross), each candidate is read off the proved facts, and the
+    declarations or premises, and gets its own template. *)
+
+(** How a cited statement is compared with a template's statement. *)
+Inductive Matcher :=
+(** [fact_eqb]: the spellings every rule accepts. *)
+| AsWritten
+(** [dependency_matches]: also an angle named by points along its rays, and
+    a pair of right angles for an angle congruence. *)
+| Loose
+(** As written, but a rectangle or a rhombus counts as the parallelogram it
+    names. *)
+| PgramLike
+(** A proportion, in any spelling its meaning cannot tell apart. *)
+| ProportionMatch
+(** A congruent angle pair, also with rays named by points along them.
+    Only used where the figure shows that the rays are not degenerate. *)
+| RayAngles
+(** Perpendicular lines, wherever the cited fact puts their meeting point.
+    The template's point is ignored. *)
+| PerpAnyPoint
+(** A trapezoid premise for the quadrilateral, whichever sides it names.
+    The template's sides are ignored. *)
+| TrapezoidAnySides
+(** A radius fact for the circle, whatever point it names.  The template's
+    point is ignored. *)
+| RadiusAnyPoint.
+
+Record Slot := slot { slot_matcher : Matcher; slot_statements : list Statement }.
+
+(** [template_premises] are the diagram premises the template was read
+    from; a step that matches the template uses them. *)
+Record Template := template {
+  template_slots : list Slot;
+  template_premises : list Statement
+}.
+
+Definition written (xs : list Statement) : Slot := slot AsWritten xs.
+Definition loose (xs : list Statement) : Slot := slot Loose xs.
+Definition pgram_slot (q : QuadrilateralName) : Slot :=
+  slot PgramLike [Parallelogram q].
+Definition plain (slots : list Slot) : Template := template slots [].
+Definition either_order (a b : Slot) : list Template := [plain [a; b]; plain [b; a]].
+Definition only_if (b : bool) (ts : list Template) : list Template :=
+  if b then ts else [].
+Definition gated (b : bool) (xs : list Statement) : list Statement :=
+  if b then xs else [].
+
+(** What a template writes for an argument its matcher ignores. *)
+Definition any_point : PointId := Ascii.ascii_of_nat 42.  (* [*] *)
+Definition any_segment : SegmentName := segment_name any_point any_point.
+
+(** ** Triangles *)
+
+Definition loose_template (parts : list Statement) : Template :=
+  plain (map (fun p => loose [p]) parts).
+
+Definition correspondence_templates
+    (parts : TriangleName -> TriangleName -> list (list Statement))
+    (t u : TriangleName) : list Template :=
+  flat_map (fun c => map loose_template (parts (fst c) (snd c)))
+           (correspondences t u).
+
+(** The citation order fixes which vertex plays which role, so all six
+    correspondences of the two triangles are tried.  [con_tri_ordered] is
+    concluded for the correspondence as written, and [con_tri] for any order
+    of the second triangle. *)
+Definition congruence_needs (decls : Declarations)
+    (parts : TriangleName -> TriangleName -> list (list Statement))
+    (conclusion : Statement) : list Template :=
+  match conclusion with
+  | ConTriOrdered t u =>
+      only_if (declared_pair decls t u) (correspondence_templates parts t u)
+  | ConTri t u =>
+      only_if (declared_pair decls t u)
+        (flat_map (correspondence_templates parts t) (triangle_orderings u))
+  | _ => []
   end.
 
-Definition inscribed_pair_used (premises : list Premise) (facts : list Statement)
-    (i j : nat) (same : bool) : option Statement :=
-  match lookup_step facts i, lookup_step facts j with
-  | Some (InscribedAngle c a), Some (InscribedAngle _ b) =>
-      premise_witness (inscribed_pair_check premises c a b same) premises
-  | _, _ => None
+Definition aa_sim_parts (t u : TriangleName) : list Slot :=
+  [loose [ConAng (angle_a t) (angle_a u)]; loose [ConAng (angle_b t) (angle_b u)]].
+(** SAS similarity, with the congruent angle at the second vertex. *)
+Definition sas_sim_parts (t u : TriangleName) : list Slot :=
+  [slot ProportionMatch [Proportion (side_ab t) (side_ab u) (side_bc t) (side_bc u)];
+   loose [ConAng (angle_b t) (angle_b u)]].
+(** SSS similarity, as two proportions sharing the sides opposite the first
+    vertex. *)
+Definition sss_sim_parts (t u : TriangleName) : list Slot :=
+  [slot ProportionMatch [Proportion (side_ab t) (side_ab u) (side_bc t) (side_bc u)];
+   slot ProportionMatch [Proportion (side_bc t) (side_bc u) (side_ca t) (side_ca u)]].
+
+Definition similarity_needs (decls : Declarations)
+    (parts : TriangleName -> TriangleName -> list Slot)
+    (conclusion : Statement) : list Template :=
+  match conclusion with
+  | SimTri t u =>
+      only_if (declared_pair decls t u)
+        (map (fun c => plain (parts (fst c) (snd c))) (correspondences t u))
+  | _ => []
+  end.
+
+(** The two triangles are not named by the conclusion, so every declared
+    pair is tried; declaring them is also what rules out degenerate ones. *)
+Definition third_angle_needs (decls : Declarations) (conclusion : Statement)
+    : list Template :=
+  flat_map (fun t => flat_map (fun u => flat_map (fun c =>
+      only_if (fact_eqb (ConAng (angle_c (fst c)) (angle_c (snd c))) conclusion)
+        [loose_template [ConAng (angle_a (fst c)) (angle_a (snd c));
+                         ConAng (angle_b (fst c)) (angle_b (snd c))]])
+      (correspondences t u))
+    decls.(decl_triangles)) decls.(decl_triangles).
+
+Definition def_equilateral_needs (decls : Declarations) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | Equilateral t =>
+      only_if (triangle_declared decls t)
+        [loose_template [ConSeg (side_ab t) (side_bc t);
+                         ConSeg (side_bc t) (side_ca t);
+                         ConSeg (side_ca t) (side_ab t)]]
+  | _ => []
+  end.
+
+Definition def_equiangular_needs (decls : Declarations) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | Equiangular t =>
+      only_if (triangle_declared decls t)
+        [loose_template [ConAng (angle_a t) (angle_b t);
+                         ConAng (angle_b t) (angle_c t);
+                         ConAng (angle_c t) (angle_a t)]]
+  | _ => []
+  end.
+
+Definition equilat_equiang_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Equiangular t => [plain [written [Equilateral t]]]
+  | _ => []
+  end.
+
+Definition equiang_equilat_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Equilateral t => [plain [written [Equiangular t]]]
+  | _ => []
+  end.
+
+(** Two right angles are congruent, and the audited [right] meaning supplies
+    the nondegenerate rays [l11_16] needs, so either [con_right] or [con_ang]
+    may be concluded. *)
+Definition def_con_right_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | ConRight c d | ConAng c d =>
+      either_order (written [Right c; Right (reverse_angle c)])
+                   (written [Right d; Right (reverse_angle d)])
+  | _ => []
+  end.
+
+(** ** Quadrilaterals *)
+
+(** Both pairs of opposite sides parallel.  A converse concludes a
+    quadrilateral statement, so the declaration supplies its
+    well-formedness. *)
+Definition def_parallelogram_needs (decls : Declarations) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | Parallelogram q =>
+      only_if (declared_quadrilateral decls q)
+        (either_order (written [Para (quad_side_ab q) (quad_side_cd q)])
+                      (written [Para (quad_side_bc q) (quad_side_da q)]))
+  | _ => []
+  end.
+
+Definition rectangle_pgram_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Parallelogram q => [plain [written [Rectangle q]]]
+  | _ => []
+  end.
+
+Definition rhombus_pgram_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Parallelogram q => [plain [written [Rhombus q]]]
+  | _ => []
+  end.
+
+(** Both pairs of opposite sides congruent. *)
+Definition pgram_opp_sides_conv_needs (decls : Declarations)
+    (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Parallelogram q =>
+      only_if (declared_quadrilateral decls q)
+        (either_order (written [ConSeg (quad_side_ab q) (quad_side_cd q)])
+                      (written [ConSeg (quad_side_bc q) (quad_side_da q)]))
+  | _ => []
+  end.
+
+(** Both pairs of opposite corners congruent. *)
+Definition pgram_opp_angs_conv_needs (decls : Declarations)
+    (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Parallelogram q =>
+      only_if (declared_quadrilateral decls q)
+        (either_order (written [ConAng (quad_corner_a q) (quad_corner_c q)])
+                      (written [ConAng (quad_corner_b q) (quad_corner_d q)]))
+  | _ => []
+  end.
+
+(** Two pairs of consecutive corners supplementary, one pair along each
+    direction of sides: each pair's shared side is a transversal of the two
+    sides the pair makes parallel. *)
+Definition pgram_consec_angs_conv_needs (decls : Declarations)
+    (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Parallelogram q =>
+      only_if (declared_quadrilateral decls q)
+        (either_order
+           (written [Supplementary (quad_corner_b q) (quad_corner_c q);
+                     Supplementary (quad_corner_d q) (quad_corner_a q)])
+           (written [Supplementary (quad_corner_a q) (quad_corner_b q);
+                     Supplementary (quad_corner_c q) (quad_corner_d q)]))
+  | _ => []
+  end.
+
+(** One pair of opposite sides both congruent and parallel. *)
+Definition pgram_opp_side_para_needs (decls : Declarations)
+    (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Parallelogram q =>
+      only_if (declared_quadrilateral decls q)
+        [plain [written [ConSeg (quad_side_ab q) (quad_side_cd q)];
+                written [Para (quad_side_ab q) (quad_side_cd q)]];
+         plain [written [ConSeg (quad_side_bc q) (quad_side_da q)];
+                written [Para (quad_side_bc q) (quad_side_da q)]]]
+  | _ => []
+  end.
+
+(** Points the step may name as the crossing of two diagonals: those proved
+    facts bisect at, which is where the citations can come from, and those
+    an [intersect_seg] premise places, for external code to suggest. *)
+Definition crossing_candidates (premises : list Premise) (facts : list Statement)
+    : list PointId :=
+  nodup Ascii.ascii_dec
+    (flat_map (fun st => match st with SegBisect _ _ p => [p] | _ => [] end) facts ++
+     flat_map (fun pr => match pr.(premise_statement) with
+                         | IntersectSeg _ _ p => [p]
+                         | _ => []
+                         end) premises).
+
+(** Diagonals that bisect each other, at the same point. *)
+Definition pgram_diag_bisect_conv_needs (decls : Declarations)
+    (premises : list Premise) (facts : list Statement) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | Parallelogram q =>
+      only_if (declared_quadrilateral decls q)
+        (flat_map (fun p =>
+           either_order
+             (written [SegBisect (quad_diagonal_ac q) (quad_diagonal_bd q) p])
+             (written [SegBisect (quad_diagonal_bd q) (quad_diagonal_ac q) p]))
+           (crossing_candidates premises facts))
+  | _ => []
+  end.
+
+(** One right corner of a parallelogram, whichever. *)
+Definition rect_pgram_ang_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Rectangle q =>
+      [plain [written (flat_map (fun a => [Right a; Right (reverse_angle a)])
+                        [quad_corner_a q; quad_corner_b q;
+                         quad_corner_c q; quad_corner_d q]);
+              pgram_slot q]]
+  | _ => []
+  end.
+
+(** Congruent diagonals in a parallelogram. *)
+Definition rect_diag_con_conv_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Rectangle q =>
+      [plain [written [ConSeg (quad_diagonal_ac q) (quad_diagonal_bd q)];
+              pgram_slot q]]
+  | _ => []
+  end.
+
+(** Two consecutive sides of a parallelogram congruent. *)
+Definition rhombus_consec_sides_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Rhombus q =>
+      [plain [pgram_slot q;
+              written [ConSeg (quad_side_ab q) (quad_side_bc q);
+                       ConSeg (quad_side_bc q) (quad_side_cd q);
+                       ConSeg (quad_side_cd q) (quad_side_da q);
+                       ConSeg (quad_side_da q) (quad_side_ab q)]]]
+  | _ => []
+  end.
+
+(** Perpendicular diagonals in a parallelogram.  Only the two lines matter,
+    so where the perpendicularity puts their meeting point is left alone:
+    [Perp_at] already places it on both. *)
+Definition rhombus_diag_perp_conv_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Rhombus q =>
+      [plain [slot PerpAnyPoint
+                [Perp (quad_diagonal_ac q) (quad_diagonal_bd q) any_point;
+                 Perp (quad_diagonal_bd q) (quad_diagonal_ac q) any_point];
+              pgram_slot q]]
+  | _ => []
+  end.
+
+(** A diagonal bisecting the two corners it runs between makes a
+    parallelogram a rhombus.  One bisected corner is already enough for the
+    geometry, but the reason is stated of a pair of opposite corners, so the
+    rule asks for both rather than letting one fact be cited twice; reading
+    the figure from each corner in turn is what [quad_rotations] is for. *)
+Definition corner_bisectors (r : QuadrilateralName) : list Statement :=
+  [AngBisect (quad_corner_a r) (quad_diagonal_ac r);
+   AngBisect (reverse_angle (quad_corner_a r)) (quad_diagonal_ac r)].
+
+Definition rhombus_opp_bisect_conv_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Rhombus q =>
+      map (fun r => plain [written (corner_bisectors r);
+                           written (corner_bisectors (rotate_quad (rotate_quad r)));
+                           pgram_slot q])
+          (quad_rotations q)
+  | _ => []
+  end.
+
+(** Every spelling of a trapezoid premise naming [a] and [b] as its parallel
+    sides. *)
+Definition segment_spellings (s : SegmentName) : list SegmentName :=
+  [s; reverse_segment s].
+
+Definition trapezoid_spellings (q : QuadrilateralName) (a b : SegmentName)
+    : list Statement :=
+  flat_map (fun x => flat_map (fun y =>
+      [TrapezoidPremise q x y; TrapezoidPremise q y x])
+    (segment_spellings b)) (segment_spellings a).
+
+(** A trapezoid with congruent diagonals is isosceles; that is the audited
+    meaning of [isos_trapezoid] itself. *)
+Definition isos_trap_con_diags_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | IsosTrapezoid q =>
+      [plain [written [ConSeg (quad_diagonal_ac q) (quad_diagonal_bd q)];
+              slot TrapezoidAnySides [TrapezoidPremise q any_segment any_segment]]]
+  | _ => []
+  end.
+
+(** Congruent base angles, at either end of whichever pair of sides the
+    premise names parallel. *)
+Definition isos_trap_base_angs_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | IsosTrapezoid q =>
+      [plain [written [ConAng (quad_corner_a q) (quad_corner_b q);
+                       ConAng (quad_corner_c q) (quad_corner_d q)];
+              written (trapezoid_spellings q (quad_side_ab q) (quad_side_cd q))];
+       plain [written [ConAng (quad_corner_b q) (quad_corner_c q);
+                       ConAng (quad_corner_d q) (quad_corner_a q)];
+              written (trapezoid_spellings q (quad_side_bc q) (quad_side_da q))]]
+  | _ => []
+  end.
+
+(** ** Parallel lines *)
+
+(** One template list per [transversal] premise, read from its labeled
+    points; a matching step uses the premise. *)
+Definition from_transversals (premises : list Premise)
+    (read : PointId -> PointId -> PointId -> PointId ->
+            PointId -> PointId -> PointId -> PointId -> list (list Slot))
+    : list Template :=
+  flat_map (fun pr =>
+    match transversal_witness pr.(premise_statement) with
+    | Some (a, b, t1, i1, c, d, t2, i2) =>
+        map (fun slots => template slots [pr.(premise_statement)])
+            (read a b t1 i1 c d t2 i2)
+    | None => []
+    end) premises.
+
+(** The names a transversal figure gives each of its two lines: the
+    flanking pair, or a drawn flank joined to the crossing point. *)
+Definition line_names (a b i1 : PointId) : list SegmentName :=
+  segment_name a b ::
+  (if named_apart a i1 then [segment_name a i1] else []) ++
+  (if named_apart b i1 then [segment_name i1 b] else []).
+
+Definition parallel_spellings (a b i1 c d i2 : PointId) : list Statement :=
+  flat_map (fun l1 => map (Para l1) (line_names c d i2)) (line_names a b i1).
+
+Definition altint_needs (premises : list Premise) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | ConAng x y =>
+      from_transversals premises (fun a b t1 i1 c d t2 i2 =>
+        if altint_pair a b i1 c d i2 x y
+        then [[written (parallel_spellings a b i1 c d i2)]] else [])
+  | _ => []
+  end.
+
+Definition altext_needs (premises : list Premise) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | ConAng x y =>
+      from_transversals premises (fun a b t1 i1 c d t2 i2 =>
+        if altext_pair a b t1 i1 c d t2 i2 x y
+        then [[written (parallel_spellings a b i1 c d i2)]] else [])
+  | _ => []
+  end.
+
+Definition corresp_ang_needs (premises : list Premise) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | ConAng x y =>
+      from_transversals premises (fun a b t1 i1 c d t2 i2 =>
+        if corresp_pair a b t1 i1 c d t2 i2 x y
+        then [[written (parallel_spellings a b i1 c d i2)]] else [])
+  | _ => []
+  end.
+
+Definition sameside_ang_needs (premises : list Premise) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | Supplementary x y =>
+      from_transversals premises (fun a b t1 i1 c d t2 i2 =>
+        if sameside_pair a b i1 c d i2 x y
+        then [[written (parallel_spellings a b i1 c d i2)]] else [])
+  | _ => []
+  end.
+
+(** The converses cite one angle pair the figure draws.  For alternate
+    interior angles the rays may also be named by points along them. *)
+Definition altint_conv_needs (premises : list Premise) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | Para s1 s2 =>
+      from_transversals premises (fun a b t1 i1 c d t2 i2 =>
+        if transversal_lines_match s1 s2 a b i1 c d i2
+        then [[slot RayAngles
+                 (gated (named_apart a i1 && named_apart d i2)
+                    [ConAng (angle_name a i1 i2) (angle_name d i2 i1)] ++
+                  gated (named_apart b i1 && named_apart c i2)
+                    [ConAng (angle_name b i1 i2) (angle_name c i2 i1)])]]
+        else [])
+  | _ => []
+  end.
+
+Definition altext_conv_needs (premises : list Premise) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | Para s1 s2 =>
+      from_transversals premises (fun a b t1 i1 c d t2 i2 =>
+        let drawn := exterior_drawn t1 i1 i2 && exterior_drawn t2 i2 i1 in
+        if transversal_lines_match s1 s2 a b i1 c d i2
+        then [[written
+                 (gated (drawn && named_apart a i1 && named_apart d i2)
+                    [ConAng (angle_name t1 i1 a) (angle_name t2 i2 d)] ++
+                  gated (drawn && named_apart b i1 && named_apart c i2)
+                    [ConAng (angle_name t1 i1 b) (angle_name t2 i2 c)])]]
+        else [])
+  | _ => []
+  end.
+
+Definition corresp_ang_conv_needs (premises : list Premise)
+    (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Para s1 s2 =>
+      from_transversals premises (fun a b t1 i1 c d t2 i2 =>
+        if transversal_lines_match s1 s2 a b i1 c d i2
+        then [[written
+                 (gated (exterior_drawn t2 i2 i1 && named_apart b i1 && named_apart d i2)
+                    [ConAng (angle_name i2 i1 b) (angle_name t2 i2 d)] ++
+                  gated (exterior_drawn t2 i2 i1 && named_apart a i1 && named_apart c i2)
+                    [ConAng (angle_name i2 i1 a) (angle_name t2 i2 c)] ++
+                  gated (exterior_drawn t1 i1 i2 && named_apart a i1 && named_apart c i2)
+                    [ConAng (angle_name t1 i1 a) (angle_name i1 i2 c)] ++
+                  gated (exterior_drawn t1 i1 i2 && named_apart b i1 && named_apart d i2)
+                    [ConAng (angle_name t1 i1 b) (angle_name i1 i2 d)])]]
+        else [])
+  | _ => []
+  end.
+
+Definition sameside_ang_conv_needs (premises : list Premise)
+    (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Para s1 s2 =>
+      from_transversals premises (fun a b t1 i1 c d t2 i2 =>
+        if transversal_lines_match s1 s2 a b i1 c d i2
+        then [[written
+                 (gated (named_apart b i1 && named_apart d i2)
+                    [Supplementary (angle_name b i1 i2) (angle_name i1 i2 d)] ++
+                  gated (named_apart a i1 && named_apart c i2)
+                    [Supplementary (angle_name a i1 i2) (angle_name i1 i2 c)])]]
+        else [])
+  | _ => []
+  end.
+
+(** ** Circles *)
+
+Definition statement_circles (s : Statement) : list CircleName :=
+  match s with
+  | Tangent c _ _ | Chord c _ | Radius c _ | Diameter c _ | InscribedAngle c _
+  | OnCirclePoint c _ | CenterOnLine c _ | CircOrder c _ => [c]
+  | _ => []
+  end.
+
+Fixpoint dedup_circles (seen rest : list CircleName) : list CircleName :=
+  match rest with
+  | [] => []
+  | c :: tail =>
+      if existsb (circle_eqb c) seen then dedup_circles seen tail
+      else c :: dedup_circles (c :: seen) tail
+  end.
+
+(** Circles a step may be about when its conclusion does not name one: those
+    of the proved facts, which is where the citations can come from, and
+    the declared and premised ones, for external code to suggest. *)
+Definition circle_candidates (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) : list CircleName :=
+  dedup_circles []
+    (flat_map statement_circles facts ++ decls.(decl_circles) ++
+     flat_map (fun pr => statement_circles pr.(premise_statement)) premises).
+
+(** A tangent is perpendicular to the radius at the point of tangency; the
+    radius fact names that point. *)
+Definition tangent_perp_needs (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Perp s1 s2 q =>
+      flat_map (fun c =>
+        flat_map (fun sr =>
+          only_if (segment_u_eqb (snd sr) (segment_name c.(circle_center) q))
+            [plain [written [Tangent c (fst sr) q; Tangent c (reverse_segment (fst sr)) q];
+                    written [Radius c q]]])
+          [(s1, s2); (s2, s1)])
+        (circle_candidates decls premises facts)
+  | _ => []
+  end.
+
+(** The converse.  The audited tangent meaning is this figure, so the rule
+    assembles it.  The point of tangency has to be an endpoint of the
+    tangent segment, which is where the segment's nondegeneracy comes back
+    as the [Q <> p] the meaning asks for. *)
+Definition tangent_perp_conv_needs (conclusion : Statement) : list Template :=
+  match conclusion with
+  | Tangent c s p =>
+      only_if (endpoint_of p s)
+        [plain [written [Perp s (segment_name c.(circle_center) p) p;
+                         Perp (segment_name c.(circle_center) p) s p];
+                written [Radius c p]]]
+  | _ => []
+  end.
+
+Definition segment_ends (s : SegmentName) : list (PointId * PointId) :=
+  [(s.(segment_first), s.(segment_second)); (s.(segment_second), s.(segment_first))].
+
+(** Two tangents to one circle from one outside point are congruent.  The
+    conclusion names the two tangent segments, which share their far end. *)
+Definition con_tangents_ext_needs (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (conclusion : Statement) : list Template :=
+  match conclusion with
+  | ConSeg x y =>
+      flat_map (fun c =>
+        flat_map (fun fg =>
+          flat_map (fun pe =>
+            flat_map (fun pe' =>
+              only_if (ascii_eqb (snd pe) (snd pe'))
+                [plain [written [Tangent c (segment_name (fst pe) (snd pe)) (fst pe);
+                                 Tangent c (segment_name (snd pe) (fst pe)) (fst pe)];
+                        written [Tangent c (segment_name (fst pe') (snd pe)) (fst pe');
+                                 Tangent c (segment_name (snd pe) (fst pe')) (fst pe')]]])
+              (segment_ends (snd fg)))
+            (segment_ends (fst fg)))
+          [(x, y); (y, x)])
+        (circle_candidates decls premises facts)
+  | _ => []
+  end.
+
+(** The radii an [on_line] premise puts [p] on: [on_line(OR, M)] puts M on
+    the radius OR, so it yields R and the premise. *)
+Definition radii_through (premises : list Premise) (centre p : PointId)
+    : list (PointId * Statement) :=
+  flat_map (fun pr =>
+    match pr.(premise_statement) with
+    | OnLine s r =>
+        if ascii_eqb r p then
+          if ascii_eqb s.(segment_first) centre
+          then [(s.(segment_second), pr.(premise_statement))]
+          else if ascii_eqb s.(segment_second) centre
+          then [(s.(segment_first), pr.(premise_statement))]
+          else []
+        else []
+    | _ => []
+    end) premises.
+
+(** A radius perpendicular to a chord bisects it.  The perpendicularity
+    names the foot, and both the concluded bisector and the perpendicular's
+    first segment run from the centre to it; the chord fact is what puts the
+    chord's ends the same distance away.  The cited radius must be the one
+    the perpendicular runs along: an [on_line] premise puts the foot on the
+    segment from the centre to the radius's point. *)
+Definition radius_chord_bisect_needs (decls : Declarations)
+    (premises : list Premise) (facts : list Statement) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | SegBisect b t p =>
+      flat_map (fun c =>
+        only_if (segment_u_eqb b (segment_name c.(circle_center) p))
+          (map (fun rw =>
+             template [written [Perp (segment_name c.(circle_center) p) t p];
+                       written [Radius c (fst rw)];
+                       written [Chord c t; Chord c (reverse_segment t)]]
+                      [snd rw])
+             (radii_through premises c.(circle_center) p)))
+        (circle_candidates decls premises facts)
+  | _ => []
   end.
 
 (** An angle in a semicircle: its rays meet the circle at the ends of a
-    diameter. *)
-Definition inscribed_semi_check (premises : list Premise) (c : CircleName)
-    (a : AngleName) (s : SegmentName) (pr : Premise) : bool :=
-  match pr.(premise_statement) with
-  | CircOrder c' ps =>
-      circle_eqb c c' && circ_order_complete premises c ps &&
-      match inscribed_chord premises ps a with
-      | Some (A, B) => segment_u_eqb (segment_name A B) s
-      | None => false
+    diameter, as traced through a [circ_order] premise. *)
+Definition inscribed_semi_needs (premises : list Premise) (conclusion : Statement)
+    : list Template :=
+  match conclusion with
+  | Right a' =>
+      flat_map (fun pr =>
+        match pr.(premise_statement) with
+        | CircOrder c ps =>
+            if circ_order_complete premises c ps then
+              flat_map (fun a =>
+                match inscribed_chord premises ps a with
+                | Some (A, B) =>
+                    [template [written [InscribedAngle c a];
+                               written [Diameter c (segment_name A B);
+                                        Diameter c (segment_name B A)]]
+                              [pr.(premise_statement)]]
+                | None => []
+                end) [a'; reverse_angle a']
+            else []
+        | _ => []
+        end) premises
+  | _ => []
+  end.
+
+Definition angle_pair_readings (x y : AngleName) : list (AngleName * AngleName) :=
+  let rx := reverse_angle x in
+  let ry := reverse_angle y in
+  [(x, y); (rx, y); (x, ry); (rx, ry); (y, x); (ry, x); (y, rx); (ry, rx)].
+
+(** Two inscribed angles on one chord: congruent when their vertices are on
+    the same arc ([same] is true), supplementary when on opposite arcs. *)
+Definition inscribed_pair_needs (premises : list Premise) (same : bool)
+    (conclusion : Statement) : list Template :=
+  let readings :=
+    match conclusion with
+    | ConAng x y | RefAng x y | Supplementary x y => angle_pair_readings x y
+    | _ => []
+    end in
+  flat_map (fun pr =>
+    match pr.(premise_statement) with
+    | CircOrder c _ =>
+        flat_map (fun ab =>
+          if fact_eqb conclusion
+               (if same then ConAng (fst ab) (snd ab)
+                else Supplementary (fst ab) (snd ab)) &&
+             inscribed_pair_check premises c (fst ab) (snd ab) same pr
+          then [template [written [InscribedAngle c (fst ab)];
+                          written [InscribedAngle c (snd ab)]]
+                         [pr.(premise_statement)]]
+          else []) readings
+    | _ => []
+    end) premises.
+
+(** ** Which reasons are given by templates *)
+
+(** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
+    label rather than a step, and [reflex] cites nothing. *)
+Definition reason_dependencies (r : Reason) : list nat :=
+  match r with
+  | Given _ | Reflex | VertAng _ | Incomplete => []
+  | CPCTC i | CASTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
+  | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
+  | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
+  | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | KiteOppConAng i
+  | RectanglePgram i
+  | RhombusPgram i | RhombusDef i | RhombusOppBisect i | RectDiagCon i
+  | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
+  | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
+  | DefRadius i | ConChordsArcs i
+  | IsosTrapBaseAngsConv i | LinearPairConv i
+  | PgramDiagBisect i | RhombusDiagPerp i | KiteDiagPerp i
+  | DefRadiusConv i => [i]
+  | PgramOppSidesConv i j | PgramConsecAngsConv i j | RectPgramAng i j
+  | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
+  | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
+  | DefParallelogram i j | PgramOppSidePara i j | RhombusConsecSides i j
+  | ParaTrans i j | TangentPerp i j | TangentPerpConv i j
+  | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
+  | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
+  | RectDiagConConv i j | RhombusDiagPerpConv i j
+  | AASim i j | SSSSim i j | SASSim i j | ChordBisectConv i j
+  | SimTriTrans i j | SuppTrans i j | CompTrans i j | PerpTransversal i j
+  | ConInscribedAngs i j
+  | SuppInscribedAngs i j | InscribedSemi i j => [i; j]
+  | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
+  | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
+  | RadiusChordBisect i j k | RhombusOppBisectConv i j k
+  | ConComplements i j k => [i; j; k]
+  | DefConTri i j k l m n => [i; j; k; l; m; n]
+  end.
+
+(** The templates of a reason given by them, or [None] for a reason with a
+    rule of its own.  The citation numbers inside [r] are not read. *)
+Definition reason_needs (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (r : Reason) (conclusion : Statement)
+    : option (list Template) :=
+  match r with
+  | SAS _ _ _ => Some (congruence_needs decls sas_parts conclusion)
+  | SSS _ _ _ => Some (congruence_needs decls sss_parts conclusion)
+  | ASA _ _ _ => Some (congruence_needs decls asa_parts conclusion)
+  | AAS _ _ _ => Some (congruence_needs decls aas_parts conclusion)
+  | RHL _ _ _ => Some (congruence_needs decls rhl_parts conclusion)
+  | DefConTri _ _ _ _ _ _ => Some (congruence_needs decls def_con_tri_parts conclusion)
+  | AASim _ _ => Some (similarity_needs decls aa_sim_parts conclusion)
+  | SASSim _ _ => Some (similarity_needs decls sas_sim_parts conclusion)
+  | SSSSim _ _ => Some (similarity_needs decls sss_sim_parts conclusion)
+  | ThirdAngle _ _ => Some (third_angle_needs decls conclusion)
+  | DefEquilateral _ _ _ => Some (def_equilateral_needs decls conclusion)
+  | DefEquiangular _ _ _ => Some (def_equiangular_needs decls conclusion)
+  | EquilatEquiang _ => Some (equilat_equiang_needs conclusion)
+  | EquiangEquilat _ => Some (equiang_equilat_needs conclusion)
+  | DefConRight _ _ => Some (def_con_right_needs conclusion)
+  | DefParallelogram _ _ => Some (def_parallelogram_needs decls conclusion)
+  | RectanglePgram _ => Some (rectangle_pgram_needs conclusion)
+  | RhombusPgram _ => Some (rhombus_pgram_needs conclusion)
+  | PgramOppSidesConv _ _ => Some (pgram_opp_sides_conv_needs decls conclusion)
+  | PgramOppAngsConv _ _ => Some (pgram_opp_angs_conv_needs decls conclusion)
+  | PgramConsecAngsConv _ _ => Some (pgram_consec_angs_conv_needs decls conclusion)
+  | PgramOppSidePara _ _ => Some (pgram_opp_side_para_needs decls conclusion)
+  | PgramDiagBisectConv _ _ =>
+      Some (pgram_diag_bisect_conv_needs decls premises facts conclusion)
+  | RectPgramAng _ _ => Some (rect_pgram_ang_needs conclusion)
+  | RectDiagConConv _ _ => Some (rect_diag_con_conv_needs conclusion)
+  | RhombusConsecSides _ _ => Some (rhombus_consec_sides_needs conclusion)
+  | RhombusDiagPerpConv _ _ => Some (rhombus_diag_perp_conv_needs conclusion)
+  | RhombusOppBisectConv _ _ _ => Some (rhombus_opp_bisect_conv_needs conclusion)
+  | IsosTrapConDiags _ _ => Some (isos_trap_con_diags_needs conclusion)
+  | IsosTrapBaseAngs _ _ => Some (isos_trap_base_angs_needs conclusion)
+  | AltInt _ => Some (altint_needs premises conclusion)
+  | AltExt _ => Some (altext_needs premises conclusion)
+  | CorrespAng _ => Some (corresp_ang_needs premises conclusion)
+  | SamesideAng _ => Some (sameside_ang_needs premises conclusion)
+  | AltIntConv _ => Some (altint_conv_needs premises conclusion)
+  | AltExtConv _ => Some (altext_conv_needs premises conclusion)
+  | CorrespAngConv _ => Some (corresp_ang_conv_needs premises conclusion)
+  | SamesideAngConv _ => Some (sameside_ang_conv_needs premises conclusion)
+  | TangentPerp _ _ => Some (tangent_perp_needs decls premises facts conclusion)
+  | TangentPerpConv _ _ => Some (tangent_perp_conv_needs conclusion)
+  | ConTangentsExt _ _ => Some (con_tangents_ext_needs decls premises facts conclusion)
+  | RadiusChordBisect _ _ _ =>
+      Some (radius_chord_bisect_needs decls premises facts conclusion)
+  | InscribedSemi _ _ => Some (inscribed_semi_needs premises conclusion)
+  | ConInscribedAngs _ _ => Some (inscribed_pair_needs premises true conclusion)
+  | SuppInscribedAngs _ _ => Some (inscribed_pair_needs premises false conclusion)
+  | _ => None
+  end.
+
+(** ** Matching a step against its templates *)
+
+Definition pgram_view (s : Statement) : Statement :=
+  match s with
+  | Rhombus q | Rectangle q => Parallelogram q
+  | other => other
+  end.
+
+Definition matcher_accepts (decls : Declarations) (premises : list Premise)
+    (m : Matcher) (expected actual : Statement) : bool :=
+  match m with
+  | AsWritten => fact_eqb expected actual || canonical_eqb decls premises expected actual
+  | Loose => dependency_matches decls premises expected actual ||
+             canonical_eqb decls premises expected actual
+  | PgramLike => fact_eqb expected (pgram_view actual)
+  | ProportionMatch =>
+      match expected with
+      | Proportion a b c d => proportion_matches a b c d actual
+      | _ => false
       end
-  | _ => false
+  | RayAngles =>
+      match expected, actual with
+      | ConAng e1 e2, ConAng x y =>
+          angle_pair_eqb x y e1 e2 || conga_ray_pair premises e1 e2 x y
+      | _, _ => false
+      end
+  | PerpAnyPoint =>
+      match expected, actual with
+      | Perp a b _, Perp c d _ => segment_u_eqb a c && segment_u_eqb b d
+      | _, _ => false
+      end
+  | TrapezoidAnySides =>
+      match expected, actual with
+      | TrapezoidPremise q _ _, TrapezoidPremise r _ _ => same_quadrilateral q r
+      | _, _ => false
+      end
+  | RadiusAnyPoint =>
+      match expected, actual with
+      | Radius c _, Radius c' _ => circle_eqb c c'
+      | _, _ => false
+      end
   end.
 
-Definition inscribed_semi_rule (premises : list Premise)
-    (facts : list Statement) (i j : nat) (conclusion : Statement) : bool :=
-  match conclusion, lookup_step facts i, lookup_step facts j with
-  | Right a', Some (InscribedAngle c a), Some (Diameter c' s) =>
-      circle_eqb c c' && angle_u_eqb a' a &&
-      premise_found (inscribed_semi_check premises c a s) premises
-  | _, _, _ => false
+Definition slot_ok decls premises (facts : list Statement) (s : Slot) (i : nat)
+    : bool :=
+  match lookup_step facts i with
+  | Some actual =>
+      existsb (fun e => matcher_accepts decls premises s.(slot_matcher) e actual)
+              s.(slot_statements)
+  | None => false
   end.
 
-Definition inscribed_semi_used (premises : list Premise) (facts : list Statement)
-    (i j : nat) : option Statement :=
-  match lookup_step facts i, lookup_step facts j with
-  | Some (InscribedAngle c a), Some (Diameter _ s) =>
-      premise_witness (inscribed_semi_check premises c a s) premises
-  | _, _ => None
+Fixpoint slots_ok decls premises (facts : list Statement) (slots : list Slot)
+    (deps : list nat) : bool :=
+  match slots, deps with
+  | [], [] => true
+  | s :: slots', i :: deps' =>
+      slot_ok decls premises facts s i && slots_ok decls premises facts slots' deps'
+  | _, _ => false
+  end.
+
+Definition template_valid decls premises (facts : list Statement)
+    (ts : list Template) (deps : list nat) : bool :=
+  existsb (fun t => slots_ok decls premises facts t.(template_slots) deps) ts.
+
+(** The diagram premises a step that matched one of [ts] used: those the
+    first matching template was read from, and those a [Loose] slot used to
+    move an angle along its rays. *)
+Definition slot_used decls premises (facts : list Statement) (s : Slot) (i : nat)
+    : list Statement :=
+  (* a statement matched only once its angles were spelled canonically
+     leaned on the premises that renamed them *)
+  let canonical_used actual :=
+    match find (fun e => canonical_eqb decls premises e actual) s.(slot_statements) with
+    | Some e => statement_ray_premises decls premises e ++
+                statement_ray_premises decls premises actual
+    | None => []
+    end in
+  match s.(slot_matcher), lookup_step facts i with
+  | Loose, Some actual =>
+      match first_used (fun e => dependency_used decls premises e actual)
+                       s.(slot_statements) with
+      | Some ps => ps
+      | None => canonical_used actual
+      end
+  | AsWritten, Some actual =>
+      if existsb (fun e => fact_eqb e actual) s.(slot_statements) then []
+      else canonical_used actual
+  | _, _ => []
+  end.
+
+Fixpoint slots_used decls premises (facts : list Statement) (slots : list Slot)
+    (deps : list nat) : list Statement :=
+  match slots, deps with
+  | s :: slots', i :: deps' =>
+      slot_used decls premises facts s i ++ slots_used decls premises facts slots' deps'
+  | _, _ => []
+  end.
+
+Definition template_used decls premises (facts : list Statement)
+    (ts : list Template) (deps : list nat) : list Statement :=
+  match find (fun t => slots_ok decls premises facts t.(template_slots) deps) ts with
+  | Some t => t.(template_premises) ++ slots_used decls premises facts t.(template_slots) deps
+  | None => []
   end.
 
 (** Which diagram premises a step actually consulted.  Each entry comes from
@@ -2418,24 +2725,26 @@ Definition rule_diagram_premises_raw (decls : Declarations)
                                   PointId -> PointId -> PointId -> PointId -> bool) =>
     one (transversal_premise_used check premises) in
   let dependency := fun (i : nat) => lookup_step facts i in
+  match reason_needs decls premises facts reason conclusion with
+  | Some ts => template_used decls premises facts ts (reason_dependencies reason)
+  | None =>
   match reason with
   | VertAng label => one (vert_ang_witness decls premises label conclusion)
-  (* A triangle criterion reaches the diagram when it transports an angle
-     along an [on_line] premise to match a dependency; the correspondence
-     search returns the premises whichever reading won. *)
-  | SAS i j k =>
-      all (criterion_used sas_schema_used decls premises facts i j k conclusion)
-  | SSS i j k =>
-      all (criterion_used sss_schema_used decls premises facts i j k conclusion)
-  | ASA i j k =>
-      all (criterion_used asa_schema_used decls premises facts i j k conclusion)
-  | AAS i j k =>
-      all (criterion_used aas_schema_used decls premises facts i j k conclusion)
-  | RHL i j k =>
-      all (criterion_used rhl_schema_used decls premises facts i j k conclusion)
-  | InscribedSemi i j => one (inscribed_semi_used premises facts i j)
-  | ConInscribedAngs i j => one (inscribed_pair_used premises facts i j true)
-  | SuppInscribedAngs i j => one (inscribed_pair_used premises facts i j false)
+  | DefAngBisect i =>
+      match dependency i with
+      | Some (AngBisect a s) =>
+          (* the same two readings the rule tries, in the same order *)
+          let reading far := dependency_used decls premises conclusion
+                               (bisector_halves a far) in
+          match (if ascii_eqb s.(segment_first) a.(angle_vertex)
+                 then reading s.(segment_second) else None) with
+          | Some used => used
+          | None =>
+              all (if ascii_eqb s.(segment_second) a.(angle_vertex)
+                   then reading s.(segment_first) else None)
+          end
+      | _ => []
+      end
   | RhombusOppBisect i =>
       match conclusion, dependency i with
       | AngBisect a s, Some (Rhombus q) =>
@@ -2461,49 +2770,6 @@ Definition rule_diagram_premises_raw (decls : Declarations)
       | Perp _ s p => one (on_line_premise_used premises s p)
       | _ => []
       end
-  | AltInt i =>
-      match conclusion, dependency i with
-      | ConAng x y, Some (Para s1 s2) => transversal (altint_check s1 s2 x y)
-      | _, _ => []
-      end
-  | AltExt i =>
-      match conclusion, dependency i with
-      | ConAng x y, Some (Para s1 s2) => transversal (altext_check s1 s2 x y)
-      | _, _ => []
-      end
-  | CorrespAng i =>
-      match conclusion, dependency i with
-      | ConAng x y, Some (Para s1 s2) => transversal (corresp_ang_check s1 s2 x y)
-      | _, _ => []
-      end
-  | SamesideAng i =>
-      match conclusion, dependency i with
-      | Supplementary x y, Some (Para s1 s2) =>
-          transversal (sameside_ang_check s1 s2 x y)
-      | _, _ => []
-      end
-  | AltIntConv i =>
-      match conclusion, dependency i with
-      | Para s1 s2, Some (ConAng x y) =>
-          transversal (altint_conv_check premises s1 s2 x y)
-      | _, _ => []
-      end
-  | AltExtConv i =>
-      match conclusion, dependency i with
-      | Para s1 s2, Some (ConAng x y) => transversal (altext_check s1 s2 x y)
-      | _, _ => []
-      end
-  | CorrespAngConv i =>
-      match conclusion, dependency i with
-      | Para s1 s2, Some (ConAng x y) => transversal (corresp_ang_check s1 s2 x y)
-      | _, _ => []
-      end
-  | SamesideAngConv i =>
-      match conclusion, dependency i with
-      | Para s1 s2, Some (Supplementary x y) =>
-          transversal (sameside_ang_check s1 s2 x y)
-      | _, _ => []
-      end
   | PerpTransversal i j =>
       match conclusion with
       | Perp x y q =>
@@ -2519,13 +2785,8 @@ Definition rule_diagram_premises_raw (decls : Declarations)
       one (diagonal_rule_used premises facts reason conclusion)
   | DefRadiusConv _ => one (def_radius_conv_used premises conclusion)
   | _ => []
+  end
   end.
-
-Definition rule_diagram_premises (decls : Declarations) (premises : list Premise)
-    (facts : list Statement) (reason : Reason) (conclusion : Statement)
-    : list Statement :=
-  dedup_statements []
-    (rule_diagram_premises_raw decls premises facts reason conclusion).
 
 (** What an incomplete step stands for.  It is true in every model -- a
     segment is congruent to itself whatever its ends -- so admitting it costs
@@ -2536,7 +2797,7 @@ Definition incomplete_fact : Statement :=
   RefSeg (segment_name incomplete_point incomplete_point)
          (segment_name incomplete_point incomplete_point).
 
-Definition rule_valid (decls : Declarations) (premises : list Premise)
+Definition bespoke_rule_valid (decls : Declarations) (premises : list Premise)
     (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
   match r with
   | Given label =>
@@ -2552,106 +2813,108 @@ Definition rule_valid (decls : Declarations) (premises : list Premise)
       | RefAng a b => angle_u_eqb a b && declared_angle decls a
       | _ => false
       end
-  | SAS i j k =>
-      criterion_conclusion sas_schema decls premises facts i j k conclusion
-  | SSS i j k =>
-      criterion_conclusion sss_schema decls premises facts i j k conclusion
-  | ASA i j k =>
-      criterion_conclusion asa_schema decls premises facts i j k conclusion
-  | AAS i j k =>
-      criterion_conclusion aas_schema decls premises facts i j k conclusion
   | CPCTC i => cpctc_rule decls premises facts i conclusion
   | ConSegTrans i j => con_seg_transitive facts i j conclusion
   | ConAngTrans i j => con_ang_transitive facts i j conclusion
   | ConTriTrans i j => con_tri_transitive facts i j conclusion
-  | DefConRight i j => def_con_right facts i j conclusion
   | PerpConAng i => perp_con_ang decls facts i conclusion
   | DefMidpt i => def_midpt facts i conclusion
   | VertAng label => vert_ang decls premises label conclusion
-  | DefAngBisect i => def_ang_bisect facts i conclusion
+  | DefAngBisect i => def_ang_bisect decls premises facts i conclusion
   | AngBisectConv i => ang_bisect_conv facts i conclusion
   | MidptConv i => midpt_conv premises facts i conclusion
-  | ThirdAngle i j => third_angle decls premises facts i j conclusion
-  | DefConTri i1 i2 i3 i4 i5 i6 =>
-      def_con_tri decls premises facts i1 i2 i3 i4 i5 i6 conclusion
   | DefIsosceles i => def_isosceles decls facts i conclusion
   | BaseAngle i => base_angle decls facts i conclusion
   | BaseAngleConv i => base_angle_conv decls facts i conclusion
-  | DefEquilateral i j k => def_equilateral decls premises facts i j k conclusion
-  | DefEquiangular i j k => def_equiangular decls premises facts i j k conclusion
-  | EquilatEquiang i => equilat_equiang facts i conclusion
-  | EquiangEquilat i => equiang_equilat facts i conclusion
-  | ConSupplements i j k => con_supplements facts i j k conclusion
-  | ConSupplementsSame i j => con_supplements_same facts i j conclusion
-  | ConComplements i j k => con_complements facts i j k conclusion
-  | ConComplementsSame i j => con_complements_same facts i j conclusion
+  | ConSupplements i j k => congruent_partners_rule supplementary_pair facts i j k conclusion
+  | ConSupplementsSame i j => shared_partner_rule supplementary_pair facts i j conclusion
+  | ConComplements i j k => congruent_partners_rule complementary_pair facts i j k conclusion
+  | ConComplementsSame i j => shared_partner_rule complementary_pair facts i j conclusion
   | DefLinearPair i => def_linear_pair facts i conclusion
   | DefPerp i => def_perp premises facts i conclusion
-  | DefParallelogram i j => def_parallelogram_rule decls facts i j conclusion
   | PgramOppSides i => pgram_opp_sides_rule facts i conclusion
   | PgramOppAngles i => pgram_opp_angles_rule facts i conclusion
   | PgramConsecAngs i => pgram_consec_angs_rule facts i conclusion
   | KiteOppConAng i => kite_opp_con_ang_rule facts i conclusion
-  | PgramOppSidesConv i j => pgram_opp_sides_conv_rule decls facts i j conclusion
-  | PgramConsecAngsConv i j =>
-      pgram_consec_angs_conv_rule decls facts i j conclusion
-  | RectPgramAng i j => rect_pgram_ang_rule facts i j conclusion
-  | PgramOppSidePara i j => pgram_opp_side_para_rule decls facts i j conclusion
-  | RectanglePgram i => rectangle_pgram_rule facts i conclusion
-  | RhombusPgram i => rhombus_pgram_rule facts i conclusion
-  | RhombusConsecSides i j => rhombus_consec_sides_rule facts i j conclusion
   | RhombusDef i => rhombus_def_rule facts i conclusion
   | RhombusOppBisect i =>
       rhombus_opp_bisect_rule decls premises facts i conclusion
   | RectDiagCon i => rect_diag_con_rule facts i conclusion
   | RectangleDef i => rectangle_def_rule facts i conclusion
-  | AltInt i => altint_rule premises facts i conclusion
-  | AltExt i => altext_rule premises facts i conclusion
-  | CorrespAng i => corresp_ang_rule premises facts i conclusion
-  | SamesideAng i => sameside_ang_rule premises facts i conclusion
-  | AltIntConv i => altint_conv_rule premises facts i conclusion
-  | AltExtConv i => altext_conv_rule premises facts i conclusion
-  | CorrespAngConv i => corresp_ang_conv_rule premises facts i conclusion
-  | SamesideAngConv i => sameside_ang_conv_rule premises facts i conclusion
   | ParaTrans i j => para_transitive_rule facts i j conclusion
   | DefRadius i => def_radius_rule facts i conclusion
-  | InscribedSemi i j => inscribed_semi_rule premises facts i j conclusion
   | ConChordsArcs i => con_chords_arcs_rule facts i conclusion
-  | TangentPerp i j => tangent_perp_rule facts i j conclusion
-  | TangentPerpConv i j => tangent_perp_conv_rule facts i j conclusion
-  | ConTangentsExt i j => con_tangents_ext_rule facts i j conclusion
-  | RadiusChordBisect i j k => radius_chord_bisect_rule facts i j k conclusion
   | PerpBisect i j => perp_bisector_rule facts i j conclusion
-  | IsosTrapConDiags i j => isos_trap_con_diags_rule facts i j conclusion
-  | IsosTrapBaseAngs i j => isos_trap_base_angs_rule facts i j conclusion
   | IsosTrapBaseAngsConv i =>
       isos_trap_base_angs_conv_rule facts i conclusion
-  | PgramDiagBisectConv i j =>
-      pgram_diag_bisect_conv_rule decls facts i j conclusion
-  | PgramOppAngsConv i j => pgram_opp_angs_conv_rule decls facts i j conclusion
-  | RectDiagConConv i j => rect_diag_con_conv_rule facts i j conclusion
-  | RhombusDiagPerpConv i j =>
-      rhombus_diag_perp_conv_rule facts i j conclusion
-  | RhombusOppBisectConv i j k =>
-      rhombus_opp_bisect_conv_rule facts i j k conclusion
-  | AASim i j => aa_sim decls premises facts i j conclusion
-  | SSSSim i j => sss_sim decls facts i j conclusion
-  | SASSim i j => sas_sim decls premises facts i j conclusion
   | CASTC i => castc_rule facts i conclusion
   | SimTriTrans i j => sim_tri_transitive facts i j conclusion
-  | SuppTrans i j => supp_transitive_rule facts i j conclusion
+  | SuppTrans i j => substitute_rule Supplementary supplementary_pair facts i j conclusion
+  | CompTrans i j => substitute_rule Complementary complementary_pair facts i j conclusion
   | PerpTransversal i j => perp_transversal_rule premises facts i j conclusion
   | LinearPairConv i => linear_pair_conv premises facts i conclusion
   | PgramDiagBisect _ | RhombusDiagPerp _ | KiteDiagPerp _ =>
       diagonal_rule premises facts r conclusion
   | ChordBisectConv i j => chord_bisect_conv_rule facts i j conclusion
   | DefRadiusConv i => def_radius_conv_rule premises facts i conclusion
-  | ConInscribedAngs i j => inscribed_pair_rule premises facts i j true conclusion
-  | SuppInscribedAngs i j => inscribed_pair_rule premises facts i j false conclusion
   | Incomplete => statement_eqb incomplete_fact conclusion
-  | RHL i j k =>
-      criterion_conclusion rhl_schema decls premises facts i j k conclusion
+  | _ => false
   end.
+
+(** A reason given by templates is accepted when the steps it cites match
+    one of them; any other reason is checked by its own rule above. *)
+Definition rule_valid_as_written (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
+  match reason_needs decls premises facts r conclusion with
+  | Some ts => template_valid decls premises facts ts (reason_dependencies r)
+  | None => bespoke_rule_valid decls premises facts r conclusion
+  end.
+
+(** A step is valid when its rule accepts it as written, in another spelling
+    of its conclusion's angles, or with the angles of its conclusion and of
+    every earlier step spelled canonically.  The first two cover a rule that
+    builds the angles it expects from the figure; the last, a rule that
+    compares the angles of cited steps with each other. *)
+Definition rule_valid (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (r : Reason) (conclusion : Statement) : bool :=
+  existsb (rule_valid_as_written decls premises facts r)
+          (statement_spellings decls premises conclusion) ||
+  rule_valid_as_written decls premises
+    (map (canonical_statement decls premises) facts) r
+    (canonical_statement decls premises conclusion).
+
+(** A fact states the goal when it does once their angles are spelled
+    canonically. *)
+Definition goal_matches (decls : Declarations) (premises : list Premise)
+    (goal fact : Statement) : bool :=
+  fact_eqb goal fact || canonical_eqb decls premises goal fact.
+
+Definition rule_diagram_premises (decls : Declarations) (premises : list Premise)
+    (facts : list Statement) (reason : Reason) (conclusion : Statement)
+    : list Statement :=
+  let canonical := map (canonical_statement decls premises) facts in
+  let cited_renamings :=
+    flat_map (fun i => match lookup_step facts i with
+                       | Some st => statement_ray_premises decls premises st
+                       | None => []
+                       end) (reason_dependencies reason) in
+  dedup_statements []
+    (if rule_valid_as_written decls premises facts reason conclusion
+     then rule_diagram_premises_raw decls premises facts reason conclusion
+     else match find (rule_valid_as_written decls premises facts reason)
+                     (statement_spellings decls premises conclusion) with
+          | Some respelled =>
+              rule_diagram_premises_raw decls premises facts reason respelled ++
+              statement_ray_premises decls premises conclusion
+          | None =>
+              if rule_valid_as_written decls premises canonical reason
+                   (canonical_statement decls premises conclusion)
+              then rule_diagram_premises_raw decls premises canonical reason
+                     (canonical_statement decls premises conclusion) ++
+                   statement_ray_premises decls premises conclusion ++
+                   cited_renamings
+              else rule_diagram_premises_raw decls premises facts reason conclusion
+          end).
 
 Fixpoint check_steps decls premises facts steps : option (list Statement) :=
   match steps with
@@ -2763,7 +3026,10 @@ Definition check_problem (p : Problem) : bool :=
   arcs_valid p.(problem_declarations) p.(problem_premises) p.(problem_goal) &&
   match check_steps (kernel_declarations p.(problem_declarations) p.(problem_premises))
           p.(problem_premises) [] p.(problem_steps) with
-  | Some facts => existsb (fact_eqb p.(problem_goal)) facts
+  | Some facts =>
+      existsb (goal_matches
+                 (kernel_declarations p.(problem_declarations) p.(problem_premises))
+                 p.(problem_premises) p.(problem_goal)) facts
   | None => false
   end.
 
@@ -3411,7 +3677,10 @@ Proof.
           | unfold reverse_segment; cbn; tauto
           | unfold reverse_segment; cbn;
             split; intros [Hne Hbet];
-            (split; [congruence|now apply between_symmetry]) ].
+            (split; [congruence|now apply between_symmetry])
+          | unfold reverse_segment, BetS; cbn;
+            split; intros [Hbet [Hne1 Hne2]];
+            (split; [now apply between_symmetry|split; auto using not_eq_sym]) ].
 Qed.
 
 Lemma find_premise_sound : forall label premises statement,
@@ -3484,6 +3753,44 @@ Proof.
   apply segment_u_eqb_cases in Heq.
   destruct Heq as [Heq|Heq]; subst s; [exact Hd|].
   unfold reverse_segment. cbn. now apply not_eq_sym.
+Qed.
+
+Lemma vertex_member : forall (x : PointId) vs,
+  existsb (ascii_eqb x) vs = true -> In x vs.
+Proof.
+  intros x vs H. apply existsb_exists in H. destruct H as [v [Hin Heq]].
+  unfold ascii_eqb in Heq. apply Ascii.eqb_eq in Heq. now subst.
+Qed.
+
+Lemma declared_distinct_sound : forall decls x y,
+  declarations_well_formed point decls ->
+  declared_distinct decls x y = true ->
+  point x <> point y.
+Proof.
+  intros decls x y Hwf H. pose proof Hwf as [Hwft [_ [Hwfq _]]].
+  unfold declared_distinct in H. apply andb_true_iff in H.
+  destruct H as [Hneq H]. apply negb_true_iff in Hneq.
+  assert (Hxy : x <> y).
+  { intro E. subst. unfold ascii_eqb in Hneq.
+    now rewrite Ascii.eqb_refl in Hneq. }
+  repeat rewrite orb_true_iff in H. destruct H as [[Hseg|Htri]|Hquad].
+  - exact (declared_segment_sound _ _ Hwf Hseg).
+  - apply existsb_exists in Htri. destruct Htri as [t [Hin Hv]].
+    apply andb_true_iff in Hv. destruct Hv as [Hx Hy].
+    apply vertex_member in Hx, Hy.
+    pose proof (Hwft t Hin) as Ht. unfold triangle_well_formed in Ht.
+    apply not_col_distincts in Ht. destruct Ht as [_ [Hab [Hbc Hac]]].
+    cbn in Hx, Hy.
+    destruct Hx as [<-|[<-|[<-|[]]]]; destruct Hy as [<-|[<-|[<-|[]]]];
+      first [exfalso; now apply Hxy | assumption | now apply not_eq_sym].
+  - apply existsb_exists in Hquad. destruct Hquad as [q [Hin Hv]].
+    apply andb_true_iff in Hv. destruct Hv as [Hx Hy].
+    apply vertex_member in Hx, Hy.
+    pose proof (Hwfq q Hin) as Hq.
+    destruct Hq as [HAB [HAC [HAD [HBC [HBD [HCD _]]]]]].
+    cbn in Hx, Hy.
+    destruct Hx as [<-|[<-|[<-|[<-|[]]]]]; destruct Hy as [<-|[<-|[<-|[<-|[]]]]];
+      first [exfalso; now apply Hxy | assumption | now apply not_eq_sym].
 Qed.
 
 Lemma declared_angle_sound : forall decls a,
@@ -3739,25 +4046,6 @@ Proof.
       apply conga_sym. exact Hactual.
 Qed.
 
-Lemma schema3_sound : forall decls premises facts i j k a b c,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> schema3 decls premises facts i j k a b c = true ->
-  Interp a /\ Interp b /\ Interp c.
-Proof.
-  intros decls premises facts i j k a b c Hwf Hprem Hall H.
-  rewrite schema3_unfold in H.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate.
-  destruct (lookup_step facts k) as [z|] eqn:Hz; try discriminate.
-  apply andb_true_iff in H. destruct H as [Hab Hc].
-  apply andb_true_iff in Hab. destruct Hab as [Ha Hb].
-  pose proof (lookup_step_sound facts i x Hall Hx) as HIx.
-  pose proof (lookup_step_sound facts j y Hall Hy) as HIy.
-  pose proof (lookup_step_sound facts k z Hall Hz) as HIz.
-  repeat split; eapply dependency_matches_sound; eauto.
-Qed.
-
 Lemma triangle_declared_sound : forall decls t,
   declarations_well_formed point decls ->
   triangle_declared decls t = true -> triangle_well_formed point t.
@@ -3787,69 +4075,47 @@ Proof.
   intros Hncol Hcol. apply Hncol. Col.
 Qed.
 
-Lemma sas_schema_sound : forall decls premises facts i j k t u,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> triangle_well_formed point t ->
-  sas_schema decls premises facts i j k t u = true ->
-  interp_triangle_congruence point t u.
+Ltac forall_parts H :=
+  repeat match type of H with
+  | Forall _ (_ :: _) =>
+      let Hp := fresh "Hpart" in
+      apply Forall_cons_iff in H; destruct H as [Hp H]
+  | Forall _ [] => clear H
+  end.
+
+Lemma sas_parts_sound : forall a b ps, triangle_well_formed point a ->
+  In ps (sas_parts a b) -> Forall Interp ps -> interp_triangle_congruence point a b.
 Proof.
-  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
-  apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
-  destruct Hschema as [Hs1 [Ha Hs2]]. eapply ghost_sas; eauto; Cong.
+  intros [A B C] [D E F] ps Hwf Hin Hps. cbn in Hin. destruct Hin as [<-|[]].
+  forall_parts Hps. cbn in *. eapply ghost_sas; eauto; Cong.
 Qed.
 
-Lemma sss_schema_sound : forall decls premises facts i j k t u,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> triangle_well_formed point t ->
-  sss_schema decls premises facts i j k t u = true -> interp_triangle_congruence point t u.
+Lemma sss_parts_sound : forall a b ps, triangle_well_formed point a ->
+  In ps (sss_parts a b) -> Forall Interp ps -> interp_triangle_congruence point a b.
 Proof.
-  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
-  apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
-  destruct Hschema as [Hs1 [Hs2 Hs3]]. now apply ghost_sss.
+  intros [A B C] [D E F] ps Hwf Hin Hps. cbn in Hin. destruct Hin as [<-|[]].
+  forall_parts Hps. cbn in *. now apply ghost_sss.
 Qed.
 
-Lemma asa_schema_sound : forall decls premises facts i j k t u,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> triangle_well_formed point t ->
-  asa_schema decls premises facts i j k t u = true -> interp_triangle_congruence point t u.
+Lemma asa_parts_sound : forall a b ps, triangle_well_formed point a ->
+  In ps (asa_parts a b) -> Forall Interp ps -> interp_triangle_congruence point a b.
 Proof.
-  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
-  apply schema3_sound in Hschema; [|exact Hdecl|exact Hprem|exact Hall]. cbn in Hschema |- *.
-  destruct Hschema as [Ha [Hs Hb]]. now apply ghost_asa.
+  intros [A B C] [D E F] ps Hwf Hin Hps. cbn in Hin. destruct Hin as [<-|[]].
+  forall_parts Hps. cbn in *. now apply ghost_asa.
 Qed.
 
-Lemma aas_schema_sound : forall decls premises facts i j k t u,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> triangle_well_formed point t ->
-  aas_schema decls premises facts i j k t u = true -> interp_triangle_congruence point t u.
+Lemma aas_parts_sound : forall a b ps, triangle_well_formed point a ->
+  In ps (aas_parts a b) -> Forall Interp ps -> interp_triangle_congruence point a b.
 Proof.
-  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
-  unfold aas_schema in Hschema. apply orb_true_iff in Hschema.
-  assert (Hparts : forall x y z : Statement,
-      schema3 decls premises facts i j k x y z = true ->
-      Interp x /\ Interp y /\ Interp z)
-    by (intros; eapply schema3_sound; eauto).
-  destruct Hschema as [H|H]; apply Hparts in H; cbn in H |- *.
-  - destruct H as [Hc [Hb Hs]]. apply ghost_aas; auto. now apply conga_comm.
-  - destruct H as [Hb [Hc Hs]]. apply ghost_aas; auto. now apply conga_comm.
+  intros [A B C] [D E F] ps Hwf Hin Hps. cbn in Hin.
+  destruct Hin as [<-|[<-|[]]]; forall_parts Hps; cbn in *;
+    apply ghost_aas; auto; now apply conga_comm.
 Qed.
 
-Lemma rhl_schema_sound : forall decls premises facts i j k t u,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> triangle_well_formed point t ->
-  rhl_schema decls premises facts i j k t u = true ->
-  interp_triangle_congruence point t u.
+Lemma rhl_parts_sound : forall a b ps, triangle_well_formed point a ->
+  In ps (rhl_parts a b) -> Forall Interp ps -> interp_triangle_congruence point a b.
 Proof.
-  intros decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hschema.
-  unfold rhl_schema in Hschema. apply orb_true_iff in Hschema.
-  assert (Hsides : forall x y z : Statement,
-      schema3 decls premises facts i j k x y z = true -> Interp x /\ Interp y /\ Interp z)
-    by (intros; eapply schema3_sound; eauto).
+  intros [A B C] [D E F] ps Hwf Hin Hps.
   assert (Hbuild : Per (point A) (point B) (point C) ->
                    Per (point D) (point E) (point F) ->
                    Cong (point C) (point A) (point F) (point D) ->
@@ -3861,36 +4127,8 @@ Proof.
       by (apply cong2_per2__cong_3; auto; Cong).
     destruct Hcong3 as [Hab [Hac Hbc']]. cbn.
     apply ghost_sss; auto; Cong. }
-  destruct Hschema as [H|H]; apply Hsides in H; cbn in H;
-    destruct H as [[Hper Hper'] [H1 H2]]; now apply Hbuild.
-Qed.
-
-Lemma three_rotations_sound : forall schema decls premises facts i j k t u,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> triangle_well_formed point t ->
-  (forall decls premises facts i j k t u,
-    declarations_well_formed point decls ->
-    Forall (interp_premise point) premises ->
-    Forall Interp facts -> triangle_well_formed point t ->
-    schema decls premises facts i j k t u = true ->
-    interp_triangle_congruence point t u) ->
-  three_rotations schema decls premises facts i j k t u = true ->
-  interp_triangle_congruence point t u.
-Proof.
-  intros schema decls premises facts i j k t u Hdecl Hprem Hall Hwf Hsound H.
-  unfold three_rotations in H. apply orb_true_iff in H. destruct H as [H|H].
-  - apply orb_true_iff in H. destruct H as [H|H].
-    + exact (Hsound decls premises facts i j k t u Hdecl Hprem Hall Hwf H).
-    + apply triangle_congruent_rotate_back.
-      exact (Hsound decls premises facts i j k (rotate_triangle t)
-               (rotate_triangle u) Hdecl Hprem Hall
-               (rotated_well_formed t Hwf) H).
-  - apply triangle_congruent_rotate_back. apply triangle_congruent_rotate_back.
-    exact (Hsound decls premises facts i j k
-             (rotate_triangle (rotate_triangle t))
-             (rotate_triangle (rotate_triangle u)) Hdecl Hprem Hall
-             (rotated_well_formed _ (rotated_well_formed t Hwf)) H).
+  cbn in Hin. destruct Hin as [<-|[<-|[]]]; forall_parts Hps; cbn in *;
+    destruct Hpart as [Hper Hper']; now apply Hbuild.
 Qed.
 
 Lemma reversed_well_formed : forall t,
@@ -3898,30 +4136,6 @@ Lemma reversed_well_formed : forall t,
 Proof.
   intros [A B C]. unfold triangle_well_formed, reverse_triangle; cbn.
   intros Hncol Hcol. apply Hncol. Col.
-Qed.
-
-Lemma six_correspondences_sound : forall schema decls premises facts i j k t u,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> triangle_well_formed point t ->
-  (forall decls premises facts i j k t u,
-    declarations_well_formed point decls ->
-    Forall (interp_premise point) premises ->
-    Forall Interp facts -> triangle_well_formed point t ->
-    schema decls premises facts i j k t u = true ->
-    interp_triangle_congruence point t u) ->
-  six_correspondences schema decls premises facts i j k t u = true ->
-  interp_triangle_congruence point t u.
-Proof.
-  intros schema decls premises facts i j k [A B C] [D E F] Hdecl Hprem Hall Hwf Hsound H.
-  unfold six_correspondences in H. apply orb_true_iff in H. destruct H as [H|H].
-  - eapply three_rotations_sound; eauto.
-  - apply triangle_congruent_reverse.
-    change (interp_triangle_congruence point
-              (reverse_triangle (triangle_name A B C)) (reverse_triangle (triangle_name D E F))).
-    eapply three_rotations_sound;
-      [exact Hdecl|exact Hprem|exact Hall|now apply reversed_well_formed
-      |exact Hsound|exact H].
 Qed.
 
 Lemma cpctc_sound : forall t u conclusion,
@@ -3938,40 +4152,6 @@ Proof.
   end;
   try discriminate;
   apply fact_eqb_sound in H; tauto.
-Qed.
-
-Lemma criterion_conclusion_sound :
-  forall schema decls premises facts i j k conclusion,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  (forall decls premises facts i j k t u,
-    declarations_well_formed point decls ->
-    Forall (interp_premise point) premises ->
-    Forall Interp facts -> triangle_well_formed point t ->
-    schema decls premises facts i j k t u = true ->
-    interp_triangle_congruence point t u) ->
-  criterion_conclusion schema decls premises facts i j k conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros schema decls premises facts i j k conclusion Hwf Hprem Hfacts
-    Hschema H.
-  unfold criterion_conclusion in H. destruct conclusion; try discriminate;
-    apply andb_true_iff in H; destruct H as [Hdecl H];
-    apply declared_pair_sound in Hdecl; try exact Hwf;
-    destruct Hdecl as [Ht Hu].
-  - apply existsb_exists in H. destruct H as [u' [Hin Hsix]].
-    exists u'. split; [exact Hin|].
-    apply ordered_congruence_of_parts.
-    + now apply triangle_well_formed_nondegenerate.
-    + apply (nondegenerate_orderings b u' Hin).
-      now apply triangle_well_formed_nondegenerate.
-    + change (interp_triangle_congruence point a u').
-      eapply six_correspondences_sound; eauto.
-  - apply ordered_congruence_of_parts;
-      [now apply triangle_well_formed_nondegenerate
-      |now apply triangle_well_formed_nondegenerate|].
-    change (interp_triangle_congruence point a b).
-    eapply six_correspondences_sound; eauto.
 Qed.
 
 (** One transitivity argument covers segments, angles, and triangles.  The
@@ -4080,39 +4260,6 @@ Proof.
       injection Hpair as <- <-; exact Hs.
 Qed.
 
-Lemma def_con_right_sound : forall facts i j conclusion,
-  Forall Interp facts -> def_con_right facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule. unfold def_con_right in Hrule.
-  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
-  destruct first; try discriminate.
-  all: try old_names_eq Hfirst.
-  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
-  destruct second; try discriminate.
-  all: try old_names_eq Hsecond.
-  assert (Ha : Interp (Right a)) by (eapply lookup_step_sound; eauto).
-  assert (Hb : Interp (Right a0)) by (eapply lookup_step_sound; eauto).
-  cbn in Ha, Hb.
-  assert (Hmove : forall x y, angle_u_eqb x y = true -> Interp (Right x) ->
-            angle_well_formed point y /\ right_angle point y).
-  { intros x y Hxy [Hwf Hper]. split.
-    - now apply (angle_u_eqb_well_formed _ _ Hxy).
-    - now apply (angle_u_eqb_right _ _ Hxy). }
-  unfold def_con_right_conclusion in Hrule.
-  destruct conclusion; try discriminate;
-    apply orb_true_iff in Hrule;
-    destruct Hrule as [Hmatch|Hmatch]; apply andb_true_iff in Hmatch;
-    destruct Hmatch as [H1 H2];
-    [ pose proof (Hmove _ _ H1 Ha) as Hc; pose proof (Hmove _ _ H2 Hb) as Hd
-    | pose proof (Hmove _ _ H2 Hb) as Hc; pose proof (Hmove _ _ H1 Ha) as Hd
-    | pose proof (Hmove _ _ H1 Ha) as Hc; pose proof (Hmove _ _ H2 Hb) as Hd
-    | pose proof (Hmove _ _ H2 Hb) as Hc; pose proof (Hmove _ _ H1 Ha) as Hd ];
-    destruct Hc as [[Hcl Hcr] Hcp], Hd as [[Hdl Hdr] Hdp];
-    unfold right_angle in Hcp, Hdp; cbn;
-    solve [ tauto | now apply l11_16 ].
-Qed.
-
 Lemma endpoint_of_col : forall c s,
   endpoint_of c s = true ->
   Col (point c) (point s.(segment_first)) (point s.(segment_second)).
@@ -4212,20 +4359,24 @@ Proof.
   eapply vertical_angle_pair_sound; eauto.
 Qed.
 
-Lemma def_ang_bisect_sound : forall facts i conclusion,
-  Forall Interp facts -> def_ang_bisect facts i conclusion = true ->
+Lemma def_ang_bisect_sound : forall decls premises facts i conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  Forall Interp facts -> def_ang_bisect decls premises facts i conclusion = true ->
   Interp conclusion.
 Proof.
-  intros facts i conclusion Hfacts Hrule. unfold def_ang_bisect in Hrule.
+  intros decls premises facts i conclusion Hwf Hprem Hfacts Hrule.
+  unfold def_ang_bisect in Hrule.
   destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
   destruct dependency; try discriminate.
   all: try old_names_eq Hlookup.
   assert (Hbisect : Interp (AngBisect a s)) by (eapply lookup_step_sound; eauto).
   cbn in Hbisect.
   apply orb_true_iff in Hrule; destruct Hrule as [Hcase|Hcase];
-    apply andb_true_iff in Hcase; destruct Hcase as [Hvertex Heq];
+    apply andb_true_iff in Hcase; destruct Hcase as [Hvertex Hmatch];
     unfold ascii_eqb in Hvertex; apply Ascii.eqb_eq in Hvertex;
-    apply (fact_eqb_sound _ _ Heq); cbn;
+    apply (dependency_matches_sound _ _ _ _ Hwf Hprem Hmatch);
+    unfold bisector_halves; cbn;
     destruct Hbisect as [[Hstart Hc]|[Hend Hc]].
   (* the named endpoint is the vertex, so the other disjunct can only hold when
      both endpoints name it and the two halves therefore coincide *)
@@ -4260,8 +4411,9 @@ Proof.
   intros s t p q Hs Hp Hon. unfold ascii_eqb in Hp. apply Ascii.eqb_eq in Hp.
   subst q. apply segment_u_eqb_cases in Hs.
   destruct Hs as [Heq|Heq]; subst s; [exact Hon|].
-  unfold reverse_segment in *. cbn in Hon |- *.
-  destruct Hon as [Hne Hbet]. split; [congruence|now apply between_symmetry].
+  unfold reverse_segment, BetS in *. cbn in Hon |- *.
+  destruct Hon as [Hbet [Hne1 Hne2]].
+  split; [now apply between_symmetry|split; auto using not_eq_sym].
 Qed.
 
 (** Betweenness transfers across the reversal [segment_u_eqb] allows. *)
@@ -4287,7 +4439,7 @@ Proof.
     destruct Hmatch as [Hseg Hpoint];
     unfold ascii_eqb in Hpoint; apply Ascii.eqb_eq in Hpoint; subst.
   - (* OnLine: the betweenness half of what it says *)
-    cbn in Hst. destruct Hst as [_ Hbet].
+    cbn in Hst. destruct Hst as [Hbet _].
     eapply segment_u_bet; eassumption.
   - (* IntersectSeg: either crossed segment may be the one named *)
     cbn in Hst. destruct Hst as [[Hbet1 _] [Hbet2 _]].
@@ -4351,20 +4503,6 @@ Proof.
   exists (S n), actual. split; [exact Hn|exact Hm].
 Qed.
 
-Lemma supported3_schema3 : forall decls premises facts a b c,
-  supported3 decls premises facts a b c = true ->
-  exists i j k, schema3 decls premises facts i j k a b c = true.
-Proof.
-  intros decls premises facts a b c H. unfold supported3 in H.
-  apply andb_true_iff in H. destruct H as [H Hc].
-  apply andb_true_iff in H. destruct H as [Ha Hb].
-  destruct (supported_lookup _ _ _ _ Ha) as [i [x [Hx Hmx]]].
-  destruct (supported_lookup _ _ _ _ Hb) as [j [y [Hy Hmy]]].
-  destruct (supported_lookup _ _ _ _ Hc) as [k [z [Hz Hmz]]].
-  exists i, j, k. rewrite schema3_unfold, Hx, Hy, Hz, Hmx, Hmy, Hmz.
-  reflexivity.
-Qed.
-
 Lemma reading_witnessed_sound : forall decls premises facts t u,
   declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
@@ -4373,20 +4511,22 @@ Lemma reading_witnessed_sound : forall decls premises facts t u,
   interp_triangle_congruence point t u.
 Proof.
   intros decls premises facts t u Hwf Hprem Hfacts Ht H.
-  unfold reading_witnessed in H. repeat rewrite orb_true_iff in H.
-  destruct H as [[[[[H|H]|H]|H]|H]|H].
-  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
-    eapply sas_schema_sound; eauto.
-  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
-    eapply sss_schema_sound; eauto.
-  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
-    eapply asa_schema_sound; eauto.
-  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
-    eapply aas_schema_sound; [exact Hwf|exact Hprem|exact Hfacts|exact Ht|].
-    unfold aas_schema. rewrite Hs. reflexivity.
-  - destruct (supported3_schema3 _ _ _ _ _ _ H) as [i [j [k Hs]]].
-    eapply rhl_schema_sound; [exact Hwf|exact Hprem|exact Hfacts|exact Ht|].
-    unfold rhl_schema. rewrite Hs. reflexivity.
+  unfold reading_witnessed in H. apply orb_true_iff in H.
+  destruct H as [H|H].
+  - apply existsb_exists in H. destruct H as [ps [Hin Hsup]].
+    assert (Hps : Forall Interp ps).
+    { apply Forall_forall. intros x Hx.
+      destruct (supported_lookup _ _ _ _ (proj1 (forallb_forall _ _) Hsup x Hx))
+        as [i [y [Hy Hm]]].
+      exact (dependency_matches_sound _ _ _ _ Hwf Hprem Hm
+               (lookup_step_sound _ _ _ Hfacts Hy)). }
+    unfold criterion_readings in Hin. repeat rewrite in_app_iff in Hin.
+    destruct Hin as [Hin|[Hin|[Hin|[Hin|Hin]]]];
+      [ exact (sas_parts_sound _ _ _ Ht Hin Hps)
+      | exact (sss_parts_sound _ _ _ Ht Hin Hps)
+      | exact (asa_parts_sound _ _ _ Ht Hin Hps)
+      | exact (aas_parts_sound _ _ _ Ht Hin Hps)
+      | exact (rhl_parts_sound _ _ _ Ht Hin Hps) ].
   - apply existsb_exists in H. destruct H as [f [Hin Heq]].
     apply fact_eqb_sound in Heq.
     assert (Hord : Interp (ConTriOrdered t u))
@@ -4511,51 +4651,6 @@ Proof.
     exact (proj2 (proj2 (ordered_congruence_parts _ _ Hord))).
 Qed.
 
-Lemma schema6_sound : forall decls premises facts i1 i2 i3 i4 i5 i6 a b c d e f,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  schema6 decls premises facts i1 i2 i3 i4 i5 i6 a b c d e f = true ->
-  Interp a /\ Interp b /\ Interp c /\ Interp d /\ Interp e /\ Interp f.
-Proof.
-  intros decls premises facts i1 i2 i3 i4 i5 i6 a b c d e f Hwf Hprem Hall H.
-  unfold schema6 in H. apply andb_true_iff in H. destruct H as [H1 H2].
-  apply (schema3_sound _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in H1.
-  apply (schema3_sound _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in H2. tauto.
-Qed.
-
-Lemma def_con_tri_sound : forall decls premises facts i1 i2 i3 i4 i5 i6
-    conclusion,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  def_con_tri decls premises facts i1 i2 i3 i4 i5 i6 conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls premises facts i1 i2 i3 i4 i5 i6 conclusion Hwf Hprem Hall Hrule.
-  assert (Hat : forall t u,
-    existsb (fun c => def_con_tri_at decls premises facts i1 i2 i3 i4 i5 i6
-                        (fst c) (snd c))
-            (correspondences t u) = true ->
-    interp_triangle_congruence point t u).
-  { intros t u H.
-    apply existsb_exists in H. destruct H as [c [Hin Hmatch]].
-    apply (correspondences_congruent t u c Hin).
-    unfold def_con_tri_at in Hmatch.
-    apply (schema6_sound _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in Hmatch.
-    destruct (fst c) as [A B C]; destruct (snd c) as [D E F].
-    cbn in Hmatch |- *. unfold interp_triangle_congruence, triangle_congruence.
-    cbn. tauto. }
-  unfold def_con_tri in Hrule. destruct conclusion; try discriminate;
-    apply andb_true_iff in Hrule; destruct Hrule as [Hdecl Hrule];
-    apply declared_pair_sound in Hdecl; try exact Hwf; destruct Hdecl as [Ht Hu];
-    apply triangle_well_formed_nondegenerate in Ht;
-    apply triangle_well_formed_nondegenerate in Hu.
-  - apply existsb_exists in Hrule. destruct Hrule as [u' [Hin Hmatch]].
-    exists u'. split; [exact Hin|].
-    apply ordered_congruence_of_parts;
-      [exact Ht|exact (nondegenerate_orderings _ _ Hin Hu)|exact (Hat _ _ Hmatch)].
-  - exact (ordered_congruence_of_parts _ _ Ht Hu (Hat _ _ Hrule)).
-Qed.
-
 Lemma def_isosceles_sound : forall decls facts i conclusion,
   declarations_well_formed point decls -> Forall Interp facts ->
   def_isosceles decls facts i conclusion = true -> Interp conclusion.
@@ -4616,114 +4711,6 @@ Proof.
   now apply ghost_base_angle_conv.
 Qed.
 
-Lemma def_equilateral_sound : forall decls premises facts i j k conclusion,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  def_equilateral decls premises facts i j k conclusion = true -> Interp conclusion.
-Proof.
-  intros decls premises facts i j k conclusion Hwf Hprem Hall Hrule.
-  unfold def_equilateral in Hrule. destruct conclusion; try discriminate. all: try old_names_goal.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hschema].
-  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
-  apply triangle_well_formed_nondegenerate in Hdeclared.
-  apply (schema3_sound _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in Hschema.
-  destruct t as [A B C]. cbn in Hschema, Hdeclared |- *. tauto.
-Qed.
-
-Lemma def_equiangular_sound : forall decls premises facts i j k conclusion,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  def_equiangular decls premises facts i j k conclusion = true -> Interp conclusion.
-Proof.
-  intros decls premises facts i j k conclusion Hwf Hprem Hall Hrule.
-  unfold def_equiangular in Hrule. destruct conclusion; try discriminate. all: try old_names_goal.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hschema].
-  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
-  apply triangle_well_formed_nondegenerate in Hdeclared.
-  apply (schema3_sound _ _ _ _ _ _ _ _ _ Hwf Hprem Hall) in Hschema.
-  destruct t as [A B C]. cbn in Hschema, Hdeclared |- *.
-  destruct Hschema as [Hab [Hbc _]]. split; [exact Hdeclared|].
-  split; CongA.
-Qed.
-
-Lemma equilat_equiang_sound : forall facts i conclusion,
-  Forall Interp facts -> equilat_equiang facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i conclusion Hall Hrule. unfold equilat_equiang in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
-  destruct dependency; try discriminate.
-  all: try old_names_eq Hlookup.
-  apply triangle_eqb_eq in Hrule. subst t.
-  assert (Hdep : Interp (Equilateral t0)) by (eapply lookup_step_sound; eauto).
-  destruct t0 as [A B C]. cbn in Hdep |- *.
-  destruct Hdep as [Hnd [Hab Hbc]]. split; [exact Hnd|].
-  apply ghost_equilateral_equiangular; [apply Hnd|exact Hab|exact Hbc].
-Qed.
-
-Lemma equiang_equilat_sound : forall facts i conclusion,
-  Forall Interp facts -> equiang_equilat facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i conclusion Hall Hrule. unfold equiang_equilat in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [dependency|] eqn:Hlookup; try discriminate.
-  destruct dependency; try discriminate.
-  all: try old_names_eq Hlookup.
-  apply triangle_eqb_eq in Hrule. subst t.
-  assert (Hdep : Interp (Equiangular t0)) by (eapply lookup_step_sound; eauto).
-  destruct t0 as [A B C]. cbn in Hdep |- *.
-  destruct Hdep as [Hnd [HangA HangB]]. split; [exact Hnd|].
-  apply ghost_equiangular_equilateral; [apply Hnd|exact HangA|exact HangB].
-Qed.
-
-Lemma supplement_realign : forall c b d,
-  angle_u_eqb d b = true ->
-  Interp (Supplementary c d) -> Interp (Supplementary c b).
-Proof.
-  intros c b d H Hs. apply angle_u_eqb_cases in H.
-  destruct H as [Heq|Heq]; subst d; [exact Hs|].
-  unfold reverse_angle in Hs. cbn in Hs |- *. now apply suppa_right_comm.
-Qed.
-
-Lemma con_supplements_same_sound : forall facts i j conclusion,
-  Forall Interp facts -> con_supplements_same facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hall Hrule. unfold con_supplements_same in Hrule.
-  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
-  destruct first; try discriminate.
-  all: try old_names_eq Hfirst.
-  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
-  destruct second; try discriminate.
-  all: try old_names_eq Hsecond.
-  assert (Hs1 : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
-  assert (Hs2 : Interp (Supplementary a1 a2)) by (eapply lookup_step_sound; eauto).
-  (* [SuppA] is symmetric, so the shared angle may occupy either slot of
-     either dependency; realign it into the second slot of both. *)
-  assert (Hcancel : forall x y z : AngleName,
-      Interp (Supplementary x y) -> Interp (Supplementary z y) ->
-      Interp (ConAng x z)).
-  { intros x y z Hx Hz. cbn in Hx, Hz |- *.
-    now apply (suppa2__conga123 _ _ _ (point (angle_first y)) (point (angle_vertex y))
-                                (point (angle_last y))). }
-  repeat rewrite orb_true_iff in Hrule.
-  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
-    apply andb_true_iff in Hcase; destruct Hcase as [Hshared Hconclusion];
-    apply (fact_eqb_sound _ _ Hconclusion).
-  (* the shared angle is the second of the first dependency ... *)
-  - apply Hcancel with (y := a0);
-      [exact Hs1|now apply (supplement_realign a1 a0 a2)].
-  - apply Hcancel with (y := a0); [exact Hs1|].
-    apply (supplement_realign a2 a0 a1); [exact Hshared|now apply suppa_sym].
-  (* ... or its first *)
-  - apply Hcancel with (y := a);
-      [now apply suppa_sym|now apply (supplement_realign a1 a a2)].
-  - apply Hcancel with (y := a); [now apply suppa_sym|].
-    apply (supplement_realign a2 a a1); [exact Hshared|now apply suppa_sym].
-Qed.
-
 Lemma supplements_transfer : forall x y z w,
   Interp (Supplementary x y) -> Interp (Supplementary z w) ->
   Interp (ConAng y w) -> Interp (ConAng x z).
@@ -4742,54 +4729,12 @@ Proof.
                               (point (angle_last y))).
 Qed.
 
-Lemma con_supplements_sound : forall facts i j k conclusion,
-  Forall Interp facts -> con_supplements facts i j k conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j k conclusion Hall Hrule. unfold con_supplements in Hrule.
-  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
-  destruct first; try discriminate.
-  all: try old_names_eq Hfirst.
-  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
-  destruct second; try discriminate.
-  all: try old_names_eq Hsecond.
-  destruct (lookup_step facts k) as [witness|] eqn:Hwitness; try discriminate.
-  assert (Hs1 : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
-  assert (Hs2 : Interp (Supplementary a1 a2)) by (eapply lookup_step_sound; eauto).
-  assert (Hw : Interp witness) by (eapply lookup_step_sound; eauto).
-  (* the witness may relate either angle of one dependency to either of the
-     other; the conclusion is then the remaining pair *)
-  repeat rewrite orb_true_iff in Hrule.
-  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
-    apply andb_true_iff in Hcase; destruct Hcase as [Hcongruent Hconclusion];
-    apply (fact_eqb_sound _ _ Hcongruent) in Hw;
-    apply (fact_eqb_sound _ _ Hconclusion).
-  - now apply (supplements_transfer a a0 a1 a2).
-  - apply (supplements_transfer a a0 a2 a1); [exact Hs1|now apply suppa_sym|exact Hw].
-  - apply (supplements_transfer a0 a a1 a2); [now apply suppa_sym|exact Hs2|exact Hw].
-  - apply (supplements_transfer a0 a a2 a1);
-      [now apply suppa_sym|now apply suppa_sym|exact Hw].
-Qed.
-
 Lemma complement_sym : forall a b,
   Interp (Complementary a b) -> Interp (Complementary b a).
 Proof.
   intros a b [X [Y [Z [Hper [Hsams Hsuma]]]]]. cbn in Hsams, Hsuma |- *.
   exists X, Y, Z.
   split; [exact Hper|split; [now apply sams_sym|now apply suma_sym]].
-Qed.
-
-Lemma complement_realign : forall c b d,
-  angle_u_eqb d b = true ->
-  Interp (Complementary c d) -> Interp (Complementary c b).
-Proof.
-  intros c b d H [X [Y [Z [Hper [Hsams Hsuma]]]]].
-  apply angle_u_eqb_cases in H. destruct H as [Heq|Heq]; subst d.
-  { exists X, Y, Z. auto. }
-  unfold reverse_angle in Hsams, Hsuma. cbn in Hsams, Hsuma |- *.
-  exists X, Y, Z.
-  split; [exact Hper
-         |split; [now apply sams_right_comm|now apply suma_middle_comm]].
 Qed.
 
 (** Both complement rules cancel the shared angle out of two sums that reach
@@ -4840,67 +4785,527 @@ Proof.
   apply conga_refl; auto using not_eq_sym.
 Qed.
 
-Lemma con_complements_sound : forall facts i j k conclusion,
-  Forall Interp facts -> con_complements facts i j k conclusion = true ->
-  Interp conclusion.
+(** What the shared angle-pair rules need of a pair statement. *)
+Record AnglePairLaws (pair : AngleName -> AngleName -> Statement)
+    (pair_of : Statement -> option (AngleName * AngleName)) : Prop := {
+  pair_of_sound : forall s x y, pair_of s = Some (x, y) -> Interp s -> Interp (pair x y);
+  pair_sym : forall x y, Interp (pair x y) -> Interp (pair y x);
+  (** A pair names nondegenerate angles. *)
+  pair_wf : forall x y, Interp (pair x y) -> Interp (ConAng y y);
+  (** An angle may be replaced by a congruent one. *)
+  pair_respects : forall x y z,
+    Interp (pair x y) -> Interp (ConAng y z) -> Interp (pair x z);
+  (** Angles paired with congruent angles are congruent. *)
+  pair_transfer : forall x y z w,
+    Interp (pair x y) -> Interp (pair z w) -> Interp (ConAng y w) -> Interp (ConAng x z)
+}.
+
+Section AnglePairsSound.
+Context (pair : AngleName -> AngleName -> Statement)
+        (pair_of : Statement -> option (AngleName * AngleName))
+        (L : AnglePairLaws pair pair_of).
+
+Lemma cited_pair_sound : forall facts i x y,
+  Forall Interp facts -> cited_pair pair_of facts i = Some (x, y) -> Interp (pair x y).
 Proof.
-  intros facts i j k conclusion Hall Hrule. unfold con_complements in Hrule.
-  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
-  destruct first; try discriminate.
-  all: try old_names_eq Hfirst.
-  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
-  destruct second; try discriminate.
-  all: try old_names_eq Hsecond.
-  destruct (lookup_step facts k) as [witness|] eqn:Hwitness; try discriminate.
-  assert (Hc1 : Interp (Complementary a a0)) by (eapply lookup_step_sound; eauto).
-  assert (Hc2 : Interp (Complementary a1 a2)) by (eapply lookup_step_sound; eauto).
-  assert (Hw : Interp witness) by (eapply lookup_step_sound; eauto).
-  repeat rewrite orb_true_iff in Hrule.
-  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
-    apply andb_true_iff in Hcase; destruct Hcase as [Hcongruent Hconclusion];
-    apply (fact_eqb_sound _ _ Hcongruent) in Hw;
-    apply (fact_eqb_sound _ _ Hconclusion).
-  - now apply (complements_transfer a a0 a1 a2).
-  - apply (complements_transfer a a0 a2 a1);
-      [exact Hc1|now apply complement_sym|exact Hw].
-  - apply (complements_transfer a0 a a1 a2);
-      [now apply complement_sym|exact Hc2|exact Hw].
-  - apply (complements_transfer a0 a a2 a1);
-      [now apply complement_sym|now apply complement_sym|exact Hw].
+  intros facts i x y Hall H. unfold cited_pair in H.
+  destruct (lookup_step facts i) as [s|] eqn:Hs; [|discriminate].
+  apply (pair_of_sound _ _ L s); [exact H|eapply lookup_step_sound; eauto].
 Qed.
 
-Lemma con_complements_same_sound : forall facts i j conclusion,
-  Forall Interp facts -> con_complements_same facts i j conclusion = true ->
-  Interp conclusion.
+(** An angle written backwards is congruent to itself as written. *)
+Lemma linked_angle_sound : forall y w,
+  angle_u_eqb y w = true -> Interp (ConAng w w) -> Interp (ConAng y w).
 Proof.
-  intros facts i j conclusion Hall Hrule. unfold con_complements_same in Hrule.
-  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
-  destruct first; try discriminate.
-  all: try old_names_eq Hfirst.
-  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
-  destruct second; try discriminate.
-  all: try old_names_eq Hsecond.
-  assert (Hc1 : Interp (Complementary a a0)) by (eapply lookup_step_sound; eauto).
-  assert (Hc2 : Interp (Complementary a1 a2)) by (eapply lookup_step_sound; eauto).
-  (* the shared angle may sit in either slot of either dependency; realign it
-     into the second slot of both, then cancel it *)
-  assert (Hcancel : forall x y z : AngleName,
-      Interp (Complementary x y) -> Interp (Complementary z y) ->
-      Interp (ConAng x z)).
-  { intros x y z Hx Hz. apply (complements_transfer x y z y);
-      [exact Hx|exact Hz|now apply (complementary_second_refl z)]. }
-  repeat rewrite orb_true_iff in Hrule.
-  destruct Hrule as [[[Hcase|Hcase]|Hcase]|Hcase];
-    apply andb_true_iff in Hcase; destruct Hcase as [Hshared Hconclusion];
-    apply (fact_eqb_sound _ _ Hconclusion).
-  - apply Hcancel with (y := a0);
-      [exact Hc1|now apply (complement_realign a1 a0 a2)].
-  - apply Hcancel with (y := a0); [exact Hc1|].
-    apply (complement_realign a2 a0 a1); [exact Hshared|now apply complement_sym].
-  - apply Hcancel with (y := a);
-      [now apply complement_sym|now apply (complement_realign a1 a a2)].
-  - apply Hcancel with (y := a); [now apply complement_sym|].
-    apply (complement_realign a2 a a1); [exact Hshared|now apply complement_sym].
+  intros y w H Hw. apply angle_u_eqb_cases in H.
+  destruct H as [->| ->]; [exact Hw|].
+  unfold reverse_angle. cbn in Hw |- *. CongA.
+Qed.
+
+Lemma partners_link_sound : forall linked a b c d conclusion,
+  Interp (pair a b) -> Interp (pair c d) ->
+  (forall y w, linked y w = true -> Interp (ConAng w w) -> Interp (ConAng y w)) ->
+  partners_link linked a b c d conclusion = true -> Interp conclusion.
+Proof.
+  intros linked a b c d conclusion Hab Hcd Hlinked H.
+  pose proof (pair_sym _ _ L _ _ Hab) as Hba.
+  pose proof (pair_sym _ _ L _ _ Hcd) as Hdc.
+  pose proof (pair_wf _ _ L _ _ Hcd) as Hdd.
+  pose proof (pair_wf _ _ L _ _ Hdc) as Hcc.
+  unfold partners_link in H. repeat rewrite orb_true_iff in H.
+  destruct H as [[[H|H]|H]|H]; apply andb_true_iff in H; destruct H as [Hl Heq];
+    apply (fact_eqb_sound _ _ Heq).
+  - exact (pair_transfer _ _ L a b c d Hab Hcd (Hlinked _ _ Hl Hdd)).
+  - exact (pair_transfer _ _ L a b d c Hab Hdc (Hlinked _ _ Hl Hcc)).
+  - exact (pair_transfer _ _ L b a c d Hba Hcd (Hlinked _ _ Hl Hdd)).
+  - exact (pair_transfer _ _ L b a d c Hba Hdc (Hlinked _ _ Hl Hcc)).
+Qed.
+
+Lemma congruent_partners_rule_sound : forall facts i j k conclusion,
+  Forall Interp facts ->
+  congruent_partners_rule pair_of facts i j k conclusion = true -> Interp conclusion.
+Proof.
+  intros facts i j k conclusion Hall H. unfold congruent_partners_rule in H.
+  destruct (cited_pair pair_of facts i) as [[a b]|] eqn:Hi; [|discriminate].
+  destruct (cited_pair pair_of facts j) as [[c d]|] eqn:Hj; [|discriminate].
+  destruct (lookup_step facts k) as [w|] eqn:Hk; [|discriminate].
+  assert (Hw : Interp w) by (eapply lookup_step_sound; eauto).
+  refine (partners_link_sound _ a b c d conclusion
+            (cited_pair_sound _ _ _ _ Hall Hi) (cited_pair_sound _ _ _ _ Hall Hj) _ H).
+  intros y z Hl _. exact (proj2 (fact_eqb_sound _ _ Hl) Hw).
+Qed.
+
+Lemma shared_partner_rule_sound : forall facts i j conclusion,
+  Forall Interp facts ->
+  shared_partner_rule pair_of facts i j conclusion = true -> Interp conclusion.
+Proof.
+  intros facts i j conclusion Hall H. unfold shared_partner_rule in H.
+  destruct (cited_pair pair_of facts i) as [[a b]|] eqn:Hi; [|discriminate].
+  destruct (cited_pair pair_of facts j) as [[c d]|] eqn:Hj; [|discriminate].
+  exact (partners_link_sound _ a b c d conclusion
+           (cited_pair_sound _ _ _ _ Hall Hi) (cited_pair_sound _ _ _ _ Hall Hj)
+           linked_angle_sound H).
+Qed.
+
+Lemma substitute_link_sound : forall keep old x y conclusion,
+  Interp (pair keep old) -> Interp (ConAng x y) ->
+  substitute_link pair keep old x y conclusion = true -> Interp conclusion.
+Proof.
+  intros keep old x y conclusion Hpair Hxy H.
+  pose proof (pair_wf _ _ L _ _ Hpair) as Hold.
+  unfold substitute_link in H. apply orb_true_iff in H.
+  destruct H as [H|H]; apply andb_true_iff in H; destruct H as [Hlink Heq];
+    apply (fact_eqb_sound _ _ Heq); apply (pair_respects _ _ L _ _ _ Hpair).
+  - (* old is x: old ~ x ~ y *)
+    apply angle_u_eqb_cases in Hlink.
+    destruct Hlink as [->| ->]; [exact Hxy|].
+    unfold reverse_angle in Hold. cbn in Hold, Hxy |- *.
+    eapply conga_trans; [|exact Hxy]. CongA.
+  - (* old is y: old ~ y ~ x *)
+    apply angle_u_eqb_cases in Hlink.
+    destruct Hlink as [->| ->]; cbn in Hxy |- *; [now apply conga_sym|].
+    unfold reverse_angle in Hold. cbn in Hold |- *.
+    eapply conga_trans; [|apply conga_sym; exact Hxy]. CongA.
+Qed.
+
+Lemma substitute_rule_sound : forall facts i j conclusion,
+  Forall Interp facts ->
+  substitute_rule pair pair_of facts i j conclusion = true -> Interp conclusion.
+Proof.
+  intros facts i j conclusion Hall H. unfold substitute_rule in H.
+  destruct (cited_pair pair_of facts i) as [[a b]|] eqn:Hi; [|discriminate].
+  destruct (lookup_step facts j) as [w|] eqn:Hj; [|discriminate].
+  destruct (angle_congruence_pair w) as [[x y]|] eqn:Hpair; [|discriminate].
+  pose proof (cited_pair_sound _ _ _ _ Hall Hi) as Hab.
+  assert (Hxy : Interp (ConAng x y)).
+  { assert (Hw : Interp w) by (eapply lookup_step_sound; eauto).
+    destruct w; cbn in Hpair; try discriminate;
+      injection Hpair as <- <-; first [exact Hw | exact (proj2 Hw)]. }
+  apply orb_true_iff in H. destruct H as [H|H].
+  - exact (substitute_link_sound _ _ _ _ _ Hab Hxy H).
+  - exact (substitute_link_sound _ _ _ _ _ (pair_sym _ _ L _ _ Hab) Hxy H).
+Qed.
+End AnglePairsSound.
+
+Lemma supplementary_laws : AnglePairLaws Supplementary supplementary_pair.
+Proof.
+  split.
+  - intros s x y H Hs. destruct s; cbn in H; try discriminate.
+    injection H as <- <-. exact Hs.
+  - intros x y H. cbn in *. now apply suppa_sym.
+  - intros x y H. cbn in *.
+    pose proof (suppa_distincts _ _ _ _ _ _ H) as Hd. spliter.
+    apply conga_refl; auto.
+  - intros x y z Hxy Hyz. cbn in *.
+    pose proof (suppa_distincts _ _ _ _ _ _ Hxy) as Hd. spliter.
+    eapply conga2_suppa__suppa; [apply conga_refl; auto|exact Hyz|exact Hxy].
+  - exact supplements_transfer.
+Qed.
+
+Lemma complementary_laws : AnglePairLaws Complementary complementary_pair.
+Proof.
+  split.
+  - intros s x y H Hs. destruct s; cbn in H; try discriminate.
+    injection H as <- <-. exact Hs.
+  - exact complement_sym.
+  - exact complementary_second_refl.
+  - intros x y z [X [Y [Z [Hper [Hsams Hsuma]]]]] Hyz. cbn in Hsams, Hsuma, Hyz |- *.
+    pose proof (suma_distincts _ _ _ _ _ _ _ _ _ Hsuma) as Hd. spliter.
+    assert (Hxx : CongA (point (angle_first x)) (point (angle_vertex x))
+                        (point (angle_last x))
+                        (point (angle_first x)) (point (angle_vertex x))
+                        (point (angle_last x)))
+      by (apply conga_refl; auto using not_eq_sym).
+    exists X, Y, Z. split; [exact Hper|]. split.
+    + eapply conga2_sams__sams; [exact Hxx|exact Hyz|exact Hsams].
+    + eapply conga3_suma__suma;
+        [exact Hsuma|exact Hxx|exact Hyz|apply conga_refl; auto using not_eq_sym].
+  - exact complements_transfer.
+Qed.
+
+(** ** Angles named along their rays
+
+    A renaming moves a ray's named point along the ray.  [SideOk v p p']:
+    [p'] is [p], or on the ray from [v] through [p]. *)
+Definition SideOk (v p p' : PointId) : Prop :=
+  p' = p \/ Out (point v) (point p) (point p').
+
+Definition SameAngle (a a' : AngleName) : Prop :=
+  a'.(angle_vertex) = a.(angle_vertex) /\
+  SideOk a.(angle_vertex) a.(angle_first) a'.(angle_first) /\
+  SideOk a.(angle_vertex) a.(angle_last) a'.(angle_last).
+
+(** A segment from [v], read as a ray, renamed along itself. *)
+Definition SameRay (v : PointId) (s s' : SegmentName) : Prop :=
+  (s.(segment_first) = v /\ s'.(segment_first) = v /\
+   SideOk v s.(segment_second) s'.(segment_second)) \/
+  (s.(segment_second) = v /\ s'.(segment_second) = v /\
+   SideOk v s.(segment_first) s'.(segment_first)) \/
+  s' = s.
+
+(** [st'] is [st] with its angles renamed along their rays. *)
+Definition Respelled (st st' : Statement) : Prop :=
+  match st, st' with
+  | Right a, Right a' => SameAngle a a'
+  | ConAng a b, ConAng a' b' | ConRight a b, ConRight a' b'
+  | Supplementary a b, Supplementary a' b'
+  | Complementary a b, Complementary a' b' => SameAngle a a' /\ SameAngle b b'
+  | AngBisect a s, AngBisect a' s' => SameAngle a a' /\ SameRay a.(angle_vertex) s s'
+  | _, _ => st' = st
+  end.
+
+Lemma side_ok_swap : forall v p p', SideOk v p p' -> SideOk v p' p.
+Proof.
+  intros v p p' [->|H]; [now left|right; now apply l6_6].
+Qed.
+
+Lemma side_out : forall v p p',
+  point p <> point v -> SideOk v p p' -> Out (point v) (point p) (point p').
+Proof. intros v p p' Hp [->|H]; [now apply out_trivial|exact H]. Qed.
+
+Lemma side_distinct : forall v p p',
+  point p <> point v -> SideOk v p p' -> point p' <> point v.
+Proof.
+  intros v p p' Hp H. exact (proj2 (out_distinct _ _ _ (side_out _ _ _ Hp H))).
+Qed.
+
+Lemma same_angle_sym : forall a a', SameAngle a a' -> SameAngle a' a.
+Proof.
+  intros a a' [Hv [H1 H2]]. split; [now symmetry|].
+  rewrite Hv. split; now apply side_ok_swap.
+Qed.
+
+Lemma same_angle_conga : forall a a',
+  SameAngle a a' ->
+  point a.(angle_first) <> point a.(angle_vertex) ->
+  point a.(angle_last) <> point a.(angle_vertex) ->
+  CongA (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))
+        (point a'.(angle_first)) (point a'.(angle_vertex)) (point a'.(angle_last)).
+Proof.
+  intros a a' [Hv [H1 H2]] Hp Hq. rewrite Hv.
+  apply out2__conga; apply l6_6; now apply side_out.
+Qed.
+
+(** A renamed angle is congruent to the original, given the original is
+    nondegenerate, as any angle in a congruence is. *)
+Lemma same_angle_conga_of : forall a a' X Y Z,
+  SameAngle a a' ->
+  CongA (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last)) X Y Z ->
+  CongA (point a'.(angle_first)) (point a'.(angle_vertex)) (point a'.(angle_last)) X Y Z.
+Proof.
+  intros a a' X Y Z Hs H.
+  destruct (conga_distinct _ _ _ _ _ _ H) as [_ [Hp [Hq _]]].
+  eapply conga_trans; [apply conga_sym, (same_angle_conga a a' Hs Hp Hq)|exact H].
+Qed.
+
+Lemma per_side_first : forall v p p' q,
+  SideOk v p p' -> Per (point p) (point v) (point q) -> Per (point p') (point v) (point q).
+Proof.
+  intros v p p' q [->|Hout] Hper; [exact Hper|].
+  apply (l8_3 _ _ _ _ Hper); [exact (proj1 (out_distinct _ _ _ Hout))|].
+  now apply out_col.
+Qed.
+
+Lemma per_respelled : forall a a',
+  SameAngle a a' ->
+  Per (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last)) ->
+  Per (point a'.(angle_first)) (point a'.(angle_vertex)) (point a'.(angle_last)).
+Proof.
+  intros a a' [Hv [H1 H2]] Hper. rewrite Hv.
+  apply (per_side_first _ _ _ _ H1). apply l8_2.
+  apply (per_side_first _ _ _ _ H2). now apply l8_2.
+Qed.
+
+(** The two halves of a bisected angle, carried across renamings of the
+    angle's sides and of the bisector. *)
+Lemma halves_respelled : forall v p q f p' q' f',
+  SideOk v p p' -> SideOk v q q' -> SideOk v f f' ->
+  CongA (point p) (point v) (point f) (point f) (point v) (point q) ->
+  CongA (point p') (point v) (point f') (point f') (point v) (point q').
+Proof.
+  intros v p q f p' q' f' Hp Hq Hf H.
+  destruct (conga_distinct _ _ _ _ _ _ H) as [_ [Hpv [Hfv [Hfv' Hqv]]]].
+  eapply conga_trans; [|eapply conga_trans; [exact H|]].
+  - apply conga_sym, out2__conga; apply l6_6; now apply side_out.
+  - apply out2__conga; apply l6_6; now apply side_out.
+Qed.
+
+Lemma pair_respelled : forall pair pair_of, AnglePairLaws pair pair_of ->
+  forall a b a' b', SameAngle a a' -> SameAngle b b' ->
+  Interp (pair a b) -> Interp (pair a' b').
+Proof.
+  intros pair pair_of L a b a' b' Ha Hb H.
+  assert (Hbb : Interp (ConAng b b')).
+  { pose proof (pair_wf _ _ L _ _ H) as Hw. cbn in Hw |- *.
+    destruct (conga_distinct _ _ _ _ _ _ Hw) as [_ [Hp [Hq _]]].
+    exact (same_angle_conga b b' Hb Hp Hq). }
+  pose proof (pair_respects _ _ L _ _ _ H Hbb) as H1.
+  apply (pair_sym _ _ L) in H1.
+  assert (Haa : Interp (ConAng a a')).
+  { pose proof (pair_wf _ _ L _ _ H1) as Hw. cbn in Hw |- *.
+    destruct (conga_distinct _ _ _ _ _ _ Hw) as [_ [Hp [Hq _]]].
+    exact (same_angle_conga a a' Ha Hp Hq). }
+  apply (pair_sym _ _ L). exact (pair_respects _ _ L _ _ _ H1 Haa).
+Qed.
+
+Lemma respelled_interp : forall st st', Respelled st st' -> Interp st -> Interp st'.
+Proof.
+  intros st st' Hr H.
+  destruct st; cbn [Respelled] in Hr;
+    try (subst st'; exact H);
+    destruct st'; try (discriminate Hr); try (rewrite Hr; exact H).
+  - (* right *)
+    cbn in H |- *. destruct H as [[Hp Hq] Hper].
+    pose proof Hr as Hs. destruct Hr as [Hv [H1 H2]].
+    unfold Audit.AngleWellFormed in *. cbn in *.
+    split; [split|].
+    + rewrite Hv. exact (side_distinct _ _ _ Hp H1).
+    + rewrite Hv. exact (side_distinct _ _ _ Hq H2).
+    + exact (per_respelled _ _ Hs Hper).
+  - (* con_ang *)
+    destruct Hr as [Ha Hb]. cbn in H |- *.
+    apply (same_angle_conga_of _ _ _ _ _ Ha).
+    apply conga_sym. apply (same_angle_conga_of _ _ _ _ _ Hb). now apply conga_sym.
+  - (* con_right *)
+    destruct Hr as [Ha Hb]. cbn in H |- *. destruct H as [H1 H2].
+    split; [exact (per_respelled _ _ Ha H1)|exact (per_respelled _ _ Hb H2)].
+  - (* ang_bisect *)
+    destruct Hr as [Ha Hs]. destruct Ha as [Hv [H1 H2]].
+    cbn in H |- *. unfold Audit.AngleBisector in *. cbn in *. rewrite Hv.
+    destruct Hs as [[Hf [Hf' Hside]]|[[Hf [Hf' Hside]] | ->]];
+      destruct H as [[Hb Hc]|[Hb Hc]].
+    + left. split; [exact Hf'|]. eapply halves_respelled; eauto.
+    + exfalso. rewrite Hf in Hc. destruct (conga_distinct _ _ _ _ _ _ Hc) as [_ [_ [Hx _]]].
+      now apply Hx.
+    + exfalso. rewrite Hf in Hc. destruct (conga_distinct _ _ _ _ _ _ Hc) as [_ [_ [Hx _]]].
+      now apply Hx.
+    + right. split; [exact Hf'|]. eapply halves_respelled; eauto.
+    + left. split; [exact Hb|]. eapply halves_respelled; eauto. now left.
+    + right. split; [exact Hb|]. eapply halves_respelled; eauto. now left.
+  - destruct Hr as [Ha Hb]. exact (pair_respelled _ _ supplementary_laws _ _ _ _ Ha Hb H).
+  - destruct Hr as [Ha Hb]. exact (pair_respelled _ _ complementary_laws _ _ _ _ Ha Hb H).
+Qed.
+
+Lemma respelled_sym : forall st st', Respelled st st' -> Respelled st' st.
+Proof.
+  intros st st' Hr.
+  destruct st; cbn [Respelled] in Hr;
+    try (subst st'; cbn [Respelled]; reflexivity);
+    destruct st'; try (discriminate Hr); try (rewrite Hr; cbn [Respelled]; reflexivity);
+    cbn [Respelled].
+  - now apply same_angle_sym.
+  - destruct Hr; split; now apply same_angle_sym.
+  - destruct Hr; split; now apply same_angle_sym.
+  - destruct Hr as [Ha Hs]. split; [now apply same_angle_sym|].
+    destruct Ha as [Hv _]. rewrite Hv.
+    destruct Hs as [[H1 [H2 H3]]|[[H1 [H2 H3]] | ->]].
+    + left. repeat split; auto. now apply side_ok_swap.
+    + right; left. repeat split; auto. now apply side_ok_swap.
+    + right; right. reflexivity.
+  - destruct Hr; split; now apply same_angle_sym.
+  - destruct Hr; split; now apply same_angle_sym.
+Qed.
+
+Lemma respelled_iff : forall st st', Respelled st st' -> (Interp st <-> Interp st').
+Proof.
+  intros st st' H. split; [now apply respelled_interp|].
+  apply respelled_interp. now apply respelled_sym.
+Qed.
+
+Lemma on_segment_match_strict : forall v p q s r,
+  on_segment_match v p q s r = true ->
+  BetS (point s.(segment_first)) (point r) (point s.(segment_second)) ->
+  point p <> point v /\ point q <> point v.
+Proof.
+  intros v p q s r H [Hbet [H1 H2]]. unfold on_segment_match in H.
+  apply orb_true_iff in H.
+  destruct H as [H|H]; apply andb_true_iff in H; destruct H as [Hs Hr];
+    unfold ascii_eqb in Hr; apply Ascii.eqb_eq in Hr; subst r;
+    apply segment_u_eqb_cases in Hs; destruct Hs as [-> | ->];
+    unfold reverse_segment in *; cbn in *;
+    split; intro E; rewrite E in *;
+    first [congruence | apply between_identity in Hbet; congruence].
+Qed.
+
+Lemma strict_ray_linked_distinct : forall premises v p q,
+  Forall (interp_premise point) premises ->
+  strict_ray_linked premises v p q = true ->
+  point p <> point v /\ point q <> point v.
+Proof.
+  intros premises v p q Hprem H. unfold strict_ray_linked in H.
+  rewrite premise_found_existsb in H. apply existsb_exists in H.
+  destruct H as [pr [Hin Hc]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
+  unfold interp_premise in Hpr. unfold strict_ray_link in Hc.
+  destruct (premise_statement pr); try discriminate; cbn in Hpr.
+  - exact (on_segment_match_strict _ _ _ _ _ Hc Hpr).
+  - destruct Hpr as [Ha Hb]. apply orb_true_iff in Hc.
+    destruct Hc as [Hc|Hc]; [exact (on_segment_match_strict _ _ _ _ _ Hc Ha)
+                            |exact (on_segment_match_strict _ _ _ _ _ Hc Hb)].
+Qed.
+
+(** The points [ray_class] collects are on the ray. *)
+Lemma ray_grow_side : forall decls premises v p,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  point p <> point v ->
+  forall fuel seen, (forall y, In y seen -> SideOk v p y) ->
+  forall x, In x (ray_grow fuel (ray_step decls premises v) seen) -> SideOk v p x.
+Proof.
+  intros decls premises v p Hwf Hprem Hp fuel.
+  induction fuel as [|n IH]; intros seen Hseen x Hx; cbn [ray_grow] in Hx;
+    [exact (Hseen x Hx)|].
+  destruct (filter _ _) as [|f fs] eqn:Hfresh; [exact (Hseen x Hx)|].
+  apply (IH (seen ++ f :: fs)); [|exact Hx].
+  intros y Hy. apply in_app_or in Hy. destruct Hy as [Hy|Hy]; [exact (Hseen y Hy)|].
+  rewrite <- Hfresh in Hy. apply filter_In in Hy. destruct Hy as [Hy _].
+  apply in_flat_map in Hy. destruct Hy as [z [Hz Hy]].
+  unfold ray_step in Hy. apply filter_In in Hy. destruct Hy as [_ Hc].
+  apply andb_true_iff in Hc. destruct Hc as [Hd Hl].
+  assert (Hyv : point y <> point v).
+  { apply orb_true_iff in Hd. destruct Hd as [Hd|Hd].
+    - exact (not_eq_sym (declared_distinct_sound _ _ _ Hwf Hd)).
+    - exact (proj2 (strict_ray_linked_distinct _ _ _ _ Hprem Hd)). }
+  pose proof (Hseen z Hz) as Hzs.
+  pose proof (side_distinct _ _ _ Hp Hzs) as Hzv.
+  pose proof (l6_6 _ _ _ (ray_linked_out premises v z y Hprem Hl Hzv Hyv)) as Hzy.
+  right. destruct Hzs as [->|Hpz]; [exact Hzy|exact (l6_7 _ _ _ _ Hpz Hzy)].
+Qed.
+
+Lemma ray_class_side : forall decls premises v p x,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  In x (ray_class decls premises v p) -> SideOk v p x.
+Proof.
+  intros decls premises v p x Hwf Hprem Hx. unfold ray_class in Hx.
+  destruct (ray_anchored decls premises v p) eqn:Hd.
+  - eapply ray_grow_side; [exact Hwf|exact Hprem| | |exact Hx].
+    + unfold ray_anchored in Hd. apply orb_true_iff in Hd. destruct Hd as [Hd|Hd].
+      * exact (not_eq_sym (declared_distinct_sound _ _ _ Hwf Hd)).
+      * apply existsb_exists in Hd. destruct Hd as [z [_ Hz]].
+        exact (proj1 (strict_ray_linked_distinct _ _ _ _ Hprem Hz)).
+    + intros y [<-|[]]. now left.
+  - destruct Hx as [<-|[]]. now left.
+Qed.
+
+Lemma least_point_in : forall xs p, least_point p xs = p \/ In (least_point p xs) xs.
+Proof.
+  unfold least_point. induction xs as [|x xs IH]; intros p; cbn [fold_left]; [now left|].
+  destruct (point_ltb x p).
+  - destruct (IH x) as [H|H]; [rewrite H; right; now left|right; now right].
+  - destruct (IH p) as [H|H]; [now left|right; now right].
+Qed.
+
+Lemma ray_rep_side : forall decls premises v p,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  SideOk v p (ray_rep decls premises v p).
+Proof.
+  intros decls premises v p Hwf Hprem. unfold ray_rep.
+  destruct (least_point_in (ray_class decls premises v p) p) as [H|H].
+  - rewrite H. now left.
+  - exact (ray_class_side _ _ _ _ _ Hwf Hprem H).
+Qed.
+
+Lemma canonical_angle_same : forall decls premises a,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  SameAngle a (canonical_angle decls premises a).
+Proof.
+  intros decls premises a Hwf Hprem. unfold canonical_angle, SameAngle. cbn.
+  split; [reflexivity|]. split; now apply ray_rep_side.
+Qed.
+
+Lemma canonical_respelled : forall decls premises st,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  Respelled st (canonical_statement decls premises st).
+Proof.
+  intros decls premises st Hwf Hprem.
+  pose proof (canonical_angle_same decls premises) as Hc.
+  destruct st; cbn [canonical_statement Respelled]; try reflexivity;
+    try (now apply Hc); try (split; now apply Hc).
+  split; [now apply Hc|]. unfold SameRay, canonical_ray.
+  destruct (ascii_eqb (segment_first s) (angle_vertex a)) eqn:H1.
+  - apply Ascii.eqb_eq in H1. left. cbn. repeat split; auto.
+    now apply ray_rep_side.
+  - destruct (ascii_eqb (segment_second s) (angle_vertex a)) eqn:H2.
+    + apply Ascii.eqb_eq in H2. right; left. cbn. repeat split; auto.
+      now apply ray_rep_side.
+    + right; right. reflexivity.
+Qed.
+
+Lemma angle_spellings_same : forall decls premises a a',
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  In a' (angle_spellings decls premises a) -> SameAngle a a'.
+Proof.
+  intros decls premises a a' Hwf Hprem H. unfold angle_spellings in H.
+  apply in_flat_map in H. destruct H as [p [Hp H]].
+  apply in_map_iff in H. destruct H as [q [<- Hq]].
+  unfold SameAngle. cbn. split; [reflexivity|].
+  split; eapply ray_class_side; eauto.
+Qed.
+
+Lemma statement_spellings_respelled : forall decls premises st st',
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  In st' (statement_spellings decls premises st) -> Respelled st st'.
+Proof.
+  intros decls premises st st' Hwf Hprem H.
+  pose proof (angle_spellings_same decls premises) as Hs.
+  destruct st; cbn [statement_spellings] in H;
+    try (destruct H as [<-|[]]; cbn [Respelled]; reflexivity).
+  (* a bisector keeps its spelling *)
+  all: try (destruct H as [<-|[]]; cbn [Respelled];
+            split; [split; [reflexivity|split; now left]|right; right; reflexivity]).
+  all: try (apply in_map_iff in H; destruct H as [a' [<- Ha]]; cbn [Respelled];
+             now eauto).
+  all: apply in_flat_map in H; destruct H as [a' [Ha H]];
+    apply in_map_iff in H; destruct H as [b' [<- Hb]]; cbn [Respelled]; split; eauto.
+Qed.
+
+Lemma canonical_eqb_sound : forall decls premises expected actual,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  canonical_eqb decls premises expected actual = true ->
+  Interp actual -> Interp expected.
+Proof.
+  intros decls premises expected actual Hwf Hprem H Ha. unfold canonical_eqb in H.
+  apply (proj2 (respelled_iff _ _ (canonical_respelled decls premises expected Hwf Hprem))).
+  apply (proj2 (fact_eqb_sound _ _ H)).
+  exact (proj1 (respelled_iff _ _ (canonical_respelled decls premises actual Hwf Hprem)) Ha).
+Qed.
+
+Lemma goal_matches_sound : forall decls premises goal fact,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  goal_matches decls premises goal fact = true -> Interp fact -> Interp goal.
+Proof.
+  intros decls premises goal fact Hwf Hprem H Hf. unfold goal_matches in H.
+  apply orb_true_iff in H. destruct H as [H|H].
+  - exact (proj2 (fact_eqb_sound _ _ H) Hf).
+  - exact (canonical_eqb_sound _ _ _ _ Hwf Hprem H Hf).
 Qed.
 
 Lemma linear_pair_is_supplementary : forall a b,
@@ -5008,7 +5413,7 @@ Proof.
   destruct (on_line_witness (premise_statement pr)) as [[t q]|] eqn:Hw;
     try discriminate.
   apply on_line_witness_some in Hw. rewrite Hw in Hpr. cbn in Hpr.
-  destruct Hpr as [_ Hbet].
+  destruct Hpr as [Hbet _].
   eapply linear_pair_figure_sound; eassumption.
 Qed.
 
@@ -5078,7 +5483,9 @@ Lemma def_perp_core : forall u s p x y,
   endpoint_of x s = true -> Interp (OnLine s p) -> Interp (Perp u s p).
 Proof.
   intros u s p x y Hx Hy Hper Hpu Hyu Hxs Hline.
-  cbn in Hline. destruct Hline as [Hne Hbet].
+  cbn in Hline. destruct Hline as [Hbet [Hn1 Hn2]].
+  assert (Hne : point (segment_first s) <> point (segment_second s)).
+  { intro E. rewrite <- E in Hbet. apply between_identity in Hbet. congruence. }
   pose proof (bet_col _ _ _ Hbet) as Hcol.
   apply (perp_core_col u s p x y); try assumption. Col.
 Qed.
@@ -5145,21 +5552,6 @@ Proof.
     eauto 6 using par_symmetry, par_left_comm, par_right_comm, par_comm.
 Qed.
 
-Lemma cong_pair_sound : forall s1 s2 a b,
-  segment_pair_eqb s1 s2 a b = true ->
-  Interp (ConSeg s1 s2) ->
-  Cong (point a.(segment_first)) (point a.(segment_second))
-       (point b.(segment_first)) (point b.(segment_second)).
-Proof.
-  intros s1 s2 a b Hpair Hcong. cbn in Hcong.
-  unfold segment_pair_eqb in Hpair. apply orb_true_iff in Hpair.
-  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
-    destruct Hcase as [H1 H2];
-    apply segment_u_eqb_cases in H1; apply segment_u_eqb_cases in H2;
-    destruct H1 as [->| ->]; destruct H2 as [->| ->];
-    unfold reverse_segment in Hcong; cbn in Hcong; Cong.
-Qed.
-
 Lemma cong_pair_conclude : forall s1 s2 a b,
   segment_pair_eqb s1 s2 a b = true ->
   Cong (point a.(segment_first)) (point a.(segment_second))
@@ -5186,68 +5578,6 @@ Proof.
   apply (relabel_closed (fun q => Audit.QuadrilateralWellFormed point q)
            quad_wf_rotated quad_wf_reversed q r Heq).
   now apply Hq.
-Qed.
-
-Lemma def_parallelogram_sound : forall decls facts i j conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  def_parallelogram_rule decls facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls facts i j conclusion Hwf Hfacts Hrule.
-  unfold def_parallelogram_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hmatch].
-  assert (Hp1 : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
-  assert (Hp2 : Interp (Para s1 s2)) by (eapply lookup_step_sound; eauto).
-  cbn. unfold Audit.IsParallelogram.
-  apply orb_true_iff in Hmatch;
-    destruct Hmatch as [Hm|Hm]; apply andb_true_iff in Hm;
-    destruct Hm as [HmA HmB];
-    [pose proof (para_pair_sound _ _ _ _ HmA Hp1) as HP1;
-     pose proof (para_pair_sound _ _ _ _ HmB Hp2) as HP2
-    |pose proof (para_pair_sound _ _ _ _ HmB Hp2) as HP1;
-     pose proof (para_pair_sound _ _ _ _ HmA Hp1) as HP2];
-    cbn in HP1, HP2;
-    (split; [eapply declared_quadrilateral_sound; eauto|]);
-    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
-      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn;
-    (split; [exact HP1|exact HP2]).
-Qed.
-
-Lemma rectangle_pgram_sound : forall facts i conclusion,
-  Forall Interp facts -> rectangle_pgram_rule facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i conclusion Hfacts Hrule.
-  unfold rectangle_pgram_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hr : Interp (Rectangle q0)) by (eapply lookup_step_sound; eauto).
-  apply (relabel_closed (fun q => Interp (Parallelogram q)) pgram_rotated pgram_reversed q q0 Hrule).
-  exact (proj1 Hr).
-Qed.
-
-Lemma rhombus_pgram_sound : forall facts i conclusion,
-  Forall Interp facts -> rhombus_pgram_rule facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i conclusion Hfacts Hrule.
-  unfold rhombus_pgram_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hr : Interp (Rhombus q0)) by (eapply lookup_step_sound; eauto).
-  apply (relabel_closed (fun q => Interp (Parallelogram q)) pgram_rotated pgram_reversed q q0 Hrule).
-  exact (proj1 Hr).
 Qed.
 
 Lemma para_pair_conclude : forall s1 s2 a b,
@@ -5510,31 +5840,6 @@ Proof.
     unfold reverse_angle; cbn; CongA.
 Qed.
 
-Lemma suppa_pair_sound : forall x y a b,
-  angle_pair_eqb x y a b = true ->
-  Interp (Supplementary x y) ->
-  SuppA (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))
-        (point b.(angle_first)) (point b.(angle_vertex)) (point b.(angle_last)).
-Proof.
-  intros x y a b Hpair Hsupp. cbn in Hsupp.
-  unfold angle_pair_eqb in Hpair. apply orb_true_iff in Hpair.
-  destruct Hpair as [Hcase|Hcase]; apply andb_true_iff in Hcase;
-    destruct Hcase as [H1 H2];
-    apply angle_u_eqb_cases in H1; apply angle_u_eqb_cases in H2;
-    destruct H1 as [->| ->]; destruct H2 as [->| ->];
-    unfold reverse_angle in Hsupp; cbn in Hsupp;
-    solve [ assumption
-          | now apply suppa_sym
-          | now apply suppa_left_comm | now apply suppa_right_comm
-          | now apply suppa_comm
-          | now apply suppa_left_comm, suppa_sym
-          | now apply suppa_right_comm, suppa_sym
-          | now apply suppa_comm, suppa_sym
-          | now apply suppa_sym, suppa_left_comm
-          | now apply suppa_sym, suppa_right_comm
-          | now apply suppa_sym, suppa_comm ].
-Qed.
-
 Lemma suppa_pair_conclude : forall x y a b,
   angle_pair_eqb x y a b = true ->
   SuppA (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))
@@ -5585,148 +5890,6 @@ Proof.
   exists pa, pb, pt1, pi1, pc, pd, pt2, pi2. split; assumption.
 Qed.
 
-Lemma altint_conv_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  altint_conv_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold altint_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hconga : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
-  destruct (transversal_premise_sound _ _ Hprem Hrule)
-    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc Hcfg]]]]]]]]].
-  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
-  apply (transversal_para_conclude _ _ _ _ _ _ _ _ _ _ Hlines Hcfg).
-  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
-    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
-  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
-  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
-  apply (ghost_transversal_master_conv (point pi1) (point pi2)); try assumption.
-  assert (HI : point pi1 <> point pi2) by (destruct Hrel as [HI _]; exact HI).
-  unfold altint_pair in Hpairs. repeat rewrite orb_true_iff in Hpairs.
-  destruct Hpairs as [[[Hm|Hm]|Hm]|Hm];
-    repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm].
-  - left. pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC. cbn in HC.
-    rewrite (EA (Ha Hg1)), (ED (Hd Hg2)). exact HC.
-  - right. pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC. cbn in HC.
-    rewrite (EB (Hb Hg1)), (EC (Hc Hg2)). exact HC.
-  - left.
-    assert (Hwf1 : angle_well_formed point (angle_name pa pi1 pi2))
-      by (cbn; split; [exact (Ha Hg1)|auto]).
-    assert (Hwf2 : angle_well_formed point (angle_name pd pi2 pi1))
-      by (cbn; split; [exact (Hd Hg2)|exact HI]).
-    pose proof (conga_ray_pair_sound _ _ _ _ _ Hprem Hwf1 Hwf2 Hm Hconga) as HC.
-    cbn in HC. rewrite (EA (Ha Hg1)), (ED (Hd Hg2)). exact HC.
-  - right.
-    assert (Hwf1 : angle_well_formed point (angle_name pb pi1 pi2))
-      by (cbn; split; [exact (Hb Hg1)|auto]).
-    assert (Hwf2 : angle_well_formed point (angle_name pc pi2 pi1))
-      by (cbn; split; [exact (Hc Hg2)|exact HI]).
-    pose proof (conga_ray_pair_sound _ _ _ _ _ Hprem Hwf1 Hwf2 Hm Hconga) as HC.
-    cbn in HC. rewrite (EB (Hb Hg1)), (EC (Hc Hg2)). exact HC.
-Qed.
-
-Lemma altext_conv_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  altext_conv_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold altext_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hconga : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
-  destruct (transversal_premise_sound _ _ Hprem Hrule)
-    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc Hcfg]]]]]]]]].
-  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
-  apply (transversal_para_conclude _ _ _ _ _ _ _ _ _ _ Hlines Hcfg).
-  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
-    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
-  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
-  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
-  apply (ghost_transversal_altext_conv T1' (point pi1) (point pi2) T2');
-    try assumption.
-  unfold altext_pair in Hpairs. apply orb_true_iff in Hpairs.
-  destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[[Hg1 Hg2] Hg3] Hg4] Hm];
-    pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC; cbn in HC;
-    rewrite (ET1 (Ht1 Hg1)), (ET2 (Ht2 Hg2)).
-  - left. rewrite (EA (Ha Hg3)), (ED (Hd Hg4)). exact HC.
-  - right. rewrite (EB (Hb Hg3)), (EC (Hc Hg4)). exact HC.
-Qed.
-
-Lemma corresp_ang_conv_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  corresp_ang_conv_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold corresp_ang_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hconga : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
-  destruct (transversal_premise_sound _ _ Hprem Hrule)
-    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc Hcfg]]]]]]]]].
-  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
-  apply (transversal_para_conclude _ _ _ _ _ _ _ _ _ _ Hlines Hcfg).
-  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
-    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
-  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
-  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
-  apply (ghost_transversal_corresp_conv T1' (point pi1) (point pi2) T2');
-    try assumption.
-  unfold corresp_pair in Hpairs. repeat rewrite orb_true_iff in Hpairs.
-  destruct Hpairs as [[[Hm|Hm]|Hm]|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[Hg1 Hg2] Hg3] Hm];
-    pose proof (conga_pair_sound _ _ _ _ Hm Hconga) as HC; cbn in HC.
-  - left. rewrite (ET2 (Ht2 Hg1)), (EB (Hb Hg2)), (ED (Hd Hg3)). exact HC.
-  - right; left.
-    rewrite (ET2 (Ht2 Hg1)), (EA (Ha Hg2)), (EC (Hc Hg3)). exact HC.
-  - right; right; left.
-    rewrite (ET1 (Ht1 Hg1)), (EA (Ha Hg2)), (EC (Hc Hg3)). exact HC.
-  - right; right; right.
-    rewrite (ET1 (Ht1 Hg1)), (EB (Hb Hg2)), (ED (Hd Hg3)). exact HC.
-Qed.
-
-Lemma sameside_ang_conv_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  sameside_ang_conv_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold sameside_ang_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hsupp : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
-  destruct (transversal_premise_sound _ _ Hprem Hrule)
-    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc Hcfg]]]]]]]]].
-  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
-  apply (transversal_para_conclude _ _ _ _ _ _ _ _ _ _ Hlines Hcfg).
-  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
-    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
-  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
-  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
-  apply (ghost_transversal_sameside_conv T1' (point pi1) (point pi2) T2');
-    try assumption.
-  unfold sameside_pair in Hpairs. apply orb_true_iff in Hpairs.
-  destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm];
-    pose proof (suppa_pair_sound _ _ _ _ Hm Hsupp) as HC; cbn in HC.
-  - left. rewrite (EB (Hb Hg1)), (ED (Hd Hg2)). exact HC.
-  - right. rewrite (EA (Ha Hg1)), (EC (Hc Hg2)). exact HC.
-Qed.
-
 Lemma def_radius_sound : forall facts i conclusion,
   Forall Interp facts -> def_radius_rule facts i conclusion = true ->
   Interp conclusion.
@@ -5769,86 +5932,11 @@ Proof.
   eapply cong_pair_conclude; [exact Hrule|]. cbn. exact Hchord.
 Qed.
 
-Lemma tangent_perp_sound : forall facts i j conclusion,
-  Forall Interp facts -> tangent_perp_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold tangent_perp_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hor].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hqp].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hcirc Hpp].
-  unfold ascii_eqb in Hqp. apply Ascii.eqb_eq in Hqp. subst p.
-  assert (Ht : Interp (Tangent c s1 p0)) by (eapply lookup_step_sound; eauto).
-  cbn in Ht. destruct Ht as [Hsegwf [Honp [Hcol HQ]]].
-  destruct Honp as [Hcwf Hcongp]. cbn in Hcwf, Hcongp, Hsegwf, Hcol.
-  assert (Hpp1 : ascii_eqb p0 p0 = true)
-    by (unfold ascii_eqb; apply Ascii.eqb_refl).
-  assert (HOp : point (c.(circle_center)) <> point p0).
-  { intro Heq. apply Hcwf.
-    rewrite <- Heq in Hcongp.
-    apply (cong_identity _ _ (point c.(circle_center))). Cong. }
-  destruct HQ as [Q [Hdisj [HQne HPer]]].
-  assert (Hcore : Interp (Perp (segment_name c.(circle_center) p0) s1 p0)).
-  { destruct Hdisj as [HQ1|HQ2].
-    - apply (perp_core_col _ _ _ s1.(segment_first) c.(circle_center)).
-      + rewrite HQ1 in HQne. exact HQne.
-      + exact HOp.
-      + apply l8_2. rewrite HQ1 in HPer. exact HPer.
-      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
-        now rewrite orb_true_r.
-      + unfold endpoint_of, ascii_eqb. cbn. now rewrite Ascii.eqb_refl.
-      + unfold endpoint_of, ascii_eqb. now rewrite Ascii.eqb_refl.
-      + exact Hsegwf.
-      + exact Hcol.
-    - apply (perp_core_col _ _ _ s1.(segment_second) c.(circle_center)).
-      + rewrite HQ2 in HQne. exact HQne.
-      + exact HOp.
-      + apply l8_2. rewrite HQ2 in HPer. exact HPer.
-      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
-        now rewrite orb_true_r.
-      + unfold endpoint_of, ascii_eqb. cbn. now rewrite Ascii.eqb_refl.
-      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
-        now rewrite orb_true_r.
-      + exact Hsegwf.
-      + exact Hcol. }
-  apply orb_true_iff in Hor. destruct Hor as [Hcase|Hcase];
-    apply andb_true_iff in Hcase; destruct Hcase as [H1 H2].
-  - assert (Hsw : Interp (Perp s1 (segment_name c.(circle_center) p0) p0)).
-    { cbn in Hcore |- *. apply perp_in_sym. exact Hcore. }
-    exact (proj2 (perp_at_realign s s0 s1 (segment_name c.(circle_center) p0) p0 p0
-                    H1 H2 Hpp1) Hsw).
-  - exact (proj2 (perp_at_realign s s0 (segment_name c.(circle_center) p0) s1 p0 p0
-                    H2 H1 Hpp1) Hcore).
-Qed.
-
 (** Everything above holds in neutral geometry.  [third_angle] is the first
     rule that genuinely needs the parallel postulate, so the assumption enters
     here rather than at the top of the section; every lemma stated before this
     point is free of it. *)
 Context {TE : @Tarski_euclidean Tn TnEQD}.
-
-Lemma schema2_sound : forall decls premises facts i j a b,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts -> schema2 decls premises facts i j a b = true ->
-  Interp a /\ Interp b.
-Proof.
-  intros decls premises facts i j a b Hwf Hprem Hall H. unfold schema2 in H.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate.
-  apply andb_true_iff in H. destruct H as [Ha Hb].
-  pose proof (lookup_step_sound facts i x Hall Hx) as HIx.
-  pose proof (lookup_step_sound facts j y Hall Hy) as HIy.
-  split; eapply dependency_matches_sound; eauto.
-Qed.
 
 Lemma correspondences_well_formed : forall t u c,
   In c (correspondences t u) ->
@@ -5865,30 +5953,6 @@ Proof.
           | now apply rotated_well_formed, rotated_well_formed,
                       reversed_well_formed ]|]).
   contradiction.
-Qed.
-
-Lemma third_angle_sound : forall decls premises facts i j conclusion,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises ->
-  Forall Interp facts ->
-  third_angle decls premises facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls premises facts i j conclusion Hwf Hprem Hall Hrule.
-  unfold third_angle in Hrule.
-  apply existsb_exists in Hrule. destruct Hrule as [t [Hint Hrule]].
-  apply existsb_exists in Hrule. destruct Hrule as [u [Hinu Hrule]].
-  apply existsb_exists in Hrule. destruct Hrule as [c [Hinc Hmatch]].
-  assert (Hwft : forall x, In x decls.(decl_triangles) ->
-                 triangle_well_formed point x) by apply Hwf.
-  pose proof (correspondences_well_formed t u c Hinc (Hwft t Hint) (Hwft u Hinu))
-    as [Hwt Hwu].
-  apply andb_true_iff in Hmatch. destruct Hmatch as [Hdeps Hconclusion].
-  apply (schema2_sound _ _ _ _ _ _ _ Hwf Hprem Hall) in Hdeps.
-  destruct Hdeps as [HatA HatB].
-  apply (fact_eqb_sound _ _ Hconclusion).
-  destruct c as [[A B C] [D E F]]. cbn in HatA, HatB, Hwt, Hwu |- *.
-  now apply ghost_third_angle.
 Qed.
 
 Lemma pgram_opp_sides_sound : forall facts i conclusion,
@@ -5937,64 +6001,6 @@ Proof.
   apply orb_true_iff in Hrule. destruct Hrule as [Hm|Hm].
   - eapply conga_pair_conclude; [exact Hm|]. cbn. now apply conga_sym.
   - eapply conga_pair_conclude; [exact Hm|]. cbn. exact Hang1.
-Qed.
-
-Lemma rhombus_consec_sides_sound : forall facts i j conclusion,
-  Forall Interp facts ->
-  rhombus_consec_sides_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold rhombus_consec_sides_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_pgram facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Heq Hmatch].
-  assert (Hp : Interp (Parallelogram q))
-    by (apply (relabel_closed (fun q => Interp (Parallelogram q)) pgram_rotated pgram_reversed q q0 Heq);
-        eapply lookup_pgram_sound; eauto).
-  clear Hx Heq q0. rename q into q0.
-  assert (Hcseg : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
-  cbn in Hp. destruct Hp as [Hwfq [Hpar1 Hpar2]].
-  pose proof Hwfq as Hwfcopy.
-  destruct Hwfcopy as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol Hex]]]]]]].
-  destruct Hex as [X [HXac HXbd]].
-  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
-    Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
-    cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
-  assert (Hadj :
-    Cong (point q0.(quadrilateral_first)) (point q0.(quadrilateral_second))
-         (point q0.(quadrilateral_second)) (point q0.(quadrilateral_third)) \/
-    Cong (point q0.(quadrilateral_second)) (point q0.(quadrilateral_third))
-         (point q0.(quadrilateral_third)) (point q0.(quadrilateral_fourth)) \/
-    Cong (point q0.(quadrilateral_third)) (point q0.(quadrilateral_fourth))
-         (point q0.(quadrilateral_fourth)) (point q0.(quadrilateral_first)) \/
-    Cong (point q0.(quadrilateral_fourth)) (point q0.(quadrilateral_first))
-         (point q0.(quadrilateral_first)) (point q0.(quadrilateral_second))).
-  { apply orb_true_iff in Hmatch. destruct Hmatch as [Hmatch|Hm].
-    2:{ do 3 right.
-        pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
-        cbn in HC. exact HC. }
-    apply orb_true_iff in Hmatch. destruct Hmatch as [Hmatch|Hm].
-    2:{ do 2 right; left.
-        pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
-        cbn in HC. exact HC. }
-    apply orb_true_iff in Hmatch. destruct Hmatch as [Hm|Hm].
-    - left. pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
-      cbn in HC. exact HC.
-    - right; left. pose proof (cong_pair_sound _ _ _ _ Hm Hcseg) as HC.
-      cbn in HC. exact HC. }
-  pose proof (ghost_rhombus_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2 Hadj)
-    as [H1 [H2 H3]].
-  cbn. split; [|split; [|split]].
-  - split; [exact Hwfq|split; [exact Hpar1|exact Hpar2]].
-  - exact H1.
-  - exact H2.
-  - exact H3.
 Qed.
 
 Lemma rhombus_def_sound : forall facts i conclusion,
@@ -6092,7 +6098,7 @@ Proof.
   destruct Hray as [Hdiagonal|Hlinked].
   { exact (bisect_conclude a s v p q c Hangle Hdiagonal Hhalves). }
   apply andb_true_iff in Hlinked. destruct Hlinked as [Hdeclared Hends].
-  pose proof (declared_segment_sound _ _ Hwf Hdeclared) as Hdistinct.
+  pose proof (declared_distinct_sound _ _ _ Hwf Hdeclared) as Hdistinct.
   destruct s as [start finish]; cbn in Hdistinct.
   apply orb_true_iff in Hends.
   destruct Hends as [Hend|Hend]; apply andb_true_iff in Hend;
@@ -6293,49 +6299,6 @@ Proof.
              (par_symmetry _ _ _ _ Hpar1)).
 Qed.
 
-Lemma pgram_opp_sides_conv_sound : forall decls facts i j conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  pgram_opp_sides_conv_rule decls facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls facts i j conclusion Hdecls Hfacts Hrule.
-  unfold pgram_opp_sides_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [first|] eqn:Hi; try discriminate.
-  destruct first; try discriminate.
-  all: try old_names_eq Hi.
-  destruct (lookup_step facts j) as [second|] eqn:Hj; try discriminate.
-  destruct second; try discriminate.
-  all: try old_names_eq Hj.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hmatch].
-  assert (Hs1 : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
-  assert (Hs2 : Interp (ConSeg s1 s2)) by (eapply lookup_step_sound; eauto).
-  pose proof (declared_quadrilateral_sound _ _ Hdecls Hdeclared) as Hwf.
-  pose proof Hwf as Hwfcopy.
-  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
-  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
-  (* both opposite pairs, whichever order the two dependencies came in *)
-  assert (Hsides :
-    Cong (point q.(quadrilateral_first)) (point q.(quadrilateral_second))
-         (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth)) /\
-    Cong (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
-         (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first))).
-  { apply orb_true_iff in Hmatch. destruct Hmatch as [Hm|Hm];
-      apply andb_true_iff in Hm; destruct Hm as [Hm1 Hm2].
-    - split; [exact (cong_pair_sound _ _ _ _ Hm1 Hs1)
-             |exact (cong_pair_sound _ _ _ _ Hm2 Hs2)].
-    - split; [exact (cong_pair_sound _ _ _ _ Hm2 Hs2)
-             |exact (cong_pair_sound _ _ _ _ Hm1 Hs1)]. }
-  destruct Hsides as [Hab Hbc].
-  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
-    as [Hbcd _].
-  cbn. split; [exact Hwf|]. split.
-  - exact (ghost_pgram_from_opposite_sides _ _ _ _ X Hncol HXac HXbd Hab Hbc).
-  - apply (ghost_pgram_from_opposite_sides _ _ _ _ X Hbcd HXbd
-             (ghost_bets_sym _ _ _ HXac) Hbc).
-    now apply cong_symmetry.
-Qed.
-
 (** An audited angle name that names the same angle as a kernel one is that
     angle, or its reversal -- the audited condition is on point names. *)
 Definition kernel_angle (u : Audit.AngleName) : AngleName :=
@@ -6402,136 +6365,6 @@ Proof.
     + now apply conga_left_comm.
 Qed.
 
-Lemma pgram_consec_angs_conv_sound : forall decls facts i j conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  pgram_consec_angs_conv_rule decls facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls facts i j conclusion Hdecls Hfacts Hrule.
-  unfold pgram_consec_angs_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [first|] eqn:Hi; try discriminate.
-  destruct first; try discriminate.
-  all: try old_names_eq Hi.
-  destruct (lookup_step facts j) as [second|] eqn:Hj; try discriminate.
-  destruct second; try discriminate.
-  all: try old_names_eq Hj.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hmatch].
-  assert (Hs1 : Interp (Supplementary a a0)) by (eapply lookup_step_sound; eauto).
-  assert (Hs2 : Interp (Supplementary a1 a2)) by (eapply lookup_step_sound; eauto).
-  pose proof (declared_quadrilateral_sound _ _ Hdecls Hdeclared) as Hwf.
-  pose proof Hwf as Hwfcopy.
-  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
-  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
-  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
-    as [Hbcd [Hcda Hdab]].
-  (* one supplementary pair per side direction, in either order and with the
-     shared corner in either slot *)
-  assert (Hsides : forall x y : AngleName, Interp (Supplementary x y) ->
-    (consec_pair_eqb x y (quad_corner_b q) (quad_corner_c q) = true \/
-     consec_pair_eqb x y (quad_corner_d q) (quad_corner_a q) = true) ->
-    Interp (Para (quad_side_ab q) (quad_side_cd q))).
-  { intros x y Hxy [Hm|Hm]; apply (proj2 (fact_eqb_sound _ _ Hm)) in Hxy;
-      cbn in Hxy |- *; unfold Audit.Parallel, Audit.seg_start,
-      Audit.seg_end; cbn.
-    - exact (ghost_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd Hxy).
-    - apply par_symmetry.
-      apply (ghost_pgram_from_consec_angles _ _ _ _ X Hcda
-               (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd) Hxy). }
-  assert (Hsides' : forall x y : AngleName, Interp (Supplementary x y) ->
-    (consec_pair_eqb x y (quad_corner_a q) (quad_corner_b q) = true \/
-     consec_pair_eqb x y (quad_corner_c q) (quad_corner_d q) = true) ->
-    Interp (Para (quad_side_bc q) (quad_side_da q))).
-  { intros x y Hxy [Hm|Hm]; apply (proj2 (fact_eqb_sound _ _ Hm)) in Hxy;
-      cbn in Hxy |- *; unfold Audit.Parallel, Audit.seg_start,
-      Audit.seg_end; cbn.
-    - apply par_symmetry.
-      apply (ghost_pgram_from_consec_angles _ _ _ _ X Hdab
-               (ghost_bets_sym _ _ _ HXbd) HXac Hxy).
-    - exact (ghost_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
-               (ghost_bets_sym _ _ _ HXac) Hxy). }
-  cbn. split; [exact Hwf|].
-  apply orb_true_iff in Hmatch. destruct Hmatch as [Hm|Hm];
-    apply andb_true_iff in Hm; destruct Hm as [Hm1 Hm2];
-    apply orb_true_iff in Hm1; apply orb_true_iff in Hm2.
-  - split; [exact (Hsides _ _ Hs1 Hm1)|exact (Hsides' _ _ Hs2 Hm2)].
-  - split; [exact (Hsides _ _ Hs2 Hm2)|exact (Hsides' _ _ Hs1 Hm1)].
-Qed.
-
-Lemma rect_pgram_ang_sound : forall facts i j conclusion,
-  Forall Interp facts -> rect_pgram_ang_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold rect_pgram_ang_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [first|] eqn:Hi; try discriminate.
-  destruct first; try discriminate.
-  all: try old_names_eq Hi.
-  destruct (lookup_pgram facts j) as [second|] eqn:Hj; try discriminate.
-  destruct second; try discriminate.
-  all: try old_names_eq Hj.
-  apply andb_true_iff in Hrule. destruct Hrule as [Heq Hcorner].
-  assert (Hright : Interp (Right a)) by (eapply lookup_step_sound; eauto).
-  assert (Hp : Interp (Parallelogram q))
-    by (apply (relabel_closed (fun q => Interp (Parallelogram q)) pgram_rotated pgram_reversed q q0 Heq);
-        eapply lookup_pgram_sound; eauto).
-  destruct Hright as [_ Hper]. unfold right_angle in Hper.
-  cbn in Hp. destruct Hp as [Hwf [Hpar1 Hpar2]].
-  pose proof Hwf as Hwfcopy.
-  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
-  destruct Hex as [X [HXac HXbd]].
-  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
-    Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
-    cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
-  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
-    as [Hbcd [Hcda Hdab]].
-  (* whichever corner was declared right, rotate the figure so that it is the
-     one the theorem takes, and read the four right angles back off *)
-  assert (Hcorners :
-    Per (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) /\
-    Per (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) (point q.(quadrilateral_third)) /\
-    Per (point q.(quadrilateral_second)) (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth)) /\
-    Per (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first))).
-  { repeat rewrite orb_true_iff in Hcorner.
-    destruct Hcorner as [[[Ha|Ha]|Ha]|Ha];
-      apply angle_u_eqb_cases in Ha; unfold reverse_angle in Ha;
-      destruct Ha as [Ha|Ha]; subst a; cbn in Hper.
-    - destruct (ghost_pgram_right_corner _ _ _ _ X Hdab
-                  (ghost_bets_sym _ _ _ HXbd) HXac
-                  (par_symmetry _ _ _ _ Hpar2) Hpar1 Hper) as [H1 [H2 [H3 H4]]].
-      auto.
-    - destruct (ghost_pgram_right_corner _ _ _ _ X Hdab
-                  (ghost_bets_sym _ _ _ HXbd) HXac
-                  (par_symmetry _ _ _ _ Hpar2) Hpar1 (l8_2 _ _ _ Hper))
-        as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ghost_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
-                  Hper) as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ghost_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
-                  (l8_2 _ _ _ Hper)) as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ghost_pgram_right_corner _ _ _ _ X Hbcd HXbd
-                  (ghost_bets_sym _ _ _ HXac) Hpar2
-                  (par_symmetry _ _ _ _ Hpar1) Hper) as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ghost_pgram_right_corner _ _ _ _ X Hbcd HXbd
-                  (ghost_bets_sym _ _ _ HXac) Hpar2
-                  (par_symmetry _ _ _ _ Hpar1) (l8_2 _ _ _ Hper))
-        as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ghost_pgram_right_corner _ _ _ _ X Hcda
-                  (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd)
-                  (par_symmetry _ _ _ _ Hpar1) (par_symmetry _ _ _ _ Hpar2)
-                  Hper) as [H1 [H2 [H3 H4]]]. auto.
-    - destruct (ghost_pgram_right_corner _ _ _ _ X Hcda
-                  (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd)
-                  (par_symmetry _ _ _ _ Hpar1) (par_symmetry _ _ _ _ Hpar2)
-                  (l8_2 _ _ _ Hper)) as [H1 [H2 [H3 H4]]]. auto. }
-  destruct Hcorners as [Hpa [Hpb [Hpc Hpd]]].
-  cbn. unfold Audit.RightAngle, Audit.quad_angle_a, Audit.quad_angle_b,
-    Audit.quad_angle_c, Audit.quad_angle_d, Audit.ang_start, Audit.ang_vertex,
-    Audit.ang_end; cbn.
-  split; [exact (conj Hwf (conj Hpar1 Hpar2))|].
-  split; [exact Hpa|]. split; [exact Hpb|]. split; [exact Hpc|exact Hpd].
-Qed.
-
 Lemma rect_diag_con_sound : forall facts i conclusion,
   Forall Interp facts -> rect_diag_con_rule facts i conclusion = true ->
   Interp conclusion.
@@ -6585,185 +6418,6 @@ Proof.
     pose proof (rectangle_corner_sound facts q a Hfacts Hwf Hra Hrb Hrc Hrd Ha) as [_ Hra'].
     pose proof (rectangle_corner_sound facts q a0 Hfacts Hwf Hra Hrb Hrc Hrd Hb) as [_ Hrb'].
     exact (conj Hra' Hrb').
-Qed.
-
-Lemma pgram_opp_side_para_sound : forall decls facts i j conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  pgram_opp_side_para_rule decls facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls facts i j conclusion Hwf Hfacts Hrule.
-  unfold pgram_opp_side_para_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hmatch].
-  assert (Hcseg : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
-  assert (Hpara : Interp (Para s1 s2)) by (eapply lookup_step_sound; eauto).
-  pose proof (declared_quadrilateral_sound _ _ Hwf Hdecl) as Hwfq.
-  pose proof Hwfq as Hwfcopy.
-  destruct Hwfcopy as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol Hex]]]]]]].
-  destruct Hex as [X [HXac HXbd]].
-  cbn in Hncol, HXac, HXbd.
-  cbn. split; [exact Hwfq|].
-  apply orb_true_iff in Hmatch; destruct Hmatch as [Hm|Hm];
-    apply andb_true_iff in Hm; destruct Hm as [HmC HmP];
-    pose proof (cong_pair_sound _ _ _ _ HmC Hcseg) as HC;
-    pose proof (para_pair_sound _ _ _ _ HmP Hpara) as HP;
-    cbn in HC, HP.
-  - assert (Hother : Par (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
-                         (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)))
-      by (eapply ghost_pgram_from_side; eauto).
-    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
-      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
-    split; [exact HP|exact Hother].
-  - assert (HXca : BetS (point q.(quadrilateral_third)) X (point q.(quadrilateral_first))).
-    { destruct HXac as [Hb [Hd1 Hd2]].
-      repeat split; [now apply between_symmetry| |];
-        intro Heq; [apply Hd2|apply Hd1]; auto. }
-    assert (Hncol2 : ~ Col (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
-                           (point q.(quadrilateral_fourth))).
-    { destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
-        as [Hn _]. exact Hn. }
-    assert (Hother : Par (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth))
-                         (point q.(quadrilateral_first)) (point q.(quadrilateral_second)))
-      by (eapply (ghost_pgram_from_side (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
-                    (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)) X); eauto).
-    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
-      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
-    split; [|exact HP].
-    apply par_symmetry. exact Hother.
-Qed.
-
-Lemma altint_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  altint_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold altint_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hpara : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
-  destruct (transversal_premise_sound _ _ Hprem Hrule)
-    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc Hcfg]]]]]]]]].
-  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
-  pose proof (transversal_para_sound _ _ _ _ _ _ _ _ _ _
-                Hlines Hcfg Hpara) as HP.
-  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
-    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
-  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
-  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
-  destruct (ghost_transversal_master _ _ _ _ _ _ _ _
-              Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hm1 Hm2].
-  unfold altint_pair in Hpairs. apply orb_true_iff in Hpairs.
-  destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm];
-    eapply conga_pair_conclude; try exact Hm; cbn.
-  - rewrite (EA (Ha Hg1)), (ED (Hd Hg2)) in Hm1. exact Hm1.
-  - rewrite (EB (Hb Hg1)), (EC (Hc Hg2)) in Hm2. exact Hm2.
-Qed.
-
-Lemma altext_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  altext_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold altext_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hpara : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
-  destruct (transversal_premise_sound _ _ Hprem Hrule)
-    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc Hcfg]]]]]]]]].
-  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
-  pose proof (transversal_para_sound _ _ _ _ _ _ _ _ _ _
-                Hlines Hcfg Hpara) as HP.
-  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
-    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
-  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
-  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
-  destruct (ghost_transversal_altext _ _ _ _ _ _ _ _
-              Hbt1 Hbt2 Hbab Hbcd Hos HP') as [He1 He2].
-  unfold altext_pair in Hpairs. apply orb_true_iff in Hpairs.
-  destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[[Hg1 Hg2] Hg3] Hg4] Hm];
-    eapply conga_pair_conclude; try exact Hm; cbn;
-    rewrite (ET1 (Ht1 Hg1)), (ET2 (Ht2 Hg2)) in *.
-  - rewrite (EA (Ha Hg3)), (ED (Hd Hg4)) in He1. exact He1.
-  - rewrite (EB (Hb Hg3)), (EC (Hc Hg4)) in He2. exact He2.
-Qed.
-
-Lemma corresp_ang_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  corresp_ang_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold corresp_ang_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hpara : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
-  destruct (transversal_premise_sound _ _ Hprem Hrule)
-    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc Hcfg]]]]]]]]].
-  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
-  pose proof (transversal_para_sound _ _ _ _ _ _ _ _ _ _
-                Hlines Hcfg Hpara) as HP.
-  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
-    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
-  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
-  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
-  destruct (ghost_transversal_corresp _ _ _ _ _ _ _ _
-              Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hc1 [Hc2 [Hc3 Hc4]]].
-  unfold corresp_pair in Hpairs. repeat rewrite orb_true_iff in Hpairs.
-  destruct Hpairs as [[[Hm|Hm]|Hm]|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[Hg1 Hg2] Hg3] Hm];
-    eapply conga_pair_conclude; try exact Hm; cbn.
-  - rewrite (ET2 (Ht2 Hg1)), (EB (Hb Hg2)), (ED (Hd Hg3)) in Hc1. exact Hc1.
-  - rewrite (ET2 (Ht2 Hg1)), (EA (Ha Hg2)), (EC (Hc Hg3)) in Hc2. exact Hc2.
-  - rewrite (ET1 (Ht1 Hg1)), (EA (Ha Hg2)), (EC (Hc Hg3)) in Hc3. exact Hc3.
-  - rewrite (ET1 (Ht1 Hg1)), (EB (Hb Hg2)), (ED (Hd Hg3)) in Hc4. exact Hc4.
-Qed.
-
-Lemma sameside_ang_sound : forall premises facts i conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  sameside_ang_rule premises facts i conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i conclusion Hprem Hfacts Hrule.
-  unfold sameside_ang_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  assert (Hpara : Interp (Para s s0)) by (eapply lookup_step_sound; eauto).
-  destruct (transversal_premise_sound _ _ Hprem Hrule)
-    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hc Hcfg]]]]]]]]].
-  apply andb_true_iff in Hc. destruct Hc as [Hlines Hpairs].
-  pose proof (transversal_para_sound _ _ _ _ _ _ _ _ _ _
-                Hlines Hcfg Hpara) as HP.
-  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
-    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
-  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
-  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
-  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
-  destruct (ghost_transversal_sameside _ _ _ _ _ _ _ _
-              Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hs1 Hs2].
-  unfold sameside_pair in Hpairs. apply orb_true_iff in Hpairs.
-  destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm];
-    eapply suppa_pair_conclude; try exact Hm; cbn.
-  - rewrite (EB (Hb Hg1)), (ED (Hd Hg2)) in Hs1. exact Hs1.
-  - rewrite (EA (Ha Hg1)), (EC (Hc Hg2)) in Hs2. exact Hs2.
 Qed.
 
 Lemma para_link_left : forall u v X Y,
@@ -6824,34 +6478,6 @@ Qed.
 
 (** * Rules added by the reason campaign: soundness *)
 
-Lemma isos_trap_con_diags_sound : forall facts i j conclusion,
-  Forall Interp facts ->
-  isos_trap_con_diags_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold isos_trap_con_diags_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hq Hdiag].
-  assert (Hcong : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
-  assert (Htrap : Interp (TrapezoidPremise q s1 s2))
-    by (apply (relabel_closed (fun q => Interp (TrapezoidPremise q s1 s2))
-                 (trap_premise_rotated s1 s2) (trap_premise_reversed s1 s2)
-                 q q0 Hq);
-        eapply lookup_step_sound; eauto).
-  cbn in Htrap. destruct Htrap as [Htrap _].
-  pose proof (cong_pair_sound _ _ _ _ Hdiag Hcong) as Hdiagonals.
-  cbn in Hdiagonals |- *. split; [exact Htrap|].
-  unfold Audit.SegmentCongruent, Audit.seg_start, Audit.seg_end; cbn.
-  exact Hdiagonals.
-Qed.
-
 (** The audited parallelogram unpacked the way every rule below needs it: the
     crossing point, the noncollinear corner, and the two parallel pairs in
     GeoCoq's own spelling. *)
@@ -6877,55 +6503,6 @@ Proof.
   split; [exact Hpar1|exact Hpar2].
 Qed.
 
-Lemma pgram_opp_angs_conv_sound : forall decls facts i j conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  pgram_opp_angs_conv_rule decls facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls facts i j conclusion Hdecls Hfacts Hrule.
-  unfold pgram_opp_angs_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hmatch].
-  pose proof (declared_quadrilateral_sound _ _ Hdecls Hdeclared) as Hwf.
-  assert (Hc1 : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
-  assert (Hc2 : Interp (ConAng a1 a2)) by (eapply lookup_step_sound; eauto).
-  (* both pairs, whichever order the two dependencies came in *)
-  assert (Hcorners :
-    CongA (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)) (point q.(quadrilateral_second))
-          (point q.(quadrilateral_second)) (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth)) /\
-    CongA (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
-          (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first))).
-  { apply orb_true_iff in Hmatch. destruct Hmatch as [Hm|Hm];
-      apply andb_true_iff in Hm; destruct Hm as [Hm1 Hm2].
-    - split; [exact (conga_pair_sound _ _ _ _ Hm1 Hc1)
-             |exact (conga_pair_sound _ _ _ _ Hm2 Hc2)].
-    - split; [exact (conga_pair_sound _ _ _ _ Hm2 Hc2)
-             |exact (conga_pair_sound _ _ _ _ Hm1 Hc1)]. }
-  destruct Hcorners as [HopA HopB].
-  pose proof Hwf as Hwfcopy.
-  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
-  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
-  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
-    as [Hbcd [_ _]].
-  cbn. split; [exact Hwf|].
-  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
-    Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
-  split.
-  - apply (ghost_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd).
-    exact (ghost_quad_opposite_angles _ _ _ _ X Hncol HXac HXbd HopA HopB).
-  - apply (ghost_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
-             (ghost_bets_sym _ _ _ HXac)).
-    apply (ghost_quad_opposite_angles _ _ _ _ X Hbcd HXbd
-             (ghost_bets_sym _ _ _ HXac));
-      [exact HopB|now apply conga_sym].
-Qed.
-
 (** The audited isosceles trapezoid unpacked: the crossing point, the
     noncollinear corner, and the congruent diagonals. *)
 Lemma isos_trap_figure : forall q s1 s2,
@@ -6944,67 +6521,6 @@ Proof.
     cbn in Hdiag.
   exists X. split; [exact Hncol|]. split; [exact HXac|].
   split; [exact HXbd|exact Hdiag].
-Qed.
-
-Lemma isos_trap_base_angs_sound : forall facts i j conclusion,
-  Forall Interp facts ->
-  isos_trap_base_angs_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold isos_trap_base_angs_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hq Hmatch].
-  assert (Hangles : Interp (ConAng a a0)) by (eapply lookup_step_sound; eauto).
-  assert (Htrap : Interp (TrapezoidPremise q s s0))
-    by (apply (relabel_closed (fun q => Interp (TrapezoidPremise q s s0))
-                 (trap_premise_rotated s s0) (trap_premise_reversed s s0)
-                 q q0 Hq);
-        eapply lookup_step_sound; eauto).
-  pose proof Htrap as Htrapcopy. cbn in Htrapcopy.
-  destruct Htrapcopy as [Hshape Hpar].
-  pose proof Hshape as Hwf. destruct Hwf as [Hwf _].
-  destruct Hwf as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
-  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
-  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
-    as [Hbcd [Hcda Hdab]].
-  cbn. split; [exact Hshape|].
-  unfold Audit.SegmentCongruent, Audit.seg_start, Audit.seg_end; cbn.
-  (* the parallel pair the premise names, and the base angles at either end
-     of it: four readings of one theorem, one per rotation *)
-  apply orb_true_iff in Hmatch.
-  destruct Hmatch as [Hm|Hm]; apply andb_true_iff in Hm;
-    destruct Hm as [Hsides Hangs];
-    pose proof (para_pair_sound _ _ _ _ Hsides Hpar) as Hparallel;
-    cbn in Hparallel;
-    apply orb_true_iff in Hangs; destruct Hangs as [Hm|Hm];
-    pose proof (conga_pair_sound _ _ _ _ Hm Hangles) as Hbase; cbn in Hbase.
-  - exact (ghost_isos_trap_con_diagonals _ _ _ _ X Hncol HXac HXbd
-             Hparallel Hbase).
-  - assert (Hrot : Cong (point q.(quadrilateral_third)) (point q.(quadrilateral_first))
-                        (point q.(quadrilateral_fourth)) (point q.(quadrilateral_second))).
-    { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hcda
-               (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd));
-        [now apply par_symmetry|exact Hbase]. }
-    Cong.
-  - assert (Hrot : Cong (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth))
-                        (point q.(quadrilateral_third)) (point q.(quadrilateral_first))).
-    { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hbcd HXbd
-               (ghost_bets_sym _ _ _ HXac));
-        [exact Hparallel|exact Hbase]. }
-    Cong.
-  - assert (Hrot : Cong (point q.(quadrilateral_fourth)) (point q.(quadrilateral_second))
-                        (point q.(quadrilateral_first)) (point q.(quadrilateral_third))).
-    { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hdab
-               (ghost_bets_sym _ _ _ HXbd) HXac);
-        [now apply par_symmetry|exact Hbase]. }
-    Cong.
 Qed.
 
 Lemma isos_trap_base_angs_conv_sound : forall facts i conclusion,
@@ -7045,37 +6561,6 @@ Proof.
   - apply (ghost_isos_trap_base_angles _ _ _ _ X Hdab
              (ghost_bets_sym _ _ _ HXbd) HXac);
       [now apply par_symmetry|Cong].
-Qed.
-
-Lemma rect_diag_con_conv_sound : forall facts i j conclusion,
-  Forall Interp facts ->
-  rect_diag_con_conv_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold rect_diag_con_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_pgram facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hq Hdiag].
-  assert (Hcong : Interp (ConSeg s s0)) by (eapply lookup_step_sound; eauto).
-  assert (Hp : Interp (Parallelogram q))
-    by (apply (relabel_closed (fun q => Interp (Parallelogram q)) pgram_rotated pgram_reversed q q0 Hq);
-        eapply lookup_pgram_sound; eauto).
-  pose proof (cong_pair_sound _ _ _ _ Hdiag Hcong) as Hdiagonals.
-  cbn in Hdiagonals.
-  destruct (pgram_figure q Hp) as [X [Hncol [HXac [HXbd [Hpar1 Hpar2]]]]].
-  destruct (ghost_pgram_con_diagonals_right _ _ _ _ X Hncol HXac HXbd
-              Hpar1 Hpar2 Hdiagonals) as [HperA [HperB [HperC HperD]]].
-  cbn. split; [exact Hp|].
-  unfold Audit.RightAngle, Audit.quad_angle_a, Audit.quad_angle_b,
-    Audit.quad_angle_c, Audit.quad_angle_d, Audit.ang_start, Audit.ang_vertex,
-    Audit.ang_end; cbn.
-  repeat split; assumption.
 Qed.
 
 (** What an [intersect_seg] premise of the two diagonals says, with the
@@ -7237,97 +6722,6 @@ Proof.
     + apply perp_in_sym, equidistant_diagonals_perp; auto; Cong.
 Qed.
 
-Lemma rhombus_diag_perp_conv_sound : forall facts i j conclusion,
-  Forall Interp facts ->
-  rhombus_diag_perp_conv_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold rhombus_diag_perp_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_pgram facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hq Hmatch].
-  assert (Hperp : Interp (Perp s s0 p)) by (eapply lookup_step_sound; eauto).
-  assert (Hp : Interp (Parallelogram q))
-    by (apply (relabel_closed (fun q => Interp (Parallelogram q)) pgram_rotated pgram_reversed q q0 Hq);
-        eapply lookup_pgram_sound; eauto).
-  destruct (pgram_figure q Hp) as [X [Hncol [HXac [HXbd [Hpar1 Hpar2]]]]].
-  cbn in Hperp. apply perp_in_perp in Hperp.
-  assert (Hdiag : Definitions.Perp (point q.(quadrilateral_first)) (point q.(quadrilateral_third))
-                                   (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth))).
-  { apply orb_true_iff in Hmatch.
-    destruct Hmatch as [Hm|Hm]; apply andb_true_iff in Hm;
-      destruct Hm as [H1 H2];
-      apply segment_u_eqb_cases in H1; apply segment_u_eqb_cases in H2;
-      destruct H1 as [->| ->]; destruct H2 as [->| ->];
-      unfold reverse_segment, quad_diagonal_ac, quad_diagonal_bd in Hperp;
-      cbn in Hperp;
-      eauto 6 using perp_sym, perp_left_comm, perp_right_comm, perp_comm. }
-  destruct (ghost_pgram_perp_diagonals_rhombus _ _ _ _ X Hncol HXac HXbd
-              Hpar1 Hpar2 Hdiag) as [Hab [Hbc Hcd]].
-  cbn. split; [exact Hp|].
-  unfold Audit.SegmentCongruent, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
-    Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
-  repeat split; assumption.
-Qed.
-
-Lemma pgram_diag_bisect_conv_sound : forall decls facts i j conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  pgram_diag_bisect_conv_rule decls facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls facts i j conclusion Hdecls Hfacts Hrule.
-  unfold pgram_diag_bisect_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hmatch].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdeclared Hsame].
-  apply Ascii.eqb_eq in Hsame. subst p0.
-  pose proof (declared_quadrilateral_sound _ _ Hdecls Hdeclared) as Hwf.
-  pose proof Hwf as Hwfcopy.
-  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol _]]]]]]]. cbn in Hncol.
-  assert (Hb1 : Interp (SegBisect s s0 p))
-    by (eapply lookup_step_sound; eauto).
-  assert (Hb2 : Interp (SegBisect s1 s2 p))
-    by (eapply lookup_step_sound; eauto).
-  cbn in Hb1, Hb2.
-  destruct Hb1 as [_ [_ Hmid1]]. destruct Hb2 as [_ [_ Hmid2]].
-  assert (Hdiagonals :
-    Midpoint (point p) (point q.(quadrilateral_first)) (point q.(quadrilateral_third)) /\
-    Midpoint (point p) (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth))).
-  { apply orb_true_iff in Hmatch.
-    assert (Hmove : forall (s t : SegmentName),
-        segment_u_eqb s t = true ->
-        Midpoint (point p) (point s.(segment_first)) (point s.(segment_second)) ->
-        Midpoint (point p) (point t.(segment_first)) (point t.(segment_second))).
-    { intros u v Huv Hm. apply segment_u_eqb_cases in Huv.
-      destruct Huv as [->| ->]; [exact Hm|].
-      unfold reverse_segment in Hm. cbn in Hm. now apply l7_2. }
-    destruct Hmatch as [Hm|Hm];
-      apply andb_true_iff in Hm; destruct Hm as [Hm Ht2];
-      apply andb_true_iff in Hm; destruct Hm as [Hm Hb2'];
-      apply andb_true_iff in Hm; destruct Hm as [_ Ht1];
-      [split; [exact (Hmove _ _ Ht2 Hmid2)|exact (Hmove _ _ Ht1 Hmid1)]
-      |split; [exact (Hmove _ _ Ht1 Hmid1)|exact (Hmove _ _ Ht2 Hmid2)]]. }
-  destruct Hdiagonals as [Hac Hbd].
-  destruct (ghost_pgram_from_diagonal_midpoint _ _ _ _ _ Hncol Hac Hbd)
-    as [Hpar1 Hpar2].
-  cbn. split; [exact Hwf|].
-  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
-    Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
-  split; assumption.
-Qed.
-
 Lemma perp_bisector_sound : forall facts i j conclusion,
   Forall Interp facts -> perp_bisector_rule facts i j conclusion = true ->
   Interp conclusion.
@@ -7365,128 +6759,6 @@ Proof.
   destruct Hshape as [->| ->]; unfold reverse_segment in *; cbn in *;
     destruct Hends as [Hq|Hq]; subst Q;
     solve [contradiction | split; assumption].
-Qed.
-
-Lemma tangent_perp_conv_sound : forall facts i j conclusion,
-  Forall Interp facts -> tangent_perp_conv_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold tangent_perp_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hlines].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hshape].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hfoot].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hcircle Htouch].
-  apply circle_eqb_eq in Hcircle. subst c0.
-  unfold ascii_eqb in Htouch, Hfoot.
-  apply Ascii.eqb_eq in Htouch. apply Ascii.eqb_eq in Hfoot. subst p1 p0.
-  assert (Hperp : Interp (Perp s0 s1 p)) by (eapply lookup_step_sound; eauto).
-  assert (Hradius : Interp (Radius c p)) by (eapply lookup_step_sound; eauto).
-  assert (Hfigure : Interp (Perp s (segment_name c.(circle_center) p) p)).
-  { apply orb_true_iff in Hlines.
-    destruct Hlines as [Hm|Hm]; apply andb_true_iff in Hm;
-      destruct Hm as [H1 H2].
-    - exact (proj1 (perp_at_realign s0 s1 s (segment_name c.(circle_center) p) p p
-                     H1 H2 (Ascii.eqb_refl p)) Hperp).
-    - cbn. apply perp_in_sym.
-      exact (proj1 (perp_at_realign s0 s1 (segment_name c.(circle_center) p) s p p
-                     H2 H1 (Ascii.eqb_refl p)) Hperp). }
-  cbn in Hfigure. destruct Hfigure as [Hswf [_ [Hcol [_ Hright]]]].
-  destruct s as [a b]. cbn in Hswf, Hcol, Hright, Hshape |- *.
-  unfold endpoint_of, ascii_eqb in Hshape. apply orb_true_iff in Hshape.
-  split; [exact Hswf|]. split; [exact Hradius|]. split; [Col|].
-  destruct Hshape as [Hp|Hp]; apply Ascii.eqb_eq in Hp; cbn in Hp; subst.
-  - exists (point b). split; [now right|]. split.
-    + now apply not_eq_sym.
-    + apply l8_2, Hright; [apply col_trivial_3|apply col_trivial_1].
-  - exists (point a). split; [now left|]. split.
-    + exact Hswf.
-    + apply l8_2, Hright; [apply col_trivial_1|apply col_trivial_1].
-Qed.
-
-Lemma con_tangents_ext_sound : forall facts i j conclusion,
-  Forall Interp facts -> con_tangents_ext_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold con_tangents_ext_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hconc].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hshape'].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hcircle Hshape].
-  apply circle_eqb_eq in Hcircle. subst c0.
-  assert (Ht1 : Interp (Tangent c s1 p)) by (eapply lookup_step_sound; eauto).
-  assert (Ht2 : Interp (Tangent c s2 p0)) by (eapply lookup_step_sound; eauto).
-  pose proof Ht1 as Hon1. pose proof Ht2 as Hon2.
-  cbn in Hon1, Hon2.
-  destruct Hon1 as [_ [[_ Hr1] _]]. destruct Hon2 as [_ [[_ Hr2] _]].
-  destruct (tangent_far_point _ _ _ _ Hshape Ht1) as [Hper1 _].
-  destruct (tangent_far_point _ _ _ _ Hshape' Ht2) as [Hper2 _].
-  apply (cong_pair_conclude _ _ (segment_name p (other_endpoint p s1))
-                                (segment_name p0 (other_endpoint p s1)));
-    [exact Hconc|cbn].
-  apply (ghost_tangents_congruent (point c.(circle_center)));
-    [now apply l8_2|now apply l8_2|].
-  apply cong_transitivity with (point c.(circle_center)) (point c.(circle_radius_point));
-    [Cong|Cong].
-Qed.
-
-Lemma radius_chord_bisect_sound : forall facts i j k conclusion,
-  Forall Interp facts ->
-  radius_chord_bisect_rule facts i j k conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j k conclusion Hfacts Hrule.
-  unfold radius_chord_bisect_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  destruct (lookup_step facts k) as [z|] eqn:Hz; try discriminate;
-    destruct z; try discriminate.
-  all: try old_names_eq Hz.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hchordline].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Htarget].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hperpline].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hbisector].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hcircle Hfoot].
-  apply circle_eqb_eq in Hcircle. subst c0.
-  unfold ascii_eqb in Hfoot. apply Ascii.eqb_eq in Hfoot. subst p0.
-  assert (Hperp : Interp (Perp s1 s2 p)) by (eapply lookup_step_sound; eauto).
-  assert (Hch : Interp (Chord c s3)) by (eapply lookup_step_sound; eauto).
-  assert (Hfigure : Interp (Perp (segment_name c.(circle_center) p) s3 p))
-    by (exact (proj1 (perp_at_realign s1 s2 (segment_name c.(circle_center) p) s3 p p
-                       Hperpline Hchordline (Ascii.eqb_refl p)) Hperp)).
-  cbn in Hfigure.
-  destruct Hfigure as [Hcentre [Hchordwf [_ [Hcol Hright]]]].
-  cbn in Hch. destruct Hch as [_ [[_ Hone] [_ Htwo]]].
-  assert (Hmid : Midpoint (point p) (point s3.(segment_first))
-                          (point s3.(segment_second))).
-  { apply (ghost_chord_foot_midpoint (point c.(circle_center)));
-      [exact Hchordwf|Col| | |].
-    - apply l8_2, Hright; [apply col_trivial_1|apply col_trivial_1].
-    - apply l8_2, Hright; [apply col_trivial_1|apply col_trivial_3].
-    - apply cong_transitivity with (point c.(circle_center)) (point c.(circle_radius_point));
-        [exact Hone|Cong]. }
-  apply (proj2 (seg_bisect_realign s s0 (segment_name c.(circle_center) p) s3 p p
-                 Hbisector Htarget (Ascii.eqb_refl p))).
-  cbn. split; [exact Hcentre|]. split; [apply col_trivial_2|exact Hmid].
 Qed.
 
 (** The audited parallelogram says the same thing about every rotation of its
@@ -7564,49 +6836,6 @@ Proof.
   repeat split; assumption.
 Qed.
 
-Lemma rhombus_opp_bisect_conv_sound : forall facts i j k conclusion,
-  Forall Interp facts ->
-  rhombus_opp_bisect_conv_rule facts i j k conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j k conclusion Hfacts Hrule.
-  unfold rhombus_opp_bisect_conv_rule in Hrule.
-  destruct conclusion; try discriminate. all: try old_names_goal.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  all: try old_names_eq Hx.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  all: try old_names_eq Hy.
-  destruct (lookup_pgram facts k) as [z|] eqn:Hz; try discriminate;
-    destruct z; try discriminate.
-  all: try old_names_eq Hz.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hq Hsearch].
-  assert (Hb1 : Interp (AngBisect a s)) by (eapply lookup_step_sound; eauto).
-  assert (Hb2 : Interp (AngBisect a0 s0)) by (eapply lookup_step_sound; eauto).
-  assert (Hp : Interp (Parallelogram q))
-    by (apply (relabel_closed (fun q => Interp (Parallelogram q)) pgram_rotated pgram_reversed q q0 Hq);
-        eapply lookup_pgram_sound; eauto).
-  apply existsb_exists in Hsearch. destruct Hsearch as [rot [Hin Hmatch]].
-  assert (Hstep : forall r, Interp (Parallelogram r) ->
-      (bisector_at_corner a s r &&
-       bisector_at_corner a0 s0 (rotate_quad (rotate_quad r))) = true ->
-      Interp (Rhombus r)).
-  { intros r Hpr Hm. apply andb_true_iff in Hm. destruct Hm as [Hm _].
-    exact (pgram_bisector_rhombus_at r a s Hm Hb1 Hpr). }
-  destruct q as [qa qb qc qd].
-  unfold quad_rotations in Hin. cbn in Hin.
-  destruct Hin as [<-|[<-|[<-|[<-|[]]]]].
-  - exact (Hstep _ Hp Hmatch).
-  - exact (rhomb_rotate _ (rhomb_rotate _ (rhomb_rotate _
-             (Hstep _ (pgram_rotate _ Hp) Hmatch)))).
-  - exact (rhomb_rotate _ (rhomb_rotate _
-             (Hstep _ (pgram_rotate _ (pgram_rotate _ Hp)) Hmatch))).
-  - exact (rhomb_rotate _
-             (Hstep _ (pgram_rotate _ (pgram_rotate _ (pgram_rotate _ Hp)))
-                Hmatch)).
-Qed.
-
 (** Similarity in the kernel's own angle spelling, together with the two moves
     the correspondence search makes on a pair of triangles. *)
 Definition similar_angles (t u : TriangleName) : Prop :=
@@ -7673,29 +6902,6 @@ Proof.
   split; [repeat split; assumption|].
   split; [now apply conga_comm|].
   split; [exact H2|now apply conga_comm].
-Qed.
-
-Lemma aa_sim_sound : forall decls premises facts i j conclusion,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  aa_sim decls premises facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls premises facts i j conclusion Hwf Hprem Hall Hrule.
-  unfold aa_sim in Hrule. destruct conclusion; try discriminate. all: try old_names_goal.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hsearch].
-  apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
-  apply existsb_exists in Hsearch. destruct Hsearch as [c [Hin Hmatch]].
-  pose proof (correspondences_well_formed _ _ _ Hin Ht Hu) as [Hwt Hwu].
-  unfold aa_sim_at in Hmatch.
-  apply (schema2_sound _ _ _ _ _ _ _ Hwf Hprem Hall) in Hmatch.
-  destruct Hmatch as [HatA HatB].
-  apply similar_angles_sim; [exact Ht|exact Hu|].
-  apply (correspondences_similar _ _ _ Hin).
-  destruct c as [[A B C] [D E F]]. cbn in HatA, HatB, Hwt, Hwu |- *.
-  unfold similar_angles. cbn.
-  split; [exact HatA|]. split; [exact HatB|].
-  now apply ghost_third_angle.
 Qed.
 
 Lemma endpoint_of_cases : forall p s, endpoint_of p s = true ->
@@ -7998,147 +7204,6 @@ Proof.
       [apply invert_one_side | apply invert_two_sides]; exact Hord.
 Qed.
 
-Lemma inscribed_pair_sound : forall premises facts i j same conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  inscribed_pair_rule premises facts i j same conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i j same conclusion Hprem Hfacts Hrule.
-  unfold inscribed_pair_rule in Hrule.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  rename c into c1, c0 into c2, a0 into b.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hfound].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hcircle Hconc].
-  apply circle_eqb_eq in Hcircle. subst c2.
-  pose proof (lookup_step_sound _ _ _ Hfacts Hx) as Hia.
-  pose proof (lookup_step_sound _ _ _ Hfacts Hy) as Hib.
-  rewrite premise_found_existsb in Hfound.
-  apply existsb_exists in Hfound. destruct Hfound as [pr [Hin Hcheck]].
-  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
-  unfold interp_premise in Hpr. unfold inscribed_pair_check in Hcheck.
-  destruct pr.(premise_statement) eqn:Hst; try discriminate.
-  rename c into c3, points into ps.
-  cbn in Hpr.
-  apply andb_true_iff in Hcheck. destruct Hcheck as [Hcheck Hpair].
-  apply andb_true_iff in Hcheck. destruct Hcheck as [Hceq _].
-  apply circle_eqb_eq in Hceq. subst c3.
-  destruct (inscribed_chord premises ps a) as [[A B]|] eqn:Hca; [|discriminate].
-  destruct (inscribed_chord premises ps b) as [[A' B']|] eqn:Hcb; [|discriminate].
-  apply andb_true_iff in Hpair. destruct Hpair as [Hchord Hside].
-  destruct (arc_side ps A B a.(angle_vertex)) as [sa|] eqn:Hsa; [|discriminate].
-  destruct (arc_side ps A B b.(angle_vertex)) as [sb|] eqn:Hsb; [|discriminate].
-  destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hia Hca)
-    as [HlP [HlA [HlB [HAB [HAP [HBP [HoA HoB]]]]]]].
-  destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hib Hcb)
-    as [HlQ [HlA' [HlB' [HAB' [HAQ [HBQ [HoA' HoB']]]]]]].
-  (* The second angle's rays reach the same two points, in either order. *)
-  assert (Hsame : (A' = A /\ B' = B) \/ (A' = B /\ B' = A)).
-  { unfold same_chord_points, ascii_eqb in Hchord.
-    apply orb_true_iff in Hchord.
-    destruct Hchord as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
-      apply Ascii.eqb_eq in H1, H2; subst; auto. }
-  assert (HQA : b.(angle_vertex) <> A) by (destruct Hsame as [[-> ->]|[-> ->]]; auto).
-  assert (HQB : b.(angle_vertex) <> B) by (destruct Hsame as [[-> ->]|[-> ->]]; auto).
-  pose proof (arc_side_sides c1 ps A B a.(angle_vertex) b.(angle_vertex) sa sb Hpr
-                HlA HlB HlP HlQ HAB (not_eq_sym HAP) (not_eq_sym HBP) HQA HQB Hsa Hsb)
-    as Hsides.
-  pose proof (listed_on_circle _ _ _ Hpr HlA) as CA.
-  pose proof (listed_on_circle _ _ _ Hpr HlB) as CB.
-  pose proof (listed_on_circle _ _ _ Hpr HlP) as CP.
-  pose proof (listed_on_circle _ _ _ Hpr HlQ) as CQ.
-  (* Each angle is the angle its rays' circle points make. *)
-  assert (Ha : CongA (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))
-                     (point A) (point a.(angle_vertex)) (point B))
-    by (apply out2__conga; assumption).
-  assert (Hb : CongA (point A) (point b.(angle_vertex)) (point B)
-                     (point b.(angle_first)) (point b.(angle_vertex)) (point b.(angle_last))).
-  { destruct Hsame as [[-> ->]|[-> ->]].
-    - apply conga_sym, out2__conga; assumption.
-    - apply conga_left_comm, conga_right_comm, conga_sym, conga_right_comm.
-      apply out2__conga; assumption. }
-  destruct same; cbn in Hside; apply (proj2 (fact_eqb_sound _ _ Hconc)); cbn.
-  - destruct (Bool.eqb sa sb) eqn:Heq; [|discriminate].
-    apply conga_trans with (point A) (point a.(angle_vertex)) (point B); [exact Ha|].
-    apply conga_trans with (point A) (point b.(angle_vertex)) (point B); [|exact Hb].
-    apply (Inscribed.GhostInscribed.cop_onc4_os__conga
-             (point c1.(circle_center)) (point c1.(circle_radius_point))); try assumption.
-    apply all_coplanar.
-  - destruct (Bool.eqb sa sb) eqn:Heq; [discriminate|].
-    apply (conga2_suppa__suppa (point A) (point a.(angle_vertex)) (point B)
-             (point A) (point b.(angle_vertex)) (point B)).
-    + apply conga_sym. exact Ha.
-    + exact Hb.
-    + apply (Inscribed.GhostInscribed.cop_onc4_ts__suppa
-               (point c1.(circle_center)) (point c1.(circle_radius_point))); try assumption.
-      apply all_coplanar.
-Qed.
-
-Lemma inscribed_semi_sound : forall premises facts i j conclusion,
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  inscribed_semi_rule premises facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros premises facts i j conclusion Hprem Hfacts Hrule.
-  unfold inscribed_semi_rule in Hrule.
-  destruct conclusion; try discriminate.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; try discriminate;
-    destruct x; try discriminate.
-  destruct (lookup_step facts j) as [y|] eqn:Hy; try discriminate;
-    destruct y; try discriminate.
-  rename a into a', c into c1, a0 into a, c0 into c2.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hrule Hfound].
-  apply andb_true_iff in Hrule. destruct Hrule as [Hcircle Haeq].
-  apply circle_eqb_eq in Hcircle. subst c2.
-  pose proof (lookup_step_sound _ _ _ Hfacts Hx) as Hia.
-  pose proof (lookup_step_sound _ _ _ Hfacts Hy) as Hd.
-  rewrite premise_found_existsb in Hfound.
-  apply existsb_exists in Hfound. destruct Hfound as [pr [Hin Hcheck]].
-  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
-  unfold interp_premise in Hpr. unfold inscribed_semi_check in Hcheck.
-  destruct pr.(premise_statement) eqn:Hst; try discriminate.
-  rename c into c3, points into ps.
-  cbn in Hpr.
-  apply andb_true_iff in Hcheck. destruct Hcheck as [Hcheck Hends].
-  apply andb_true_iff in Hcheck. destruct Hcheck as [Hceq _].
-  apply circle_eqb_eq in Hceq. subst c3.
-  destruct (inscribed_chord premises ps a) as [[A B]|] eqn:Hca; [|discriminate].
-  destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hia Hca)
-    as [HlP [HlA [HlB [HAB [HAP [HBP [HoA HoB]]]]]]].
-  cbn in Hd. destruct Hd as [[Hswf [Hon1 Hon2]] Hbet].
-  destruct Hon1 as [_ Hc1]. destruct Hon2 as [_ Hc2].
-  cbn in Hc1, Hc2, Hbet.
-  pose proof (listed_on_circle _ _ _ Hpr HlP) as CP.
-  assert (Hmid : Midpoint (point c1.(circle_center))
-                   (point s.(segment_first)) (point s.(segment_second))).
-  { split; [exact Hbet|].
-    apply cong_transitivity with (point c1.(circle_center))
-        (point c1.(circle_radius_point)); unfold Audit.circ_center in *; Cong. }
-  assert (HOV : Cong (point c1.(circle_center)) (point s.(segment_first))
-                     (point c1.(circle_center)) (point a.(angle_vertex))).
-  { apply cong_transitivity with (point c1.(circle_center))
-        (point c1.(circle_radius_point)); unfold Audit.circ_center in *; Cong. }
-  assert (Hper : Per (point s.(segment_first)) (point a.(angle_vertex))
-                     (point s.(segment_second))).
-  { apply (ghost_thales _ _ _ (point c1.(circle_center))); assumption. }
-  assert (HperAB : Per (point A) (point a.(angle_vertex)) (point B)).
-  { apply segment_u_eqb_cases in Hends. destruct Hends as [Hends|Hends].
-    - rewrite <- Hends in Hper. exact Hper.
-    - destruct s as [s1 s2]. unfold reverse_segment in Hends. cbn in Hends.
-      injection Hends as -> ->. cbn in Hper. apply l8_2. exact Hper. }
-  assert (Hrt : Per (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))).
-  { apply (l11_17 (point A) (point a.(angle_vertex)) (point B)); [exact HperAB|].
-    apply conga_sym, out2__conga; assumption. }
-  cbn in Hia. destruct Hia as [_ [Hawf _]].
-  apply angle_u_eqb_cases in Haeq. cbn.
-  destruct Haeq as [->| ->]; cbn.
-  - split; [exact Hawf|]. exact Hrt.
-  - unfold reverse_angle. cbn. destruct Hawf as [Hl Hr].
-    split; [split; assumption|]. unfold Audit.RightAngle. cbn. apply l8_2. exact Hrt.
-Qed.
-
 (** A congruent segment may stand in for any length of a proportion; a
     matched segment is the expected one or its reversal. *)
 Lemma segment_u_eqb_cong : forall s s', segment_u_eqb s s' = true ->
@@ -8149,42 +7214,6 @@ Proof.
   destruct H as [Heq|Heq]; subst s; cbn; Cong.
 Qed.
 
-Lemma proportion_at_sound : forall facts i a b c d,
-  Forall Interp facts -> proportion_at facts i a b c d = true ->
-  Similarity.GhostSimilarity.Proportional
-    (point a.(segment_first)) (point a.(segment_second))
-    (point b.(segment_first)) (point b.(segment_second))
-    (point c.(segment_first)) (point c.(segment_second))
-    (point d.(segment_first)) (point d.(segment_second)).
-Proof.
-  intros facts i a b c d Hall H. unfold proportion_at in H.
-  destruct (lookup_step facts i) as [x|] eqn:Hx; [|discriminate].
-  pose proof (lookup_step_sound facts i x Hall Hx) as Hint.
-  destruct x; cbn in H; try discriminate. old_names_eq Hx.
-  cbn in Hint. destruct Hint as [_ [_ [_ [_ Hprop]]]].
-  change (Similarity.GhostSimilarity.Proportional
-    (point s.(segment_first)) (point s.(segment_second))
-    (point s0.(segment_first)) (point s0.(segment_second))
-    (point s1.(segment_first)) (point s1.(segment_second))
-    (point s2.(segment_first)) (point s2.(segment_second))) in Hprop.
-  repeat rewrite orb_true_iff in H. repeat rewrite andb_true_iff in H.
-  destruct H as [[[H|H]|H]|H]; destruct H as [[[Ha Hb] Hc] Hd];
-    apply segment_u_eqb_cong in Ha; apply segment_u_eqb_cong in Hb;
-    apply segment_u_eqb_cong in Hc; apply segment_u_eqb_cong in Hd.
-  - exact (Similarity.GhostSimilarity.proportional_cong _ _ _ _ _ _ _ _
-      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
-  - apply Similarity.GhostSimilarity.proportional_swap.
-    exact (Similarity.GhostSimilarity.proportional_cong _ _ _ _ _ _ _ _
-      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
-  - apply Similarity.GhostSimilarity.proportional_invert.
-    exact (Similarity.GhostSimilarity.proportional_cong _ _ _ _ _ _ _ _
-      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
-  - apply Similarity.GhostSimilarity.proportional_swap,
-          Similarity.GhostSimilarity.proportional_invert.
-    exact (Similarity.GhostSimilarity.proportional_cong _ _ _ _ _ _ _ _
-      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
-Qed.
-
 (** Both segments of a proportion read from their other ends. *)
 Lemma proportional_reverse : forall A B C D E F G H,
   Similarity.GhostSimilarity.Proportional A B C D E F G H ->
@@ -8192,68 +7221,6 @@ Lemma proportional_reverse : forall A B C D E F G H,
 Proof.
   intros A B C D E F G H Hp.
   apply (Similarity.GhostSimilarity.proportional_cong A B C D E F G H); Cong.
-Qed.
-
-Lemma sas_sim_sound : forall decls premises facts i j conclusion,
-  declarations_well_formed point decls ->
-  Forall (interp_premise point) premises -> Forall Interp facts ->
-  sas_sim decls premises facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls premises facts i j conclusion Hwf Hprem Hall Hrule.
-  unfold sas_sim in Hrule. destruct conclusion; try discriminate. all: try old_names_goal.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hsearch].
-  apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
-  apply existsb_exists in Hsearch. destruct Hsearch as [c [Hin Hmatch]].
-  pose proof (correspondences_well_formed _ _ _ Hin Ht Hu) as [Hwt Hwu].
-  apply similar_angles_sim; [exact Ht|exact Hu|].
-  apply (correspondences_similar _ _ _ Hin).
-  unfold sas_sim_at in Hmatch. apply andb_true_iff in Hmatch.
-  destruct Hmatch as [Hprop Hang].
-  apply proportion_at_sound in Hprop; [|exact Hall].
-  destruct (lookup_step facts j) as [y|] eqn:Hy; [|discriminate].
-  apply (dependency_matches_sound _ _ _ _ Hwf Hprem) in Hang;
-    [|exact (lookup_step_sound facts j y Hall Hy)].
-  destruct c as [[A B C] [D E F]].
-  cbn in Hwt, Hwu, Hprop, Hang |- *. unfold triangle_well_formed in Hwt, Hwu.
-  destruct (Similarity.GhostSimilarity.sas_similar
-    (point A) (point B) (point C) (point D) (point E) (point F) Hwt Hwu Hang)
-    as [HangA HangC].
-  { apply (Similarity.GhostSimilarity.proportional_cong
-      (point A) (point B) (point D) (point E) (point B) (point C) (point E) (point F));
-      [exact Hprop|Cong|Cong|Cong|Cong]. }
-  split; [exact HangA|]. split; [exact Hang|now apply conga_comm].
-Qed.
-
-Lemma sss_sim_sound : forall decls facts i j conclusion,
-  declarations_well_formed point decls -> Forall Interp facts ->
-  sss_sim decls facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros decls facts i j conclusion Hwf Hall Hrule.
-  unfold sss_sim in Hrule. destruct conclusion; try discriminate. all: try old_names_goal.
-  apply andb_true_iff in Hrule. destruct Hrule as [Hdecl Hsearch].
-  apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ht Hu].
-  apply existsb_exists in Hsearch. destruct Hsearch as [c [Hin Hmatch]].
-  pose proof (correspondences_well_formed _ _ _ Hin Ht Hu) as [Hwt Hwu].
-  apply similar_angles_sim; [exact Ht|exact Hu|].
-  apply (correspondences_similar _ _ _ Hin).
-  unfold sss_sim_at in Hmatch. apply andb_true_iff in Hmatch.
-  destruct Hmatch as [Hprop1 Hprop2].
-  apply proportion_at_sound in Hprop1; [|exact Hall].
-  apply proportion_at_sound in Hprop2; [|exact Hall].
-  destruct c as [[A B C] [D E F]].
-  cbn in Hwt, Hwu, Hprop1, Hprop2 |- *. unfold triangle_well_formed in Hwt, Hwu.
-  destruct (Similarity.GhostSimilarity.sss_similar
-    (point A) (point B) (point C) (point D) (point E) (point F) Hwt Hwu)
-    as [HangA [HangB HangC]].
-  - apply (Similarity.GhostSimilarity.proportional_cong
-      (point A) (point B) (point D) (point E) (point B) (point C) (point E) (point F));
-      [exact Hprop1|Cong|Cong|Cong|Cong].
-  - apply (Similarity.GhostSimilarity.proportional_cong
-      (point B) (point C) (point E) (point F) (point C) (point A) (point F) (point D));
-      [exact Hprop2|Cong|Cong|Cong|Cong].
-  - split; [exact HangA|]. split; [exact HangB|now apply conga_comm].
 Qed.
 
 Lemma castc_rule_sound : forall facts i conclusion,
@@ -8290,54 +7257,6 @@ Proof.
     split; eapply conga_trans; eauto.
   - intros s x y Hpair Hs. destruct s; cbn in Hpair; try discriminate.
     injection Hpair as <- <-. exact Hs.
-Qed.
-
-Lemma supp_substitute_sound : forall keep old x y conclusion,
-  Interp (Supplementary keep old) -> Interp (ConAng x y) ->
-  supp_substitute keep old x y conclusion = true -> Interp conclusion.
-Proof.
-  intros keep old x y conclusion Hsupp Hcong H.
-  cbn in Hsupp, Hcong.
-  destruct (suppa_distincts _ _ _ _ _ _ Hsupp) as [Hk1 [Hk2 _]].
-  assert (Hkeep : CongA (point keep.(angle_first)) (point keep.(angle_vertex))
-                        (point keep.(angle_last))
-                        (point keep.(angle_first)) (point keep.(angle_vertex))
-                        (point keep.(angle_last)))
-    by (apply conga_refl; auto).
-  unfold supp_substitute in H. apply orb_true_iff in H.
-  destruct H as [H|H]; apply andb_true_iff in H; destruct H as [Hold Heq];
-    apply (fact_eqb_sound _ _ Heq); cbn;
-    apply angle_u_eqb_cases in Hold;
-    destruct Hold as [->| ->]; unfold reverse_angle in Hsupp; cbn in Hsupp.
-  - exact (conga2_suppa__suppa _ _ _ _ _ _ _ _ _ _ _ _ Hkeep Hcong Hsupp).
-  - apply suppa_right_comm in Hsupp.
-    exact (conga2_suppa__suppa _ _ _ _ _ _ _ _ _ _ _ _ Hkeep Hcong Hsupp).
-  - exact (conga2_suppa__suppa _ _ _ _ _ _ _ _ _ _ _ _ Hkeep
-             (conga_sym _ _ _ _ _ _ Hcong) Hsupp).
-  - apply suppa_right_comm in Hsupp.
-    exact (conga2_suppa__suppa _ _ _ _ _ _ _ _ _ _ _ _ Hkeep
-             (conga_sym _ _ _ _ _ _ Hcong) Hsupp).
-Qed.
-
-Lemma supp_transitive_sound : forall facts i j conclusion,
-  Forall Interp facts -> supp_transitive_rule facts i j conclusion = true ->
-  Interp conclusion.
-Proof.
-  intros facts i j conclusion Hfacts Hrule.
-  unfold supp_transitive_rule in Hrule.
-  destruct (lookup_step facts i) as [first|] eqn:Hfirst; try discriminate.
-  destruct first; try discriminate.
-  destruct (lookup_step facts j) as [second|] eqn:Hsecond; try discriminate.
-  destruct (angle_congruence_pair second) as [[x y]|] eqn:Hpair; try discriminate.
-  assert (Hsupp : Interp (Supplementary a b)) by (eapply lookup_step_sound; eauto).
-  assert (Hcong : Interp (ConAng x y)).
-  { assert (Hs : Interp second) by (eapply lookup_step_sound; eauto).
-    destruct second; cbn in Hpair; try discriminate;
-      injection Hpair as <- <-; first [exact Hs | exact (proj2 Hs)]. }
-  apply orb_true_iff in Hrule. destruct Hrule as [H|H].
-  - exact (supp_substitute_sound _ _ _ _ _ Hsupp Hcong H).
-  - assert (Hsym : Interp (Supplementary b a)) by (cbn in *; now apply suppa_sym).
-    exact (supp_substitute_sound _ _ _ _ _ Hsym Hcong H).
 Qed.
 
 (** A line perpendicular to one of two parallels meets the other at right
@@ -8485,14 +7404,1684 @@ Proof.
     exact (perp_transversal_at_sound _ _ _ _ _ _ _ Hprem Hfacts H).
 Qed.
 
-Lemma rule_valid_sound : forall decls premises facts reason conclusion,
+(** * Templates are sound
+
+    A template holds when, in each slot, one of its statements holds, read
+    the way the slot's matcher reads it.  Each reason's lemma below shows
+    that its templates are enough for the conclusion; [template_valid_sound]
+    shows that the steps a matched step cites make the template hold. *)
+
+Definition SlotHolds (m : Matcher) (e : Statement) : Prop :=
+  match m with
+  | AsWritten | Loose | PgramLike => Interp e
+  | ProportionMatch =>
+      match e with
+      | Proportion a b c d =>
+          Similarity.GhostSimilarity.Proportional
+            (point a.(segment_first)) (point a.(segment_second))
+            (point b.(segment_first)) (point b.(segment_second))
+            (point c.(segment_first)) (point c.(segment_second))
+            (point d.(segment_first)) (point d.(segment_second))
+      | _ => False
+      end
+  | RayAngles =>
+      match e with
+      | ConAng e1 e2 =>
+          angle_well_formed point e1 -> angle_well_formed point e2 -> Interp e
+      | _ => False
+      end
+  | PerpAnyPoint =>
+      match e with
+      | Perp a b _ => exists p, Interp (Perp a b p)
+      | _ => False
+      end
+  | TrapezoidAnySides =>
+      match e with
+      | TrapezoidPremise q _ _ => exists a b, Interp (TrapezoidPremise q a b)
+      | _ => False
+      end
+  | RadiusAnyPoint =>
+      match e with
+      | Radius c _ => exists p, Interp (Radius c p)
+      | _ => False
+      end
+  end.
+
+Definition SlotSatisfied (s : Slot) : Prop :=
+  exists e, In e s.(slot_statements) /\ SlotHolds s.(slot_matcher) e.
+
+Definition TemplateHolds (t : Template) : Prop :=
+  Forall SlotSatisfied t.(template_slots).
+
+Lemma proportion_matches_sound : forall a b c d x,
+  proportion_matches a b c d x = true -> Interp x ->
+  Similarity.GhostSimilarity.Proportional
+    (point a.(segment_first)) (point a.(segment_second))
+    (point b.(segment_first)) (point b.(segment_second))
+    (point c.(segment_first)) (point c.(segment_second))
+    (point d.(segment_first)) (point d.(segment_second)).
+Proof.
+  intros a b c d x H Hint.
+  destruct x; cbn in H; try discriminate.
+  cbn in Hint. destruct Hint as [_ [_ [_ [_ Hprop]]]].
+  change (Similarity.GhostSimilarity.Proportional
+    (point a0.(segment_first)) (point a0.(segment_second))
+    (point b0.(segment_first)) (point b0.(segment_second))
+    (point c0.(segment_first)) (point c0.(segment_second))
+    (point d0.(segment_first)) (point d0.(segment_second))) in Hprop.
+  repeat rewrite orb_true_iff in H. repeat rewrite andb_true_iff in H.
+  destruct H as [[[H|H]|H]|H]; destruct H as [[[Ha Hb] Hc] Hd];
+    apply segment_u_eqb_cong in Ha; apply segment_u_eqb_cong in Hb;
+    apply segment_u_eqb_cong in Hc; apply segment_u_eqb_cong in Hd.
+  - exact (Similarity.GhostSimilarity.proportional_cong _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
+  - apply Similarity.GhostSimilarity.proportional_swap.
+    exact (Similarity.GhostSimilarity.proportional_cong _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
+  - apply Similarity.GhostSimilarity.proportional_invert.
+    exact (Similarity.GhostSimilarity.proportional_cong _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
+  - apply Similarity.GhostSimilarity.proportional_swap,
+          Similarity.GhostSimilarity.proportional_invert.
+    exact (Similarity.GhostSimilarity.proportional_cong _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ _ _ Hprop Ha Hb Hc Hd).
+Qed.
+
+Lemma matcher_accepts_sound : forall decls premises m expected actual,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises ->
+  matcher_accepts decls premises m expected actual = true ->
+  Interp actual -> SlotHolds m expected.
+Proof.
+  intros decls premises m expected actual Hwf Hprem Hm Ha.
+  destruct m; cbn [matcher_accepts SlotHolds] in Hm |- *.
+  - apply orb_true_iff in Hm. destruct Hm as [Hm|Hm].
+    + exact (proj2 (fact_eqb_sound _ _ Hm) Ha).
+    + exact (canonical_eqb_sound _ _ _ _ Hwf Hprem Hm Ha).
+  - apply orb_true_iff in Hm. destruct Hm as [Hm|Hm].
+    + exact (dependency_matches_sound _ _ _ _ Hwf Hprem Hm Ha).
+    + exact (canonical_eqb_sound _ _ _ _ Hwf Hprem Hm Ha).
+  - apply (proj2 (fact_eqb_sound _ _ Hm)).
+    destruct actual; cbn [pgram_view]; try exact Ha; exact (proj1 Ha).
+  - destruct expected; try discriminate.
+    exact (proportion_matches_sound _ _ _ _ _ Hm Ha).
+  - destruct expected; try discriminate; destruct actual; try discriminate.
+    intros Hw1 Hw2. apply orb_true_iff in Hm. destruct Hm as [Hm|Hm].
+    + exact (conga_pair_sound _ _ _ _ Hm Ha).
+    + exact (conga_ray_pair_sound _ _ _ _ _ Hprem Hw1 Hw2 Hm Ha).
+  - destruct expected; try discriminate; destruct actual; try discriminate.
+    exists p0.
+    assert (Heq : fact_eqb (Perp a b p0) (Perp a0 b0 p0) = true)
+      by (cbn [fact_eqb]; rewrite Hm; apply Ascii.eqb_refl).
+    exact (proj2 (fact_eqb_sound _ _ Heq) Ha).
+  - destruct expected; try discriminate; destruct actual; try discriminate.
+    exists a0, b0.
+    assert (Heq : fact_eqb (TrapezoidPremise q a0 b0) (TrapezoidPremise q0 a0 b0) = true)
+      by (cbn [fact_eqb]; rewrite Hm;
+          rewrite (proj2 (segment_eqb_eq a0 a0) eq_refl);
+          rewrite (proj2 (segment_eqb_eq b0 b0) eq_refl); reflexivity).
+    exact (proj2 (fact_eqb_sound _ _ Heq) Ha).
+  - destruct expected; try discriminate; destruct actual; try discriminate.
+    apply circle_eqb_eq in Hm. subst c0. exists p0. exact Ha.
+Qed.
+
+Lemma slots_ok_sound : forall decls premises facts slots deps,
   declarations_well_formed point decls ->
   Forall (interp_premise point) premises -> Forall Interp facts ->
-  rule_valid decls premises facts reason conclusion = true ->
+  slots_ok decls premises facts slots deps = true ->
+  Forall SlotSatisfied slots.
+Proof.
+  intros decls premises facts slots. induction slots as [|s slots IH];
+    intros [|i deps] Hwf Hprem Hall Hok; cbn in Hok; try discriminate.
+  - constructor.
+  - apply andb_true_iff in Hok. destruct Hok as [Hs Hrest].
+    constructor; [|exact (IH deps Hwf Hprem Hall Hrest)].
+    unfold slot_ok in Hs.
+    destruct (lookup_step facts i) as [actual|] eqn:Hl; [|discriminate].
+    apply existsb_exists in Hs. destruct Hs as [e [Hin He]].
+    exists e. split; [exact Hin|].
+    exact (matcher_accepts_sound _ _ _ _ _ Hwf Hprem He
+             (lookup_step_sound _ _ _ Hall Hl)).
+Qed.
+
+Lemma template_valid_sound : forall decls premises facts ts deps,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  template_valid decls premises facts ts deps = true ->
+  exists t, In t ts /\ TemplateHolds t.
+Proof.
+  intros decls premises facts ts deps Hwf Hprem Hall H.
+  apply existsb_exists in H. destruct H as [t [Hin Hok]].
+  exists t. split; [exact Hin|].
+  exact (slots_ok_sound _ _ _ _ _ Hwf Hprem Hall Hok).
+Qed.
+
+Lemma angle_u_eqb_refl : forall a, angle_u_eqb a a = true.
+Proof.
+  intros a. unfold angle_u_eqb. now rewrite (proj2 (angle_eqb_eq a a) eq_refl).
+Qed.
+
+(** Turns [TemplateHolds] of a written-out template into one hypothesis per
+    slot, and splits each slot into one case per statement it lists. *)
+Ltac open_slots H :=
+  unfold TemplateHolds, plain, written, loose, pgram_slot, loose_template in H;
+  cbn [template_slots map] in H;
+  repeat match type of H with
+  | Forall _ (_ :: _) =>
+      let Hs := fresh "Hslot" in
+      apply Forall_cons_iff in H; destruct H as [Hs H];
+      let e := fresh "e" in
+      let Hin := fresh "Hin" in
+      let He := fresh "He" in
+      destruct Hs as [e [Hin He]];
+      cbn [slot_statements slot_matcher SlotHolds] in Hin, He
+  | Forall _ [] => clear H
+  end.
+
+Ltac pick_statements :=
+  repeat match goal with
+  | Hin : In ?e (_ :: _) |- _ => destruct Hin as [Hin|Hin]; [subst e|]
+  | Hin : In _ [] |- _ => destruct Hin
+  end.
+
+(** Splits [In t [t1; t2; ...]] into one goal per template. *)
+Ltac template_cases Hin :=
+  repeat match type of Hin with
+  | In _ (_ :: _) => destruct Hin as [<-|Hin]
+  | In _ [] => destruct Hin
+  end.
+
+Ltac no_template Hin := try solve [destruct Hin].
+
+Lemma segment_u_eqb_rev_l : forall s, segment_u_eqb (reverse_segment s) s = true.
+Proof.
+  intros [a b]. unfold segment_u_eqb, reverse_segment. cbn.
+  rewrite (proj2 (segment_eqb_eq (segment_name b a) (segment_name b a)) eq_refl).
+  apply orb_true_r.
+Qed.
+
+Lemma angle_u_eqb_rev_l : forall a, angle_u_eqb (reverse_angle a) a = true.
+Proof.
+  intros [x v y]. unfold angle_u_eqb, reverse_angle. cbn.
+  rewrite (proj2 (angle_eqb_eq (angle_name y v x) (angle_name y v x)) eq_refl).
+  apply orb_true_r.
+Qed.
+
+Lemma segment_u_eqb_rev_r : forall s, segment_u_eqb s (reverse_segment s) = true.
+Proof.
+  intros [a b]. unfold segment_u_eqb, reverse_segment. cbn.
+  rewrite (proj2 (segment_eqb_eq (segment_name a b) (segment_name a b)) eq_refl).
+  apply orb_true_r.
+Qed.
+
+Lemma angle_u_eqb_rev_r : forall a, angle_u_eqb a (reverse_angle a) = true.
+Proof.
+  intros [x v y]. unfold angle_u_eqb, reverse_angle. cbn.
+  rewrite (proj2 (angle_eqb_eq (angle_name x v y) (angle_name x v y)) eq_refl).
+  apply orb_true_r.
+Qed.
+
+(** Proves a Boolean match that a template guarantees by construction. *)
+Ltac btrue :=
+  lazymatch goal with
+  | |- (_ || _) = true =>
+      apply orb_true_iff; first [left; btrue | right; btrue]
+  | |- (_ && _) = true => apply andb_true_iff; split; btrue
+  | |- _ =>
+      first [ apply segment_u_eqb_refl | apply segment_u_eqb_rev_l
+            | apply segment_u_eqb_rev_r | apply segment_u_eqb_reverse
+            | apply angle_u_eqb_refl | apply angle_u_eqb_rev_l
+            | apply angle_u_eqb_rev_r
+            | apply Ascii.eqb_refl | reflexivity
+            | progress unfold segment_pair_eqb, angle_pair_eqb; btrue ]
+  end.
+
+
+(** Every part a [loose_template] lists holds. *)
+Lemma loose_template_holds : forall ps,
+  TemplateHolds (loose_template ps) -> Forall Interp ps.
+Proof.
+  unfold TemplateHolds, loose_template, plain. cbn [template_slots].
+  induction ps as [|p ps IH]; intros H; [constructor|].
+  cbn [map] in H. apply Forall_cons_iff in H. destruct H as [[e [Hin He]] H].
+  cbn in Hin. destruct Hin as [<-|[]].
+  constructor; [exact He|exact (IH H)].
+Qed.
+
+
+(** A congruence criterion whose parts, for one correspondence, make the
+    triangles congruent concludes what [congruence_needs] says it does. *)
+Lemma congruence_needs_core : forall decls parts conclusion t,
+  declarations_well_formed point decls ->
+  (forall a b ps, triangle_well_formed point a -> In ps (parts a b) ->
+     Forall Interp ps -> interp_triangle_congruence point a b) ->
+  In t (congruence_needs decls parts conclusion) -> TemplateHolds t ->
+  Interp conclusion.
+Proof.
+  intros decls parts conclusion t Hwf Hparts Hin Ht.
+  assert (Hat : forall a b, triangle_well_formed point a ->
+    triangle_well_formed point b ->
+    In t (correspondence_templates parts a b) ->
+    interp_triangle_congruence point a b).
+  { intros a b Ha Hb Hin'. unfold correspondence_templates in Hin'.
+    apply in_flat_map in Hin'. destruct Hin' as [c [Hc Hin']].
+    apply in_map_iff in Hin'. destruct Hin' as [ps [<- Hps]].
+    apply (correspondences_congruent a b c Hc).
+    destruct (correspondences_well_formed a b c Hc Ha Hb) as [Hwa _].
+    exact (Hparts _ _ ps Hwa Hps (loose_template_holds ps Ht)). }
+  destruct conclusion; cbn [congruence_needs] in Hin; no_template Hin;
+    unfold only_if in Hin;
+    (destruct (declared_pair decls a b) eqn:Hdecl; [|destruct Hin]);
+    apply declared_pair_sound in Hdecl; try exact Hwf;
+    destruct Hdecl as [Ht' Hu].
+  - apply in_flat_map in Hin. destruct Hin as [u' [Hu' Hin]].
+    exists u'. split; [exact Hu'|].
+    assert (Hwu' : triangle_well_formed point u').
+    { pose proof (triangle_well_formed_nondegenerate _ _ Hu) as Hnd.
+      pose proof (nondegenerate_orderings b u' Hu' Hnd) as Hnd'.
+      destruct u' as [D E F]. destruct Hnd' as [_ [_ [_ Hncol]]]. exact Hncol. }
+    apply ordered_congruence_of_parts.
+    + now apply triangle_well_formed_nondegenerate.
+    + now apply triangle_well_formed_nondegenerate.
+    + exact (Hat _ _ Ht' Hwu' Hin).
+  - apply ordered_congruence_of_parts;
+      [now apply triangle_well_formed_nondegenerate
+      |now apply triangle_well_formed_nondegenerate|].
+    exact (Hat _ _ Ht' Hu Hin).
+Qed.
+
+
+
+Lemma def_con_tri_parts_sound : forall a b ps, triangle_well_formed point a ->
+  In ps (def_con_tri_parts a b) -> Forall Interp ps ->
+  interp_triangle_congruence point a b.
+Proof.
+  intros [A B C] [D E F] ps Hwf Hin Hps. cbn in Hin. destruct Hin as [<-|[]].
+  forall_parts Hps. cbn in *. unfold interp_triangle_congruence, triangle_congruence.
+  cbn. tauto.
+Qed.
+
+(** A similarity reason whose slots, for one correspondence, give its three
+    angle pairs concludes what [similarity_needs] says it does. *)
+Lemma similarity_needs_core : forall decls parts conclusion t,
+  declarations_well_formed point decls ->
+  (forall a b, triangle_well_formed point a -> triangle_well_formed point b ->
+     TemplateHolds (plain (parts a b)) -> similar_angles a b) ->
+  In t (similarity_needs decls parts conclusion) -> TemplateHolds t ->
+  Interp conclusion.
+Proof.
+  intros decls parts conclusion t Hwf Hparts Hin Ht.
+  destruct conclusion; cbn [similarity_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (declared_pair decls a b) eqn:Hdecl; [|destruct Hin].
+  apply declared_pair_sound in Hdecl; [|exact Hwf]. destruct Hdecl as [Ha Hb].
+  apply in_map_iff in Hin. destruct Hin as [c [<- Hc]].
+  pose proof (correspondences_well_formed _ _ _ Hc Ha Hb) as [Hwa Hwb].
+  apply similar_angles_sim; [exact Ha|exact Hb|].
+  apply (correspondences_similar _ _ _ Hc).
+  exact (Hparts _ _ Hwa Hwb Ht).
+Qed.
+
+Lemma aa_sim_parts_sound : forall a b,
+  triangle_well_formed point a -> triangle_well_formed point b ->
+  TemplateHolds (plain (aa_sim_parts a b)) -> similar_angles a b.
+Proof.
+  intros [A B C] [D E F] Hwa Hwb Ht. unfold aa_sim_parts in Ht.
+  open_slots Ht; pick_statements.
+  cbn in He, He0, Hwa, Hwb |- *. unfold similar_angles. cbn.
+  split; [exact He|]. split; [exact He0|].
+  now apply ghost_third_angle.
+Qed.
+
+Lemma sas_sim_parts_sound : forall a b,
+  triangle_well_formed point a -> triangle_well_formed point b ->
+  TemplateHolds (plain (sas_sim_parts a b)) -> similar_angles a b.
+Proof.
+  intros [A B C] [D E F] Hwa Hwb Ht. unfold sas_sim_parts in Ht.
+  open_slots Ht; pick_statements.
+  rename He into Hprop, He0 into Hang.
+  cbn in Hprop, Hang, Hwa, Hwb |- *. unfold triangle_well_formed in Hwa, Hwb.
+  destruct (Similarity.GhostSimilarity.sas_similar
+    (point A) (point B) (point C) (point D) (point E) (point F) Hwa Hwb Hang)
+    as [HangA HangC].
+  { apply (Similarity.GhostSimilarity.proportional_cong
+      (point A) (point B) (point D) (point E) (point B) (point C) (point E) (point F));
+      [exact Hprop|Cong|Cong|Cong|Cong]. }
+  unfold similar_angles. cbn.
+  split; [exact HangA|]. split; [exact Hang|now apply conga_comm].
+Qed.
+
+Lemma sss_sim_parts_sound : forall a b,
+  triangle_well_formed point a -> triangle_well_formed point b ->
+  TemplateHolds (plain (sss_sim_parts a b)) -> similar_angles a b.
+Proof.
+  intros [A B C] [D E F] Hwa Hwb Ht. unfold sss_sim_parts in Ht.
+  open_slots Ht; pick_statements.
+  rename He into Hprop1, He0 into Hprop2.
+  cbn in Hprop1, Hprop2, Hwa, Hwb |- *. unfold triangle_well_formed in Hwa, Hwb.
+  destruct (Similarity.GhostSimilarity.sss_similar
+    (point A) (point B) (point C) (point D) (point E) (point F) Hwa Hwb)
+    as [HangA [HangB HangC]].
+  - apply (Similarity.GhostSimilarity.proportional_cong
+      (point A) (point B) (point D) (point E) (point B) (point C) (point E) (point F));
+      [exact Hprop1|Cong|Cong|Cong|Cong].
+  - apply (Similarity.GhostSimilarity.proportional_cong
+      (point B) (point C) (point E) (point F) (point C) (point A) (point F) (point D));
+      [exact Hprop2|Cong|Cong|Cong|Cong].
+  - unfold similar_angles. cbn.
+    split; [exact HangA|]. split; [exact HangB|now apply conga_comm].
+Qed.
+
+(** A template read from a [transversal] premise comes with the drawn
+    configuration that premise means. *)
+Lemma from_transversals_sound : forall premises read t,
+  Forall (interp_premise point) premises ->
+  In t (from_transversals premises read) ->
+  exists pa pb pt1 pi1 pc pd pt2 pi2,
+    In t.(template_slots) (read pa pb pt1 pi1 pc pd pt2 pi2) /\
+    Audit.TransversalConfiguration point pa pb pt1 pi1 pc pd pt2 pi2.
+Proof.
+  intros premises read t Hprem Hin.
+  unfold from_transversals in Hin. apply in_flat_map in Hin.
+  destruct Hin as [pr [Hpr Hin]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hpr) as Hint.
+  unfold interp_premise in Hint.
+  destruct (transversal_witness pr.(premise_statement))
+    as [[[[[[[[pa pb] pt1] pi1] pc] pd] pt2] pi2]|] eqn:Hwit; [|destruct Hin].
+  assert (Hpremise : pr.(premise_statement) = Transversal pa pb pt1 pi1 pc pd pt2 pi2).
+  { unfold transversal_witness in Hwit.
+    destruct pr.(premise_statement); try discriminate.
+    now injection Hwit as <- <- <- <- <- <- <- <-. }
+  rewrite Hpremise in Hint. cbn in Hint.
+  apply in_map_iff in Hin. destruct Hin as [slots [<- Hslots]].
+  exists pa, pb, pt1, pi1, pc, pd, pt2, pi2. split; [exact Hslots|exact Hint].
+Qed.
+
+Lemma line_names_match : forall l a b i1,
+  In l (line_names a b i1) -> line_name_matches l a b i1 = true.
+Proof.
+  intros l a b i1 Hin. unfold line_names in Hin. unfold line_name_matches.
+  destruct (named_apart a i1); destruct (named_apart b i1);
+    cbn in Hin; repeat destruct Hin as [<-|Hin]; try destruct Hin; btrue.
+Qed.
+
+Lemma parallel_spellings_match : forall a b i1 c d i2 e,
+  In e (parallel_spellings a b i1 c d i2) ->
+  exists s1 s2, e = Para s1 s2 /\
+    transversal_lines_match s1 s2 a b i1 c d i2 = true.
+Proof.
+  intros a b i1 c d i2 e Hin. unfold parallel_spellings in Hin.
+  apply in_flat_map in Hin. destruct Hin as [l1 [Hl1 Hin]].
+  apply in_map_iff in Hin. destruct Hin as [l2 [<- Hl2]].
+  exists l1, l2. split; [reflexivity|].
+  unfold transversal_lines_match.
+  rewrite (line_names_match _ _ _ _ Hl1), (line_names_match _ _ _ _ Hl2).
+  reflexivity.
+Qed.
+
+Lemma in_gated : forall g (xs : list Statement) e,
+  In e (gated g xs) -> g = true /\ In e xs.
+Proof. intros [|] xs e H; cbn in H; [auto|destruct H]. Qed.
+
+(** Splits a slot whose statements are [gated] into one case per statement,
+    each with the condition it was drawn under. *)
+Ltac gated_cases H :=
+  repeat match type of H with
+  | In _ (_ ++ _) => apply in_app_iff in H; destruct H as [H|H]
+  end;
+  let Hg := fresh "Hg" in
+  apply in_gated in H; destruct H as [Hg H]; destruct H as [<-|[]];
+  repeat rewrite andb_true_iff in Hg.
+
+(** The one slot of a transversal template, opened. *)
+Ltac transversal_slot Hslots Ht :=
+  destruct Hslots as [Hslots|[]];
+  unfold TemplateHolds in Ht; rewrite <- Hslots in Ht;
+  apply Forall_cons_iff in Ht;
+  let e := fresh "e" in let Hine := fresh "Hine" in let He := fresh "He" in
+  destruct Ht as [[e [Hine He]] _];
+  unfold written in Hine, He;
+  cbn [slot_statements slot_matcher SlotHolds] in Hine, He.
+
+
+Lemma sas_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (congruence_needs decls sas_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (congruence_needs_core _ _ _ _ Hwf sas_parts_sound Hin Ht).
+Qed.
+
+Lemma sss_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (congruence_needs decls sss_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (congruence_needs_core _ _ _ _ Hwf sss_parts_sound Hin Ht).
+Qed.
+
+Lemma asa_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (congruence_needs decls asa_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (congruence_needs_core _ _ _ _ Hwf asa_parts_sound Hin Ht).
+Qed.
+
+Lemma aas_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (congruence_needs decls aas_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (congruence_needs_core _ _ _ _ Hwf aas_parts_sound Hin Ht).
+Qed.
+
+Lemma rhl_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (congruence_needs decls rhl_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (congruence_needs_core _ _ _ _ Hwf rhl_parts_sound Hin Ht).
+Qed.
+
+Lemma def_con_tri_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (congruence_needs decls def_con_tri_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (congruence_needs_core _ _ _ _ Hwf def_con_tri_parts_sound Hin Ht).
+Qed.
+
+Lemma aa_sim_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (similarity_needs decls aa_sim_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (similarity_needs_core _ _ _ _ Hwf aa_sim_parts_sound Hin Ht).
+Qed.
+
+Lemma sas_sim_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (similarity_needs decls sas_sim_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (similarity_needs_core _ _ _ _ Hwf sas_sim_parts_sound Hin Ht).
+Qed.
+
+Lemma sss_sim_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (similarity_needs decls sss_sim_parts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  exact (similarity_needs_core _ _ _ _ Hwf sss_sim_parts_sound Hin Ht).
+Qed.
+
+Lemma third_angle_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (third_angle_needs decls conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  unfold third_angle_needs in Hin.
+  apply in_flat_map in Hin. destruct Hin as [a [Ha Hin]].
+  apply in_flat_map in Hin. destruct Hin as [b [Hb Hin]].
+  apply in_flat_map in Hin. destruct Hin as [c [Hc Hin]].
+  unfold only_if in Hin.
+  destruct (fact_eqb _ conclusion) eqn:Hconclusion; [|destruct Hin].
+  destruct Hin as [<-|[]].
+  assert (Hwft : forall x, In x decls.(decl_triangles) ->
+                 triangle_well_formed point x) by apply Hwf.
+  pose proof (correspondences_well_formed a b c Hc (Hwft a Ha) (Hwft b Hb))
+    as [Hwt Hwu].
+  apply loose_template_holds in Ht. forall_parts Ht.
+  apply (fact_eqb_sound _ _ Hconclusion).
+  destruct c as [[A B C] [D E F]]. cbn in Hpart, Hpart0, Hwt, Hwu |- *.
+  now apply ghost_third_angle.
+Qed.
+
+Lemma def_equilateral_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (def_equilateral_needs decls conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [def_equilateral_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (triangle_declared decls t0) eqn:Hdeclared; [|destruct Hin].
+  destruct Hin as [<-|[]].
+  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
+  apply triangle_well_formed_nondegenerate in Hdeclared.
+  apply loose_template_holds in Ht. forall_parts Ht.
+  destruct t0 as [A B C]. cbn in Hpart, Hpart0, Hpart1, Hdeclared |- *. tauto.
+Qed.
+
+Lemma def_equiangular_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (def_equiangular_needs decls conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [def_equiangular_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (triangle_declared decls t0) eqn:Hdeclared; [|destruct Hin].
+  destruct Hin as [<-|[]].
+  apply (triangle_declared_sound decls _ Hwf) in Hdeclared.
+  apply triangle_well_formed_nondegenerate in Hdeclared.
+  apply loose_template_holds in Ht. forall_parts Ht.
+  destruct t0 as [A B C]. cbn in Hpart, Hpart0, Hdeclared |- *.
+  split; [exact Hdeclared|]. split; CongA.
+Qed.
+
+Lemma equilat_equiang_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (equilat_equiang_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [equilat_equiang_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht; pick_statements.
+  destruct t0 as [A B C]. cbn in He |- *.
+  destruct He as [Hnd [Hab Hbc]]. split; [exact Hnd|].
+  apply ghost_equilateral_equiangular; [apply Hnd|exact Hab|exact Hbc].
+Qed.
+
+Lemma equiang_equilat_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (equiang_equilat_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [equiang_equilat_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht; pick_statements.
+  destruct t0 as [A B C]. cbn in He |- *.
+  destruct He as [Hnd [HangA HangB]]. split; [exact Hnd|].
+  apply ghost_equiangular_equilateral; [apply Hnd|exact HangA|exact HangB].
+Qed.
+
+Lemma def_con_right_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (def_con_right_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  assert (Hmove : forall x y, angle_u_eqb x y = true -> Interp (Right x) ->
+            angle_well_formed point y /\ right_angle point y).
+  { intros x y Hxy [Hw Hper]. split.
+    - now apply (angle_u_eqb_well_formed _ _ Hxy).
+    - now apply (angle_u_eqb_right _ _ Hxy). }
+  destruct conclusion; cbn [def_con_right_needs] in Hin; no_template Hin;
+    unfold either_order in Hin; template_cases Hin; open_slots Ht; pick_statements;
+    (assert (Hc : angle_well_formed point a /\ right_angle point a)
+       by first [ (eapply (Hmove _ a); [idtac|exact He]); btrue
+                | (eapply (Hmove _ a); [idtac|exact He0]); btrue ]);
+    (assert (Hd : angle_well_formed point b /\ right_angle point b)
+       by first [ (eapply (Hmove _ b); [idtac|exact He]); btrue
+                | (eapply (Hmove _ b); [idtac|exact He0]); btrue ]);
+    destruct Hc as [[Hcl Hcr] Hcp], Hd as [[Hdl Hdr] Hdp];
+    unfold right_angle in Hcp, Hdp; cbn;
+    solve [ tauto | now apply l11_16 ].
+Qed.
+
+Lemma def_parallelogram_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (def_parallelogram_needs decls conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [def_parallelogram_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (declared_quadrilateral decls q) eqn:Hd; [|destruct Hin].
+  pose proof (declared_quadrilateral_sound _ _ Hwf Hd) as Hq.
+  unfold either_order in Hin. template_cases Hin; open_slots Ht; pick_statements;
+    cbn; unfold Audit.IsParallelogram; (split; [exact Hq|]);
+    first [split; [exact He|exact He0] | split; [exact He0|exact He]].
+Qed.
+
+Lemma rectangle_pgram_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (rectangle_pgram_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [rectangle_pgram_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht; pick_statements. exact (proj1 He).
+Qed.
+
+Lemma rhombus_pgram_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (rhombus_pgram_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [rhombus_pgram_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht; pick_statements. exact (proj1 He).
+Qed.
+
+Lemma pgram_opp_sides_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (pgram_opp_sides_conv_needs decls conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [pgram_opp_sides_conv_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (declared_quadrilateral decls q) eqn:Hd; [|destruct Hin].
+  pose proof (declared_quadrilateral_sound _ _ Hwf Hd) as Hwfq.
+  assert (Hcore : Interp (ConSeg (quad_side_ab q) (quad_side_cd q)) ->
+                  Interp (ConSeg (quad_side_bc q) (quad_side_da q)) ->
+                  Interp (Parallelogram q)).
+  { intros Hab Hbc. cbn in Hab, Hbc.
+    pose proof Hwfq as Hwfcopy.
+    destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+    destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
+    destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+      as [Hbcd _].
+    cbn. split; [exact Hwfq|]. split.
+    - exact (ghost_pgram_from_opposite_sides _ _ _ _ X Hncol HXac HXbd Hab Hbc).
+    - apply (ghost_pgram_from_opposite_sides _ _ _ _ X Hbcd HXbd
+               (ghost_bets_sym _ _ _ HXac) Hbc).
+      now apply cong_symmetry. }
+  unfold either_order in Hin.
+  template_cases Hin; open_slots Ht; pick_statements; auto.
+Qed.
+
+Lemma pgram_opp_angs_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (pgram_opp_angs_conv_needs decls conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [pgram_opp_angs_conv_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (declared_quadrilateral decls q) eqn:Hd; [|destruct Hin].
+  pose proof (declared_quadrilateral_sound _ _ Hwf Hd) as Hwfq.
+  assert (Hcore : Interp (ConAng (quad_corner_a q) (quad_corner_c q)) ->
+                  Interp (ConAng (quad_corner_b q) (quad_corner_d q)) ->
+                  Interp (Parallelogram q)).
+  { intros HopA HopB. cbn in HopA, HopB.
+    pose proof Hwfq as Hwfcopy.
+    destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+    destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
+    destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+      as [Hbcd [_ _]].
+    cbn. split; [exact Hwfq|].
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
+    split.
+    - apply (ghost_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd).
+      exact (ghost_quad_opposite_angles _ _ _ _ X Hncol HXac HXbd HopA HopB).
+    - apply (ghost_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
+               (ghost_bets_sym _ _ _ HXac)).
+      apply (ghost_quad_opposite_angles _ _ _ _ X Hbcd HXbd
+               (ghost_bets_sym _ _ _ HXac));
+        [exact HopB|now apply conga_sym]. }
+  unfold either_order in Hin.
+  template_cases Hin; open_slots Ht; pick_statements; auto.
+Qed.
+
+Lemma pgram_consec_angs_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (pgram_consec_angs_conv_needs decls conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [pgram_consec_angs_conv_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (declared_quadrilateral decls q) eqn:Hd; [|destruct Hin].
+  pose proof (declared_quadrilateral_sound _ _ Hwf Hd) as Hwfq.
+  pose proof Hwfq as Hwfcopy.
+  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    as [Hbcd [Hcda Hdab]].
+  (* one supplementary pair per side direction *)
+  assert (Hsides :
+    Interp (Supplementary (quad_corner_b q) (quad_corner_c q)) \/
+    Interp (Supplementary (quad_corner_d q) (quad_corner_a q)) ->
+    Interp (Para (quad_side_ab q) (quad_side_cd q))).
+  { intros [Hxy|Hxy]; cbn in Hxy |- *; unfold Audit.Parallel, Audit.seg_start,
+      Audit.seg_end; cbn.
+    - exact (ghost_pgram_from_consec_angles _ _ _ _ X Hncol HXac HXbd Hxy).
+    - apply par_symmetry.
+      apply (ghost_pgram_from_consec_angles _ _ _ _ X Hcda
+               (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd) Hxy). }
+  assert (Hsides' :
+    Interp (Supplementary (quad_corner_a q) (quad_corner_b q)) \/
+    Interp (Supplementary (quad_corner_c q) (quad_corner_d q)) ->
+    Interp (Para (quad_side_bc q) (quad_side_da q))).
+  { intros [Hxy|Hxy]; cbn in Hxy |- *; unfold Audit.Parallel, Audit.seg_start,
+      Audit.seg_end; cbn.
+    - apply par_symmetry.
+      apply (ghost_pgram_from_consec_angles _ _ _ _ X Hdab
+               (ghost_bets_sym _ _ _ HXbd) HXac Hxy).
+    - exact (ghost_pgram_from_consec_angles _ _ _ _ X Hbcd HXbd
+               (ghost_bets_sym _ _ _ HXac) Hxy). }
+  unfold either_order in Hin.
+  template_cases Hin; open_slots Ht; pick_statements;
+    cbn; (split; [exact Hwfq|]);
+    (split; [exact (Hsides ltac:(auto))|exact (Hsides' ltac:(auto))]).
+Qed.
+
+Lemma pgram_opp_side_para_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (pgram_opp_side_para_needs decls conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [pgram_opp_side_para_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (declared_quadrilateral decls q) eqn:Hd; [|destruct Hin].
+  pose proof (declared_quadrilateral_sound _ _ Hwf Hd) as Hwfq.
+  pose proof Hwfq as Hwfcopy.
+  destruct Hwfcopy as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  cbn in Hncol, HXac, HXbd.
+  template_cases Hin; open_slots Ht; pick_statements;
+    rename He into HC, He0 into HP; cbn in HC, HP |- *;
+    (split; [exact Hwfq|]);
+    unfold Audit.Parallel in HP.
+  - assert (Hother : Par (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
+                         (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)))
+      by (eapply ghost_pgram_from_side; eauto).
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
+    split; [exact HP|exact Hother].
+  - assert (HXca : BetS (point q.(quadrilateral_third)) X (point q.(quadrilateral_first))).
+    { destruct HXac as [Hb [Hd1 Hd2]].
+      repeat split; [now apply between_symmetry| |];
+        intro Heq; [apply Hd2|apply Hd1]; auto. }
+    assert (Hncol2 : ~ Col (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
+                           (point q.(quadrilateral_fourth))).
+    { destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+        as [Hn _]. exact Hn. }
+    assert (Hother : Par (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth))
+                         (point q.(quadrilateral_first)) (point q.(quadrilateral_second)))
+      by (eapply (ghost_pgram_from_side (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
+                    (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)) X); eauto).
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
+    split; [|exact HP].
+    apply par_symmetry. exact Hother.
+Qed.
+
+Lemma pgram_diag_bisect_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (pgram_diag_bisect_conv_needs decls premises facts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [pgram_diag_bisect_conv_needs] in Hin; no_template Hin.
+  unfold only_if in Hin.
+  destruct (declared_quadrilateral decls q) eqn:Hd; [|destruct Hin].
+  pose proof (declared_quadrilateral_sound _ _ Hwf Hd) as Hwfq.
+  pose proof Hwfq as Hwfcopy.
+  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol _]]]]]]]. cbn in Hncol.
+  assert (Hcore : forall p,
+    Interp (SegBisect (quad_diagonal_ac q) (quad_diagonal_bd q) p) ->
+    Interp (SegBisect (quad_diagonal_bd q) (quad_diagonal_ac q) p) ->
+    Interp (Parallelogram q)).
+  { intros p H1 H2. cbn in H1, H2.
+    destruct H1 as [_ [_ Hbd]]. destruct H2 as [_ [_ Hac]].
+    destruct (ghost_pgram_from_diagonal_midpoint _ _ _ _ _ Hncol Hac Hbd)
+      as [Hpar1 Hpar2].
+    cbn. split; [exact Hwfq|].
+    unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+      Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
+    split; assumption. }
+  apply in_flat_map in Hin. destruct Hin as [p [_ Hin]].
+  unfold either_order in Hin.
+  template_cases Hin; open_slots Ht; pick_statements; eauto.
+Qed.
+
+Lemma rect_pgram_ang_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (rect_pgram_ang_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [rect_pgram_ang_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht.
+  destruct Hin0 as [<-|[]]. rename He0 into Hp.
+  cbn in Hp. destruct Hp as [Hwfq [Hpar1 Hpar2]].
+  pose proof Hwfq as Hwfcopy.
+  destruct Hwfcopy as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
+    cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
+  destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+    as [Hbcd [Hcda Hdab]].
+  (* whichever corner is right, rotate the figure so that it is the one the
+     theorem takes, and read the four right angles back off *)
+  assert (Hcorners :
+    Per (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) /\
+    Per (point q.(quadrilateral_first)) (point q.(quadrilateral_second)) (point q.(quadrilateral_third)) /\
+    Per (point q.(quadrilateral_second)) (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth)) /\
+    Per (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first))).
+  { cbn [flat_map app] in Hin. pick_statements;
+      destruct He as [_ Hper]; unfold right_angle, reverse_angle in Hper;
+      cbn in Hper.
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hdab
+                  (ghost_bets_sym _ _ _ HXbd) HXac
+                  (par_symmetry _ _ _ _ Hpar2) Hpar1 Hper) as [H1 [H2 [H3 H4]]].
+      auto.
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hdab
+                  (ghost_bets_sym _ _ _ HXbd) HXac
+                  (par_symmetry _ _ _ _ Hpar2) Hpar1 (l8_2 _ _ _ Hper))
+        as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
+                  Hper) as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hncol HXac HXbd Hpar1 Hpar2
+                  (l8_2 _ _ _ Hper)) as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hbcd HXbd
+                  (ghost_bets_sym _ _ _ HXac) Hpar2
+                  (par_symmetry _ _ _ _ Hpar1) Hper) as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hbcd HXbd
+                  (ghost_bets_sym _ _ _ HXac) Hpar2
+                  (par_symmetry _ _ _ _ Hpar1) (l8_2 _ _ _ Hper))
+        as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hcda
+                  (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd)
+                  (par_symmetry _ _ _ _ Hpar1) (par_symmetry _ _ _ _ Hpar2)
+                  Hper) as [H1 [H2 [H3 H4]]]. auto.
+    - destruct (ghost_pgram_right_corner _ _ _ _ X Hcda
+                  (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd)
+                  (par_symmetry _ _ _ _ Hpar1) (par_symmetry _ _ _ _ Hpar2)
+                  (l8_2 _ _ _ Hper)) as [H1 [H2 [H3 H4]]]. auto. }
+  destruct Hcorners as [Hpa [Hpb [Hpc Hpd]]].
+  cbn. unfold Audit.RightAngle, Audit.quad_angle_a, Audit.quad_angle_b,
+    Audit.quad_angle_c, Audit.quad_angle_d, Audit.ang_start, Audit.ang_vertex,
+    Audit.ang_end; cbn.
+  split; [exact (conj Hwfq (conj Hpar1 Hpar2))|].
+  split; [exact Hpa|]. split; [exact Hpb|]. split; [exact Hpc|exact Hpd].
+Qed.
+
+Lemma rect_diag_con_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (rect_diag_con_conv_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [rect_diag_con_conv_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht; pick_statements.
+  rename He into Hdiagonals, He0 into Hp. cbn in Hdiagonals.
+  destruct (pgram_figure q Hp) as [X [Hncol [HXac [HXbd [Hpar1 Hpar2]]]]].
+  destruct (ghost_pgram_con_diagonals_right _ _ _ _ X Hncol HXac HXbd
+              Hpar1 Hpar2 Hdiagonals) as [HperA [HperB [HperC HperD]]].
+  cbn. split; [exact Hp|].
+  unfold Audit.RightAngle, Audit.quad_angle_a, Audit.quad_angle_b,
+    Audit.quad_angle_c, Audit.quad_angle_d, Audit.ang_start, Audit.ang_vertex,
+    Audit.ang_end; cbn.
+  repeat split; assumption.
+Qed.
+
+Lemma rhombus_consec_sides_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (rhombus_consec_sides_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [rhombus_consec_sides_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht.
+  destruct Hin as [<-|[]]. rename He into Hp.
+  cbn in Hp. destruct Hp as [Hwfq [Hpar1 Hpar2]].
+  pose proof Hwfq as Hwfcopy.
+  destruct Hwfcopy as [HAB [HAC [HAD [HBC [HBD [HCD [Hncol Hex]]]]]]].
+  destruct Hex as [X [HXac HXbd]].
+  unfold Audit.Parallel, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.seg_start, Audit.seg_end in Hpar1, Hpar2;
+    cbn in Hpar1, Hpar2, Hncol, HXac, HXbd.
+  assert (Hadj :
+    Cong (point q.(quadrilateral_first)) (point q.(quadrilateral_second))
+         (point q.(quadrilateral_second)) (point q.(quadrilateral_third)) \/
+    Cong (point q.(quadrilateral_second)) (point q.(quadrilateral_third))
+         (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth)) \/
+    Cong (point q.(quadrilateral_third)) (point q.(quadrilateral_fourth))
+         (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first)) \/
+    Cong (point q.(quadrilateral_fourth)) (point q.(quadrilateral_first))
+         (point q.(quadrilateral_first)) (point q.(quadrilateral_second))).
+  { pick_statements; cbn in He0; tauto. }
+  pose proof (ghost_rhombus_sides _ _ _ _ _ Hncol HXac HXbd Hpar1 Hpar2 Hadj)
+    as [H1 [H2 H3]].
+  cbn. split; [|split; [|split]].
+  - split; [exact Hwfq|split; [exact Hpar1|exact Hpar2]].
+  - exact H1.
+  - exact H2.
+  - exact H3.
+Qed.
+
+Lemma rhombus_diag_perp_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (rhombus_diag_perp_conv_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [rhombus_diag_perp_conv_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht.
+  destruct Hin0 as [<-|[]]. rename He0 into Hp.
+  destruct (pgram_figure q Hp) as [X [Hncol [HXac [HXbd [Hpar1 Hpar2]]]]].
+  assert (Hdiag : Definitions.Perp (point q.(quadrilateral_first)) (point q.(quadrilateral_third))
+                                   (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth))).
+  { pick_statements; destruct He as [p Hperp]; cbn in Hperp;
+      apply perp_in_perp in Hperp;
+      unfold quad_diagonal_ac, quad_diagonal_bd in Hperp; cbn in Hperp;
+      eauto 6 using perp_sym, perp_left_comm, perp_right_comm, perp_comm. }
+  destruct (ghost_pgram_perp_diagonals_rhombus _ _ _ _ X Hncol HXac HXbd
+              Hpar1 Hpar2 Hdiag) as [Hab [Hbc Hcd]].
+  cbn. split; [exact Hp|].
+  unfold Audit.SegmentCongruent, Audit.quad_ab, Audit.quad_bc, Audit.quad_cd,
+    Audit.quad_da, Audit.seg_start, Audit.seg_end; cbn.
+  repeat split; assumption.
+Qed.
+
+Lemma rhombus_opp_bisect_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (rhombus_opp_bisect_conv_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [rhombus_opp_bisect_conv_needs] in Hin; no_template Hin.
+  apply in_map_iff in Hin. destruct Hin as [r [<- Hr]].
+  open_slots Ht. destruct Hin1 as [<-|[]]. rename He1 into Hp.
+  assert (Hstep : Interp (Parallelogram r) -> Interp (Rhombus r)).
+  { intros Hpr. unfold corner_bisectors in Hin, Hin0. pick_statements;
+      (eapply (pgram_bisector_rhombus_at r); [|exact He|exact Hpr];
+       unfold bisector_at_corner; btrue). }
+
+  destruct q as [qa qb qc qd].
+  unfold quad_rotations in Hr. cbn in Hr.
+  destruct Hr as [<-|[<-|[<-|[<-|[]]]]].
+  - exact (Hstep Hp).
+  - exact (rhomb_rotate _ (rhomb_rotate _ (rhomb_rotate _
+             (Hstep (pgram_rotate _ Hp))))).
+  - exact (rhomb_rotate _ (rhomb_rotate _
+             (Hstep (pgram_rotate _ (pgram_rotate _ Hp))))).
+  - exact (rhomb_rotate _
+             (Hstep (pgram_rotate _ (pgram_rotate _ (pgram_rotate _ Hp))))).
+Qed.
+
+Lemma isos_trap_con_diags_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (isos_trap_con_diags_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [isos_trap_con_diags_needs] in Hin; no_template Hin.
+  template_cases Hin; open_slots Ht; pick_statements.
+  destruct He0 as [s1 [s2 Htrap]]. cbn in Htrap. destruct Htrap as [Htrap _].
+  cbn in He |- *. split; [exact Htrap|].
+  unfold Audit.SegmentCongruent, Audit.seg_start, Audit.seg_end; cbn.
+  exact He.
+Qed.
+
+Lemma isos_trap_base_angs_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (isos_trap_base_angs_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [isos_trap_base_angs_needs] in Hin; no_template Hin.
+  assert (Hcore : forall s s0 a a0,
+    Interp (TrapezoidPremise q s s0) -> Interp (ConAng a a0) ->
+    ((segment_pair_eqb s s0 (quad_side_ab q) (quad_side_cd q) &&
+      (angle_pair_eqb a a0 (quad_corner_a q) (quad_corner_b q) ||
+       angle_pair_eqb a a0 (quad_corner_c q) (quad_corner_d q))) ||
+     (segment_pair_eqb s s0 (quad_side_bc q) (quad_side_da q) &&
+      (angle_pair_eqb a a0 (quad_corner_b q) (quad_corner_c q) ||
+       angle_pair_eqb a a0 (quad_corner_d q) (quad_corner_a q)))) = true ->
+    Interp (IsosTrapezoid q)).
+  { intros s s0 a a0 Htrap Hangles Hmatch.
+    pose proof Htrap as Htrapcopy. cbn in Htrapcopy.
+    destruct Htrapcopy as [Hshape Hpar].
+    pose proof Hshape as Hwfq. destruct Hwfq as [Hwfq _].
+    destruct Hwfq as [_ [_ [_ [_ [_ [_ [Hncol Hex]]]]]]].
+    destruct Hex as [X [HXac HXbd]]. cbn in Hncol, HXac, HXbd.
+    destruct (ghost_quad_no_three_collinear _ _ _ _ _ Hncol HXac HXbd)
+      as [Hbcd [Hcda Hdab]].
+    cbn. split; [exact Hshape|].
+    unfold Audit.SegmentCongruent, Audit.seg_start, Audit.seg_end; cbn.
+    apply orb_true_iff in Hmatch.
+    destruct Hmatch as [Hm|Hm]; apply andb_true_iff in Hm;
+      destruct Hm as [Hsides Hangs];
+      pose proof (para_pair_sound _ _ _ _ Hsides Hpar) as Hparallel;
+      cbn in Hparallel;
+      apply orb_true_iff in Hangs; destruct Hangs as [Hm|Hm];
+      pose proof (conga_pair_sound _ _ _ _ Hm Hangles) as Hbase; cbn in Hbase.
+    - exact (ghost_isos_trap_con_diagonals _ _ _ _ X Hncol HXac HXbd
+               Hparallel Hbase).
+    - assert (Hrot : Cong (point q.(quadrilateral_third)) (point q.(quadrilateral_first))
+                          (point q.(quadrilateral_fourth)) (point q.(quadrilateral_second))).
+      { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hcda
+                 (ghost_bets_sym _ _ _ HXac) (ghost_bets_sym _ _ _ HXbd));
+          [now apply par_symmetry|exact Hbase]. }
+      Cong.
+    - assert (Hrot : Cong (point q.(quadrilateral_second)) (point q.(quadrilateral_fourth))
+                          (point q.(quadrilateral_third)) (point q.(quadrilateral_first))).
+      { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hbcd HXbd
+                 (ghost_bets_sym _ _ _ HXac));
+          [exact Hparallel|exact Hbase]. }
+      Cong.
+    - assert (Hrot : Cong (point q.(quadrilateral_fourth)) (point q.(quadrilateral_second))
+                          (point q.(quadrilateral_first)) (point q.(quadrilateral_third))).
+      { apply (ghost_isos_trap_con_diagonals _ _ _ _ X Hdab
+                 (ghost_bets_sym _ _ _ HXbd) HXac);
+          [now apply par_symmetry|exact Hbase]. }
+      Cong. }
+  template_cases Hin; open_slots Ht;
+    unfold trapezoid_spellings, segment_spellings in Hin0;
+    cbn [flat_map app] in Hin0; pick_statements;
+    exact (Hcore _ _ _ _ He0 He ltac:(btrue)).
+Qed.
+
+Lemma altint_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (altint_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [altint_needs] in Hin; no_template Hin.
+  destruct (from_transversals_sound _ _ _ Hprem Hin)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hslots Hcfg]]]]]]]]].
+  cbv beta in Hslots.
+  destruct (altint_pair pa pb pi1 pc pd pi2 a b) eqn:Hpairs; [|destruct Hslots].
+  transversal_slot Hslots Ht.
+  destruct (parallel_spellings_match _ _ _ _ _ _ _ Hine) as [s1 [s2 [-> Hlines]]].
+  cbn [SlotHolds] in He.
+  pose proof (transversal_para_sound _ _ _ _ _ _ _ _ _ _ Hlines Hcfg He) as HP.
+  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
+    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
+  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
+  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
+  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
+  destruct (ghost_transversal_master _ _ _ _ _ _ _ _
+              Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hm1 Hm2].
+  unfold altint_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm];
+    eapply conga_pair_conclude; try exact Hm; cbn.
+  - rewrite (EA (Ha Hg1)), (ED (Hd Hg2)) in Hm1. exact Hm1.
+  - rewrite (EB (Hb Hg1)), (EC (Hc Hg2)) in Hm2. exact Hm2.
+Qed.
+
+Lemma altext_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (altext_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [altext_needs] in Hin; no_template Hin.
+  destruct (from_transversals_sound _ _ _ Hprem Hin)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hslots Hcfg]]]]]]]]].
+  cbv beta in Hslots.
+  destruct (altext_pair pa pb pt1 pi1 pc pd pt2 pi2 a b) eqn:Hpairs; [|destruct Hslots].
+  transversal_slot Hslots Ht.
+  destruct (parallel_spellings_match _ _ _ _ _ _ _ Hine) as [s1 [s2 [-> Hlines]]].
+  cbn [SlotHolds] in He.
+  pose proof (transversal_para_sound _ _ _ _ _ _ _ _ _ _ Hlines Hcfg He) as HP.
+  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
+    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
+  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
+  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
+  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
+  destruct (ghost_transversal_altext _ _ _ _ _ _ _ _
+              Hbt1 Hbt2 Hbab Hbcd Hos HP') as [He1 He2].
+  unfold altext_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[[Hg1 Hg2] Hg3] Hg4] Hm];
+    eapply conga_pair_conclude; try exact Hm; cbn;
+    rewrite (ET1 (Ht1 Hg1)), (ET2 (Ht2 Hg2)) in *.
+  - rewrite (EA (Ha Hg3)), (ED (Hd Hg4)) in He1. exact He1.
+  - rewrite (EB (Hb Hg3)), (EC (Hc Hg4)) in He2. exact He2.
+Qed.
+
+Lemma corresp_ang_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (corresp_ang_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [corresp_ang_needs] in Hin; no_template Hin.
+  destruct (from_transversals_sound _ _ _ Hprem Hin)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hslots Hcfg]]]]]]]]].
+  cbv beta in Hslots.
+  destruct (corresp_pair pa pb pt1 pi1 pc pd pt2 pi2 a b) eqn:Hpairs; [|destruct Hslots].
+  transversal_slot Hslots Ht.
+  destruct (parallel_spellings_match _ _ _ _ _ _ _ Hine) as [s1 [s2 [-> Hlines]]].
+  cbn [SlotHolds] in He.
+  pose proof (transversal_para_sound _ _ _ _ _ _ _ _ _ _ Hlines Hcfg He) as HP.
+  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
+    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
+  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
+  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
+  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
+  destruct (ghost_transversal_corresp _ _ _ _ _ _ _ _
+              Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hc1 [Hc2 [Hc3 Hc4]]].
+  unfold corresp_pair in Hpairs. repeat rewrite orb_true_iff in Hpairs.
+  destruct Hpairs as [[[Hm|Hm]|Hm]|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[[Hg1 Hg2] Hg3] Hm];
+    eapply conga_pair_conclude; try exact Hm; cbn.
+  - rewrite (ET2 (Ht2 Hg1)), (EB (Hb Hg2)), (ED (Hd Hg3)) in Hc1. exact Hc1.
+  - rewrite (ET2 (Ht2 Hg1)), (EA (Ha Hg2)), (EC (Hc Hg3)) in Hc2. exact Hc2.
+  - rewrite (ET1 (Ht1 Hg1)), (EA (Ha Hg2)), (EC (Hc Hg3)) in Hc3. exact Hc3.
+  - rewrite (ET1 (Ht1 Hg1)), (EB (Hb Hg2)), (ED (Hd Hg3)) in Hc4. exact Hc4.
+Qed.
+
+Lemma sameside_ang_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (sameside_ang_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [sameside_ang_needs] in Hin; no_template Hin.
+  destruct (from_transversals_sound _ _ _ Hprem Hin)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hslots Hcfg]]]]]]]]].
+  cbv beta in Hslots.
+  destruct (sameside_pair pa pb pi1 pc pd pi2 a b) eqn:Hpairs; [|destruct Hslots].
+  transversal_slot Hslots Ht.
+  destruct (parallel_spellings_match _ _ _ _ _ _ _ Hine) as [s1 [s2 [-> Hlines]]].
+  cbn [SlotHolds] in He.
+  pose proof (transversal_para_sound _ _ _ _ _ _ _ _ _ _ Hlines Hcfg He) as HP.
+  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
+    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
+  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
+  apply (ghost_transversal_forward _ _ _ _ _ _ _ _ _ Hrel HT1 HT2 HP).
+  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos HP' ET1 ET2 EA EB EC ED.
+  destruct (ghost_transversal_sameside _ _ _ _ _ _ _ _
+              Hbt1 Hbt2 Hbab Hbcd Hos HP') as [Hs1 Hs2].
+  unfold sameside_pair in Hpairs. apply orb_true_iff in Hpairs.
+  destruct Hpairs as [Hm|Hm]; repeat rewrite andb_true_iff in Hm; destruct Hm as [[Hg1 Hg2] Hm];
+    eapply suppa_pair_conclude; try exact Hm; cbn.
+  - rewrite (EB (Hb Hg1)), (ED (Hd Hg2)) in Hs1. exact Hs1.
+  - rewrite (EA (Ha Hg1)), (EC (Hc Hg2)) in Hs2. exact Hs2.
+Qed.
+
+Lemma altint_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (altint_conv_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [altint_conv_needs] in Hin; no_template Hin.
+  destruct (from_transversals_sound _ _ _ Hprem Hin)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hslots Hcfg]]]]]]]]].
+  cbv beta zeta in Hslots.
+  destruct (transversal_lines_match a b pa pb pi1 pc pd pi2) eqn:Hlines;
+    [|destruct Hslots].
+  transversal_slot Hslots Ht.
+  apply (transversal_para_conclude _ _ _ _ _ _ _ _ _ _ Hlines Hcfg).
+  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
+    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
+  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
+  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
+  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
+  apply (ghost_transversal_master_conv (point pi1) (point pi2)); try assumption.
+  assert (HI : point pi1 <> point pi2) by (destruct Hrel as [HI _]; exact HI).
+  gated_cases Hine; cbn [SlotHolds] in He.
+  - destruct Hg as [Hg1 Hg2]. left.
+    assert (Hwf1 : angle_well_formed point (angle_name pa pi1 pi2))
+      by (cbn; split; [exact (Ha Hg1)|auto]).
+    assert (Hwf2 : angle_well_formed point (angle_name pd pi2 pi1))
+      by (cbn; split; [exact (Hd Hg2)|exact HI]).
+    pose proof (He Hwf1 Hwf2) as HC. cbn in HC.
+    rewrite (EA (Ha Hg1)), (ED (Hd Hg2)). exact HC.
+  - destruct Hg as [Hg1 Hg2]. right.
+    assert (Hwf1 : angle_well_formed point (angle_name pb pi1 pi2))
+      by (cbn; split; [exact (Hb Hg1)|auto]).
+    assert (Hwf2 : angle_well_formed point (angle_name pc pi2 pi1))
+      by (cbn; split; [exact (Hc Hg2)|exact HI]).
+    pose proof (He Hwf1 Hwf2) as HC. cbn in HC.
+    rewrite (EB (Hb Hg1)), (EC (Hc Hg2)). exact HC.
+Qed.
+
+Lemma altext_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (altext_conv_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [altext_conv_needs] in Hin; no_template Hin.
+  destruct (from_transversals_sound _ _ _ Hprem Hin)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hslots Hcfg]]]]]]]]].
+  cbv beta zeta in Hslots.
+  destruct (transversal_lines_match a b pa pb pi1 pc pd pi2) eqn:Hlines;
+    [|destruct Hslots].
+  transversal_slot Hslots Ht.
+  apply (transversal_para_conclude _ _ _ _ _ _ _ _ _ _ Hlines Hcfg).
+  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
+    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
+  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
+  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
+  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
+  apply (ghost_transversal_altext_conv T1' (point pi1) (point pi2) T2');
+    try assumption.
+  gated_cases Hine; cbn [SlotHolds] in He.
+  - destruct Hg as [[[Hg1 Hg2] Hg3] Hg4]. cbn in He.
+    rewrite (ET1 (Ht1 Hg1)), (ET2 (Ht2 Hg2)).
+    left. rewrite (EA (Ha Hg3)), (ED (Hd Hg4)). exact He.
+  - destruct Hg as [[[Hg1 Hg2] Hg3] Hg4]. cbn in He.
+    rewrite (ET1 (Ht1 Hg1)), (ET2 (Ht2 Hg2)).
+    right. rewrite (EB (Hb Hg3)), (EC (Hc Hg4)). exact He.
+Qed.
+
+Lemma corresp_ang_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (corresp_ang_conv_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [corresp_ang_conv_needs] in Hin; no_template Hin.
+  destruct (from_transversals_sound _ _ _ Hprem Hin)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hslots Hcfg]]]]]]]]].
+  cbv beta zeta in Hslots.
+  destruct (transversal_lines_match a b pa pb pi1 pc pd pi2) eqn:Hlines;
+    [|destruct Hslots].
+  transversal_slot Hslots Ht.
+  apply (transversal_para_conclude _ _ _ _ _ _ _ _ _ _ Hlines Hcfg).
+  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
+    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
+  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
+  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
+  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
+  apply (ghost_transversal_corresp_conv T1' (point pi1) (point pi2) T2');
+    try assumption.
+  gated_cases Hine; cbn [SlotHolds] in He.
+  - destruct Hg as [[Hg1 Hg2] Hg3]. cbn in He. left.
+    rewrite (ET2 (Ht2 Hg1)), (EB (Hb Hg2)), (ED (Hd Hg3)). exact He.
+  - destruct Hg as [[Hg1 Hg2] Hg3]. cbn in He. right; left.
+    rewrite (ET2 (Ht2 Hg1)), (EA (Ha Hg2)), (EC (Hc Hg3)). exact He.
+  - destruct Hg as [[Hg1 Hg2] Hg3]. cbn in He. right; right; left.
+    rewrite (ET1 (Ht1 Hg1)), (EA (Ha Hg2)), (EC (Hc Hg3)). exact He.
+  - destruct Hg as [[Hg1 Hg2] Hg3]. cbn in He. right; right; right.
+    rewrite (ET1 (Ht1 Hg1)), (EB (Hb Hg2)), (ED (Hd Hg3)). exact He.
+Qed.
+
+Lemma sameside_ang_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (sameside_ang_conv_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [sameside_ang_conv_needs] in Hin; no_template Hin.
+  destruct (from_transversals_sound _ _ _ Hprem Hin)
+    as [pa [pb [pt1 [pi1 [pc [pd [pt2 [pi2 [Hslots Hcfg]]]]]]]]].
+  cbv beta zeta in Hslots.
+  destruct (transversal_lines_match a b pa pb pi1 pc pd pi2) eqn:Hlines;
+    [|destruct Hslots].
+  transversal_slot Hslots Ht.
+  apply (transversal_para_conclude _ _ _ _ _ _ _ _ _ _ Hlines Hcfg).
+  destruct (transversal_drawn _ _ _ _ _ _ _ _ Hcfg)
+    as [Ha [Hb [Hc [Hd [Ht1 Ht2]]]]].
+  destruct (transversal_relaxed _ _ _ _ _ _ _ _ Hcfg) as [Hrel [HT1 HT2]].
+  apply (ghost_transversal_converse _ _ _ _ _ _ _ _ Hrel HT1 HT2).
+  intros T1' A' B' C' D' T2' Hbt1 Hbt2 Hbab Hbcd Hos ET1 ET2 EA EB EC ED.
+  apply (ghost_transversal_sameside_conv T1' (point pi1) (point pi2) T2');
+    try assumption.
+  gated_cases Hine; cbn [SlotHolds] in He.
+  - destruct Hg as [Hg1 Hg2]. cbn in He. left.
+    rewrite (EB (Hb Hg1)), (ED (Hd Hg2)). exact He.
+  - destruct Hg as [Hg1 Hg2]. cbn in He. right.
+    rewrite (EA (Ha Hg1)), (EC (Hc Hg2)). exact He.
+Qed.
+
+Lemma tangent_perp_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (tangent_perp_needs decls premises facts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [tangent_perp_needs] in Hin; no_template Hin.
+  apply in_flat_map in Hin. destruct Hin as [c [_ Hin]].
+  assert (Hcore : forall s1, Interp (Tangent c s1 p) ->
+            Interp (Perp (segment_name c.(circle_center) p) s1 p)).
+  { intros s1 Ht'.
+    cbn in Ht'. destruct Ht' as [Hsegwf [Honp [Hcol HQ]]].
+    destruct Honp as [Hcwf Hcongp]. cbn in Hcwf, Hcongp, Hsegwf, Hcol.
+    assert (HOp : point (c.(circle_center)) <> point p).
+    { intro Heq. apply Hcwf.
+      rewrite <- Heq in Hcongp.
+      apply (cong_identity _ _ (point c.(circle_center))). Cong. }
+    destruct HQ as [Q [Hdisj [HQne HPer]]].
+    destruct Hdisj as [HQ1|HQ2].
+    - apply (perp_core_col _ _ _ s1.(segment_first) c.(circle_center)).
+      + rewrite HQ1 in HQne. exact HQne.
+      + exact HOp.
+      + apply l8_2. rewrite HQ1 in HPer. exact HPer.
+      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
+        now rewrite orb_true_r.
+      + unfold endpoint_of, ascii_eqb. cbn. now rewrite Ascii.eqb_refl.
+      + unfold endpoint_of, ascii_eqb. now rewrite Ascii.eqb_refl.
+      + exact Hsegwf.
+      + exact Hcol.
+    - apply (perp_core_col _ _ _ s1.(segment_second) c.(circle_center)).
+      + rewrite HQ2 in HQne. exact HQne.
+      + exact HOp.
+      + apply l8_2. rewrite HQ2 in HPer. exact HPer.
+      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
+        now rewrite orb_true_r.
+      + unfold endpoint_of, ascii_eqb. cbn. now rewrite Ascii.eqb_refl.
+      + unfold endpoint_of, ascii_eqb. cbn. rewrite Ascii.eqb_refl.
+        now rewrite orb_true_r.
+      + exact Hsegwf.
+      + exact Hcol. }
+  assert (Hsw : forall s1, Interp (Tangent c s1 p) ->
+            Interp (Perp s1 (segment_name c.(circle_center) p) p)).
+  { intros s1 Ht'. pose proof (Hcore s1 Ht') as H. cbn in H |- *.
+    apply perp_in_sym. exact H. }
+  cbn [flat_map app fst snd] in Hin. unfold only_if in Hin.
+  destruct (segment_u_eqb b (segment_name c.(circle_center) p)) eqn:Hg1;
+  destruct (segment_u_eqb a (segment_name c.(circle_center) p)) eqn:Hg2;
+  cbn [app] in Hin; template_cases Hin; open_slots Ht; pick_statements;
+  match type of He with
+  | Interp (Tangent _ ?x _) =>
+      first
+        [ exact (proj2 (perp_at_realign a b x _ p p ltac:(btrue) Hg1
+                          (Ascii.eqb_refl p)) (Hsw x He))
+        | exact (proj2 (perp_at_realign a b _ x p p Hg2 ltac:(btrue)
+                          (Ascii.eqb_refl p)) (Hcore x He)) ]
+  end.
+Qed.
+
+Lemma tangent_perp_conv_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (tangent_perp_conv_needs conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [tangent_perp_conv_needs] in Hin; no_template Hin.
+  unfold only_if in Hin. destruct (endpoint_of p s) eqn:Hshape; [|destruct Hin].
+  template_cases Hin; open_slots Ht.
+  destruct Hin0 as [<-|[]]. rename He0 into Hradius.
+  assert (Hfigure : Interp (Perp s (segment_name c.(circle_center) p) p)).
+  { pick_statements; [exact He|]. cbn in He |- *. apply perp_in_sym. exact He. }
+  cbn in Hfigure. destruct Hfigure as [Hswf [_ [Hcol [_ Hright]]]].
+  destruct s as [a b]. cbn in Hswf, Hcol, Hright, Hshape |- *.
+  unfold endpoint_of, ascii_eqb in Hshape. apply orb_true_iff in Hshape.
+  split; [exact Hswf|]. split; [exact Hradius|]. split; [Col|].
+  destruct Hshape as [Hp|Hp]; apply Ascii.eqb_eq in Hp; cbn in Hp; subst.
+  - exists (point b). split; [now right|]. split.
+    + now apply not_eq_sym.
+    + apply l8_2, Hright; [apply col_trivial_3|apply col_trivial_1].
+  - exists (point a). split; [now left|]. split.
+    + exact Hswf.
+    + apply l8_2, Hright; [apply col_trivial_1|apply col_trivial_1].
+Qed.
+
+Lemma con_tangents_ext_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (con_tangents_ext_needs decls premises facts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [con_tangents_ext_needs] in Hin; no_template Hin.
+  apply in_flat_map in Hin. destruct Hin as [c [_ Hin]].
+  assert (Hcore : forall s1 s2 p p0 e,
+      Interp (Tangent c s1 p) -> Interp (Tangent c s2 p0) ->
+      segment_u_eqb s1 (segment_name p e) = true ->
+      segment_u_eqb s2 (segment_name p0 e) = true ->
+      segment_pair_eqb a b (segment_name p e) (segment_name p0 e) = true ->
+      Interp (ConSeg a b)).
+  { intros s1 s2 p p0 e Ht1 Ht2 Hshape Hshape' Hconc.
+    pose proof Ht1 as Hon1. pose proof Ht2 as Hon2.
+    cbn in Hon1, Hon2.
+    destruct Hon1 as [_ [[_ Hr1] _]]. destruct Hon2 as [_ [[_ Hr2] _]].
+    destruct (tangent_far_point _ _ _ _ Hshape Ht1) as [Hper1 _].
+    destruct (tangent_far_point _ _ _ _ Hshape' Ht2) as [Hper2 _].
+    apply (cong_pair_conclude _ _ (segment_name p e) (segment_name p0 e));
+      [exact Hconc|cbn].
+    apply (ghost_tangents_congruent (point c.(circle_center)));
+      [now apply l8_2|now apply l8_2|].
+    apply cong_transitivity with (point c.(circle_center)) (point c.(circle_radius_point));
+      [Cong|Cong]. }
+  apply in_flat_map in Hin. destruct Hin as [fg [Hfg Hin]].
+  apply in_flat_map in Hin. destruct Hin as [pe [Hpe Hin]].
+  apply in_flat_map in Hin. destruct Hin as [pe' [Hpe' Hin]].
+  unfold only_if in Hin.
+  destruct (ascii_eqb (snd pe) (snd pe')) eqn:Hgate; [|destruct Hin].
+  apply Ascii.eqb_eq in Hgate.
+  destruct Hin as [<-|[]]. open_slots Ht.
+  destruct pe as [P E], pe' as [P' E']. cbn [fst snd] in *. subst E'.
+  destruct a as [a1 a2], b as [b1 b2].
+  cbn in Hfg; destruct Hfg as [<-|[<-|[]]]; cbn in Hpe, Hpe';
+    destruct Hpe as [Hpe|[Hpe|[]]]; injection Hpe as -> ->;
+    destruct Hpe' as [Hpe'|[Hpe'|[]]]; injection Hpe' as -> ->;
+    pick_statements; apply (Hcore _ _ _ _ E He He0); btrue.
+Qed.
+
+Lemma radius_chord_bisect_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (radius_chord_bisect_needs decls premises facts conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [radius_chord_bisect_needs] in Hin; no_template Hin.
+  apply in_flat_map in Hin. destruct Hin as [c [_ Hin]].
+  unfold only_if in Hin.
+  destruct (segment_u_eqb a (segment_name c.(circle_center) p)) eqn:Hbisector;
+    [|destruct Hin].
+  apply in_map_iff in Hin. destruct Hin as [rw [<- _]].
+  open_slots Ht.
+  destruct Hin as [<-|[]]. rename He into Hperp.
+  assert (Hcore : forall s3, segment_u_eqb b s3 = true -> Interp (Chord c s3) ->
+            Interp (SegBisect a b p)).
+  { intros s3 Htarget Hch.
+    assert (Hfigure : Interp (Perp (segment_name c.(circle_center) p) s3 p))
+      by (exact (proj1 (perp_at_realign _ _ _ _ p p (segment_u_eqb_refl _)
+                         Htarget (Ascii.eqb_refl p)) Hperp)).
+    cbn in Hfigure.
+    destruct Hfigure as [Hcentre [Hchordwf [_ [Hcol Hright]]]].
+    cbn in Hch. destruct Hch as [_ [[_ Hone] [_ Htwo]]].
+    assert (Hmid : Midpoint (point p) (point s3.(segment_first))
+                            (point s3.(segment_second))).
+    { apply (ghost_chord_foot_midpoint (point c.(circle_center)));
+        [exact Hchordwf|Col| | |].
+      - apply l8_2, Hright; [apply col_trivial_1|apply col_trivial_1].
+      - apply l8_2, Hright; [apply col_trivial_1|apply col_trivial_3].
+      - apply cong_transitivity with (point c.(circle_center)) (point c.(circle_radius_point));
+          [exact Hone|Cong]. }
+    apply (proj2 (seg_bisect_realign a b (segment_name c.(circle_center) p) s3 p p
+                   Hbisector Htarget (Ascii.eqb_refl p))).
+    cbn. split; [exact Hcentre|]. split; [apply col_trivial_2|exact Hmid]. }
+  pick_statements; (eapply Hcore; [|exact He1]); btrue.
+Qed.
+
+Lemma inscribed_semi_needs_sound : forall decls premises facts conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (inscribed_semi_needs premises conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts conclusion t Hwf Hprem Hall Hin Ht.
+  destruct conclusion; cbn [inscribed_semi_needs] in Hin; no_template Hin.
+  rename a into a'.
+  apply in_flat_map in Hin. destruct Hin as [pr [Hprin Hin]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hprin) as Hpr.
+  unfold interp_premise in Hpr.
+  destruct pr.(premise_statement) eqn:Hst; try solve [destruct Hin].
+  rename c into c1, points into ps. cbn in Hpr.
+  destruct (circ_order_complete premises c1 ps) eqn:Hcomplete; [|destruct Hin].
+  apply in_flat_map in Hin. destruct Hin as [a [Ha Hin]].
+  destruct (inscribed_chord premises ps a) as [[A B]|] eqn:Hca; [|destruct Hin].
+  destruct Hin as [<-|[]]. open_slots Ht. destruct Hin as [<-|[]].
+  rename He into Hia.
+  assert (Haeq : angle_u_eqb a' a = true)
+    by (cbn in Ha; destruct Ha as [<-|[<-|[]]]; btrue).
+  assert (Hcore : forall s, segment_u_eqb (segment_name A B) s = true ->
+            Interp (Diameter c1 s) -> Interp (Right a')).
+  { intros s Hends Hd.
+    destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hia Hca)
+      as [HlP [HlA [HlB [HAB [HAP [HBP [HoA HoB]]]]]]].
+    cbn in Hd. destruct Hd as [[Hswf [Hon1 Hon2]] Hbet].
+    destruct Hon1 as [_ Hc1]. destruct Hon2 as [_ Hc2].
+    cbn in Hc1, Hc2, Hbet.
+    pose proof (listed_on_circle _ _ _ Hpr HlP) as CP.
+    assert (Hmid : Midpoint (point c1.(circle_center))
+                     (point s.(segment_first)) (point s.(segment_second))).
+    { split; [exact Hbet|].
+      apply cong_transitivity with (point c1.(circle_center))
+          (point c1.(circle_radius_point)); unfold Audit.circ_center in *; Cong. }
+    assert (HOV : Cong (point c1.(circle_center)) (point s.(segment_first))
+                       (point c1.(circle_center)) (point a.(angle_vertex))).
+    { apply cong_transitivity with (point c1.(circle_center))
+          (point c1.(circle_radius_point)); unfold Audit.circ_center in *; Cong. }
+    assert (Hper : Per (point s.(segment_first)) (point a.(angle_vertex))
+                       (point s.(segment_second))).
+    { apply (ghost_thales _ _ _ (point c1.(circle_center))); assumption. }
+    assert (HperAB : Per (point A) (point a.(angle_vertex)) (point B)).
+    { apply segment_u_eqb_cases in Hends. destruct Hends as [Hends|Hends].
+      - rewrite <- Hends in Hper. exact Hper.
+      - destruct s as [s1 s2]. unfold reverse_segment in Hends. cbn in Hends.
+        injection Hends as -> ->. cbn in Hper. apply l8_2. exact Hper. }
+    assert (Hrt : Per (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))).
+    { apply (l11_17 (point A) (point a.(angle_vertex)) (point B)); [exact HperAB|].
+      apply conga_sym, out2__conga; assumption. }
+    cbn in Hia. destruct Hia as [_ [Hawf _]].
+    apply angle_u_eqb_cases in Haeq. cbn.
+    destruct Haeq as [->| ->]; cbn.
+    - split; [exact Hawf|]. exact Hrt.
+    - unfold reverse_angle. cbn. destruct Hawf as [Hl Hr].
+      split; [split; assumption|]. unfold Audit.RightAngle. cbn. apply l8_2. exact Hrt. }
+  pick_statements; (eapply Hcore; [|exact He0]); btrue.
+Qed.
+
+Lemma inscribed_pair_needs_sound : forall decls premises facts (same : bool) conclusion t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  In t (inscribed_pair_needs premises same conclusion) -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts same conclusion t Hwf Hprem Hall Hin Ht.
+  unfold inscribed_pair_needs in Hin.
+  apply in_flat_map in Hin. destruct Hin as [pr [Hprin Hin]].
+  pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hprin) as Hpr.
+  unfold interp_premise in Hpr.
+  destruct pr.(premise_statement) eqn:Hst; try solve [destruct Hin].
+  rename c into c1, points into ps. cbn in Hpr.
+  apply in_flat_map in Hin. destruct Hin as [[a b] [_ Hin]]. cbn [fst snd] in Hin.
+  destruct (fact_eqb conclusion (if same then ConAng a b else Supplementary a b) &&
+            inscribed_pair_check premises c1 a b same pr) eqn:Hok; [|destruct Hin].
+  apply andb_true_iff in Hok. destruct Hok as [Hconc Hcheck].
+  destruct Hin as [<-|[]]. open_slots Ht. pick_statements.
+  rename He into Hia, He0 into Hib.
+  unfold inscribed_pair_check in Hcheck. rewrite Hst in Hcheck.
+  apply andb_true_iff in Hcheck. destruct Hcheck as [_ Hpair].
+  destruct (inscribed_chord premises ps a) as [[A B]|] eqn:Hca; [|discriminate].
+  destruct (inscribed_chord premises ps b) as [[A' B']|] eqn:Hcb; [|discriminate].
+  apply andb_true_iff in Hpair. destruct Hpair as [Hchord Hside].
+  destruct (arc_side ps A B a.(angle_vertex)) as [sa|] eqn:Hsa; [|discriminate].
+  destruct (arc_side ps A B b.(angle_vertex)) as [sb|] eqn:Hsb; [|discriminate].
+  destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hia Hca)
+    as [HlP [HlA [HlB [HAB [HAP [HBP [HoA HoB]]]]]]].
+  destruct (inscribed_chord_sound _ _ _ _ _ _ Hprem Hpr Hib Hcb)
+    as [HlQ [HlA' [HlB' [HAB' [HAQ [HBQ [HoA' HoB']]]]]]].
+  assert (Hsame : (A' = A /\ B' = B) \/ (A' = B /\ B' = A)).
+  { unfold same_chord_points, ascii_eqb in Hchord.
+    apply orb_true_iff in Hchord.
+    destruct Hchord as [H|H]; apply andb_true_iff in H; destruct H as [H1 H2];
+      apply Ascii.eqb_eq in H1, H2; subst; auto. }
+  assert (HQA : b.(angle_vertex) <> A) by (destruct Hsame as [[-> ->]|[-> ->]]; auto).
+  assert (HQB : b.(angle_vertex) <> B) by (destruct Hsame as [[-> ->]|[-> ->]]; auto).
+  pose proof (arc_side_sides c1 ps A B a.(angle_vertex) b.(angle_vertex) sa sb Hpr
+                HlA HlB HlP HlQ HAB (not_eq_sym HAP) (not_eq_sym HBP) HQA HQB Hsa Hsb)
+    as Hsides.
+  pose proof (listed_on_circle _ _ _ Hpr HlA) as CA.
+  pose proof (listed_on_circle _ _ _ Hpr HlB) as CB.
+  pose proof (listed_on_circle _ _ _ Hpr HlP) as CP.
+  pose proof (listed_on_circle _ _ _ Hpr HlQ) as CQ.
+  assert (Ha : CongA (point a.(angle_first)) (point a.(angle_vertex)) (point a.(angle_last))
+                     (point A) (point a.(angle_vertex)) (point B))
+    by (apply out2__conga; assumption).
+  assert (Hb : CongA (point A) (point b.(angle_vertex)) (point B)
+                     (point b.(angle_first)) (point b.(angle_vertex)) (point b.(angle_last))).
+  { destruct Hsame as [[-> ->]|[-> ->]].
+    - apply conga_sym, out2__conga; assumption.
+    - apply conga_left_comm, conga_right_comm, conga_sym, conga_right_comm.
+      apply out2__conga; assumption. }
+  destruct same; cbn in Hside; apply (proj2 (fact_eqb_sound _ _ Hconc)); cbn.
+  - destruct (Bool.eqb sa sb) eqn:Heq; [|discriminate].
+    apply conga_trans with (point A) (point a.(angle_vertex)) (point B); [exact Ha|].
+    apply conga_trans with (point A) (point b.(angle_vertex)) (point B); [|exact Hb].
+    apply (Inscribed.GhostInscribed.cop_onc4_os__conga
+             (point c1.(circle_center)) (point c1.(circle_radius_point))); try assumption.
+    apply all_coplanar.
+  - destruct (Bool.eqb sa sb) eqn:Heq; [discriminate|].
+    apply (conga2_suppa__suppa (point A) (point a.(angle_vertex)) (point B)
+             (point A) (point b.(angle_vertex)) (point B)).
+    + apply conga_sym. exact Ha.
+    + exact Hb.
+    + apply (Inscribed.GhostInscribed.cop_onc4_ts__suppa
+               (point c1.(circle_center)) (point c1.(circle_radius_point))); try assumption.
+      apply all_coplanar.
+Qed.
+
+
+Lemma reason_needs_sound : forall decls premises facts r conclusion ts t,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  reason_needs decls premises facts r conclusion = Some ts ->
+  In t ts -> TemplateHolds t -> Interp conclusion.
+Proof.
+  intros decls premises facts r conclusion ts t Hwf Hprem Hall Hneeds Hin Ht.
+  destruct r; cbn [reason_needs] in Hneeds; try discriminate;
+    injection Hneeds as <-;
+    first
+      [ (eapply sas_needs_sound; eassumption)
+      | (eapply sss_needs_sound; eassumption)
+      | (eapply asa_needs_sound; eassumption)
+      | (eapply aas_needs_sound; eassumption)
+      | (eapply rhl_needs_sound; eassumption)
+      | (eapply def_con_tri_needs_sound; eassumption)
+      | (eapply aa_sim_needs_sound; eassumption)
+      | (eapply sas_sim_needs_sound; eassumption)
+      | (eapply sss_sim_needs_sound; eassumption)
+      | (eapply third_angle_needs_sound; eassumption)
+      | (eapply def_equilateral_needs_sound; eassumption)
+      | (eapply def_equiangular_needs_sound; eassumption)
+      | (eapply equilat_equiang_needs_sound; eassumption)
+      | (eapply equiang_equilat_needs_sound; eassumption)
+      | (eapply def_con_right_needs_sound; eassumption)
+      | (eapply def_parallelogram_needs_sound; eassumption)
+      | (eapply rectangle_pgram_needs_sound; eassumption)
+      | (eapply rhombus_pgram_needs_sound; eassumption)
+      | (eapply pgram_opp_sides_conv_needs_sound; eassumption)
+      | (eapply pgram_opp_angs_conv_needs_sound; eassumption)
+      | (eapply pgram_consec_angs_conv_needs_sound; eassumption)
+      | (eapply pgram_opp_side_para_needs_sound; eassumption)
+      | (eapply pgram_diag_bisect_conv_needs_sound; eassumption)
+      | (eapply rect_pgram_ang_needs_sound; eassumption)
+      | (eapply rect_diag_con_conv_needs_sound; eassumption)
+      | (eapply rhombus_consec_sides_needs_sound; eassumption)
+      | (eapply rhombus_diag_perp_conv_needs_sound; eassumption)
+      | (eapply rhombus_opp_bisect_conv_needs_sound; eassumption)
+      | (eapply isos_trap_con_diags_needs_sound; eassumption)
+      | (eapply isos_trap_base_angs_needs_sound; eassumption)
+      | (eapply altint_needs_sound; eassumption)
+      | (eapply altext_needs_sound; eassumption)
+      | (eapply corresp_ang_needs_sound; eassumption)
+      | (eapply sameside_ang_needs_sound; eassumption)
+      | (eapply altint_conv_needs_sound; eassumption)
+      | (eapply altext_conv_needs_sound; eassumption)
+      | (eapply corresp_ang_conv_needs_sound; eassumption)
+      | (eapply sameside_ang_conv_needs_sound; eassumption)
+      | (eapply tangent_perp_needs_sound; eassumption)
+      | (eapply tangent_perp_conv_needs_sound; eassumption)
+      | (eapply con_tangents_ext_needs_sound; eassumption)
+      | (eapply radius_chord_bisect_needs_sound; eassumption)
+      | (eapply inscribed_semi_needs_sound; eassumption)
+      | (eapply inscribed_pair_needs_sound; eassumption) ].
+Qed.
+
+Lemma bespoke_rule_valid_sound : forall decls premises facts reason conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  bespoke_rule_valid decls premises facts reason conclusion = true ->
   Interp conclusion.
 Proof.
   intros decls premises facts reason conclusion Hwf Hprem Hfacts Hvalid.
-  destruct reason; cbn in Hvalid.
+  destruct reason; cbn in Hvalid; try discriminate.
   - destruct (find_premise s premises) eqn:Hfind; try discriminate.
     apply statement_eqb_eq in Hvalid. subst conclusion.
     apply find_premise_sound in Hfind. destruct Hfind as [p [Hin Hp]].
@@ -8513,89 +9102,42 @@ Proof.
         [destruct Hdeclared as [Hl Hr]; cbn; now apply conga_refl|].
       unfold reverse_angle in Hdeclared |- *. cbn in Hdeclared |- *.
       destruct Hdeclared as [Hl Hr]. now apply conga_pseudo_refl.
-  - eapply criterion_conclusion_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact sas_schema_sound|exact Hvalid].
-  - eapply criterion_conclusion_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact sss_schema_sound|exact Hvalid].
-  - eapply criterion_conclusion_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact asa_schema_sound|exact Hvalid].
-  - eapply criterion_conclusion_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact aas_schema_sound|exact Hvalid].
   - eapply cpctc_rule_sound; eauto.
   - eapply con_seg_transitive_sound; eauto.
   - eapply con_ang_transitive_sound; eauto.
   - eapply con_tri_transitive_sound; eauto.
-  - eapply def_con_right_sound; eauto.
   - eapply perp_con_ang_sound; eauto.
   - eapply def_midpt_sound; eauto.
   - eapply vert_ang_sound; eauto.
   - eapply def_ang_bisect_sound; eauto.
   - eapply ang_bisect_conv_sound; eauto.
-  - eapply criterion_conclusion_sound;
-      [exact Hwf|exact Hprem|exact Hfacts|exact rhl_schema_sound|exact Hvalid].
   - eapply midpt_conv_sound; eauto.
-  - eapply third_angle_sound; eauto.
-  - eapply def_con_tri_sound; eauto.
   - eapply def_isosceles_sound; eauto.
   - eapply base_angle_sound; eauto.
   - eapply base_angle_conv_sound; eauto.
-  - eapply def_equilateral_sound; eauto.
-  - eapply def_equiangular_sound; eauto.
-  - eapply equilat_equiang_sound; eauto.
-  - eapply equiang_equilat_sound; eauto.
-  - eapply con_supplements_sound; eauto.
-  - eapply con_supplements_same_sound; eauto.
-  - eapply con_complements_sound; eauto.
-  - eapply con_complements_same_sound; eauto.
+  - eapply (congruent_partners_rule_sound _ _ supplementary_laws); eauto.
+  - eapply (shared_partner_rule_sound _ _ supplementary_laws); eauto.
+  - eapply (congruent_partners_rule_sound _ _ complementary_laws); eauto.
+  - eapply (shared_partner_rule_sound _ _ complementary_laws); eauto.
   - eapply def_linear_pair_sound; eauto.
   - eapply def_perp_sound; eauto.
-  - eapply def_parallelogram_sound; eauto.
   - eapply pgram_opp_sides_sound; eauto.
   - eapply pgram_opp_angles_sound; eauto.
   - eapply pgram_consec_angs_sound; eauto.
   - eapply kite_opp_con_ang_sound; eauto.
-  - eapply pgram_opp_sides_conv_sound; eauto.
-  - eapply pgram_consec_angs_conv_sound; eauto.
-  - eapply rect_pgram_ang_sound; eauto.
-  - eapply pgram_opp_side_para_sound; eauto.
-  - eapply rectangle_pgram_sound; eauto.
-  - eapply rhombus_pgram_sound; eauto.
-  - eapply rhombus_consec_sides_sound; eauto.
   - eapply rhombus_def_sound; eauto.
   - eapply rhombus_opp_bisect_sound; eauto.
   - eapply rect_diag_con_sound; eauto.
   - eapply rectangle_def_sound; eauto.
-  - eapply altint_sound; eauto.
-  - eapply altext_sound; eauto.
-  - eapply corresp_ang_sound; eauto.
-  - eapply sameside_ang_sound; eauto.
-  - eapply altint_conv_sound; eauto.
-  - eapply altext_conv_sound; eauto.
-  - eapply corresp_ang_conv_sound; eauto.
-  - eapply sameside_ang_conv_sound; eauto.
   - eapply para_trans_sound; eauto.
   - eapply def_radius_sound; eauto.
-  - eapply inscribed_semi_sound; eauto.
   - eapply con_chords_arcs_sound; eauto.
-  - eapply tangent_perp_sound; eauto.
-  - eapply tangent_perp_conv_sound; eauto.
-  - eapply con_tangents_ext_sound; eauto.
-  - eapply radius_chord_bisect_sound; eauto.
   - eapply perp_bisector_sound; eauto.
-  - eapply isos_trap_con_diags_sound; eauto.
-  - eapply isos_trap_base_angs_sound; eauto.
   - eapply isos_trap_base_angs_conv_sound; eauto.
-  - eapply pgram_diag_bisect_conv_sound; eauto.
-  - eapply pgram_opp_angs_conv_sound; eauto.
-  - eapply rect_diag_con_conv_sound; eauto.
-  - eapply rhombus_diag_perp_conv_sound; eauto.
-  - eapply rhombus_opp_bisect_conv_sound; eauto.
-  - eapply aa_sim_sound; eauto.
-  - eapply sss_sim_sound; eauto.
-  - eapply sas_sim_sound; eauto.
   - eapply castc_rule_sound; eauto.
   - eapply sim_tri_transitive_sound; eauto.
-  - eapply supp_transitive_sound; eauto.
+  - eapply (substitute_rule_sound _ _ supplementary_laws); eauto.
+  - eapply (substitute_rule_sound _ _ complementary_laws); eauto.
   - eapply perp_transversal_sound; eauto.
   - eapply linear_pair_conv_sound; eauto.
   - eapply diagonal_rule_sound; eauto.
@@ -8603,8 +9145,6 @@ Proof.
   - eapply diagonal_rule_sound; eauto.
   - eapply chord_bisect_conv_sound; eauto.
   - eapply def_radius_conv_sound; eauto.
-  - eapply inscribed_pair_sound; eauto.
-  - eapply inscribed_pair_sound; eauto.
   - (* an incomplete step concludes only the always-true placeholder *)
     change (statement_eqb incomplete_fact conclusion = true) in Hvalid.
     apply statement_eqb_eq in Hvalid. subst conclusion.
@@ -8612,6 +9152,41 @@ Proof.
     rewrite (ref_seg_iff (segment_name incomplete_point incomplete_point)
                (segment_name incomplete_point incomplete_point)) by reflexivity.
     cbn. apply cong_reflexivity.
+Qed.
+
+Lemma rule_valid_as_written_sound : forall decls premises facts reason conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  rule_valid_as_written decls premises facts reason conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros decls premises facts reason conclusion Hwf Hprem Hfacts Hvalid.
+  unfold rule_valid_as_written in Hvalid.
+  destruct (reason_needs decls premises facts reason conclusion) as [ts|] eqn:Hneeds.
+  - destruct (template_valid_sound _ _ _ _ _ Hwf Hprem Hfacts Hvalid) as [t [Hin Ht]].
+    exact (reason_needs_sound _ _ _ _ _ _ _ Hwf Hprem Hfacts Hneeds Hin Ht).
+  - exact (bespoke_rule_valid_sound _ _ _ _ _ Hwf Hprem Hfacts Hvalid).
+Qed.
+
+Lemma rule_valid_sound : forall decls premises facts reason conclusion,
+  declarations_well_formed point decls ->
+  Forall (interp_premise point) premises -> Forall Interp facts ->
+  rule_valid decls premises facts reason conclusion = true ->
+  Interp conclusion.
+Proof.
+  intros decls premises facts reason conclusion Hwf Hprem Hfacts Hvalid.
+  unfold rule_valid in Hvalid. apply orb_true_iff in Hvalid.
+  destruct Hvalid as [Hvalid|Hvalid].
+  - apply existsb_exists in Hvalid. destruct Hvalid as [c [Hin Hc]].
+    apply (proj2 (respelled_iff _ _
+             (statement_spellings_respelled _ _ _ _ Hwf Hprem Hin))).
+    exact (rule_valid_as_written_sound _ _ _ _ _ Hwf Hprem Hfacts Hc).
+  - apply (proj2 (respelled_iff _ _ (canonical_respelled decls premises conclusion Hwf Hprem))).
+    assert (Hcanon : Forall Interp (map (canonical_statement decls premises) facts)).
+    { apply Forall_map. eapply Forall_impl; [|exact Hfacts].
+      intros st Hst.
+      exact (proj1 (respelled_iff _ _ (canonical_respelled decls premises st Hwf Hprem)) Hst). }
+    exact (rule_valid_as_written_sound _ _ _ _ _ Hwf Hprem Hcanon Hvalid).
 Qed.
 
 Lemma check_steps_sound : forall decls premises steps facts output,
@@ -8672,7 +9247,7 @@ Proof.
             (problem_steps p)) as [facts|] eqn:Hsteps; try discriminate.
   apply existsb_exists in Hcheck. destruct Hcheck as [goal [Hin Heq]].
   pose proof (check_steps_sound _ _ _ _ _ Hwf Hprem (Forall_nil _) Hsteps) as Hall.
-  apply (proj2 (fact_eqb_sound _ _ Heq)).
+  apply (goal_matches_sound _ _ _ _ Hwf Hprem Heq).
   eapply Forall_forall; eauto.
 Qed.
 

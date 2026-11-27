@@ -4,6 +4,7 @@ import React from "react";
 import { AngleBisector } from "../reasons/AngleBisector";
 import { Complementary } from "../reasons/Complementary";
 import { EqualAngles } from "../reasons/EqualAngles";
+import { EqualArcs } from "../reasons/EqualArcs";
 import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
 import { EqualTriangles } from "../reasons/EqualTriangles";
@@ -22,7 +23,6 @@ import { SimilarTriangles } from "../reasons/SimilarTriangles";
 import { Supplementary } from "../reasons/Supplementary";
 import { Tangent } from "../reasons/Tangent";
 import { TriangleClassification } from "../reasons/TriangleClassification";
-import { arcStr, congruent } from "../geometryText";
 
 export const stmtToText =
   (stmt?: Stmt, ctx?: ProofContent) => (isActive: boolean) => {
@@ -79,15 +79,7 @@ export const stmtToText =
       return SimilarTriangles.text([args[0], args[1]])(isActive);
     }
     if (stmt.function === "con_arc" && args.length === 2) {
-      // `r_OAB` is drawn as the arc AB.
-      const [first, second] = args.map((arc) => arc.slice(3));
-      return (
-        <span>
-          {arcStr(first, isActive)}
-          {congruent}
-          {arcStr(second, isActive)}
-        </span>
-      );
+      return EqualArcs.text([args[0], args[1]])(isActive);
     }
     if (stmt.function === "linear_pair" && args.length === 2) {
       return LinearPair.text([args[0], args[1]])(isActive);

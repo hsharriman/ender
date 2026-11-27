@@ -1,6 +1,7 @@
 import { Obj } from "geometry-object";
 import {
   AngleBuilder,
+  ArcBuilder,
   CircleBuilder,
   PointBuilder,
   QuadrilateralBuilder,
@@ -12,9 +13,9 @@ export type TickType =
   | Obj.ParallelTick
   | Obj.EqualLengthTick
   | Obj.EqualAngleTick
-  | Obj.HiddenTick
   | Obj.RightTick
-  | Obj.SimilarTick;
+  | Obj.SimilarTick
+  | Obj.AngleHighlight;
 
 export enum SVGModes {
   Hidden = "hidden",
@@ -23,6 +24,8 @@ export enum SVGModes {
   ReliesOn = "relieson",
   Derived = "derived",
   Inconsistent = "inconsistent",
+  /** A fact the step needed that nothing before it establishes. */
+  Unestablished = "unestablished",
 }
 // for determining what type of styling to apply to an object
 export enum HighlightType {
@@ -52,6 +55,7 @@ export type DiagramRenderCtx = {
   triangles: TriangleBuilder[];
   quads: QuadrilateralBuilder[];
   circles: CircleBuilder[];
+  arcs: ArcBuilder[];
   frames: string[];
   deps: Map<string, Set<string>>;
 };

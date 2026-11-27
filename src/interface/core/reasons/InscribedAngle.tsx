@@ -1,17 +1,38 @@
-import { angleStr, segmentStr } from "../geometryText";
+import { Obj } from "geometry-object";
+import { Arc } from "geometry-object/geometry/Arc";
+import { angleStr, circleStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
 
 export class InscribedAngle {
-  static additions = (props: StepFocusProps, s: string, a: string) => {
-    props.ctx.getSegment(s)?.mode(props.frame, props.mode);
-    props.ctx.getAngle(a)?.mode(props.frame, props.mode);
+  static additions = (props: StepFocusProps, c: string, a: string) => {
+    // The arc, not the whole circle, is highlighted: a highlighted circle
+    // would draw over it.
+    const circle = props.ctx.getCircle(c);
+    props.ctx
+      .getAngle(a)
+      ?.addTick(props.frame, Obj.AngleHighlight)
+      .mode(props.frame, props.mode);
+    // The arc the angle cuts off, on the far side of the circle from its
+    // vertex.
+    const [start, vertex, end] = [...a].map((p) => props.ctx.getPoint(p)?.obj);
+    if (!circle || !start || !vertex || !end) return;
+    props.ctx
+      .addArc(
+        new Arc({
+          center: circle.obj.center,
+          start,
+          end,
+          opposite: vertex,
+        }),
+      )
+      .mode(props.frame, props.mode);
   };
-  static text = (s: string, a: string) => (isActive: boolean) => {
+  static text = (c: string, a: string) => (isActive: boolean) => {
     return (
       <span>
         {angleStr(a)}
         {" inscribes "}
-        {segmentStr(s, isActive)}
+        {circleStr(c)}
       </span>
     );
   };

@@ -1,10 +1,10 @@
-import { REASONS_DEFS } from "checker/grammar/defs/reasons.defs";
+import { reasonDef, ReasonDef } from "checker/grammar/catalog";
 
-export interface ReasonItem {
-  title: string;
-  body: string;
-  src?: string; // used to load static diagram image from public/reasons/<src>.png
-}
+/** A reason's catalog entry, with what the interface needs to show it. */
+export type ReasonVis = ReasonDef & {
+  /** The image of its definition, `public/reasons/<src>.png`. */
+  src: string;
+};
 
 // used for linking reasons to images of their definitions.
 const SRC_MAP: Partial<Record<string, string>> = {
@@ -33,10 +33,21 @@ const SRC_MAP: Partial<Record<string, string>> = {
   perp_bisector: "perp-bisector",
 };
 
-export const reasonFromFunction = (fn?: string): ReasonItem => {
-  if (!fn) return { title: "", body: "", src: "" };
-  const key = fn.toLowerCase();
-  const def = REASONS_DEFS[key as keyof typeof REASONS_DEFS];
-  if (!def) return { title: fn, body: "", src: "" };
-  return { title: def.title, body: def.body, src: SRC_MAP[key] ?? "" };
+/** The reason named `fn`, or a blank one when it has no catalog entry. */
+export const reasonFromFunction = (fn?: string): ReasonVis => {
+  const key = (fn ?? "").toLowerCase();
+  const def = reasonDef(key);
+  if (!def)
+    return {
+      name: key,
+      title: fn ?? "",
+      body: "",
+      dependencies: [],
+      conclusions: [],
+      src: "",
+    };
+  return { ...def, src: SRC_MAP[key] ?? "" };
 };
+
+/** Whether a reason is `given`, which states a premise rather than a step. */
+export const isGiven = (reason: ReasonVis): boolean => reason.name === "given";

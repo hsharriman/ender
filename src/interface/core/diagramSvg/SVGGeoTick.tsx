@@ -1,8 +1,9 @@
 import { LAngle, LSegment, Obj, Vector } from "geometry-object";
 import React from "react";
-import { TickType } from "../types/diagramTypes";
+import { SVGModes, TickType } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
 import { pops } from "./pathBuilderUtils";
+import { AngleHighlightCSS } from "./SVGStyles";
 import { arcSweepsCCW, coordsToSvg, scaleToSvg } from "./svgUtils";
 
 const SINGLE_ARC_RADIUS = 0.65;
@@ -14,11 +15,18 @@ const PARALLEL_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.6 : 0.45);
 const RIGHT_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.5 : 0.4);
 const EQ_LEN_TICK_LEN = (miniScale: boolean) => (miniScale ? 0.3 : 0.3);
 const TICK_SPACING = (miniScale: boolean) => (miniScale ? 0.3 : 0.25);
+/** How far, in diagram units, an angle highlight reaches from the vertex. */
+const HIGHLIGHT_RADIUS = 1;
+
+// Every diagram on a page shares one id namespace, and two diagrams can
+// draw the same angle in different places, so each gradient gets its own id.
+let gradientCount = 0;
 
 export type SVGTickProps = {
   parent: LSegment | LAngle;
   tick?: { type: TickType; num: number };
   css: string;
+  mode: SVGModes;
   miniScale: boolean;
   isHighlight: boolean;
   geoId: string;
@@ -28,6 +36,65 @@ export type SVGTickProps = {
 // ticks are not interactive and do not need state
 
 export class SVGGeoTick extends React.Component<SVGTickProps> {
+  private gradientId = `angle-highlight-${gradientCount++}`;
+
+  angleHighlight = (a: LAngle) => {
+    const colors = AngleHighlightCSS[this.props.mode];
+    if (!colors) return <></>;
+    const miniScale = this.props.miniScale;
+    const u = vops.sub(a.start, a.center);
+    const v = vops.sub(a.end, a.center);
+    // Stay inside the angle: reach no further than either side does.
+    const r = Math.min(HIGHLIGHT_RADIUS, vops.mag(u), vops.mag(v));
+    const rSvg = scaleToSvg(r, miniScale);
+    const tip = coordsToSvg(a.center, miniScale);
+    const from = coordsToSvg(
+      vops.add(a.center, vops.smul(vops.unit(u), r)),
+      miniScale,
+    );
+    const to = coordsToSvg(
+      vops.add(a.center, vops.smul(vops.unit(v), r)),
+      miniScale,
+    );
+    const sweep = arcSweepsCCW(a.center, a.start, a.end);
+    return (
+      <>
+        <defs>
+          <radialGradient
+            id={this.gradientId}
+            gradientUnits="userSpaceOnUse"
+            cx={tip[0]}
+            cy={tip[1]}
+            r={rSvg}
+          >
+            <stop
+              offset="0"
+              stopColor="currentColor"
+              className={colors.inner}
+            />
+            <stop
+              offset="1"
+              stopColor="currentColor"
+              className={colors.outer}
+            />
+          </radialGradient>
+        </defs>
+        <path
+          d={
+            pops.moveTo(tip) +
+            pops.lineTo(from) +
+            pops.arcTo(rSvg, 0, sweep, to) +
+            pops.closePath()
+          }
+          id={this.props.geoId}
+          key={this.props.geoId}
+          fill={`url(#${this.gradientId})`}
+          className="stroke-none pointer-events-none"
+        />
+      </>
+    );
+  };
+
   parallelMark = (s: LSegment, num: number) => {
     // find midpoint on segment
     const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
@@ -200,6 +267,8 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
   render() {
     // frame-specific render-logic
     let pathStr = "";
+    if (this.props.tick?.type === Obj.AngleHighlight)
+      return this.angleHighlight(this.props.parent as LAngle);
     if (this.props.tick) {
       if (this.props.tick.type === Obj.ParallelTick) {
         pathStr = this.parallelMark(

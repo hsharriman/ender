@@ -2,21 +2,19 @@ import React from "react";
 import { Legend } from "../../core/diagramSvg/Legend";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
 import { DiagramRenderCtx } from "../../core/types/diagramTypes";
-import { Reason } from "../../core/types/layoutTypes";
+import { ReasonVis } from "../../theorems/reasons";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { getReasonFn } from "../../theorems/utils";
 import { Diagram } from "./Diagram";
 import { ProofRows } from "./ProofRows";
 import { ReasonText } from "./ReasonText";
 import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
-import { WaysToProveFigures } from "./WaysToProveFigures";
 
 export interface InteractiveAppPageProps {
   name: string;
   ctx: DiagramRenderCtx;
   linkedTexts: ProofTextItem[];
-  reasonMap: Map<string, Reason>;
-  miniReasonCtxMap: Map<string, DiagramRenderCtx[]>;
+  reasonMap: Map<string, ReasonVis>;
   isTutorial?: boolean;
   /** When true, proof rows show every step (no reveal animation); used by ProofObjHarness */
   proofHarnessMode?: boolean;
@@ -90,12 +88,6 @@ export class InteractiveAppPage extends React.Component<
                 textFn={getReasonFn(this.props.reasonMap)}
               />
             </div>
-            <WaysToProveFigures
-              activeFrame={this.state.activeFrame}
-              linkedTexts={this.props.linkedTexts}
-              miniReasonCtxMap={this.props.miniReasonCtxMap}
-              diagramAspect={this.props.diagramAspect}
-            />
           </div>
           <div
             id="proof-steps"

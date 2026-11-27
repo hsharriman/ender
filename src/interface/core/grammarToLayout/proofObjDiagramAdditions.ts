@@ -1,8 +1,10 @@
 import { Stmt } from "checker/types/checkerTypes";
 import { DiagramContent } from "../builder/DiagramContent";
 import { AngleBisector } from "../reasons/AngleBisector";
+import { Complementary } from "../reasons/Complementary";
 import { CongruentTriangles } from "../reasons/CongruentTriangles";
 import { EqualAngles } from "../reasons/EqualAngles";
+import { EqualArcs } from "../reasons/EqualArcs";
 import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
 import { InscribedAngle } from "../reasons/InscribedAngle";
@@ -16,6 +18,7 @@ import { SegmentBisector } from "../reasons/SegmentBisector";
 import { SegmentCircleClassification } from "../reasons/SegmentCircleClassification";
 import { SimilarSegments } from "../reasons/SimilarSegments";
 import { SimilarTriangles } from "../reasons/SimilarTriangles";
+import { Supplementary } from "../reasons/Supplementary";
 import { Tangent } from "../reasons/Tangent";
 import { TriangleClassification } from "../reasons/TriangleClassification";
 import { SVGModes } from "../types/diagramTypes";
@@ -224,6 +227,20 @@ export const applyStmtAdditions =
       );
       return;
     }
+    if (stmt.function === "supplementary" && stmt.arguments.length === 2) {
+      Supplementary.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
+      return;
+    }
+    if (stmt.function === "complementary" && stmt.arguments.length === 2) {
+      Complementary.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
+      return;
+    }
     if (stmt.function === "tangent" && stmt.arguments.length === 3) {
       Tangent.additions(
         { ctx, frame, mode },
@@ -233,10 +250,26 @@ export const applyStmtAdditions =
       );
       return;
     }
+    if (stmt.function === "con_arc" && stmt.arguments.length === 2) {
+      EqualArcs.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
+      return;
+    }
+    // A radius names its outer end; the segment runs from the centre to it.
+    if (stmt.function === "radius" && stmt.arguments.length === 2) {
+      const [circle, point] = stmt.arguments.map((arg) => arg.v);
+      const center = ctx.getCircle(circle)?.obj.center.label ?? "";
+      SegmentCircleClassification.additions(
+        { ctx, frame, mode },
+        center + point,
+        circle,
+      );
+      return;
+    }
     if (
-      (stmt.function === "chord" ||
-        stmt.function === "diameter" ||
-        stmt.function === "radius") &&
+      (stmt.function === "chord" || stmt.function === "diameter") &&
       stmt.arguments.length === 2
     ) {
       SegmentCircleClassification.additions(

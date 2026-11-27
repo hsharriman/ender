@@ -207,6 +207,70 @@ Example certified_sss_type_mismatch_is_structured :
             [Audit.JsonString "4"])])).
 Proof. vm_compute. reflexivity. Qed.
 
+(** Sessions check a step against the accepted steps before it.
+    In [bad_sss_source], steps 1-3 are accepted and step 4 is not. *)
+Definition bad_sss_accepts (position : nat) (reason conclusion : string) :=
+  option_map (fun data => CertifiedAPI.sessionAccepts data position reason conclusion)
+    (CertifiedAPI.openSession bad_sss_source).
+
+Example session_accepts_the_criterion_that_fits :
+  bad_sss_accepts 4 "sas(1,2,3)" "con_tri(t_ABC,t_DEF)" = Some true.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_refuses_the_criterion_written :
+  bad_sss_accepts 4 "sss(1,2,3)" "con_tri(t_ABC,t_DEF)" = Some false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_refuses_a_step_not_before_it :
+  bad_sss_accepts 3 "sas(1,2,3)" "con_tri(t_ABC,t_DEF)" = Some false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_refuses_a_rejected_step :
+  bad_sss_accepts 5 "cpctc(4)" "con_seg(BC,EF)" = Some false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_refuses_an_unreadable_candidate :
+  bad_sss_accepts 4 "sas(1,2" "con_tri(t_ABC,t_DEF)" = Some false.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_matches_up_to_spelling :
+  option_map (fun data =>
+    (CertifiedAPI.sessionMatches data "loose" "con_seg(DE,AB)" "con_seg(AB,DE)",
+     CertifiedAPI.sessionMatches data "loose" "con_seg(AB,DE)" "con_seg(AC,DF)",
+     CertifiedAPI.sessionMatches data "no_such_matcher" "con_seg(DE,AB)" "con_seg(AB,DE)"))
+    (CertifiedAPI.openSession bad_sss_source) = Some (true, false, false).
+Proof. vm_compute. reflexivity. Qed.
+
+(** The first template [sas] has for the conclusion of step 4 is the
+    correspondence as written: the three parts steps 1-3 state. *)
+Example session_needs_lists_the_written_correspondence :
+  option_map (fun data =>
+    match CertifiedAPI.sessionNeeds data 4 "sas(1,2,3)" "con_tri_ordered(t_ABC,t_DEF)" with
+    | Audit.JsonArray (Audit.JsonObject (("slots", Audit.JsonArray slots) :: _) :: _) =>
+        map (fun slot => match slot with
+             | Audit.JsonObject [(_, Audit.JsonString m);
+                                 (_, Audit.JsonArray [Audit.JsonString st])] => (m, st)
+             | _ => (""%string, ""%string)
+             end) slots
+    | _ => []
+    end)
+    (CertifiedAPI.openSession bad_sss_source) =
+  Some [("loose", "con_seg(AB,DE)"); ("loose", "con_ang(a_BAC,a_EDF)");
+        ("loose", "con_seg(CA,FD)")]%string.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_needs_nothing_for_a_rule_of_its_own :
+  option_map (fun data => CertifiedAPI.sessionNeeds data 5 "cpctc(4)" "con_seg(BC,EF)")
+    (CertifiedAPI.openSession bad_sss_source) = Some Audit.JsonNull.
+Proof. vm_compute. reflexivity. Qed.
+
+Example session_needs_a_problem :
+  match CertifiedAPI.openSession "not a proof" with
+  | Some _ => false
+  | None => true
+  end = true.
+Proof. vm_compute. reflexivity. Qed.
+
 (** Transitivity of congruence, for each supported object kind. *)
 Definition transitive_header (declarations premises goal steps : string) : string :=
   "title: Transitivity
@@ -659,6 +723,32 @@ Definition def_ang_bisect_detached_source := transitive_header "ang: a_ABC
   "[01] given(g_1) -> ang_bisect(a_ABC,DE)
 [02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
 
+(** The halves may be named through a point along the bisector, when a
+    premise puts it there. *)
+Definition def_ang_bisect_along_ray_source := transitive_header "ang: a_ABC a_ABD a_DBC
+"
+  "[d_1] on_line(BE,D)
+[g_1] ang_bisect(a_ABC,BE)
+"
+  "con_ang(a_ABD,a_DBC)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,BE)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
+
+(** Without the premise, D is not known to be on the bisector. *)
+Definition def_ang_bisect_off_ray_source := transitive_header "ang: a_ABC a_ABD a_DBC
+"
+  "[g_1] ang_bisect(a_ABC,BE)
+"
+  "con_ang(a_ABD,a_DBC)"
+  "[01] given(g_1) -> ang_bisect(a_ABC,BE)
+[02] def_ang_bisect(1) -> con_ang(a_ABD,a_DBC)".
+
+Example def_ang_bisect_along_ray_accepts :
+  complete_checker def_ang_bisect_along_ray_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example def_ang_bisect_off_ray_rejects :
+  complete_checker def_ang_bisect_off_ray_source = false.
+Proof. vm_compute. reflexivity. Qed.
 Example def_ang_bisect_accepts : complete_checker def_ang_bisect_source = true.
 Proof. vm_compute. reflexivity. Qed.
 Example def_ang_bisect_reversed_accepts :
@@ -1296,6 +1386,143 @@ Example supp_transitive_unshared_rejects :
 Proof. vm_compute. reflexivity. Qed.
 Example supp_transitive_kept_rejects :
   complete_checker supp_transitive_kept_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A complement carries across a congruence the same way. *)
+Definition comp_transitive_source := transitive_header "ang: a_ABC a_DEF a_GHI
+"
+  "[g_1] complementary(a_ABC,a_DEF)
+[g_2] con_ang(a_GHI,a_FED)
+"
+  "complementary(a_GHI,a_ABC)"
+  "[01] given(g_1) -> complementary(a_ABC,a_DEF)
+[02] given(g_2) -> con_ang(a_GHI,a_FED)
+[03] comp_transitive(1,2) -> complementary(a_GHI,a_ABC)".
+
+Definition comp_transitive_unshared_source := transitive_header "ang: a_ABC a_DEF a_GHI a_JKL
+"
+  "[g_1] complementary(a_ABC,a_DEF)
+[g_2] con_ang(a_JKL,a_GHI)
+"
+  "complementary(a_ABC,a_GHI)"
+  "[01] given(g_1) -> complementary(a_ABC,a_DEF)
+[02] given(g_2) -> con_ang(a_JKL,a_GHI)
+[03] comp_transitive(1,2) -> complementary(a_ABC,a_GHI)".
+
+(** Each rule reads only its own kind of pair. *)
+Definition comp_transitive_wrong_pair_source := transitive_header "ang: a_ABC a_DEF a_GHI
+"
+  "[g_1] supplementary(a_ABC,a_DEF)
+[g_2] con_ang(a_DEF,a_GHI)
+"
+  "complementary(a_ABC,a_GHI)"
+  "[01] given(g_1) -> supplementary(a_ABC,a_DEF)
+[02] given(g_2) -> con_ang(a_DEF,a_GHI)
+[03] comp_transitive(1,2) -> complementary(a_ABC,a_GHI)".
+
+Example comp_transitive_accepts :
+  complete_checker comp_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example comp_transitive_unshared_rejects :
+  complete_checker comp_transitive_unshared_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example comp_transitive_wrong_pair_rejects :
+  complete_checker comp_transitive_wrong_pair_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** An angle may be named through any point on each of its rays.  With E on
+    BD, [a_ABE] and [a_ABD] are one angle, so a congruence of one continues
+    a congruence of the other. *)
+Definition renamed_transitive_source := transitive_header "seg: BA BD BE
+ang: a_FGH a_IJK
+"
+  "[d_1] on_line(BD,E)
+[g_1] con_ang(a_FGH,a_ABD)
+[g_2] con_ang(a_ABE,a_IJK)
+"
+  "con_ang(a_FGH,a_IJK)"
+  "[01] given(g_1) -> con_ang(a_FGH,a_ABD)
+[02] given(g_2) -> con_ang(a_ABE,a_IJK)
+[03] con_ang_transitive(1,2) -> con_ang(a_FGH,a_IJK)".
+
+(** Without the premise, E is not known to be on BD. *)
+Definition renamed_transitive_unlinked_source := transitive_header "seg: BA BD BE
+ang: a_FGH a_IJK
+"
+  "[g_1] con_ang(a_FGH,a_ABD)
+[g_2] con_ang(a_ABE,a_IJK)
+"
+  "con_ang(a_FGH,a_IJK)"
+  "[01] given(g_1) -> con_ang(a_FGH,a_ABD)
+[02] given(g_2) -> con_ang(a_ABE,a_IJK)
+[03] con_ang_transitive(1,2) -> con_ang(a_FGH,a_IJK)".
+
+(** [on_line] places E strictly inside BD, so E is not the vertex B and
+    needs no declaration of its own. *)
+Definition renamed_transitive_undeclared_source := transitive_header "seg: BA BD
+ang: a_FGH a_IJK
+"
+  "[d_1] on_line(BD,E)
+[g_1] con_ang(a_FGH,a_ABD)
+[g_2] con_ang(a_ABE,a_IJK)
+"
+  "con_ang(a_FGH,a_IJK)"
+  "[01] given(g_1) -> con_ang(a_FGH,a_ABD)
+[02] given(g_2) -> con_ang(a_ABE,a_IJK)
+[03] con_ang_transitive(1,2) -> con_ang(a_FGH,a_IJK)".
+
+(** A rule that builds its angles from a triangle accepts a conclusion
+    naming them through other points. *)
+Definition renamed_cpctc_source := transitive_header "tri: t_ABD t_FGH
+"
+  "[d_1] on_line(BD,E)
+[g_1] con_tri_ordered(t_ABD,t_FGH)
+"
+  "con_ang(a_ABE,a_FGH)"
+  "[01] given(g_1) -> con_tri_ordered(t_ABD,t_FGH)
+[02] cpctc(1) -> con_ang(a_ABE,a_FGH)".
+
+(** The goal may be spelled differently from the step that proves it. *)
+Definition renamed_goal_source := transitive_header "seg: BA BD BE
+ang: a_FGH
+"
+  "[d_1] on_line(BD,E)
+[g_1] con_ang(a_FGH,a_ABD)
+"
+  "con_ang(a_ABE,a_FGH)"
+  "[01] given(g_1) -> con_ang(a_FGH,a_ABD)".
+
+(** Supplements of one angle, written through different points on its
+    ray, are congruent. *)
+Definition renamed_supplements_source := transitive_header "seg: BA BC BD BE
+ang: a_FGH
+"
+  "[d_1] on_line(BD,E)
+[g_1] supplementary(a_ABD,a_DBC)
+[g_2] supplementary(a_FGH,a_EBC)
+"
+  "con_ang(a_ABD,a_FGH)"
+  "[01] given(g_1) -> supplementary(a_ABD,a_DBC)
+[02] given(g_2) -> supplementary(a_FGH,a_EBC)
+[03] con_supplements_same(1,2) -> con_ang(a_ABD,a_FGH)".
+
+Example renamed_transitive_accepts :
+  complete_checker renamed_transitive_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example renamed_transitive_unlinked_rejects :
+  complete_checker renamed_transitive_unlinked_source = false.
+Proof. vm_compute. reflexivity. Qed.
+Example renamed_transitive_undeclared_accepts :
+  complete_checker renamed_transitive_undeclared_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example renamed_cpctc_accepts :
+  complete_checker renamed_cpctc_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example renamed_goal_accepts :
+  complete_checker renamed_goal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example renamed_supplements_accepts :
+  complete_checker renamed_supplements_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
 (** A transversal perpendicular to one parallel is perpendicular to the
@@ -2172,7 +2399,8 @@ Definition rhombus_opp_bisect_side_source := transitive_header "quad: q_ABCD
 
 (** The ray may be named by a point along the diagonal instead of by the
     opposite corner.  That needs the point to be distinct from the corner,
-    which only a [seg:] declaration supplies. *)
+    which a [seg:] declaration supplies, and so does [on_line], which
+    places E strictly inside AC. *)
 Definition rhombus_opp_bisect_ray_source := transitive_header "quad: q_ABCD
 seg: AE
 "
@@ -2195,8 +2423,8 @@ Definition rhombus_opp_bisect_undeclared_ray_source := transitive_header "quad: 
 Example rhombus_opp_bisect_ray_accepts :
   complete_checker rhombus_opp_bisect_ray_source = true.
 Proof. vm_compute. reflexivity. Qed.
-Example rhombus_opp_bisect_undeclared_ray_rejects :
-  complete_checker rhombus_opp_bisect_undeclared_ray_source = false.
+Example rhombus_opp_bisect_undeclared_ray_accepts :
+  complete_checker rhombus_opp_bisect_undeclared_ray_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
 Example rhombus_opp_bisect_accepts :
@@ -2677,13 +2905,20 @@ Definition ref_ang_undeclared_source := transitive_header "seg: AB
   "[01] reflex() -> ref_ang(a_ABC,a_ABC)
 [02] reflex() -> ref_seg(AB,CD)".
 
+(** The first issue's note, or its code when it has no note, and the steps
+    it blames. *)
 Definition first_blame (source : string) : option (string * Audit.JsonValue) :=
   match (CertifiedAPI.check source).(Audit.report_issues) with
   | issue :: _ =>
       match issue.(Audit.issue_details) with
       | Audit.JsonObject fields =>
+          let cause :=
+            match find (fun f => String.eqb (fst f) "note") fields with
+            | Some (_, Audit.JsonString note) => note
+            | _ => issue.(Audit.issue_code)
+            end in
           match find (fun f => String.eqb (fst f) "steps") fields with
-          | Some (_, steps) => Some (issue.(Audit.issue_code), steps)
+          | Some (_, steps) => Some (cause, steps)
           | None => None
           end
       | _ => None

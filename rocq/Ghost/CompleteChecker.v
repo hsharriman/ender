@@ -514,6 +514,7 @@ Definition reason_name (r : Reason) : string :=
   | CASTC _ => "castc"
   | SimTriTrans _ _ => "sim_tri_transitive"
   | SuppTrans _ _ => "supp_transitive"
+  | CompTrans _ _ => "comp_transitive"
   | PerpTransversal _ _ => "perp_transversal"
   | LinearPairConv _ => "linear_pair_conv"
   | PgramDiagBisect _ => "pgram_diag_bisect"
@@ -523,42 +524,6 @@ Definition reason_name (r : Reason) : string :=
   | DefRadiusConv _ => "def_radius_conv"
   | ConInscribedAngs _ _ => "con_inscribed_angs"
   | SuppInscribedAngs _ _ => "supp_inscribed_angs"
-  end.
-
-(** The step numbers a reason cites.  [given] and [vert_ang] cite a premise
-    label rather than a step, and [reflex] cites nothing. *)
-Definition reason_dependencies (r : Reason) : list nat :=
-  match r with
-  | Given _ | Reflex | VertAng _ | Incomplete => []
-  | CPCTC i | CASTC i | PerpConAng i | DefMidpt i | DefAngBisect i | AngBisectConv i
-  | MidptConv i | DefIsosceles i | BaseAngle i | BaseAngleConv i
-  | EquilatEquiang i | EquiangEquilat i | DefLinearPair i | DefPerp i
-  | PgramOppSides i | PgramOppAngles i | PgramConsecAngs i | KiteOppConAng i
-  | RectanglePgram i
-  | RhombusPgram i | RhombusDef i | RhombusOppBisect i | RectDiagCon i
-  | RectangleDef i | AltInt i | AltExt i | CorrespAng i | SamesideAng i
-  | AltIntConv i | AltExtConv i | CorrespAngConv i | SamesideAngConv i
-  | DefRadius i | ConChordsArcs i
-  | IsosTrapBaseAngsConv i | LinearPairConv i
-  | PgramDiagBisect i | RhombusDiagPerp i | KiteDiagPerp i
-  | DefRadiusConv i => [i]
-  | PgramOppSidesConv i j | PgramConsecAngsConv i j | RectPgramAng i j
-  | ConSegTrans i j | ConAngTrans i j | ConTriTrans i j | DefConRight i j
-  | ThirdAngle i j | ConSupplementsSame i j | ConComplementsSame i j
-  | DefParallelogram i j | PgramOppSidePara i j | RhombusConsecSides i j
-  | ParaTrans i j | TangentPerp i j | TangentPerpConv i j
-  | ConTangentsExt i j | PerpBisect i j | IsosTrapConDiags i j
-  | PgramDiagBisectConv i j | PgramOppAngsConv i j | IsosTrapBaseAngs i j
-  | RectDiagConConv i j | RhombusDiagPerpConv i j
-  | AASim i j | SSSSim i j | SASSim i j | ChordBisectConv i j
-  | SimTriTrans i j | SuppTrans i j | PerpTransversal i j
-  | ConInscribedAngs i j
-  | SuppInscribedAngs i j | InscribedSemi i j => [i; j]
-  | SAS i j k | SSS i j k | ASA i j k | AAS i j k | RHL i j k
-  | DefEquilateral i j k | DefEquiangular i j k | ConSupplements i j k
-  | RadiusChordBisect i j k | RhombusOppBisectConv i j k
-  | ConComplements i j k => [i; j; k]
-  | DefConTri i j k l m n => [i; j; k; l; m; n]
   end.
 
 Definition nat_eqb_report (a b : nat) : bool := Nat.eqb a b.
@@ -881,7 +846,8 @@ Definition premise_facts (premises : list Premise)
     never established -- cannot be it.  Reporting the two separately tells
     apart the two ways a proof falls short: never stating the goal, and
     stating it on a step that did not hold. *)
-Fixpoint goal_stated_by (goal : Statement) (steps : list (option Step))
+Fixpoint goal_stated_by (decls : Declarations) (premises : list Premise)
+    (goal : Statement) (steps : list (option Step))
     (number : nat) (statuses : list (nat * Audit.StepStatus))
     (require_accepted : bool) : option nat :=
   match steps with
@@ -896,9 +862,12 @@ Fixpoint goal_stated_by (goal : Statement) (steps : list (option Step))
         else true in
       match current with
       | Some st =>
-          if usable && fact_eqb goal st.(step_conclusion) then Some number
-          else goal_stated_by goal rest (S number) statuses require_accepted
-      | None => goal_stated_by goal rest (S number) statuses require_accepted
+          if usable && goal_matches decls premises goal st.(step_conclusion)
+          then Some number
+          else goal_stated_by decls premises goal rest (S number) statuses
+                 require_accepted
+      | None => goal_stated_by decls premises goal rest (S number) statuses
+                  require_accepted
       end
   end.
 
@@ -912,12 +881,13 @@ Definition goal_unproved_diagnostic (number : nat) : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
     ("step " ++ nat_text number ++ " states the goal but was not accepted").
 
-Definition goal_report_for (goal : Statement) (steps : list (option Step))
+Definition goal_report_for (decls : Declarations) (premises : list Premise)
+    (goal : Statement) (steps : list (option Step))
     (statuses : list (nat * Audit.StepStatus)) : Audit.GoalReport :=
-  match goal_stated_by goal steps 1 statuses true with
+  match goal_stated_by decls premises goal steps 1 statuses true with
   | Some n => Audit.goal_report (Some n) []
   | None =>
-      match goal_stated_by goal steps 1 statuses false with
+      match goal_stated_by decls premises goal steps 1 statuses false with
       | Some n => Audit.goal_report None [goal_unproved_diagnostic n]
       | None => Audit.goal_report None [goal_missing_diagnostic]
       end
@@ -970,10 +940,12 @@ Definition report_content_from_data (data : option ReportData) : ReportContent :
       let reports :=
         step_reports d.(rd_declarations) d.(rd_premises) [] d.(rd_statuses)
           d.(rd_steps) 1 in
-      let stated := goal_stated_by d.(rd_goal) steps 1 d.(rd_statuses) false in
+      let stated := goal_stated_by d.(rd_declarations) d.(rd_premises) d.(rd_goal)
+                      steps 1 d.(rd_statuses) false in
       (reports, step_graph reports stated,
        duplicate_scan (premise_facts d.(rd_premises)) (numbered_step_facts steps 1),
-       goal_report_for d.(rd_goal) steps d.(rd_statuses))
+       goal_report_for d.(rd_declarations) d.(rd_premises) d.(rd_goal) steps
+         d.(rd_statuses))
   | None => ([], empty_graph, [], Audit.goal_report None [])
   end.
 
@@ -1136,7 +1108,7 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("rect_diag_con_conv", (2, 2)); ("rhombus_diag_perp_conv", (2, 2));
    ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
    ("sss_sim", (2, 2)); ("sas_sim", (2, 2)); ("castc", (1, 1));
-   ("sim_tri_transitive", (2, 2)); ("supp_transitive", (2, 2));
+   ("sim_tri_transitive", (2, 2)); ("supp_transitive", (2, 2)); ("comp_transitive", (2, 2));
    ("perp_transversal", (2, 3));
    ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
    ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2));
@@ -1293,6 +1265,7 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | InscribedSemi _ _ => Some ["right"]
   | AASim _ _ | SSSSim _ _ | SASSim _ _ | SimTriTrans _ _ => Some ["sim_tri"]
   | SuppTrans _ _ => Some ["supplementary"]
+  | CompTrans _ _ => Some ["complementary"]
   | PerpTransversal _ _ => Some ["perp"]
   | CASTC _ => Some ["con_ang"]
   | LinearPairConv _ => Some ["linear_pair"]
@@ -1354,6 +1327,7 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | SimTriTrans i j => [(i, "sim_tri"); (j, "sim_tri")]
   (* The congruence may be cited as [con_ang] or [ref_ang]. *)
   | SuppTrans i _ => [(i, "supplementary")]
+  | CompTrans i _ => [(i, "complementary")]
   | PerpTransversal i j => [(i, "perp"); (j, "para")]
   (* The angle may be cited as [con_right] or [ref_ang], as for [aa_sim]. *)
   | SASSim i _ => [(i, "proportion")]
@@ -1579,8 +1553,11 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
   let r := current.(step_reason) in
   let conclusion := current.(step_conclusion) in
   let base := [string_field "reason" (reason_name r); step_field number] in
-  let issue code extra :=
-    Some (Audit.issue 1 code (Audit.JsonObject (base ++ extra))) in
+  (* Every cause is a [reason_application_error]; [note] says which rule
+     check failed. *)
+  let issue note extra :=
+    Some (Audit.issue 1 "reason_application_error"
+      (Audit.JsonObject (base ++ string_field "note" note :: extra))) in
   match r with
   | Reflex =>
       match conclusion with
@@ -1858,10 +1835,12 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
           else issue "no_shared_congruent_element" []
       | _, _ => None
       end
-  | SuppTrans i j =>
+  | SuppTrans i j | CompTrans i j =>
       match lookup_step facts i, lookup_step facts j with
       | Some (Supplementary a b), Some (ConAng c d)
-      | Some (Supplementary a b), Some (RefAng c d) =>
+      | Some (Supplementary a b), Some (RefAng c d)
+      | Some (Complementary a b), Some (ConAng c d)
+      | Some (Complementary a b), Some (RefAng c d) =>
           if angles_share a b c d then None
           else issue "no_shared_congruent_element" []
       | _, _ => None
@@ -1925,8 +1904,9 @@ Definition rejected_step_issue (decls : Declarations) (premises : list Premise)
               [string_field "ref" label])))
         | Some stated =>
             if String.eqb (statement_function stated) (statement_function conclusion)
-            then Some (Audit.issue 11 "stmt_arg_type_invalid" (Audit.JsonObject (base ++
-              [string_field "ref" label;
+            then Some (Audit.issue 1 "reason_application_error" (Audit.JsonObject (base ++
+              [string_field "note" "given_restated_differently";
+               string_field "ref" label;
                string_field "expected" (Audit.statementText stated);
                string_field "actual" (Audit.statementText conclusion)])))
             else Some (Audit.issue 10 "reason_stmt_mismatch" (Audit.JsonObject (base ++
@@ -2119,7 +2099,8 @@ Definition proof_issues_from_data (data : option ReportData) (content : ReportCo
              | None =>
                  [Audit.issue 4 "goal_not_reached" (Audit.JsonObject
                    (string_field "goal" (Audit.statementText d.(rd_goal)) ::
-                    match goal_stated_by d.(rd_goal) (map rs_step d.(rd_steps)) 1
+                    match goal_stated_by d.(rd_declarations) d.(rd_premises)
+                            d.(rd_goal) (map rs_step d.(rd_steps)) 1
                             d.(rd_statuses) false with
                     | Some n => [string_field "statedBy" (nat_text n)]
                     | None => []
@@ -2417,11 +2398,117 @@ Proof.
   exact (check_problem_sound point _ HkernelCheck Hwf HkernelPremises).
 Qed.
 
+(** * Proof sessions
+
+    Check hypotheical steps that are not in the proof, for external code that relies on
+    the checker's answers:
+    - [session_accepts]: would this reason and conclusion be accepted at
+      step n, using only the accepted steps before n?
+    - [session_needs]: the templates a reason would be checked against.
+    - [session_matches]: does one statement count as a template's statement
+      under a given matcher (argument order, reversed segments, ref_ forms)?
+    Accepting or rejecting a proof never calls these functions. *)
+Definition session_accepted (data : ReportData) (n : nat) : bool :=
+  match status_of data.(rd_statuses) n with
+  | Audit.StepAccepted => true
+  | _ => false
+  end.
+
+(** The facts a step at [position] can cite: the conclusions of accepted
+    steps before it.  A rejected step is replaced by a placeholder fact, so
+    the step numbers stay the same. *)
+Definition session_facts (data : ReportData) (position : nat) : list Statement :=
+  firstn (Nat.pred position)
+    (map (fun numbered =>
+            if session_accepted data (fst numbered)
+            then fact_of (snd numbered).(rs_step) else placeholder_fact)
+         (combine (seq 1 (List.length data.(rd_steps))) data.(rd_steps))).
+
+(** Whether [reason -> conclusion] would be accepted as step [position].
+    It may cite only accepted steps before [position].  The text is parsed
+    like any step line, and [false] if it does not parse. *)
+Definition session_accepts (data : ReportData) (position : nat)
+    (reason conclusion : string) : bool :=
+  let line := "[" ++ nat_text position ++ "] " ++ reason ++ " -> " ++ conclusion in
+  match Parser.parse_step (list_ascii_of_string line) with
+  | Some candidate =>
+      forallb (fun d => Nat.ltb d position && session_accepted data d)
+        (reason_dependencies candidate.(step_reason)) &&
+      rule_valid data.(rd_declarations) data.(rd_premises)
+        (session_facts data position)
+        candidate.(step_reason) candidate.(step_conclusion)
+  | None => false
+  end.
+
+(** The names external code uses for the template matchers. *)
+Definition matcher_names : list (string * Matcher) :=
+  [("as_written", AsWritten); ("loose", Loose); ("pgram_like", PgramLike);
+   ("proportion", ProportionMatch); ("ray_angles", RayAngles);
+   ("perp_any_point", PerpAnyPoint); ("trapezoid_any_sides", TrapezoidAnySides);
+   ("radius_any_point", RadiusAnyPoint)].
+
+Definition matcher_name (m : Matcher) : string :=
+  match m with
+  | AsWritten => "as_written" | Loose => "loose" | PgramLike => "pgram_like"
+  | ProportionMatch => "proportion" | RayAngles => "ray_angles"
+  | PerpAnyPoint => "perp_any_point" | TrapezoidAnySides => "trapezoid_any_sides"
+  | RadiusAnyPoint => "radius_any_point"
+  end.
+
+Definition statement_texts (ss : list Statement) : Audit.JsonValue :=
+  Audit.JsonArray (map (fun s => Audit.JsonString (Audit.statementText s)) ss).
+
+Definition template_json (t : Template) : Audit.JsonValue :=
+  Audit.JsonObject
+    [("slots", Audit.JsonArray (map (fun s =>
+        Audit.JsonObject
+          [("matcher", Audit.JsonString (matcher_name s.(slot_matcher)));
+           ("statements", statement_texts s.(slot_statements))])
+       t.(template_slots)));
+     ("premises", statement_texts t.(template_premises))].
+
+(** The templates [reason] has for concluding [conclusion] as step
+    [position], read with the accepted steps before it as the facts proved
+    so far: the same list [rule_valid] checks the step against.  [null] when
+    the reason has a rule of its own, or the text does not parse.  The
+    citation numbers in [reason] are not read. *)
+Definition session_needs (data : ReportData) (position : nat)
+    (reason conclusion : string) : Audit.JsonValue :=
+  let line := "[" ++ nat_text position ++ "] " ++ reason ++ " -> " ++ conclusion in
+  match Parser.parse_step (list_ascii_of_string line) with
+  | Some candidate =>
+      match reason_needs data.(rd_declarations) data.(rd_premises)
+              (session_facts data position)
+              candidate.(step_reason) candidate.(step_conclusion) with
+      | Some ts => Audit.JsonArray (map template_json ts)
+      | None => Audit.JsonNull
+      end
+  | None => Audit.JsonNull
+  end.
+
+(** Whether a step that states [actual] matches a template statement
+    [expected] under the named matcher ([loose] is how most rules compare
+    a cited fact with what they need). *)
+Definition session_matches (data : ReportData) (matcher expected actual : string)
+    : bool :=
+  match lookup_text matcher matcher_names,
+        Parser.parse_statement_chars (list_ascii_of_string expected),
+        Parser.parse_statement_chars (list_ascii_of_string actual) with
+  | Some m, Some e, Some a =>
+      matcher_accepts data.(rd_declarations) data.(rd_premises) m e a
+  | _, _, _ => false
+  end.
+
 Module CompleteVerifiedChecker <: Audit.COMPLETE_VERIFIED_CHECKER.
   Definition parseProblem := parsePublicProblem.
   Definition parsePresentation := PresentationParser.parsePresentation.
   Definition check := check_report.
   Definition checker (source : string) : bool := Audit.accepted (check source).
+  Definition ProofSession := ReportData.
+  Definition openSession := report_data_of.
+  Definition sessionAccepts := session_accepts.
+  Definition sessionNeeds := session_needs.
+  Definition sessionMatches := session_matches.
   Definition parser_sound := parsePublicProblem_sound.
   Definition parser_complete := parsePublicProblem_complete.
 
