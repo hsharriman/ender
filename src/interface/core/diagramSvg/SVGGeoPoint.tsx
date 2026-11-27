@@ -1,13 +1,12 @@
-import { LPoint, Obj, Vector } from "geometry-object";
+import { Obj, Point, Vector } from "geometry-object";
 import React from "react";
 import { ShowPoint, SVGModes } from "../types/diagramTypes";
 import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { coordsToSvg, updateStyle } from "./svgUtils";
 
 export type SVGPointProps = {
-  p: LPoint;
+  p: Point;
   offset: Vector;
-  label: string;
   showLabel?: boolean;
   showPoint: ShowPoint;
 } & BaseSVGProps;
@@ -93,7 +92,7 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
           }}
           className={this.state.isActive ? this.state.css : ""}
         >
-          {this.props.label}
+          {this.props.p.label}
         </text>
         {this.props.hoverable && (
           <text
@@ -107,7 +106,7 @@ export class SVGGeoPoint extends React.Component<SVGPointProps, BaseSVGState> {
             onClick={() => this.onTextClick()}
             className="text-xl"
           >
-            {this.props.label}
+            {this.props.p.label}
           </text>
         )}
       </>

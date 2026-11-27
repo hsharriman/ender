@@ -1,4 +1,4 @@
-import { LAngle, Obj } from "geometry-object";
+import { Angle, Obj } from "geometry-object";
 import React from "react";
 import { SVGModes, TickType } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
@@ -8,7 +8,7 @@ import { BaseSVGProps, BaseSVGState } from "./svgTypes";
 import { arcSweepsCCW, coordsToSvg, updateStyle } from "./svgUtils";
 
 export type SVGAngleProps = {
-  a: LAngle;
+  a: Angle;
   tick?: { type: TickType; num: number };
 } & BaseSVGProps;
 
@@ -59,23 +59,20 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
   };
 
   angleBbox = () => {
-    const sweep = arcSweepsCCW(
-      this.props.a.center,
-      this.props.a.start,
-      this.props.a.end,
-    );
-    const sUnit = vops.unit(vops.sub(this.props.a.start, this.props.a.center));
-    const eUnit = vops.unit(vops.sub(this.props.a.end, this.props.a.center));
+    const [s, c, e] = this.props.a.getPoints();
+    const sweep = arcSweepsCCW(c, s, e);
+    const sUnit = vops.unit(vops.sub(s, c));
+    const eUnit = vops.unit(vops.sub(e, c));
 
     const scalar = 0.5;
     let dStr = "";
-    const tip = coordsToSvg(this.props.a.center, this.props.miniScale);
+    const tip = coordsToSvg(c, this.props.miniScale);
     const end = coordsToSvg(
-      vops.add(this.props.a.center, vops.smul(eUnit, scalar)),
+      vops.add(c, vops.smul(eUnit, scalar)),
       this.props.miniScale,
     );
     const start = coordsToSvg(
-      vops.add(this.props.a.center, vops.smul(sUnit, scalar)),
+      vops.add(c, vops.smul(sUnit, scalar)),
       this.props.miniScale,
     );
 
@@ -89,10 +86,11 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
   };
 
   render() {
+    const [s, c, e] = this.props.a.getPoints();
     // calculate angle bisector of angle, rotate along vector and position label
     // angle bisector is unit(u)*v + unit(v)*u
-    const u = vops.sub(this.props.a.start, this.props.a.center);
-    const v = vops.sub(this.props.a.end, this.props.a.center);
+    const u = vops.sub(s, c);
+    const v = vops.sub(e, c);
     const bisector = vops.unit(
       vops.add(vops.smul(v, vops.mag(u)), vops.smul(u, vops.mag(v))),
     );
@@ -102,7 +100,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
       angle = angle + 180;
     }
 
-    const pos = vops.add(this.props.a.center, vops.smul(bisector, 0.8));
+    const pos = vops.add(c, vops.smul(bisector, 0.8));
     return (
       <>
         <SVGGeoTick

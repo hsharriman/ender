@@ -1,5 +1,5 @@
 import { SegmentProps } from "../types/geometryTypes";
-import { LSegment, Obj } from "../types/types";
+import { Obj } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
 
@@ -22,14 +22,6 @@ export class Segment extends BaseGeometryObject {
         : this.id;
     this.names = this.permutator([this.p1.label, this.p2.label]);
   }
-
-  labeled = (): LSegment => {
-    return {
-      p1: this.p1.pt,
-      p2: this.p2.pt,
-      label: this.label,
-    };
-  };
 
   contains = (pt: Point) => {
     return this.label.includes(pt.label);
@@ -54,8 +46,4 @@ export class Segment extends BaseGeometryObject {
   getSubSegments = () => this.subSegments;
 
   getParentSegments = () => this.parentSegment;
-
-  isSubSegment = (s: Segment) => this.parentSegment.add(s);
-
-  isParentSegment = (s: Segment) => this.subSegments.has(s);
 }

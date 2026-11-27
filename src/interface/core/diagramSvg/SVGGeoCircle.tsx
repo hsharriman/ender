@@ -1,4 +1,4 @@
-import { LCircle, Obj } from "geometry-object";
+import { Circle, Obj } from "geometry-object";
 import React from "react";
 import { SVGModes } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
@@ -7,7 +7,7 @@ import { coordsToSvg, updateStyle } from "./svgUtils";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
 export type SVGCircleProps = {
-  c: LCircle;
+  c: Circle;
 } & BaseSVGProps;
 
 export class SVGGeoCircle extends React.Component<
@@ -63,8 +63,8 @@ export class SVGGeoCircle extends React.Component<
   };
 
   render() {
-    const center = coordsToSvg(this.props.c.center, this.props.miniScale);
-    const end = coordsToSvg(this.props.c.radius, this.props.miniScale);
+    const center = coordsToSvg(this.props.c.center.pt, this.props.miniScale);
+    const end = coordsToSvg(this.props.c.radius.pt, this.props.miniScale);
     const radius = vops.mag(vops.sub(end, center));
     return (
       <>

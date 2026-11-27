@@ -329,6 +329,10 @@
             ocamlPackages.ocaml ocamlPackages.findlib
             ocamlPackages."wasm_of_ocaml-compiler" pkgs.binaryen
             nodejs pkgs.jq
+            # On macOS this shell points `DEVELOPER_DIR` at Nix's Apple SDK,
+            # which has no git, so `/usr/bin/git` fails here ("tool 'git' not
+            # found"). `npm run deploy` (gh-pages) and the shellHook need one.
+            pkgs.git
           ];
           buildInputs = rocqLibraries
             ++ [ ocamlPackages.yojson ocamlPackages.js_of_ocaml ];

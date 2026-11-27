@@ -49,7 +49,7 @@ export class Diagram extends React.Component<DiagramProps> {
           hoverable={false}
           key={this.keyId(p.obj.id, layer, i)}
           {...{
-            p: p.obj.labeled(),
+            p: p.obj,
             offset: p.offset,
             label: p.obj.label,
             miniScale: this.props.miniScale,
@@ -73,7 +73,7 @@ export class Diagram extends React.Component<DiagramProps> {
           hoverable={false}
           {...{
             miniScale: this.props.miniScale,
-            s: seg.obj.labeled(),
+            s: seg.obj,
             tick: seg.ticks.get(frame),
           }}
           key={this.keyId(seg.obj.id, layer, i)}
@@ -94,7 +94,7 @@ export class Diagram extends React.Component<DiagramProps> {
           geoId={this.geoId(ang.obj.id, layer)}
           hoverable={false}
           {...{
-            a: ang.obj.labeled(),
+            a: ang.obj,
             miniScale: this.props.miniScale,
             tick: ang.ticks.get(frame),
           }}
@@ -139,7 +139,7 @@ export class Diagram extends React.Component<DiagramProps> {
           geoId={this.geoId(circle.obj.id, layer)}
           mode={mode}
           hoverable={false}
-          {...{ c: circle.obj.labeled(), miniScale: this.props.miniScale }}
+          {...{ c: circle.obj, miniScale: this.props.miniScale }}
           key={this.keyId(circle.obj.id, layer, i)}
           isHighlight={layer === 1}
         />
@@ -157,7 +157,7 @@ export class Diagram extends React.Component<DiagramProps> {
           geoId={this.geoId(arc.obj.id, layer)}
           mode={mode}
           hoverable={false}
-          {...{ a: arc.obj.labeled(), miniScale: this.props.miniScale }}
+          {...{ a: arc.obj, miniScale: this.props.miniScale }}
           key={this.keyId(arc.obj.id, layer, i)}
           isHighlight={layer === 1}
         />

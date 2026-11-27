@@ -1,4 +1,4 @@
-import { LAngle, LSegment, Obj, Vector } from "geometry-object";
+import { Angle, Obj, Segment, Vector } from "geometry-object";
 import React from "react";
 import { SVGModes, TickType } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
@@ -23,7 +23,7 @@ const HIGHLIGHT_RADIUS = 1;
 let gradientCount = 0;
 
 export type SVGTickProps = {
-  parent: LSegment | LAngle;
+  parent: Segment | Angle;
   tick?: { type: TickType; num: number };
   css: string;
   mode: SVGModes;
@@ -38,25 +38,23 @@ export type SVGTickProps = {
 export class SVGGeoTick extends React.Component<SVGTickProps> {
   private gradientId = `angle-highlight-${gradientCount++}`;
 
-  angleHighlight = (a: LAngle) => {
+  angleHighlight = (a: Angle) => {
+    const [s, c, e] = a.getPoints();
     const colors = AngleHighlightCSS[this.props.mode];
     if (!colors) return <></>;
     const miniScale = this.props.miniScale;
-    const u = vops.sub(a.start, a.center);
-    const v = vops.sub(a.end, a.center);
+    const u = vops.sub(s, c);
+    const v = vops.sub(e, c);
     // Stay inside the angle: reach no further than either side does.
     const r = Math.min(HIGHLIGHT_RADIUS, vops.mag(u), vops.mag(v));
     const rSvg = scaleToSvg(r, miniScale);
-    const tip = coordsToSvg(a.center, miniScale);
+    const tip = coordsToSvg(c, miniScale);
     const from = coordsToSvg(
-      vops.add(a.center, vops.smul(vops.unit(u), r)),
+      vops.add(c, vops.smul(vops.unit(u), r)),
       miniScale,
     );
-    const to = coordsToSvg(
-      vops.add(a.center, vops.smul(vops.unit(v), r)),
-      miniScale,
-    );
-    const sweep = arcSweepsCCW(a.center, a.start, a.end);
+    const to = coordsToSvg(vops.add(c, vops.smul(vops.unit(v), r)), miniScale);
+    const sweep = arcSweepsCCW(c, s, e);
     return (
       <>
         <defs>
@@ -95,11 +93,11 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     );
   };
 
-  parallelMark = (s: LSegment, num: number) => {
+  parallelMark = (s: Segment, num: number) => {
     // find midpoint on segment
-    const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
+    const midpoint = vops.div(vops.add(s.p1.pt, s.p2.pt), 2);
 
-    let unit = vops.unit(vops.sub(s.p2, s.p1));
+    let unit = vops.unit(vops.sub(s.p2.pt, s.p1.pt));
     // flip the direction of chevron if unit vec is pointing downwards
     // (in quadrant 3 or 4, where y coord is negative)
     if (unit[1] < 0) {
@@ -129,10 +127,10 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     return dStr;
   };
 
-  equalLength = (s: LSegment, num: number) => {
+  equalLength = (s: Segment, num: number) => {
     // find midpoint on segment
-    const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
-    const unit = vops.unit(vops.sub(s.p2, s.p1));
+    const midpoint = vops.div(vops.add(s.p1.pt, s.p2.pt), 2);
+    const unit = vops.unit(vops.sub(s.p2.pt, s.p1.pt));
 
     // segments to make up the tick mark
     const seg = vops.rot(
@@ -153,10 +151,11 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     return dStr;
   };
 
-  equalAngle = (a: LAngle, num: number) => {
-    const sweep = arcSweepsCCW(a.center, a.start, a.end);
-    const sUnit = vops.unit(vops.sub(a.start, a.center));
-    const eUnit = vops.unit(vops.sub(a.end, a.center));
+  equalAngle = (a: Angle, num: number) => {
+    const [s, c, e] = a.getPoints();
+    const sweep = arcSweepsCCW(c, s, e);
+    const sUnit = vops.unit(vops.sub(s, c));
+    const eUnit = vops.unit(vops.sub(e, c));
 
     // scale start and end by radius per tick
     let arcR = num === 1 ? SINGLE_ARC_RADIUS : 0.35;
@@ -172,11 +171,11 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     for (let i = 0; i < num; i++) {
       const r = arcR + arcPad * i;
       const end = coordsToSvg(
-        vops.add(a.center, vops.smul(eUnit, r)),
+        vops.add(c, vops.smul(eUnit, r)),
         this.props.miniScale,
       );
       const start = coordsToSvg(
-        vops.add(a.center, vops.smul(sUnit, r)),
+        vops.add(c, vops.smul(sUnit, r)),
         this.props.miniScale,
       );
       dStr =
@@ -187,9 +186,9 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     return dStr;
   };
 
-  similarityMark = (s: LSegment, num: number) => {
-    const midpoint = vops.div(vops.add(s.p1, s.p2), 2);
-    const unit = vops.unit(vops.sub(s.p2, s.p1));
+  similarityMark = (s: Segment, num: number) => {
+    const midpoint = vops.div(vops.add(s.p1.pt, s.p2.pt), 2);
+    const unit = vops.unit(vops.sub(s.p2.pt, s.p1.pt));
     const perp = vops.rot(
       vops.smul(unit, EQ_LEN_TICK_LEN(this.props.miniScale)),
       90,
@@ -221,24 +220,22 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     return dStr;
   };
 
-  rightAngle = (a: LAngle) => {
-    const sUnit = vops.unit(vops.sub(a.start, a.center));
-    const eUnit = vops.unit(vops.sub(a.end, a.center));
+  rightAngle = (a: Angle) => {
+    const [s, c, e] = a.getPoints();
+    const sUnit = vops.unit(vops.sub(s, c));
+    const eUnit = vops.unit(vops.sub(e, c));
 
     const scale = RIGHT_TICK_LEN(this.props.miniScale);
     const start = coordsToSvg(
-      vops.add(a.center, vops.smul(sUnit, scale)),
+      vops.add(c, vops.smul(sUnit, scale)),
       this.props.miniScale,
     );
     const mid = coordsToSvg(
-      vops.add(
-        vops.add(vops.smul(sUnit, scale), vops.smul(eUnit, scale)),
-        a.center,
-      ),
+      vops.add(vops.add(vops.smul(sUnit, scale), vops.smul(eUnit, scale)), c),
       this.props.miniScale,
     );
     const end = coordsToSvg(
-      vops.add(a.center, vops.smul(eUnit, scale)),
+      vops.add(c, vops.smul(eUnit, scale)),
       this.props.miniScale,
     );
     return pops.moveTo(start) + pops.lineTo(mid) + pops.lineTo(end);
@@ -268,28 +265,28 @@ export class SVGGeoTick extends React.Component<SVGTickProps> {
     // frame-specific render-logic
     let pathStr = "";
     if (this.props.tick?.type === Obj.AngleHighlight)
-      return this.angleHighlight(this.props.parent as LAngle);
+      return this.angleHighlight(this.props.parent as Angle);
     if (this.props.tick) {
       if (this.props.tick.type === Obj.ParallelTick) {
         pathStr = this.parallelMark(
-          this.props.parent as LSegment,
+          this.props.parent as Segment,
           this.props.tick.num,
         );
       } else if (this.props.tick.type === Obj.EqualLengthTick) {
         pathStr = this.equalLength(
-          this.props.parent as LSegment,
+          this.props.parent as Segment,
           this.props.tick.num,
         );
       } else if (this.props.tick.type === Obj.EqualAngleTick) {
         pathStr = this.equalAngle(
-          this.props.parent as LAngle,
+          this.props.parent as Angle,
           this.props.tick.num,
         );
       } else if (this.props.tick.type === Obj.RightTick) {
-        pathStr = this.rightAngle(this.props.parent as LAngle);
+        pathStr = this.rightAngle(this.props.parent as Angle);
       } else if (this.props.tick.type === Obj.SimilarTick) {
         pathStr = this.similarityMark(
-          this.props.parent as LSegment,
+          this.props.parent as Segment,
           this.props.tick.num,
         );
       }
