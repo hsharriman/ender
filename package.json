@@ -14,7 +14,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "jest --passWithNoTests",
-    "predeploy": "npm run build",
+    "predeploy": "make -C rocq wasm && npm run build",
     "deploy": "gh-pages -d dist",
     "checkProof": "tsx src/checker/proofCheckerCli.ts",
     "scanProofs": "tsx scripts/scanProofsCli.ts",

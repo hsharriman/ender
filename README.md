@@ -279,4 +279,4 @@ The web interface is built with [Vite](https://vitejs.dev/). `vite.config.ts` se
 | `npm run build`                  | Typecheck with `tsc` and production build to `dist/`                               |
 | `npm run preview`                | Serve the `dist/` build locally                                                    |
 | `npm test` / `npm run test-core` | Run [Jest](https://jestjs.io/) (see `jest.config.js`)                              |
-| `npm run deploy`                 | Build and publish `dist/` to the `gh-pages` branch (see `package.json` `homepage`) |
+| `npm run deploy`                 | Rebuild the Wasm checker, build, and publish `dist/` (checker included) to the `gh-pages` branch; run inside `nix develop` |

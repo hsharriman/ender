@@ -12,7 +12,7 @@ npm test                           # Run Jest tests (single file: src/checker/te
 npm run checkProof -- <file>       # CLI: check a proof file
 npm run scanProofs -- <dir>        # CLI: check every proof under a directory
 npm run checker-server             # HTTP checker service on port 4000 (used by Docker backend)
-npm run deploy                     # Build and publish to gh-pages
+nix develop -c npm run deploy      # Rebuild the Wasm checker, build, publish to gh-pages
 ```
 
 Run tests in watch mode: `npm test -- --watch`
