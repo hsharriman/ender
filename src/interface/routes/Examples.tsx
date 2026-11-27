@@ -9,6 +9,9 @@ import {
 import { isGiven } from "interface/theorems/reasons";
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
+import CIRC_2 from "../../checker/proofs/examples/circ_2.txt";
+import OVERLAP from "../../checker/proofs/examples/overlap.txt";
+import RHOMBUS from "../../checker/proofs/examples/rhombusOutside.txt";
 import S1_C1 from "../../checker/proofs/examples/s1c1.txt?raw";
 import S1_C2 from "../../checker/proofs/examples/s1c2.txt?raw";
 import S1_C3 from "../../checker/proofs/examples/s1c3.txt?raw";
@@ -19,8 +22,8 @@ import S2_C1 from "../../checker/proofs/examples/s2c1.txt?raw";
 import S2_C2 from "../../checker/proofs/examples/s2c2.txt?raw";
 import S2_IN1 from "../../checker/proofs/examples/s2inc1.txt?raw";
 import S2_IN2 from "../../checker/proofs/examples/s2inc2.txt?raw";
-import TUTORIAL_1 from "../../checker/proofs/examples/tutorial.txt?raw";
 import TUTORIAL_2 from "../../checker/proofs/examples/tutinc.txt?raw";
+import TUTORIAL_1 from "../../checker/proofs/examples/tutorial.txt?raw";
 import ender from "../assets/ender.png";
 import { StaticAppPageProps } from "../components/ender/StaticAppPage";
 import { StaticDiagram } from "../components/ender/StaticDiagram";
@@ -95,6 +98,9 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
       example("s2c2.txt", S2_C2),
       example("s2inc1.txt", S2_IN1),
       example("s2inc2.txt", S2_IN2),
+      example("overlap.txt", OVERLAP),
+      example("circ_2.txt", CIRC_2),
+      example("rhombusOutside.txt", RHOMBUS),
     ];
     this.state = { tiles: this.proofs.map(() => null) };
   }

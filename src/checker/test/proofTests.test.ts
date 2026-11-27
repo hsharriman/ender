@@ -1154,9 +1154,15 @@ steps:
   });
 
   test("names the premise that placed a ray on a diagonal", async () => {
+    // PR runs past the diagonal PT.  No seg: line declares it; the triangle
+    // t_QPR makes its ends distinct.
     const report = await checkVerifiedReportNode(
-      readFileSync(join(PROOFS_DIR, "examples/rhombusOutside.txt"), "utf8"),
+      readFileSync(
+        join(PROOFS_DIR, "quadrilaterals/rhombus_opp_bisect_ray_correct.txt"),
+        "utf8",
+      ),
     );
+    expect(report.verdict).toBe("accepted");
     const bisect = report.steps.find(
       (step) => step.reason === "rhombus_opp_bisect",
     )!;

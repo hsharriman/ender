@@ -553,6 +553,7 @@ export const REASONS_DEFS = {
     name: "radius_chord_bisect",
     title: "Radius Chord Bisect",
     body: "If a radius of a circle is perpendicular to a chord, then it bisects the chord and its arc.",
+    diagramDependencies: ["on_line"],
     dependencies: ["perp", "radius", "chord"],
     conclusions: ["seg_bisect"],
   },
@@ -664,5 +665,12 @@ export const REASONS_DEFS = {
     body: "If an angle is supplementary to an angle, then it is supplementary to every angle congruent to that angle.",
     dependencies: ["supplementary", "con_ang"],
     conclusions: ["supplementary"],
+  },
+  comp_transitive: {
+    name: "comp_transitive",
+    title: "Complements of Congruent Angles",
+    body: "If an angle is complementary to an angle, then it is complementary to every angle congruent to that angle.",
+    dependencies: ["complementary", "con_ang"],
+    conclusions: ["complementary"],
   },
 } as const satisfies Record<string, ReasonDef>;

@@ -1,3 +1,4 @@
+import { Arc } from "geometry-object/geometry/Arc";
 import { Circle } from "geometry-object/geometry/Circle";
 import { Angle } from "../geometry/Angle";
 import { Point } from "../geometry/Point";
@@ -42,12 +43,24 @@ export type CircleProps = {
   radius: Point;
 } & BaseGeometryProps;
 
+export type ArcProps = {
+  center: Point;
+  start: Point;
+  end: Point;
+  /**
+   * A point on the circle the arc goes around rather than through, such as
+   * an inscribed angle's vertex.  Without it the arc is the minor one.
+   */
+  opposite?: Point;
+} & BaseGeometryProps;
+
 export type SupportedObjects =
   | Obj.Point
   | Obj.Segment
   | Obj.Angle
   | Obj.Triangle
-  | Obj.Circle;
+  | Obj.Circle
+  | Obj.Arc;
 
 export type ProofCtx = {
   points: Point[];
@@ -56,6 +69,7 @@ export type ProofCtx = {
   triangles: Triangle[];
   quads: Quadrilateral[];
   circles: Circle[];
+  arcs: Arc[];
   frames: string[];
   deps: Map<string, Set<string>>;
 };

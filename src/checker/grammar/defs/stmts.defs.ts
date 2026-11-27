@@ -9,6 +9,7 @@ const point_list = (min: number) => `Points (at least ${min})`;
 
 export const STMTS_DEFS = {
   statements: {
+    // on_line(AB, P): P lies strictly inside AB, never at A or B.
     on_line: {
       name: "on_line",
       parameters: [segment("s"), point("p")],

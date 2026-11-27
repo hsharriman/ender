@@ -88,6 +88,7 @@ Inductive Reason :=
 | CASTC : nat -> Reason
 | SimTriTrans : nat -> nat -> Reason
 | SuppTrans : nat -> nat -> Reason
+| CompTrans : nat -> nat -> Reason
 | PerpTransversal : nat -> nat -> Reason
 | LinearPairConv : nat -> Reason
 | PgramDiagBisect : nat -> Reason

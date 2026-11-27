@@ -29,6 +29,6 @@ export const seedBaseContentFromPremises = (
   pcCtx.triangles.forEach((tri) => ctx.addTriangle(tri));
   pcCtx.quads.forEach((quad) => ctx.addQuadrilateral(quad));
   pcCtx.circles.forEach((circle) => ctx.addCircle(circle));
-
+  pcCtx.arcs.forEach((arc) => ctx.addArc(arc));
   return ctx;
 };

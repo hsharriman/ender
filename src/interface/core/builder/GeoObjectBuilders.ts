@@ -7,6 +7,7 @@ import {
   Triangle,
   Vector,
 } from "geometry-object";
+import { Arc } from "geometry-object/geometry/Arc";
 import { ShowPoint, SVGModes, TickType } from "../types/diagramTypes";
 
 export class PointBuilder {
@@ -77,6 +78,22 @@ export class CircleBuilder {
   readonly modes: Map<string, SVGModes>;
   readonly center: PointBuilder;
   constructor(obj: Circle) {
+    this.obj = obj;
+    this.modes = new Map<string, SVGModes>();
+    this.center = new PointBuilder(obj.center);
+  }
+
+  mode = (frameKey: string, mode: SVGModes) => {
+    this.modes.set(frameKey, mode);
+    return this;
+  };
+}
+
+export class ArcBuilder {
+  readonly obj: Arc;
+  readonly modes: Map<string, SVGModes>;
+  readonly center: PointBuilder;
+  constructor(obj: Arc) {
     this.obj = obj;
     this.modes = new Map<string, SVGModes>();
     this.center = new PointBuilder(obj.center);

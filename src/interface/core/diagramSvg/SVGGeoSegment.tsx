@@ -98,6 +98,7 @@ export class SVGGeoSegment extends React.Component<
         <SVGGeoTick
           parent={this.props.s}
           tick={this.props.tick}
+          mode={this.props.mode}
           css={
             this.state.isActive || this.state.isPinned
               ? this.state.css

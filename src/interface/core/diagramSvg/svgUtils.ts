@@ -36,6 +36,33 @@ export const arcSweepsCCW = (
   return cross > 0 ? 0 : 1;
 };
 
+/**
+ * The large-arc and sweep flags of the SVG arc from `start` to `end` around
+ * `center`, all in SVG coordinates.  The arc goes the way round that misses
+ * `avoid`; without `avoid` it is the minor arc.
+ */
+export const arcFlags = (
+  center: Vector,
+  start: Vector,
+  end: Vector,
+  avoid?: Vector,
+): { major: number; sweep: number } => {
+  const angle = (p: Vector) => Math.atan2(p[1] - center[1], p[0] - center[0]);
+  // How far round from a to b in the direction sweep-flag 1 draws.
+  const turn = (a: Vector, b: Vector) =>
+    (angle(b) - angle(a) + 2 * Math.PI) % (2 * Math.PI);
+  const span = turn(start, end);
+  const sweep = avoid
+    ? turn(start, avoid) < span
+      ? 0
+      : 1
+    : span < Math.PI
+      ? 1
+      : 0;
+  const length = sweep ? span : 2 * Math.PI - span;
+  return { major: length > Math.PI ? 1 : 0, sweep };
+};
+
 // TODO combine SVGModes and ModeCSS
 export const updateStyle = (mode: SVGModes, fill?: boolean) => {
   switch (mode) {

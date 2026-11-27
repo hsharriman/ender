@@ -465,9 +465,10 @@ Definition ArcCongruent (a b : ArcName) : Prop :=
 
 Definition statementMeaning (s : Statement) : Prop :=
   match s with
-  (* Every corpus diagram places the named point on the drawn segment, so
-     the meaning is endpoint-inclusive betweenness, not mere collinearity. *)
-  | OnLine s p => SegmentWellFormed s /\ OnSegment s p
+  (* The named point lies strictly inside the segment: it is neither end.
+     A point at an end is already named by the segment, and a strict point
+     is what lets the kernel name a ray through it. *)
+  | OnLine s p => BetS (seg_start s) (point p) (seg_end s)
   | Transversal a b t1 i1 c d t2 i2 =>
       TransversalConfiguration a b t1 i1 c d t2 i2
   (* Two segments crossing at a point interior to both: the crossing differs

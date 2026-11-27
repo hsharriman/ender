@@ -173,7 +173,7 @@ const editorTheme = EditorView.theme(
       overflow: "auto",
     },
     ".cm-content": { caretColor: "#000000", padding: "6px 0" },
-    ".cm-activeLine": { backgroundColor: "#f8fafc" },
+    ".cm-activeLine": { backgroundColor: "rgba(148, 163, 184, 0.07)" },
     ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
       backgroundColor: "#bfdbfe !important",
     },
@@ -197,9 +197,9 @@ const editorTheme = EditorView.theme(
     ".cm-status-dot-rejected": { backgroundColor: "#dc2626" },
     ".cm-status-dot-blocked": { backgroundColor: "#fbbf24" },
     ".cm-status-dot-incomplete": { backgroundColor: "#94a3b8" },
-    ".cm-line-rejected": { backgroundColor: "#fee2e2" },
-    ".cm-line-blocked": { backgroundColor: "#fffbeb" },
-    ".cm-line-incomplete": { backgroundColor: "#f1f5f9" },
+    ".cm-line-rejected": { backgroundColor: "rgba(239, 68, 68, 0.15)" },
+    ".cm-line-blocked": { backgroundColor: "rgba(251, 191, 36, 0.09)" },
+    ".cm-line-incomplete": { backgroundColor: "rgba(148, 163, 184, 0.13)" },
     ".cm-squiggle": {
       textDecoration: "underline wavy #dc2626",
       textUnderlineOffset: "3px",

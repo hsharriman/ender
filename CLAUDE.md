@@ -147,6 +147,20 @@ proof: one without a step number `[n]` (`n` all digits), one with a character
 other than letters, digits, spaces, and `_ ( ) , - >`, a whole step missing
 its `->`, or a whole statement followed by more text.
 
+`on_line(AB, P)` places P strictly inside AB: never at A or B. A point at an
+end of a segment needs no `on_line`; it is already named by the segment.
+
+An angle may be named through any point on each of its rays: with
+`[d_n] on_line(PR, T)`, `a_QPT` and `a_QPR` are the same angle, in any step,
+citation, or the goal. The point must differ from the vertex, which
+`on_line` and `intersect_seg` guarantee; a point linked only another way (a
+midpoint) must be declared apart from the vertex instead (a `seg:` line, or two
+corners of a declared triangle or quadrilateral). The kernel compares angles
+through a canonical spelling (`canonical_statement` in
+`rocq/Ghost/Checker.v`) used only for checking; proofs, reports, and the
+interface keep the spelling as written. `ref_ang`, `linear_pair`, and
+`inscribed_angle` are compared as written.
+
 Triangle congruence in premises uses `con_tri_ordered`, not `con_tri`. The
 vertex order states the correspondence, so `con_tri_ordered(t_ABC, t_DEF)`
 pairs A with D, B with E, and C with F. A `con_tri` step gets its

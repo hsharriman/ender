@@ -1,13 +1,9 @@
+import { StepFocusProps } from "../types/stepTypes";
 import { BaseAngle } from "./BaseAngle";
 
-// TODO how to visually represent supplementary angles
 export class Supplementary {
   private static addition = " + ";
   private static equalNinety = " = 180°";
-  // static additions = (props: StepFocusProps, [a1, a2]: [string, string]) => {
-  //   RightAngle.additions({ ...props }, a1);
-  //   RightAngle.additions({ ...props, mode: props.mode }, a2);
-  // };
   static text =
     ([a1, a2]: [string, string]) =>
     (isActive: boolean) => {
@@ -20,6 +16,11 @@ export class Supplementary {
         </span>
       );
     };
+
+  static additions = (props: StepFocusProps, [a1, a2]: [string, string]) => {
+    BaseAngle.additions(props, a1);
+    BaseAngle.additions(props, a2);
+  };
   // static highlight = (
   //   props: StepProps,
   //   [a1, a2]: [string, string],

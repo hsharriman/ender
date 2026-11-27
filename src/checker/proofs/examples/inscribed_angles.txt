@@ -1,15 +1,15 @@
 // pass
-title: "S11-4 - Exercise 32: Prove Corollary 11-4-2"
+title: "Inscribed Angles"
 premises:
-pt: A (0, 0, t), B (0, 0, t), C (0, 0, t), D (0, 0, t), O (0, 0, c)
-seg: AB AC CB AD DB
+pt: A (11.38365385, 8.45961538, r), B (10.62980769, 1.5, br), C (4.72019231, 8.5, l), D (3.61634615, 3.99038462, l), O (8.01826923, 5.29615385, c)
 circ: c_OA
 [d_01] circ_order(c_OA, A, C, D, B)
-[g_1] inscribed_angle(c_OA, a_ACB)
-[g_2] inscribed_angle(c_OA, a_ADB)
+seg: AB AC CB AD DB
+[g_1] inscribed_angle(c_OA,a_ACB)
+[g_2] inscribed_angle(c_OA,a_ADB)
 -> con_ang(a_ACB,a_ADB)
 
 steps:
-[01] given(g_1) -> inscribed_angle(c_OA, a_ACB)
-[02] given(g_2) -> inscribed_angle(c_OA, a_ADB)
+[01] given(g_1) -> inscribed_angle(c_OA,a_ACB)
+[02] given(g_2) -> inscribed_angle(c_OA,a_ADB)
 [03] con_inscribed_angs(1,2) -> con_ang(a_ACB,a_ADB)

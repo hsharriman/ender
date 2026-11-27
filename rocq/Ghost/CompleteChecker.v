@@ -514,6 +514,7 @@ Definition reason_name (r : Reason) : string :=
   | CASTC _ => "castc"
   | SimTriTrans _ _ => "sim_tri_transitive"
   | SuppTrans _ _ => "supp_transitive"
+  | CompTrans _ _ => "comp_transitive"
   | PerpTransversal _ _ => "perp_transversal"
   | LinearPairConv _ => "linear_pair_conv"
   | PgramDiagBisect _ => "pgram_diag_bisect"
@@ -845,7 +846,8 @@ Definition premise_facts (premises : list Premise)
     never established -- cannot be it.  Reporting the two separately tells
     apart the two ways a proof falls short: never stating the goal, and
     stating it on a step that did not hold. *)
-Fixpoint goal_stated_by (goal : Statement) (steps : list (option Step))
+Fixpoint goal_stated_by (decls : Declarations) (premises : list Premise)
+    (goal : Statement) (steps : list (option Step))
     (number : nat) (statuses : list (nat * Audit.StepStatus))
     (require_accepted : bool) : option nat :=
   match steps with
@@ -860,9 +862,12 @@ Fixpoint goal_stated_by (goal : Statement) (steps : list (option Step))
         else true in
       match current with
       | Some st =>
-          if usable && fact_eqb goal st.(step_conclusion) then Some number
-          else goal_stated_by goal rest (S number) statuses require_accepted
-      | None => goal_stated_by goal rest (S number) statuses require_accepted
+          if usable && goal_matches decls premises goal st.(step_conclusion)
+          then Some number
+          else goal_stated_by decls premises goal rest (S number) statuses
+                 require_accepted
+      | None => goal_stated_by decls premises goal rest (S number) statuses
+                  require_accepted
       end
   end.
 
@@ -876,12 +881,13 @@ Definition goal_unproved_diagnostic (number : nat) : Audit.Diagnostic :=
   Audit.diagnostic Audit.ProofChecking Audit.DiagnosticError Audit.GoalNotProved
     ("step " ++ nat_text number ++ " states the goal but was not accepted").
 
-Definition goal_report_for (goal : Statement) (steps : list (option Step))
+Definition goal_report_for (decls : Declarations) (premises : list Premise)
+    (goal : Statement) (steps : list (option Step))
     (statuses : list (nat * Audit.StepStatus)) : Audit.GoalReport :=
-  match goal_stated_by goal steps 1 statuses true with
+  match goal_stated_by decls premises goal steps 1 statuses true with
   | Some n => Audit.goal_report (Some n) []
   | None =>
-      match goal_stated_by goal steps 1 statuses false with
+      match goal_stated_by decls premises goal steps 1 statuses false with
       | Some n => Audit.goal_report None [goal_unproved_diagnostic n]
       | None => Audit.goal_report None [goal_missing_diagnostic]
       end
@@ -934,10 +940,12 @@ Definition report_content_from_data (data : option ReportData) : ReportContent :
       let reports :=
         step_reports d.(rd_declarations) d.(rd_premises) [] d.(rd_statuses)
           d.(rd_steps) 1 in
-      let stated := goal_stated_by d.(rd_goal) steps 1 d.(rd_statuses) false in
+      let stated := goal_stated_by d.(rd_declarations) d.(rd_premises) d.(rd_goal)
+                      steps 1 d.(rd_statuses) false in
       (reports, step_graph reports stated,
        duplicate_scan (premise_facts d.(rd_premises)) (numbered_step_facts steps 1),
-       goal_report_for d.(rd_goal) steps d.(rd_statuses))
+       goal_report_for d.(rd_declarations) d.(rd_premises) d.(rd_goal) steps
+         d.(rd_statuses))
   | None => ([], empty_graph, [], Audit.goal_report None [])
   end.
 
@@ -1100,7 +1108,7 @@ Definition reason_arities : list (string * (nat * nat)) :=
    ("rect_diag_con_conv", (2, 2)); ("rhombus_diag_perp_conv", (2, 2));
    ("rhombus_opp_bisect_conv", (3, 3)); ("aa_sim", (2, 2));
    ("sss_sim", (2, 2)); ("sas_sim", (2, 2)); ("castc", (1, 1));
-   ("sim_tri_transitive", (2, 2)); ("supp_transitive", (2, 2));
+   ("sim_tri_transitive", (2, 2)); ("supp_transitive", (2, 2)); ("comp_transitive", (2, 2));
    ("perp_transversal", (2, 3));
    ("linear_pair_conv", (1, 2)); ("pgram_diag_bisect", (1, 2));
    ("rhombus_diag_perp", (1, 2)); ("kite_diag_perp", (1, 2));
@@ -1257,6 +1265,7 @@ Definition reason_conclusions (r : Reason) : option (list string) :=
   | InscribedSemi _ _ => Some ["right"]
   | AASim _ _ | SSSSim _ _ | SASSim _ _ | SimTriTrans _ _ => Some ["sim_tri"]
   | SuppTrans _ _ => Some ["supplementary"]
+  | CompTrans _ _ => Some ["complementary"]
   | PerpTransversal _ _ => Some ["perp"]
   | CASTC _ => Some ["con_ang"]
   | LinearPairConv _ => Some ["linear_pair"]
@@ -1318,6 +1327,7 @@ Definition dependency_kinds (r : Reason) : list (nat * string) :=
   | SimTriTrans i j => [(i, "sim_tri"); (j, "sim_tri")]
   (* The congruence may be cited as [con_ang] or [ref_ang]. *)
   | SuppTrans i _ => [(i, "supplementary")]
+  | CompTrans i _ => [(i, "complementary")]
   | PerpTransversal i j => [(i, "perp"); (j, "para")]
   (* The angle may be cited as [con_right] or [ref_ang], as for [aa_sim]. *)
   | SASSim i _ => [(i, "proportion")]
@@ -1825,10 +1835,12 @@ Definition rule_specific_issue (decls : Declarations) (premises : list Premise)
           else issue "no_shared_congruent_element" []
       | _, _ => None
       end
-  | SuppTrans i j =>
+  | SuppTrans i j | CompTrans i j =>
       match lookup_step facts i, lookup_step facts j with
       | Some (Supplementary a b), Some (ConAng c d)
-      | Some (Supplementary a b), Some (RefAng c d) =>
+      | Some (Supplementary a b), Some (RefAng c d)
+      | Some (Complementary a b), Some (ConAng c d)
+      | Some (Complementary a b), Some (RefAng c d) =>
           if angles_share a b c d then None
           else issue "no_shared_congruent_element" []
       | _, _ => None
@@ -2087,7 +2099,8 @@ Definition proof_issues_from_data (data : option ReportData) (content : ReportCo
              | None =>
                  [Audit.issue 4 "goal_not_reached" (Audit.JsonObject
                    (string_field "goal" (Audit.statementText d.(rd_goal)) ::
-                    match goal_stated_by d.(rd_goal) (map rs_step d.(rd_steps)) 1
+                    match goal_stated_by d.(rd_declarations) d.(rd_premises)
+                            d.(rd_goal) (map rs_step d.(rd_steps)) 1
                             d.(rd_statuses) false with
                     | Some n => [string_field "statedBy" (nat_text n)]
                     | None => []

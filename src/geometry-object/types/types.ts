@@ -14,6 +14,14 @@ export type LCircle = {
   label: string;
 };
 
+export type LArc = {
+  center: Vector;
+  start: Vector;
+  end: Vector;
+  opposite?: Vector;
+  label: string;
+};
+
 export enum Obj {
   Point = "point",
   Segment = "segment",
@@ -25,11 +33,11 @@ export enum Obj {
   Arc = "arc",
   EqualAngleTick = "equalangle",
   Tick = "tick",
-  HiddenTick = "hiddentick",
   RightTick = "righttick",
   Quadrilateral = "rectangle",
   Circle = "circle",
   SimilarTick = "similartick",
+  AngleHighlight = "highlight",
 }
 
 export interface ParseObj {

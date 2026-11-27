@@ -108,6 +108,7 @@ export class SVGGeoAngle extends React.Component<SVGAngleProps, BaseSVGState> {
         <SVGGeoTick
           parent={this.props.a}
           tick={this.props.tick}
+          mode={this.props.mode}
           geoId={this.props.geoId}
           isHighlight={this.props.isHighlight}
           css={
