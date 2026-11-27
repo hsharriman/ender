@@ -32,6 +32,7 @@ export const presentationContent = (proof: ProofObj): ProofContent => {
   proof.premises.circles.forEach((object) => ctx.addCircleFromStr(object.v));
   proof.premises.segments.forEach((object) => ctx.addSegmentFromStr(object.v));
   proof.premises.angles.forEach((object) => addAngleWithSides(ctx, object.v));
+  proof.premises.arcs.forEach((object) => ctx.addArcFromStr(object.v));
 
   const premiseStatements = [
     ...proof.steps.filter((step) => step.type === "given"),
@@ -106,6 +107,7 @@ const addVisibleObjects = (ctx: ProofContent, statement: Stmt) => {
     case "para":
     case "center_on_line":
     case "proportion":
+    case "con_arc":
     case "con_seg":
       addAllObjects(ctx, statement);
       break;

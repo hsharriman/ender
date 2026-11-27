@@ -4,6 +4,7 @@ import { AngleBisector } from "../reasons/AngleBisector";
 import { Complementary } from "../reasons/Complementary";
 import { CongruentTriangles } from "../reasons/CongruentTriangles";
 import { EqualAngles } from "../reasons/EqualAngles";
+import { EqualArcs } from "../reasons/EqualArcs";
 import { EqualRightAngles } from "../reasons/EqualRightAngles";
 import { EqualSegments } from "../reasons/EqualSegments";
 import { InscribedAngle } from "../reasons/InscribedAngle";
@@ -247,6 +248,13 @@ export const applyStmtAdditions =
         stmt.arguments[1].v,
         stmt.arguments[0].v,
       );
+      return;
+    }
+    if (stmt.function === "con_arc" && stmt.arguments.length === 2) {
+      EqualArcs.additions({ ctx, frame, mode }, [
+        stmt.arguments[0].v,
+        stmt.arguments[1].v,
+      ]);
       return;
     }
     // A radius names its outer end; the segment runs from the centre to it.

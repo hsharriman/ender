@@ -10,6 +10,7 @@ import {
   preloadVerifiedChecker,
 } from "checker/verified/wasmLoader";
 import { ProofContent } from "geometry-object";
+import { Diagnoses, diagnoseSteps } from "interface/core/diagnosis/steps";
 import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
 import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import {
@@ -27,7 +28,6 @@ import {
   wrongDependencies,
   WrongDependencies,
 } from "interface/core/reportAnnotations";
-import { Diagnoses, diagnoseSteps } from "interface/core/diagnosis/steps";
 import { Component, createRef } from "react";
 import { NavLink } from "react-router-dom";
 import ender from "../assets/ender.png";
@@ -446,7 +446,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
                 : "Show Interactive Layout"}
             </button>
             <NavLink
-              to={"/ender/examples"}
+              to={"/ender/"}
               className="px-3 underline underline-offset-2 text-sm"
             >
               Examples

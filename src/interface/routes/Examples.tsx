@@ -9,9 +9,10 @@ import {
 import { isGiven } from "interface/theorems/reasons";
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
-import CIRC_2 from "../../checker/proofs/examples/circ_2.txt";
-import OVERLAP from "../../checker/proofs/examples/overlap.txt";
-import RHOMBUS from "../../checker/proofs/examples/rhombusOutside.txt";
+import CIRC_1 from "../../checker/proofs/examples/circ_1.txt?raw";
+import CIRC_2 from "../../checker/proofs/examples/circ_2.txt?raw";
+import OVERLAP from "../../checker/proofs/examples/overlap.txt?raw";
+import RHOMBUS from "../../checker/proofs/examples/rhombusOutside.txt?raw";
 import S1_C1 from "../../checker/proofs/examples/s1c1.txt?raw";
 import S1_C2 from "../../checker/proofs/examples/s1c2.txt?raw";
 import S1_C3 from "../../checker/proofs/examples/s1c3.txt?raw";
@@ -100,6 +101,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
       example("s2inc2.txt", S2_IN2),
       example("overlap.txt", OVERLAP),
       example("circ_2.txt", CIRC_2),
+      example("circ_1.txt", CIRC_1),
       example("rhombusOutside.txt", RHOMBUS),
     ];
     this.state = { tiles: this.proofs.map(() => null) };
@@ -176,7 +178,7 @@ export class Examples extends React.Component<ExamplesProps, ExamplesState> {
         </div>
         <div className="w-screen h-full bg-white p-8">
           <div className="font-notoSans font-medium text-slate-700 text-3xl border-b-2 border-slate-300 mb-2 pb-4 flex flex-row justify-start gap-4">
-            Triangle Congruence Proof Examples
+            Ender Proof Examples
             <div>
               <span className="font-mono text-sm text-orange-500 font-bold">
                 {"[M]"}

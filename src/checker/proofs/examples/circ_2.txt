@@ -1,5 +1,5 @@
 // pass
-title: "Prove Similar Triangles from Two Secants"
+title: "Prove Similar Triangles from Secants"
 premises:
 pt:  A (4.67560322, 4.97695684), C (2.69360398, 1.5, bl), D (7.55, 2.22, b), E (1.35, 7.1397952, l), F (8.67, 4.55, tr), G (13, 3.03621068, r)
 tri: t_CFG t_EDG

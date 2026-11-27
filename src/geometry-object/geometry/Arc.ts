@@ -16,7 +16,10 @@ export class Arc extends BaseGeometryObject {
     this.end = props.end;
     this.opposite = props.opposite;
     this.label = `${this.start.label}${this.end.label}`;
-    this.names = this.permutator([this.start.label, this.end.label]);
+    this.names = new Set([
+      `${this.center.label}${this.start.label}${this.end.label}`,
+      `${this.center.label}${this.end.label}${this.start.label}`,
+    ]);
     // Arcs between the same two points on opposite sides are different arcs.
     this.id =
       `${this.getId(Obj.Arc, this.label)}` +
