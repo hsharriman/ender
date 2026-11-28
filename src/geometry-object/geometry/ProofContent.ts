@@ -1,3 +1,4 @@
+import { Obj } from "geometry-object/types/types";
 import {
   AngleProps,
   ArcProps,
@@ -16,34 +17,45 @@ import { Quadrilateral } from "./Quadrilateral";
 import { Segment } from "./Segment";
 import { Triangle } from "./Triangle";
 
-// TODO rename to ProofContent
+type ObjectKind =
+  | "segment"
+  | "angle"
+  | "triangle"
+  | "quadrilateral"
+  | "circle"
+  | "arc";
+
+/**
+ * The objects of one proof's figure and how each is drawn in every frame.
+ * Each layer of a walkthrough (the figure, its highlights, its additions)
+ * builds its own, so their modes never mix.
+ */
 export class ProofContent {
-  ctx: ProofCtx;
-  constructor(prevCtx?: ProofCtx) {
-    this.ctx = prevCtx ?? {
-      points: [],
-      segments: [],
-      angles: [],
-      triangles: [],
-      quads: [],
-      circles: [],
-      arcs: [],
-      frames: [],
-      deps: new Map(),
-    };
+  readonly ctx: ProofCtx = {
+    points: [],
+    segments: [],
+    angles: [],
+    triangles: [],
+    quads: [],
+    circles: [],
+    arcs: [],
+    frames: [],
+    deps: new Map(),
+  };
+  /** The checker's ray representatives, keyed vertex then point (`"PT"`). */
+  private readonly rays: Map<string, string>;
+  private readonly warnedMissing = new Set<string>();
+
+  constructor(rays: Map<string, string> = new Map()) {
+    this.rays = rays;
   }
 
-  getTriangles = () => this.ctx.triangles;
-
+  /** Record which frames a frame depends on. */
   reliesOn = (id: string, deps: string[]) => {
-    // adds dependencies from one step to another
-    // key is mode, value is array of modes that it depends on
     this.ctx.deps.set(id, new Set(deps));
   };
 
-  getReliesOn = () => {
-    return this.ctx.deps;
-  };
+  getReliesOn = () => this.ctx.deps;
 
   addFrame = (name: string) => {
     this.ctx.frames.push(name);
@@ -53,255 +65,169 @@ export class ProofContent {
   getCtx = () => this.ctx;
 
   addPoint = (props: PointProps) => {
+    const existing = this.findPoint(props.label);
+    if (existing) return existing;
     const pt = new Point(props);
-    if (!this.getPoint(pt.label)) this.ctx.points.push(pt);
+    this.ctx.points.push(pt);
     return pt;
   };
 
   addSegment = (props: SegmentProps) => {
-    let s = new Segment(props);
-    if (!this.getSegment(s.label)) this.ctx.segments.push(s);
-    return this.getSegment(s.label) ?? s;
+    const s = new Segment(props);
+    const existing = this.findSegment(s.label);
+    if (existing) return existing;
+    this.ctx.segments.push(s);
+    return s;
   };
 
+  /**
+   * An angle the checker treats as one already drawn (its sides run through
+   * other points of the same rays) is that angle, under one more name.
+   */
   addAngle = (props: AngleProps) => {
-    let a = new Angle(props);
-    return this.getAngle(a.label) ?? this.overlap(a);
+    const a = new Angle(props);
+    const existing = this.findAngle(a.label) ?? this.findSameAngle(a.label);
+    if (existing) {
+      existing.addNames(a.start.label, a.end.label);
+      return existing;
+    }
+    this.ctx.angles.push(a);
+    return a;
   };
 
   addTriangle = (props: TriangleProps) => {
-    let t = new Triangle(props);
-    if (!this.getTriangle(t.label)) {
-      this.ctx.triangles.push(t);
-      this.addSegments(t.s);
-      this.addAngles(t.a);
-    }
-    return this.getTriangle(t.label) ?? t;
-  };
-
-  addCircle = (props: CircleProps) => {
-    // TODO add checks for overlapping circles
-    const c = new Circle(props);
-    if (!this.getCircle(c.label)) this.ctx.circles.push(c);
-    return this.getCircle(c.label) ?? c;
-  };
-
-  addArc = (props: ArcProps) => {
-    const a = new Arc(props);
-    if (!this.getArc(a.label)) this.ctx.arcs.push(a);
-    return this.getArc(a.label) ?? a;
+    const t = new Triangle(props);
+    const existing = this.findTriangle(t.label);
+    if (existing) return existing;
+    this.ctx.triangles.push(t);
+    t.s.forEach((s) => this.addSegment(s));
+    t.a.forEach((a) => this.addAngle(a));
+    return t;
   };
 
   addQuadrilateral = (props: QuadrilateralProps) => {
     const q = new Quadrilateral(props);
-    const existing = this.getQuadrilateral(q.label);
-    if (!existing) {
-      this.ctx.quads.push(q);
-      this.addSegments(q.s);
-      this.addAngles(q.a);
-    } else if (props.typeOpts && !existing.typeOpts) {
-      existing.typeOpts = props.typeOpts;
+    const existing = this.findQuadrilateral(q.label);
+    if (existing) {
+      if (props.typeOpts && !existing.typeOpts)
+        existing.typeOpts = props.typeOpts;
+      return existing;
     }
-    return this.getQuadrilateral(q.label) ?? q;
+    this.ctx.quads.push(q);
+    q.s.forEach((s) => this.addSegment(s));
+    q.a.forEach((a) => this.addAngle(a));
+    return q;
   };
 
-  addPoints = (propsArr: PointProps[]) => {
-    return propsArr.map((props) => this.addPoint(props));
+  addCircle = (props: CircleProps) => {
+    const c = new Circle(props);
+    const existing = this.findCircle(c.label);
+    if (existing) return existing;
+    this.ctx.circles.push(c);
+    return c;
   };
 
-  addSegments = (propsArr: SegmentProps[]) => {
-    return propsArr.map((props) => this.addSegment(props));
-  };
-
-  addAngles = (propsArr: AngleProps[]) => {
-    return propsArr.map((props) => this.addAngle(props));
+  /** Arcs between the same points on opposite sides are kept apart by id. */
+  addArc = (props: ArcProps) => {
+    const a = new Arc(props);
+    const existing = this.ctx.arcs.find((b) => b.id === a.id);
+    if (existing) return existing;
+    this.ctx.arcs.push(a);
+    return a;
   };
 
   addSegmentFromStr = (str: string) => {
-    const [a, b] = str.split("").map((c) => this.getPoint(c));
-    return this.addSegment({ p1: a, p2: b });
+    const [p1, p2] = this.points(str, "");
+    return this.addSegment({ p1, p2 });
   };
 
   addTriangleFromStr = (str: string) => {
-    if (str.startsWith("t_")) {
-      str = str.slice(2);
-    }
-    const [a, b, c] = str.split("").map((c) => this.getPoint(c));
+    const [a, b, c] = this.points(str, "t_");
     return this.addTriangle({ pts: [a, b, c] });
   };
 
   addQuadrilateralFromStr = (
     str: string,
-    typeOpts?: { type: "trapezoid" | "kite"; objs: [string, string] },
+    typeOpts?: QuadrilateralProps["typeOpts"],
   ) => {
-    if (str.startsWith("q_")) {
-      str = str.slice(2);
-    }
-    const [a, b, c, d] = str.split("").map((c) => this.getPoint(c));
+    const [a, b, c, d] = this.points(str, "q_");
     return this.addQuadrilateral({ pts: [a, b, c, d], typeOpts });
   };
 
   addAngleFromStr = (str: string) => {
-    if (str.startsWith("a_")) {
-      str = str.slice(2);
-    }
-    const [a, b, c] = str.split("").map((c) => this.getPoint(c));
-    return this.addAngle({ start: a, center: b, end: c });
+    const [start, center, end] = this.points(str, "a_");
+    return this.addAngle({ start, center, end });
   };
 
   addCircleFromStr = (str: string) => {
-    if (str.startsWith("c_")) {
-      str = str.slice(2);
-    }
-    const [center, radius] = str.split("").map((c) => this.getPoint(c));
+    const [center, radius] = this.points(str, "c_");
     return this.addCircle({ center, radius });
   };
 
   addArcFromStr = (str: string) => {
-    if (str.startsWith("r_")) {
-      str.slice(2);
-    }
-    const [center, start, end] = str
-      .replace("_", "")
-      .split("")
-      .map((p) => this.getPoint(p));
+    const [center, start, end] = this.points(str, "r_");
     return this.addArc({ center, start, end });
   };
 
-  getPoint = (label: string) =>
-    this.ctx.points.filter((p) => p.matches(label))[0];
+  getPoint = (label: string) => this.findPoint(label) as Point;
   getSegment = (label: string) =>
-    this.ctx.segments.filter((s) => s.matches(label))[0];
+    this.found(Obj.Segment, label, this.findSegment(label));
   getAngle = (label: string) =>
-    this.ctx.angles.filter((a) => a.matches(label))[0];
+    this.found(
+      Obj.Angle,
+      label,
+      this.findAngle(label) ?? this.findSameAngle(label),
+    );
   getTriangle = (label: string) =>
-    this.ctx.triangles.filter((t) => t.matches(label))[0];
+    this.found(Obj.Triangle, label, this.findTriangle(label));
   getQuadrilateral = (label: string) =>
-    this.ctx.quads.filter((r) => r.matches(label))[0];
+    this.found(Obj.Quadrilateral, label, this.findQuadrilateral(label));
   getCircle = (label: string) =>
-    this.ctx.circles.filter((c) => c.matches(label))[0];
-  getArc = (label: string) => this.ctx.arcs.filter((a) => a.matches(label))[0];
+    this.found(Obj.Circle, label, this.findCircle(label));
+  getArc = (label: string) => this.found(Obj.Arc, label, this.findArc(label));
 
-  checkAngleOverlaps = () => {
-    this.ctx.angles.forEach((a) => this.overlap(a));
+  /** The named points of an object's letters; every one must be declared. */
+  private points = (str: string, prefix: string): Point[] =>
+    (str.startsWith(prefix) ? str.slice(prefix.length) : str)
+      .split("")
+      .map((label) => this.findPoint(label)!);
+
+  /**
+   * The angle at `label[1]`, read through the checker's ray representatives
+   * so every spelling of one angle gives the same key.
+   */
+  private angleKey = (label: string) => {
+    const [start, center, end] = label;
+    const rep = (p: string) => this.rays.get(`${center}${p}`) ?? p;
+    return `${center}:${[rep(start), rep(end)].sort().join("")}`;
   };
 
-  overlap = (a: Angle) => {
-    const [s, c, e] = [a.start.label, a.center.label, a.end.label];
-    let overlapsExisting = false;
+  private findSameAngle = (label: string) => {
+    if (label.length !== 3) return undefined;
+    const key = this.angleKey(label);
+    return this.ctx.angles.find((a) => this.angleKey(a.label) === key);
+  };
 
-    const findOverlaps = (segSet: Set<Segment>, angleEnd: string) => {
-      if (segSet.size > 0) {
-        segSet.forEach((s) => {
-          // add an overlapping angle if the center of the angle is one of the segment endpoints
-          if (s.label.includes(c)) {
-            const overlapLabel = `${angleEnd}${c}${s.label.replace(c, "")}`;
-            // does overlapping angle already exist in ctx?
-            const existingAngle = this.getAngle(overlapLabel);
-            if (existingAngle) {
-              // add new angle to existing angle's list of names instead of creating new angle
-              overlapsExisting = true;
-              existingAngle.addNames(angleEnd, s.label.replace(c, ""));
-              // also register the new angle's own label on the existing angle so it's
-              // reachable by name (e.g. EGD must be findable even though only FGD is in ctx.angles)
-              existingAngle.addNames(a.start.label, a.end.label);
-            } else {
-              // overlapping angle isn't tracked, add it to original angle
-              a.addNames(angleEnd, s.label.replace(c, ""));
-            }
-          }
-        });
-      }
-    };
-
-    // get segments that form the angle
-    const startToCenter = this.getSegment(`${s}${c}`);
-    const endToCenter = this.getSegment(`${c}${e}`);
-
-    if (!startToCenter || !endToCenter)
-      throw new Error(
-        `Angle ${s}${c}${e}: segment ${s}${c} or ${c}${e} not found in context`,
-      );
-
-    // first check if overlaps while holding one side fixed
-    // check for overlaps with parent segments
-    findOverlaps(startToCenter.getParentSegments(), e); // 3rd pt = end
-    findOverlaps(endToCenter.getParentSegments(), s); // 3rd pt = start
-
-    // check for overlaps with sub segments
-    findOverlaps(startToCenter.getSubSegments(), e); // 3rd pt = end
-    findOverlaps(endToCenter.getSubSegments(), s); // 3rd pt = start
-
-    // Two-sided overlap: detect angles equivalent via sub-ray on BOTH sides
-    const addTwoSidedOverlaps = (
-      firstSegs: Set<Segment>,
-      secondSegs: Set<Segment>,
-    ) => {
-      firstSegs.forEach((seg1) => {
-        if (!seg1.label.includes(c) || seg1.label.replace(c, "").length !== 1)
-          return;
-        const pt1 = seg1.label.replace(c, "");
-        secondSegs.forEach((seg2) => {
-          if (!seg2.label.includes(c) || seg2.label.replace(c, "").length !== 1)
-            return;
-          const pt2 = seg2.label.replace(c, "");
-          if (pt1 === pt2 || pt1 === s || pt2 === e) return;
-          const twoSided = this.getAngle(`${pt1}${c}${pt2}`);
-          if (twoSided && twoSided !== a) {
-            a.addNames(pt1, pt2);
-            twoSided.addNames(s, e);
-          }
-        });
-      });
-    };
-    // Case 1: start-ray is subray (has parent) + end-ray has a subray (has sub)
-    addTwoSidedOverlaps(
-      startToCenter.getParentSegments(),
-      endToCenter.getSubSegments(),
-    );
-    // Case 2: start-ray has a subray + end-ray is subray (symmetric of case 1)
-    addTwoSidedOverlaps(
-      startToCenter.getSubSegments(),
-      endToCenter.getParentSegments(),
-    );
-    // Case 3: both rays are subrays (this angle is a "zoom-in" of the other)
-    addTwoSidedOverlaps(
-      startToCenter.getParentSegments(),
-      endToCenter.getParentSegments(),
-    );
-    // Case 4: both rays have subrays (this angle is a "zoom-out" of the other)
-    addTwoSidedOverlaps(
-      startToCenter.getSubSegments(),
-      endToCenter.getSubSegments(),
-    );
-
-    // if doesn't overlap with existing angles, add the angle to the ctx
-    if (!overlapsExisting) {
-      this.ctx.angles.push(a);
+  private found = <T>(kind: Obj, label: string, obj: T | undefined) => {
+    if (!obj && !this.warnedMissing.has(`${kind}:${label}`)) {
+      this.warnedMissing.add(`${kind}:${label}`);
+      console.log(`[diagram] Missing ${kind} reference: "${label}"`);
     }
-    return a;
+    return obj as T;
   };
 
-  print = () => {
-    console.log(
-      "pts",
-      this.ctx.points.map((p) => p.label),
-    );
-    console.log(
-      "segs",
-      this.ctx.segments.map((s) => s.label),
-    );
-    console.log(
-      "angs",
-      this.ctx.angles.map((a) => a.label),
-    );
-    console.log(
-      "tris",
-      this.ctx.triangles.map((t) => t.label),
-    );
-    console.log(
-      "quads",
-      this.ctx.quads.map((q) => q.label),
-    );
-  };
+  private findPoint = (label: string) =>
+    this.ctx.points.find((p) => p.matches(label));
+  private findSegment = (label: string) =>
+    this.ctx.segments.find((s) => s.matches(label));
+  private findAngle = (label: string) =>
+    this.ctx.angles.find((a) => a.matches(label));
+  private findTriangle = (label: string) =>
+    this.ctx.triangles.find((t) => t.matches(label));
+  private findQuadrilateral = (label: string) =>
+    this.ctx.quads.find((q) => q.matches(label));
+  private findCircle = (label: string) =>
+    this.ctx.circles.find((c) => c.matches(label));
+  private findArc = (label: string) =>
+    this.ctx.arcs.find((a) => a.matches(label));
 }

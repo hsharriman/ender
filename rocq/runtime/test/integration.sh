@@ -30,7 +30,7 @@ fi
            (.presentation.steps | length > 0) and
            (.steps | type == "array") and (.graph | type == "object") and
            (.duplicates | type == "array") and (.goal | type == "object") and
-           (.diagnostics | type == "array")' > /dev/null
+           (.diagnostics | type == "array") and (.rays | type == "array")' > /dev/null
 
 find "$proofs" -name '*.txt' -print0 | while IFS= read -r -d $'\0' proof; do
   "$checker" --presentation "$proof" | jq -e 'type == "object"' > /dev/null

@@ -1,6 +1,6 @@
+import { ProofContent } from "geometry-object";
 import { InteractiveAppPageProps } from "../../components/ender/InteractiveAppPage";
 import { StaticAppPageProps } from "../../components/ender/StaticAppPage";
-import { DiagramContent } from "../builder/DiagramContent";
 import { StepMeta } from "./stepTypes";
 
 // -------- TYPES RELATED TO PROOF SETUP --------
@@ -13,7 +13,7 @@ export enum AspectRatio {
 
 export interface LayoutProps {
   name: string;
-  baseContent: () => DiagramContent;
+  baseContent: () => ProofContent;
   steps: StepMeta[];
   givens: StepMeta;
   proves: StepMeta;

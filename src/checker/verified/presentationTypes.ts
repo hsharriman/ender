@@ -55,6 +55,15 @@ export type VerifiedStepReport = {
   diagramDependencies: string[];
   diagnostics: VerifiedDiagnostic[];
 };
+/**
+ * Display data: from `vertex`, the ray through `point` is the one the checker
+ * names through `representative`. Points not listed name their own ray.
+ */
+export type RayRepresentative = {
+  vertex: string;
+  point: string;
+  representative: string;
+};
 export type VerifiedCheckReport = {
   verdict: "failed_to_parse_problem" | "rejected_proof" | "accepted";
   problem: {
@@ -82,6 +91,7 @@ export type VerifiedCheckReport = {
   issues: VerifiedIssue[];
   errors: VerifiedIssue[];
   diagnostics: VerifiedDiagnostic[];
+  rays: RayRepresentative[];
 };
 
 declare global {

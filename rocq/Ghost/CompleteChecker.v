@@ -952,6 +952,31 @@ Definition report_content_from_data (data : option ReportData) : ReportContent :
 Definition report_content (source : string) : ReportContent :=
   report_content_from_data (report_data_of source).
 
+(** * Ray representatives
+
+    Display data for external code that draws the figure: for each vertex
+    [v] and point [p] the premises link along a ray from [v], the point
+    [ray_rep] names that ray by, when it is not [p] itself.  An angle drawn
+    through any points is the same angle the checker compares exactly when
+    its sides map to the same representatives (in either order).  Only
+    points a ray premise names can have a representative other than
+    themselves, so those are the only ones listed.  The verdict never reads
+    this. *)
+Definition ray_representatives_of (d : ReportData)
+    : list (PointId * PointId * PointId) :=
+  let points := nodup Ascii.ascii_dec (ray_points d.(rd_premises)) in
+  flat_map (fun v =>
+    flat_map (fun p =>
+      let r := ray_rep d.(rd_declarations) d.(rd_premises) v p in
+      if Ascii.eqb r p then [] else [(v, p, r)]) points) points.
+
+Definition ray_representatives (source : string)
+    : list (PointId * PointId * PointId) :=
+  match report_data_of source with
+  | Some d => ray_representatives_of d
+  | None => []
+  end.
+
 (** * Issues
 
     What the interface and the feedback prompts read: one issue per step that
@@ -2143,7 +2168,17 @@ Fixpoint header_line_issue (lines : list string) (number : nat)
           let context := [string_field "line" line] in
           Some
             match Audit.premiseBody line with
-            | Some body => statement_issue context body
+            | Some body =>
+                match PublicParser.parse_public_statement body with
+                (* The statement reads, so its label is the wrong kind. *)
+                | Some statement =>
+                    Audit.issue 3 "premise_label_mismatch"
+                      (Audit.JsonObject (context ++
+                        [string_field "expected"
+                           (if Audit.isDiagramPremise statement
+                            then "d_" else "g_")]))
+                | None => statement_issue context body
+                end
             | None =>
                 match Audit.goalBody line with
                 | Some body => statement_issue context body

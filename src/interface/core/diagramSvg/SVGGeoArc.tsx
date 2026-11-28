@@ -1,4 +1,4 @@
-import { LArc } from "geometry-object";
+import { Arc } from "geometry-object/geometry/Arc";
 import React from "react";
 import { vops } from "../vectorOps";
 import { pops } from "./pathBuilderUtils";
@@ -7,7 +7,7 @@ import { arcFlags, coordsToSvg, updateStyle } from "./svgUtils";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
 export type SVGArcProps = {
-  a: LArc;
+  a: Arc;
 } & BaseSVGProps;
 
 export class SVGGeoArc extends React.Component<SVGArcProps, BaseSVGState> {
@@ -23,9 +23,10 @@ export class SVGGeoArc extends React.Component<SVGArcProps, BaseSVGState> {
   render() {
     const { a, miniScale } = this.props;
     const [center, start, end] = [a.center, a.start, a.end].map((v) =>
-      coordsToSvg(v, miniScale),
+      coordsToSvg(v.pt, miniScale),
     );
-    const avoid = a.opposite && coordsToSvg(a.opposite, miniScale);
+    const avoid =
+      this.props.a.opposite && coordsToSvg(this.props.a.opposite.pt, miniScale);
     const radius = vops.mag(vops.sub(start, center));
     const { major, sweep } = arcFlags(center, start, end, avoid);
     return (

@@ -15,7 +15,7 @@ export class TriangleClassification {
     const tri = props.ctx.getTriangle(t);
     if (!tri) return;
     tri.s.forEach((sb) =>
-      props.ctx.getSegment(sb.obj.label)?.mode(props.frame, props.mode),
+      props.ctx.getSegment(sb.label)?.mode(props.frame, props.mode),
     );
   };
 }

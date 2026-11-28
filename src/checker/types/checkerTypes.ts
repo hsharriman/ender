@@ -39,6 +39,11 @@ export interface ProofObj {
   };
   steps: ProofStep[];
   goal?: Stmt;
+  /**
+   * The checker's ray representatives, keyed vertex then point (`"PT"`):
+   * angles whose sides map to the same points are drawn as one angle.
+   */
+  rays: Map<string, string>;
 }
 
 export type ParsePointObj = ParseObj & {

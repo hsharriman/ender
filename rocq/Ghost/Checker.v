@@ -241,16 +241,56 @@ Definition on_segment_match (v p q : PointId) (s : SegmentName) (r : PointId) : 
   ((segment_u_eqb s (segment_name v q) && ascii_eqb r p) ||
    (segment_u_eqb s (segment_name v p) && ascii_eqb r q)).
 
-(** Diagram statements and midpoint givens all carry endpoint-inclusive
-    segment membership.  Treat their named interior point uniformly when
-    deciding whether two spellings name the same ray. *)
-Definition statement_ray_linked (v p q : PointId) (s : Statement) : bool :=
+(** The points a [transversal] places on segments, wherever its letters
+    say those parts are drawn: each crossing strictly inside its crossed
+    line, and the crossings strictly inside the transversal and each other's
+    stretch of it.  A repeated letter marks a part absent and places
+    nothing. *)
+Definition transversal_segments (a b t1 i1 c d t2 i2 : PointId)
+    : list (SegmentName * PointId) :=
+  let apart x y := negb (ascii_eqb x y) in
+  let before := apart t1 i1 && apart t1 i2 in
+  let after := apart t2 i2 && apart t2 i1 in
+  (if before then [(segment_name t1 i2, i1)] else []) ++
+  (if after then [(segment_name i1 t2, i2)] else []) ++
+  (if before && after
+   then [(segment_name t1 t2, i1); (segment_name t1 t2, i2)] else []) ++
+  (if apart a i1 && apart b i1 then [(segment_name a b, i1)] else []) ++
+  (if apart c i2 && apart d i2 then [(segment_name c d, i2)] else []).
+
+(** The points a premise places on a segment, ends included, as
+    (segment, point): [on_line], [intersect_seg], [transversal], and the
+    midpoint a [midpt], [seg_bisect], or [perp_bisector] names on the
+    segment it halves.  A bisector only meets its own line ([Col]), so it
+    places nothing there; an [on_line] premise has to. *)
+Definition statement_ray_segments (s : Statement) : list (SegmentName * PointId) :=
   match s with
-  | OnLine t r | Midpt t r => on_segment_match v p q t r
-  | IntersectSeg t u r =>
-      on_segment_match v p q t r || on_segment_match v p q u r
-  | _ => false
+  | OnLine t r | Midpt t r | SegBisect _ t r | PerpBisector _ t r => [(t, r)]
+  | IntersectSeg t u r => [(t, r); (u, r)]
+  | Transversal a b t1 i1 c d t2 i2 => transversal_segments a b t1 i1 c d t2 i2
+  | _ => []
   end.
+
+(** Those placed strictly inside, so that the point differs from both ends.
+    A midpoint is strictly inside once the ends are declared apart: the
+    midpoint of a degenerate segment is its one point. *)
+Definition statement_strict_segments (decls : Declarations) (s : Statement)
+    : list (SegmentName * PointId) :=
+  match s with
+  | Midpt t r | SegBisect _ t r | PerpBisector _ t r =>
+      if declared_distinct decls t.(segment_first) t.(segment_second)
+      then [(t, r)] else []
+  | _ => statement_ray_segments s
+  end.
+
+Definition segments_ray_linked (v p q : PointId) (segs : list (SegmentName * PointId))
+    : bool :=
+  existsb (fun tr => on_segment_match v p q (fst tr) (snd tr)) segs.
+
+(** Whether a premise places [p] or [q] on the segment from [v] through the
+    other, so that the two name the same ray from [v]. *)
+Definition statement_ray_linked (v p q : PointId) (s : Statement) : bool :=
+  segments_ray_linked v p q (statement_ray_segments s).
 
 Definition on_line_witness (s : Statement) : option (SegmentName * PointId) :=
   match s with OnLine t q => Some (t, q) | _ => None end.
@@ -364,35 +404,29 @@ Definition angle_pair_used (decls : Declarations) (premises : list Premise)
     strictly inside the segment, and declarations can say so too -- which is
     what makes the renaming an [Out] fact. *)
 Definition statement_ray_points (s : Statement) : list PointId :=
-  match s with
-  | OnLine t r | Midpt t r => [t.(segment_first); t.(segment_second); r]
-  | IntersectSeg t u r =>
-      [t.(segment_first); t.(segment_second); u.(segment_first); u.(segment_second); r]
-  | _ => []
-  end.
+  flat_map (fun tr => [(fst tr).(segment_first); (fst tr).(segment_second); snd tr])
+    (statement_ray_segments s).
 
 Definition ray_points (premises : list Premise) : list PointId :=
   flat_map (fun pr => statement_ray_points pr.(premise_statement)) premises.
 
 (** A link through a premise that places its point strictly inside a
-    segment, as [on_line] and [intersect_seg] do: both linked points then
-    differ from the vertex. *)
-Definition strict_ray_link (v p q : PointId) (pr : Premise) : bool :=
-  match pr.(premise_statement) with
-  | OnLine t r => on_segment_match v p q t r
-  | IntersectSeg t u r => on_segment_match v p q t r || on_segment_match v p q u r
-  | _ => false
-  end.
+    segment ([statement_strict_segments]): both linked points then differ
+    from the vertex. *)
+Definition strict_ray_link (decls : Declarations) (v p q : PointId) (pr : Premise)
+    : bool :=
+  segments_ray_linked v p q (statement_strict_segments decls pr.(premise_statement)).
 
-Definition strict_ray_linked (premises : list Premise) (v p q : PointId) : bool :=
-  premise_found (strict_ray_link v p q) premises.
+Definition strict_ray_linked (decls : Declarations) (premises : list Premise)
+    (v p q : PointId) : bool :=
+  premise_found (strict_ray_link decls v p q) premises.
 
 (** The points one premise links to the ray from [v] through [y], each
     known to differ from [v]: declared apart from it, or placed by a strict
     premise. *)
 Definition ray_step (decls : Declarations) (premises : list Premise) (v y : PointId)
     : list PointId :=
-  filter (fun x => (declared_distinct decls v x || strict_ray_linked premises v y x) &&
+  filter (fun x => (declared_distinct decls v x || strict_ray_linked decls premises v y x) &&
                    ray_linked premises v y x)
          (ray_points premises).
 
@@ -401,7 +435,7 @@ Definition ray_step (decls : Declarations) (premises : list Premise) (v y : Poin
 Definition ray_anchored (decls : Declarations) (premises : list Premise) (v p : PointId)
     : bool :=
   declared_distinct decls v p ||
-  existsb (strict_ray_linked premises v p) (ray_points premises).
+  existsb (strict_ray_linked decls premises v p) (ray_points premises).
 
 Fixpoint ray_grow (fuel : nat) (step : PointId -> list PointId) (seen : list PointId)
     : list PointId :=
@@ -3837,6 +3871,116 @@ Proof.
     apply (proj2 (angle_u_eqb_well_formed _ _ Heq)). now apply Hwfa.
 Qed.
 
+Lemma ascii_apart_neq : forall x y, negb (ascii_eqb x y) = true -> x <> y.
+Proof.
+  intros x y H E. subst. unfold ascii_eqb in H.
+  rewrite Ascii.eqb_refl in H. discriminate.
+Qed.
+
+(** Every point a [transversal] places on a segment is strictly inside it. *)
+Lemma transversal_segments_strict : forall a b t1 i1 c d t2 i2 t r,
+  TransversalConfiguration point a b t1 i1 c d t2 i2 ->
+  In (t, r) (transversal_segments a b t1 i1 c d t2 i2) ->
+  BetS (point t.(segment_first)) (point r) (point t.(segment_second)).
+Proof.
+  intros a b t1 i1 c d t2 i2 t r Hc Hin.
+  unfold TransversalConfiguration in Hc.
+  destruct Hc as [H12 [Hbefore [Hafter [HAB [_ [HAi [HBi [HCD [_ [HCi [HDi _]]]]]]]]]]].
+  assert (Hb : negb (ascii_eqb t1 i1) && negb (ascii_eqb t1 i2) = true ->
+               BetS (point t1) (point i1) (point i2)).
+  { intro E. apply andb_true_iff in E. destruct E as [E1 E2].
+    exact (Hbefore (ascii_apart_neq _ _ E1) (ascii_apart_neq _ _ E2)). }
+  assert (Ha : negb (ascii_eqb t2 i2) && negb (ascii_eqb t2 i1) = true ->
+               BetS (point i1) (point i2) (point t2)).
+  { intro E. apply andb_true_iff in E. destruct E as [E1 E2].
+    exact (Hafter (ascii_apart_neq _ _ E1) (ascii_apart_neq _ _ E2)). }
+  unfold transversal_segments in Hin. cbv zeta in Hin.
+  repeat rewrite in_app_iff in Hin.
+  destruct Hin as [Hin|[Hin|[Hin|[Hin|Hin]]]].
+  - destruct (negb (ascii_eqb t1 i1) && negb (ascii_eqb t1 i2)) eqn:E;
+      [|destruct Hin].
+    destruct Hin as [Heq|[]]. inversion Heq; subst. cbn. exact (Hb eq_refl).
+  - destruct (negb (ascii_eqb t2 i2) && negb (ascii_eqb t2 i1)) eqn:E;
+      [|destruct Hin].
+    destruct Hin as [Heq|[]]. inversion Heq; subst. cbn. exact (Ha eq_refl).
+  - destruct (negb (ascii_eqb t1 i1) && negb (ascii_eqb t1 i2)) eqn:E1;
+      [|destruct Hin].
+    destruct (negb (ascii_eqb t2 i2) && negb (ascii_eqb t2 i1)) eqn:E2;
+      [|destruct Hin].
+    destruct (Hb eq_refl) as [Hx [Hn1 Hn2]].
+    destruct (Ha eq_refl) as [Hy [Hn3 Hn4]].
+    destruct Hin as [Heq|[Heq|[]]]; inversion Heq; subst; cbn.
+    + split; [exact (outer_transitivity_between _ _ _ _ Hx Hy Hn2)|].
+      split; [exact Hn1|].
+      intro E. rewrite <- E in Hy. apply between_identity in Hy. contradiction.
+    + split; [exact (outer_transitivity_between2 _ _ _ _ Hx Hy Hn2)|].
+      split; [|exact Hn4].
+      intro E. rewrite E in Hx. apply between_identity in Hx.
+      apply Hn2. symmetry. exact Hx.
+  - destruct (negb (ascii_eqb a i1) && negb (ascii_eqb b i1)) eqn:E;
+      [|destruct Hin].
+    apply andb_true_iff in E. destruct E as [E1 E2].
+    destruct Hin as [Heq|[]]. inversion Heq; subst. cbn.
+    split; [exact HAB|]. split.
+    + exact (HAi (ascii_apart_neq _ _ E1)).
+    + apply not_eq_sym. exact (HBi (ascii_apart_neq _ _ E2)).
+  - destruct (negb (ascii_eqb c i2) && negb (ascii_eqb d i2)) eqn:E;
+      [|destruct Hin].
+    apply andb_true_iff in E. destruct E as [E1 E2].
+    destruct Hin as [Heq|[]]. inversion Heq; subst. cbn.
+    split; [exact HCD|]. split.
+    + exact (HCi (ascii_apart_neq _ _ E1)).
+    + apply not_eq_sym. exact (HDi (ascii_apart_neq _ _ E2)).
+Qed.
+
+(** Every point a premise places on a segment lies on it. *)
+Lemma statement_ray_segments_bet : forall st t r,
+  Interp st -> In (t, r) (statement_ray_segments st) ->
+  Bet (point t.(segment_first)) (point r) (point t.(segment_second)).
+Proof.
+  intros st t r Hst Hin.
+  destruct st; cbn in Hin; try contradiction;
+    unfold interp_statement, statement_meaning in Hst; cbn in Hst.
+  - destruct Hin as [Heq|[]]. inversion Heq; subst. exact (proj1 Hst).
+  - exact (proj1 (transversal_segments_strict _ _ _ _ _ _ _ _ _ _ Hst Hin)).
+  - destruct Hin as [Heq|[Heq|[]]]; inversion Heq; subst.
+    + exact (proj1 (proj1 Hst)).
+    + exact (proj1 (proj2 Hst)).
+  - destruct Hin as [Heq|[]]. inversion Heq; subst. exact (proj1 Hst).
+  - destruct Hin as [Heq|[]]. inversion Heq; subst.
+    exact (proj1 (proj2 (proj2 (proj1 Hst)))).
+  - destruct Hin as [Heq|[]]. inversion Heq; subst.
+    exact (proj1 (proj2 (proj2 Hst))).
+Qed.
+
+(** And every point a premise places strictly inside a segment is. *)
+Lemma statement_strict_segments_strict : forall decls st t r,
+  declarations_well_formed point decls ->
+  Interp st -> In (t, r) (statement_strict_segments decls st) ->
+  BetS (point t.(segment_first)) (point r) (point t.(segment_second)).
+Proof.
+  intros decls st t r Hwf Hst Hin.
+  assert (Hmid : forall s m,
+    declared_distinct decls s.(segment_first) s.(segment_second) = true ->
+    Midpoint (point m) (point s.(segment_first)) (point s.(segment_second)) ->
+    BetS (point s.(segment_first)) (point m) (point s.(segment_second))).
+  { intros s0 m Hd Hm.
+    pose proof (declared_distinct_sound _ _ _ Hwf Hd) as Hne.
+    destruct (midpoint_distinct_1 _ _ _ Hne Hm) as [H1 H2].
+    split; [exact (proj1 Hm)|]. split; [exact (not_eq_sym H1)|exact H2]. }
+  destruct st; cbn in Hin; try contradiction;
+    unfold interp_statement, statement_meaning in Hst; cbn in Hst;
+    try (destruct (declared_distinct decls _ _) eqn:Hd; [|contradiction];
+         destruct Hin as [Heq|[]]; inversion Heq; subst).
+  - destruct Hin as [Heq|[]]. inversion Heq; subst. exact Hst.
+  - eapply transversal_segments_strict; [exact Hst|exact Hin].
+  - destruct Hin as [Heq|[Heq|[]]]; inversion Heq; subst;
+      [exact (proj1 Hst)|exact (proj2 Hst)].
+  - exact (Hmid _ _ Hd Hst).
+  - exact (Hmid _ _ Hd (proj2 (proj2 (proj1 Hst)))).
+  - exact (Hmid _ _ Hd (proj2 (proj2 Hst))).
+Qed.
+
 Lemma on_segment_match_out : forall v p q s r,
   Bet (point s.(segment_first)) (point r) (point s.(segment_second)) ->
   on_segment_match v p q s r = true ->
@@ -3870,18 +4014,11 @@ Proof.
   { apply Ascii.eqb_eq in Heq. subst q. apply out_trivial. exact Hp. }
   rewrite premise_found_existsb in Hlink. apply existsb_exists in Hlink. destruct Hlink as [pr [Hin Hc]].
   pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
-  unfold interp_premise in Hpr. unfold ray_link_premise in Hc.
-  destruct pr.(premise_statement); try discriminate;
-    cbn in Hpr, Hc;
-    first
-    [ destruct Hpr as [[Hbet1 _] [Hbet2 _]]; apply orb_true_iff in Hc;
-      destruct Hc as [Hc|Hc];
-      [ eapply on_segment_match_out; [exact Hbet1|exact Hc|exact Hp|exact Hq]
-      | eapply on_segment_match_out; [exact Hbet2|exact Hc|exact Hp|exact Hq] ]
-    | destruct Hpr as [Hbet _];
-      eapply on_segment_match_out; [exact Hbet|exact Hc|exact Hp|exact Hq]
-    | destruct Hpr as [_ Hbet];
-      eapply on_segment_match_out; [exact Hbet|exact Hc|exact Hp|exact Hq] ].
+  unfold interp_premise in Hpr.
+  unfold ray_link_premise, statement_ray_linked, segments_ray_linked in Hc.
+  apply existsb_exists in Hc. destruct Hc as [[t r] [Hseg Hc]]. cbn in Hc.
+  eapply on_segment_match_out;
+    [exact (statement_ray_segments_bet _ _ _ Hpr Hseg)|exact Hc|exact Hp|exact Hq].
 Qed.
 
 (** The premises-yielding definition decides exactly what the plain reading of
@@ -5147,21 +5284,20 @@ Proof.
     first [congruence | apply between_identity in Hbet; congruence].
 Qed.
 
-Lemma strict_ray_linked_distinct : forall premises v p q,
+Lemma strict_ray_linked_distinct : forall decls premises v p q,
+  declarations_well_formed point decls ->
   Forall (interp_premise point) premises ->
-  strict_ray_linked premises v p q = true ->
+  strict_ray_linked decls premises v p q = true ->
   point p <> point v /\ point q <> point v.
 Proof.
-  intros premises v p q Hprem H. unfold strict_ray_linked in H.
+  intros decls premises v p q Hwf Hprem H. unfold strict_ray_linked in H.
   rewrite premise_found_existsb in H. apply existsb_exists in H.
   destruct H as [pr [Hin Hc]].
   pose proof ((proj1 (Forall_forall _ _)) Hprem pr Hin) as Hpr.
-  unfold interp_premise in Hpr. unfold strict_ray_link in Hc.
-  destruct (premise_statement pr); try discriminate; cbn in Hpr.
-  - exact (on_segment_match_strict _ _ _ _ _ Hc Hpr).
-  - destruct Hpr as [Ha Hb]. apply orb_true_iff in Hc.
-    destruct Hc as [Hc|Hc]; [exact (on_segment_match_strict _ _ _ _ _ Hc Ha)
-                            |exact (on_segment_match_strict _ _ _ _ _ Hc Hb)].
+  unfold interp_premise in Hpr. unfold strict_ray_link, segments_ray_linked in Hc.
+  apply existsb_exists in Hc. destruct Hc as [[t r] [Hseg Hc]]. cbn in Hc.
+  exact (on_segment_match_strict _ _ _ _ _ Hc
+           (statement_strict_segments_strict _ _ _ _ Hwf Hpr Hseg)).
 Qed.
 
 (** The points [ray_class] collects are on the ray. *)
@@ -5185,7 +5321,7 @@ Proof.
   assert (Hyv : point y <> point v).
   { apply orb_true_iff in Hd. destruct Hd as [Hd|Hd].
     - exact (not_eq_sym (declared_distinct_sound _ _ _ Hwf Hd)).
-    - exact (proj2 (strict_ray_linked_distinct _ _ _ _ Hprem Hd)). }
+    - exact (proj2 (strict_ray_linked_distinct _ _ _ _ _ Hwf Hprem Hd)). }
   pose proof (Hseen z Hz) as Hzs.
   pose proof (side_distinct _ _ _ Hp Hzs) as Hzv.
   pose proof (l6_6 _ _ _ (ray_linked_out premises v z y Hprem Hl Hzv Hyv)) as Hzy.
@@ -5203,7 +5339,7 @@ Proof.
     + unfold ray_anchored in Hd. apply orb_true_iff in Hd. destruct Hd as [Hd|Hd].
       * exact (not_eq_sym (declared_distinct_sound _ _ _ Hwf Hd)).
       * apply existsb_exists in Hd. destruct Hd as [z [_ Hz]].
-        exact (proj1 (strict_ray_linked_distinct _ _ _ _ Hprem Hz)).
+        exact (proj1 (strict_ray_linked_distinct _ _ _ _ _ Hwf Hprem Hz)).
     + intros y [<-|[]]. now left.
   - destruct Hx as [<-|[]]. now left.
 Qed.

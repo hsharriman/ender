@@ -1,4 +1,4 @@
-import { LSegment, Obj, Vector } from "geometry-object";
+import { Obj, Segment, Vector } from "geometry-object";
 import React from "react";
 import { SVGModes, TickType } from "../types/diagramTypes";
 import { vops } from "../vectorOps";
@@ -8,7 +8,7 @@ import { coordsToSvg, updateStyle } from "./svgUtils";
 
 // this implementation assumes that it is being told what state it should be in for ONE FRAME
 export type SVGSegmentProps = {
-  s: LSegment;
+  s: Segment;
   tick?: { type: TickType; num: number };
 } & BaseSVGProps;
 
@@ -65,8 +65,8 @@ export class SVGGeoSegment extends React.Component<
   };
 
   render() {
-    const start = coordsToSvg(this.props.s.p1, this.props.miniScale);
-    const end = coordsToSvg(this.props.s.p2, this.props.miniScale);
+    const start = coordsToSvg(this.props.s.p1.pt, this.props.miniScale);
+    const end = coordsToSvg(this.props.s.p2.pt, this.props.miniScale);
     const midpt: Vector = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
     let padding = [0, 0];
     // match rotation of text to be parallel with line
@@ -76,8 +76,6 @@ export class SVGGeoSegment extends React.Component<
       unit = vops.smul(unit, -1);
       padding = [0, 0];
     }
-    const norm = vops.smul(vops.rot(unit, 90), 17);
-    const angleDeg = Math.atan2(unit[1], unit[0]) * (180 / Math.PI);
     return (
       <>
         <line

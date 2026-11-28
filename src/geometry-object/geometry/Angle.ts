@@ -1,5 +1,5 @@
 import { AngleProps } from "../types/geometryTypes";
-import { LAngle, Obj } from "../types/types";
+import { Obj, Tick, TickType, Vector } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
@@ -10,7 +10,8 @@ export class Angle extends BaseGeometryObject {
   public readonly center: Point;
   public readonly end: Point;
   public id: string;
-  private parentAngle: Angle | null = null;
+  /** The congruence or parallel marks drawn on it, per frame. */
+  public readonly ticks: Map<string, Tick> = new Map();
   constructor(props: AngleProps) {
     super(Obj.Angle, props);
     this.start = props.start;
@@ -24,38 +25,13 @@ export class Angle extends BaseGeometryObject {
     this.id = this.getId(Obj.Angle, this.label);
   }
 
-  labeled = (): LAngle => {
-    return {
-      start: this.start.pt,
-      center: this.center.pt,
-      end: this.end.pt,
-      label: this.label,
-    };
+  addTick = (frame: string, type: TickType, num: number = 1) => {
+    this.ticks.set(frame, { type, num });
+    return this;
   };
 
   centerStr = () => {
     return this.center.label;
-  };
-
-  // Returns the first name in this angle's names set for which check passes,
-  // or null if none pass. Use this to resolve an angle label to one that a
-  // geometric object (triangle, quad, transversal) actually recognises when
-  // the raw label is an overlapping/containing variant.
-  resolveLabel = (check: (label: string) => boolean): string | null => {
-    for (const name of this.names) {
-      if (check(name)) return name;
-    }
-    return null;
-  };
-
-  // Returns true if pt's label appears as the start or end (not center) in
-  // any name variant. Handles intermediate-point angle references like
-  // a_EGM where M is on ray GD: addNames populates overlap-merged variants
-  // into this.names during premises setup so M appears at position 0 or 2.
-  angleRayContains = (pt: Point): boolean => {
-    return Array.from(this.names).some(
-      (name) => name[0] === pt.label || name[2] === pt.label,
-    );
   };
 
   contains = (obj: Point | Segment) => {
@@ -72,15 +48,6 @@ export class Angle extends BaseGeometryObject {
 
   centerEquals = (pt: Point) => {
     return this.center.equals(pt);
-  };
-
-  addParentAngle = (a: Angle) => {
-    this.parentAngle = a;
-    return this;
-  };
-
-  getParentAngle = () => {
-    return this.parentAngle;
   };
 
   addNames = (start: string, end: string) => {
@@ -104,12 +71,9 @@ export class Angle extends BaseGeometryObject {
     };
   };
 
-  getPts = () => [this.start, this.center, this.end];
-
-  endpointsEqual = (other: Angle) => {
-    return (
-      (this.start.equals(other.start) && this.end.equals(other.end)) ||
-      (this.start.equals(other.end) && this.end.equals(other.start))
-    );
-  };
+  getPoints = (): [Vector, Vector, Vector] => [
+    this.start.pt,
+    this.center.pt,
+    this.end.pt,
+  ];
 }

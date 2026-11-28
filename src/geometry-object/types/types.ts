@@ -1,26 +1,5 @@
 // -------- GEOMETRY TYPES --------
 export type Vector = [number, number];
-export type LPoint = { pt: Vector; label: string };
-export type LSegment = { p1: Vector; p2: Vector; label: string };
-export type LAngle = {
-  center: Vector;
-  start: Vector;
-  end: Vector;
-  label: string;
-};
-export type LCircle = {
-  center: Vector;
-  radius: Vector;
-  label: string;
-};
-
-export type LArc = {
-  center: Vector;
-  start: Vector;
-  end: Vector;
-  opposite?: Vector;
-  label: string;
-};
 
 export enum Obj {
   Point = "point",
@@ -54,4 +33,34 @@ export interface ParseObj {
     // as a nested call.
     | Obj.Text;
   v: string;
+}
+
+// -------- DISPLAY STATE --------
+// Every object records, per frame of a proof walkthrough, how it is drawn.
+
+export type TickType =
+  | Obj.ParallelTick
+  | Obj.EqualLengthTick
+  | Obj.EqualAngleTick
+  | Obj.RightTick
+  | Obj.SimilarTick
+  | Obj.AngleHighlight;
+
+export type Tick = { type: TickType; num: number };
+
+export enum SVGModes {
+  Hidden = "hidden",
+  Unfocused = "unfocused",
+  Default = "default",
+  ReliesOn = "relieson",
+  Derived = "derived",
+  Inconsistent = "inconsistent",
+  /** A fact the step needed that nothing before it establishes. */
+  Unestablished = "unestablished",
+}
+
+export enum ShowPoint {
+  Always = "always",
+  Adaptive = "adaptive",
+  Hide = "hide",
 }

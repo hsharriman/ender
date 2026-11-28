@@ -1,5 +1,5 @@
 import { CircleProps } from "../types/geometryTypes";
-import { LCircle, Obj } from "../types/types";
+import { Obj } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
 
@@ -15,14 +15,6 @@ export class Circle extends BaseGeometryObject {
     this.names = new Set([this.label]);
     this.id = this.getId(Obj.Circle, this.label);
   }
-
-  labeled = (): LCircle => {
-    return {
-      center: this.center.pt,
-      radius: this.radius.pt,
-      label: this.label,
-    };
-  };
 
   addPt = (pt: Point) => {
     this.names.add(`${this.center.label}${pt.label}`);

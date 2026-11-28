@@ -162,6 +162,7 @@ with `details.line`.
 | `missing_points_line` | 3    | The file has no `pt:` line.                                                                                                                                                 |
 | `missing_steps_line`  | 3    | The file has a `pt:` line but no `steps:` line after it.                                                                                                                    |
 | `unrecognized_line`   | 3    | A header line is not a declaration (`pt:`, `seg:`, `ang:`, `tri:`, `quad:`, `circ:`, `arc:`), a premise (`[g_n]`, `[d_n]`), or the goal (`-> ...`).                         |
+| `premise_label_mismatch` | 3 | A premise has the wrong kind of label: `on_line`, `transversal`, `intersect_seg`, `circ_order`, and `on_circle` are diagram premises (`[d_n]`), and every other statement is a given (`[g_n]`). `details.expected` is the prefix it needs, `d_` or `g_`. |
 | `missing_goal`        | 3    | No header line states the goal.                                                                                                                                             |
 | `multiple_goals`      | 3    | More than one header line states a goal.                                                                                                                                    |
 | `parser_error`        | 3    | Every line reads and there is exactly one goal, but the header as a whole still is not a problem the audited grammar accepts. The checker has nothing more specific to say. |

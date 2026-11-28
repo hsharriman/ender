@@ -1,7 +1,6 @@
 import { presentationToProofObj } from "checker/verified/presentationAdapter";
 import { checkVerifiedReport } from "checker/verified/wasmLoader";
 import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
-import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import {
   diagramAspectFor,
   interactiveLayoutFromProofObj,
@@ -62,13 +61,9 @@ const example = (file: string, source: string): ExampleProof => ({
 const buildTile = async ({ source }: ExampleProof): Promise<ExampleTile> => {
   const report = await checkVerifiedReport(source);
   if (!report.presentation) throw new Error("proof did not parse");
-  const proof = presentationToProofObj(report.presentation);
+  const proof = presentationToProofObj(report.presentation, report.rays);
   const ctx = presentationContent(proof);
-  const layout = interactiveLayoutFromProofObj(
-    proof,
-    ctx,
-    seedBaseContentFromPremises(proof, ctx),
-  );
+  const layout = interactiveLayoutFromProofObj(proof, ctx);
   const givens = layout.steps.filter((s) => isGiven(s.reason)).length;
   return {
     title: layout.title,

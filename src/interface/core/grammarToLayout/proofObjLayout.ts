@@ -3,7 +3,6 @@ import { Obj, ParseObj, ProofContent } from "geometry-object";
 import React from "react";
 import { reasonFromFunction } from "../../theorems/reasons";
 import { makeStepMeta } from "../../theorems/utils";
-import { DiagramContent } from "../builder/DiagramContent";
 import { AspectRatio } from "../diagramSvg/svgTypes";
 import { Transversal } from "../reasons/Transversal";
 import { VerticalAngles } from "../reasons/VerticalAngles";
@@ -11,7 +10,7 @@ import type { StepHint } from "../reportAnnotations";
 import { SVGModes } from "../types/diagramTypes";
 import { LayoutProps } from "../types/layoutTypes";
 import { StepMeta } from "../types/stepTypes";
-import { seedBaseContentFromPremises } from "./proofObjBaseContent";
+import { presentationContent } from "./presentationContent";
 import {
   applyPremisesObjects,
   applyStmtAdditions,
@@ -36,7 +35,6 @@ export const diagramAspectFor = (proof: ProofObj): AspectRatio => {
 export const interactiveLayoutFromProofObj = (
   proof: ProofObj,
   ctx: ProofContent,
-  diagramCtx: DiagramContent,
   incorrectSteps?: Set<string>,
   /** Per step number, the 0-based reason arguments that cite the wrong kind of fact. */
   wrongDependencies?: Map<string, Set<number>>,
@@ -63,7 +61,7 @@ export const interactiveLayoutFromProofObj = (
       ),
       proveStmt,
     ],
-    diagramCtx,
+    ctx,
   );
   const applyStmtObjects = applyStmtAdditions(tickTracker);
 
@@ -224,7 +222,8 @@ export const interactiveLayoutFromProofObj = (
   return {
     name: proof.title ?? "Imported proof",
     title: proof.title ?? "Imported proof",
-    baseContent: () => seedBaseContentFromPremises(proof, ctx),
+    // A fresh figure per layer, so each marks its own frames.
+    baseContent: () => presentationContent(proof),
     givens: givensMeta,
     proves: provesMeta,
     steps: stepMetas,

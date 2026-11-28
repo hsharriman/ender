@@ -1,5 +1,5 @@
+import { ProofContent } from "geometry-object";
 import { Stmt } from "checker/types/checkerTypes";
-import { DiagramContent } from "../builder/DiagramContent";
 import { AngleBisector } from "../reasons/AngleBisector";
 import { Complementary } from "../reasons/Complementary";
 import { CongruentTriangles } from "../reasons/CongruentTriangles";
@@ -40,14 +40,14 @@ const assignTick = (
   map.set(a, tick);
   map.set(b, tick);
 };
-const canonSeg = (ctx: DiagramContent, l: string) =>
-  ctx.getSegment(l)?.obj.label ?? l;
-const canonAng = (ctx: DiagramContent, l: string) =>
-  ctx.getAngle(l)?.obj.label ?? l;
+const canonSeg = (ctx: ProofContent, l: string) =>
+  ctx.getSegment(l)?.label ?? l;
+const canonAng = (ctx: ProofContent, l: string) =>
+  ctx.getAngle(l)?.label ?? l;
 
 export const buildCongruenceTickTracker = (
   stmts: Array<Stmt | undefined>,
-  ctx: DiagramContent,
+  ctx: ProofContent,
 ): CongruenceTickTracker => {
   const segTickByObj = new Map<string, number>();
   const angTickByObj = new Map<string, number>();
@@ -84,7 +84,7 @@ export const buildCongruenceTickTracker = (
 export const applyStmtAdditions =
   (tracker: CongruenceTickTracker) =>
   (
-    ctx: DiagramContent,
+    ctx: ProofContent,
     frame: string,
     mode: SVGModes,
     stmt?: Stmt,
@@ -260,7 +260,7 @@ export const applyStmtAdditions =
     // A radius names its outer end; the segment runs from the centre to it.
     if (stmt.function === "radius" && stmt.arguments.length === 2) {
       const [circle, point] = stmt.arguments.map((arg) => arg.v);
-      const center = ctx.getCircle(circle)?.obj.center.label ?? "";
+      const center = ctx.getCircle(circle)?.center.label ?? "";
       SegmentCircleClassification.additions(
         { ctx, frame, mode },
         center + point,
@@ -312,7 +312,7 @@ export const applyStmtAdditions =
   };
 
 export const applyPremisesObjects = (
-  ctx: DiagramContent,
+  ctx: ProofContent,
   frame: string,
   mode: SVGModes,
 ) => {

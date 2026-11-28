@@ -1,5 +1,4 @@
-import { Obj } from "geometry-object";
-import { DiagramContent } from "../builder/DiagramContent";
+import { Obj, ProofContent } from "geometry-object";
 import { SVGModes } from "../types/diagramTypes";
 import {
   StepFocusProps,
@@ -19,7 +18,7 @@ export interface ASAProps {
   triangles: [string, string];
 }
 export class ASA {
-  static text = (ctx: DiagramContent, triangles: [string, string]) => {
+  static text = (ctx: ProofContent, triangles: [string, string]) => {
     return EqualTriangles.text(triangles);
   };
 

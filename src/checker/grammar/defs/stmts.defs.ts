@@ -7,6 +7,9 @@ const circle = (c: string) => `Circle ${c}`;
 const arc = (a: string) => `Arc ${a}`;
 const point_list = (min: number) => `Points (at least ${min})`;
 
+// A premise's label says its kind: a statement marked isDiagramPremise is
+// written as a diagram premise, [d_n]; every other premise is a given, [g_n].
+// The checker rejects a problem whose premise has the wrong kind of label.
 export const STMTS_DEFS = {
   statements: {
     // on_line(AB, P): P lies strictly inside AB, never at A or B.
@@ -14,7 +17,7 @@ export const STMTS_DEFS = {
       name: "on_line",
       parameters: [segment("s"), point("p")],
       isPremisesOnly: true,
-      isDiagramOnly: true,
+      isDiagramPremise: true,
     },
     transversal: {
       name: "transversal",
@@ -29,14 +32,14 @@ export const STMTS_DEFS = {
         point("i2"),
       ],
       isPremisesOnly: true,
-      isDiagramOnly: true,
+      isDiagramPremise: true,
       allowDupeArgs: true,
     },
     intersect_seg: {
       name: "intersect_seg",
       parameters: [segment("s1"), segment("s2"), point("p")],
       isPremisesOnly: true,
-      isDiagramOnly: true,
+      isDiagramPremise: true,
     },
     trapezoid_premise: {
       name: "trapezoid_premise",
@@ -197,13 +200,13 @@ export const STMTS_DEFS = {
       name: "circ_order",
       parameters: [circle("c"), point_list(3)],
       isPremisesOnly: true,
-      isDiagramOnly: true,
+      isDiagramPremise: true,
     },
     on_circle: {
       name: "on_circle",
       parameters: [circle("c"), point("p")],
       isPremisesOnly: true,
-      isDiagramOnly: true,
+      isDiagramPremise: true,
     },
     // The circle's centre lies on the line through the segment.
     center_on_line: {
