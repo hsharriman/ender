@@ -1,4 +1,4 @@
-import { DiagramContent } from "../builder/DiagramContent";
+import { ProofContent } from "geometry-object";
 import { angleStr, segmentStr } from "../geometryText";
 import { SVGModes } from "../types/diagramTypes";
 import { StepFocusProps, StepProps } from "../types/stepTypes";
@@ -32,10 +32,10 @@ export class AngleBisector {
 }
 
 const angleSubstrs = (
-  ctx: DiagramContent,
+  ctx: ProofContent,
   a: string,
   s: string,
 ): [string, string] => {
   const ang = ctx.getAngle(a);
-  return [`${ang.obj.start}${s}`, `${ang.obj.end}${s}`];
+  return [`${ang.start.label}${s}`, `${ang.end.label}${s}`];
 };

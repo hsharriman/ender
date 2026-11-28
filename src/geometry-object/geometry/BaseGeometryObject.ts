@@ -1,11 +1,12 @@
 import { BaseGeometryProps } from "../types/geometryTypes";
-import { Obj } from "../types/types";
+import { Obj, SVGModes } from "../types/types";
 
 export class BaseGeometryObject {
   public readonly tag: Obj;
   public names: Set<string> = new Set();
   public label: string = "";
   public activeIdx: number;
+  public readonly modes: Map<string, SVGModes> = new Map();
 
   constructor(tag: Obj, props: BaseGeometryProps) {
     this.tag = tag;
@@ -41,6 +42,11 @@ export class BaseGeometryObject {
     }
     let id = `${objectType}.${label}`;
     return tickNumber ? `${id}.${tickNumber}` : id;
+  };
+
+  mode = (frame: string, mode: SVGModes) => {
+    this.modes.set(frame, mode);
+    return this;
   };
 
   equals = (other: BaseGeometryObject) => {

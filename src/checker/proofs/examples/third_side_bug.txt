@@ -1,7 +1,7 @@
 // fail on step 4
 title: "Unconstrained third side"
 premises:
-A (1, 3, bl), B (5, 3, br), C (5, 7, t), D (5, 1, bl), E (10, 1, br), F (10, 6, tr)
+pt: A (1, 3, bl), B (5, 3, br), C (5, 7, t), D (5, 1, bl), E (10, 1, br), F (10, 6, tr)
 tri: t_ABC t_DEF
 [g_1] con_seg(BC, DE)
 [g_2] con_seg(CA, DE)

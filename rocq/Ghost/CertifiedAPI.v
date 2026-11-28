@@ -34,6 +34,11 @@ Definition sessionAccepts := CertifiedChecker.sessionAccepts.
 Definition sessionNeeds := CertifiedChecker.sessionNeeds.
 Definition sessionMatches := CertifiedChecker.sessionMatches.
 
+(** Display data only, outside the audited contract: which points name the
+    same ray from a vertex, so external code draws one angle for every
+    spelling the checker treats as the same.  The verdict never reads it. *)
+Definition rayRepresentatives := CompleteChecker.ray_representatives.
+
 (** Named proof bindings make it easy to inspect assumptions in CI or with
     [Print Assumptions], without knowing the implementation module layout. *)
 Definition parser_sound := CertifiedChecker.parser_sound.

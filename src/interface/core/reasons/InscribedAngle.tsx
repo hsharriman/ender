@@ -1,5 +1,4 @@
 import { Obj } from "geometry-object";
-import { Arc } from "geometry-object/geometry/Arc";
 import { angleStr, circleStr } from "../geometryText";
 import { StepFocusProps } from "../types/stepTypes";
 
@@ -14,17 +13,10 @@ export class InscribedAngle {
       .mode(props.frame, props.mode);
     // The arc the angle cuts off, on the far side of the circle from its
     // vertex.
-    const [start, vertex, end] = [...a].map((p) => props.ctx.getPoint(p)?.obj);
+    const [start, vertex, end] = [...a].map((p) => props.ctx.getPoint(p));
     if (!circle || !start || !vertex || !end) return;
     props.ctx
-      .addArc(
-        new Arc({
-          center: circle.obj.center,
-          start,
-          end,
-          opposite: vertex,
-        }),
-      )
+      .addArc({ center: circle.center, start, end, opposite: vertex })
       .mode(props.frame, props.mode);
   };
   static text = (c: string, a: string) => (isActive: boolean) => {

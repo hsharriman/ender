@@ -282,7 +282,7 @@ export const diagnoseSteps = (
   report: VerifiedCheckReport,
 ): Diagnoses => {
   if (!report.presentation) return new Map();
-  const proof = presentationToProofObj(report.presentation);
+  const proof = presentationToProofObj(report.presentation, report.rays);
   const matches = cachedMatches(session);
   const objects = vocabulary(proof);
   const written = new Map(

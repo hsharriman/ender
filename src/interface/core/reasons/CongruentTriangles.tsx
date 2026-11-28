@@ -29,10 +29,10 @@ export class CongruentTriangles {
     ctx
       .getTriangle(labels[0])
       ?.setCongruent(frame)
-      .labelMode(frame, props.mode);
+      .mode(frame, props.mode);
     const t2 = ctx.getTriangle(labels[1]);
     if (!t2) return;
     t2.setRotatePattern(true);
-    t2.setCongruent(frame).labelMode(frame, props.mode);
+    t2.setCongruent(frame).mode(frame, props.mode);
   };
 }

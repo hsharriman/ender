@@ -4,6 +4,7 @@ import { ProofObj, Stmt } from "../types/checkerTypes";
 import {
   DisplayDeclaration,
   PresentationFile,
+  RayRepresentative,
   SurfaceCall,
 } from "./presentationTypes";
 
@@ -34,7 +35,14 @@ const declarationObjects = (
     .filter((declaration) => declaration.kind === kind)
     .flatMap((declaration) => declaration.objects.map(parseObject));
 
-export const presentationToProofObj = (file: PresentationFile): ProofObj => ({
+/**
+ * The layout model of a parsed proof. Pass the report's `rays` so the figure
+ * draws one angle for every spelling the checker treats as the same.
+ */
+export const presentationToProofObj = (
+  file: PresentationFile,
+  rays: RayRepresentative[] = [],
+): ProofObj => ({
   title: file.title,
   premises: {
     points: file.points.map((point) => ({
@@ -74,4 +82,5 @@ export const presentationToProofObj = (file: PresentationFile): ProofObj => ({
     })),
   ],
   goal: file.goal ? stmtOf(file.goal) : undefined,
+  rays: new Map(rays.map((r) => [`${r.vertex}${r.point}`, r.representative])),
 });

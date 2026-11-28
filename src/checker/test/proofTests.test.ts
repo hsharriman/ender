@@ -26,7 +26,6 @@ import {
   wrongDependencies,
 } from "../../interface/core/reportAnnotations";
 import { interactiveLayoutFromProofObj } from "../../interface/core/grammarToLayout/proofObjLayout";
-import { seedBaseContentFromPremises } from "../../interface/core/grammarToLayout/proofObjBaseContent";
 import { VerifiedCheckOutput } from "../verified/presentationTypes";
 import { SVGModes } from "../../interface/core/types/diagramTypes";
 
@@ -529,7 +528,7 @@ steps:
     const report = await checkVerifiedReportNode(
       readFileSync(join(PROOFS_DIR, "examples/s1c1.txt"), "utf8"),
     );
-    const proof = presentationToProofObj(report.presentation!);
+    const proof = presentationToProofObj(report.presentation!, report.rays);
     attachDiagramDependencies(proof, report);
     const deps = proof.steps
       .filter((step) => step.diagramDeps)
@@ -541,6 +540,23 @@ steps:
       ["3", ["d_1"]],
       ["6", ["d_2"]],
     ]);
+  });
+
+  test("draws one angle for every spelling the checker treats as the same", async () => {
+    // [d_1] on_line(PR, T): from P, T and R are on one ray.
+    const report = await checkVerifiedReportNode(
+      readFileSync(join(PROOFS_DIR, "examples/rhombusOutside.txt"), "utf8"),
+    );
+    const proof = presentationToProofObj(report.presentation!, report.rays);
+    const ctx = presentationContent(proof);
+    expect(ctx.getAngle("QPT")).toBeDefined();
+    expect(ctx.getAngle("QPR")).toBe(ctx.getAngle("QPT"));
+    expect(ctx.getAngle("RPS")).toBe(ctx.getAngle("TPS"));
+    // Without the checker's rays, the spellings stay apart.
+    const unlinked = presentationContent(
+      presentationToProofObj(report.presentation!),
+    );
+    expect(unlinked.getAngle("QPR")).not.toBe(unlinked.getAngle("QPT"));
   });
 
   test("draws the lines a premise implies", async () => {
@@ -597,12 +613,11 @@ steps:
 
     const wrong = wrongDependencies(report);
     expect(wrong).toEqual(new Map([["4", new Set([1])]]));
-    const proof = presentationToProofObj(report.presentation!);
+    const proof = presentationToProofObj(report.presentation!, report.rays);
     const ctx = presentationContent(proof);
     const layout = interactiveLayoutFromProofObj(
       proof,
       ctx,
-      seedBaseContentFromPremises(proof, ctx),
       new Set(["4"]),
       wrong,
     );
@@ -903,13 +918,12 @@ steps:
 
       // In step 5's frame both concluded angles are red and ticked; the
       // expected a_MXW, which stays in the issue details, is not drawn.
-      const proof = presentationToProofObj(report.presentation!);
+      const proof = presentationToProofObj(report.presentation!, report.rays);
       const content = presentationContent(proof);
-      const ctx = seedBaseContentFromPremises(proof, content);
+      const ctx = presentationContent(proof);
       const layout = interactiveLayoutFromProofObj(
         proof,
         content,
-        ctx,
         new Set(["5"]),
         wrongDependencies(report, diagnoses),
         hints,
@@ -1055,13 +1069,12 @@ steps:
       });
       expect(squiggled("[03]")).toEqual(["con_seg"]);
 
-      const proof = presentationToProofObj(report.presentation!);
+      const proof = presentationToProofObj(report.presentation!, report.rays);
       const content = presentationContent(proof);
-      const ctx = seedBaseContentFromPremises(proof, content);
+      const ctx = presentationContent(proof);
       const layout = interactiveLayoutFromProofObj(
         proof,
         content,
-        ctx,
         new Set(["3"]),
         wrongDependencies(report, diagnoses),
         hints,

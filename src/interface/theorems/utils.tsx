@@ -1,4 +1,4 @@
-import { DiagramContent } from "../core/builder/DiagramContent";
+import { ProofContent } from "geometry-object";
 import { SVGModes } from "../core/types/diagramTypes";
 import { StepFocusProps, StepMeta, StepProps } from "../core/types/stepTypes";
 import { reasonFromFunction, ReasonVis } from "./reasons";
@@ -26,7 +26,7 @@ export const makeStepMeta = (meta: Partial<StepMeta>): StepMeta => {
       meta.prevStep.unfocused(props);
     }
   };
-  const diagram = (ctx: DiagramContent, frame: string, prevStep?: StepMeta) => {
+  const diagram = (ctx: ProofContent, frame: string, prevStep?: StepMeta) => {
     const additionProps = {
       ctx,
       frame,

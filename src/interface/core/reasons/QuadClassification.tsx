@@ -15,7 +15,7 @@ export class QuadClassification {
     const quad = props.ctx.getQuadrilateral(q);
     if (!quad) return;
     quad.s.forEach((sb) =>
-      props.ctx.getSegment(sb.obj.label)?.mode(props.frame, props.mode),
+      props.ctx.getSegment(sb.label)?.mode(props.frame, props.mode),
     );
   };
   static highlight = (props: StepProps, q: string) => {
@@ -23,7 +23,7 @@ export class QuadClassification {
     const quad = ctx.getQuadrilateral(q);
     if (!quad) return;
     quad.s.forEach((sb) =>
-      ctx.getSegment(sb.obj.label)?.mode(frame, SVGModes.ReliesOn),
+      ctx.getSegment(sb.label)?.mode(frame, SVGModes.ReliesOn),
     );
   };
 }

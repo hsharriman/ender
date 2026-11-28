@@ -16,6 +16,11 @@ export class Triangle extends BaseGeometryObject {
   a: [Angle, Angle, Angle];
   p: [Point, Point, Point];
   readonly id: string;
+  /** Frames that mark it congruent or similar to another triangle. */
+  readonly congruent: Set<string> = new Set();
+  readonly similar: Set<string> = new Set();
+  /** Draw its congruence pattern rotated, to tell it from its partner. */
+  rotatePattern = false;
 
   constructor(props: TriangleProps) {
     super(Obj.Triangle, props);
@@ -29,6 +34,21 @@ export class Triangle extends BaseGeometryObject {
 
     this.id = this.getId(Obj.Triangle, this.label);
   }
+
+  setCongruent = (frame: string) => {
+    this.congruent.add(frame);
+    return this;
+  };
+
+  setSimilar = (frame: string) => {
+    this.similar.add(frame);
+    return this;
+  };
+
+  setRotatePattern = (rotate: boolean) => {
+    this.rotatePattern = rotate;
+    return this;
+  };
 
   private buildSegments = (
     pts: Point[],

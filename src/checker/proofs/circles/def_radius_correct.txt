@@ -3,6 +3,7 @@ title: "Test: def_radius (correct - all radii are congruent)"
 premises:
 pt: O (5, 5, c), A (5, 9, t), B (9, 5, r)
 circ: c_OA
+seg: OA OB
 [g_1] radius(c_OA, B)
 -> con_seg(OB, OA)
 

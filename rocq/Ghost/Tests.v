@@ -1525,6 +1525,63 @@ Example renamed_supplements_accepts :
   complete_checker renamed_supplements_source = true.
 Proof. vm_compute. reflexivity. Qed.
 
+(** A [transversal] places each crossing strictly inside the transversal:
+    from E, the crossing F and the far end H are on one ray, so [a_AEF] and
+    [a_AEH] are one angle. *)
+Definition renamed_transversal_source := transitive_header "ang: a_IJK a_JKL
+"
+  "[d_1] transversal(A,B,G,E,C,D,H,F)
+[g_1] con_ang(a_IJK,a_AEF)
+[g_2] con_ang(a_AEH,a_JKL)
+"
+  "con_ang(a_IJK,a_JKL)"
+  "[01] given(g_1) -> con_ang(a_IJK,a_AEF)
+[02] given(g_2) -> con_ang(a_AEH,a_JKL)
+[03] con_ang_transitive(1,2) -> con_ang(a_IJK,a_JKL)".
+
+(** A midpoint of a segment declared nondegenerate is strictly inside it. *)
+Definition renamed_midpoint_source (declarations : string) :=
+  transitive_header (declarations ++ "ang: a_FGH a_IJK
+")
+  "[d_1] midpt(BD,E)
+[g_1] con_ang(a_FGH,a_ABD)
+[g_2] con_ang(a_ABE,a_IJK)
+"
+  "con_ang(a_FGH,a_IJK)"
+  "[01] given(g_1) -> con_ang(a_FGH,a_ABD)
+[02] given(g_2) -> con_ang(a_ABE,a_IJK)
+[03] con_ang_transitive(1,2) -> con_ang(a_FGH,a_IJK)".
+
+(** A bisector only meets its own line, so E may lie outside BD: naming a
+    ray from B through E needs an [on_line]. *)
+Definition renamed_bisector_line_source := transitive_header "seg: BA BD BE CF
+ang: a_FGH a_IJK
+"
+  "[d_1] seg_bisect(BD,CF,E)
+[g_1] con_ang(a_FGH,a_ABD)
+[g_2] con_ang(a_ABE,a_IJK)
+"
+  "con_ang(a_FGH,a_IJK)"
+  "[01] given(g_1) -> con_ang(a_FGH,a_ABD)
+[02] given(g_2) -> con_ang(a_ABE,a_IJK)
+[03] con_ang_transitive(1,2) -> con_ang(a_FGH,a_IJK)".
+
+Example renamed_transversal_accepts :
+  complete_checker renamed_transversal_source = true.
+Proof. vm_compute. reflexivity. Qed.
+Example renamed_midpoint_declared_accepts :
+  complete_checker (renamed_midpoint_source "seg: BA BD
+") = true.
+Proof. vm_compute. reflexivity. Qed.
+(** The midpoint of an undeclared segment may be its one point. *)
+Example renamed_midpoint_undeclared_rejects :
+  complete_checker (renamed_midpoint_source "seg: BA
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example renamed_bisector_line_rejects :
+  complete_checker renamed_bisector_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
 (** A transversal perpendicular to one parallel is perpendicular to the
     other at the other crossing. *)
 Definition perp_transversal_header (goal step : string) : string :=

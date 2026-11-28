@@ -5,7 +5,7 @@ import { Point } from "../geometry/Point";
 import { Quadrilateral } from "../geometry/Quadrilateral";
 import { Segment } from "../geometry/Segment";
 import { Triangle } from "../geometry/Triangle";
-import { Obj, Vector } from "./types";
+import { Obj, ShowPoint, Vector } from "./types";
 
 export interface BaseGeometryProps {
   activeIdx?: number; // follows the state of the app
@@ -15,6 +15,8 @@ export interface BaseGeometryProps {
 export type PointProps = {
   pt: Vector;
   label: string;
+  offset?: Vector;
+  showPoint?: ShowPoint;
 } & BaseGeometryProps;
 
 export type SegmentProps = {

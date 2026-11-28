@@ -1,15 +1,20 @@
 import { ProofObj, Stmt } from "checker/types/checkerTypes";
-import { Obj, ParseObj, ProofContent } from "geometry-object";
+import { Obj, ParseObj, ProofContent, ShowPoint } from "geometry-object";
+import { resolvePointLabelOffset } from "./pointLabelOffset";
 
 /**
  * Construct the geometric objects needed to draw a parsed presentation: the
  * declared objects, the segments and points that premises such as
  * `intersect_seg` or `transversal` imply, and the angles those segments make.
  * This function deliberately performs no proof checking: acceptance and all
- * diagnostics come from the extracted Rocq checker.
+ * diagnostics come from the extracted Rocq checker, and which spellings name
+ * the same angle comes from its ray representatives (`proof.rays`).
+ *
+ * Each call builds a fresh figure with nothing marked in any frame, so each
+ * layer of a walkthrough calls it for its own copy.
  */
 export const presentationContent = (proof: ProofObj): ProofContent => {
-  const ctx = new ProofContent();
+  const ctx = new ProofContent(proof.rays);
   const definedPoints = new Set(proof.premises.points.map((point) => point.v));
   const pointsDefined = (statement: Stmt): boolean =>
     statement.arguments.every(
@@ -19,7 +24,12 @@ export const presentationContent = (proof: ProofObj): ProofContent => {
     );
 
   proof.premises.points.forEach((point) =>
-    ctx.addPoint({ label: point.v, pt: point.pt }),
+    ctx.addPoint({
+      label: point.v,
+      pt: point.pt,
+      offset: resolvePointLabelOffset(point.offsetCode),
+      showPoint: ShowPoint.Hide,
+    }),
   );
   // Triangles, quadrilaterals, and circles create their sides and angles, so
   // proofs need not declare those segments separately.
@@ -46,7 +56,10 @@ export const presentationContent = (proof: ProofObj): ProofContent => {
   addAnglesAtSharedPoints(ctx, proof);
   premiseStatements.forEach((statement) => addDependentObjects(ctx, statement));
 
-  // Steps and the goal may name objects no premise implies.
+  // Steps and the goal draw nothing new: the figure is what the premises
+  // make. They may name an angle, triangle, or quadrilateral the premises
+  // only imply, so a step can mark it, but only when every side is already
+  // drawn. A wrong conclusion naming a line the figure lacks adds nothing.
   proof.steps
     .filter((step) => step.type === "proof")
     .map((step) => step.statement)
@@ -54,10 +67,9 @@ export const presentationContent = (proof: ProofObj): ProofContent => {
     .filter((statement): statement is Stmt => !!statement)
     .filter(pointsDefined)
     .forEach((statement) =>
-      statement.arguments.forEach((arg) => addObject(ctx, arg)),
+      statement.arguments.forEach((arg) => addStepObject(ctx, arg)),
     );
 
-  ctx.checkAngleOverlaps();
   return ctx;
 };
 
@@ -66,6 +78,31 @@ const addAngleWithSides = (ctx: ProofContent, name: string) => {
   ctx.addSegmentFromStr(name.slice(0, 2));
   ctx.addSegmentFromStr(name.slice(1, 3));
   ctx.addAngleFromStr(name);
+};
+
+/** The sides an angle, triangle, or quadrilateral is drawn with. */
+const sidesOf = (arg: ParseObj): string[] => {
+  const v = arg.v;
+  switch (arg.type) {
+    case Obj.Angle:
+      return v.length === 3 ? [v.slice(0, 2), v.slice(1, 3)] : [];
+    case Obj.Triangle:
+      return [`${v[0]}${v[1]}`, `${v[1]}${v[2]}`, `${v[0]}${v[2]}`];
+    case Obj.Quadrilateral:
+      return [0, 1, 2, 3].map((i) => `${v[i]}${v[(i + 1) % 4]}`);
+    default:
+      return [];
+  }
+};
+
+/** An object a step names, added only if the figure already draws its sides. */
+const addStepObject = (ctx: ProofContent, arg: ParseObj) => {
+  const sides = sidesOf(arg);
+  if (sides.length === 0) return;
+  if (!sides.every((side) => ctx.ctx.segments.some((s) => s.matches(side))))
+    return;
+  if (arg.type === Obj.Angle) ctx.addAngleFromStr(arg.v);
+  else addObject(ctx, arg);
 };
 
 const addObject = (ctx: ProofContent, arg: ParseObj) => {
@@ -245,13 +282,13 @@ const perpPremise = (ctx: ProofContent, args: ParseObj[]) => {
   const s2 = ctx.addSegmentFromStr(seg2.v);
   const p = ctx.getPoint(point.v);
   // An endpoint of one segment meets the other in a T: split the other at it.
-  const split = (onto: typeof s1, label: string) => {
-    label.split("").forEach((end) => {
-      onto.addSubSegment(ctx.addSegmentFromStr(`${point.v}${end}`));
-    });
-  };
-  if (s1.contains(p)) split(s2, seg2.v);
-  else if (s2.contains(p)) split(s1, seg1.v);
+  const split = (label: string) =>
+    label
+      .split("")
+      .filter((end) => end !== point.v)
+      .forEach((end) => ctx.addSegmentFromStr(`${point.v}${end}`));
+  if (s1.contains(p)) split(seg2.v);
+  else if (s2.contains(p)) split(seg1.v);
   else intersectSeg(ctx, args);
 };
 
@@ -269,20 +306,19 @@ const onLine = (ctx: ProofContent, args: ParseObj[]) => {
   const [segment, point] = args;
   const s = ctx.addSegmentFromStr(segment.v);
   const p = ctx.getPoint(point.v);
-  ctx.addSegmentFromStr(`${s.p1.label}${p.label}`).addParentSegment(s);
-  ctx.addSegmentFromStr(`${p.label}${s.p2.label}`).addParentSegment(s);
+  ctx.addSegmentFromStr(`${s.p1.label}${p.label}`);
+  ctx.addSegmentFromStr(`${p.label}${s.p2.label}`);
 };
 
 const intersectSeg = (ctx: ProofContent, args: ParseObj[]) => {
   const [seg1, seg2, point] = args;
-  const crossing = ctx.getPoint(point.v);
+  // A crossing at a segment's end leaves that end unsplit.
   [seg1, seg2].forEach((segment) => {
-    const s = ctx.addSegmentFromStr(segment.v);
-    segment.v.split("").forEach((end) => {
-      const sub = ctx.addSegmentFromStr(`${crossing.label}${end}`);
-      s.addSubSegment(sub);
-      sub.addParentSegment(s);
-    });
+    ctx.addSegmentFromStr(segment.v);
+    segment.v
+      .split("")
+      .filter((end) => end !== point.v)
+      .forEach((end) => ctx.addSegmentFromStr(`${point.v}${end}`));
   });
 };
 
@@ -295,7 +331,7 @@ const transversal = (ctx: ProofContent, args: ParseObj[]) => {
   const line = `${t1}${t2}`;
   ctx.addSegmentFromStr(`${a}${b}`);
   ctx.addSegmentFromStr(`${c}${d}`);
-  const t = ctx.addSegmentFromStr(line);
+  ctx.addSegmentFromStr(line);
   // Split each line at a crossing strictly inside it. used for initializing segments
   const split = (segment: string, i: string) => {
     if (!segment.includes(i)) onLine(ctx, [segmentObj(segment), pointObj(i)]);
@@ -307,15 +343,15 @@ const transversal = (ctx: ProofContent, args: ParseObj[]) => {
     [line, i2],
   ].forEach(([segment, i]) => split(segment, i));
   if (new Set([i1, i2, t1, t2]).size > 2)
-    ctx.addSegmentFromStr(`${i1}${i2}`).addParentSegment(t);
+    ctx.addSegmentFromStr(`${i1}${i2}`);
 };
 
 const midpt = (ctx: ProofContent, args: ParseObj[]) => {
   const [segment, point] = args;
   const s = ctx.addSegmentFromStr(segment.v);
   const p = ctx.getPoint(point.v);
-  ctx.addSegment({ p1: p, p2: s.p2 }).addParentSegment(s);
-  ctx.addSegment({ p1: s.p1, p2: p }).addParentSegment(s);
+  ctx.addSegment({ p1: p, p2: s.p2 });
+  ctx.addSegment({ p1: s.p1, p2: p });
 };
 
 const linearPair = (ctx: ProofContent, args: ParseObj[]) => {

@@ -1,3 +1,4 @@
+import { ProofCtx } from "geometry-object";
 import { SVGGeoArc } from "interface/core/diagramSvg/SVGGeoArc";
 import React from "react";
 import { LinePatternDefs } from "../../core/diagramSvg/LinePattern";
@@ -6,20 +7,20 @@ import { SVGGeoCircle } from "../../core/diagramSvg/SVGGeoCircle";
 import { SVGGeoPoint } from "../../core/diagramSvg/SVGGeoPoint";
 import { SVGGeoSegment } from "../../core/diagramSvg/SVGGeoSegment";
 import { SVGGeoTriangle } from "../../core/diagramSvg/SVGGeoTriangle";
-import { DiagramRenderCtx, SVGModes } from "../../core/types/diagramTypes";
+import { SVGModes } from "../../core/types/diagramTypes";
 import { AspectRatio } from "../../core/types/layoutTypes";
 
 export interface DiagramProps {
   svgIdSuffix: string;
-  ctx: DiagramRenderCtx;
+  ctx: ProofCtx;
   activeFrame: string;
   width: string;
   height: string;
   miniScale: boolean;
   isStatic?: boolean;
   isTutorial?: boolean;
-  additionCtx?: DiagramRenderCtx;
-  highlightCtx?: DiagramRenderCtx;
+  additionCtx?: ProofCtx;
+  highlightCtx?: ProofCtx;
   diagramAspect: AspectRatio;
 }
 
@@ -35,7 +36,7 @@ export class Diagram extends React.Component<DiagramProps> {
   private keyId = (objId: string, layer: number, idx: number) =>
     `${objId}-${idx}-${layer}`;
 
-  renderPoints = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
+  renderPoints = (ctx: ProofCtx, frame: string, layer: number) => {
     return ctx.points.flatMap((p, i) => {
       let setMode = p.modes.get(frame);
       setMode = setMode === SVGModes.Unfocused ? SVGModes.Hidden : setMode;
@@ -44,14 +45,14 @@ export class Diagram extends React.Component<DiagramProps> {
         : (setMode ?? SVGModes.Hidden);
       return (
         <SVGGeoPoint
-          geoId={this.geoId(p.obj.id, layer)}
+          geoId={this.geoId(p.id, layer)}
           mode={mode}
           hoverable={false}
-          key={this.keyId(p.obj.id, layer, i)}
+          key={this.keyId(p.id, layer, i)}
           {...{
-            p: p.obj,
+            p: p,
             offset: p.offset,
-            label: p.obj.label,
+            label: p.label,
             miniScale: this.props.miniScale,
             showPoint: p.showPoint,
           }}
@@ -61,29 +62,29 @@ export class Diagram extends React.Component<DiagramProps> {
     });
   };
 
-  renderSegments = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
+  renderSegments = (ctx: ProofCtx, frame: string, layer: number) => {
     return ctx.segments.flatMap((seg, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : (seg.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoSegment
-          geoId={this.geoId(seg.obj.id, layer)}
+          geoId={this.geoId(seg.id, layer)}
           mode={mode}
           hoverable={false}
           {...{
             miniScale: this.props.miniScale,
-            s: seg.obj,
+            s: seg,
             tick: seg.ticks.get(frame),
           }}
-          key={this.keyId(seg.obj.id, layer, i)}
+          key={this.keyId(seg.id, layer, i)}
           isHighlight={layer === 1}
         />
       );
     });
   };
 
-  renderAngles = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
+  renderAngles = (ctx: ProofCtx, frame: string, layer: number) => {
     return ctx.angles.flatMap((ang, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
@@ -91,34 +92,34 @@ export class Diagram extends React.Component<DiagramProps> {
       return (
         <SVGGeoAngle
           mode={mode}
-          geoId={this.geoId(ang.obj.id, layer)}
+          geoId={this.geoId(ang.id, layer)}
           hoverable={false}
           {...{
-            a: ang.obj,
+            a: ang,
             miniScale: this.props.miniScale,
             tick: ang.ticks.get(frame),
           }}
-          key={this.keyId(ang.obj.id, layer, i)}
+          key={this.keyId(ang.id, layer, i)}
           isHighlight={layer === 1}
         />
       );
     });
   };
 
-  renderTriangles = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
+  renderTriangles = (ctx: ProofCtx, frame: string, layer: number) => {
     return ctx.triangles.flatMap((tri, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : (tri.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoTriangle
-          geoId={this.geoId(tri.obj.id, layer)}
+          geoId={this.geoId(tri.id, layer)}
           hoverable={false}
           {...{
             miniScale: this.props.miniScale,
-            t: tri.obj,
+            t: tri,
           }}
-          key={this.keyId(tri.obj.id, layer, i)}
+          key={this.keyId(tri.id, layer, i)}
           mode={mode}
           rotate={tri.rotatePattern}
           similar={!this.props.isStatic && tri.similar.has(frame)}
@@ -129,43 +130,43 @@ export class Diagram extends React.Component<DiagramProps> {
     });
   };
 
-  renderCircles = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
+  renderCircles = (ctx: ProofCtx, frame: string, layer: number) => {
     return ctx.circles.flatMap((circle, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : (circle.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoCircle
-          geoId={this.geoId(circle.obj.id, layer)}
+          geoId={this.geoId(circle.id, layer)}
           mode={mode}
           hoverable={false}
-          {...{ c: circle.obj, miniScale: this.props.miniScale }}
-          key={this.keyId(circle.obj.id, layer, i)}
+          {...{ c: circle, miniScale: this.props.miniScale }}
+          key={this.keyId(circle.id, layer, i)}
           isHighlight={layer === 1}
         />
       );
     });
   };
 
-  renderArcs = (ctx: DiagramRenderCtx, frame: string, layer: number) => {
+  renderArcs = (ctx: ProofCtx, frame: string, layer: number) => {
     return ctx.arcs.flatMap((arc, i) => {
       const mode = this.props.isStatic
         ? SVGModes.Default
         : (arc.modes.get(frame) ?? SVGModes.Hidden);
       return (
         <SVGGeoArc
-          geoId={this.geoId(arc.obj.id, layer)}
+          geoId={this.geoId(arc.id, layer)}
           mode={mode}
           hoverable={false}
-          {...{ a: arc.obj, miniScale: this.props.miniScale }}
-          key={this.keyId(arc.obj.id, layer, i)}
+          {...{ a: arc, miniScale: this.props.miniScale }}
+          key={this.keyId(arc.id, layer, i)}
           isHighlight={layer === 1}
         />
       );
     });
   };
 
-  renderObjectsFromCtx = (ctx: DiagramRenderCtx, layer: number) => {
+  renderObjectsFromCtx = (ctx: ProofCtx, layer: number) => {
     return (
       <>
         {this.renderSegments(ctx, this.props.activeFrame, layer)}
@@ -177,7 +178,7 @@ export class Diagram extends React.Component<DiagramProps> {
     );
   };
 
-  renderPointsFromCtx = (ctx: DiagramRenderCtx, layer: number) => {
+  renderPointsFromCtx = (ctx: ProofCtx, layer: number) => {
     return <>{this.renderPoints(ctx, this.props.activeFrame, layer)}</>;
   };
 

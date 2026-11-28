@@ -6,4 +6,5 @@ Extraction "extracted/GhostChecker.ml"
   CertifiedAPI.parseProblem CertifiedAPI.parsePresentation
   CertifiedAPI.check CertifiedAPI.checker
   CertifiedAPI.openSession CertifiedAPI.sessionAccepts
-  CertifiedAPI.sessionNeeds CertifiedAPI.sessionMatches.
+  CertifiedAPI.sessionNeeds CertifiedAPI.sessionMatches
+  CertifiedAPI.rayRepresentatives.

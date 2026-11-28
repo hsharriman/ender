@@ -20,10 +20,10 @@ export class SimilarTriangles {
 
   static similarLabel = (props: StepFocusProps, labels: [string, string]) => {
     const { ctx, frame } = props;
-    ctx.getTriangle(labels[0])?.setSimilar(frame).labelMode(frame, props.mode);
+    ctx.getTriangle(labels[0])?.setSimilar(frame).mode(frame, props.mode);
     const t2 = ctx.getTriangle(labels[1]);
     if (!t2) return;
     t2.setRotatePattern(true);
-    t2.setSimilar(frame).labelMode(frame, props.mode);
+    t2.setSimilar(frame).mode(frame, props.mode);
   };
 }

@@ -34,3 +34,33 @@ export interface ParseObj {
     | Obj.Text;
   v: string;
 }
+
+// -------- DISPLAY STATE --------
+// Every object records, per frame of a proof walkthrough, how it is drawn.
+
+export type TickType =
+  | Obj.ParallelTick
+  | Obj.EqualLengthTick
+  | Obj.EqualAngleTick
+  | Obj.RightTick
+  | Obj.SimilarTick
+  | Obj.AngleHighlight;
+
+export type Tick = { type: TickType; num: number };
+
+export enum SVGModes {
+  Hidden = "hidden",
+  Unfocused = "unfocused",
+  Default = "default",
+  ReliesOn = "relieson",
+  Derived = "derived",
+  Inconsistent = "inconsistent",
+  /** A fact the step needed that nothing before it establishes. */
+  Unestablished = "unestablished",
+}
+
+export enum ShowPoint {
+  Always = "always",
+  Adaptive = "adaptive",
+  Hide = "hide",
+}

@@ -89,7 +89,11 @@ its `*_needs_sound` lemma; a reason whose citations depend on each other
 - `Reason` = `{ function: string; arguments: string[] }` — a reason like `sas([01], [02], [03])`
 - `ParseObj` = `{ type: Obj.*; v: string }` — a geometric object (point, segment, angle, triangle, quad, circle)
 - `ProofObj` — presentation/layout model for premises and proof rows
-- `ProofContent` — display geometry: coordinates, segments, and angles
+- `ProofContent` — display geometry: the figure's objects and how each is
+  drawn in every frame (modes and ticks live on the objects). Built by
+  `presentationContent`, once per layer of a walkthrough. Angles are merged
+  through the checker's ray representatives (the report's `rays`), so the
+  figure treats two spellings as one angle exactly when the checker does
 
 **Backend agents** (`backend/`): Python scripts using `litellm`. `solver_agent.py` iteratively fixes broken proofs (up to 5 LLM loops); `feedback_agent.py` compares student proof to LLM solution for feedback. Prompt templates in `backend/prompt/`.
 
@@ -147,15 +151,27 @@ proof: one without a step number `[n]` (`n` all digits), one with a character
 other than letters, digits, spaces, and `_ ( ) , - >`, a whole step missing
 its `->`, or a whole statement followed by more text.
 
+The diagram draws only what the premises make: declared objects and the
+segments premises such as `on_line` or `intersect_seg` imply. A step or the
+goal never adds a segment; a segment it names must be declared on a `seg:`
+line (or be a side of a declared triangle or quadrilateral) to be drawn. A
+step may mark an angle, triangle, or quadrilateral the premises only imply,
+when all its sides are drawn.
+
 `on_line(AB, P)` places P strictly inside AB: never at A or B. A point at an
 end of a segment needs no `on_line`; it is already named by the segment.
 
 An angle may be named through any point on each of its rays: with
 `[d_n] on_line(PR, T)`, `a_QPT` and `a_QPR` are the same angle, in any step,
-citation, or the goal. The point must differ from the vertex, which
-`on_line` and `intersect_seg` guarantee; a point linked only another way (a
-midpoint) must be declared apart from the vertex instead (a `seg:` line, or two
-corners of a declared triangle or quadrilateral). The kernel compares angles
+citation, or the goal. Premises place points on rays (`statement_ray_segments`
+in `rocq/Ghost/Checker.v`): `on_line`, `intersect_seg`, and `transversal`
+place each named point strictly inside its segments, so their points never
+need a declaration. `midpt`, `seg_bisect`, and `perp_bisector` place the
+midpoint on the segment they halve, strictly once that segment is declared
+(a `seg:` line, or two corners of a declared triangle or quadrilateral);
+otherwise each renamed point must be declared apart from the vertex. A
+bisector only meets its own line, so naming a ray along the bisector needs an
+`on_line`. Only premises place points; derived facts never do. The kernel compares angles
 through a canonical spelling (`canonical_statement` in
 `rocq/Ghost/Checker.v`) used only for checking; proofs, reports, and the
 interface keep the spelling as written. `ref_ang`, `linear_pair`, and

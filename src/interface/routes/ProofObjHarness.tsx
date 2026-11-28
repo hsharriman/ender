@@ -12,7 +12,6 @@ import {
 import { ProofContent } from "geometry-object";
 import { Diagnoses, diagnoseSteps } from "interface/core/diagnosis/steps";
 import { presentationContent } from "interface/core/grammarToLayout/presentationContent";
-import { seedBaseContentFromPremises } from "interface/core/grammarToLayout/proofObjBaseContent";
 import {
   diagramAspectFor,
   interactiveLayoutFromProofObj,
@@ -239,7 +238,7 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
           });
           return;
         }
-        const proof = presentationToProofObj(report.presentation);
+        const proof = presentationToProofObj(report.presentation, report.rays);
         attachDiagramDependencies(proof, report);
         const diagnoses = await this.diagnose(report, source);
         if (generation !== this.proofParseGeneration) return;
@@ -358,11 +357,9 @@ export class ProofObjHarness extends Component<object, ProofObjHarnessState> {
     const { lastGoodProof, lastGoodCtx, incorrectSteps, wrongDeps, hints } =
       this.state;
     if (!lastGoodProof || !lastGoodCtx) return null;
-    const diagramCtx = seedBaseContentFromPremises(lastGoodProof, lastGoodCtx);
     const layoutProps = interactiveLayoutFromProofObj(
       lastGoodProof,
       lastGoodCtx,
-      diagramCtx,
       incorrectSteps,
       wrongDeps,
       hints,

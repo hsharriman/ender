@@ -238,6 +238,22 @@ let report_json report =
         report.GhostChecker.report_diagnostics))
     ]
 
+(* Display data, not part of the audited report: for a vertex and a point
+   on a ray from it, the point the checker names that ray by. *)
+let ray_json ((vertex, point), representative) =
+  `Assoc
+    [ ("vertex", `String (String.make 1 vertex))
+    ; ("point", `String (String.make 1 point))
+    ; ("representative", `String (String.make 1 representative))
+    ]
+
 let report_output source =
-  source |> GhostChecker.CertifiedChecker.check |> report_json
-  |> Yojson.Safe.to_string
+  let fields =
+    match report_json (GhostChecker.CertifiedChecker.check source) with
+    | `Assoc fields -> fields
+    | _ -> []
+  in
+  let rays =
+    `List (List.map ray_json (GhostChecker.rayRepresentatives source))
+  in
+  Yojson.Safe.to_string (`Assoc (fields @ [ ("rays", rays) ]))

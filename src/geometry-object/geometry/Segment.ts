@@ -1,5 +1,5 @@
 import { SegmentProps } from "../types/geometryTypes";
-import { Obj } from "../types/types";
+import { Obj, Tick, TickType } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
 
@@ -8,8 +8,8 @@ export class Segment extends BaseGeometryObject {
   public readonly p1: Point;
   public readonly p2: Point;
   public readonly id: string;
-  private subSegments: Set<Segment> = new Set();
-  private parentSegment: Set<Segment> = new Set();
+  /** The congruence or parallel marks drawn on it, per frame. */
+  public readonly ticks: Map<string, Tick> = new Map();
   constructor(props: SegmentProps) {
     super(Obj.Segment, props);
     this.p1 = props.p1;
@@ -27,23 +27,8 @@ export class Segment extends BaseGeometryObject {
     return this.label.includes(pt.label);
   };
 
-  addSubSegment = (s: Segment) => {
-    if (!this.subSegments.has(s)) {
-      this.subSegments.add(s);
-      s.addParentSegment(this);
-    }
+  addTick = (frame: string, type: TickType, num: number = 1) => {
+    this.ticks.set(frame, { type, num });
     return this;
   };
-
-  addParentSegment = (s: Segment) => {
-    if (!this.parentSegment.has(s)) {
-      this.parentSegment.add(s);
-      s.addSubSegment(this);
-    }
-    return this;
-  };
-
-  getSubSegments = () => this.subSegments;
-
-  getParentSegments = () => this.parentSegment;
 }

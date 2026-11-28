@@ -1,7 +1,7 @@
+import { ProofCtx } from "geometry-object";
 import React from "react";
 import { Legend } from "../../core/diagramSvg/Legend";
 import { AspectRatio } from "../../core/diagramSvg/svgTypes";
-import { DiagramRenderCtx } from "../../core/types/diagramTypes";
 import { ReasonVis } from "../../theorems/reasons";
 import { ProofTextItem } from "../../core/types/stepTypes";
 import { getReasonFn } from "../../theorems/utils";
@@ -12,14 +12,14 @@ import { ReliesOn, ReliesRowHeight } from "./ReliesOn";
 
 export interface InteractiveAppPageProps {
   name: string;
-  ctx: DiagramRenderCtx;
+  ctx: ProofCtx;
   linkedTexts: ProofTextItem[];
   reasonMap: Map<string, ReasonVis>;
   isTutorial?: boolean;
   /** When true, proof rows show every step (no reveal animation); used by ProofObjHarness */
   proofHarnessMode?: boolean;
-  highlightCtx: DiagramRenderCtx;
-  additionCtx: DiagramRenderCtx;
+  highlightCtx: ProofCtx;
+  additionCtx: ProofCtx;
   diagramAspect: AspectRatio;
 }
 

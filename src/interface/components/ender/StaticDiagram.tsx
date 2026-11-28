@@ -1,12 +1,12 @@
+import { ProofCtx } from "geometry-object";
 import React from "react";
-import { DiagramRenderCtx } from "../../core/types/diagramTypes";
 import { AspectRatio } from "../../core/types/layoutTypes";
 import { GIVEN_ID } from "../../theorems/utils";
 import { Diagram } from "./Diagram";
 
 export interface StaticDiagramProps {
   svgIdSuffix: string;
-  ctx: DiagramRenderCtx;
+  ctx: ProofCtx;
   width: string;
   height: string;
   activeFrame?: string;

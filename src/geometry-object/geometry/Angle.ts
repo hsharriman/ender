@@ -1,5 +1,5 @@
 import { AngleProps } from "../types/geometryTypes";
-import { Obj, Vector } from "../types/types";
+import { Obj, Tick, TickType, Vector } from "../types/types";
 import { BaseGeometryObject } from "./BaseGeometryObject";
 import { Point } from "./Point";
 import { Segment } from "./Segment";
@@ -10,6 +10,8 @@ export class Angle extends BaseGeometryObject {
   public readonly center: Point;
   public readonly end: Point;
   public id: string;
+  /** The congruence or parallel marks drawn on it, per frame. */
+  public readonly ticks: Map<string, Tick> = new Map();
   constructor(props: AngleProps) {
     super(Obj.Angle, props);
     this.start = props.start;
@@ -22,6 +24,11 @@ export class Angle extends BaseGeometryObject {
     ]);
     this.id = this.getId(Obj.Angle, this.label);
   }
+
+  addTick = (frame: string, type: TickType, num: number = 1) => {
+    this.ticks.set(frame, { type, num });
+    return this;
+  };
 
   centerStr = () => {
     return this.center.label;

@@ -22,7 +22,7 @@ export class Arc extends BaseGeometryObject {
     ]);
     // Arcs between the same two points on opposite sides are different arcs.
     this.id =
-      `${this.getId(Obj.Arc, this.label)}` +
-      (this.opposite && `-${this.opposite}`);
+      this.getId(Obj.Arc, this.label) +
+      (this.opposite ? `-${this.opposite.label}` : "");
   }
 }
