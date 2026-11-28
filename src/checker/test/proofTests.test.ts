@@ -1367,7 +1367,7 @@ steps:
       issues: [{ code: "arc_points_not_distinct", details: { arc: "r_OBB" } }],
     });
     expect(
-      await check("r_OBR r_OYD r_OBY", ["[d_2] diameter(c_OB, BY)"]),
+      await check("r_OBR r_OYD r_OBY", ["[g_2] diameter(c_OB, BY)"]),
     ).toEqual({
       isCorrect: false,
       issues: [{ code: "arc_is_diameter", details: { arc: "r_OBY" } }],

@@ -2168,7 +2168,17 @@ Fixpoint header_line_issue (lines : list string) (number : nat)
           let context := [string_field "line" line] in
           Some
             match Audit.premiseBody line with
-            | Some body => statement_issue context body
+            | Some body =>
+                match PublicParser.parse_public_statement body with
+                (* The statement reads, so its label is the wrong kind. *)
+                | Some statement =>
+                    Audit.issue 3 "premise_label_mismatch"
+                      (Audit.JsonObject (context ++
+                        [string_field "expected"
+                           (if Audit.isDiagramPremise statement
+                            then "d_" else "g_")]))
+                | None => statement_issue context body
+                end
             | None =>
                 match Audit.goalBody line with
                 | Some body => statement_issue context body

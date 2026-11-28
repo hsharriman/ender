@@ -1543,7 +1543,7 @@ Definition renamed_transversal_source := transitive_header "ang: a_IJK a_JKL
 Definition renamed_midpoint_source (declarations : string) :=
   transitive_header (declarations ++ "ang: a_FGH a_IJK
 ")
-  "[d_1] midpt(BD,E)
+  "[g_3] midpt(BD,E)
 [g_1] con_ang(a_FGH,a_ABD)
 [g_2] con_ang(a_ABE,a_IJK)
 "
@@ -1557,7 +1557,7 @@ Definition renamed_midpoint_source (declarations : string) :=
 Definition renamed_bisector_line_source := transitive_header "seg: BA BD BE CF
 ang: a_FGH a_IJK
 "
-  "[d_1] seg_bisect(BD,CF,E)
+  "[g_3] seg_bisect(BD,CF,E)
 [g_1] con_ang(a_FGH,a_ABD)
 [g_2] con_ang(a_ABE,a_IJK)
 "
@@ -1580,6 +1580,34 @@ Example renamed_midpoint_undeclared_rejects :
 Proof. vm_compute. reflexivity. Qed.
 Example renamed_bisector_line_rejects :
   complete_checker renamed_bisector_line_source = false.
+Proof. vm_compute. reflexivity. Qed.
+
+(** A premise's label says what kind it is: the figure's [on_line],
+    [transversal], [intersect_seg], [circ_order], and [on_circle] are
+    diagram premises, [[d_...]]; every other premise is a given, [[g_...]]. *)
+Definition labeled_premise_source (premise : string) := transitive_header "seg: BA BD BE
+ang: a_FGH a_IJK
+"
+  (premise ++ "[g_1] con_ang(a_FGH,a_ABD)
+[g_2] con_ang(a_ABE,a_IJK)
+")
+  "con_ang(a_FGH,a_IJK)"
+  "[01] given(g_1) -> con_ang(a_FGH,a_ABD)
+[02] given(g_2) -> con_ang(a_ABE,a_IJK)
+[03] con_ang_transitive(1,2) -> con_ang(a_FGH,a_IJK)".
+
+Example diagram_premise_as_given_rejects :
+  complete_checker (labeled_premise_source "[g_3] on_line(BD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example given_as_diagram_premise_rejects :
+  complete_checker (labeled_premise_source "[d_1] midpt(BD,E)
+") = false.
+Proof. vm_compute. reflexivity. Qed.
+Example labeled_premises_accept :
+  complete_checker (labeled_premise_source "[d_1] on_line(BD,E)
+[g_3] midpt(BD,E)
+") = true.
 Proof. vm_compute. reflexivity. Qed.
 
 (** A transversal perpendicular to one parallel is perpendicular to the
@@ -3534,9 +3562,9 @@ premises:
 pt: O (5,5), A (5,9), B (9,5), D (1,5), E (5,1)
 circ: c_OA
 arc: r_OAB r_ODE
-[d_1] radius(c_OA, B)
+[g_2] radius(c_OA, B)
 [d_2] on_circle(c_OA, D)
-[d_3] chord(c_OA, DE)
+[g_3] chord(c_OA, DE)
 [g_1] con_arc(r_OAB, r_ODE)
 -> con_seg(AB, DE)
 
@@ -3577,7 +3605,7 @@ Proof. vm_compute. reflexivity. Qed.
 
 Example arc_on_diameter_rejects :
   complete_checker (arc_header "r_OAB r_ODE r_OAE"
-    "[d_2] diameter(c_OA, AE)
+    "[g_2] diameter(c_OA, AE)
 [g_1] con_arc(r_OAB, r_ODE)
 ") = false.
 Proof. vm_compute. reflexivity. Qed.
@@ -3740,11 +3768,11 @@ Example def_radius_conv_on_circle_accepts : complete_checker
 " "radius(c_OR, T)") = true.
 Proof. vm_compute. reflexivity. Qed.
 Example def_radius_conv_chord_accepts : complete_checker
-  (def_radius_conv_source "[d_01] chord(c_OR, AT)
+  (def_radius_conv_source "[g_2] chord(c_OR, AT)
 " "radius(c_OR, T)") = true.
 Proof. vm_compute. reflexivity. Qed.
 Example def_radius_conv_inscribed_accepts : complete_checker
-  (def_radius_conv_source "[d_01] inscribed_angle(c_OR, a_ATB)
+  (def_radius_conv_source "[g_2] inscribed_angle(c_OR, a_ATB)
 " "radius(c_OR, T)") = true.
 Proof. vm_compute. reflexivity. Qed.
 (** Nothing places M on the circle. *)

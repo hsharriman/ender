@@ -143,6 +143,13 @@ steps:
 
 Sample proofs in `src/checker/proofs/`, organized into category subdirectories (e.g., `examples/tutorial.txt`, `examples/s1c1.txt`).
 
+A premise's label says its kind (`Audit.isDiagramPremise`): `on_line`,
+`transversal`, `intersect_seg`, `circ_order`, and `on_circle` are diagram
+premises and must be labeled `[d_n]`; every other statement is a given,
+`[g_n]`. A premise with the wrong kind of label fails to parse
+(`premise_label_mismatch`). The catalog marks the diagram ones
+`isDiagramPremise`.
+
 A step line that does not parse (empty, cut off, a misspelled reason) is
 skipped as `incomplete` rather than rejecting the proof: it keeps its number,
 proves nothing, and blocks any step that cites it, and the proof is accepted

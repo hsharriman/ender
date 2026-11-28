@@ -108,7 +108,7 @@ type StatementDef = {
   name: string;
   parameters: readonly string[];
   isPremisesOnly?: boolean;
-  isDiagramOnly?: boolean;
+  isDiagramPremise?: boolean;
 };
 
 const statementDefs = Object.values(
