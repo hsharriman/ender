@@ -193,5 +193,5 @@ af=await
 S();var{caml_callback:i,caml_alloc_times:v,caml_alloc_tm:w,caml_alloc_stat:H,caml_start_fiber:L,caml_handle_uncaught_exception:x,caml_buffer:I,caml_extract_bytes:J,_initialize:s}=af.instance.exports,k=I?.buffer,ab=k&&new
 Uint8Array(k,0,k.length);D=A(L);var
 s=A(s);if(globalThis.process?.on)globalThis.process.on("uncaughtException",(a,b)=>x(a));else if(globalThis.addEventListener)globalThis.addEventListener("error",a=>a.error&&x(a.error));await
-s()})(function(a){"use strict";return{}}(globalThis))({"link":[["code-82c2667f04d8bc8f5dd1",0]],"generated":(a=>{var
+s()})(function(a){"use strict";return{}}(globalThis))({"link":[["code-23be6bebfcf23798bf9a",0]],"generated":(a=>{var
 c=a,b=a?.module?.export||a;return{"fragments":{"get_Array":a=>a.Array,"get_Date":a=>a.Date,"get_Error":a=>a.Error,"get_JSON":a=>a.JSON,"get_Math":a=>a.Math,"get_Object":a=>a.Object,"get_RegExp":a=>a.RegExp,"get_String":a=>a.String,"get_length":a=>a.length,"js_expr_12c48ca8":()=>a,"js_expr_21711c2a":()=>b,"meth_call_0_toString":a=>a.toString()}}})(globalThis),"src":"ghost-checker-api.assets"});
